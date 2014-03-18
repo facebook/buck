@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -56,6 +57,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -107,6 +109,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     }
   }
 
+  private final int timeoutSeconds;
   private final Future<KeyspaceAndTtl> keyspaceAndTtlFuture;
   private final AtomicInteger numConnectionExceptionReports;
   private final boolean doStore;
@@ -114,12 +117,19 @@ public class CassandraArtifactCache implements ArtifactCache {
 
   private final Set<ListenableFuture<OperationResult<Void>>> futures;
   private final AtomicBoolean isWaitingToClose;
+  private final AtomicBoolean isKilled;
 
-  public CassandraArtifactCache(String hosts, int port, boolean doStore, BuckEventBus buckEventBus)
+  public CassandraArtifactCache(
+      String hosts,
+      int port,
+      int timeoutSeconds,
+      boolean doStore,
+      BuckEventBus buckEventBus)
       throws ConnectionException {
     this.doStore = doStore;
     this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
     this.numConnectionExceptionReports = new AtomicInteger(0);
+    this.timeoutSeconds = timeoutSeconds;
 
     final AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
         .forCluster(CLUSTER_NAME)
@@ -158,6 +168,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     this.futures = Sets.newSetFromMap(
         new ConcurrentHashMap<ListenableFuture<OperationResult<Void>>, Boolean>());
     this.isWaitingToClose = new AtomicBoolean(false);
+    this.isKilled = new AtomicBoolean(false);
   }
 
   private static void verifyMagic(Keyspace keyspace) throws ConnectionException {
@@ -181,12 +192,22 @@ public class CassandraArtifactCache implements ArtifactCache {
    *    otherwise Optional.absent().  This method will block until connection finishes.
    */
   private Optional<KeyspaceAndTtl> getKeyspaceAndTtl() {
+    if (isKilled.get()) {
+      return Optional.absent();
+    }
     try {
-      return Optional.of(keyspaceAndTtlFuture.get());
+      return Optional.of(keyspaceAndTtlFuture.get(timeoutSeconds, TimeUnit.SECONDS));
+    } catch (TimeoutException e) {
+      keyspaceAndTtlFuture.cancel(true);
+      isKilled.set(true);
     } catch (ExecutionException | InterruptedException e) {
-      buckEventBus.post(ThrowableLogEvent.create(e,
-          "Unexpected error when fetching keyspace and ttl: %s.",
-          e.getMessage()));
+      buckEventBus.post(
+          ThrowableLogEvent.create(
+              e,
+              "Unexpected error when fetching keyspace and ttl: %s.",
+              e.getMessage()));
+    } catch (CancellationException e) {
+      return Optional.absent();
     }
     return Optional.absent();
   }

@@ -91,6 +91,7 @@ public class BuckConfig {
   private static final String DEFAULT_CACHE_DIR = "buck-cache";
   private static final String DEFAULT_CASSANDRA_PORT = "9160";
   private static final String DEFAULT_CASSANDRA_MODE = CassandraMode.readwrite.name();
+  private static final String DEFAULT_CASSANDRA_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
 
   private final ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
@@ -604,9 +605,12 @@ public class BuckConfig {
     String cacheHosts = getValue("cache", "hosts").or("");
     // cache.port
     int port = Integer.parseInt(getValue("cache", "port").or(DEFAULT_CASSANDRA_PORT));
+    // cache.connection_timeout_seconds
+    int timeoutSeconds = Integer.parseInt(
+        getValue("cache", "connection_timeout_seconds").or(DEFAULT_CASSANDRA_TIMEOUT_SECONDS));
 
     try {
-      return new CassandraArtifactCache(cacheHosts, port, doStore, buckEventBus);
+      return new CassandraArtifactCache(cacheHosts, port, timeoutSeconds, doStore, buckEventBus);
     } catch (ConnectionException e) {
       buckEventBus.post(ThrowableLogEvent.create(e, "Cassandra cache connection failure."));
       return null;
