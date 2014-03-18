@@ -33,4 +33,9 @@ public interface AndroidManifestReader {
    * @return the value of the package attribute to the manifest element.
    */
   public String getPackage();
+
+  /**
+   * @return the value of the versionCode attribute to the manifest element.
+   */
+  public String getVersionCode();
 }

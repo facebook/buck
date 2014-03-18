@@ -7,6 +7,16 @@ android_library(
   ],
 )
 
+java_library(
+  name = 'manifest-as-resource',
+  resources = [
+    'AndroidManifest.xml',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)
+
 java_binary(
   name = 'agent-for-host',
   main_class = "com.facebook.buck.android.agent.AgentMain",

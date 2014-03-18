@@ -58,7 +58,16 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader{
    */
   private static final String XPATH_PACKAGE = "/manifest/@package";
 
+  /**
+   * XPath expression to get the version code.
+   * For a manifest as {@code <manifest android:versionCode="1" />}, this results in
+   * {@code 1}.
+   */
+  private static final String XPATH_VERSION_CODE = "/manifest/@android:versionCode";
+
+
   private final XPathExpression packageExpression;
+  private final XPathExpression versionCodeExpression;
   private final XPathExpression launchableActivitiesExpression;
   private final Document doc;
 
@@ -72,6 +81,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader{
       xPath.setNamespaceContext(androidNamespaceContext);
       launchableActivitiesExpression = xPath.compile(XPATH_LAUNCHER_ACTIVITIES);
       packageExpression = xPath.compile(XPATH_PACKAGE);
+      versionCodeExpression = xPath.compile(XPATH_VERSION_CODE);
     } catch (XPathExpressionException e) {
       throw Throwables.propagate(e);
     }
@@ -98,6 +108,15 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader{
   public String getPackage() {
     try {
       return (String) packageExpression.evaluate(doc, XPathConstants.STRING);
+    } catch (XPathExpressionException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  @Override
+  public String getVersionCode() {
+    try {
+      return (String) versionCodeExpression.evaluate(doc, XPathConstants.STRING);
     } catch (XPathExpressionException e) {
       throw Throwables.propagate(e);
     }

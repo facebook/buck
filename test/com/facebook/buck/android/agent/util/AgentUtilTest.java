@@ -19,10 +19,14 @@ package com.facebook.buck.android.agent.util;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.AndroidManifestReader;
+import com.facebook.buck.util.DefaultAndroidManifestReader;
+import com.google.common.io.ByteStreams;
 
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 public class AgentUtilTest {
   @Test
@@ -31,5 +35,19 @@ public class AgentUtilTest {
     File testJar = new File(testDataDir, "example.jar");
     String jarSignature = AgentUtil.getJarSignature(testJar.getAbsolutePath());
     assertEquals("JB2+Jt7N6wdguWfvzaM3cJiisTM=", jarSignature);
+  }
+
+  @Test
+  public void testConstants() throws IOException {
+    AndroidManifestReader manifest =
+        DefaultAndroidManifestReader.forString(
+            new String(
+                ByteStreams.toByteArray(
+                    getClass().getResourceAsStream(
+                        "/com/facebook/buck/android/agent/AndroidManifest.xml"))));
+
+    assertEquals(AgentUtil.AGENT_PACKAGE_NAME, manifest.getPackage());
+    assertEquals(AgentUtil.AGENT_VERSION_CODE, manifest.getVersionCode());
+
   }
 }
