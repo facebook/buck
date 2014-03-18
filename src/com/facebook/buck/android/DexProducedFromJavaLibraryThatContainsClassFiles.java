@@ -20,11 +20,12 @@ import com.facebook.buck.android.DexProducedFromJavaLibraryThatContainsClassFile
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
@@ -34,7 +35,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -47,7 +47,6 @@ import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -173,10 +172,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
   }
 
   public Path getPathToDex() {
-    return Paths.get(
-        BuckConstant.GEN_DIR,
-        buildTarget.getBasePath(),
-        buildTarget.getShortName() + ".dex.jar");
+    return BuildTargets.getGenPath(buildTarget, "%s.dex.jar");
   }
 
   public boolean hasOutput() {
