@@ -323,6 +323,9 @@
         <exclude name="**/*.pyc"/>
         <exclude name="**/*.sh"/>
         <exclude name="**/*.soy"/>
+        <exclude name="**/*.xml"/>
+        <exclude name="**/*.keystore"/>
+        <exclude name="**/*.properties"/>
       </fileset>
       <fileset dir="${javacc.gensrc.dir}">
       </fileset>
