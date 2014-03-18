@@ -187,7 +187,7 @@ public class ResourcesFilter extends AbstractBuildable
 
   /**
    * Sets up filtering of resources, images/drawables and strings in particular, based on build
-   * rule parameters {@link #resourceFilter} and {@link #isStoreStringsAsAssets}.
+   * rule parameters {@link #resourceFilter} and {@link #resourceCompressionMode}.
    *
    * {@link com.facebook.buck.android.FilterResourcesStep.ResourceFilter} {@code resourceFilter}
    * determines which drawables end up in the APK (based on density - mdpi, hdpi etc), and also
@@ -215,16 +215,12 @@ public class ResourcesFilter extends AbstractBuildable
         .setInResToOutResDirMap(resSourceToDestDirMap)
         .setResourceFilter(resourceFilter);
 
-    if (isStoreStringsAsAssets()) {
+    if (resourceCompressionMode.isStoreStringsAsAssets()) {
       filterResourcesStepBuilder.enableStringsFilter();
       filterResourcesStepBuilder.setWhitelistedStringDirs(whitelistedStringDirs);
     }
 
     return filterResourcesStepBuilder.build();
-  }
-
-  public boolean isStoreStringsAsAssets() {
-    return resourceCompressionMode.isStoreStringsAsAssets();
   }
 
   private String getResDestinationBasePath() {
