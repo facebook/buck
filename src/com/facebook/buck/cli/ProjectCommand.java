@@ -105,6 +105,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       exitCode = createIntellijProject(project,
           tempFile,
           executionContext.getProcessExecutor(),
+          !options.getArgumentsFormattedAsBuildTargets().isEmpty(),
           console.getStdOut(),
           console.getStdErr());
       if (exitCode != 0) {
@@ -148,10 +149,16 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   int createIntellijProject(Project project,
       File jsonTemplate,
       ProcessExecutor processExecutor,
+      boolean generateMinimalProject,
       PrintStream stdOut,
       PrintStream stdErr)
       throws IOException {
-    return project.createIntellijProject(jsonTemplate, processExecutor, stdOut, stdErr);
+    return project.createIntellijProject(
+        jsonTemplate,
+        processExecutor,
+        generateMinimalProject,
+        stdOut,
+        stdErr);
   }
 
   /**

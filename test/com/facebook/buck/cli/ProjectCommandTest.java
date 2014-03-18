@@ -191,6 +191,7 @@ public class ProjectCommandTest {
     int createIntellijProject(Project project,
         File jsonTemplate,
         ProcessExecutor processExecutor,
+        boolean generateMinimalProject,
         PrintStream stdOut,
         PrintStream stdErr)
         throws IOException {

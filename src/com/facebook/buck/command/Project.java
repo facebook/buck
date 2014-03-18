@@ -162,8 +162,10 @@ public class Project {
     this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
   }
 
-  public int createIntellijProject(File jsonTempFile,
+  public int createIntellijProject(
+      File jsonTempFile,
       ProcessExecutor processExecutor,
+      boolean generateMinimalProject,
       PrintStream stdOut,
       PrintStream stdErr) throws IOException {
     List<Module> modules = createModulesForProjectConfigs();
@@ -172,7 +174,7 @@ public class Project {
     List<String> modifiedFiles = Lists.newArrayList();
 
     // Process the JSON config to generate the .xml and .iml files for IntelliJ.
-    ExitCodeAndOutput result = processJsonConfig(jsonTempFile);
+    ExitCodeAndOutput result = processJsonConfig(jsonTempFile, generateMinimalProject);
     if (result.exitCode != 0) {
       return result.exitCode;
     } else {
@@ -948,9 +950,18 @@ public class Project {
     }
   }
 
-  private ExitCodeAndOutput processJsonConfig(File jsonTempFile) throws IOException {
-    final ImmutableList<String> args = ImmutableList.of(
-        pythonInterpreter, PATH_TO_INTELLIJ_PY, jsonTempFile.getAbsolutePath());
+  private ExitCodeAndOutput processJsonConfig(File jsonTempFile, boolean generateMinimalProject)
+      throws IOException {
+    ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
+        .add(pythonInterpreter)
+        .add(PATH_TO_INTELLIJ_PY)
+        .add(jsonTempFile.getAbsolutePath());
+
+    if (generateMinimalProject) {
+      argsBuilder.add("--generate_minimum_project");
+    }
+
+    final ImmutableList<String> args = argsBuilder.build();
 
     ShellStep command = new ShellStep() {
 

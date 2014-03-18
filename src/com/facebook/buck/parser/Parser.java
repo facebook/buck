@@ -49,7 +49,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
@@ -669,14 +668,14 @@ public class Parser {
    */
   @VisibleForTesting
   @Nullable
-  List<BuildTarget> filterGraphTargets(
+  Iterable<BuildTarget> filterGraphTargets(
       @Nullable RawRulePredicate filter,
       DependencyGraph dependencyGraph) throws NoSuchBuildTargetException {
     if (filter == null) {
       return null;
     }
 
-    ImmutableList.Builder<BuildTarget> matchingTargets = ImmutableList.builder();
+    ImmutableSet.Builder<BuildTarget> matchingTargets = ImmutableSet.builder();
     for (BuildRule buildRule : dependencyGraph.getNodes()) {
       for (Map<String, Object> map :
            parsedBuildFiles.get(targetsToFile.get(buildRule.getBuildTarget()))) {
@@ -759,7 +758,7 @@ public class Parser {
    * {@code android_binary}. See {@link com.facebook.buck.cli.ProjectCommand#predicate} for an
    * example of such a {@link RawRulePredicate}.
    */
-  public synchronized List<BuildTarget> filterTargetsInProjectFromRoots(
+  public synchronized Iterable<BuildTarget> filterTargetsInProjectFromRoots(
       Iterable<BuildTarget> roots,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,

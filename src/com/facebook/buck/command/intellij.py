@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 
+from collections import defaultdict
 
 MODULE_XML_START = """<?xml version="1.0" encoding="UTF-8"?>
 <module type="%(type)s" version="4">"""
@@ -112,8 +113,58 @@ MODIFIED_FILES = []
 # that are not checked in and not in this set.
 PROJECT_FILES = set()
 
-def write_modules(modules):
+# Marker for a directory in the module tree that contains an .iml file.
+# Intentionally chosen to be an illegal file name in both unix and windows.
+CONTAINS_IML_MARKER = '/*contains_iml*/'
+
+def tree():
+  """ Create an autovivification tree """
+  return defaultdict(tree)
+
+
+def create_additional_excludes(modules):
+  """Create set of directories to also be excluded."""
+
+  # Tree representation of all modules.
+  module_tree = tree()
+  additional_excludes = defaultdict(list)
+  for module in modules:
+    normalized_iml = os.path.dirname(os.path.normpath(module['pathToImlFile']))
+
+    # Add this path to our build tree
+    current_directory = module_tree
+    if normalized_iml:
+      for part in normalized_iml.split(os.path.sep):
+        current_directory = current_directory[part]
+
+    current_directory[CONTAINS_IML_MARKER] = module['pathToImlFile']
+
+  for root, dirs, _files in os.walk('.', topdown=True, followlinks=True):
+    current_directory = module_tree
+    normalized_root = os.path.normpath(root)
+    if normalized_root == '.':
+      continue
+    highest_iml_file = None
+    for part in normalized_root.split(os.path.sep):
+      if CONTAINS_IML_MARKER in current_directory:
+        highest_iml_file = current_directory[CONTAINS_IML_MARKER]
+      if part not in current_directory:
+        if part != 'res' and highest_iml_file:
+          additional_excludes[highest_iml_file].append(normalized_root)
+        dirs[:] = []
+        break
+      else:
+        current_directory = current_directory[part]
+
+  return additional_excludes
+
+
+def write_modules(modules, generate_minimum_project):
   """Writes one XML file for each module."""
+  additional_excludes = defaultdict(list)
+  if generate_minimum_project:
+    additional_excludes = create_additional_excludes(modules)
+
   for module in modules:
     # Build up the XML.
     module_type = 'JAVA_MODULE'
@@ -172,6 +223,9 @@ def write_modules(modules):
              }
     for exclude_folder in module['excludeFolders']:
       xml += '\n      <excludeFolder url="%s" />' % exclude_folder['url']
+    for exclude_folder in additional_excludes[module['pathToImlFile']]:
+      normalized_dir = os.path.dirname(os.path.normpath(module['pathToImlFile']))
+      xml += '\n      <excludeFolder url="file://$MODULE_DIR$/%s" />' % os.path.relpath(exclude_folder, normalized_dir)
     xml += '\n    </content>'
 
     xml = add_annotation_generated_source_folder(xml, module)
@@ -396,13 +450,17 @@ def clean_old_files():
 
 if __name__ == '__main__':
   json_file = sys.argv[1]
+  generate_minimum_project = False
+  if len(sys.argv) == 3:
+    generate_minimum_project = sys.argv[2] == '--generate_minimum_project'
+
   parsed_json = json.load(open(json_file, 'r'))
 
   libraries = parsed_json['libraries']
   write_libraries(libraries)
 
   modules = parsed_json['modules']
-  write_modules(modules)
+  write_modules(modules, generate_minimum_project)
   write_all_modules(modules)
   write_run_configs()
 

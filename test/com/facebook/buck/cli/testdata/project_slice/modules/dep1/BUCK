@@ -1,6 +1,6 @@
 android_library(
   name = 'dep1',
-  srcs = glob(['src/**/*.java']),
+  srcs = glob(['src/*.java']),
   deps = [
     '//libs:guava',
     '//libs:jsr305',
@@ -12,7 +12,7 @@ android_library(
 
 java_test(
   name = 'test',
-  srcs = glob(['test/**/*Test.java']),
+  srcs = glob(['test/*Test.java']),
   deps = [
     ':dep1',
     '//libs:guava',
