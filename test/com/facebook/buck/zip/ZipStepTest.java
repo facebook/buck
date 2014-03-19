@@ -20,14 +20,17 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -35,10 +38,21 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ZipStepTest {
 
-  @Rule public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule
+  public TemporaryFolder tmp = new TemporaryFolder();
+
+  private ExecutionContext executionContext;
+
+  @Before
+  public void setUp() {
+    executionContext = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
+        .build();
+  }
 
   @Test
   public void shouldCreateANewZipFileFromScratch() throws IOException {
@@ -50,12 +64,13 @@ public class ZipStepTest {
     Files.touch(new File(toZip, "file2.txt"));
     Files.touch(new File(toZip, "file3.txt"));
 
-    ZipStep step = new ZipStep(out.getAbsolutePath(),
-        ImmutableSet.<String>of(),
+    ZipStep step = new ZipStep(
+        Paths.get("zipstep/output.zip"),
+        ImmutableSet.<Path>of(),
         false,
         ZipStep.DEFAULT_COMPRESSION_LEVEL,
-        toZip);
-    step.execute(TestExecutionContext.newInstance());
+        Paths.get("zipdir"));
+    assertEquals(0, step.execute(executionContext));
 
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file1.txt", "file2.txt", "file3.txt"), zip.getFileNames());
@@ -72,12 +87,13 @@ public class ZipStepTest {
     Files.touch(new File(toZip, "file2.txt"));
     Files.touch(new File(toZip, "file3.txt"));
 
-    ZipStep step = new ZipStep(out.getAbsolutePath(),
-        ImmutableSet.of("file2.txt"),
+    ZipStep step = new ZipStep(
+        Paths.get("zipstep/output.zip"),
+        ImmutableSet.of(Paths.get("zipdir/file2.txt")),
         false,
         ZipStep.DEFAULT_COMPRESSION_LEVEL,
-        toZip);
-    step.execute(TestExecutionContext.newInstance());
+        Paths.get("zipdir"));
+    assertEquals(0, step.execute(executionContext));
 
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file2.txt"), zip.getFileNames());
@@ -94,12 +110,13 @@ public class ZipStepTest {
     assertTrue(new File(toZip, "child").mkdir());
     Files.touch(new File(toZip, "child/file2.txt"));
 
-    ZipStep step = new ZipStep(out.getAbsolutePath(),
-        ImmutableSet.<String>of(),
+    ZipStep step = new ZipStep(
+        Paths.get("zipstep/output.zip"),
+        ImmutableSet.<Path>of(),
         false,
         ZipStep.DEFAULT_COMPRESSION_LEVEL,
-        toZip);
-    step.execute(TestExecutionContext.newInstance());
+        Paths.get("zipdir"));
+    assertEquals(0, step.execute(executionContext));
 
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file1.txt", "child/file2.txt"), zip.getFileNames());
@@ -114,18 +131,19 @@ public class ZipStepTest {
     File parent = tmp.newFolder("zipstep");
     File out = new File(parent, "output.zip");
     File target = new File(parent, "target");
-    Files.write("example content", target, UTF_8);
+    Files.write("example content", target, Charsets.UTF_8);
 
     File toZip = tmp.newFolder("zipdir");
     Path path = toZip.toPath().resolve("file.txt");
     java.nio.file.Files.createSymbolicLink(path, target.toPath());
 
-    ZipStep step = new ZipStep(out.getAbsolutePath(),
-        ImmutableSet.<String>of(),
+    ZipStep step = new ZipStep(
+        Paths.get("zipstep/output.zip"),
+        ImmutableSet.<Path>of(),
         false,
         ZipStep.DEFAULT_COMPRESSION_LEVEL,
-        toZip);
-    step.execute(TestExecutionContext.newInstance());
+        Paths.get("zipdir"));
+    assertEquals(0, step.execute(executionContext));
 
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file.txt"), zip.getFileNames());
@@ -137,40 +155,39 @@ public class ZipStepTest {
 
   @Test
   public void overwritingAnExistingZipFileIsAnError() throws IOException {
-    File parent = tmp.newFolder();
+    File parent = tmp.newFolder("zipstep");
     File out = new File(parent, "output.zip");
 
     try (Zip zip = new Zip(out, true)) {
       zip.add("file1.txt", "");
     }
 
-    File toZip = tmp.newFolder();
 
-    ZipStep step = new ZipStep(out.getAbsolutePath(),
-        ImmutableSet.<String>of(),
+    ZipStep step = new ZipStep(
+        Paths.get("zipstep"),
+        ImmutableSet.<Path>of(),
         false,
         ZipStep.DEFAULT_COMPRESSION_LEVEL,
-        toZip);
-    int result = step.execute(TestExecutionContext.newInstance());
-
-    assertEquals(1, result);
+        Paths.get("zipdir"));
+    assertEquals(1, step.execute(executionContext));
   }
 
   @Test
   public void shouldBeAbleToJunkPaths() throws IOException {
-    File parent = tmp.newFolder();
+    File parent = tmp.newFolder("zipstep");
     File out = new File(parent, "output.zip");
 
-    File toZip = tmp.newFolder();
+    File toZip = tmp.newFolder("zipdir");
     assertTrue(new File(toZip, "child").mkdir());
     Files.touch(new File(toZip, "child/file1.txt"));
 
-    ZipStep step = new ZipStep(out.getAbsolutePath(),
-        ImmutableSet.<String>of(),
+    ZipStep step = new ZipStep(
+        Paths.get("zipstep/output.zip"),
+        ImmutableSet.<Path>of(),
         true,
         ZipStep.DEFAULT_COMPRESSION_LEVEL,
-        toZip);
-    step.execute(TestExecutionContext.newInstance());
+        Paths.get("zipdir"));
+    assertEquals(0, step.execute(executionContext));
 
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file1.txt"), zip.getFileNames());

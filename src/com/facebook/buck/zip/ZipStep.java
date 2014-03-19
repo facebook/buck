@@ -17,20 +17,22 @@
 package com.facebook.buck.zip;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_EXISTING;
-import static java.util.logging.Level.SEVERE;
 
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.DirectoryTraversal;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Set;
 
 /**
@@ -42,11 +44,11 @@ public class ZipStep implements Step {
   public static final int DEFAULT_COMPRESSION_LEVEL = 6;
   public static final int MAX_COMPRESSION_LEVEL = 9;
 
-  private final String absolutePathToZipFile;
-  private final ImmutableSet<String> paths;
+  private final Path pathToZipFile;
+  private final ImmutableSet<Path> paths;
   private final boolean junkPaths;
   private final int compressionLevel;
-  private final File baseDir;
+  private final Path baseDir;
 
 
   /**
@@ -57,25 +59,23 @@ public class ZipStep implements Step {
    * an archive containing just the file. If you were in {@code /} and added
    * {@code dir/file.txt}, you would get an archive containing the file within a directory.
    *
-   *
-   * @param absolutePathToZipFile path to archive to create.
-   * @param paths a set of files and/or directories to work on. The entire working directory is
-   *    assumed if this set is empty.
+   * @param pathToZipFile path to archive to create, relative to project root.
+   * @param paths a set of files to work on. The entire working directory is assumed if this set
+   *    is empty.
    * @param junkPaths if {@code true}, the relative paths of added archive entries are discarded,
    *    i.e. they are all placed in the root of the archive.
    * @param compressionLevel between 0 (store) and 9.
    * @param baseDir working directory for {@code zip} command.
-   *    If {@code null}, project directory root is used instead.
    */
   public ZipStep(
-      String absolutePathToZipFile,
-      Set<String> paths,
+      Path pathToZipFile,
+      Set<Path> paths,
       boolean junkPaths,
       int compressionLevel,
-      File baseDir) {
+      Path baseDir) {
     Preconditions.checkArgument(compressionLevel >= MIN_COMPRESSION_LEVEL &&
         compressionLevel <= MAX_COMPRESSION_LEVEL, "compressionLevel out of bounds.");
-    this.absolutePathToZipFile = Preconditions.checkNotNull(absolutePathToZipFile);
+    this.pathToZipFile = Preconditions.checkNotNull(pathToZipFile);
     this.paths = ImmutableSet.copyOf(Preconditions.checkNotNull(paths));
     this.junkPaths = junkPaths;
     this.compressionLevel = compressionLevel;
@@ -85,51 +85,47 @@ public class ZipStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    File original = new File(absolutePathToZipFile);
-    if (original.exists()) {
-      context.getBuckEventBus().post(
-          LogEvent.create(SEVERE, "Attempting to overwrite an existing zip: %s", original)
-      );
+    final ProjectFilesystem filesystem = context.getProjectFilesystem();
+    if (filesystem.exists(pathToZipFile)) {
+      context.postEvent(
+          LogEvent.severe("Attempting to overwrite an existing zip: %s", pathToZipFile));
       return 1;
     }
 
     try (
       BufferedOutputStream baseOut =
-          new BufferedOutputStream(new FileOutputStream(absolutePathToZipFile));
-      CustomZipOutputStream out = ZipOutputStreams.newOutputStream(baseOut, OVERWRITE_EXISTING);
-    ) {
-      DirectoryTraversal traversal = new DirectoryTraversal(baseDir) {
+          new BufferedOutputStream(filesystem.newFileOutputStream(pathToZipFile));
+      final CustomZipOutputStream out =
+          ZipOutputStreams.newOutputStream(baseOut, OVERWRITE_EXISTING)) {
 
+      final FileVisitor<Path> pathFileVisitor = new SimpleFileVisitor<Path>() {
         @Override
-        public void visit(File file, String relativePath) throws IOException {
-          if (!paths.isEmpty() && !paths.contains(relativePath)) {
-            return;
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attributes)
+            throws IOException {
+          if (!paths.isEmpty() && !paths.contains(file)) {
+            return FileVisitResult.CONTINUE;
           }
 
-          String name = junkPaths ? file.getName() : relativePath;
-          if (file.isDirectory()) {
-            // Lame.
-            name += "/";
-          }
-
-          CustomZipEntry entry = new CustomZipEntry(name);
-          entry.setTime(file.lastModified());
-          entry.setSize(file.length());
+          Path relativePath = junkPaths ? file.getFileName() : baseDir.relativize(file);
+          String entryName = relativePath.toString();
+          CustomZipEntry entry = new CustomZipEntry(entryName);
+          entry.setTime(attributes.lastModifiedTime().toMillis());
+          entry.setSize(attributes.size());
           entry.setCompressionLevel(compressionLevel);
 
           out.putNextEntry(entry);
-          Files.copy(file.toPath(), out);
+          Files.copy(filesystem.resolve(file), out);
           out.closeEntry();
+          return FileVisitResult.CONTINUE;
         }
       };
-
-      traversal.traverse();
-
-      return 0;
+      filesystem.walkRelativeFileTree(baseDir, pathFileVisitor);
     } catch (IOException e) {
+      context.logError(e, "Error creating zip file %s", pathToZipFile);
       return 1;
     }
 
+    return 0;
   }
 
   @Override
@@ -151,7 +147,7 @@ public class ZipStep implements Step {
     }
 
     // destination archive
-    args.append(absolutePathToZipFile).append(" ");
+    args.append(pathToZipFile.toString()).append(" ");
 
     // files to add to archive
     if (paths.isEmpty()) {
@@ -160,8 +156,8 @@ public class ZipStep implements Step {
       args.append(". ");
     } else {
       // Add specified paths, relative to workingDirectory.
-      for (String path : paths) {
-        args.append(path).append(" ");
+      for (Path path : paths) {
+        args.append(path.toString()).append(" ");
       }
     }
 
