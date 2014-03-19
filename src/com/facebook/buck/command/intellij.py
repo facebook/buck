@@ -238,7 +238,7 @@ def write_modules(modules, generate_minimum_project):
              }
     for exclude_folder in module['excludeFolders']:
       xml += '\n      <excludeFolder url="%s" />' % exclude_folder['url']
-    for exclude_folder in additional_excludes[module['pathToImlFile']]:
+    for exclude_folder in sorted(additional_excludes[module['pathToImlFile']]):
       normalized_dir = os.path.dirname(os.path.normpath(module['pathToImlFile']))
       xml += '\n      <excludeFolder url="file://$MODULE_DIR$/%s" />' % os.path.relpath(exclude_folder, normalized_dir)
     xml += '\n    </content>'
