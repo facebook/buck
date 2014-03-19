@@ -570,6 +570,6 @@ public class ProjectFilesystem {
       Path path = (Path) event.context();
       return path.toAbsolutePath().normalize().toString();
     }
-    return event.context().toString();
+    return String.valueOf(event.context());
   }
 }

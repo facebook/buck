@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -328,6 +329,15 @@ public class ProjectFilesystemTest {
             "b_file",
             "b_c_file",
             "b_d_file"));
+  }
+
+  @Test
+  public void whenContextNullThenCreateContextStringReturnsValidString() {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    assertThat(
+        "Context string should contain null.",
+        projectFilesystem.createContextString(WatchEvents.createOverflowEvent()),
+        Matchers.containsString("null"));
   }
 }
 
