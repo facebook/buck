@@ -58,7 +58,7 @@ java_library(
 java_test(
   name = 'cli',
   srcs = glob(STANDARD_TEST_SRCS),
-  resources = glob(['testdata/**/*']),
+  resources = glob(['testdata/**'], include_dotfiles=True),
   source_under_test = [
     '//src/com/facebook/buck/cli:cli',
   ],

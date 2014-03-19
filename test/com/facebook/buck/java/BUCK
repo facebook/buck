@@ -27,7 +27,7 @@ java_library(
 java_test(
   name = 'java',
   srcs = glob(['*Test.java']),
-  resources = glob(['testdata/**/*']),
+  resources = glob(['testdata/**'], include_dotfiles=True),
   source_under_test = [
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',

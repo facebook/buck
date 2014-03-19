@@ -3,7 +3,7 @@
 java_test(
   name = 'shell',
   srcs = glob(['*Test.java']),
-  resources = glob(['testdata/**/*']),
+  resources = glob(['testdata/**'], include_dotfiles=True),
   source_under_test = [
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/shell:steps',

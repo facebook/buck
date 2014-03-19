@@ -1,7 +1,7 @@
 java_test(
   name = 'junit',
   srcs = glob(['*.java']),
-  resources = glob(['testdata/**/*']),
+  resources = glob(['testdata/**'], include_dotfiles=True),
   source_under_test = [
     '//src/com/facebook/buck/junit:junit',
   ],

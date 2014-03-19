@@ -274,7 +274,7 @@ def glob_match(pattern, path, include_dotfiles=False):
   return glob_match_internal(include_dotfiles, tokens, chunks)
 
 @provide_for_build
-def glob(includes, excludes=[], include_dotfiles=True, build_env=None):
+def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
   search_base = build_env['BUILD_FILE_DIRECTORY']
 
   # Ensure the user passes lists of strings rather than just a string.

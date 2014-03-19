@@ -23,7 +23,7 @@ java_library(
 java_test(
   name = 'android',
   srcs = glob(STANDARD_TEST_SRCS),
-  resources = glob(['testdata/**/*']),
+  resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
     ':testutil',
     '//lib:easymock',

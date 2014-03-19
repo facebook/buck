@@ -1,7 +1,7 @@
 java_test(
   name = 'labels',
   srcs = glob(['*.java']),
-  resources = glob(['testdata/**/*']),
+  resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
     '//lib:guava',
     '//lib:hamcrest-core',
