@@ -318,7 +318,15 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getBuckEventBus(),
         options.getTargetDeviceOptional(),
         getCommandRunnerParams().getPlatform());
-    int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
+    int exitCode = 0;
+    try {
+      exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
+    } finally {
+      // Shutdown the Executor Service once the build completes.
+      // Note: we need to use shutdown() instead of shutdownNow() to ensure that tasks submitted to
+      // the Execution Service are completed.
+      build.getStepRunner().getListeningExecutorService().shutdown();
+    }
     if (exitCode != 0) {
       return exitCode;
     }
