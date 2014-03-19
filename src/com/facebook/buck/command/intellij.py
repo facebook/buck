@@ -137,7 +137,7 @@ def create_additional_excludes(modules):
       for part in normalized_iml.split(os.path.sep):
         current_directory = current_directory[part]
 
-    current_directory[CONTAINS_IML_MARKER] = module['pathToImlFile']
+    current_directory[CONTAINS_IML_MARKER] = module
 
   for root, dirs, _files in os.walk('.', topdown=True, followlinks=True):
     current_directory = module_tree
@@ -147,7 +147,22 @@ def create_additional_excludes(modules):
     highest_iml_file = None
     for part in normalized_root.split(os.path.sep):
       if CONTAINS_IML_MARKER in current_directory:
-        highest_iml_file = current_directory[CONTAINS_IML_MARKER]
+        module = current_directory[CONTAINS_IML_MARKER]
+        found_relevant_source_folder = False
+        for source_folder in module['sourceFolders']:
+          # If we find a module that specifies the directory as the source
+          # folder, then keep all folders under that module.
+          #
+          # TODO(royw): Be smarter here and actually keep track of the
+          # additional directories being tracked by sub modules.
+          if source_folder['url'] != 'file://$MODULE_DIR$/gen':
+            found_relevant_source_folder = True
+            break
+        # If we found a module containing subdirectories as sourceFolders,
+        # bail on trying to find a higher IML file.
+        if found_relevant_source_folder:
+          break
+        highest_iml_file = module['pathToImlFile']
       if part not in current_directory:
         if part != 'res' and highest_iml_file:
           additional_excludes[highest_iml_file].append(normalized_root)

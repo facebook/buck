@@ -83,7 +83,7 @@ public class ProjectIntegrationTest {
         this, "project_slice", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project", "//modules/dep1:dep1");
+    ProcessResult result = workspace.runBuckCommand("project", "//modules/dep1:dep1", "//:root");
     result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
@@ -98,6 +98,7 @@ public class ProjectIntegrationTest {
             ".idea/libraries/libs_junit_jar.xml",
             ".idea/modules.xml",
             ".idea/runConfigurations/Debug_Buck_test.xml",
+            "module_.iml",
             "modules/dep1/module_modules_dep1.iml"
         ) + '\n',
         result.getStdout());

@@ -1,0 +1,7 @@
+java_binary(
+  name = 'root',
+)
+
+project_config(
+  src_target = ':root',
+)
