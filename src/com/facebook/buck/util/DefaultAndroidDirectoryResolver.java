@@ -21,6 +21,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.StringTokenizer;
 
 /**
@@ -180,5 +181,27 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       }
     }
     return path;
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+
+    if (!(other instanceof DefaultAndroidDirectoryResolver)) {
+      return false;
+    }
+
+    DefaultAndroidDirectoryResolver that = (DefaultAndroidDirectoryResolver) other;
+
+    return Objects.equals(projectFilesystem, that.projectFilesystem) &&
+        Objects.equals(targetNdkVersion, that.targetNdkVersion) &&
+        Objects.equals(propertyFinder, that.propertyFinder);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(projectFilesystem, targetNdkVersion, propertyFinder);
   }
 }

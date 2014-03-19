@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -28,6 +30,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
@@ -39,7 +42,6 @@ import com.martiansoftware.nailgun.NGExitException;
 import com.martiansoftware.nailgun.NGInputStream;
 import com.martiansoftware.nailgun.NGSecurityManager;
 
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -224,7 +226,7 @@ public class DaemonIntegrationTest {
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertThat("Failure should have been due to BUCK file removal.", e.getMessage(),
-          Matchers.containsString(fileName));
+          containsString(fileName));
     }
   }
 
@@ -262,7 +264,7 @@ public class DaemonIntegrationTest {
       fail("Should have thrown HumanReadableException.");
     } catch (java.lang.RuntimeException e) {
       assertThat("Failure should have been due to file removal.", e.getMessage(),
-          Matchers.containsString(fileName));
+          containsString(fileName));
     }
   }
 
@@ -299,8 +301,42 @@ public class DaemonIntegrationTest {
     assertThat(
         "Failure should be due to syntax error.",
         result.getStderr(),
-        Matchers.containsString("SyntaxError: invalid syntax"));
+        containsString("SyntaxError: invalid syntax"));
     result.assertFailure();
+  }
+
+  @Test
+  public void whenBuckConfigChangesParserInvalidated()
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "file_watching", tmp);
+    workspace.setUp();
+
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
+
+    ProjectWorkspace.ProcessResult rebuild =
+        workspace.runBuckdCommand("build", "//java/com/example/activity:activity", "-v", "10");
+    rebuild.assertSuccess();
+
+    assertThat("Noop build should not have reparsed.",
+        rebuild.getStderr(),
+        not(containsString("Parsing")));
+
+    String buckConfigFilename = ".buckconfig";
+    String extraConfigOptions = Joiner.on("\n").join(
+        "[ndk]",
+        "    ndk_version = r9b",
+        "");
+
+    Files.append(extraConfigOptions, workspace.getFile(buckConfigFilename), Charsets.UTF_8);
+
+    rebuild =
+        workspace.runBuckdCommand("build", "//java/com/example/activity:activity", "-v", "10");
+    rebuild.assertSuccess();
+
+    assertThat("Changing .buckconfing should have forced a reparse.",
+        rebuild.getStderr(),
+        containsString("Parsing"));
   }
 
   private void waitForChange(final Path path) throws IOException {

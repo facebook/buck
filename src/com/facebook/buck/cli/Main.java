@@ -126,6 +126,7 @@ public final class Main {
   private final class Daemon implements Closeable {
 
     private final Parser parser;
+    private final AndroidDirectoryResolver androidDirectoryResolver;
     private final DefaultFileHashCache hashCache;
     private final EventBus fileEventBus;
     private final ProjectFilesystemWatcher filesystemWatcher;
@@ -134,17 +135,21 @@ public final class Main {
     private final Console console;
 
     public Daemon(ProjectFilesystem projectFilesystem,
+                  KnownBuildRuleTypes knownBuildRuleTypes,
+                  AndroidDirectoryResolver androidDirectoryResolver,
                   BuckConfig config,
                   Console console) throws IOException {
       this.config = Preconditions.checkNotNull(config);
       this.console = Preconditions.checkNotNull(console);
       this.hashCache = new DefaultFileHashCache(projectFilesystem, console);
       this.parser = new Parser(projectFilesystem,
-          KnownBuildRuleTypes.getDefault(),
+          knownBuildRuleTypes,
           console,
           config.getPythonInterpreter(),
           config.getTempFilePatterns(),
           createRuleKeyBuilderFactory(hashCache));
+      this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
+
       this.fileEventBus = new EventBus("file-change-events");
       this.filesystemWatcher = createWatcher(projectFilesystem);
       fileEventBus.register(parser);
@@ -201,6 +206,10 @@ public final class Main {
 
     private Parser getParser() {
       return parser;
+    }
+
+    private AndroidDirectoryResolver getAndroidDirectoryResolver() {
+      return androidDirectoryResolver;
     }
 
     private void watchClient(final NGContext context) {
@@ -279,11 +288,19 @@ public final class Main {
   /**
    * Get or create Daemon.
    */
-  private Daemon getDaemon(ProjectFilesystem filesystem,
-                           BuckConfig config,
-                           Console console) throws IOException {
+  private Daemon getDaemon(
+      ProjectFilesystem filesystem,
+      BuckConfig config,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      AndroidDirectoryResolver androidDirectoryResolver,
+      Console console) throws IOException {
     if (daemon == null) {
-      daemon = new Daemon(filesystem, config, console);
+      daemon = new Daemon(
+          filesystem,
+          knownBuildRuleTypes,
+          androidDirectoryResolver,
+          config,
+          console);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -296,10 +313,17 @@ public final class Main {
             filesystem.getProjectRoot(), parserRoot));
       }
 
-      // If Buck config has changed, invalidate the cache and create a new daemon.
-      if (!daemon.getConfig().equals(config)) {
+      // If Buck config or the AndroidDirectoryResolver has changed, invalidate the cache and
+      // create a new daemon.
+      if (!daemon.getConfig().equals(config) ||
+          !daemon.getAndroidDirectoryResolver().equals(androidDirectoryResolver)) {
         daemon.close();
-        daemon = new Daemon(filesystem, config, console);
+        daemon = new Daemon(
+            filesystem,
+            knownBuildRuleTypes,
+            androidDirectoryResolver,
+            config,
+            console);
       }
     }
     return daemon;
@@ -434,6 +458,22 @@ public final class Main {
     Clock clock = new DefaultClock();
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
 
+    // Configure the AndroidDirectoryResolver.
+    PropertyFinder propertyFinder = new DefaultPropertyFinder(projectFilesystem);
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new DefaultAndroidDirectoryResolver(
+            projectFilesystem,
+            config.getNdkVersion(),
+            propertyFinder);
+
+    // NOTE:  If any other variable is used when configuring buildRuleTypes, it MUST be passed down
+    // to the Daemon and implement equals/hashCode so we can invalidate the Parser if values used
+    // for configuring buildRuleTypes have changed between builds.
+    KnownBuildRuleTypes buildRuleTypes =
+        KnownBuildRuleTypes.getConfigured(config,
+            new ProcessExecutor(console),
+            androidDirectoryResolver);
+
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
     // be the last resource, so that it is closed first and can deliver its queued events to the
     // other resources before they are closed.
@@ -443,6 +483,8 @@ public final class Main {
       Optional<WebServer> webServer = getWebServerIfDaemon(context,
           projectFilesystem,
           config,
+          buildRuleTypes,
+          androidDirectoryResolver,
           console);
       eventListeners = addEventListeners(buildEventBus,
           projectFilesystem,
@@ -463,27 +505,16 @@ public final class Main {
       // running commands such as `buck clean`.
       ArtifactCacheFactory artifactCacheFactory = new LoggingArtifactCacheFactory(buildEventBus);
 
-      // Configure the AndroidDirectoryResolver.
-      PropertyFinder propertyFinder = new DefaultPropertyFinder(projectFilesystem);
-      AndroidDirectoryResolver androidDirectoryResolver =
-          new DefaultAndroidDirectoryResolver(
-              projectFilesystem,
-              config.getNdkVersion(),
-              propertyFinder);
-
       // Create or get Parser and invalidate cached command parameters.
       Parser parser;
-
-      KnownBuildRuleTypes buildRuleTypes =
-          KnownBuildRuleTypes.getConfigured(config,
-              new ProcessExecutor(console),
-              androidDirectoryResolver);
 
       if (isDaemon) {
         parser = getParserFromDaemon(
             context,
             projectFilesystem,
             config,
+            buildRuleTypes,
+            androidDirectoryResolver,
             console,
             commandEvent,
             buildEventBus);
@@ -542,11 +573,19 @@ public final class Main {
   private Parser getParserFromDaemon(
       Optional<NGContext> context,
       ProjectFilesystem projectFilesystem,
-      BuckConfig config, Console console,
+      BuckConfig config,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      AndroidDirectoryResolver androidDirectoryResolver,
+      Console console,
       CommandEvent commandEvent,
       BuckEventBus eventBus) throws IOException {
     // Wire up daemon to new client and console and get cached Parser.
-    Daemon daemon = getDaemon(projectFilesystem, config, console);
+    Daemon daemon = getDaemon(
+        projectFilesystem,
+        config,
+        knownBuildRuleTypes,
+        androidDirectoryResolver,
+        console);
     daemon.watchClient(context.get());
     daemon.watchFileSystem(console, commandEvent, eventBus);
     daemon.initWebServer();
@@ -557,9 +596,17 @@ public final class Main {
       Optional<NGContext> context,
       ProjectFilesystem projectFilesystem,
       BuckConfig config,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      AndroidDirectoryResolver androidDirectoryResolver,
       Console console) throws IOException {
     if (context.isPresent()) {
-      return getDaemon(projectFilesystem, config, console).getWebServer();
+      Daemon daemon = getDaemon(
+          projectFilesystem,
+          config,
+          knownBuildRuleTypes,
+          androidDirectoryResolver,
+          console);
+      return daemon.getWebServer();
     }
     return Optional.absent();
   }

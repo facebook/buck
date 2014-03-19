@@ -54,6 +54,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 
@@ -572,4 +573,27 @@ public class ProjectFilesystem {
     }
     return String.valueOf(event.context());
   }
+
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+
+    if (!(other instanceof ProjectFilesystem)) {
+      return false;
+    }
+
+    ProjectFilesystem that = (ProjectFilesystem) other;
+
+    return Objects.equals(projectRoot, that.projectRoot) &&
+        Objects.equals(ignorePaths, that.ignorePaths);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(projectRoot, ignorePaths);
+  }
+
 }

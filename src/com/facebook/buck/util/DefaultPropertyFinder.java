@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 public class DefaultPropertyFinder implements PropertyFinder {
@@ -117,5 +118,25 @@ public class DefaultPropertyFinder implements PropertyFinder {
       }
       return Optional.of(dirPath);
     }
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+
+    if (!(other instanceof DefaultPropertyFinder)) {
+      return false;
+    }
+
+    DefaultPropertyFinder that = (DefaultPropertyFinder) other;
+
+    return Objects.equals(projectFilesystem, that.projectFilesystem);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(projectFilesystem);
   }
 }
