@@ -2,6 +2,7 @@ java_library(
   name = 'project_generator',
   srcs = [
     'ProjectGenerator.java',
+    'ProjectParser.java',
     'SeparatedProjectsGenerator.java',
     'RuleDependencyFinder.java',
     'SchemeGenerator.java',

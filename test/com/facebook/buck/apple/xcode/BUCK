@@ -23,6 +23,7 @@ java_test(
     'ProjectGeneratorTest.java',
     'ProjectGeneratorTestUtils.java',
     'SeparatedProjectsGeneratorTest.java',
+    'ProjectParserTest.java',
   ],
   source_under_test = ['//src/com/facebook/buck/apple/xcode:project_generator'],
   deps = [
