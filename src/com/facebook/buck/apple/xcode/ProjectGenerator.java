@@ -89,7 +89,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -186,6 +188,7 @@ public class ProjectGenerator {
   private final ImmutableMultimap.Builder<String, ConfigInXcodeLayout>
     xcodeConfigurationLayersMultimapBuilder;
 
+  private ImmutableMap<String, String> targetNameToGIDMap;
 
   public ProjectGenerator(
       PartialGraph partialGraph,
@@ -243,6 +246,7 @@ public class ProjectGenerator {
 
   public void createXcodeProjects() throws IOException {
     try {
+      targetNameToGIDMap = buildTargetNameToGIDMap();
       Iterable<BuildRule> allRules = RuleDependencyFinder.getAllRules(partialGraph, initialTargets);
       ImmutableMap.Builder<BuildRule, PBXTarget> ruleToTargetMapBuilder = ImmutableMap.builder();
       for (BuildRule rule : allRules) {
@@ -290,21 +294,29 @@ public class ProjectGenerator {
     Preconditions.checkState(
         isBuiltByCurrentProject(rule),
         "should not generate rule if it shouldn't be built by current project");
+    Preconditions.checkNotNull(targetNameToGIDMap);
+    Optional<PBXTarget> result;
     if (rule.getType().equals(IosLibraryDescription.TYPE)) {
-      return Optional.of((PBXTarget) generateIosLibraryTarget(
+      result = Optional.of((PBXTarget) generateIosLibraryTarget(
           project, rule, (IosLibrary) rule.getBuildable()));
     } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
-      return Optional.of((PBXTarget) generateXcodeNativeTarget(
+      result = Optional.of((PBXTarget) generateXcodeNativeTarget(
           project, rule, (XcodeNative) rule.getBuildable()));
     } else if (rule.getType().equals(IosTestDescription.TYPE)) {
-      return Optional.of((PBXTarget) generateIosTestTarget(
+      result = Optional.of((PBXTarget) generateIosTestTarget(
           project, rule, (IosTest) rule.getBuildable()));
     } else if (rule.getType().equals(IosBinaryDescription.TYPE)) {
-      return Optional.of((PBXTarget) generateIOSBinaryTarget(
+      result = Optional.of((PBXTarget) generateIOSBinaryTarget(
           project, rule, (IosBinary) rule.getBuildable()));
     } else {
-      return Optional.absent();
+      result = Optional.absent();
     }
+
+    if (result.isPresent()) {
+      setTargetGIDIfNameInMap(result.get(), targetNameToGIDMap);
+    }
+
+    return result;
   }
 
   private PBXNativeTarget generateIosLibraryTarget(
@@ -839,7 +851,9 @@ public class ProjectGenerator {
    * Create the project bundle structure and write {@code project.pbxproj}.
    */
   private Path writeProjectFile(PBXProject project) throws IOException {
-    XcodeprojSerializer serializer = new XcodeprojSerializer(new GidGenerator(), project);
+    Preconditions.checkNotNull(targetNameToGIDMap);
+    XcodeprojSerializer serializer = new XcodeprojSerializer(
+        new GidGenerator(ImmutableSet.copyOf(targetNameToGIDMap.values())), project);
     NSDictionary rootObject = serializer.toPlist();
     Path xcodeprojDir = outputDirectory.resolve(projectName + ".xcodeproj");
     projectFilesystem.mkdirs(xcodeprojDir);
@@ -1069,6 +1083,54 @@ public class ProjectGenerator {
       throw new RuntimeException(e);
     }
     return filteredRules.build();
+  }
+
+  /**
+   * Once we've generated the target, check if there's already a GID for a
+   * target with the same name in an existing on-disk Xcode project.
+   *
+   * If there is, then re-use that target's GID instead of generating
+   * a new one based on the target's name.
+   */
+  private static void setTargetGIDIfNameInMap(
+      PBXTarget target,
+      ImmutableMap<String, String> targetNameToGIDMap) {
+    @Nullable String existingTargetGID = targetNameToGIDMap.get(target.getName());
+    if (existingTargetGID == null) {
+      return;
+    }
+
+    if (target.getGlobalID() == null) {
+      target.setGlobalID(existingTargetGID);
+    } else {
+      // We better not have already generated some other GID for this
+      // target.
+      Preconditions.checkState(target.getGlobalID().equals(existingTargetGID));
+    }
+  }
+
+  /**
+   * Reads in an existing Xcode project at
+   * "projectPath/project.pbxproj" and returns a map of {target-name:
+   * GID} pairs.
+   *
+   * If no such project exists, returns an empty map.
+   */
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  private ImmutableMap<String, String> buildTargetNameToGIDMap() throws IOException {
+    ImmutableMap.Builder<String, String> targetNameToGIDMapBuilder = ImmutableMap.builder();
+    try {
+      InputStream projectInputStream =
+        projectFilesystem.newFileInputStream(projectPath.resolve(Paths.get("project.pbxproj")));
+      NSDictionary projectObjects = ProjectParser.extractObjectsFromXcodeProject(
+          projectInputStream);
+      ProjectParser.extractTargetNameToGIDMap(
+          projectObjects,
+          targetNameToGIDMapBuilder);
+    } catch (NoSuchFileException e) {
+      // We'll leave the builder empty in this case and return an empty map.
+    }
+    return targetNameToGIDMapBuilder.build();
   }
 
   /**

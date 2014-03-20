@@ -26,10 +26,10 @@ import java.util.Set;
  * The GID is a 96 bit identifier that's unique on a per-project basis.
  */
 public class GidGenerator {
-  private final Set<String> generatedIds;
+  private final Set<String> generatedAndReservedIds;
 
-  public GidGenerator() {
-    generatedIds = Sets.newHashSet();
+  public GidGenerator(Set<String> reservedIds) {
+    generatedAndReservedIds = Sets.newHashSet(reservedIds);
   }
 
   /**
@@ -43,8 +43,8 @@ public class GidGenerator {
     String gid;
     do {
       gid = String.format("%08X%08X%08X", pbxClassName.hashCode(), hash, counter++);
-    } while (generatedIds.contains(gid));
-    generatedIds.add(gid);
+    } while (generatedAndReservedIds.contains(gid));
+    generatedAndReservedIds.add(gid);
     return gid;
   }
 }

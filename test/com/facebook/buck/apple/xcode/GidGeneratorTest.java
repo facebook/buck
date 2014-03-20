@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple.xcode;
 
+import com.google.common.collect.ImmutableSet;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
@@ -26,13 +28,21 @@ import org.junit.Test;
 public class GidGeneratorTest {
   @Test
   public void testTrivialGidGeneration() {
-    GidGenerator generator = new GidGenerator();
+    GidGenerator generator = new GidGenerator(ImmutableSet.<String>of());
     String gid = generator.generateGid("foo", 0);
     assertFalse("GID should be non-empty", gid.isEmpty());
     assertTrue("GID should be hexadecimal", gid.matches("^[0-9A-F]+$"));
     assertSame("GID should be 96 bits (24 hex digits)", gid.length(), 24);
 
     String gid1 = generator.generateGid("bla", 0);
+    assertNotEquals("The GID generator should avoid collisions", gid, gid1);
+  }
+
+  @Test
+  public void testTwoGidsWithSameClassNameAndHashDiffer() {
+    GidGenerator generator = new GidGenerator(ImmutableSet.<String>of());
+    String gid = generator.generateGid("foo", 0);
+    String gid1 = generator.generateGid("foo", 0);
     assertNotEquals("The GID generator should avoid collisions", gid, gid1);
   }
 }

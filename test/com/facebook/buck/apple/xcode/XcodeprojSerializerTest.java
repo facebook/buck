@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -30,7 +31,7 @@ public class XcodeprojSerializerTest {
   public void testEmptyProject() {
     PBXProject project = new PBXProject("TestProject");
     XcodeprojSerializer xcodeprojSerializer = new XcodeprojSerializer(
-        new GidGenerator(), project);
+        new GidGenerator(ImmutableSet.<String>of()), project);
     NSDictionary rootObject = xcodeprojSerializer.toPlist();
 
     assertEquals(project.getGlobalID(), ((NSString) rootObject.get("rootObject")).getContent());

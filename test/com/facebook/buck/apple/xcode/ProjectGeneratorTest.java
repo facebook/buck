@@ -858,6 +858,59 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
   }
 
+  @Test
+  public void targetGidShouldReuseIfNameMatchInExistingProject() throws IOException {
+    String projectData =
+      "// !$*UTF8*$!\n" +
+      "{\n" +
+      "  archiveVersion = 1;\n" +
+      "  classes = {};\n" +
+      "  objectVersion = 46;\n" +
+      "  objects = {\n" +
+      "    12345 /* libFoo.a */ = {isa = PBXFileReference; explicitFileType = " +
+      "      archive.ar; path = libFoo.a; sourceTree = BUILT_PRODUCTS_DIR; };\n" +
+      "    ABCDE /* //foo:lib */ = {\n" +
+      "      isa = PBXNativeTarget;\n" +
+      "      buildConfigurationList = 7CC5FDCE622E7F7B4F76AB38 /* Build configuration list for " +
+      "        PBXNativeTarget \"Foo\" */;\n" +
+      "      buildPhases = (\n" +
+      "      );\n" +
+      "      buildRules = (\n" +
+      "      );\n" +
+      "      dependencies = (\n" +
+      "      );\n" +
+      "      name = \"//foo:lib\";\n" +
+      "      productName = Foo;\n" +
+      "      productReference = 12345 /* libFoo.a */;\n" +
+      "      productType = \"com.apple.product-type.library.static\";\n" +
+      "    };\n" +
+      "  };\n" +
+      "}";
+    projectFilesystem.writeContentsToPath(projectData, OUTPUT_PROJECT_FILE_PATH);
+    BuildRuleParams params = new FakeBuildRuleParams(
+        new BuildTarget("//foo", "lib"), ImmutableSortedSet.<BuildRule>of());
+    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of();
+    arg.srcs = ImmutableList.of();
+    arg.frameworks = ImmutableSortedSet.of();
+
+    BuildRule rule = new DescribedRule(
+        IosLibraryDescription.TYPE,
+        iosLibraryDescription.createBuildable(params, arg), params);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    // Ensure the GID for the target is the same as the one previously on disk.
+    assertThat(target.getGlobalID(), equalTo("ABCDE"));
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       BuildRuleResolver resolver, ImmutableSet<BuildTarget> initialBuildTargets) {
     return createProjectGeneratorForCombinedProject(

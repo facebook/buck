@@ -40,6 +40,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
@@ -209,6 +210,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   @Override
   public InputStream newFileInputStream(Path pathRelativeToProjectRoot)
     throws IOException {
+    if (!exists(pathRelativeToProjectRoot)) {
+      throw new NoSuchFileException(pathRelativeToProjectRoot.toString());
+    }
     return new ByteArrayInputStream(fileContents.get(pathRelativeToProjectRoot.normalize()));
   }
 
