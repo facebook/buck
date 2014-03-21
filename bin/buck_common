@@ -12,9 +12,9 @@ function gitFetchFailed()
 function checkForAnt()
 {
   if [ -z `command -v ant` ]; then
-    echo "You do not have ant on your \$PATH. Cannot build Buck."
+    echo >&2 "You do not have ant on your \$PATH. Cannot build Buck."
     if [[ "$OSTYPE" =~ ^darwin ]] && [ ! -z `command -v brew` ]; then
-      echo "Try running 'brew install ant'."
+      echo >&2 "Try running 'brew install ant'."
     fi
     exit 1
   fi
@@ -22,12 +22,12 @@ function checkForAnt()
 
 function printAntFailedMessage()
 {
-    echo " :: 'ant' failed in the buck repo at $PWD."
+    echo >&2 " :: 'ant' failed in the buck repo at $PWD."
     if [ -d ".git" ]; then
-      echo " :: Try changing to that directory and running 'git clean -xfd'."
+      echo >&2 " :: Try changing to that directory and running 'git clean -xfd'."
     else
-      echo " :: Try changing to that directory and deleting the 'build' "
-      echo " :: directory."
+      echo >&2 " :: Try changing to that directory and deleting the 'build' "
+      echo >&2 " :: directory."
     fi
     exit 1
 }
@@ -83,9 +83,9 @@ elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
   # If the hash is in not in the user's repository, do a `git fetch`.
   if ! git cat-file -e "$BUCK_REQUIRED_VERSION"; then
     if [ -e "${BUCK_REQUIRED_BRANCH}" ]; then
-      git fetch --all || gitFetchFailed
+      git fetch --all >&2 || gitFetchFailed
     else
-      git fetch origin $BUCK_REQUIRED_BRANCH || gitFetchFailed
+      git fetch origin $BUCK_REQUIRED_BRANCH >&2 || gitFetchFailed
     fi
   fi
 
@@ -103,20 +103,20 @@ elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
   # Note that this test succeeds if you have local changes in your Buck repository that have not
   # been committed.
   if [ "$BUCK_REQUIRED_VERSION" != "$BUCK_CURRENT_VERSION" ]; then
-    echo "Buck is at ${BUCK_CURRENT_VERSION},"
-    echo "but should be ${BUCK_REQUIRED_VERSION}."
-    echo "Buck is updating itself."
-    echo "To disable this, add a '.nobuckcheck' file to your project root."
-    echo "In general, you should only disable this if you are developing Buck."
+    echo >&2 "Buck is at ${BUCK_CURRENT_VERSION},"
+    echo >&2 "but should be ${BUCK_REQUIRED_VERSION}."
+    echo >&2 "Buck is updating itself."
+    echo >&2 "To disable this, add a '.nobuckcheck' file to your project root."
+    echo >&2 "In general, you should only disable this if you are developing Buck."
 
     # Now that the version is guaranteed to be in the user's repository,
     # checkout that hash.
-    git checkout $BUCK_REQUIRED_VERSION
+    git checkout $BUCK_REQUIRED_VERSION >&2
 
     # Now that we have updated the repository, we should rebuild Buck.
     rm -f "$BUCK_SUCCESS_FILE"
     checkForAnt
-    ant clean
+    ant clean >&2
     if [ $? -ne 0 ]; then
       printAntFailedMessage
     fi
@@ -187,20 +187,20 @@ else
       if [ "${BUCK_REPOSITORY_LOCAL_CHANGES}" = "1" ] ; then
         # If the buck repo is dirty but has local changes, warn the user, but we
         # can't clean the repo for them.
-        echo ":: Your buck directory has local modifications, and therefore"
-        echo ":: builds will not be able to use a distributed cache."
-        echo ":: The following files must be either reverted or committed:"
-        git ls-files -m
+        echo >&2 ":: Your buck directory has local modifications, and therefore"
+        echo >&2 ":: builds will not be able to use a distributed cache."
+        echo >&2 ":: The following files must be either reverted or committed:"
+        git ls-files -m >&2
         BUCK_CLEAN_REPO_IF_DIRTY=N
       fi
       if [ -z "$BUCK_CLEAN_REPO_IF_DIRTY" ]; then
-        echo ":: Your local buck directory is dirty, and therefore builds will"
-        echo ":: not be able to use a distributed cache."
-        echo ":: Do you want to clean your buck directory? [y/N]"
+        echo >&2 ":: Your local buck directory is dirty, and therefore builds will"
+        echo >&2 ":: not be able to use a distributed cache."
+        echo >&2 ":: Do you want to clean your buck directory? [y/N]"
         read BUCK_CLEAN_REPO_IF_DIRTY
       fi
       if [[ "$(echo $BUCK_CLEAN_REPO_IF_DIRTY | tr '[:lower:]' '[:upper:]')" =~ ^Y.* ]]; then
-        git clean -fd
+        git clean -fd >&2
         # Restart buck just in case the files we just deleted in any way
         # affected this file.
         restartBuck $@
@@ -217,22 +217,22 @@ fi
 if [ ! -e "$BUCK_SUCCESS_FILE" ]; then
 
   if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCKD_PID_FILE" ]; then
-    echo "Killing buckd before building buck"
+    echo >&2 "Killing buckd before building buck"
     kill `cat "$BUCKD_PID_FILE"` || true
   fi
 
-  echo "Buck does not appear to have been built -- building Buck!"
+  echo >&2 "Buck does not appear to have been built -- building Buck!"
   checkForAnt
   (
     set -e
-    ant clean && ant
+    ant clean >&2 && ant >&2
   )
   if [ $? -ne 0 ]; then
     printAntFailedMessage
   fi
 
   if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCK_BIN_DIRECTORY}/buckd" ]; then
-    echo "Restarting buckd after building buck"
+    echo >&2 "Restarting buckd after building buck"
     "${BUCK_BIN_DIRECTORY}/buckd"
   fi
 fi
