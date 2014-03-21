@@ -15,9 +15,6 @@
  */
 
 package com.facebook.buck.step;
-
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -32,7 +29,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 import org.junit.Test;
@@ -58,9 +54,7 @@ public class DefaultStepRunnerTest {
         .setPlatform(Platform.detect())
         .build();
 
-    ListeningExecutorService executorService =
-        listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), 3));
-    DefaultStepRunner runner = new DefaultStepRunner(context, executorService);
+    DefaultStepRunner runner = new DefaultStepRunner(context, 3);
     runner.runStep(passingStep);
     try {
       runner.runStep(failingStep);
@@ -100,9 +94,7 @@ public class DefaultStepRunnerTest {
         .setPlatform(Platform.detect())
         .build();
 
-    ListeningExecutorService executorService =
-        listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), 3));
-    DefaultStepRunner runner = new DefaultStepRunner(context, executorService);
+    DefaultStepRunner runner = new DefaultStepRunner(context, 3);
     runner.runStepsInParallelAndWait(steps.build());
 
     // Success if the test timeout is not reached.
@@ -112,9 +104,7 @@ public class DefaultStepRunnerTest {
   public void testExplodingStep() {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    ListeningExecutorService executorService =
-        listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), 3));
-    DefaultStepRunner runner = new DefaultStepRunner(context, executorService);
+    DefaultStepRunner runner = new DefaultStepRunner(context, 3);
     try {
       runner.runStep(new ExplosionStep());
       fail("Should have thrown a StepFailedException!");

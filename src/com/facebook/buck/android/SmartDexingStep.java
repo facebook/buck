@@ -15,9 +15,6 @@
  */
 package com.facebook.buck.android;
 
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
-
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.ClasspathTraverser;
@@ -51,7 +48,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -78,7 +74,6 @@ public class SmartDexingStep implements Step {
   private final Path successDir;
   private final Optional<Integer> numThreads;
   private final EnumSet<DxStep.Option> dxOptions;
-  private ListeningExecutorService dxExecutor;
 
   /**
    * @param primaryOutputPath Path for the primary dex artifact.
@@ -121,27 +116,6 @@ public class SmartDexingStep implements Step {
     this.dxOptions = Preconditions.checkNotNull(dxOptions);
   }
 
-  static ListeningExecutorService createDxExecutor(Optional<Integer> numThreads) {
-    int numThreadsValue;
-    if (numThreads.isPresent()) {
-      Preconditions.checkArgument(numThreads.get() >= 1,
-          "Must specify at least 1 thread on which to run dx");
-      numThreadsValue = numThreads.get();
-    } else {
-      numThreadsValue = determineOptimalThreadCount();
-    }
-    return listeningDecorator(newMultiThreadExecutor(
-            SmartDexingStep.class.getSimpleName(),
-            numThreadsValue));
-  }
-
-  private ListeningExecutorService getDxExecutor() {
-    if (dxExecutor == null) {
-      dxExecutor = createDxExecutor(numThreads);
-    }
-    return dxExecutor;
-  }
-
   static int determineOptimalThreadCount() {
     return (int)(1.25 * Runtime.getRuntime().availableProcessors());
   }
@@ -168,15 +142,12 @@ public class SmartDexingStep implements Step {
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)
       throws StepFailedException, IOException {
-    DefaultStepRunner stepRunner = new DefaultStepRunner(context, getDxExecutor());
-
-    // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
-    // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
-    List<Step> dxSteps = generateDxCommands(context.getProjectFilesystem(), outputToInputs);
-    try {
+    try (DefaultStepRunner stepRunner =
+             new DefaultStepRunner(context, numThreads.or(determineOptimalThreadCount()))) {
+      // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
+      // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
+      List<Step> dxSteps = generateDxCommands(context.getProjectFilesystem(), outputToInputs);
       stepRunner.runStepsInParallelAndWait(dxSteps);
-    } finally {
-      stepRunner.getListeningExecutorService().shutdownNow();
     }
   }
 

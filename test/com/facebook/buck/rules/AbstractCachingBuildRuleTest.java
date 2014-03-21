@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static com.facebook.buck.rules.BuildRuleEvent.Finished;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
@@ -35,6 +36,7 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
@@ -46,6 +48,7 @@ import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -199,11 +202,9 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         .andReturn(CacheResult.MISS);
 
     // Set the requisite expectations to build the rule.
-    expect(context.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
     expect(context.getEventBus()).andReturn(buckEventBus).anyTimes();
     context.logBuildInfo("[BUILDING %s]", "//src/com/facebook/orca:orca");
-    StepRunner stepRunner = createMock(StepRunner.class);
-    expect(context.getStepRunner()).andReturn(stepRunner);
+    expect(context.getStepRunner()).andReturn(createSameThreadStepRunner()).anyTimes();
 
     // The dependent rule will be built immediately with a distinct rule key.
     expect(dep.build(context)).andReturn(
@@ -213,8 +214,12 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // Add a build step so we can verify that the steps are executed.
     Step buildStep = createMock(Step.class);
+    expect(buildStep.getDescription(anyObject(ExecutionContext.class)))
+        .andReturn("Some Description")
+        .anyTimes();
+    expect(buildStep.getShortName()).andReturn("Some Short Name").anyTimes();
+    expect(buildStep.execute(anyObject(ExecutionContext.class))).andReturn(0);
     buildSteps.add(buildStep);
-    stepRunner.runStepForBuildTarget(buildStep, buildTarget);
 
     // These methods should be invoked after the rule is built locally.
     buildInfoRecorder.recordArtifact(Paths.get(pathToOutputFile));
@@ -353,7 +358,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ false);
 
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
-    expect(buildContext.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
+    expect(buildContext.getStepRunner()).andReturn(createSameThreadStepRunner());
     expect(buildContext.getEventBus()).andReturn(buckEventBus).anyTimes();
 
     replayAll();
@@ -378,6 +383,17 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
             buckEventBus));
 
     verifyAll();
+  }
+
+  private StepRunner createSameThreadStepRunner() {
+
+    ExecutionContext executionContext = createMock(ExecutionContext.class);
+    expect(executionContext.getVerbosity()).andReturn(Verbosity.SILENT).anyTimes();
+    executionContext.postEvent(anyObject(BuckEvent.class));
+    expectLastCall().anyTimes();
+    return new DefaultStepRunner(
+        executionContext,
+        listeningDecorator(MoreExecutors.sameThreadExecutor()));
   }
 
   @Test
@@ -423,7 +439,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
 
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
-    expect(buildContext.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
+    expect(buildContext.getStepRunner()).andReturn(createSameThreadStepRunner());
     expect(buildContext.getEventBus()).andReturn(buckEventBus).anyTimes();
 
     replayAll();
@@ -465,8 +481,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         ImmutableList.of(step),
         /* pathToOutputFile */ null);
 
-    StepRunner stepRunner = createMock(StepRunner.class);
-    expect(stepRunner.getListeningExecutorService()).andReturn(MoreExecutors.sameThreadExecutor());
+    StepRunner stepRunner = createSameThreadStepRunner();
 
     // Mock out all of the disk I/O.
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);

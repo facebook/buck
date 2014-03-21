@@ -17,8 +17,8 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -46,5 +46,10 @@ public interface StepRunner {
 
   public void runStepsInParallelAndWait(final List<Step> steps) throws StepFailedException;
 
-  public ListeningExecutorService getListeningExecutorService();
+  /**
+   * Execute callback in a new thread, once dependencies have completed.
+   */
+  public <T> void addCallback(
+      ListenableFuture<List<T>> dependencies,
+      FutureCallback<List<T>> callback);
 }

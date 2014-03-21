@@ -21,19 +21,24 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
-public final class DefaultStepRunner implements StepRunner {
+public final class DefaultStepRunner implements StepRunner, Closeable {
 
   private final ExecutionContext context;
   private final ListeningExecutorService listeningExecutorService;
@@ -42,19 +47,21 @@ public final class DefaultStepRunner implements StepRunner {
    * This StepRunner will run all steps on the same thread.
    */
   public DefaultStepRunner(ExecutionContext context) {
-    this(context,
-        listeningDecorator(newMultiThreadExecutor(DefaultStepRunner.class.getSimpleName(), 1)));
+    this(context, 1);
   }
 
   public DefaultStepRunner(ExecutionContext context,
-                           ListeningExecutorService listeningExecutorService) {
-    this.context = Preconditions.checkNotNull(context);
-    this.listeningExecutorService = Preconditions.checkNotNull(listeningExecutorService);
+                           int numThreads) {
+    this(context, listeningDecorator(newMultiThreadExecutor("DefaultStepRunner", numThreads)));
   }
 
-  @Override
-  public ListeningExecutorService getListeningExecutorService() {
-    return listeningExecutorService;
+  @VisibleForTesting
+  public DefaultStepRunner(
+      ExecutionContext executionContext,
+      ListeningExecutorService listeningExecutorService) {
+    this.context = Preconditions.checkNotNull(executionContext);
+    this.listeningExecutorService = Preconditions.checkNotNull(listeningExecutorService);
+
   }
 
   @Override
@@ -135,7 +142,7 @@ public final class DefaultStepRunner implements StepRunner {
     });
 
     try {
-      MoreFutures.getAllUninterruptibly(getListeningExecutorService(), callables);
+      MoreFutures.getAllUninterruptibly(listeningExecutorService, callables);
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
       Throwables.propagateIfInstanceOf(cause, StepFailedException.class);
@@ -143,5 +150,17 @@ public final class DefaultStepRunner implements StepRunner {
       // Programmer error.  Boo-urns.
       throw new RuntimeException(cause);
     }
+  }
+
+  @Override
+  public <T> void addCallback(
+      ListenableFuture<List<T>> dependencies,
+      FutureCallback<List<T>> callback) {
+    Futures.addCallback(dependencies, callback, listeningExecutorService);
+  }
+
+  @Override
+  public void close() throws IOException {
+    listeningExecutorService.shutdown(); // Allow tasks to complete.
   }
 }

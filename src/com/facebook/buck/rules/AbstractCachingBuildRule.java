@@ -155,7 +155,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       ListenableFuture<List<BuildRuleSuccess>> allBuiltDeps = Futures.allAsList(builtDeps);
 
       // Schedule this rule to build itself once all of the deps are built.
-      Futures.addCallback(allBuiltDeps,
+      context.getStepRunner().addCallback(allBuiltDeps,
           new FutureCallback<List<BuildRuleSuccess>>() {
 
             private final BuckEventBus eventBus = context.getEventBus();
@@ -280,8 +280,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
                   result.getCacheResult(),
                   Optional.fromNullable(result.getSuccess())));
             }
-          },
-          context.getExecutor());
+          });
     } catch (Throwable failure) {
       // This is a defensive catch block: if buildRuleResult is never satisfied, then Buck will
       // hang because a callback that is waiting for this rule's future to complete will never be

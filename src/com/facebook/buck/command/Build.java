@@ -34,7 +34,6 @@ import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.AndroidPlatformTarget;
@@ -44,8 +43,8 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -53,7 +52,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-public class Build {
+public class Build implements Closeable {
 
   private final DependencyGraph dependencyGraph;
 
@@ -61,7 +60,7 @@ public class Build {
 
   private final ArtifactCache artifactCache;
 
-  private final StepRunner stepRunner;
+  private final DefaultStepRunner stepRunner;
 
   private final JavaPackageFinder javaPackageFinder;
 
@@ -80,7 +79,7 @@ public class Build {
       ProjectFilesystem projectFilesystem,
       AndroidDirectoryResolver androidDirectoryResolver,
       ArtifactCache artifactCache,
-      ListeningExecutorService listeningExecutorService,
+      int numThreads,
       JavaPackageFinder javaPackageFinder,
       Console console,
       long defaultTestTimeoutMillis,
@@ -107,7 +106,7 @@ public class Build {
         .setPlatform(platform)
         .build();
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
-    this.stepRunner = new DefaultStepRunner(executionContext, listeningExecutorService);
+    this.stepRunner = new DefaultStepRunner(executionContext, numThreads);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
   }
@@ -118,10 +117,6 @@ public class Build {
 
   public ExecutionContext getExecutionContext() {
     return executionContext;
-  }
-
-  public StepRunner getStepRunner() {
-    return stepRunner;
   }
 
   /** Returns null until {@link #executeBuild(Set)} is invoked. */
@@ -214,5 +209,10 @@ public class Build {
         .build();
 
     return Builder.getInstance().buildRules(rulesToBuild, buildContext);
+  }
+
+  @Override
+  public void close() throws IOException {
+    stepRunner.close();
   }
 }

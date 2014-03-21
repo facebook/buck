@@ -47,38 +47,39 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
     }
 
     // Make sure the target is built.
-    BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
-    BuildCommandOptions buildCommandOptions = new BuildCommandOptions(options.getBuckConfig());
-    buildCommandOptions.setArguments(ImmutableList.of(options.getTarget()));
-    int exitCode = buildCommand.runCommandWithOptions(buildCommandOptions);
-    if (exitCode != 0) {
-      return exitCode;
-    }
+    try (BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams())) {
+      BuildCommandOptions buildCommandOptions = new BuildCommandOptions(options.getBuckConfig());
+      buildCommandOptions.setArguments(ImmutableList.of(options.getTarget()));
+      int exitCode = buildCommand.runCommandWithOptions(buildCommandOptions);
+      if (exitCode != 0) {
+        return exitCode;
+      }
 
-    String targetName = options.getTarget();
-    BuildTarget target;
-    try {
-      target = getBuildTargets(ImmutableList.of(targetName)).get(0);
-    } catch (NoSuchBuildTargetException e) {
-      console.printBuildFailure(e.getMessage());
-      return 1;
-    }
+      String targetName = options.getTarget();
+      BuildTarget target;
+      try {
+        target = getBuildTargets(ImmutableList.of(targetName)).get(0);
+      } catch (NoSuchBuildTargetException e) {
+        console.printBuildFailure(e.getMessage());
+        return 1;
+      }
 
-    Build build = buildCommand.getBuild();
-    BuildRule targetRule = build.getDependencyGraph().findBuildRuleByTarget(target);
-    if (!(targetRule instanceof BinaryBuildRule)) {
-      console.printBuildFailure(
+      Build build = buildCommand.getBuild();
+      BuildRule targetRule = build.getDependencyGraph().findBuildRuleByTarget(target);
+      if (!(targetRule instanceof BinaryBuildRule)) {
+        console.printBuildFailure(
             "target " + targetName + " is not a binary rule (only binary rules can be `run`)"
-      );
-      return 1;
-    }
+        );
+        return 1;
+      }
 
-    ImmutableList<String> fullCommand = new ImmutableList.Builder<String>()
-        .addAll(((BinaryBuildRule)targetRule).getExecutableCommand(getProjectFilesystem()))
-        .addAll(options.getTargetArguments())
-        .build();
-    ShellStep step = new DefaultShellStep(fullCommand);
-    return step.execute(build.getExecutionContext());
+      ImmutableList<String> fullCommand = new ImmutableList.Builder<String>()
+          .addAll(((BinaryBuildRule)targetRule).getExecutableCommand(getProjectFilesystem()))
+          .addAll(options.getTargetArguments())
+          .build();
+      ShellStep step = new DefaultShellStep(fullCommand);
+      return step.execute(build.getExecutionContext());
+    }
   }
 
   @Override

@@ -44,8 +44,8 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
@@ -183,12 +183,13 @@ public class ExportFileTest {
           }
 
           @Override
-          public ListeningExecutorService getListeningExecutorService() {
-            return null;
+          public void runStepsInParallelAndWait(List<Step> steps) throws StepFailedException {
+            // Do nothing.
           }
 
           @Override
-          public void runStepsInParallelAndWait(List<Step> steps) throws StepFailedException {
+          public <T> void addCallback(
+              ListenableFuture<List<T>> allBuiltDeps, FutureCallback<List<T>> futureCallback) {
             // Do nothing.
           }
         })

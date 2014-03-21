@@ -38,12 +38,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
-  private Build build;
+import javax.annotation.Nullable;
+
+public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> implements Closeable {
+
+  @Nullable private Build build;
 
   private ImmutableList<BuildTarget> buildTargets = ImmutableList.of();
 
@@ -120,23 +124,9 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         getBuckEventBus(),
         Optional.<TargetDevice>absent(),
         getCommandRunnerParams().getPlatform());
-    int exitCode = 0;
-    try {
-      exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
-    } finally {
-      // Shutdown the Executor Service once the build completes.
-      // Note: we need to use shutdown() instead of shutdownNow() to ensure that tasks submitted to
-      // the Execution Service are completed.
-      build.getStepRunner().getListeningExecutorService().shutdown();
-    }
-
+    int exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
     getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
-
-    if (exitCode != 0) {
-      return exitCode;
-    }
-
-    return 0;
+    return exitCode;
   }
 
   static int executeBuildAndPrintAnyFailuresToConsole(Build build, Console console) {
@@ -192,4 +182,11 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     return "Specify one build rule to build.";
   }
 
+  @Override
+  public void close() throws IOException {
+    if (build != null) {
+      build.close();
+      build = null;
+    }
+  }
 }

@@ -16,9 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
-
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.ArtifactCache;
@@ -31,13 +28,11 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -53,8 +48,6 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       aliases = "-b",
       usage = "How to handle including dependencies")
   private BuildDependencies buildDependencies = null;
-
-  private ListeningExecutorService listeningExecutorService;
 
 
   @Argument
@@ -118,24 +111,12 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   }
 
 
-  @VisibleForTesting
   int getNumThreads() {
     return numThreads;
   }
 
   public BuildDependencies getBuildDependencies() {
     return buildDependenciesSupplier.get();
-  }
-
-  public ListeningExecutorService getListeningExecutorService() {
-    if (listeningExecutorService == null) {
-      listeningExecutorService = createListeningExecutorService();
-    }
-    return listeningExecutorService;
-  }
-
-  public ListeningExecutorService createListeningExecutorService() {
-    return listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), numThreads));
   }
 
   Build createBuild(BuckConfig buckConfig,
@@ -155,7 +136,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         projectFilesystem,
         androidDirectoryResolver,
         artifactCache,
-        getListeningExecutorService(),
+        getNumThreads(),
         getBuckConfig().createDefaultJavaPackageFinder(),
         console,
         buckConfig.getDefaultTestTimeoutMillis(),

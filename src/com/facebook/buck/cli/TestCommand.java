@@ -121,34 +121,35 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     }
 
-    BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
+    try (BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams())) {
 
-    int exitCode = buildCommand.runCommandWithOptions(options);
-    if (exitCode != 0) {
-      return exitCode;
+      int exitCode = buildCommand.runCommandWithOptions(options);
+      if (exitCode != 0) {
+        return exitCode;
+      }
+
+      Build build = buildCommand.getBuild();
+
+      Iterable<TestRule> results = getCandidateRules(build.getDependencyGraph());
+
+      results = filterTestRules(options, results);
+      if (options.isPrintMatchingTestRules()) {
+        printMatchingTestRules(console, results);
+        return 0;
+      }
+
+      BuildContext buildContext = build.getBuildContext();
+      ExecutionContext buildExecutionContext = build.getExecutionContext();
+      ExecutionContext testExecutionContext = ExecutionContext.builder().
+          setExecutionContext(buildExecutionContext).
+          setTargetDevice(options.getTargetDeviceOptional()).
+          build();
+
+      return runTestsAndShutdownExecutor(results,
+          buildContext,
+          testExecutionContext,
+          options);
     }
-
-    Build build = buildCommand.getBuild();
-
-    Iterable<TestRule> results = getCandidateRules(build.getDependencyGraph());
-
-    results = filterTestRules(options, results);
-    if (options.isPrintMatchingTestRules()) {
-      printMatchingTestRules(console, results);
-      return 0;
-    }
-
-    BuildContext buildContext = build.getBuildContext();
-    ExecutionContext buildExecutionContext = build.getExecutionContext();
-    ExecutionContext testExecutionContext = ExecutionContext.builder().
-        setExecutionContext(buildExecutionContext).
-        setTargetDevice(options.getTargetDeviceOptional()).
-        build();
-
-    return runTestsAndShutdownExecutor(results,
-        buildContext,
-        testExecutionContext,
-        options);
   }
 
   /**
@@ -308,8 +309,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Create artifact cache to initialize Cassandra connection, if appropriate.
     ArtifactCache artifactCache = getArtifactCache();
 
-    // Build all of the test rules.
-    Build build = options.createBuild(options.getBuckConfig(),
+    try (Build build = options.createBuild(options.getBuckConfig(),
         graph,
         getProjectFilesystem(),
         getAndroidDirectoryResolver(),
@@ -317,25 +317,20 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         console,
         getBuckEventBus(),
         options.getTargetDeviceOptional(),
-        getCommandRunnerParams().getPlatform());
-    int exitCode = 0;
-    try {
-      exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
-    } finally {
-      // Shutdown the Executor Service once the build completes.
-      // Note: we need to use shutdown() instead of shutdownNow() to ensure that tasks submitted to
-      // the Execution Service are completed.
-      build.getStepRunner().getListeningExecutorService().shutdown();
-    }
-    if (exitCode != 0) {
-      return exitCode;
-    }
+        getCommandRunnerParams().getPlatform())) {
 
-    // Once all of the rules are built, then run the tests.
-    return runTestsAndShutdownExecutor(testRules,
-        build.getBuildContext(),
-        build.getExecutionContext(),
-        options);
+      // Build all of the test rules.
+      int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
+      if (exitCode != 0) {
+        return exitCode;
+      }
+
+      // Once all of the rules are built, then run the tests.
+      return runTestsAndShutdownExecutor(testRules,
+          build.getBuildContext(),
+          build.getExecutionContext(),
+          options);
+    }
   }
 
   private void printMatchingTestRules(Console console, Iterable<TestRule> testRules) {
@@ -410,14 +405,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       BuildContext buildContext,
       ExecutionContext executionContext,
       TestCommandOptions options) throws IOException {
-    StepRunner stepRunner = new DefaultStepRunner(executionContext,
-        options.createListeningExecutorService());
-    try {
+
+    try (DefaultStepRunner stepRunner =
+            new DefaultStepRunner(executionContext, options.getNumThreads())) {
       return runTests(tests, buildContext, executionContext, stepRunner, options);
-    } finally {
-      // Note: we need to use shutdown() instead of shutdownNow() to ensure that tasks submitted to
-      // the Execution Service are completed.
-      stepRunner.getListeningExecutorService().shutdown();
     }
   }
 
