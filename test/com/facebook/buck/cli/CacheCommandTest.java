@@ -28,6 +28,7 @@ import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.Console;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.easymock.Capture;
@@ -72,7 +73,10 @@ public class CacheCommandTest extends EasyMockSupport {
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
     Capture<BuckEventBus> buckEventBus = new Capture<>();
-    expect(buckConfig.createCassandraArtifactCache(capture(buckEventBus))).andReturn(null);
+    expect(
+        buckConfig.createCassandraArtifactCache(
+            eq(Optional.<String>absent()),
+            capture(buckEventBus))).andReturn(null);
 
     replayAll();
 
@@ -108,7 +112,10 @@ public class CacheCommandTest extends EasyMockSupport {
             capture(new Capture<File>())))
         .andReturn(CacheResult.CASSANDRA_HIT);
     Capture<BuckEventBus> buckEventBus = new Capture<>();
-    expect(buckConfig.createCassandraArtifactCache(capture(buckEventBus))).andReturn(cassandra);
+    expect(
+        buckConfig.createCassandraArtifactCache(
+            eq(Optional.<String>absent()),
+            capture(buckEventBus))).andReturn(cassandra);
 
     replayAll();
 
@@ -143,7 +150,10 @@ public class CacheCommandTest extends EasyMockSupport {
             capture(new Capture<File>())))
         .andReturn(CacheResult.MISS);
     Capture<BuckEventBus> buckEventBus = new Capture<>();
-    expect(buckConfig.createCassandraArtifactCache(capture(buckEventBus))).andReturn(cassandra);
+    expect(
+        buckConfig.createCassandraArtifactCache(
+            eq(Optional.<String>absent()),
+            capture(buckEventBus))).andReturn(cassandra);
 
     replayAll();
 

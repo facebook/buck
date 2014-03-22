@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.rules.FakeProcessExecutor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -109,7 +110,8 @@ public class ShBinaryRuleIntegrationTest {
     // Verify contents of output.txt
     File outputFile = workspace.getFile("buck-out/gen/app/output.txt");
     List<String> lines = Files.readLines(outputFile, Charsets.US_ASCII);
-    ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
+    ExecutionEnvironment executionEnvironment =
+        new DefaultExecutionEnvironment(new FakeProcessExecutor());
     String expectedPlatform = executionEnvironment.getPlatform().getPrintableName();
     assertEquals(expectedPlatform, lines.get(0));
     assertEquals("arg1 arg2", lines.get(1));

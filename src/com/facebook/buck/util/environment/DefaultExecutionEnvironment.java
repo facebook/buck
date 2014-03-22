@@ -15,19 +15,32 @@
  */
 package com.facebook.buck.util.environment;
 
+import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.sun.management.OperatingSystemMXBean;
 
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DefaultExecutionEnvironment implements ExecutionEnvironment {
+  private static final String HARDWARE_PORT_WI_FI = "Hardware Port: Wi-Fi";
+  private static final Pattern DEVICE_PATTERN = Pattern.compile("Device: (\\w*)");
+  private static final Pattern SSID_PATTERN =
+      Pattern.compile("Current Wi\\-Fi Network: (.*)$", Pattern.MULTILINE);
   private static final long  MEGABYTE = 1024L * 1024L;
   private final Platform platform;
+  private final ProcessExecutor processExecutor;
 
-  public DefaultExecutionEnvironment() {
-    platform = Platform.detect();
+  public DefaultExecutionEnvironment(ProcessExecutor processExecutor) {
+    this.platform = Platform.detect();
+    this.processExecutor = Preconditions.checkNotNull(processExecutor);
   }
 
   @Override
@@ -61,5 +74,62 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   @Override
   public Platform getPlatform() {
     return platform;
+  }
+
+  @Override
+  public Optional<String> getWifiSsid() {
+    // TODO(royw): Support Linux and Windows.
+    if (getPlatform().equals(Platform.MACOS)) {
+      try {
+        ProcessExecutor.Result allNetworksResult = this.processExecutor.execute(
+            Runtime.getRuntime().exec("networksetup -listallhardwareports"));
+
+        if (allNetworksResult.getExitCode() == 0) {
+          String allNetworks = allNetworksResult.getStdout();
+          Optional<String> wifiNetwork = parseNetworksetupOutputForWifi(allNetworks);
+          if (wifiNetwork.isPresent()) {
+            ProcessExecutor.Result wifiNameResult = this.processExecutor.execute(
+                Runtime.getRuntime().exec("networksetup -getairportnetwork " + wifiNetwork.get()));
+
+            if (wifiNameResult.getExitCode() == 0) {
+              return parseWifiSsid(wifiNameResult.getStdout());
+            }
+          }
+        }
+      } catch (IOException e) {
+        return Optional.absent();
+      }
+    }
+    return Optional.absent();
+  }
+
+  @VisibleForTesting
+  static Optional<String> parseNetworksetupOutputForWifi(String listAllHardwareOutput) {
+    Iterable<String> lines = Splitter.on("\n")
+        .trimResults()
+        .omitEmptyStrings()
+        .split(listAllHardwareOutput);
+
+    boolean foundWifiLine = false;
+    for (String line : lines) {
+      if (line.equals(HARDWARE_PORT_WI_FI)) {
+        foundWifiLine = true;
+      } else if (foundWifiLine) {
+        Matcher match = DEVICE_PATTERN.matcher(line);
+        if (match.matches()) {
+          return Optional.of(match.group(1));
+        }
+      }
+    }
+    return Optional.absent();
+  }
+
+  @VisibleForTesting
+  static Optional<String> parseWifiSsid(String getAirportOutput) {
+    Matcher match = SSID_PATTERN.matcher(getAirportOutput);
+    if (match.find()) {
+      return Optional.of(match.group(1));
+    }
+    return Optional.absent();
   }
 }

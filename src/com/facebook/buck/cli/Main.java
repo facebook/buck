@@ -452,11 +452,13 @@ public final class Main {
       return BUSY_EXIT_CODE;
     }
 
+    ProcessExecutor processExecutor = new ProcessExecutor(console);
+
     int exitCode;
     ImmutableList<BuckEventListener> eventListeners;
     String buildId = MoreStrings.createRandomString();
     Clock clock = new DefaultClock();
-    ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
+    ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(processExecutor);
 
     // Configure the AndroidDirectoryResolver.
     PropertyFinder propertyFinder = new DefaultPropertyFinder(projectFilesystem);
@@ -470,8 +472,9 @@ public final class Main {
     // to the Daemon and implement equals/hashCode so we can invalidate the Parser if values used
     // for configuring buildRuleTypes have changed between builds.
     KnownBuildRuleTypes buildRuleTypes =
-        KnownBuildRuleTypes.getConfigured(config,
-            new ProcessExecutor(console),
+        KnownBuildRuleTypes.getConfigured(
+            config,
+            processExecutor,
             androidDirectoryResolver);
 
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
@@ -503,7 +506,8 @@ public final class Main {
 
       // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
       // running commands such as `buck clean`.
-      ArtifactCacheFactory artifactCacheFactory = new LoggingArtifactCacheFactory(buildEventBus);
+      ArtifactCacheFactory artifactCacheFactory =
+          new LoggingArtifactCacheFactory(executionEnvironment, buildEventBus);
 
       // Create or get Parser and invalidate cached command parameters.
       Parser parser;

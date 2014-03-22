@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeProcessExecutor;
 import com.facebook.buck.step.FakeStep;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.testutil.TestConsole;
@@ -93,7 +94,10 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableSet.<BuildTargetPattern>of());
 
     SuperConsoleEventBusListener listener =
-        new SuperConsoleEventBusListener(console, fakeClock, new DefaultExecutionEnvironment());
+        new SuperConsoleEventBusListener(
+            console,
+            fakeClock,
+            new DefaultExecutionEnvironment(new FakeProcessExecutor()));
     eventBus.register(listener);
 
     rawEventBus.post(configureTestEventAtTime(

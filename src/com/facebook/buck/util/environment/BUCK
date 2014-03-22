@@ -1,9 +1,23 @@
+PLATFORM_SRCS = [
+  'Platform.java',
+]
+
+java_library(
+  name = 'platform',
+  srcs = PLATFORM_SRCS,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 
 java_library(
   name = 'environment',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = PLATFORM_SRCS),
   deps = [
+    ':platform',
     '//lib:guava',
+    '//src/com/facebook/buck/util:io',
   ],
   visibility = [
     'PUBLIC',

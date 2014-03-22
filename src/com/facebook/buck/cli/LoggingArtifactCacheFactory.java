@@ -21,6 +21,7 @@ import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.LoggingArtifactCacheDecorator;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -38,8 +39,12 @@ public class LoggingArtifactCacheFactory implements ArtifactCacheFactory {
 
   private final BuckEventBus buckEventBus;
   private final List<ArtifactCache> createdArtifactCaches;
+  private final ExecutionEnvironment executionEnvironment;
 
-  public LoggingArtifactCacheFactory(BuckEventBus buckEventBus) {
+  public LoggingArtifactCacheFactory(
+      ExecutionEnvironment executionEnvironment,
+      BuckEventBus buckEventBus) {
+    this.executionEnvironment = Preconditions.checkNotNull(executionEnvironment);
     this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
     this.createdArtifactCaches = Lists.newArrayList();
   }
@@ -51,7 +56,9 @@ public class LoggingArtifactCacheFactory implements ArtifactCacheFactory {
     } else {
       buckEventBus.post(ArtifactCacheConnectEvent.started());
       ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buckEventBus)
-          .decorate(options.getBuckConfig().createArtifactCache(buckEventBus));
+          .decorate(options.getBuckConfig().createArtifactCache(
+                  executionEnvironment.getWifiSsid(),
+                  buckEventBus));
       buckEventBus.post(ArtifactCacheConnectEvent.finished());
       createdArtifactCaches.add(artifactCache);
       return artifactCache;

@@ -520,7 +520,9 @@ public class BuckConfig {
     }
   }
 
-  public ArtifactCache createArtifactCache(BuckEventBus buckEventBus) {
+  public ArtifactCache createArtifactCache(
+      Optional<String> currentWifiSsid,
+      BuckEventBus buckEventBus) {
     ImmutableList<String> modes = getArtifactCacheModes();
     if (modes.isEmpty()) {
       return new NoopArtifactCache();
@@ -535,7 +537,9 @@ public class BuckConfig {
           builder.add(dirArtifactCache);
           break;
         case cassandra:
-          ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(buckEventBus);
+          ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(
+              currentWifiSsid,
+              buckEventBus);
           if (cassandraArtifactCache != null) {
             builder.add(cassandraArtifactCache);
           }
@@ -588,11 +592,26 @@ public class BuckConfig {
   }
 
   /**
-   * Clients should use {@link #createArtifactCache(BuckEventBus)} unless it is expected that the
-   * user has defined a {@code cassandra} cache, and that it should be used exclusively.
+   * Clients should use {@link #createArtifactCache(Optional<String>, BuckEventBus)} unless it
+   * is expected that the user has defined a {@code cassandra} cache, and that it should be used
+   * exclusively.
    */
   @Nullable
-  CassandraArtifactCache createCassandraArtifactCache(BuckEventBus buckEventBus) {
+  CassandraArtifactCache createCassandraArtifactCache(
+      Optional<String> currentWifiSsid,
+      BuckEventBus buckEventBus) {
+    // cache.blacklisted_wifi_ssids
+    ImmutableSet<String> blacklistedWifi = ImmutableSet.copyOf(
+        Splitter.on(",")
+            .trimResults()
+            .omitEmptyStrings()
+            .split(getValue("cache", "blacklisted_wifi_ssids").or("")));
+    if (currentWifiSsid.isPresent() && blacklistedWifi.contains(currentWifiSsid.get())) {
+      // We're connected to a wifi hotspot that has been explicitly blacklisted from connecting to
+      // Cassandra.
+      return null;
+    }
+
     // cache.cassandra_mode
     String cacheCassandraMode = getValue("cache", "cassandra_mode").or(DEFAULT_CASSANDRA_MODE);
     final boolean doStore;

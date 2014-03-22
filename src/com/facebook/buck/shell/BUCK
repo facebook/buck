@@ -28,7 +28,7 @@ java_library(
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
-    '//src/com/facebook/buck/util/environment:environment',
+    '//src/com/facebook/buck/util/environment:platform',
   ],
   visibility = ['PUBLIC'],
 )
@@ -56,7 +56,7 @@ java_library(
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test:test',
-    '//src/com/facebook/buck/util/environment:environment',
+    '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',

@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.util.environment;
 
+import com.google.common.base.Optional;
+
 public interface ExecutionEnvironment {
 
   /**
@@ -41,4 +43,9 @@ public interface ExecutionEnvironment {
    * @return The current operating system.
    */
   public Platform getPlatform();
+
+  /**
+   * @return The SSID of the current wifi network if it can be determined.
+   */
+  public Optional<String> getWifiSsid();
 }

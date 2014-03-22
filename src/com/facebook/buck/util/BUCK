@@ -46,7 +46,7 @@ java_library(
   deps = [
     '//lib:guava',
     '//lib:jsr305',
-    '//src/com/facebook/buck/util/environment:environment',
+    '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/zip:stream',
   ],
   visibility = [ 'PUBLIC' ],
