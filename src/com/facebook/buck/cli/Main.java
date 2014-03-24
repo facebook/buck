@@ -701,7 +701,9 @@ public final class Main {
       Console console,
       Verbosity verbosity,
       ExecutionEnvironment executionEnvironment) {
-    if (console.getAnsi().isAnsiTerminal() && !verbosity.shouldPrintCommand()) {
+    if (console.getAnsi().isAnsiTerminal() &&
+        !verbosity.shouldPrintCommand() &&
+        verbosity.shouldPrintStandardInformation()) {
       SuperConsoleEventBusListener superConsole =
           new SuperConsoleEventBusListener(console, clock, executionEnvironment);
       superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
