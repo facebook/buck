@@ -47,70 +47,69 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
     }
 
     // Build the specified target.
-    try (BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams())) {
-      int exitCode = buildCommand.runCommandWithOptions(options);
+    BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
+    int exitCode = buildCommand.runCommandWithOptions(options);
+    if (exitCode != 0) {
+      return exitCode;
+    }
+
+    // Get the build rule that was built. Verify that it is an android_binary() rule.
+    Build build = buildCommand.getBuild();
+    DependencyGraph graph = build.getDependencyGraph();
+    BuildRule buildRule = graph.findBuildRuleByTarget(buildCommand.getBuildTargets().get(0));
+    if (!(buildRule instanceof InstallableApk)) {
+      console.printBuildFailure(String.format(
+          "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
+          buildRule.getFullyQualifiedName(),
+          buildRule.getType().getName()));
+      return 1;
+    }
+    InstallableApk installableApk = (InstallableApk)buildRule;
+
+    final AdbHelper adbHelper = new AdbHelper(
+        options.adbOptions(),
+        options.targetDeviceOptions(),
+        build.getExecutionContext(),
+        console,
+        getBuckEventBus(),
+        options.getBuckConfig());
+
+    // Uninstall the app first, if requested.
+    if (options.shouldUninstallFirst()) {
+      String packageName = AdbHelper.tryToExtractPackageNameFromManifest(installableApk);
+      adbHelper.uninstallApk(
+          packageName,
+          options.uninstallOptions());
+      // Perhaps the app wasn't installed to begin with, shouldn't stop us.
+    }
+
+    boolean installSuccess;
+    Optional<InstallableApk.ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
+    if (exopackageInfo.isPresent()) {
+      installSuccess = new ExopackageInstaller(
+          build.getExecutionContext(),
+          adbHelper,
+          installableApk)
+          .install();
+    } else {
+      installSuccess = adbHelper.installApk(installableApk, options);
+    }
+    if (!installSuccess) {
+      return 1;
+    }
+
+    // We've installed the application successfully.
+    // Is either of --activity or --run present?
+    if (options.shouldStartActivity()) {
+      exitCode = adbHelper.startActivity(
+          installableApk,
+          options.getActivityToStart());
       if (exitCode != 0) {
         return exitCode;
       }
-
-      // Get the build rule that was built. Verify that it is an android_binary() rule.
-      Build build = buildCommand.getBuild();
-      DependencyGraph graph = build.getDependencyGraph();
-      BuildRule buildRule = graph.findBuildRuleByTarget(buildCommand.getBuildTargets().get(0));
-      if (!(buildRule instanceof InstallableApk)) {
-        console.printBuildFailure(String.format(
-            "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
-            buildRule.getFullyQualifiedName(),
-            buildRule.getType().getName()));
-        return 1;
-      }
-      InstallableApk installableApk = (InstallableApk)buildRule;
-
-      final AdbHelper adbHelper = new AdbHelper(
-          options.adbOptions(),
-          options.targetDeviceOptions(),
-          build.getExecutionContext(),
-          console,
-          getBuckEventBus(),
-          options.getBuckConfig());
-
-      // Uninstall the app first, if requested.
-      if (options.shouldUninstallFirst()) {
-        String packageName = AdbHelper.tryToExtractPackageNameFromManifest(installableApk);
-        adbHelper.uninstallApk(
-            packageName,
-            options.uninstallOptions());
-      // Perhaps the app wasn't installed to begin with, shouldn't stop us.
-      }
-
-      boolean installSuccess;
-      Optional<InstallableApk.ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
-      if (exopackageInfo.isPresent()) {
-        installSuccess = new ExopackageInstaller(
-            build.getExecutionContext(),
-            adbHelper,
-            installableApk)
-            .install();
-      } else {
-        installSuccess = adbHelper.installApk(installableApk, options);
-      }
-      if (!installSuccess) {
-        return 1;
-      }
-
-      // We've installed the application successfully.
-      // Is either of --activity or --run present?
-      if (options.shouldStartActivity()) {
-        exitCode = adbHelper.startActivity(
-            installableApk,
-            options.getActivityToStart());
-        if (exitCode != 0) {
-          return exitCode;
-        }
-      }
-
-      return exitCode;
     }
+
+    return exitCode;
   }
 
   @Override

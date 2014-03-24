@@ -121,35 +121,34 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     }
 
-    try (BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams())) {
+    BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
 
-      int exitCode = buildCommand.runCommandWithOptions(options);
-      if (exitCode != 0) {
-        return exitCode;
-      }
-
-      Build build = buildCommand.getBuild();
-
-      Iterable<TestRule> results = getCandidateRules(build.getDependencyGraph());
-
-      results = filterTestRules(options, results);
-      if (options.isPrintMatchingTestRules()) {
-        printMatchingTestRules(console, results);
-        return 0;
-      }
-
-      BuildContext buildContext = build.getBuildContext();
-      ExecutionContext buildExecutionContext = build.getExecutionContext();
-      ExecutionContext testExecutionContext = ExecutionContext.builder().
-          setExecutionContext(buildExecutionContext).
-          setTargetDevice(options.getTargetDeviceOptional()).
-          build();
-
-      return runTestsAndShutdownExecutor(results,
-          buildContext,
-          testExecutionContext,
-          options);
+    int exitCode = buildCommand.runCommandWithOptions(options);
+    if (exitCode != 0) {
+      return exitCode;
     }
+
+    Build build = buildCommand.getBuild();
+
+    Iterable<TestRule> results = getCandidateRules(build.getDependencyGraph());
+
+    results = filterTestRules(options, results);
+    if (options.isPrintMatchingTestRules()) {
+      printMatchingTestRules(console, results);
+      return 0;
+    }
+
+    BuildContext buildContext = build.getBuildContext();
+    ExecutionContext buildExecutionContext = build.getExecutionContext();
+    ExecutionContext testExecutionContext = ExecutionContext.builder().
+        setExecutionContext(buildExecutionContext).
+        setTargetDevice(options.getTargetDeviceOptional()).
+        build();
+
+    return runTestsAndShutdownExecutor(results,
+        buildContext,
+        testExecutionContext,
+        options);
   }
 
   /**

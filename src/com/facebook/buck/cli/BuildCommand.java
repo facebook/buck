@@ -38,14 +38,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
-public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> implements Closeable {
+public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   @Nullable private Build build;
 
@@ -124,7 +123,12 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> imp
         getBuckEventBus(),
         Optional.<TargetDevice>absent(),
         getCommandRunnerParams().getPlatform());
-    int exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
+    int exitCode = 0;
+    try {
+      exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
+    } finally {
+      build.close(); // Can't use try-with-resources as build is returned by getBuild.
+    }
     getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
     return exitCode;
   }
@@ -180,13 +184,5 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> imp
   @Override
   String getUsageIntro() {
     return "Specify one build rule to build.";
-  }
-
-  @Override
-  public void close() throws IOException {
-    if (build != null) {
-      build.close();
-      build = null;
-    }
   }
 }

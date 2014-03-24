@@ -116,15 +116,14 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
       // Build initial targets.
       if (options.hasInitialTargets() || !additionalInitialTargets.isEmpty()) {
-        try (BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams())) {
-          BuildCommandOptions buildOptions =
-              options.createBuildCommandOptionsWithInitialTargets(additionalInitialTargets);
+        BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
+        BuildCommandOptions buildOptions =
+            options.createBuildCommandOptionsWithInitialTargets(additionalInitialTargets);
 
 
-          exitCode = runBuildCommand(buildCommand, buildOptions);
-          if (exitCode != 0) {
-            return exitCode;
-          }
+        exitCode = runBuildCommand(buildCommand, buildOptions);
+        if (exitCode != 0) {
+          return exitCode;
         }
       }
     } finally {
