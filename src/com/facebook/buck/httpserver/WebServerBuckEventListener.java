@@ -17,6 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -40,7 +41,7 @@ public class WebServerBuckEventListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(String buildId) {}
+  public void outputTrace(BuildId buildId) {}
 
   @Subscribe
   public void parseStarted(ParseEvent.Started started) {

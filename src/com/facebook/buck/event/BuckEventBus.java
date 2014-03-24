@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.event;
 
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.concurrent.MoreExecutors;
@@ -47,10 +48,10 @@ public class BuckEventBus implements Closeable {
   private final ExecutorService executorService;
   private final AsyncEventBus eventBus;
   private final Supplier<Long> threadIdSupplier;
-  private final String buildId;
+  private final BuildId buildId;
   private final int shutdownTimeoutMillis;
 
-  public BuckEventBus(Clock clock, String buildId) {
+  public BuckEventBus(Clock clock, BuildId buildId) {
     this(clock,
         MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
         buildId,
@@ -60,7 +61,7 @@ public class BuckEventBus implements Closeable {
   @VisibleForTesting
   BuckEventBus(Clock clock,
                ExecutorService executorService,
-               String buildId,
+               BuildId buildId,
                int shutdownTimeoutMillis) {
     this.clock = Preconditions.checkNotNull(clock);
     this.executorService = Preconditions.checkNotNull(executorService);
@@ -109,7 +110,7 @@ public class BuckEventBus implements Closeable {
    * <p>
    * In practice, this should be a short string, because it may be sent over the wire frequently.
    */
-  public String getBuildId() {
+  public BuildId getBuildId() {
     return buildId;
   }
 

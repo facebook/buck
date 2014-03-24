@@ -25,6 +25,7 @@ import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -41,7 +42,6 @@ import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
@@ -456,7 +456,7 @@ public final class Main {
 
     int exitCode;
     ImmutableList<BuckEventListener> eventListeners;
-    String buildId = MoreStrings.createRandomString();
+    BuildId buildId = new BuildId();
     Clock clock = new DefaultClock();
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(processExecutor);
 

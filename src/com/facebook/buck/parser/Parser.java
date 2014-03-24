@@ -26,6 +26,7 @@ import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.model.BuildFileTree;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
@@ -41,7 +42,6 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
@@ -154,8 +154,8 @@ public class Parser {
   static class BuildFileTreeCache implements InputSupplier<BuildFileTree> {
     private final InputSupplier<BuildFileTree> supplier;
     @Nullable private BuildFileTree buildFileTree;
-    private String currentBuildId = MoreStrings.createRandomString();
-    private String buildTreeBuildId = MoreStrings.createRandomString();
+    private BuildId currentBuildId = new BuildId();
+    private BuildId buildTreeBuildId = new BuildId();
 
     /**
      * @param buildFileTreeSupplier each call to get() must reconstruct the tree from disk.

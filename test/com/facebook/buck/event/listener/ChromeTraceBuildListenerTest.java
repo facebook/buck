@@ -28,6 +28,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.TraceEventLogger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -138,7 +139,7 @@ public class ChromeTraceBuildListenerTest {
     ImmutableList<BuildTarget> buildTargets = ImmutableList.of(target);
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock,
-        "ChromeTraceBuildListenerTestBuildId");
+        new BuildId("ChromeTraceBuildListenerTestBuildId"));
     Supplier<Long> threadIdSupplier = BuckEventBusFactory.getThreadIdSupplierFor(eventBus);
     EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
     eventBus.register(listener);
@@ -190,7 +191,7 @@ public class ChromeTraceBuildListenerTest {
         ImmutableList.of("arg1", "arg2"),
         /* isDaemon */ true,
         /* exitCode */ 0));
-    listener.outputTrace("BUILD_ID");
+    listener.outputTrace(new BuildId("BUILD_ID"));
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BUCK_TRACE_DIR + "/build.trace");
 

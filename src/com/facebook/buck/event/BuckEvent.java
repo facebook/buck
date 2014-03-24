@@ -16,12 +16,13 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.model.BuildId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 
 public interface BuckEvent {
   @VisibleForTesting
-  void configure(long timestamp, long nanoTime, long threadId, String buildId);
+  void configure(long timestamp, long nanoTime, long threadId, BuildId buildId);
 
   long getTimestamp();
 
@@ -34,7 +35,7 @@ public interface BuckEvent {
   /**
    * @return an identifier that distinguishes the build with which this event is associated.
    */
-  String getBuildId();
+  BuildId getBuildId();
 
   /**
    * @return Whether or not this event is a pair of another event.  Events that are pairs if they

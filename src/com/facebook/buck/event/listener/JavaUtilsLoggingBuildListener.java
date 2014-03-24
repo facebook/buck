@@ -17,6 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.BuckConstant;
@@ -99,7 +100,7 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(String buildId) {
+  public void outputTrace(BuildId buildId) {
     closeLogFile();
   }
 

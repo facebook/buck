@@ -37,6 +37,7 @@ import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.model.BuildFileTree;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -999,7 +1000,7 @@ public class ParserTest extends EasyMockSupport {
       throws IOException {
     BuckEvent mockEvent = createMock(BuckEvent.class);
     expect(mockEvent.getEventName()).andReturn("CommandStarted").anyTimes();
-    expect(mockEvent.getBuildId()).andReturn("BUILD1");
+    expect(mockEvent.getBuildId()).andReturn(new BuildId("BUILD1"));
     BuildFileTree mockBuildFileTree = createMock(BuildFileTree.class);
     InputSupplier<BuildFileTree> mockSupplier = createMock(InputSupplier.class);
     expect(mockSupplier.getInput()).andReturn(mockBuildFileTree).once();
@@ -1019,8 +1020,8 @@ public class ParserTest extends EasyMockSupport {
       throws IOException {
     BuckEvent mockEvent = createMock(BuckEvent.class);
     expect(mockEvent.getEventName()).andReturn("CommandStarted").anyTimes();
-    expect(mockEvent.getBuildId()).andReturn("BUILD1");
-    expect(mockEvent.getBuildId()).andReturn("BUILD2");
+    expect(mockEvent.getBuildId()).andReturn(new BuildId("BUILD1"));
+    expect(mockEvent.getBuildId()).andReturn(new BuildId("BUILD2"));
     BuildFileTree mockBuildFileTree = createMock(BuildFileTree.class);
     InputSupplier<BuildFileTree> mockSupplier = createMock(InputSupplier.class);
     expect(mockSupplier.getInput()).andReturn(mockBuildFileTree).times(2);

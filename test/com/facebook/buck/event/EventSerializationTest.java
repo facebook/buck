@@ -18,6 +18,7 @@ package com.facebook.buck.event;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -60,7 +61,7 @@ public class EventSerializationTest {
   private long timestamp;
   private long nanoTime;
   private long threadId;
-  private String buildId;
+  private BuildId buildId;
 
   @Before
   public void setUp() {
@@ -68,7 +69,7 @@ public class EventSerializationTest {
     timestamp = clock.currentTimeMillis();
     nanoTime = clock.nanoTime();
     threadId = 0;
-    buildId = "Test";
+    buildId = new BuildId("Test");
   }
 
   @Test

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.model.BuildId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -33,7 +34,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   private long timestamp;
   private long nanoTime;
   private long threadId;
-  private String buildId;
+  private BuildId buildId;
 
   protected AbstractBuckEvent() {
     isConfigured = false;
@@ -45,7 +46,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
    */
   @Override
   @VisibleForTesting
-  public void configure(long timestamp, long nanoTime, long threadId, String buildId) {
+  public void configure(long timestamp, long nanoTime, long threadId, BuildId buildId) {
     Preconditions.checkState(!isConfigured, "Events can only be configured once.");
     this.timestamp = timestamp;
     this.nanoTime = nanoTime;
@@ -78,7 +79,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   }
 
   @Override
-  public String getBuildId() {
+  public BuildId getBuildId() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
     return buildId;
   }

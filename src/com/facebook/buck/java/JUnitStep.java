@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
@@ -64,7 +65,7 @@ public class JUnitStep extends ShellStep {
 
   private final boolean isDebugEnabled;
 
-  private final String buildId;
+  private final BuildId buildId;
 
   private Optional<TestSelectorList> testSelectorListOptional;
 
@@ -102,7 +103,7 @@ public class JUnitStep extends ShellStep {
       boolean isCodeCoverageEnabled,
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
-      String buildId,
+      BuildId buildId,
       Optional<TestSelectorList> testSelectorListOptional) {
     this(classpathEntries,
         testClassNames,
@@ -126,7 +127,7 @@ public class JUnitStep extends ShellStep {
       boolean isCodeCoverageEnabled,
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
-      String buildId,
+      BuildId buildId,
       Optional<TestSelectorList> testSelectorListOptional,
       String testRunnerClassesDirectory) {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);

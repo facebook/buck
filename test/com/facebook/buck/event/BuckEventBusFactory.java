@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,7 +38,7 @@ import java.util.List;
  */
 public class BuckEventBusFactory {
 
-  public static final String BUILD_ID_FOR_TEST = "CAFEBABE";
+  public static final BuildId BUILD_ID_FOR_TEST = new BuildId("CAFEBABE");
 
   /** Utility class: do not instantiate. */
   private BuckEventBusFactory() {}
@@ -56,7 +57,7 @@ public class BuckEventBusFactory {
    * This registers an {@link ErrorListener}. This is helpful when errors are logged during tests
    * that would not otherwise be noticed.
    */
-  public static BuckEventBus newInstance(Clock clock, String buildId) {
+  public static BuckEventBus newInstance(Clock clock, BuildId buildId) {
     BuckEventBus buckEventBus = new BuckEventBus(clock,
         MoreExecutors.sameThreadExecutor(),
         buildId,

@@ -19,6 +19,7 @@ import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.timing.Clock;
@@ -176,7 +177,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Override
-  public void outputTrace(String buildId) {}
+  public void outputTrace(BuildId buildId) {}
 
   @Override
   public void close() throws IOException {

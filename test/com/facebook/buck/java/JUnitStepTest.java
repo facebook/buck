@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -52,7 +53,7 @@ public class JUnitStepTest {
     String vmArg2 = "-Dname1=value2";
     List<String> vmArgs = ImmutableList.of(vmArg1, vmArg2);
 
-    String pretendBuildId = "pretend-build-id";
+    BuildId pretendBuildId = new BuildId("pretend-build-id");
     String buildIdArg = String.format("-D%s=%s", JUnitStep.BUILD_ID_PROPERTY, pretendBuildId);
 
     String directoryForTestResults = "buck-out/gen/theresults/";
@@ -111,7 +112,7 @@ public class JUnitStepTest {
     String vmArg2 = "-Dname1=value2";
     List<String> vmArgs = ImmutableList.of(vmArg1, vmArg2);
 
-    String pretendBuildId = "pretend-build-id";
+    BuildId pretendBuildId = new BuildId("pretend-build-id");
     String buildIdArg = String.format("-D%s=%s", JUnitStep.BUILD_ID_PROPERTY, pretendBuildId);
 
     String directoryForTestResults = "buck-out/gen/theresults/";
