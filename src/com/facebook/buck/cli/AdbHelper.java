@@ -298,7 +298,7 @@ public class AdbHelper {
     // Report results.
     if (successCount > 0) {
       console.printSuccess(
-          String.format("Succesfully ran %s on %d device(s)", adbCallable, successCount));
+          String.format("Successfully ran %s on %d device(s)", adbCallable, successCount));
     }
     if (failureCount > 0) {
       console.printBuildFailure(
