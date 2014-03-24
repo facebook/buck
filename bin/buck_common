@@ -196,8 +196,13 @@ else
       if [ -z "$BUCK_CLEAN_REPO_IF_DIRTY" ]; then
         echo >&2 ":: Your local buck directory is dirty, and therefore builds will"
         echo >&2 ":: not be able to use a distributed cache."
-        echo >&2 ":: Do you want to clean your buck directory? [y/N]"
-        read BUCK_CLEAN_REPO_IF_DIRTY
+        # Only read from stdin if we're talking to an interactive
+        # terminal. Otherwise, the script will appear to hang forever
+        # as it reads from stdin with no human being on the other side.
+        if [ -t 1 ]; then
+            echo >&2 ":: Do you want to clean your buck directory? [y/N]"
+            read BUCK_CLEAN_REPO_IF_DIRTY
+        fi
       fi
       if [[ "$(echo $BUCK_CLEAN_REPO_IF_DIRTY | tr '[:lower:]' '[:upper:]')" =~ ^Y.* ]]; then
         git clean -fd >&2
