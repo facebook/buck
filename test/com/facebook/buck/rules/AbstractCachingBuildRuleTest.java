@@ -28,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -230,6 +231,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     replayAll();
     BuildRuleSuccess result = cachingRule.build(context).get();
     assertEquals(BuildRuleSuccess.Type.BUILT_LOCALLY, result.getType());
+    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
     verifyAll();
 
     assertEquals(expectedRuleKeyHash, ruleKeyForRecorder.getValue().toString());
@@ -302,6 +304,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     BuildRuleSuccess result = cachingBuildRule.build(buildContext).get();
     assertEquals(result.getType(), BuildRuleSuccess.Type.BUILT_LOCALLY);
+    eventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
     MoreAsserts.assertListEquals(Lists.newArrayList("Step was executed."), strings);
 
     Finished finishedEvent = null;
@@ -314,7 +317,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     assertEquals(CacheResult.SKIP, finishedEvent.getCacheResult());
   }
 
-   /**
+  /**
    * Rebuild a rule where one if its dependencies has been modified such that its RuleKey has
    * changed, but its ABI is the same.
    */
@@ -349,7 +352,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
              new RuleKey(TestAbstractCachingBuildRule.RULE_KEY_WITHOUT_DEPS_HASH))
          // Similarly, the ABI key for the deps in memory should be the same as the one on disk.
         .putMetadata(
-            AbstractCachingBuildRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+            CachingBuildEngine.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
             TestAbstractCachingBuildRule.ABI_KEY_FOR_DEPS_HASH)
         .putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA,
             "At some point, this method call should go away.");
@@ -367,6 +370,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     assertTrue("We expect build() to be synchronous in this case, " +
                "so the future should already be resolved.",
                MoreFutures.isSuccess(result));
+    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
 
     BuildRuleSuccess success = result.get();
     assertEquals(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS, success.getType());
@@ -432,7 +436,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // This metadata must be added to the buildInfoRecorder so that it is written as part of
     // writeMetadataToDisk().
-    buildInfoRecorder.addMetadata(AbstractCachingBuildRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+    buildInfoRecorder.addMetadata(CachingBuildEngine.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
         TestAbstractCachingBuildRule.ABI_KEY_FOR_DEPS_HASH);
 
     // These methods should be invoked after the rule is built locally.
@@ -445,6 +449,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     replayAll();
 
     ListenableFuture<BuildRuleSuccess> result = buildRule.build(buildContext);
+    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
     assertTrue(
         "We expect build() to be synchronous in this case, " +
             "so the future should already be resolved.",
@@ -503,18 +508,20 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
             capture(new CaptureThatWritesAZipFile(desiredZipEntries))))
         .andReturn(CacheResult.DIR_HIT);
 
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     BuildContext buildContext = BuildContext.builder()
         .setDependencyGraph(RuleMap.createGraphFromSingleRule(cachingRule))
         .setStepRunner(stepRunner)
         .setProjectFilesystem(projectFilesystem)
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-        .setEventBus(BuckEventBusFactory.newInstance())
+        .setEventBus(buckEventBus)
         .build();
 
     // Build the rule!
     replayAll();
     ListenableFuture<BuildRuleSuccess> result = cachingRule.build(buildContext);
+    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
     verifyAll();
 
     assertTrue("We expect build() to be synchronous in this case, " +

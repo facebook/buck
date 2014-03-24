@@ -22,7 +22,11 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.CacheResult;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
@@ -85,7 +89,13 @@ public class PrebuiltJarRuleTest {
             ImmutableList.of(
                 "com/example/Bar 1b1221d71c29aacb8e0b5b9eaffcd05e914ac55b",
                 "com/example/Foo cea146e5aa5565a09e6a1ae9137044eb64b2cf45"));
-    junitJarRule.doHydrationAfterBuildStepsFinish(onDiskBuildInfo);
+
+    BuildResult buildResult = new BuildResult(BuildRuleSuccess.Type.BUILT_LOCALLY,
+        CacheResult.MISS);
+    CachingBuildEngine buildEngine = new CachingBuildEngine();
+    buildEngine.createFutureFor(junitJarRule.getBuildTarget());
+    buildEngine.doHydrationAfterBuildStepsFinish(
+        junitJarRule, buildResult, onDiskBuildInfo);
 
     // Make sure the ABI key is set as expected.
     HashCode hashForJar = ByteStreams.hash(

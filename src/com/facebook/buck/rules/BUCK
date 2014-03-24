@@ -121,6 +121,7 @@ java_library(
     'BuildRuleParams.java',
     'BuildRuleResolver.java',
     'BuildRuleStatus.java',
+    'CachingBuildEngine.java',
     'CassandraArtifactCache.java',
     'DefaultBuildableContext.java',
     'DefaultBuildRuleBuilderParams.java',
