@@ -372,7 +372,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
     protected Function<Path, Path> getRelativeToAbsolutePathFunction(BuildRuleParams params) {
       return (relativeToAbsolutePathFunctionForTesting == null)
-          ? params.getPathRelativizer()
+          ? params.getPathAbsolutifier()
           : relativeToAbsolutePathFunctionForTesting;
     }
 

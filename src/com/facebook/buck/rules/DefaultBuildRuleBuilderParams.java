@@ -24,7 +24,7 @@ import java.nio.file.Path;
 
 public class DefaultBuildRuleBuilderParams implements AbstractBuildRuleBuilderParams {
 
-  private final Function<Path, Path> pathRelativizer;
+  private final Function<Path, Path> pathAbsolutifier;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   public DefaultBuildRuleBuilderParams(ProjectFilesystem projectFilesystem,
@@ -32,15 +32,15 @@ public class DefaultBuildRuleBuilderParams implements AbstractBuildRuleBuilderPa
     this(Preconditions.checkNotNull(projectFilesystem).getAbsolutifier(), ruleKeyBuilderFactory);
   }
 
-  public DefaultBuildRuleBuilderParams(Function<Path, Path> pathRelativizer,
+  public DefaultBuildRuleBuilderParams(Function<Path, Path> pathAbsolutifier,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-    this.pathRelativizer = Preconditions.checkNotNull(pathRelativizer);
+    this.pathAbsolutifier = Preconditions.checkNotNull(pathAbsolutifier);
     this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
   }
 
   @Override
   public Function<Path, Path> getPathAbsolutifier() {
-    return pathRelativizer;
+    return pathAbsolutifier;
   }
 
   @Override

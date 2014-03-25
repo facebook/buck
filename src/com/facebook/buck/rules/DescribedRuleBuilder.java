@@ -114,7 +114,7 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
           params.getBuildTarget(),
           enhancedDeps,
           params.getVisibilityPatterns(),
-          params.getPathRelativizer(),
+          params.getPathAbsolutifier(),
           params.getRuleKeyBuilderFactory());
     }
 
