@@ -20,12 +20,16 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.test.selectors.TestSelectorParseException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.StringArrayOptionHandler;
-
-import java.util.List;
+import org.kohsuke.args4j.OptionDef;
+import org.kohsuke.args4j.spi.OptionHandler;
+import org.kohsuke.args4j.spi.Parameters;
+import org.kohsuke.args4j.spi.Setter;
 
 public class TestSelectorOptions {
 
@@ -49,8 +53,8 @@ public class TestSelectorOptions {
           "'!MyTest#Foo' to run everything except the testFoo test; " +
           "'#Important !TestA !TestC #' to only run the important tests in TestA and TestC " +
           "and run everything else.)",
-      handler = StringArrayOptionHandler.class)
-  private List<String> rawTestSelectors = Lists.newArrayList();
+      handler = TestSelectorsOptionHandler.class)
+  public Supplier<TestSelectorList> testSelectorListSupplier;
 
   @Option(
       name = "--explain-test-selectors",
@@ -58,22 +62,49 @@ public class TestSelectorOptions {
   private boolean shouldExplain = false;
 
   public Optional<TestSelectorList> getTestSelectorListOptional() {
-    if (rawTestSelectors.isEmpty()) {
+    TestSelectorList testSelectorList = testSelectorListSupplier.get();
+    if (testSelectorList.isEmpty()) {
       return Optional.absent();
     }
-
-    try {
-      TestSelectorList.Builder builder = new TestSelectorList.Builder();
-      builder.addRawSelectors(rawTestSelectors);
-      TestSelectorList testSelectorList = builder.build();
-      return Optional.of(testSelectorList);
-    } catch (TestSelectorParseException e) {
-      String message = "Unable to parse test selectors: " + e.getMessage();
-      throw new HumanReadableException(e, message);
-    }
+    return Optional.of(testSelectorList);
   }
 
   public boolean shouldExplain() {
     return shouldExplain;
+  }
+
+  public static class TestSelectorsOptionHandler extends OptionHandler<Supplier<TestSelectorList>> {
+
+    private final TestSelectorList.Builder builder = new TestSelectorList.Builder();
+
+    public TestSelectorsOptionHandler(
+        CmdLineParser parser,
+        OptionDef option,
+        Setter<Supplier<TestSelectorList>> setter) throws CmdLineException {
+      super(parser, option, setter);
+      setter.addValue(Suppliers.memoize(new Supplier<TestSelectorList>() {
+        @Override
+        public TestSelectorList get() {
+          return builder.build();
+        }
+      }));
+    }
+
+    @Override
+    public int parseArguments(Parameters parameters) throws CmdLineException {
+      String rawTestSelector = parameters.getParameter(0);
+      try {
+        builder.addRawSelectors(rawTestSelector);
+      } catch (TestSelectorParseException e) {
+        String message = "Unable to parse test selectors: " + e.getMessage();
+        throw new HumanReadableException(e, message);
+      }
+      return 1;
+    }
+
+    @Override
+    public String getDefaultMetaVariable() {
+      return "LIST<TEST-SELECTORS>";
+    }
   }
 }

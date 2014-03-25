@@ -91,6 +91,10 @@ public class TestSelectorList {
     return rawSelectors;
   }
 
+  public boolean isEmpty() {
+    return rawSelectors.isEmpty();
+  }
+
   /**
    * Build a new {@link TestSelectorList} from a list of strings, each of which is parsed by
    * {@link TestSelector}.
