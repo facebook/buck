@@ -102,6 +102,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ProjectGeneratorTest {
 
@@ -950,6 +951,37 @@ public class ProjectGeneratorTest {
         "GeneratedSignedSourceTarget");
     // Ensure the GID for the target is the same as the one previously on disk.
     assertThat(target.getGlobalID(), equalTo("93C1B2AA1B49969700000000"));
+  }
+
+  @Test
+  public void generatedSourceTargetShouldHaveConfigsWithSameNamesAsProjectConfigs()
+      throws IOException {
+    BuildRuleParams params = new FakeBuildRuleParams(
+        new BuildTarget("//foo", "lib"), ImmutableSortedSet.<BuildRule>of());
+    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.srcs = ImmutableList.of();
+    arg.frameworks = ImmutableSortedSet.of();
+    BuildRule rule = new DescribedRule(
+        IosLibraryDescription.TYPE,
+        iosLibraryDescription.createBuildable(params, arg), params);
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    Set<String> projectConfigurationNames =
+      project.getBuildConfigurationList().getBuildConfigurationsByName().asMap().keySet();
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "GeneratedSignedSourceTarget");
+    Set<String> generatedSignedSourceTargetNames =
+      target.getBuildConfigurationList().getBuildConfigurationsByName().asMap().keySet();
+    assertEquals(ImmutableSet.of("Debug"), projectConfigurationNames);
+    assertEquals(projectConfigurationNames, generatedSignedSourceTargetNames);
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(

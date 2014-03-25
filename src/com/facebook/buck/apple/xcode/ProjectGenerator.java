@@ -51,6 +51,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
 import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.model.BuildTarget;
@@ -837,6 +838,14 @@ public class ProjectGenerator {
 
   private void addGeneratedSignedSourceTarget(PBXProject project) {
     PBXAggregateTarget target = new PBXAggregateTarget("GeneratedSignedSourceTarget");
+    // If we don't do this, Xcode "helpfully" generates a new configuration list
+    // with a new GID every time.
+    XCConfigurationList buildConfigurationList = new XCConfigurationList();
+    for (String projectConfigurationName :
+           project.getBuildConfigurationList().getBuildConfigurationsByName().asMap().keySet()) {
+      buildConfigurationList.getBuildConfigurationsByName().getUnchecked(projectConfigurationName);
+    }
+    target.setBuildConfigurationList(buildConfigurationList);
     setTargetGIDIfNameInMap(target, targetNameToGIDMap);
     PBXShellScriptBuildPhase generatedSignedSourceScriptPhase = new PBXShellScriptBuildPhase();
     generatedSignedSourceScriptPhase.setShellScript(
