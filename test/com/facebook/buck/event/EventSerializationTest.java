@@ -142,11 +142,11 @@ public class EventSerializationTest {
   @Test
   public void testTestRunEventStarted() throws IOException {
     TestRunEvent.Started event = TestRunEvent.started(
-        true, Optional.<TestSelectorList>absent(), false, ImmutableList.<String>of());
+        true, TestSelectorList.empty(), false, ImmutableList.<String>of());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"runAllTests\":true,\"testSelectorListOptional\":{\"present\":false}," +
+        "\"runAllTests\":true," +
         "\"targetNames\":[],\"type\":\"RunStarted\"}", message);
   }
 

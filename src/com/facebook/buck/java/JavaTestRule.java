@@ -152,7 +152,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   public List<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
-      Optional<TestSelectorList> testSelectorList) {
+      TestSelectorList testSelectorList) {
     Preconditions.checkState(isRuleBuilt(), "%s must be built before tests can be run.", this);
 
     // If no classes were generated, then this is probably a java_test() that declares a number of

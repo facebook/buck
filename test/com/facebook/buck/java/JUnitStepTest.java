@@ -28,7 +28,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -71,7 +70,7 @@ public class JUnitStepTest {
         isJacocoEnabled,
         isDebugEnabled,
         pretendBuildId,
-        Optional.<TestSelectorList>absent(),
+        TestSelectorList.empty(),
         testRunnerClassesDirectory);
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
@@ -130,7 +129,7 @@ public class JUnitStepTest {
         isJacocoEnabled,
         isDebugEnabled,
         pretendBuildId,
-        Optional.<TestSelectorList>absent(),
+        TestSelectorList.empty(),
         testRunnerClassesDirectory);
 
 

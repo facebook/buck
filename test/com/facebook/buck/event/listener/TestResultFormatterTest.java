@@ -27,7 +27,6 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -79,7 +78,7 @@ public class TestResultFormatterTest {
     formatter.runStarted(
         builder,
         false,
-        Optional.<TestSelectorList>absent(),
+        TestSelectorList.empty(),
         false,
         ImmutableList.of("//:example", "//foo:bar"));
 
@@ -94,10 +93,9 @@ public class TestResultFormatterTest {
         .addRawSelectors("com.example.clown.Car")
         .build();
 
-    Optional<TestSelectorList> testSelectorListOptional = Optional.of(testSelectorList);
     ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
 
-    formatter.runStarted(builder, false, testSelectorListOptional, false, targetNames);
+    formatter.runStarted(builder, false, testSelectorList, false, targetNames);
 
     assertEquals("TESTING SELECTED TESTS", toString(builder));
   }
@@ -110,11 +108,10 @@ public class TestResultFormatterTest {
         .addRawSelectors("com.example.clown.Car")
         .build();
 
-    Optional<TestSelectorList> testSelectorListOptional = Optional.of(testSelectorList);
     ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
     boolean shouldExplain = true;
 
-    formatter.runStarted(builder, false, testSelectorListOptional, shouldExplain, targetNames);
+    formatter.runStarted(builder, false, testSelectorList, shouldExplain, targetNames);
 
     String expected = "TESTING SELECTED TESTS\n" +
         "include class:com.example.clown.Car method:<any>\n" +
@@ -130,7 +127,7 @@ public class TestResultFormatterTest {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
 
-    formatter.runStarted(builder, true, Optional.<TestSelectorList>absent(), false, targetNames);
+    formatter.runStarted(builder, true, TestSelectorList.empty(), false, targetNames);
 
     assertEquals("TESTING ALL TESTS", toString(builder));
   }

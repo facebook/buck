@@ -131,8 +131,8 @@ public class TestCommandOptions extends BuildCommandOptions {
     return targetDeviceOptions.getTargetDeviceOptional();
   }
 
-  public Optional<TestSelectorList> getTestSelectorListOptional() {
-    return testSelectorOptions.getTestSelectorListOptional();
+  public TestSelectorList getTestSelectorList() {
+    return testSelectorOptions.getTestSelectorList();
   }
 
   public boolean shouldExplainTestSelectorList() {

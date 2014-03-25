@@ -20,7 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.google.common.base.Optional;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -37,13 +37,13 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
 
   public static Started started(
       boolean isRunAllTests,
-      Optional<TestSelectorList> testSelectorListOptional,
+      TestSelectorList testSelectorList,
       boolean shouldExplainTestSelectorList,
       List<String> targets) {
     return new Started(
         targets.hashCode(),
         isRunAllTests,
-        Preconditions.checkNotNull(testSelectorListOptional),
+        Preconditions.checkNotNull(testSelectorList),
         shouldExplainTestSelectorList,
         Preconditions.checkNotNull(targets));
   }
@@ -64,19 +64,19 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
 
   public static class Started extends TestRunEvent {
     private final boolean runAllTests;
-    private Optional<TestSelectorList> testSelectorListOptional;
+    @JsonIgnore private TestSelectorList testSelectorList;
     private boolean shouldExplainTestSelectorList;
     private final ImmutableList<String> targetNames;
 
     public Started(
         int secret,
         boolean runAllTests,
-        Optional<TestSelectorList> testSelectorListOptional,
+        TestSelectorList testSelectorList,
         boolean shouldExplainTestSelectorList,
         List<String> targetNames) {
       super(secret);
       this.runAllTests = runAllTests;
-      this.testSelectorListOptional = testSelectorListOptional;
+      this.testSelectorList = testSelectorList;
       this.shouldExplainTestSelectorList = shouldExplainTestSelectorList;
       this.targetNames = ImmutableList.copyOf(Preconditions.checkNotNull(targetNames));
     }
@@ -99,8 +99,8 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
       return String.format("%d test targets", targetNames.size());
     }
 
-    public Optional<TestSelectorList> getTestSelectorListOptional() {
-      return testSelectorListOptional;
+    public TestSelectorList getTestSelectorList() {
+      return testSelectorList;
     }
 
     public boolean shouldExplainTestSelectorList() {

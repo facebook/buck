@@ -23,7 +23,6 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -67,7 +66,7 @@ public class JUnitStep extends ShellStep {
 
   private final BuildId buildId;
 
-  private Optional<TestSelectorList> testSelectorListOptional;
+  private TestSelectorList testSelectorList;
 
   private final String testRunnerClassesDirectory;
 
@@ -104,7 +103,7 @@ public class JUnitStep extends ShellStep {
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
       BuildId buildId,
-      Optional<TestSelectorList> testSelectorListOptional) {
+      TestSelectorList testSelectorList) {
     this(classpathEntries,
         testClassNames,
         vmArgs,
@@ -113,7 +112,7 @@ public class JUnitStep extends ShellStep {
         isJacocoEnabled,
         isDebugEnabled,
         buildId,
-        testSelectorListOptional,
+        testSelectorList,
         System.getProperty("buck.testrunner_classes",
             new File("build/testrunner/classes").getAbsolutePath()));
   }
@@ -128,7 +127,7 @@ public class JUnitStep extends ShellStep {
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
       BuildId buildId,
-      Optional<TestSelectorList> testSelectorListOptional,
+      TestSelectorList testSelectorList,
       String testRunnerClassesDirectory) {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.testClassNames = ImmutableSet.copyOf(testClassNames);
@@ -138,7 +137,7 @@ public class JUnitStep extends ShellStep {
     this.isJacocoEnabled = isJacocoEnabled;
     this.isDebugEnabled = isDebugEnabled;
     this.buildId = buildId;
-    this.testSelectorListOptional = testSelectorListOptional;
+    this.testSelectorList = Preconditions.checkNotNull(testSelectorList);
     this.testRunnerClassesDirectory = Preconditions.checkNotNull(testRunnerClassesDirectory);
   }
 
@@ -214,9 +213,8 @@ public class JUnitStep extends ShellStep {
 
     // Add the test selectors, one per line, in a single argument.
     StringBuilder selectorsArgBuilder = new StringBuilder();
-    if (testSelectorListOptional.isPresent()) {
-      TestSelectorList testSelectorList = testSelectorListOptional.get();
-      for (String rawSelector : testSelectorList.getRawSelectors()) {
+    if (!testSelectorList.isEmpty()) {
+      for (String rawSelector : this.testSelectorList.getRawSelectors()) {
         selectorsArgBuilder.append(rawSelector).append("\n");
       }
     }

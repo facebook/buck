@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.test.selectors.TestSelectorParseException;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 
@@ -61,12 +60,8 @@ public class TestSelectorOptions {
       usage = "Buck will say how it interpreted your test selectors before running tests.")
   private boolean shouldExplain = false;
 
-  public Optional<TestSelectorList> getTestSelectorListOptional() {
-    TestSelectorList testSelectorList = testSelectorListSupplier.get();
-    if (testSelectorList.isEmpty()) {
-      return Optional.absent();
-    }
-    return Optional.of(testSelectorList);
+  public TestSelectorList getTestSelectorList() {
+    return testSelectorListSupplier.get();
   }
 
   public boolean shouldExplain() {

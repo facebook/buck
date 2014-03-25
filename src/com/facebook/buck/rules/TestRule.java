@@ -21,7 +21,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -55,14 +54,14 @@ public interface TestRule
    *     {@link BuildRule#build(BuildContext)} having been run, this is supplied in case any
    *     non-cacheable build work needs to be done.
    * @param executionContext Provides context for creating {@link Step}s.
-   * @param testSelectorListOptional Provides a way of selecting which tests to include or exclude
+   * @param testSelectorList Provides a way of selecting which tests to include or exclude
    *     from a run.
    * @return the commands required to run the tests
    */
   public List<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
-      Optional<TestSelectorList> testSelectorListOptional);
+      TestSelectorList testSelectorList);
 
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,

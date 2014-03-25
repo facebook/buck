@@ -279,7 +279,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     testFormatter.runStarted(builder,
         event.isRunAllTests(),
-        event.getTestSelectorListOptional(),
+        event.getTestSelectorList(),
         event.shouldExplainTestSelectorList(),
         event.getTargetNames());
     logEvents.add(LogEvent.info(Joiner.on('\n').join(builder.build())));

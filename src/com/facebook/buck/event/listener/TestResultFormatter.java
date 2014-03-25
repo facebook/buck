@@ -22,7 +22,6 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -41,13 +40,13 @@ public class TestResultFormatter {
   public void runStarted(
       ImmutableList.Builder<String> addTo,
       boolean isRunAllTests,
-      Optional<TestSelectorList> testSelectorList,
+      TestSelectorList testSelectorList,
       boolean shouldExplainTestSelectorList,
       ImmutableList<String> targetNames) {
-    if (testSelectorList.isPresent()) {
+    if (!testSelectorList.isEmpty()) {
       addTo.add("TESTING SELECTED TESTS");
       if (shouldExplainTestSelectorList) {
-        addTo.addAll(testSelectorList.get().getExplanation());
+        addTo.addAll(testSelectorList.getExplanation());
       }
     } else if (isRunAllTests) {
       addTo.add("TESTING ALL TESTS");

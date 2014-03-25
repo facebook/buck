@@ -460,7 +460,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     getBuckEventBus().post(TestRunEvent.started(
         options.isRunAllTests(),
-        options.getTestSelectorListOptional(),
+        options.getTestSelectorList(),
         options.shouldExplainTestSelectorList(),
         options.getArgumentsFormattedAsBuildTargets()));
 
@@ -492,7 +492,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
               executionContext,
               testRuleKeyFileHelper,
               options.isResultsCacheEnabled(),
-              options.getTestSelectorListOptional().isPresent());
+              !options.getTestSelectorList().isEmpty());
       if (isTestRunRequired) {
         getBuckEventBus().post(IndividualTestEvent.started(
             options.getArgumentsFormattedAsBuildTargets()));
@@ -500,7 +500,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         List<Step> testSteps = test.runTests(
             buildContext,
             executionContext,
-            options.getTestSelectorListOptional());
+            options.getTestSelectorList());
         if (!testSteps.isEmpty()) {
           stepsBuilder.addAll(testSteps);
           stepsBuilder.add(testRuleKeyFileHelper.createRuleKeyInDirStep(test));
@@ -517,7 +517,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
               getCachingStatusTransformingCallable(
                   isTestRunRequired,
                   test.interpretTestResults(executionContext,
-                      /*isUsingTestSelectors*/ options.getTestSelectorListOptional().isPresent())),
+                      /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty())),
               test.getBuildTarget());
       FutureCallback<TestResults> onTestFinishedCallback =
           getFutureCallback(grouper, test, options, printTestResults);
