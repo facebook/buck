@@ -57,7 +57,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -208,12 +207,12 @@ public class KnownBuildRuleTypes {
   }
 
   public static class Builder {
-    private final Set<Description<?>> descriptions;
+    private final Map<BuildRuleType, Description<?>> descriptions;
     private final Map<BuildRuleType, BuildRuleFactory<?>> factories;
     private final Map<String, BuildRuleType> types;
 
     protected Builder() {
-      this.descriptions = Sets.newConcurrentHashSet();
+      this.descriptions = Maps.newConcurrentMap();
       this.factories = Maps.newConcurrentMap();
       this.types = Maps.newConcurrentMap();
     }
@@ -230,11 +229,11 @@ public class KnownBuildRuleTypes {
       BuildRuleType type = description.getBuildRuleType();
       types.put(type.getName(), type);
       factories.put(type, new DescribedRuleFactory<>(description));
-      descriptions.add(description);
+      descriptions.put(type, description);
     }
 
     public KnownBuildRuleTypes build() {
-      return new KnownBuildRuleTypes(descriptions, factories, types);
+      return new KnownBuildRuleTypes(ImmutableSet.copyOf(descriptions.values()), factories, types);
     }
   }
 }
