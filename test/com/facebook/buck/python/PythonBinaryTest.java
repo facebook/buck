@@ -39,7 +39,7 @@ import org.junit.Test;
 import java.nio.file.Paths;
 import java.util.Map;
 
-public class PythonBinaryRuleTest {
+public class PythonBinaryTest {
   @Test
   public void testGetPythonPathEntries() {
     BuildTarget orphanPyLibraryTarget = new BuildTarget("//", "orphan_python_library");
@@ -56,28 +56,25 @@ public class PythonBinaryRuleTest {
 
     Map<BuildTarget, BuildRule> rules = Maps.newHashMap();
     rules.put(orphanPyLibraryTarget, createBuildRule(orphanPyLibrary, orphanPyLibraryTarget));
-    rules.put(pyLibraryTarget, createBuildRule(pyLibrary, pyLibraryTarget));
+    BuildRule pyLibraryRule = createBuildRule(pyLibrary, pyLibraryTarget);
+    rules.put(pyLibraryTarget, pyLibraryRule);
     BuildRuleResolver ruleResolver = new BuildRuleResolver(rules);
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:javalib");
-    ruleResolver.buildAndAddToIndex(
+    DefaultJavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(javaLibraryTarget)
             .addSrc(Paths.get("java/src/com/javalib/Bar.java"))
             .addDep(orphanPyLibraryTarget)
-            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+    );
 
-    BuildTarget pyBinaryTarget = BuildTargetFactory.newInstance("//:py_binary");
-    PythonBinaryRule pyBinary = ruleResolver.buildAndAddToIndex(
-        PythonBinaryRule.newPythonBinaryBuilder(new FakeAbstractBuildRuleBuilderParams())
-            .setMain(Paths.get("foo"))
-            .addDep(javaLibraryTarget)
-            .addDep(pyLibraryTarget)
-            .setBuildTarget(pyBinaryTarget)
-            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+    PythonBinary buildable = new PythonBinary(
+        ImmutableSortedSet.<BuildRule>of(javaLibrary, pyLibraryRule),
+        Paths.get("foo"));
 
     assertEquals(ImmutableSet.of(Paths.get("buck-out/gen/__pylib_py_library")),
-        pyBinary.getPythonPathEntries());
+        buildable.getPythonPathEntries());
   }
 
   private static BuildRule createBuildRule(PythonLibrary pythonLibrary, BuildTarget buildTarget) {

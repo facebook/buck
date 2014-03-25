@@ -41,7 +41,7 @@ import com.facebook.buck.java.KeystoreBuildRuleFactory;
 import com.facebook.buck.java.PrebuiltJarBuildRuleFactory;
 import com.facebook.buck.parcelable.GenParcelableBuildRuleFactory;
 import com.facebook.buck.parser.ProjectConfigRuleFactory;
-import com.facebook.buck.python.PythonBinaryBuildRuleFactory;
+import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleBuildRuleFactory;
@@ -121,6 +121,7 @@ public class KnownBuildRuleTypes {
     builder.register(new IosTestDescription());
     builder.register(new IosResourceDescription());
     builder.register(new PythonLibraryDescription());
+    builder.register(new PythonBinaryDescription());
     builder.register(new XcodeProjectConfigDescription());
     builder.register(new XcodeNativeDescription());
 
@@ -143,7 +144,6 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.PREBUILT_NATIVE_LIBRARY,
         new PrebuiltNativeLibraryBuildRuleFactory());
     builder.register(BuildRuleType.PROJECT_CONFIG, new ProjectConfigRuleFactory());
-    builder.register(BuildRuleType.PYTHON_BINARY, new PythonBinaryBuildRuleFactory());
     builder.register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
     builder.register(BuildRuleType.SH_BINARY, new ShBinaryBuildRuleFactory());
     builder.register(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory());

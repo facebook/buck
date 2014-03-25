@@ -614,22 +614,6 @@ def ndk_library(
 
 
 @provide_for_build
-def python_binary(
-    name,
-    main=None,
-    deps=[],
-    visibility=[],
-    build_env=None):
-  add_rule({
-    'type' : 'python_binary',
-    'name' : name,
-    'main' : main,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def keystore(
     name,
     store,

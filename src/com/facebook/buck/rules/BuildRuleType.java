@@ -38,7 +38,6 @@ public final class BuildRuleType {
   public static final BuildRuleType PREBUILT_NATIVE_LIBRARY =
       new BuildRuleType("prebuilt_native_library");
   public static final BuildRuleType PROJECT_CONFIG = new BuildRuleType("project_config");
-  public static final BuildRuleType PYTHON_BINARY = new BuildRuleType("python_binary");
   public static final BuildRuleType ROBOLECTRIC_TEST = new BuildRuleType("robolectric_test");
   public static final BuildRuleType SH_BINARY = new BuildRuleType("sh_binary");
   public static final BuildRuleType SH_TEST = new BuildRuleType("sh_test");

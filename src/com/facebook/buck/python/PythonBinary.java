@@ -18,19 +18,15 @@ package com.facebook.buck.python;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -38,6 +34,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
@@ -45,25 +42,32 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
-public class PythonBinaryRule extends DoNotUseAbstractBuildable implements BinaryBuildRule {
+import javax.annotation.Nullable;
+
+public class PythonBinary extends AbstractBuildable implements BinaryBuildRule {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
+  private final ImmutableSortedSet<BuildRule> deps;
   private final Path main;
 
-  protected PythonBinaryRule(BuildRuleParams buildRuleParams, Path main) {
-    super(buildRuleParams);
+  protected PythonBinary(ImmutableSortedSet<BuildRule> deps, Path main) {
+    this.deps = Preconditions.checkNotNull(deps);
     this.main = Preconditions.checkNotNull(main);
-  }
-
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.PYTHON_BINARY;
   }
 
   @Override
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
+  }
+
+  @Nullable
+  @Override
+  public Path getPathToOutputFile() {
+    // We don't generate a python file for this, we use the binary to construct a python path which
+    // we then execute. This is somewhat confusing.
+    // TODO(simons): Add support for "wheel" or something similar.
+    return null;  // I mean, seriously? OK.
   }
 
   @Override
@@ -80,8 +84,7 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
   ImmutableSet<Path> getPythonPathEntries() {
     final ImmutableSet.Builder<Path> entries = ImmutableSet.builder();
 
-    final PythonBinaryRule pythonBinaryRule = this;
-    new AbstractDependencyVisitor(this) {
+    new AbstractDependencyVisitor(deps) {
 
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
@@ -94,9 +97,7 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
           return rule.getDeps();
         }
 
-        // AbstractDependencyVisitor will start from this (PythonBinaryRule) so make sure it
-        // descends to its dependencies even though it is not a library rule.
-        return maybeVisitAllDeps(rule, rule == pythonBinaryRule);
+        return ImmutableSet.of();
       }
 
     }.start();
@@ -106,11 +107,12 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    if (main != null) {
-      return ImmutableList.of(main);
-    } else {
-      return ImmutableList.of();
-    }
+    return ImmutableList.of(main);
+  }
+
+  @Override
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder.setInput("main", main);
   }
 
   @Override
@@ -119,28 +121,5 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
     // TODO(mbolin): Package Python code, if appropriate. There does not appear to be a standard
     // cross-platform way to do this.
     return ImmutableList.of();
-  }
-
-  public static Builder newPythonBinaryBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildRuleBuilder<PythonBinaryRule> {
-
-    private Path main;
-
-    private Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public PythonBinaryRule build(BuildRuleResolver ruleResolver) {
-      return new PythonBinaryRule(createBuildRuleParams(ruleResolver), main);
-    }
-
-    public Builder setMain(Path main) {
-      this.main = main;
-      return this;
-    }
   }
 }
