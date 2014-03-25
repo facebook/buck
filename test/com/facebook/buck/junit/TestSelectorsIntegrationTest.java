@@ -126,6 +126,18 @@ public class TestSelectorsIntegrationTest {
     result.assertSuccess();
   }
 
+  @Test
+  public void shouldFailWithMultipleStringsGivenToFilter() throws IOException {
+    String[] goodArgs = {"test", "--filter", "QQ", "//test/com/example/clown:clown"};
+    String goodMessage = "Should pass, because the target is real and no test matches the filter.";
+
+    String[] failArgs = {"test", "--filter", "QQ", "bar", "//test/com/example/clown:clown"};
+    String failMessage = "Should fail, because two arguments are given to --filter!";
+
+    workspace.runBuckCommand(goodArgs).assertSuccess(goodMessage);
+    workspace.runBuckCommand(failArgs).assertFailure(failMessage);
+  }
+
   private void assertOutputWithSelectors(ProjectWorkspace.ProcessResult result) {
     String stderr = result.getStderr();
     assertThat(stderr, containsString(
