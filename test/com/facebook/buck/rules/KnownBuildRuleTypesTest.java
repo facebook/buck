@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -52,6 +53,37 @@ public class KnownBuildRuleTypesTest {
   @Rule public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   private static BuildRuleFactoryParams params;
+
+  private static class TestDescription implements Description<ConstructorArg> {
+
+    public static final BuildRuleType TYPE = new BuildRuleType("known_rule_test");
+
+    private final String value;
+
+    private TestDescription(String value) {
+      this.value = value;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public BuildRuleType getBuildRuleType() {
+      return TYPE;
+    }
+
+    @Override
+    public ConstructorArg createUnpopulatedConstructorArg() {
+      return new ConstructorArg() {};
+    }
+
+    @Override
+    public Buildable createBuildable(
+        BuildRuleParams params, ConstructorArg args) {
+      return null;
+    }
+  }
 
   @BeforeClass
   public static void setupBuildParams() throws IOException {
@@ -241,5 +273,34 @@ public class KnownBuildRuleTypesTest {
     assertTrue("Rule is AndroidLibraryRule", rule instanceof AndroidLibraryRule);
     AndroidLibraryRule libraryRule = (AndroidLibraryRule) rule;
     assertEquals(javac.toPath(), libraryRule.getJavac().get());
+  }
+
+  @Test
+  public void whenRegisteringDescriptionsLastOneWins()
+      throws IOException, NoSuchBuildTargetException {
+
+    KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.createDefaultBuilder();
+    buildRuleTypesBuilder.register(new TestDescription("Foo"));
+    buildRuleTypesBuilder.register(new TestDescription("Bar"));
+    buildRuleTypesBuilder.register(new TestDescription("Raz"));
+
+    KnownBuildRuleTypes buildRuleTypes = buildRuleTypesBuilder.build();
+
+    assertEquals(
+        "Only one description should have wound up in the final KnownBuildRuleTypes",
+        KnownBuildRuleTypes.createDefaultBuilder().build().getAllDescriptions().size() + 1,
+        buildRuleTypes.getAllDescriptions().size());
+
+    boolean foundTestDescription = false;
+    for (Description<?> description : buildRuleTypes.getAllDescriptions()) {
+      if (description.getBuildRuleType().equals(TestDescription.TYPE)) {
+        assertFalse("Should only find one test description", foundTestDescription);
+        foundTestDescription = true;
+        assertEquals(
+            "Last description should have won",
+            "Raz",
+            ((TestDescription) description).getValue());
+      }
+    }
   }
 }
