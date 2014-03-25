@@ -3,6 +3,7 @@ java_library(
   srcs = glob(['*.java']),
   deps = [
     '//lib:guava',
+    '//src/com/facebook/buck/util:util',
   ],
   visibility = [
     'PUBLIC',

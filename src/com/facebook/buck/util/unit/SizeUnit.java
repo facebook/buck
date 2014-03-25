@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.unit;
 
-import com.google.common.base.Joiner;
+import com.facebook.buck.util.MoreStrings;
 import com.google.common.collect.ImmutableMap;
 
 import java.math.BigDecimal;
@@ -64,9 +64,9 @@ public enum SizeUnit {
         .put("terabytes", TERABYTES)
         .build();
 
-  private static final Pattern SIZE_PATTERN = Pattern.compile("([\\d]+(?:\\.[\\d]+)?)\\s*((?:" +
-      Joiner.on(")|(?:").join(SHORT_TO_CODE.keySet()) + "))",
-      Pattern.CASE_INSENSITIVE);
+  private static final Pattern SIZE_PATTERN = Pattern.compile("([\\d]+(?:\\.[\\d]+)?)\\s*" +
+          MoreStrings.regexPatternForAny(SHORT_TO_CODE.keySet()),
+          Pattern.CASE_INSENSITIVE);
 
   /**
    * Parses a string that represents a size into the number of bytes represented by that string.

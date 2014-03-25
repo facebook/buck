@@ -20,7 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.junit.Test;
+
+import java.util.regex.Pattern;
 
 public class MoreStringsTest {
 
@@ -87,5 +91,19 @@ public class MoreStringsTest {
         "The distance between 'test' and 'tset' should be 2 (e.g., 1 deletion + 1 insertion).",
         2,
         MoreStrings.getLevenshteinDistance("test", "tset"));
+  }
+
+  @Test
+  public void testRegexPatternForAny() {
+    Pattern varArgTestPattern = Pattern.compile(MoreStrings.regexPatternForAny("foo", "bar"));
+    assertTrue(varArgTestPattern.matcher("bar").matches());
+    assertTrue(varArgTestPattern.matcher("foo").matches());
+    assertFalse(varArgTestPattern.matcher("mehfoo").matches());
+
+    Pattern iterabeArgTestPattern = Pattern.compile(
+        ".*" + MoreStrings.regexPatternForAny(ImmutableSet.of("raz", "meh")) + "$");
+    assertTrue(iterabeArgTestPattern.matcher("hello raz").matches());
+    assertTrue(iterabeArgTestPattern.matcher("hello meh").matches());
+    assertFalse(iterabeArgTestPattern.matcher("hello meh hi").matches());
   }
 }

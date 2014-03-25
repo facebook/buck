@@ -16,9 +16,12 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -83,4 +86,12 @@ public final class MoreStrings {
 
       return levenshteinDist[arr1.length][arr2.length];
     }
+
+  public static String regexPatternForAny(String... values) {
+    return regexPatternForAny(Arrays.asList(values));
+  }
+
+  public static String regexPatternForAny(Iterable<String> values) {
+    return "((?:" + Joiner.on(")|(?:").join(values) + "))";
+  }
 }
