@@ -25,7 +25,7 @@ import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.AndroidResourceRule;
 import com.facebook.buck.android.NdkLibrary;
-import com.facebook.buck.java.JavaBinaryRule;
+import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildFileTree;
@@ -374,7 +374,7 @@ public class Project {
     BuildRule projectRule = projectConfig.getProjectRule();
     Buildable buildable = projectRule.getBuildable();
     Preconditions.checkState(projectRule instanceof JavaLibraryRule
-        || projectRule instanceof JavaBinaryRule
+        || buildable instanceof JavaBinary
         || projectRule instanceof AndroidLibraryRule
         || projectRule instanceof AndroidResourceRule
         || projectRule instanceof AndroidBinaryRule

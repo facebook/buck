@@ -192,15 +192,15 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
         // We're using raw strings here to avoid circular dependencies.
         // TODO(simons): don't use raw strings.
+        HasClasspathEntries hasClasspathEntries = getRuleAsHasClasspathEntries(rule);
         if ("java_binary".equals(type) || "prebuilt_jar".equals(type)) {
           Path pathToOutput = rule.getBuildable().getPathToOutputFile();
           if (pathToOutput != null) {
             searchPathElements.add(pathToOutput);
           }
-        } else if (rule instanceof HasClasspathEntries) {
-          HasClasspathEntries javaLibraryRule = (HasClasspathEntries)rule;
+        } else if (hasClasspathEntries != null) {
           searchPathElements.addAll(
-              FluentIterable.from(javaLibraryRule.getTransitiveClasspathEntries().values())
+              FluentIterable.from(hasClasspathEntries.getTransitiveClasspathEntries().values())
                   .transform(MorePaths.TO_PATH)
                   .toSet());
         } else {
@@ -219,6 +219,15 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
           parameters,
           rules.build(),
           processOnly);
+    }
+
+    private HasClasspathEntries getRuleAsHasClasspathEntries(BuildRule rule) {
+      if (rule instanceof HasClasspathEntries) {
+        return (HasClasspathEntries) rule;
+      } else if (rule.getBuildable() instanceof HasClasspathEntries) {
+        return (HasClasspathEntries) rule.getBuildable();
+      }
+      return null;
     }
   }
 }

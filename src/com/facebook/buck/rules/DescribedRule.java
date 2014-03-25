@@ -45,4 +45,9 @@ public class DescribedRule extends AbstractCachingBuildRule {
   public Buildable getBuildable() {
     return buildable;
   }
+
+  @Override
+  public BuildableProperties getProperties() {
+    return buildable.getProperties();
+  }
 }

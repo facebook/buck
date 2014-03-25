@@ -145,11 +145,16 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
     for (BuildTarget target : targets) {
       BuildRule rule = graph.findBuildRuleByTarget(target);
-      if (!(rule instanceof HasClasspathEntries)) {
+      HasClasspathEntries classpathEntries;
+      // TODO(user): Remove the double checks once Buildable becomes a BuildRule.
+      if (rule instanceof HasClasspathEntries) {
+        classpathEntries = (HasClasspathEntries) rule;
+      } else if (rule.getBuildable() instanceof HasClasspathEntries) {
+        classpathEntries = (HasClasspathEntries) rule.getBuildable();
+      } else {
         continue;
       }
 
-      HasClasspathEntries classpathEntries = (HasClasspathEntries) rule;
       targetClasspaths.putAll(
           target.getFullyQualifiedName(),
           classpathEntries.getTransitiveClasspathEntries().values());

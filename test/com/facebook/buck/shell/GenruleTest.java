@@ -24,8 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
-import com.facebook.buck.java.JavaBinaryRule;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -307,7 +306,7 @@ public class GenruleTest {
   @Test
   public void testReplaceBinaryBuildRuleRefsInCmd() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
+    BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
     String originalCmd = "$(exe //java/com/facebook/util:ManifestGenerator) $OUT";
     String contextBasePath = "java/com/facebook/util";
@@ -333,7 +332,7 @@ public class GenruleTest {
   @Test
   public void testReplaceRelativeBinaryBuildRuleRefsInCmd() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
+    BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
     String originalCmd = "$(exe :ManifestGenerator) $OUT";
     String contextBasePath = "java/com/facebook/util";
@@ -362,7 +361,7 @@ public class GenruleTest {
     EasyMock.replay(filesystem);
 
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
+    BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
     String originalCmd = String.format("$(location :%s) $(location %s) $OUT",
         javaBinary.getBuildTarget().getShortName(),
@@ -390,7 +389,7 @@ public class GenruleTest {
   @Test
   public void testDepsGenrule() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
+    BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
     // Interpolate the build target in the genrule cmd string.
     String originalCmd = "$(exe :ManifestGenerator) $OUT";
@@ -444,22 +443,23 @@ public class GenruleTest {
     assertEquals(Paths.get(baseTmpPath + "other/place.txt"), linkCmd.getTarget());
   }
 
-  private JavaBinaryRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) {
+  private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
-    JavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
+    BuildRule javaLibrary = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java")));
+            .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
+            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+            .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java"))
+    );
 
-    JavaBinaryRule javaBinary = ruleResolver.buildAndAddToIndex(
-        JavaBinaryRule.newJavaBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(
-            BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator"))
+    BuildTarget buildTarget =
+        BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator");
+    BuildRule javaBinary = JavaBinaryRuleBuilder.newBuilder(buildTarget)
+        .setDeps(ImmutableSortedSet.of(javaLibrary))
         .setMainClass("com.facebook.util.ManifestGenerator")
-        .addDep(javaLibrary.getBuildTarget()));
-
+        .build();
+    ruleResolver.addToIndex(buildTarget, javaBinary);
     return javaBinary;
   }
 

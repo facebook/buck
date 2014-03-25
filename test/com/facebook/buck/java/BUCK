@@ -3,6 +3,7 @@ java_library(
   srcs = [
     'FakeDefaultJavaLibraryRule.java',
     'FakeJavaLibraryRule.java',
+    'JavaBinaryRuleBuilder.java',
   ],
   deps = [
     '//lib:guava',

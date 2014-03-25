@@ -35,8 +35,8 @@ import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cpp.CppBinaryDescription;
 import com.facebook.buck.cpp.CppLibraryDescription;
-import com.facebook.buck.java.JavaBinaryBuildRuleFactory;
 import com.facebook.buck.java.JavaCompilerEnvironment;
+import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.java.JavaTestBuildRuleFactory;
 import com.facebook.buck.java.JavacOptions;
@@ -123,6 +123,7 @@ public class KnownBuildRuleTypes {
     builder.register(new IosResourceDescription());
     builder.register(new CppBinaryDescription());
     builder.register(new CppLibraryDescription());
+    builder.register(new JavaBinaryDescription());
     builder.register(new PythonLibraryDescription());
     builder.register(new PythonBinaryDescription());
     builder.register(new XcodeProjectConfigDescription());
@@ -137,7 +138,6 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
-    builder.register(BuildRuleType.JAVA_BINARY, new JavaBinaryBuildRuleFactory());
     builder.register(BuildRuleType.KEYSTORE, new KeystoreBuildRuleFactory());
     builder.register(BuildRuleType.GEN_PARCELABLE, new GenParcelableBuildRuleFactory());
     builder.register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());

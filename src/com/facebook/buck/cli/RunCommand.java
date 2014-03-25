@@ -66,7 +66,13 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
 
     Build build = buildCommand.getBuild();
     BuildRule targetRule = build.getDependencyGraph().findBuildRuleByTarget(target);
-    if (!(targetRule instanceof BinaryBuildRule)) {
+    BinaryBuildRule binaryBuildRule = null;
+    if (targetRule instanceof BinaryBuildRule) {
+      binaryBuildRule = (BinaryBuildRule) targetRule;
+    } else if (targetRule.getBuildable() instanceof BinaryBuildRule) {
+      binaryBuildRule = (BinaryBuildRule) targetRule.getBuildable();
+    }
+    if (binaryBuildRule == null) {
       console.printBuildFailure(
           "target " + targetName + " is not a binary rule (only binary rules can be `run`)"
       );
@@ -74,7 +80,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
     }
 
     ImmutableList<String> fullCommand = new ImmutableList.Builder<String>()
-        .addAll(((BinaryBuildRule)targetRule).getExecutableCommand(getProjectFilesystem()))
+        .addAll(binaryBuildRule.getExecutableCommand(getProjectFilesystem()))
         .addAll(options.getTargetArguments())
         .build();
     ShellStep step = new DefaultShellStep(fullCommand);

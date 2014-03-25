@@ -25,11 +25,14 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
@@ -38,7 +41,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class JavaBinaryRuleTest {
+public class JavaBinaryTest {
 
   private static final Path PATH_TO_GUAVA_JAR = Paths.get("third_party/guava/guava-10.0.1.jar");
   private static final Path PATH_TO_GENERATOR_JAR = Paths.get("third_party/guava/generator.jar");
@@ -62,18 +65,20 @@ public class JavaBinaryRuleTest {
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // java_library //java/com/facebook/base:base
-    ruleResolver.buildAndAddToIndex(
+    BuildRule libraryRule = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
         .addSrc(Paths.get("java/com/facebook/base/Base.java"))
         .addDep(BuildTargetFactory.newInstance("//third_party/guava:guava")));
 
     // java_binary //java/com/facebook/base:Main
-    JavaBinaryRule javaBinaryRule = ruleResolver.buildAndAddToIndex(
-        JavaBinaryRule.newJavaBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
-        .addDep(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
-        .setMainClass("com.facebook.base.Main"));
+    JavaBinary javaBinary = new JavaBinary(
+        BuildTargetFactory.newInstance("//java/com/facebook/base:Main"),
+        ImmutableSortedSet.of(libraryRule),
+        "com.facebook.base.Main",
+        null,
+        null,
+        new DefaultDirectoryTraverser());
 
     // Strip the trailing "." from the absolute path to the current directory.
     final String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");
@@ -81,7 +86,7 @@ public class JavaBinaryRuleTest {
     // Each classpath entry is specified via its absolute path so that the executable command can be
     // run from a /tmp directory, if necessary.
     String expectedClasspath =
-        basePath + javaBinaryRule.getPathToOutputFile();
+        basePath + javaBinary.getPathToOutputFile();
 
     List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
@@ -93,7 +98,7 @@ public class JavaBinaryRuleTest {
     };
     expect(projectFilesystem.getAbsolutifier()).andReturn(pathRelativizer);
     replay(projectFilesystem);
-    assertEquals(expectedCommand, javaBinaryRule.getExecutableCommand(projectFilesystem));
+    assertEquals(expectedCommand, javaBinary.getExecutableCommand(projectFilesystem));
     verify(projectFilesystem);
 
     assertFalse(

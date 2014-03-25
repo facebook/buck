@@ -387,25 +387,6 @@ def robolectric_test(
 
 
 @provide_for_build
-def java_binary(
-  name,
-  main_class=None,
-  manifest_file=None,
-  deps=[],
-  visibility=[],
-  build_env=None):
-
-  add_rule({
-    'type' : 'java_binary',
-    'name' : name,
-    'manifest_file': manifest_file,
-    'main_class' : main_class,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def prebuilt_jar(
     name,
     binary_jar,

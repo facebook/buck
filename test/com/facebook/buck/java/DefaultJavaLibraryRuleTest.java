@@ -70,7 +70,6 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
@@ -1310,12 +1309,9 @@ public class DefaultJavaLibraryRuleTest {
     VALID_JAVA_BINARY("//tools/java/src/com/facebook/annotations:custom-processors") {
       @Override
       public BuildRule createRule(BuildTarget target) {
-        return new JavaBinaryRule(
-            new FakeBuildRuleParams(target),
-            "com.facebook.Main",
-            null,
-            null,
-            new DefaultDirectoryTraverser());
+       return JavaBinaryRuleBuilder.newBuilder(target)
+            .setMainClass("com.facebook.Main")
+            .build();
       }
     },
     VALID_JAVA_LIBRARY("//tools/java/src/com/facebook/somejava:library") {
