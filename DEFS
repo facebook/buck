@@ -4,46 +4,27 @@
 original_java_library = java_library
 def java_library(
     name,
-    srcs=[],
-    resources=[],
-    exported_deps=[],
     source='7',
     target='7',
-    proguard_config=None,
-    deps=[],
-    visibility=[],
+    **kwargs
     ):
   original_java_library(
-    name=name,
-    srcs=srcs,
-    resources=resources,
-    exported_deps=exported_deps,
+    name,
     source=source,
     target=target,
-    proguard_config=proguard_config,
-    deps=deps,
-    visibility=visibility,
+    **kwargs
     )
-    
+
 original_java_test = java_test
 def java_test(
     name,
-    srcs=[],
-    labels=[],
-    resources=[],
     source='7',
     target='7',
     vm_args=[],
-    source_under_test=[],
-    contacts=[],
-    deps=[],
-    visibility=[],
+    **kwargs
     ):
   original_java_test(
-    name=name,
-    srcs=srcs,
-    labels=labels,
-    resources=resources,
+    name,
     source=source,
     target=target,
     vm_args=[
@@ -77,8 +58,5 @@ def java_test(
       # publicly accessible.
       '-Dsun.zip.disableMemoryMapping=true',
     ] + vm_args,
-    source_under_test=source_under_test,
-    contacts=contacts,
-    deps=deps,
-    visibility=visibility,
+    **kwargs
   )
