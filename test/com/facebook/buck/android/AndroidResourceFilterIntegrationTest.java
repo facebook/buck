@@ -125,4 +125,19 @@ public class AndroidResourceFilterIntegrationTest {
 
     apkInspector.assertFileExists("assets/strings/fr.fbstr");
   }
+
+  @Test
+  public void testApkWithStringsAsAssetsAndResourceFilter() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckBuild("//apps/sample:app_comp_str_xhdpi");
+    result.assertSuccess();
+
+    File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_comp_str_xhdpi"));
+    ApkInspector apkInspector = new ApkInspector(apkFile);
+
+    apkInspector.assertFileExists("assets/strings/fr.fbstr");
+    apkInspector.assertFileExists("res/drawable-xhdpi/app_icon.png");
+    apkInspector.assertFileDoesNotExist("res/drawable-hdpi/app_icon.png");
+    apkInspector.assertFileDoesNotExist("res/drawable-mdpi/app_icon.png");
+  }
 }
