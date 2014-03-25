@@ -26,6 +26,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -132,10 +133,11 @@ public class ApkBuilderStep implements Step {
         builder.addSourceFolder(projectFilesystem.getFileForRelativePath(assetDirectory));
       }
       for (Path zipFile : zipFiles) {
-        File zipFileOnDisk = projectFilesystem.getFileForRelativePath(zipFile);
-        if (zipFileOnDisk.exists() && zipFileOnDisk.isFile()) {
-          builder.addZipFile(zipFileOnDisk);
-        }
+        Preconditions.checkState(projectFilesystem.exists(zipFile),
+            "Input zip file does not exist: %s", zipFile);
+        Preconditions.checkState(projectFilesystem.isFile(zipFile),
+            "Input zip file is not a regular file: %s", zipFile);
+        builder.addZipFile(projectFilesystem.getFileForRelativePath(zipFile));
       }
       for (String jarFileThatMayContainResources : jarFilesThatMayContainResources) {
         File jarFile  = projectFilesystem.getFileForRelativePath(jarFileThatMayContainResources);
@@ -196,7 +198,7 @@ public class ApkBuilderStep implements Step {
     return String.format(
         // TODO(mbolin): Make the directory that corresponds to $ANDROID_HOME a field that is
         // accessible via an AndroidPlatformTarget and insert that here in place of "$ANDROID_HOME".
-        "java -classpath $ANDROID_HOME/tools/lib/sdklib.jar %s %s -v -u %s -z %s %s -f %s",
+        "java -classpath $ANDROID_HOME/tools/lib/sdklib.jar %s %s -v -u %s -z %s %s %s -f %s",
         "com.android.sdklib.build.ApkBuilderMain",
         pathToOutputApkFile,
         Joiner.on(' ').join(Iterables.transform(nativeLibraryDirectories,
@@ -206,6 +208,7 @@ public class ApkBuilderStep implements Step {
                 return "-nf " + s;
               }
             })),
+        Joiner.on(' ').join(Iterables.transform(zipFiles, Functions.toStringFunction())),
         resourceApk,
         Joiner.on(' ').join(Iterables.transform(assetDirectories,
             new Function<String, String>() {
