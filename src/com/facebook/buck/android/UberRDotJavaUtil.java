@@ -93,11 +93,14 @@ public class UberRDotJavaUtil {
 
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
+        HasAndroidResourceDeps androidResourceRule = null;
         if (rule instanceof HasAndroidResourceDeps) {
-          HasAndroidResourceDeps androidResourceRule = (HasAndroidResourceDeps)rule;
-          if (androidResourceRule.getRes() != null) {
-            androidResources.add(androidResourceRule);
-          }
+          androidResourceRule = (HasAndroidResourceDeps) rule;
+        } else if (rule.getBuildable() instanceof HasAndroidResourceDeps) {
+          androidResourceRule = (HasAndroidResourceDeps) rule.getBuildable();
+        }
+        if (androidResourceRule != null && androidResourceRule.getRes() != null) {
+          androidResources.add(androidResourceRule);
         }
 
         // Only certain types of rules should be considered as part of this traversal.
