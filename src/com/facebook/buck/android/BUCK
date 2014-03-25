@@ -47,7 +47,7 @@ RULES_SRCS = [
   'IntermediateDexRule.java',
   'MergeAndroidResourcesStep.java',
   'NativeLibraryBuildable.java',
-  'NdkLibraryBuildRuleFactory.java',
+  'NdkLibraryDescription.java',
   'NdkLibrary.java',
   'PackageStringAssets.java',
   'PreDexedFilesSorter.java',

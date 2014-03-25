@@ -25,12 +25,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -60,20 +57,20 @@ public class NdkLibraryTest {
 
     String basePath = "java/src/com/facebook/base";
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    BuildRule rule = ruleResolver.buildAndAddToIndex(
-        NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams(),
-            Optional.of("r8b"))
-        .setBuildTarget(BuildTargetFactory.newInstance(
+    BuildRule rule =
+        NdkLibraryBuilder.createNdkLibrary(BuildTargetFactory.newInstance(
             String.format("//%s:base", basePath)))
+        .setNdkVersion("r8b")
         .addSrc(Paths.get(basePath + "/Application.mk"))
         .addSrc(Paths.get(basePath + "/main.cpp"))
         .addSrc(Paths.get(basePath + "/Android.mk"))
         .addFlag("flag1")
         .addFlag("flag2")
-        .setIsAsset(true)
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .setIsAsset(true).build();
 
-    assertEquals(BuildRuleType.NDK_LIBRARY, rule.getType());
+    ruleResolver.addToIndex(rule.getBuildTarget(), rule);
+
+    assertEquals(NdkLibraryDescription.TYPE, rule.getType());
 
     NdkLibrary ndkLibrary = (NdkLibrary) rule.getBuildable();
 

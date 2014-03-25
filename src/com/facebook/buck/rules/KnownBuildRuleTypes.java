@@ -23,7 +23,7 @@ import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceBuildRuleFactory;
 import com.facebook.buck.android.ApkGenruleBuildRuleFactory;
 import com.facebook.buck.android.GenAidlDescription;
-import com.facebook.buck.android.NdkLibraryBuildRuleFactory;
+import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuildRuleFactory;
 import com.facebook.buck.android.RobolectricTestBuildRuleFactory;
 import com.facebook.buck.apple.IosBinaryDescription;
@@ -127,6 +127,7 @@ public class KnownBuildRuleTypes {
     builder.register(new PythonBinaryDescription());
     builder.register(new XcodeProjectConfigDescription());
     builder.register(new XcodeNativeDescription());
+    builder.register(new NdkLibraryDescription(Optional.<String>absent()));
 
     // TODO(simons): Consider once more whether we actually want to have default rules
     builder.register(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory());
@@ -141,8 +142,6 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.JAVA_BINARY, new JavaBinaryBuildRuleFactory());
     builder.register(BuildRuleType.KEYSTORE, new KeystoreBuildRuleFactory());
     builder.register(BuildRuleType.GEN_PARCELABLE, new GenParcelableBuildRuleFactory());
-    builder.register(BuildRuleType.NDK_LIBRARY,
-        new NdkLibraryBuildRuleFactory(Optional.<String>absent()));
     builder.register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());
     builder.register(BuildRuleType.PREBUILT_NATIVE_LIBRARY,
         new PrebuiltNativeLibraryBuildRuleFactory());
@@ -200,8 +199,7 @@ public class KnownBuildRuleTypes {
     if (!ndkVersion.isPresent()) {
       ndkVersion = androidDirectoryResolver.getNdkVersion();
     }
-
-    builder.register(BuildRuleType.NDK_LIBRARY, new NdkLibraryBuildRuleFactory(ndkVersion));
+    builder.register(new NdkLibraryDescription(ndkVersion));
 
     return builder;
   }

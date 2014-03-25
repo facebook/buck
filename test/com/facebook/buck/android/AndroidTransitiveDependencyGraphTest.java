@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
@@ -60,15 +59,12 @@ public class AndroidTransitiveDependencyGraphTest {
         .setBinaryJar(Paths.get("third_party/jsr-305/jsr305.jar"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    BuildRule ndkLibrary = ruleResolver.buildAndAddToIndex(
-        NdkLibrary.newNdkLibraryRuleBuilder(
-            new FakeAbstractBuildRuleBuilderParams(), Optional.<String>absent())
-            .setBuildTarget(
-                BuildTargetFactory.newInstance(
-                    "//java/com/facebook/native_library:library"))
+    BuildRule ndkLibrary =
+        NdkLibraryBuilder.createNdkLibrary(BuildTargetFactory.newInstance(
+                "//java/com/facebook/native_library:library"))
             .addSrc(Paths.get("Android.mk"))
-            .setIsAsset(false)
-            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+            .setIsAsset(false).build();
+    ruleResolver.addToIndex(ndkLibrary.getBuildTarget(), ndkLibrary);
 
     BuildRule prebuiltNativeLibraryBuild = ruleResolver.buildAndAddToIndex(
         PrebuiltNativeLibrary.newPrebuiltNativeLibrary(new FakeAbstractBuildRuleBuilderParams())

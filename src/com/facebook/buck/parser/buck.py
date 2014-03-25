@@ -592,28 +592,6 @@ def android_instrumentation_apk(
 
 
 @provide_for_build
-def ndk_library(
-    name,
-    flags=None,
-    is_asset=False,
-    deps=[],
-    visibility=[],
-    build_env=None):
-
-  EXTENSIONS = ("mk", "h", "hpp", "c", "cpp", "cc", "cxx")
-  srcs = glob(["**/*.%s" % ext for ext in EXTENSIONS], build_env=build_env)
-  add_rule({
-    'type' : 'ndk_library',
-    'name' : name,
-    'srcs' : srcs,
-    'flags' : flags,
-    'is_asset' : is_asset,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def keystore(
     name,
     store,

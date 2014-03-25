@@ -25,6 +25,7 @@ import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.AndroidResourceRule;
 import com.facebook.buck.android.NdkLibrary;
+import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.command.Project.SourceFolder;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -34,7 +35,6 @@ import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -771,12 +771,11 @@ public class ProjectTest {
     // )
 
     BuildTarget fooJni = BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni");
-    BuildRule ndkLibrary = ruleResolver.buildAndAddToIndex(
-        NdkLibrary.newNdkLibraryRuleBuilder(
-            new FakeAbstractBuildRuleBuilderParams(), Optional.<String>absent())
-              .setBuildTarget(fooJni)
-              .addSrc(Paths.get("Android.mk"))
-              .addVisibilityPattern(new SingletonBuildTargetPattern("//third_party/java/foo:foo")));
+    BuildRule ndkLibrary = NdkLibraryBuilder.createNdkLibrary(fooJni)
+        .addSrc(Paths.get("Android.mk"))
+        .build();
+
+    ruleResolver.addToIndex(ndkLibrary.getBuildTarget(), ndkLibrary);
 
     ProjectConfigRule ndkProjectConfig = ruleResolver.buildAndAddToIndex(
         ProjectConfigRule.newProjectConfigRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
