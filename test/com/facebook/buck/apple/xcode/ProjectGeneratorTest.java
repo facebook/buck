@@ -911,6 +911,47 @@ public class ProjectGeneratorTest {
     assertThat(target.getGlobalID(), equalTo("ABCDE"));
   }
 
+  @Test
+  public void generatedSourceTargetGidShouldReuseIfNameMatchInExistingProject() throws IOException {
+    String projectData =
+      "// !$*UTF8*$!\n" +
+      "{\n" +
+      "  archiveVersion = 1;\n" +
+      "  classes = {};\n" +
+      "  objectVersion = 46;\n" +
+      "  objects = {\n" +
+      "    /* Begin PBXAggregateTarget section */\n" +
+      "            93C1B2AA1B49969700000000 /* GeneratedSignedSourceTarget */ = {\n" +
+      "                         isa = PBXAggregateTarget;\n" +
+      "                         buildConfigurationList = 64D2EE2518E12BBC00773179 /* Build " +
+      "configuration list for PBXAggregateTarget \"GeneratedSignedSourceTarget\" */;\n" +
+      "                         buildPhases = (\n" +
+      "                                 E1F174220000000000000000 /* ShellScript */,\n" +
+      "                         );\n" +
+      "                         dependencies = (\n" +
+      "                         );\n" +
+      "                         name = GeneratedSignedSourceTarget;\n" +
+      "                         productName = GeneratedSignedSourceTarget;\n" +
+      "                 };\n" +
+      "    /* End PBXAggregateTarget section */\n" +
+      "    };\n" +
+      "  };\n" +
+      "}";
+    projectFilesystem.writeContentsToPath(projectData, OUTPUT_PROJECT_FILE_PATH);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<BuildTarget>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "GeneratedSignedSourceTarget");
+    // Ensure the GID for the target is the same as the one previously on disk.
+    assertThat(target.getGlobalID(), equalTo("93C1B2AA1B49969700000000"));
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       BuildRuleResolver resolver, ImmutableSet<BuildTarget> initialBuildTargets) {
     return createProjectGeneratorForCombinedProject(

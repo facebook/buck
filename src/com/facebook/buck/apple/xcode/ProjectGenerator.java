@@ -837,6 +837,7 @@ public class ProjectGenerator {
 
   private void addGeneratedSignedSourceTarget(PBXProject project) {
     PBXAggregateTarget target = new PBXAggregateTarget("GeneratedSignedSourceTarget");
+    setTargetGIDIfNameInMap(target, targetNameToGIDMap);
     PBXShellScriptBuildPhase generatedSignedSourceScriptPhase = new PBXShellScriptBuildPhase();
     generatedSignedSourceScriptPhase.setShellScript(
         "# Do not change or remove this. This is a generated script phase\n" +
