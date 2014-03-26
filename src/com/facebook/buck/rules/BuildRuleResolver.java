@@ -80,6 +80,16 @@ public class BuildRuleResolver {
     }
   }
 
+  /**
+   * Adds to the index a mapping from {@code buildRule}'s target to itself and returns
+   * {@code buildRule}.
+   */
+  @VisibleForTesting
+  public <T extends BuildRule> T addToIndex(T buildRule) {
+    addToIndex(buildRule.getBuildTarget(), buildRule);
+    return buildRule;
+  }
+
   public <T extends BuildRule> T buildAndAddToIndex(BuildRuleBuilder<T> builder) {
     T buildRule = builder.build(this);
     addToIndex(buildRule.getBuildTarget(), buildRule);
