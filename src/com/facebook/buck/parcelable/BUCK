@@ -1,5 +1,5 @@
 RULES_SRCS = [
-  'GenParcelableBuildRuleFactory.java',
+  'GenParcelableDescription.java',
   'GenParcelable.java',
 ]
 java_library(
@@ -15,6 +15,7 @@ java_library(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:io',
   ],
   visibility = [
     '//src/com/facebook/buck/rules:types',

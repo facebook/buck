@@ -1,0 +1,4 @@
+gen_parcelable(
+  name = "student",
+  srcs = ["student.xml"],
+)

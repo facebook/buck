@@ -23,6 +23,7 @@ import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceBuildRuleFactory;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
+import com.facebook.buck.parcelable.GenParcelableDescription;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuildRuleFactory;
 import com.facebook.buck.android.RobolectricTestBuildRuleFactory;
@@ -42,7 +43,6 @@ import com.facebook.buck.java.JavaTestBuildRuleFactory;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarBuildRuleFactory;
-import com.facebook.buck.parcelable.GenParcelableBuildRuleFactory;
 import com.facebook.buck.parser.ProjectConfigRuleFactory;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonLibraryDescription;
@@ -130,6 +130,7 @@ public class KnownBuildRuleTypes {
     builder.register(new XcodeProjectConfigDescription());
     builder.register(new XcodeNativeDescription());
     builder.register(new NdkLibraryDescription(Optional.<String>absent()));
+    builder.register(new GenParcelableDescription());
 
     // TODO(simons): Consider once more whether we actually want to have default rules
     builder.register(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory());
@@ -139,7 +140,6 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
-    builder.register(BuildRuleType.GEN_PARCELABLE, new GenParcelableBuildRuleFactory());
     builder.register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());
     builder.register(BuildRuleType.PREBUILT_NATIVE_LIBRARY,
         new PrebuiltNativeLibraryBuildRuleFactory());

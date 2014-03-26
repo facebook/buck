@@ -18,19 +18,17 @@ package com.facebook.buck.parcelable;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SrcsAttributeBuilder;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -50,17 +48,12 @@ public class GenParcelable extends AbstractBuildable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(ANDROID);
 
-  private final ImmutableSortedSet<Path> srcs;
-  private final String outputDirectory;
+  private final ImmutableSortedSet<SourcePath> srcs;
+  private final Path outputDirectory;
 
-  private GenParcelable(BuildRuleParams buildRuleParams,
-                        Set<Path> srcs) {
+  GenParcelable(BuildRuleParams buildRuleParams, Set<SourcePath> srcs) {
     this.srcs = ImmutableSortedSet.copyOf(srcs);
-
-    this.outputDirectory = String.format("%s/%s/__%s__",
-        BuckConstant.GEN_DIR,
-        buildRuleParams.getBuildTarget().getBasePath(),
-        buildRuleParams.getBuildTarget().getShortName());
+    this.outputDirectory = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s__");
   }
 
   @Nullable
@@ -71,28 +64,32 @@ public class GenParcelable extends AbstractBuildable {
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    return srcs;
+    return SourcePaths.filterInputsToCompareToOutput(srcs);
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+  public List<Step> getBuildSteps(
+      final BuildContext buildContext,
+      BuildableContext buildableContext)
       throws IOException {
     Step step = new Step() {
 
       @Override
-      public int execute(ExecutionContext context) {
-        for (Path src : srcs) {
+      public int execute(ExecutionContext executionContext) {
+        for (SourcePath sourcePath : srcs) {
+          Path src = sourcePath.resolve(buildContext);
+          File file = executionContext.getProjectFilesystem().getFileForRelativePath(src);
           try {
             // Generate the Java code for the Parcelable class.
-            ParcelableClass parcelableClass = Parser.parse(src.toFile());
+            ParcelableClass parcelableClass = Parser.parse(file);
             String generatedJava = new Generator(parcelableClass).generate();
 
             // Write the generated Java code to a file.
-            File outputPath = new File(getOutputPathForParcelableClass(parcelableClass));
+            File outputPath = getOutputPathForParcelableClass(parcelableClass).toFile();
             Files.createParentDirs(outputPath);
             Files.write(generatedJava, outputPath, Charsets.UTF_8);
           } catch (IOException e) {
-            e.printStackTrace(context.getStdErr());
+            executionContext.logError(e, "Error creating parcelable from file: %s", src);
             return 1;
           }
         }
@@ -113,10 +110,10 @@ public class GenParcelable extends AbstractBuildable {
   }
 
   @VisibleForTesting
-  private String getOutputPathForParcelableClass(ParcelableClass parcelableClass) {
-    return outputDirectory + '/'
-        + parcelableClass.getPackageName().replace('.', '/') + '/'
-        + parcelableClass.getClassName() + ".java";
+  private Path getOutputPathForParcelableClass(ParcelableClass parcelableClass) {
+    return outputDirectory
+        .resolve(parcelableClass.getPackageName().replace('.', '/'))
+        .resolve(parcelableClass.getClassName() + ".java");
   }
 
   @Override
@@ -126,37 +123,6 @@ public class GenParcelable extends AbstractBuildable {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
-    return builder
-        .set("outputDirectory", outputDirectory);
-  }
-
-  public static Builder newGenParcelableRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildable.Builder implements
-      SrcsAttributeBuilder {
-
-    private ImmutableSortedSet.Builder<Path> srcs = ImmutableSortedSet.naturalOrder();
-
-    private Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public Builder addSrc(Path relativePathToSrc) {
-      srcs.add(relativePathToSrc);
-      return this;
-    }
-
-    @Override
-    public BuildRuleType getType() {
-      return BuildRuleType.GEN_PARCELABLE;
-    }
-
-    @Override
-    protected GenParcelable newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      return new GenParcelable(params, srcs.build());
-    }
+    return builder.set("outputDirectory", outputDirectory.toString());
   }
 }
