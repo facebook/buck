@@ -17,12 +17,8 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -42,7 +38,7 @@ public class Keystore extends AbstractBuildable {
   private final Path pathToStore;
   private final Path pathToProperties;
 
-  protected Keystore(BuildTarget buildTarget, Path store, Path properties) {
+  Keystore(BuildTarget buildTarget, Path store, Path properties) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.pathToStore = Preconditions.checkNotNull(store);
     this.pathToProperties = Preconditions.checkNotNull(properties);
@@ -81,46 +77,5 @@ public class Keystore extends AbstractBuildable {
       throws IOException {
     // Nothing to build: this is like a glorified exported_deps() rule.
     return ImmutableList.of();
-  }
-
-  public static Builder newKeystoreBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildable.Builder {
-
-    private Path pathToStore;
-    private Path pathToProperties;
-
-    protected Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    protected BuildRuleType getType() {
-      return BuildRuleType.KEYSTORE;
-    }
-
-    @Override
-    protected Keystore newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      return new Keystore(params.getBuildTarget(), pathToStore, pathToProperties);
-    }
-
-    public Builder setStore(Path pathToStore) {
-      this.pathToStore = pathToStore;
-      return this;
-    }
-
-    public Builder setProperties(Path pathToProperties) {
-      this.pathToProperties = pathToProperties;
-      return this;
-    }
-
   }
 }

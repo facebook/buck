@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
-import com.facebook.buck.java.Keystore;
+import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -89,12 +89,10 @@ public class AndroidTransitiveDependencyGraphTest {
         .setAssetsDirectory(Paths.get("assets")));
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    ruleResolver.buildAndAddToIndex(
-        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(keystoreTarget)
+    KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .build(ruleResolver);
 
     AndroidBinaryRule binaryRule = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
@@ -161,20 +159,18 @@ public class AndroidTransitiveDependencyGraphTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget androidLibraryKeystoreTarget = new BuildTarget("//java/com/keystore/base", "base");
-    ruleResolver.buildAndAddToIndex(
+    BuildRule androidLibraryKeystore = ruleResolver.buildAndAddToIndex(
         AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(androidLibraryKeystoreTarget)
         .addSrc(Paths.get("java/com/facebook/keystore/Base.java"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     BuildTarget keystoreTarget = new BuildTarget("//keystore", "debug");
-    ruleResolver.buildAndAddToIndex(
-        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(keystoreTarget)
+    KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .addDep(androidLibraryKeystoreTarget)
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .addDep(androidLibraryKeystore)
+        .build(ruleResolver);
 
     BuildTarget androidLibraryTarget = new BuildTarget("//java/com/facebook/base", "base");
     ruleResolver.buildAndAddToIndex(

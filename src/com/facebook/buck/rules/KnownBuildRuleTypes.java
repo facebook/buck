@@ -40,7 +40,7 @@ import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.java.JavaTestBuildRuleFactory;
 import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.KeystoreBuildRuleFactory;
+import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarBuildRuleFactory;
 import com.facebook.buck.parcelable.GenParcelableBuildRuleFactory;
 import com.facebook.buck.parser.ProjectConfigRuleFactory;
@@ -117,6 +117,7 @@ public class KnownBuildRuleTypes {
     builder.register(new ExportFileDescription());
     builder.register(new GenAidlDescription());
     builder.register(new GenruleDescription());
+    builder.register(new KeystoreDescription());
     builder.register(new IosBinaryDescription());
     builder.register(new IosLibraryDescription());
     builder.register(new IosTestDescription());
@@ -138,7 +139,6 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
-    builder.register(BuildRuleType.KEYSTORE, new KeystoreBuildRuleFactory());
     builder.register(BuildRuleType.GEN_PARCELABLE, new GenParcelableBuildRuleFactory());
     builder.register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());
     builder.register(BuildRuleType.PREBUILT_NATIVE_LIBRARY,

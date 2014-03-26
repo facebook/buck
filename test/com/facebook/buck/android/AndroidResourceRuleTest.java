@@ -19,10 +19,9 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.java.Keystore;
+import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -200,12 +199,11 @@ public class AndroidResourceRuleTest {
     // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
     // right thing when it gets a non-AndroidResourceRule as well as an AndroidResourceRule.
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    ruleResolver.buildAndAddToIndex(
-        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(keystoreTarget)
+    KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .build(ruleResolver);
+
     AndroidBinaryRule e = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:e"))

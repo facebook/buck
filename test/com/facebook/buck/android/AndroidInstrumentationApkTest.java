@@ -20,9 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.java.FakeJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
-import com.facebook.buck.java.Keystore;
+import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -81,13 +80,10 @@ public class AndroidInstrumentationApkTest {
     buildRuleIndex.put(javaLibrary4.getBuildTarget(), javaLibrary4);
     BuildRuleResolver ruleResolver = new BuildRuleResolver(buildRuleIndex);
 
-    BuildRule keystore = ruleResolver.buildAndAddToIndex(
-        Keystore.newKeystoreBuilder(
-            new FakeAbstractBuildRuleBuilderParams())
-            .setBuildTarget(new BuildTarget("//keystores", "debug"))
-            .setProperties(Paths.get("keystores/debug.properties"))
-            .setStore(Paths.get("keystores/debug.keystore"))
-            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+    BuildRule keystore = KeystoreBuilder.createBuilder(new BuildTarget("//keystores", "debug"))
+        .setProperties(Paths.get("keystores/debug.properties"))
+        .setStore(Paths.get("keystores/debug.keystore"))
+        .build(ruleResolver);
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.
     AndroidBinaryRule.Builder androidBinaryBuilder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(

@@ -22,11 +22,9 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -40,11 +38,9 @@ import java.util.List;
 
 public class KeystoreTest {
 
-  private static AbstractCachingBuildRule createKeystoreRuleForTest() {
+  private static BuildRule createKeystoreRuleForTest() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    return Keystore
-        .newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//keystores:debug"))
+    return KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//keystores:debug"))
         .setStore(Paths.get("keystores/debug.keystore"))
         .setProperties(Paths.get("keystores/debug.keystore.properties"))
         .build(ruleResolver);
@@ -52,8 +48,8 @@ public class KeystoreTest {
 
   @Test
   public void testObservers() {
-    AbstractCachingBuildRule rule = createKeystoreRuleForTest();
-    assertEquals(BuildRuleType.KEYSTORE, rule.getType());
+    BuildRule rule = createKeystoreRuleForTest();
+    assertEquals(KeystoreDescription.TYPE, rule.getType());
 
     Keystore keystore = (Keystore) rule.getBuildable();
     MoreAsserts.assertIterablesEquals(
@@ -72,7 +68,7 @@ public class KeystoreTest {
 
     replay(buildContext);
 
-    AbstractCachingBuildRule keystore = createKeystoreRuleForTest();
+    BuildRule keystore = createKeystoreRuleForTest();
     List<Step> buildSteps = keystore.getBuildable().getBuildSteps(buildContext,
         new FakeBuildableContext());
     assertEquals(ImmutableList.<Step>of(), buildSteps);

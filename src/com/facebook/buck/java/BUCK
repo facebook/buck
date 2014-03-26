@@ -41,7 +41,7 @@ java_library(
     'JavaTestRule.java',
     'JavaTestBuildRuleFactory.java',
     'Keystore.java',
-    'KeystoreBuildRuleFactory.java',
+    'KeystoreDescription.java',
     'PrebuiltJarRule.java',
     'PrebuiltJarBuildRuleFactory.java',
   ],

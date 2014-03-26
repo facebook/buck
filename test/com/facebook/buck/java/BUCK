@@ -1,9 +1,10 @@
 java_library(
-  name = 'fakes',
+  name = 'testutil',
   srcs = [
     'FakeDefaultJavaLibraryRule.java',
     'FakeJavaLibraryRule.java',
     'JavaBinaryRuleBuilder.java',
+    'KeystoreBuilder.java',
   ],
   deps = [
     '//lib:guava',
@@ -33,7 +34,7 @@ java_test(
     '//src/com/facebook/buck/java:support',
   ],
   deps = [
-    ':fakes',
+    ':testutil',
     '//lib:easymock',
     '//lib:guava',
     '//lib:hamcrest-core',

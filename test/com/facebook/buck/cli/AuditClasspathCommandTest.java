@@ -24,7 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
-import com.facebook.buck.java.Keystore;
+import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.PartialGraph;
@@ -123,11 +123,10 @@ public class AuditClasspathCommandTest {
         .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
         .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
     BuildTarget keystoreBuildTarget = BuildTargetFactory.newInstance("//:keystore");
-    ruleResolver.buildAndAddToIndex(
-        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(keystoreBuildTarget)
+    KeystoreBuilder.createBuilder(keystoreBuildTarget)
         .setStore(Paths.get("debug.keystore"))
-        .setProperties(Paths.get("keystore.properties")));
+        .setProperties(Paths.get("keystore.properties"))
+        .build(ruleResolver);
     ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-binary"))

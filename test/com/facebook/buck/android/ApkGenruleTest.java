@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
-import com.facebook.buck.java.Keystore;
+import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -96,21 +96,20 @@ public class ApkGenruleTest {
         .addSrc(Paths.get("java/com/facebook/util/Facebook.java")));
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    ruleResolver.buildAndAddToIndex(
-        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(keystoreTarget)
+    KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .build(ruleResolver);
 
     ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
-        .setManifest(new FileSourcePath("AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(keystoreTarget)
-        .addDep(libAndroidTarget)
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+            .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
+            .setManifest(new FileSourcePath("AndroidManifest.xml"))
+            .setTarget("Google Inc.:Google APIs:16")
+            .setKeystore(keystoreTarget)
+            .addDep(libAndroidTarget)
+            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+    );
   }
 
   @Test

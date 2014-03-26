@@ -573,24 +573,6 @@ def android_instrumentation_apk(
 
 
 @provide_for_build
-def keystore(
-    name,
-    store,
-    properties,
-    deps=[],
-    visibility=[],
-    build_env=None):
-  add_rule({
-    'type' : 'keystore',
-    'name' : name,
-    'store' : store,
-    'properties' : properties,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def gen_parcelable(
     name,
     srcs,
