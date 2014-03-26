@@ -23,6 +23,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -43,19 +44,23 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 
 /**
@@ -239,8 +244,21 @@ public class ProjectFilesystem {
   public void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       final FileVisitor<Path> fileVisitor) throws IOException {
+    walkRelativeFileTree(pathRelativeToProjectRoot,
+        EnumSet.noneOf(FileVisitOption.class),
+        fileVisitor);
+  }
+
+  private void walkRelativeFileTree(
+      Path pathRelativeToProjectRoot,
+      EnumSet<FileVisitOption> visitOptions,
+      final FileVisitor<Path> fileVisitor) throws IOException {
     Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
-    java.nio.file.Files.walkFileTree(rootPath, new FileVisitor<Path>() {
+    java.nio.file.Files.walkFileTree(
+        rootPath,
+        visitOptions,
+        Integer.MAX_VALUE,
+        new FileVisitor<Path>() {
           @Override
           public FileVisitResult preVisitDirectory(
               Path dir, BasicFileAttributes attrs) throws IOException {
@@ -270,6 +288,26 @@ public class ProjectFilesystem {
    */
   public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException {
     java.nio.file.Files.walkFileTree(root, fileVisitor);
+  }
+
+  public Set<Path> getFilesUnderPath(
+      Path pathRelativeToProjectRoot,
+      EnumSet<FileVisitOption> visitOptions,
+      final Predicate<Path> predicate) throws IOException {
+    final ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
+    walkRelativeFileTree(
+        getPathForRelativePath(pathRelativeToProjectRoot),
+        visitOptions,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
+            if (predicate.apply(path)) {
+              paths.add(path);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
+    return paths.build();
   }
 
   /**

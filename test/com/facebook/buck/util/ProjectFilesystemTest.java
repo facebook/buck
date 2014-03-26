@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.util.ProjectFilesystem.CopySourceMode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
@@ -40,6 +41,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,6 +49,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.EnumSet;
 
 /** Unit test for {@link ProjectFilesystem}. */
 public class ProjectFilesystemTest {
@@ -338,6 +341,27 @@ public class ProjectFilesystemTest {
         "Context string should contain null.",
         projectFilesystem.createContextString(WatchEvents.createOverflowEvent()),
         Matchers.containsString("null"));
+  }
+
+  @Test
+  public void testGetFilesUnderPath() throws IOException {
+    tmp.newFile("file1");
+    tmp.newFolder("dir1");
+    tmp.newFile("dir1/file2");
+    tmp.newFolder("dir1/dir2");
+    tmp.newFile("dir1/dir2/file3");
+
+    assertThat(filesystem.getFilesUnderPath(
+            Paths.get("dir1"),
+            EnumSet.noneOf(FileVisitOption.class),
+            Predicates.<Path>alwaysTrue()),
+            containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
+
+    assertThat(filesystem.getFilesUnderPath(
+            Paths.get("dir1"),
+            EnumSet.noneOf(FileVisitOption.class),
+            Predicates.equalTo(Paths.get("dir1/dir2/file3"))),
+        containsInAnyOrder(Paths.get("dir1/dir2/file3")));
   }
 }
 
