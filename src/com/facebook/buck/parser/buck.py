@@ -131,25 +131,21 @@ def symlink_aware_walk(base):
   raise StopIteration
 
 def split_path(path):
-  '''Splits /foo/bar/baz.java into ['', 'foo', 'bar', 'baz.java'].'''
+  """Splits /foo/bar/baz.java into ['', 'foo', 'bar', 'baz.java']."""
   return path.split(os.path.sep);
 
 def well_formed_tokens(tokens):
-  '''Verify that a tokenized path contains no empty token'''
-  for token in tokens:
-    if not token:
-      return False
-  return True
+  """Verify that a tokenized path contains no empty token."""
+  return all(tokens)
 
 def path_join(path, element):
-  '''Add a new path element to a path, assuming None encodes the empty path.'''
+  """Add a new path element to a path, assuming None encodes the empty path."""
   if path is None:
     return element
   return path + os.path.sep + element
 
 def glob_walk_internal(normpath, iglob, isresult, visited, tokens, path):
-  """
-  Recursive routine for glob_walk
+  """Recursive routine for glob_walk.
 
   'visited' is initially the empty set.
   'tokens' is the list of glob elements yet to be traversed, e.g. ['**', '*.java'].
@@ -162,8 +158,8 @@ def glob_walk_internal(normpath, iglob, isresult, visited, tokens, path):
   key = (tuple(tokens), normpath(path))
   if key in visited:
     return
-  else:
-    visited.add(key)
+  visited.add(key)
+
   # Base case.
   if not tokens:
     if isresult(path):
@@ -171,6 +167,7 @@ def glob_walk_internal(normpath, iglob, isresult, visited, tokens, path):
     return
   token = tokens[0]
   next_tokens = tokens[1:]
+
   # Special glob token, equivalent to zero or more consecutive '*'
   if token == '**':
     for x in glob_walk_internal(normpath, iglob, isresult, visited, next_tokens, path):
@@ -178,6 +175,7 @@ def glob_walk_internal(normpath, iglob, isresult, visited, tokens, path):
     for child in iglob(path_join(path, '*')):
       for x in glob_walk_internal(normpath, iglob, isresult, visited, tokens, child):
         yield x
+
   # Usual glob pattern.
   else:
     for child in iglob(path_join(path, token)):
@@ -185,8 +183,7 @@ def glob_walk_internal(normpath, iglob, isresult, visited, tokens, path):
         yield x
 
 def glob_walk(pattern, root, wantdots=False):
-  """
-  Walk the path hierarchy, following symlinks, and emit relative paths to plain files matching 'pattern'.
+  """Walk the path hierarchy, following symlinks, and emit relative paths to plain files matching 'pattern'.
 
   Patterns can be any combination of chars recognized by shell globs.
   The special path token '**' expands to zero or more consecutive '*'.
@@ -199,6 +196,7 @@ def glob_walk(pattern, root, wantdots=False):
     if path is None:
       return None
     return os.path.realpath(os.path.join(root, path))
+
   # Relativized version of glob.iglob
   # Note that glob.iglob already optimizes paths with no special char.
   root_len = len(os.path.join(root, ''))
@@ -228,8 +226,7 @@ def glob_walk(pattern, root, wantdots=False):
   return glob_walk_internal(normpath, iglob, isresult, visited, tokens, None)
 
 def glob_match_internal(wantdots, tokens, chunks):
-  """
-  Recursive routine for glob_match
+  """Recursive routine for glob_match.
 
   Works as glob_walk_internal but on a linear path instead of some filesystem.
   """
@@ -242,9 +239,11 @@ def glob_match_internal(wantdots, tokens, chunks):
     return glob_match_internal(wantdots, next_tokens, chunks) if token == '**' else False
   chunk = chunks[0]
   next_chunks = chunks[1:]
+
   # Plain name (possibly empty)
   if not glob_module.has_magic(token):
     return token == chunk and glob_match_internal(wantdots, next_tokens, next_chunks)
+
   # Special glob token.
   elif token == '**':
     if glob_match_internal(wantdots, next_tokens, chunks):
@@ -253,8 +252,9 @@ def glob_match_internal(wantdots, tokens, chunks):
     if not wantdots and chunk and chunk[0] == '.':
       return False
     return glob_match_internal(wantdots, tokens, next_chunks)
+
+  # Usual glob pattern.
   else:
-    # Simulate a usual glob pattern.
     # We use the same internal library fnmatch as the original code:
     #    http://hg.python.org/cpython/file/2.7/Lib/glob.py#l76
     # TODO(user): to match glob.glob, '.*' should not match '.' or '..'
@@ -263,8 +263,8 @@ def glob_match_internal(wantdots, tokens, chunks):
     return fnmatch.fnmatch(chunk, token) and glob_match_internal(wantdots, next_tokens, next_chunks)
 
 def glob_match(pattern, path, wantdots=False):
-  """
-  Checks if a given (non necessarily existing) path matches a 'pattern'.
+  """Checks if a given (non necessarily existing) path matches a 'pattern'.
+
   Patterns can include the same special tokens as glob_walk.
   Paths and patterns are seen as a list of path elements delimited by '/'.
   E.g. '/' does not match '', but '*' does.
