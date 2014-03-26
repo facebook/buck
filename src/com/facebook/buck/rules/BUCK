@@ -130,6 +130,8 @@ java_library(
     'DescribedRuleBuilder.java',
     'DescribedRuleFactory.java',
     'DirArtifactCache.java',
+    'DoNotImplementHasRuleKey.java',
+    'DoNotImplementHasBuildResultType.java',
     'DoNotUseAbstractBuildable.java',
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',

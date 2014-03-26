@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
@@ -30,7 +31,8 @@ import java.util.concurrent.Callable;
 /**
  * A {@link BuildRule} that is designed to run tests.
  */
-public interface TestRule extends BuildRule {
+public interface TestRule
+    extends HasBuildTarget, DoNotImplementHasRuleKey, DoNotImplementHasBuildResultType {
 
   /**
    * Returns a boolean indicating whether the files that contain the test results for this rule are
@@ -45,13 +47,14 @@ public interface TestRule extends BuildRule {
   /**
    * Returns the commands required to run the tests.
    * <p>
-   * <strong>Note:</strong> This method may be run without {@link #build(BuildContext)} having been
-   * run. This happens if the user has built [and ran] the test previously and then re-runs it using
-   * the {@code --debug} flag.
+   * <strong>Note:</strong> This method may be run without {@link BuildRule#build(BuildContext)}
+   *     having been run. This happens if the user has built [and ran] the test previously and then
+   *     re-runs it using the {@code --debug} flag.
    *
-   * @param buildContext Because this method may be run without {@link #build(BuildContext)} having
-   *     been run, this is supplied in case any non-cacheable build work needs to be done.
-   * @param executionContext Provides context for creating {@link com.facebook.buck.step.Step}s.
+   * @param buildContext Because this method may be run without
+   *     {@link BuildRule#build(BuildContext)} having been run, this is supplied in case any
+   *     non-cacheable build work needs to be done.
+   * @param executionContext Provides context for creating {@link Step}s.
    * @param testSelectorListOptional Provides a way of selecting which tests to include or exclude
    *     from a run.
    * @return the commands required to run the tests

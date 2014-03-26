@@ -390,31 +390,31 @@ public class TestCommandTest {
 
   @Test
   public void testGetCandidateRulesByIncludedLabels() throws CmdLineException {
-    TestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    FakeTestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
         ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
-    TestRule rule2 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    FakeTestRule rule2 = new FakeTestRule(BuildRuleType.JAVA_TEST,
         ImmutableSet.of(new Label("android")),
         BuildTargetFactory.newInstance("//:teh"),
         ImmutableSortedSet.<BuildRule>of(rule1),
         ImmutableSet.<BuildTargetPattern>of());
 
-    TestRule rule3 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    FakeTestRule rule3 = new FakeTestRule(BuildRuleType.JAVA_TEST,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(rule2),
         ImmutableSet.<BuildTargetPattern>of());
 
-    Iterable<TestRule> rules = Lists.newArrayList(rule1, rule2, rule3);
+    Iterable<FakeTestRule> rules = Lists.newArrayList(rule1, rule2, rule3);
     DependencyGraph graph = createDependencyGraphFromBuildRules(rules);
     TestCommandOptions options = getOptions("--include", "linux", "windows");
 
     Iterable<TestRule> result = TestCommand.filterTestRules(options,
         TestCommand.getCandidateRules(graph));
-    assertThat(result, containsInAnyOrder(rule1, rule3));
+    assertThat(result, containsInAnyOrder((TestRule) rule1, (TestRule) rule3));
   }
 
   @Test
@@ -547,10 +547,18 @@ public class TestCommandTest {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
-    TestRule testRule = createMock(TestRule.class);
-    expect(testRule.getBuildResultType()).andReturn(BuildRuleSuccess.Type.FETCHED_FROM_CACHE);
+    FakeTestRule testRule = new FakeTestRule(BuildRuleType.JAVA_TEST,
+        ImmutableSet.of(new Label("windows")),
+        BuildTargetFactory.newInstance("//:lulz"),
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSet.<BuildTargetPattern>of()) {
 
-    replay(executionContext, testRule);
+      @Override
+      public BuildRuleSuccess.Type getBuildResultType() {
+        return BuildRuleSuccess.Type.FETCHED_FROM_CACHE;
+      }
+    };
+    replay(executionContext);
 
     assertTrue(
         "A cache hit updates the build artifact but not the test results. " +
@@ -562,7 +570,7 @@ public class TestCommandTest {
             /* results cache enabled */ true,
             /* running with test selectors */ false));
 
-    verify(executionContext, testRule);
+    verify(executionContext);
   }
 
   @Test
@@ -570,10 +578,18 @@ public class TestCommandTest {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
-    TestRule testRule = createMock(TestRule.class);
-    expect(testRule.getBuildResultType()).andReturn(BuildRuleSuccess.Type.BUILT_LOCALLY);
+    FakeTestRule testRule = new FakeTestRule(BuildRuleType.JAVA_TEST,
+        ImmutableSet.of(new Label("windows")),
+        BuildTargetFactory.newInstance("//:lulz"),
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSet.<BuildTargetPattern>of()) {
 
-    replay(executionContext, testRule);
+      @Override
+      public BuildRuleSuccess.Type getBuildResultType() {
+        return BuildRuleSuccess.Type.BUILT_LOCALLY;
+      }
+    };
+    replay(executionContext);
 
     assertTrue(
         "A test built locally should always run regardless of any cached result. ",
@@ -584,7 +600,7 @@ public class TestCommandTest {
             /* results cache enabled */ true,
             /* running with test selectors */ false));
 
-    verify(executionContext, testRule);
+    verify(executionContext);
   }
 
   @Test
@@ -592,14 +608,27 @@ public class TestCommandTest {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
-    TestRule testRule = createNiceMock(TestRule.class);
-    expect(testRule.getBuildResultType()).andReturn(BuildRuleSuccess.Type.MATCHING_RULE_KEY);
-    expect(testRule.hasTestResultFiles(executionContext)).andReturn(true);
+    FakeTestRule testRule = new FakeTestRule(BuildRuleType.JAVA_TEST,
+        ImmutableSet.of(new Label("windows")),
+        BuildTargetFactory.newInstance("//:lulz"),
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSet.<BuildTargetPattern>of()) {
+
+      @Override
+      public BuildRuleSuccess.Type getBuildResultType() {
+        return BuildRuleSuccess.Type.MATCHING_RULE_KEY;
+      }
+
+      @Override
+      public boolean hasTestResultFiles(ExecutionContext context) {
+        return true;
+      }
+    };
 
     TestRuleKeyFileHelper testRuleKeyFileHelper = createNiceMock(TestRuleKeyFileHelper.class);
     expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(false);
 
-    replay(executionContext, testRule, testRuleKeyFileHelper);
+    replay(executionContext, testRuleKeyFileHelper);
 
     assertTrue(
         "A cached build should run the tests if the test output directory\'s rule key is not " +
@@ -611,7 +640,7 @@ public class TestCommandTest {
             /* results cache enabled */ true,
             /* running with test selectors */ false));
 
-    verify(executionContext, testRule, testRuleKeyFileHelper);
+    verify(executionContext, testRuleKeyFileHelper);
   }
 
   @Test

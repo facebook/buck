@@ -78,6 +78,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -357,8 +358,13 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
       @Override
       public void visit(BuildRule buildRule) {
+        TestRule testRule = null;
         if (buildRule instanceof TestRule) {
-          TestRule testRule = (TestRule)buildRule;
+          testRule = (TestRule) buildRule;
+        } else if (buildRule.getBuildable() instanceof TestRule) {
+          testRule = (TestRule) buildRule.getBuildable();
+        }
+        if (testRule != null) {
           results.add(testRule);
         }
       }
@@ -375,14 +381,22 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   @VisibleForTesting
   static Iterable<TestRule> filterTestRules(final TestCommandOptions options,
       Iterable<TestRule> testRules) {
-    ImmutableSortedSet.Builder<TestRule> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<TestRule> builder =
+        ImmutableSortedSet.orderedBy(
+            new Comparator<TestRule>() {
+              @Override
+              public int compare(TestRule o1, TestRule o2) {
+                return o1.getBuildTarget().getFullyQualifiedName().compareTo(
+                    o2.getBuildTarget().getFullyQualifiedName());
+              }
+            });
 
     // We always want to run the rules that are given on the command line. Always. Unless we don't
     // want to.
     if (!options.shouldExcludeWin()) {
       List<String> allTargets = options.getArgumentsFormattedAsBuildTargets();
       for (TestRule rule : testRules) {
-        if (allTargets.contains(rule.getFullyQualifiedName())) {
+        if (allTargets.contains(rule.getBuildTarget().getFullyQualifiedName())) {
           builder.add(rule);
         }
       }
