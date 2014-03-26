@@ -68,7 +68,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
     try {
       final Path buildRulePath = Paths.get(params.getBuildTarget().getBasePath());
-      final Path rootDirectory = params.getPathRelativizer().apply(buildRulePath);
+      final Path rootDirectory = params.getPathAbsolutifier().apply(buildRulePath);
       Files.walkFileTree(
           rootDirectory,
           EnumSet.of(FileVisitOption.FOLLOW_LINKS),
