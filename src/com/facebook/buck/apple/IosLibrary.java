@@ -69,6 +69,10 @@ public class IosLibrary extends AbstractBuildable {
     return perFileFlags;
   }
 
+  public ImmutableSortedSet<String> getFrameworks() {
+    return frameworks;
+  }
+
   @Nullable
   @Override
   public Path getPathToOutputFile() {

@@ -529,6 +529,58 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testIosTestRuleGathersTransitiveFrameworkDependencies() throws IOException {
+    BuildRule libraryRule;
+    BuildRule testRule;
+
+    {
+      BuildRuleParams params = new FakeBuildRuleParams(
+          new BuildTarget("//foo", "lib"), ImmutableSortedSet.<BuildRule>of());
+      IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+      arg.configs = ImmutableMap.of(
+          "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("foo.m")));
+      arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
+      libraryRule = new DescribedRule(
+          IosLibraryDescription.TYPE,
+          iosLibraryDescription.createBuildable(params, arg), params);
+    }
+
+    {
+      BuildRuleParams params = new FakeBuildRuleParams(
+          new BuildTarget("//foo", "test"), ImmutableSortedSet.of(libraryRule));
+
+      IosTestDescription.Arg arg = iosTestDescription.createUnpopulatedConstructorArg();
+      arg.infoPlist = Paths.get("Info.plist");
+      arg.configs = ImmutableMap.of(
+          "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("fooTest.m")));
+      arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
+      arg.sourceUnderTest = ImmutableSortedSet.of();
+
+      testRule = new DescribedRule(
+          IosTestDescription.TYPE,
+          iosTestDescription.createBuildable(params, arg), params);
+    }
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryRule, testRule),
+        ImmutableSet.of(testRule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:test");
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target,
+        ImmutableList.of(
+            "$BUILT_PRODUCTS_DIR/liblib.a",
+            "$SDKROOT/Library.framework",
+            "$SDKROOT/Test.framework"));
+  }
+
+  @Test
   public void testIosBinaryRule() throws IOException {
     BuildRule depRule = createBuildRuleWithDefaults(
         new BuildTarget("//dep", "dep"),

@@ -384,11 +384,14 @@ public class ProjectGenerator {
         targetGroup,
         buildable.getSrcs(),
         buildable.getPerFileFlags());
+    ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
+    frameworksBuilder.addAll(buildable.getFrameworks());
+    collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
     addFrameworksBuildPhase(
         rule.getBuildTarget(),
         target,
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
-        buildable.getFrameworks(),
+        frameworksBuilder.build(),
         collectRecursiveLibraryDependencies(rule));
     addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule));
 
@@ -433,11 +436,14 @@ public class ProjectGenerator {
         targetGroup,
         buildable.getSrcs(),
         buildable.getPerFileFlags());
+    ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
+    frameworksBuilder.addAll(buildable.getFrameworks());
+    collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
     addFrameworksBuildPhase(
         rule.getBuildTarget(),
         target,
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
-        buildable.getFrameworks(),
+        frameworksBuilder.build(),
         collectRecursiveLibraryDependencies(rule));
     addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule));
 
@@ -984,6 +990,16 @@ public class ProjectGenerator {
     Path originalProjectPath = projectFilesystem.getPathForRelativePath(
         Paths.get(buildTarget.getBasePathWithSlash()));
     return this.repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path);
+  }
+
+  private void collectRecursiveFrameworkDependencies(
+      BuildRule rule,
+      ImmutableSet.Builder<String> frameworksBuilder) {
+    for (BuildRule ruleDependency :
+           getRecursiveRuleDependenciesOfType(rule, IosLibraryDescription.TYPE)) {
+      IosLibrary iosLibrary = (IosLibrary)Preconditions.checkNotNull(ruleDependency.getBuildable());
+      frameworksBuilder.addAll(iosLibrary.getFrameworks());
+    }
   }
 
   private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(BuildRule rule) {
