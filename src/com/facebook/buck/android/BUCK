@@ -53,7 +53,7 @@ RULES_SRCS = [
   'PreDexedFilesSorter.java',
   'PreDexMerge.java',
   'PrebuiltNativeLibrary.java',
-  'PrebuiltNativeLibraryBuildRuleFactory.java',
+  'PrebuiltNativeLibraryDescription.java',
   'ResourcesFilter.java',
   'RobolectricTestBuildRuleFactory.java',
   'RobolectricTestRule.java',

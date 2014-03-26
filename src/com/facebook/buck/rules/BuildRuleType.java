@@ -29,8 +29,6 @@ public final class BuildRuleType {
   public static final BuildRuleType JAVA_LIBRARY = new BuildRuleType("java_library");
   public static final BuildRuleType JAVA_TEST = new BuildRuleType("java_test");
   public static final BuildRuleType PREBUILT_JAR = new BuildRuleType("prebuilt_jar");
-  public static final BuildRuleType PREBUILT_NATIVE_LIBRARY =
-      new BuildRuleType("prebuilt_native_library");
   public static final BuildRuleType ROBOLECTRIC_TEST = new BuildRuleType("robolectric_test");
   public static final BuildRuleType SH_BINARY = new BuildRuleType("sh_binary");
   public static final BuildRuleType SH_TEST = new BuildRuleType("sh_test");

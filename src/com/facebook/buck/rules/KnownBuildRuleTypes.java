@@ -24,7 +24,7 @@ import com.facebook.buck.android.AndroidResourceBuildRuleFactory;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkLibraryDescription;
-import com.facebook.buck.android.PrebuiltNativeLibraryBuildRuleFactory;
+import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.RobolectricTestBuildRuleFactory;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
@@ -124,6 +124,7 @@ public class KnownBuildRuleTypes {
     builder.register(new CppBinaryDescription());
     builder.register(new CppLibraryDescription());
     builder.register(new JavaBinaryDescription());
+    builder.register(new PrebuiltNativeLibraryDescription());
     builder.register(new PythonLibraryDescription());
     builder.register(new PythonBinaryDescription());
     builder.register(new XcodeProjectConfigDescription());
@@ -141,8 +142,6 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
     builder.register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());
-    builder.register(BuildRuleType.PREBUILT_NATIVE_LIBRARY,
-        new PrebuiltNativeLibraryBuildRuleFactory());
     builder.register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
     builder.register(BuildRuleType.SH_BINARY, new ShBinaryBuildRuleFactory());
     builder.register(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory());

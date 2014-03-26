@@ -290,6 +290,7 @@ public class ProjectFilesystem {
     java.nio.file.Files.walkFileTree(root, fileVisitor);
   }
 
+  // TODO(user): create a variant that always follows the links
   public Set<Path> getFilesUnderPath(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,

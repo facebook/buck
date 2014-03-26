@@ -467,24 +467,6 @@ def android_resource(
 
 
 @provide_for_build
-def prebuilt_native_library(
-    name,
-    native_libs=None,
-    is_asset=False,
-    deps=[],
-    visibility=[],
-    build_env=None):
-  add_rule({
-    'type' : 'prebuilt_native_library',
-    'name' : name,
-    'native_libs' : native_libs,
-    'is_asset' : is_asset,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def android_binary(
       name,
       manifest,

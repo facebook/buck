@@ -66,13 +66,14 @@ public class AndroidTransitiveDependencyGraphTest {
             .setIsAsset(false).build();
     ruleResolver.addToIndex(ndkLibrary.getBuildTarget(), ndkLibrary);
 
-    BuildRule prebuiltNativeLibraryBuild = ruleResolver.buildAndAddToIndex(
-        PrebuiltNativeLibrary.newPrebuiltNativeLibrary(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance(
-            "//java/com/facebook/prebuilt_native_library:library"))
-        .setNativeLibsDirectory(Paths.get("/java/com/facebook/prebuilt_native_library/libs"))
+    BuildTarget prebuiltNativeLibraryTarget =
+        BuildTargetFactory.newInstance("//java/com/facebook/prebuilt_native_library:library");
+    BuildRule prebuiltNativeLibraryBuild =
+        PrebuiltNativeLibraryBuilder.newBuilder(prebuiltNativeLibraryTarget)
+        .setNativeLibs(Paths.get("/java/com/facebook/prebuilt_native_library/libs"))
         .setIsAsset(true)
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .build();
+    ruleResolver.addToIndex(prebuiltNativeLibraryTarget, prebuiltNativeLibraryBuild);
 
     DefaultJavaLibraryRule libraryRule = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())

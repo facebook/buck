@@ -16,20 +16,11 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.DefaultDirectoryTraverser;
-import com.facebook.buck.util.DirectoryTraverser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -57,14 +48,15 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
 
   private final boolean isAsset;
   private final Path libraryPath;
-  private final DirectoryTraverser directoryTraverser;
+  private final ImmutableSortedSet<Path> librarySources;
 
-  protected PrebuiltNativeLibrary(Path nativeLibsDirectory,
-                                  boolean isAsset,
-                                  DirectoryTraverser directoryTraverser) {
+  protected PrebuiltNativeLibrary(
+      Path nativeLibsDirectory,
+      boolean isAsset,
+      ImmutableSortedSet<Path> librarySources) {
     this.isAsset = isAsset;
     this.libraryPath = Preconditions.checkNotNull(nativeLibsDirectory);
-    this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
+    this.librarySources = Preconditions.checkNotNull(librarySources);
   }
 
   @Override
@@ -85,14 +77,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    ImmutableSortedSet.Builder<Path> inputsToConsiderForCachingPurposes = ImmutableSortedSet
-        .naturalOrder();
-
-    Buildables.addInputsToSortedSet(getLibraryPath(),
-        inputsToConsiderForCachingPurposes,
-        directoryTraverser);
-
-    return inputsToConsiderForCachingPurposes.build();
+    return librarySources;
   }
 
   @Override
@@ -106,60 +91,5 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     // We're checking in prebuilt libraries for now, so this is a noop.
     return ImmutableList.of();
-  }
-
-  public static Builder newPrebuiltNativeLibrary(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildable.Builder {
-
-    private boolean isAsset = false;
-    @Nullable
-    private Path nativeLibs = null;
-
-    private Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    protected BuildRuleType getType() {
-      return BuildRuleType.PREBUILT_NATIVE_LIBRARY;
-    }
-
-    public Builder setIsAsset(boolean isAsset) {
-      this.isAsset = isAsset;
-      return this;
-    }
-
-    @Override
-    protected PrebuiltNativeLibrary newBuildable(BuildRuleParams params,
-        BuildRuleResolver resolver) {
-      return new PrebuiltNativeLibrary(nativeLibs, isAsset, new DefaultDirectoryTraverser());
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    public Builder addDep(BuildTarget dep) {
-      super.addDep(dep);
-      return this;
-    }
-
-    @Override
-    public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
-      super.addVisibilityPattern(visibilityPattern);
-      return this;
-    }
-
-    public Builder setNativeLibsDirectory(Path nativeLibs) {
-      this.nativeLibs = nativeLibs;
-      return this;
-    }
-
   }
 }
