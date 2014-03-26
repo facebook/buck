@@ -16,9 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.BuildRule;
-
-public interface HasAndroidPlatformTarget extends BuildRule {
+public interface HasAndroidPlatformTarget {
 
   /**
    * Return the version of the Android platform to target when building this rule, such as "16".
