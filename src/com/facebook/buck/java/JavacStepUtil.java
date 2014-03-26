@@ -42,7 +42,7 @@ public class JavacStepUtil {
       Optional<Path> pathToSrcsList,
       BuildTarget buildTarget) {
 
-    if (javacOptions.getPathToJavac().isPresent()) {
+    if (javacOptions.getJavaCompilerEnvironment().getJavacPath().isPresent()) {
       return new ExternalJavacStep(
           outputDirectory,
           javaSourceFilePaths,

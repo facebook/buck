@@ -174,8 +174,7 @@ public class UberRDotJavaUtil {
         ImmutableSet.<String>of(),
         /* classpathEntries */ ImmutableSet.<String>of(),
         JavacOptions.builder(JavacOptions.DEFAULTS)
-            .setPathToJavac(javacOptions.getPathToJavac())
-            .setJavacVersion(javacOptions.getJavacVersion())
+            .setJavaCompilerEnviornment(javacOptions.getJavaCompilerEnvironment())
             .build(),
         pathToOutputAbiFile,
         Optional.<String>absent(),

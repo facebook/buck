@@ -74,7 +74,10 @@ public class ExternalJavacTest extends EasyMockSupport {
           /* transitiveClasspathEntries */ ImmutableSet.of("bar.jar", "foo.jar"),
           /* declaredClasspathEntries */ ImmutableSet.of("foo.jar"),
           JavacOptions.builder(JavacOptions.DEFAULTS)
-              .setPathToJavac(Optional.of(Paths.get("fakeJavac")))
+              .setJavaCompilerEnviornment(
+                  new JavaCompilerEnvironment(
+                      Optional.of(Paths.get("fakeJavac")),
+                      Optional.<JavacVersion> absent()))
               .build(),
           /* pathToOutputAbiFile */ Optional.<Path>absent(),
           /* invokingRule */ Optional.<String>absent(),

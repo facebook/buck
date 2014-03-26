@@ -36,6 +36,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cpp.CppBinaryDescription;
 import com.facebook.buck.cpp.CppLibraryDescription;
 import com.facebook.buck.java.JavaBinaryBuildRuleFactory;
+import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.java.JavaTestBuildRuleFactory;
 import com.facebook.buck.java.JavacOptions;
@@ -51,15 +52,12 @@ import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -155,42 +153,30 @@ public class KnownBuildRuleTypes {
 
   public static KnownBuildRuleTypes getConfigured(
       BuckConfig buckConfig,
-      ProcessExecutor executor,
-      AndroidDirectoryResolver androidDirectoryResolver) {
-    return createConfiguredBuilder(buckConfig, executor, androidDirectoryResolver).build();
+      AndroidDirectoryResolver androidDirectoryResolver,
+      JavaCompilerEnvironment javacEnv) {
+    return createConfiguredBuilder(
+        buckConfig, androidDirectoryResolver, javacEnv).build();
   }
 
   public static Builder createConfiguredBuilder(
       BuckConfig buckConfig,
-      ProcessExecutor executor,
-      AndroidDirectoryResolver androidDirectoryResolver) {
-    Optional<Path> javac = buckConfig.getJavac();
-
-    Optional<String> javacVersion = Optional.absent();
-    if (javac.isPresent()) {
-      try {
-        ProcessExecutor.Result versionResult = executor.execute(
-            Runtime.getRuntime().exec(javac.get() + " -version"));
-        if (versionResult.getExitCode() == 0) {
-          javacVersion = Optional.of(versionResult.getStderr());
-        } else {
-          throw new HumanReadableException(versionResult.getStderr());
-        }
-      } catch (IOException e) {
-        throw new HumanReadableException("Could not run " + javac.get() + " -version");
-      }
-    }
+      AndroidDirectoryResolver androidDirectoryResolver,
+      JavaCompilerEnvironment javacEnv) {
 
     Builder builder = createDefaultBuilder();
     builder.register(BuildRuleType.JAVA_LIBRARY,
-        new JavaLibraryBuildRuleFactory(javac, javacVersion));
+        new JavaLibraryBuildRuleFactory(
+            javacEnv.getJavacPath(),
+            javacEnv.getJavacVersion()));
     builder.register(BuildRuleType.ANDROID_LIBRARY,
-        new AndroidLibraryBuildRuleFactory(javac, javacVersion));
+        new AndroidLibraryBuildRuleFactory(
+            javacEnv.getJavacPath(),
+            javacEnv.getJavacVersion()));
     builder.register(BuildRuleType.ANDROID_BINARY,
         new AndroidBinaryBuildRuleFactory(
             JavacOptions.builder(JavacOptions.DEFAULTS)
-                .setPathToJavac(javac)
-                .setJavacVersion(javacVersion)
+                .setJavaCompilerEnviornment(javacEnv)
                 .build()));
 
     Optional<String> ndkVersion = buckConfig.getNdkVersion();

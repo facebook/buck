@@ -252,7 +252,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       commands.add(new MkdirStep(pathToSrcsList.getParent()));
 
       final JavacStep javacStep;
-      if (javacOptions.getPathToJavac().isPresent()) {
+      if (javacOptions.getJavaCompilerEnvironment().getJavacPath().isPresent()) {
         javacStep = new ExternalJavacStep(
             outputDirectory,
             getJavaSrcs(),
@@ -676,12 +676,12 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   @VisibleForTesting
   public Optional<Path> getJavac() {
-    return javacOptions.getPathToJavac();
+    return javacOptions.getJavaCompilerEnvironment().getJavacPath();
   }
 
   @VisibleForTesting
-  public Optional<String> getJavacVersion() {
-    return javacOptions.getJavacVersion();
+  public Optional<JavacVersion> getJavacVersion() {
+    return javacOptions.getJavaCompilerEnvironment().getJavacVersion();
   }
 
   @VisibleForTesting
@@ -750,11 +750,14 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   public static Builder newJavaLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return newJavaLibraryRuleBuilder(Optional.<Path>absent(), Optional.<String>absent(), params);
+    return newJavaLibraryRuleBuilder(
+        Optional.<Path>absent(),
+        Optional.<JavacVersion>absent(),
+        params);
   }
 
   public static Builder newJavaLibraryRuleBuilder(Optional<Path> javac,
-      Optional<String> javacVersion,
+      Optional<JavacVersion> javacVersion,
       AbstractBuildRuleBuilderParams params) {
     return new Builder(javac, javacVersion, params);
   }
@@ -773,17 +776,17 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     protected Optional<Path> proguardConfig = Optional.absent();
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
-      this(Optional.<Path>absent(), Optional.<String>absent(), params);
+      this(Optional.<Path>absent(), Optional.<JavacVersion>absent(), params);
     }
 
     protected Builder(Optional<Path> javac,
-        Optional<String> javacVersion,
+        Optional<JavacVersion> javacVersion,
         AbstractBuildRuleBuilderParams params) {
       super(params);
       this.params = params;
 
-      javacOptions.setPathToJavac(javac);
-      javacOptions.setJavacVersion(javacVersion);
+      javacOptions.setJavaCompilerEnviornment(
+        new JavaCompilerEnvironment(javac, javacVersion));
     }
 
     @Override

@@ -33,13 +33,13 @@ public class JavaLibraryBuildRuleFactory extends
   public static final String ANNOTATION_PROCESSORS = "annotation_processors";
 
   private final Optional<Path> javac;
-  private final Optional<String> javacVersion;
+  private final Optional<JavacVersion> javacVersion;
 
   public JavaLibraryBuildRuleFactory() {
-    this(Optional.<Path>absent(), Optional.<String>absent());
+    this(Optional.<Path>absent(), Optional.<JavacVersion>absent());
   }
 
-  public JavaLibraryBuildRuleFactory(Optional<Path> javac, Optional<String> javacVersion) {
+  public JavaLibraryBuildRuleFactory(Optional<Path> javac, Optional<JavacVersion> javacVersion) {
     this.javac = javac;
     this.javacVersion = javacVersion;
   }
@@ -50,7 +50,7 @@ public class JavaLibraryBuildRuleFactory extends
   }
 
   @VisibleForTesting
-  public Optional<String> getJavacVersion() {
+  public Optional<JavacVersion> getJavacVersion() {
     return javacVersion;
   }
 

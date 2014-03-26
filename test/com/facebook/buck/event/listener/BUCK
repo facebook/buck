@@ -33,6 +33,7 @@ java_test(
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/util:network',
+    '//src/com/facebook/buck/java:support',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',

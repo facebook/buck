@@ -22,7 +22,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.JavaAbiRule;
+import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -129,8 +131,10 @@ public class AndroidLibraryGraphEnhancerTest {
         buildRuleParams,
         new FakeAbstractBuildRuleBuilderParams(),
         JavacOptions.builder(JavacOptions.DEFAULTS)
-            .setPathToJavac(Optional.of(Paths.get("javac")))
-            .setJavacVersion(Optional.of("1.7"))
+            .setJavaCompilerEnviornment(
+                new JavaCompilerEnvironment(
+                    Optional.of(Paths.get("javac")),
+                    Optional.of(new JavacVersion("1.7"))))
             .build());
     Result result = graphEnhancer.createBuildableForAndroidResources(ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -138,7 +142,11 @@ public class AndroidLibraryGraphEnhancerTest {
     Optional<DummyRDotJava> dummyRDotJava = result.getOptionalDummyRDotJava();
     assertTrue(dummyRDotJava.isPresent());
     JavacOptions javacOptions = dummyRDotJava.get().getJavacOptions();
-    assertEquals(Paths.get("javac"), javacOptions.getPathToJavac().get());
-    assertEquals("1.7", javacOptions.getJavacVersion().get());
+    assertEquals(
+        Paths.get("javac"),
+        javacOptions.getJavaCompilerEnvironment().getJavacPath().get());
+    assertEquals(
+        new JavacVersion("1.7"),
+        javacOptions.getJavaCompilerEnvironment().getJavacVersion().get());
   }
 }

@@ -9,7 +9,9 @@ java_library(
     'HasClasspathEntries.java',
     'JavaAbiRule.java',
     'JavaLibraryRule.java',
+    'JavacVersion.java',
     'JavacOptions.java',
+    'JavaCompilerEnvironment.java',
   ],
   deps = [
     '//lib:guava',

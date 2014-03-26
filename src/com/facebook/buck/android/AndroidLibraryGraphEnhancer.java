@@ -53,8 +53,7 @@ public class AndroidLibraryGraphEnhancer {
     // DummyRDotJava is built.
     Preconditions.checkNotNull(javacOptions);
     this.javacOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
-        .setPathToJavac(javacOptions.getPathToJavac())
-        .setJavacVersion(javacOptions.getJavacVersion())
+        .setJavaCompilerEnviornment(javacOptions.getJavaCompilerEnvironment())
         .build();
   }
 

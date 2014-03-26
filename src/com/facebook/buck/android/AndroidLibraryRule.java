@@ -22,6 +22,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -97,12 +98,15 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   public static Builder newAndroidLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return newAndroidLibraryRuleBuilder(Optional.<Path>absent(), Optional.<String>absent(), params);
+    return newAndroidLibraryRuleBuilder(
+      Optional.<Path>absent(),
+      Optional.<JavacVersion>absent(),
+      params);
   }
 
   public static Builder newAndroidLibraryRuleBuilder(
       Optional<Path> javac,
-      Optional<String> javacVersion,
+      Optional<JavacVersion> javacVersion,
       AbstractBuildRuleBuilderParams params) {
     return new Builder(javac, javacVersion, params);
   }
@@ -112,7 +116,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
 
     private Builder(
         Optional<Path> javac,
-        Optional<String> javacVersion,
+        Optional<JavacVersion> javacVersion,
         AbstractBuildRuleBuilderParams params) {
       super(javac, javacVersion, params);
     }

@@ -63,7 +63,7 @@ public class ExternalJavacStep extends JavacStep {
         buildDependencies,
         suggestBuildRules,
         pathToSrcsList);
-    this.pathToJavac = javacOptions.getPathToJavac().get();
+    this.pathToJavac = javacOptions.getJavaCompilerEnvironment().getJavacPath().get();
     this.target = Preconditions.checkNotNull(target);
   }
 

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
+import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
@@ -31,7 +32,7 @@ public class AndroidLibraryBuildRuleFactory extends JavaLibraryBuildRuleFactory 
     super();
   }
 
-  public AndroidLibraryBuildRuleFactory(Optional<Path> javac, Optional<String> javacVersion) {
+  public AndroidLibraryBuildRuleFactory(Optional<Path> javac, Optional<JavacVersion> javacVersion) {
     super(javac, javacVersion);
   }
 

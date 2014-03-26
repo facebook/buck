@@ -1197,7 +1197,10 @@ public class DefaultJavaLibraryRuleTest {
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     JavacOptions javacOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
-        .setPathToJavac(Optional.of(Paths.get("javac")))
+        .setJavaCompilerEnviornment(
+            new JavaCompilerEnvironment(
+                Optional.of(Paths.get("javac")),
+                Optional.<JavacVersion> absent()))
         .build();
     rule.createCommandsForJavac(
         rule.getPathToOutputFile(),
