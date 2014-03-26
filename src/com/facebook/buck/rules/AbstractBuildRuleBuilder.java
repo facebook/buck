@@ -19,15 +19,14 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
 
@@ -38,11 +37,11 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   protected Set<BuildTarget> deps = Sets.newHashSet();
   protected Set<BuildTargetPattern> visibilityPatterns = Sets.newHashSet();
 
-  private final Function<Path, Path> pathAbsolutifier;
+  private final ProjectFilesystem projectFilesystem;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   protected AbstractBuildRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    this.pathAbsolutifier = params.getPathAbsolutifier();
+    this.projectFilesystem = params.getProjectFilesystem();
     this.ruleKeyBuilderFactory = params.getRuleKeyBuilderFactory();
   }
 
@@ -122,7 +121,7 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
     return new BuildRuleParams(getBuildTarget(),
         getDepsAsBuildRules(ruleResolver),
         getVisibilityPatterns(),
-        pathAbsolutifier,
+        projectFilesystem,
         ruleKeyBuilderFactory);
   }
 }

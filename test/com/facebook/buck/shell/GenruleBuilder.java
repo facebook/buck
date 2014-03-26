@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -71,7 +72,7 @@ public class GenruleBuilder {
           if (absolutifier != null) {
             return absolutifier;
           }
-          return super.getPathAbsolutifier();
+          return IdentityPathAbsolutifier.getIdentityAbsolutifier();
         }
       };
       Buildable buildable = description.createBuildable(params, args);

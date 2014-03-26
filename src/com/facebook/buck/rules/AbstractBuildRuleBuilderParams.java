@@ -27,12 +27,16 @@ import java.nio.file.Path;
  */
 public interface AbstractBuildRuleBuilderParams {
 
+  public ProjectFilesystem getProjectFilesystem();
+
   /**
    * A function that maps a path relative to the project root to an absolute path.
    * <p>
    * This is likely backed by a {@link ProjectFilesystem}, but we expose only this function, as it
    * makes it easier to create a fake {@link AbstractBuildRuleBuilderParams} for testing that
    * could be implemented by {@link Functions#identity()}.
+   *
+   * TODO(user): Remove this since the {@link ProjectFilesystem} provides this.
    */
   public Function<Path, Path> getPathAbsolutifier();
 

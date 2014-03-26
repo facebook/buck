@@ -405,8 +405,8 @@ public final class BuildRuleFactoryParams {
     return instance.get(attributeName);
   }
 
-  public Function<Path, Path> getPathRelativizer() {
-    return abstractBuildRuleFactoryParams.getPathAbsolutifier();
+  public ProjectFilesystem getProjectFilesystem() {
+    return filesystem;
   }
 
   public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {

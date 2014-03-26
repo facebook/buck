@@ -32,7 +32,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.testutil.IdentityPathAbsolutifier;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +63,7 @@ public class DescribedRuleTest {
         BuildTargetFactory.newInstance("//one:example"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of(),
-        IdentityPathAbsolutifier.getIdentityAbsolutifier(),
+        new FakeProjectFilesystem(),
         new FakeRuleKeyBuilderFactory()
     );
 

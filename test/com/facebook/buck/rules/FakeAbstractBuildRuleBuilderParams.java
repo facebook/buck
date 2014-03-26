@@ -16,7 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 
 import java.nio.file.Path;
@@ -31,6 +33,11 @@ public class FakeAbstractBuildRuleBuilderParams implements AbstractBuildRuleBuil
 
   public FakeAbstractBuildRuleBuilderParams(RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
+  }
+
+  @Override
+  public ProjectFilesystem getProjectFilesystem() {
+    return new FakeProjectFilesystem();
   }
 
   @Override

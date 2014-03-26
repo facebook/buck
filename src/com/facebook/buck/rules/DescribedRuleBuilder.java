@@ -97,7 +97,7 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
         target,
         rules.build(),
         getVisibilityPatterns(),
-        ruleFactoryParams.getPathRelativizer(),
+        ruleFactoryParams.getProjectFilesystem(),
         ruleFactoryParams.getRuleKeyBuilderFactory());
 
     ConstructorArgMarshaller inspector =
@@ -114,7 +114,7 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
           params.getBuildTarget(),
           enhancedDeps,
           params.getVisibilityPatterns(),
-          params.getPathAbsolutifier(),
+          params.getProjectFilesystem(),
           params.getRuleKeyBuilderFactory());
     }
 

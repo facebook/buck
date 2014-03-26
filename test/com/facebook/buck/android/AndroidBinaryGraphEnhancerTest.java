@@ -40,19 +40,18 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
@@ -61,33 +60,27 @@ public class AndroidBinaryGraphEnhancerTest {
   @Test
   public void testCreateDepsForPreDexing() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    Function<Path, Path> pathRelativizer = new Function<Path, Path>() {
-      @Override
-      public Path apply(Path input) {
-        return input;
-      }
-    };
     RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory();
 
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
     BuildTarget javaDep1BuildTarget = new BuildTarget("//java/com/example", "dep1");
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
-            new DefaultBuildRuleBuilderParams(pathRelativizer, ruleKeyBuilderFactory))
+            new FakeAbstractBuildRuleBuilderParams(ruleKeyBuilderFactory))
             .setBuildTarget(javaDep1BuildTarget)
             .addSrc(Paths.get("java/com/example/Dep1.java")));
 
     BuildTarget javaDep2BuildTarget = new BuildTarget("//java/com/example", "dep2");
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
-            new DefaultBuildRuleBuilderParams(pathRelativizer, ruleKeyBuilderFactory))
+            new FakeAbstractBuildRuleBuilderParams(ruleKeyBuilderFactory))
             .setBuildTarget(javaDep2BuildTarget)
             .addSrc(Paths.get("java/com/example/Dep2.java")));
 
     BuildTarget javaLibBuildTarget = new BuildTarget("//java/com/example", "lib");
     DefaultJavaLibraryRule javaLib = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
-            new DefaultBuildRuleBuilderParams(pathRelativizer, ruleKeyBuilderFactory))
+            new FakeAbstractBuildRuleBuilderParams(ruleKeyBuilderFactory))
             .setBuildTarget(javaLibBuildTarget)
             .addSrc(Paths.get("java/com/example/Lib.java"))
             .addDep(javaDep1BuildTarget)
@@ -102,7 +95,7 @@ public class AndroidBinaryGraphEnhancerTest {
         apkTarget,
         originalDeps,
         /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-        pathRelativizer,
+        new FakeProjectFilesystem(),
         ruleKeyBuilderFactory);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalParams,
@@ -134,7 +127,7 @@ public class AndroidBinaryGraphEnhancerTest {
             uberRDotJavaTarget,
             ImmutableSortedSet.<BuildRule>of(),
             ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-            pathRelativizer,
+            new FakeProjectFilesystem(),
             ruleKeyBuilderFactory));
     ruleResolver.addToIndex(uberRDotJavaTarget, uberRDotJavaRule);
 
@@ -167,18 +160,12 @@ public class AndroidBinaryGraphEnhancerTest {
 
   @Test
   public void testAllBuildablesExceptPreDexRule() {
-    Function<Path, Path> pathRelativizer = new Function<Path, Path>() {
-      @Override
-      public Path apply(Path input) {
-        return input;
-      }
-    };
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams = new BuildRuleParams(
         apkTarget,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSortedSet.<BuildTargetPattern>of(),
-        pathRelativizer,
+        new FakeProjectFilesystem(),
         new FakeRuleKeyBuilderFactory());
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 

@@ -89,7 +89,7 @@ public class AndroidBinaryGraphEnhancer {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
     this.buildRuleBuilderParams = new DefaultBuildRuleBuilderParams(
-        originalParams.getPathAbsolutifier(),
+        originalParams.getProjectFilesystem(),
         originalParams.getRuleKeyBuilderFactory());
 
     this.ruleResolver = Preconditions.checkNotNull(ruleResolver);

@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
-import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,8 +52,6 @@ public class RobolectricTestBuildRuleFactoryTest {
 
     // Set up mocks.
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.getAbsolutifier()).andReturn(
-        IdentityPathAbsolutifier.getIdentityAbsolutifier());
     BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem) {
       @Override
       public BuildTarget parse(String buildTargetName, ParseContext parseContext)
