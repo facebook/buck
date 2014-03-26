@@ -17,18 +17,13 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -48,7 +43,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -108,7 +102,7 @@ import java.util.Set;
  * <p>
  * Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
+public class Genrule extends AbstractBuildable {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
@@ -121,6 +115,8 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
   protected final Map<Path, Path> srcsToAbsolutePaths;
 
+  protected final BuildTarget target;
+  private final ImmutableSortedSet<BuildRule> deps;
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
   private final Path pathToTmpDirectory;
@@ -129,14 +125,16 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   private final Path absolutePathToSrcDirectory;
   protected final Function<Path, Path> relativeToAbsolutePathFunction;
 
-  protected Genrule(BuildRuleParams buildRuleParams,
+  protected Genrule(BuildTarget target,
+      ImmutableSortedSet<BuildRule> deps,
       List<Path> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
       String out,
       final Function<Path, Path> relativeToAbsolutePathFunction) {
-    super(buildRuleParams);
+    this.deps = deps;
+    this.target = Preconditions.checkNotNull(target);
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = Preconditions.checkNotNull(cmd);
     this.bash = Preconditions.checkNotNull(bash);
@@ -151,29 +149,24 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     Preconditions.checkNotNull(out);
     this.pathToOutDirectory = Paths.get(
         BuckConstant.GEN_DIR,
-        buildRuleParams.getBuildTarget().getBasePathWithSlash());
+        target.getBasePathWithSlash());
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
 
     this.pathToTmpDirectory = Paths.get(
         BuckConstant.GEN_DIR,
-        buildRuleParams.getBuildTarget().getBasePathWithSlash(),
-        String.format("%s__tmp", getBuildTarget().getShortName()));
+        target.getBasePathWithSlash(),
+        String.format("%s__tmp", target.getShortName()));
     // TODO(simons): pathToTmpDirectory.toAbsolutePath() should be enough
     this.absolutePathToTmpDirectory = relativeToAbsolutePathFunction.apply(pathToTmpDirectory);
 
     this.pathToSrcDirectory = Paths.get(
         BuckConstant.GEN_DIR,
-        buildRuleParams.getBuildTarget().getBasePathWithSlash(),
-        String.format("%s__srcs", getBuildTarget().getShortName()));
+        target.getBasePathWithSlash(),
+        String.format("%s__srcs", target.getShortName()));
     // TODO(simons): And here.
     this.absolutePathToSrcDirectory = relativeToAbsolutePathFunction.apply(pathToSrcDirectory);
 
     this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
-  }
-
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.GENRULE;
   }
 
   /** @return the absolute path to the output file */
@@ -192,8 +185,8 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return super.appendToRuleKey(builder)
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder
         .set("cmd", cmd)
         .set("bash", bash)
         .set("cmd_exe", cmdExe);
@@ -210,7 +203,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
     final Set<String> depFiles = Sets.newHashSet();
     final Set<BuildRule> processedBuildRules = Sets.newHashSet();
-    for (BuildRule dep : getDeps()) {
+    for (BuildRule dep : deps) {
       transformNames(processedBuildRules, depFiles, dep);
     }
 
@@ -261,6 +254,10 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     }
   }
 
+  protected BuildRuleType getType() {
+    return GenruleDescription.TYPE;
+  }
+
   public AbstractGenruleStep createGenruleStep() {
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
@@ -268,7 +265,11 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     File workingDirectory = new File(absolutePathToSrcDirectory.toString());
 
     return new AbstractGenruleStep(
-        this, new CommandString(cmd, bash, cmdExe), getDeps(), workingDirectory) {
+        getType(),
+        target,
+        new CommandString(cmd, bash, cmdExe),
+        deps,
+        workingDirectory) {
       @Override
       protected void addEnvironmentVariables(
           ExecutionContext context,
@@ -307,7 +308,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
   @VisibleForTesting
   void addSymlinkCommands(ImmutableList.Builder<Step> commands) {
-    String basePath = getBuildTarget().getBasePathWithSlash();
+    String basePath = target.getBasePathWithSlash();
     int basePathLength = basePath.length();
 
     // Symlink all sources into the temp directory so that they can be used in the genrule.
@@ -330,95 +331,6 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
       Path destination = pathToSrcDirectory.resolve(localPath);
       commands.add(new MkdirAndSymlinkFileStep(entry.getKey(), destination));
-    }
-  }
-
-
-  public static Builder newGenruleBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildRuleBuilder<Genrule>
-      implements SrcsAttributeBuilder {
-
-    protected List<Path> srcs = Lists.newArrayList();
-
-    protected Optional<String> cmd;
-    protected Optional<String> bash;
-    protected Optional<String> cmdExe;
-
-    protected String out;
-
-    private Function<Path, Path> relativeToAbsolutePathFunctionForTesting = null;
-
-    protected Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-      cmd = Optional.absent();
-      bash = Optional.absent();
-      cmdExe = Optional.absent();
-    }
-
-    @Override
-    public Genrule build(BuildRuleResolver ruleResolver) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
-      return new Genrule(buildRuleParams,
-          srcs,
-          cmd,
-          bash,
-          cmdExe,
-          out,
-          getRelativeToAbsolutePathFunction(buildRuleParams));
-    }
-
-    protected Function<Path, Path> getRelativeToAbsolutePathFunction(BuildRuleParams params) {
-      return (relativeToAbsolutePathFunctionForTesting == null)
-          ? params.getPathAbsolutifier()
-          : relativeToAbsolutePathFunctionForTesting;
-    }
-
-    @Override
-    public Builder addSrc(Path src) {
-      srcs.add(src);
-      return this;
-    }
-
-    @Override
-    public Builder addDep(BuildTarget dep) {
-      deps.add(dep);
-      return this;
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      this.buildTarget = Preconditions.checkNotNull(buildTarget);
-      return this;
-    }
-
-    public Builder setCmd(Optional<String> cmd) {
-      this.cmd = Preconditions.checkNotNull(cmd);
-      return this;
-    }
-
-    public Builder setBash(Optional<String> bash) {
-      this.bash = Preconditions.checkNotNull(bash);
-      return this;
-    }
-
-    public Builder setCmdExe(Optional<String> cmdExe) {
-      this.cmdExe = cmdExe;
-      return this;
-    }
-
-    public Builder setOut(String out) {
-      this.out = out;
-      return this;
-    }
-
-    @VisibleForTesting
-    public Builder setRelativeToAbsolutePathFunctionForTesting(
-        Function<Path, Path> relativeToAbsolutePathFunction) {
-      this.relativeToAbsolutePathFunctionForTesting = relativeToAbsolutePathFunction;
-      return this;
     }
   }
 }

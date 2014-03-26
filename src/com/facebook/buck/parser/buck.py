@@ -626,55 +626,6 @@ def gen_parcelable(
 
 
 @provide_for_build
-def genrule(name,
-    out,
-    cmd=None,
-    bash=None,
-    cmd_exe=None,
-    srcs=[],
-    deps=[],
-    visibility=[],
-    build_env=None):
-  add_rule({
-    'type' : 'genrule',
-    'name' : name,
-    'srcs' : srcs,
-    'cmd' : cmd,
-    'bash' : bash,
-    'cmd_exe' : cmd_exe,
-    'out' : out,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
-def apk_genrule(name,
-    srcs,
-    apk,
-    out,
-    cmd=None,
-    bash=None,
-    cmd_exe=None,
-    deps=[],
-    visibility=[],
-    build_env=None):
-  # Always include the apk as a dep, as it should be built before this rule.
-  deps = deps + [apk]
-  add_rule({
-    'type' : 'apk_genrule',
-    'name' : name,
-    'srcs' : srcs,
-    'apk': apk,
-    'cmd' : cmd,
-    'bash' : bash,
-    'cmd_exe' : cmd_exe,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def sh_binary(
     name,
     main,

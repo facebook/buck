@@ -19,17 +19,13 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -62,14 +58,15 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   private final InstallableApk apk;
   private final Function<Path, Path> relativeToAbsolutePathFunction;
 
-  private ApkGenrule(BuildRuleParams buildRuleParams,
+  ApkGenrule(BuildRuleParams buildRuleParams,
       List<Path> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
       Function<Path, Path> relativeToAbsolutePathFunction,
       InstallableApk apk) {
-    super(buildRuleParams,
+    super(buildRuleParams.getBuildTarget(),
+        buildRuleParams.getDeps(),
         srcs,
         cmd,
         bash,
@@ -83,19 +80,19 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   }
 
   @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.APK_GENRULE;
-  }
-
-  @Override
   public BuildableProperties getProperties() {
     return PROPERTIES;
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return super.appendToRuleKey(builder)
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return super.appendDetailsToRuleKey(builder)
         .setInput("apk", apk.getApkPath());
+  }
+
+  @Override
+  public BuildTarget getBuildTarget() {
+    return target;
   }
 
   public InstallableApk getInstallableApk() {
@@ -122,8 +119,9 @@ public class ApkGenrule extends Genrule implements InstallableApk {
     return super.getInputsToCompareToOutput();
   }
 
-  public static Builder newApkGenruleBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
+  @Override
+  protected BuildRuleType getType() {
+    return ApkGenruleDescription.TYPE;
   }
 
   @Override
@@ -134,47 +132,5 @@ public class ApkGenrule extends Genrule implements InstallableApk {
     // We have to use an absolute path, because genrules are run in a temp directory.
     String apkAbsolutePath = relativeToAbsolutePathFunction.apply(apk.getApkPath()).toString();
     environmentVariablesBuilder.put("APK", apkAbsolutePath);
-  }
-
-  public static class Builder extends Genrule.Builder {
-
-    private BuildTarget apk;
-
-    protected Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public ApkGenrule build(BuildRuleResolver ruleResolver) {
-      // Verify that the 'apk' field is set and corresponds to an installable rule.
-
-      BuildRule apkRule = ruleResolver.get(apk);
-
-      Preconditions.checkState(apk != null && apkRule != null,
-          "Buck should guarantee that apk was set and included in the deps of this rule, " +
-          "so apk should not be null at this point and should have an entry in buildRuleIndex " +
-          "as all deps should.");
-
-      if (!(apkRule.getBuildable() instanceof InstallableApk)) {
-        throw new HumanReadableException("The 'apk' argument of %s, %s, must correspond to an " +
-            "installable rule, such as android_binary() or apk_genrule().",
-            getBuildTarget(),
-            apkRule.getFullyQualifiedName());
-      }
-
-      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
-      return new ApkGenrule(createBuildRuleParams(ruleResolver),
-          srcs,
-          cmd,
-          bash,
-          cmdExe,
-          getRelativeToAbsolutePathFunction(buildRuleParams),
-          (InstallableApk)apkRule.getBuildable());
-    }
-
-    public Builder setApk(BuildTarget apk) {
-      this.apk = apk;
-      return this;
-    }
   }
 }

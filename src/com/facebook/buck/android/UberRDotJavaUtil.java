@@ -55,7 +55,7 @@ public class UberRDotJavaUtil {
       BuildRuleType.ANDROID_INSTRUMENTATION_APK,
       BuildRuleType.ANDROID_LIBRARY,
       BuildRuleType.ANDROID_RESOURCE,
-      BuildRuleType.APK_GENRULE,
+      ApkGenruleDescription.TYPE,
       BuildRuleType.JAVA_LIBRARY,
       BuildRuleType.JAVA_TEST,
       BuildRuleType.ROBOLECTRIC_TEST

@@ -61,6 +61,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
@@ -90,8 +91,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -601,8 +602,8 @@ public class ProjectGenerator {
 
   private void addRunScriptBuildPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
     for (BuildRule dependency : rule.getDeps()) {
-      if (dependency.getType().equals(BuildRuleType.GENRULE)) {
-        addRunScriptBuildPhase(target, (Genrule) dependency);
+      if (dependency.getType().equals(GenruleDescription.TYPE)) {
+        addRunScriptBuildPhase(target, (Genrule) dependency.getBuildable());
       }
     }
   }

@@ -30,17 +30,22 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildable;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.JavaPackageFinder;
-import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -54,6 +59,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -66,7 +72,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Unit test for {@link com.facebook.buck.android.ApkGenrule}.
@@ -113,38 +118,70 @@ public class ApkGenruleTest {
   public void testCreateAndRunApkGenrule() throws IOException, NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     createSampleAndroidBinaryRule(ruleResolver);
-    Map<String, ?> instance = new ImmutableMap.Builder<String, Object>()
-        .put("name", "fb4a_signed")
-        .put("srcs", ImmutableList.<String>of("signer.py", "key.properties"))
-        .put("cmd", "python signer.py $APK key.properties > $OUT")
-        .put("apk", ":fb4a")
-        .put("out", "signed_fb4a.apk")
-        .put("deps", ImmutableList.<Object>of())
-        .build();
 
     // From the Python object, create a ApkGenruleBuildRuleFactory to create a ApkGenrule.Builder
     // that builds a ApkGenrule from the Python object.
     BuildTargetParser parser = EasyMock.createNiceMock(BuildTargetParser.class);
+    final BuildTarget apkTarget = BuildTargetFactory.newInstance("//:fb4a");
     EasyMock.expect(parser.parse(EasyMock.eq(":fb4a"), EasyMock.anyObject(ParseContext.class)))
-        .andStubReturn(BuildTargetFactory.newInstance("//:fb4a"));
+        .andStubReturn(apkTarget);
     EasyMock.replay(parser);
 
     BuildTarget buildTarget = new BuildTarget("//src/com/facebook", "sign_fb4a");
-    BuildRuleFactoryParams params = NonCheckingBuildRuleFactoryParams.
-        createNonCheckingBuildRuleFactoryParams(
-            instance,
-            parser,
-            buildTarget);
+    ApkGenruleDescription description = new ApkGenruleDescription();
+    ApkGenruleDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    arg.apk = new FakeBuildRule(BuildRuleType.ANDROID_BINARY, apkTarget) {
+      @Override
+      public Buildable getBuildable() {
+        class Dummy extends FakeBuildable implements InstallableApk {
 
-    ApkGenruleBuildRuleFactory factory = new ApkGenruleBuildRuleFactory();
-    ApkGenrule.Builder builder = factory.newInstance(params);
-    builder.setRelativeToAbsolutePathFunctionForTesting(relativeToAbsolutePathFunction);
-    ApkGenrule apkGenrule = (ApkGenrule) ruleResolver.buildAndAddToIndex(builder);
+          @Override
+          public BuildTarget getBuildTarget() {
+            return apkTarget;
+          }
+
+          @Override
+          public Path getManifestPath() {
+            return Paths.get("spoof");
+          }
+
+          @Override
+          public Path getApkPath() {
+            return Paths.get("buck-out/gen/fb4a.apk");
+          }
+
+          @Override
+          public Optional<ExopackageInfo> getExopackageInfo() {
+            return Optional.absent();
+          }
+        }
+
+        return new Dummy();
+      }
+    };
+    arg.bash = Optional.of("");
+    arg.cmd = Optional.of("python signer.py $APK key.properties > $OUT");
+    arg.cmdExe = Optional.of("");
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.out = "signed_fb4a.apk";
+    arg.srcs = Optional.of(ImmutableList.of(
+            Paths.get("src/com/facebook/signer.py"), Paths.get("src/com/facebook/key.properties")));
+    FakeBuildRuleParams params = new FakeBuildRuleParams(buildTarget) {
+      @Override
+      public Function<Path, Path> getPathAbsolutifier() {
+        return relativeToAbsolutePathFunction;
+      }
+    };
+    ApkGenrule apkGenrule = description.createBuildable(params, arg);
+    BuildRule rule = new AbstractBuildable.AnonymousBuildRule(
+        ApkGenruleDescription.TYPE,
+        apkGenrule,
+        params);
+    ruleResolver.addToIndex(buildTarget, rule);
 
     // Verify all of the observers of the Genrule.
     String expectedApkOutput =
         "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk";
-    assertEquals(BuildRuleType.APK_GENRULE, apkGenrule.getType());
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
     BuildContext buildContext = BuildContext.builder()
@@ -215,10 +252,13 @@ public class ApkGenruleTest {
     assertTrue(seventhStep instanceof ShellStep);
     ShellStep genruleCommand = (ShellStep) seventhStep;
     assertEquals("genrule", genruleCommand.getShortName());
+    ImmutableMap<String, String> environmentVariables = genruleCommand.getEnvironmentVariables(
+        executionContext);
     assertEquals(new ImmutableMap.Builder<String, String>()
         .put("APK", relativeToAbsolutePathFunction.apply(GEN_PATH.resolve("fb4a.apk")).toString())
         .put("OUT", expectedApkOutput).build(),
-        genruleCommand.getEnvironmentVariables(executionContext));
+        environmentVariables
+    );
     assertEquals(
         ImmutableList.of("/bin/bash", "-e", "-c", "python signer.py $APK key.properties > $OUT"),
         genruleCommand.getShellCommand(executionContext));

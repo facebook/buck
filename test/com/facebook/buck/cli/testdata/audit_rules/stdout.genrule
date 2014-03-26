@@ -3,8 +3,8 @@
 genrule(
   name = "example",
   bash = "cat $SRCS > $OUT",
-  cmd = None,
-  cmd_exe = None,
+  cmd = "",
+  cmdExe = "",
   out = "baz.txt",
   srcs = [
     "foo.txt",

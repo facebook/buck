@@ -552,7 +552,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           /* bash */ preprocessJavaClassesBash,
           /* cmdExe */ Optional.<String>absent());
       steps.add(new AbstractGenruleStep(
-          this, commandString, preprocessJavaClassesDeps, preprocessJavaClassesInDir.toFile()) {
+          BuildRuleType.ANDROID_BINARY,
+          this.getBuildTarget(),
+          commandString,
+          preprocessJavaClassesDeps,
+          preprocessJavaClassesInDir.toFile()) {
 
         @Override
         protected void addEnvironmentVariables(

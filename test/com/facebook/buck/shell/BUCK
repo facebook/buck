@@ -2,13 +2,14 @@
 # -Dbuck.path_to_emma_jar being passed in.
 java_test(
   name = 'shell',
-  srcs = glob(['*.java']),
+  srcs = glob(['*Test.java']),
   resources = glob(['testdata/**/*']),
   source_under_test = [
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/shell:steps',
   ],
   deps = [
+    ':testutil',
     '//lib:easymock',
     '//lib:guava',
     '//lib:junit',
@@ -38,5 +39,23 @@ java_test(
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//test/com/facebook/buck/model:BuildTargetFactory',
+  ],
+)
+
+java_library(
+  name = 'testutil',
+  srcs = [
+    'GenruleBuilder.java',
+  ],
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:rules',
+    '//test/com/facebook/buck/rules:testutil',
+  ],
+  visibility = [
+    '//test/...',
   ],
 )

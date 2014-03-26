@@ -63,19 +63,17 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DescribedRule;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.Pair;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -578,17 +576,18 @@ public class ProjectGeneratorTest {
   public void testIosLibraryRuleWithGenruleDependency() throws IOException {
 
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
-    AbstractBuildRuleBuilderParams genruleParams = new FakeAbstractBuildRuleBuilderParams();
-    Genrule.Builder builder = Genrule.newGenruleBuilder(genruleParams);
-    builder.setBuildTarget(new BuildTarget("//foo", "script"));
-    builder.setBash(Optional.of("echo \"hello world!\""));
-    builder.setOut("helloworld.txt");
 
-    Genrule genrule = buildRuleResolver.buildAndAddToIndex(builder);
+    BuildRule genrule = GenruleBuilder.createGenrule(new BuildTarget("//foo", "script"))
+        .setBash("echo \"hello world!\"")
+        .setOut("helloworld.txt")
+        .build();
+
+    buildRuleResolver.addToIndex(genrule.getBuildTarget(), genrule);
 
     BuildTarget libTarget = new BuildTarget("//foo", "lib");
-    BuildRuleParams libParams = new FakeBuildRuleParams(libTarget,
-                                                        ImmutableSortedSet.<BuildRule>of(genrule));
+    BuildRuleParams libParams = new FakeBuildRuleParams(
+        libTarget,
+        ImmutableSortedSet.of(genrule));
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
@@ -836,7 +835,8 @@ public class ProjectGeneratorTest {
         ImmutableList.of(
             "$BUILT_PRODUCTS_DIR/libfoo.a",
             "$SDKROOT/libfoo.a",
-            "$SOURCE_ROOT/libfoo.a"));
+            "$SOURCE_ROOT/libfoo.a")
+    );
   }
 
   @Test(expected = HumanReadableException.class)

@@ -58,7 +58,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
@@ -293,11 +293,11 @@ public class DefaultJavaLibraryRuleTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget genruleBuildTarget = BuildTargetFactory.newInstance("//generated:stuff");
-    Genrule.newGenruleBuilder(params)
-        .setBuildTarget(genruleBuildTarget)
-        .setBash(Optional.of("echo 'aha' > $OUT"))
+    BuildRule genrule = GenruleBuilder.createGenrule(genruleBuildTarget)
+        .setBash("echo 'aha' > $OUT")
         .setOut("stuff.txt")
-        .build(ruleResolver);
+        .build();
+    ruleResolver.addToIndex(genruleBuildTarget, genrule);
 
     DefaultJavaLibraryRule javaRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(params)
         .setBuildTarget(BuildTargetFactory.newInstance("//library:code"))

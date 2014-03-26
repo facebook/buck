@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -69,17 +70,21 @@ public abstract class AbstractGenruleStep extends ShellStep {
       "(?<!\\\\)(\\$\\((exe|location)\\s+((\\/\\/[^:]*)?(:[^\\)]+))\\))"
   );
 
-  private final BuildRule buildRule;
   private final CommandString commandString;
   private final ImmutableSortedSet<BuildRule> depsToSubstituteInCommandString;
+  private final BuildRuleType type;
+  private final BuildTarget target;
 
   public AbstractGenruleStep(
-      BuildRule buildRule,
+      BuildRuleType type,
+
+      BuildTarget target,
       CommandString commandString,
       Set<BuildRule> depsToSubstituteInCommandString,
       @Nullable File workingDirectory) {
     super(workingDirectory);
-    this.buildRule = Preconditions.checkNotNull(buildRule);
+    this.type = type;
+    this.target = target;
     this.commandString = Preconditions.checkNotNull(commandString);
     this.depsToSubstituteInCommandString = ImmutableSortedSet.copyOf(
         depsToSubstituteInCommandString);
@@ -98,7 +103,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   private String getFullyQualifiedName() {
-    return buildRule.getFullyQualifiedName();
+    return target.getFullyQualifiedName();
   }
 
   @Override
@@ -123,9 +128,9 @@ public abstract class AbstractGenruleStep extends ShellStep {
     String command;
     if (context.getPlatform() == Platform.WINDOWS) {
       String commandInUse;
-      if (commandString.cmdExe.isPresent()) {
+      if (!commandString.cmdExe.or("").isEmpty()) {
         commandInUse = commandString.cmdExe.get();
-      } else if (commandString.cmd.isPresent()) {
+      } else if (!commandString.cmd.or("").isEmpty()) {
         commandInUse = commandString.cmd.get();
       } else {
         throw new HumanReadableException("You must specify either cmd_exe or cmd for genrule %s.",
@@ -135,9 +140,9 @@ public abstract class AbstractGenruleStep extends ShellStep {
       return new ExecutionArgsAndCommand(ImmutableList.of("cmd.exe", "/c"), command);
     } else {
       String commandInUse;
-      if (commandString.bash.isPresent()) {
+      if (!commandString.bash.or("").isEmpty()) {
         commandInUse = commandString.bash.get();
-      } else if (commandString.cmd.isPresent()) {
+      } else if (!commandString.cmd.or("").isEmpty()) {
         commandInUse = commandString.cmd.get();
       } else {
         throw new HumanReadableException("You must specify either bash or cmd for genrule %s.",
@@ -205,13 +210,12 @@ public abstract class AbstractGenruleStep extends ShellStep {
       String base = matcher.group(4);
       if (base == null) {
         // This is a relative build target, so make it fully qualified.
-        BuildTarget myBuildTarget = buildRule.getBuildTarget();
-        buildTarget = String.format("//%s%s", myBuildTarget.getBasePath(), buildTarget);
+        buildTarget = String.format("//%s%s", target.getBasePath(), buildTarget);
       }
       BuildRule matchingRule = fullyQualifiedNameToBuildRule.get(buildTarget);
       if (matchingRule == null) {
         throw new HumanReadableException("No dep named %s for %s %s, cmd was %s",
-            buildTarget, buildRule.getType().getName(), getFullyQualifiedName(), command);
+            buildTarget, type.getName(), getFullyQualifiedName(), command);
       }
 
       String replacement;
@@ -268,7 +272,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
         "%s must correspond to a binary rule or file in %s for %s %s",
         matchingRule,
         cmd,
-        buildRule.getType().getName(),
+        type.getName(),
         getFullyQualifiedName());
   }
 

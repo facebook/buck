@@ -21,7 +21,7 @@ import com.facebook.buck.android.AndroidInstrumentationApkRuleFactory;
 import com.facebook.buck.android.AndroidLibraryBuildRuleFactory;
 import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceBuildRuleFactory;
-import com.facebook.buck.android.ApkGenruleBuildRuleFactory;
+import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuildRuleFactory;
@@ -46,7 +46,7 @@ import com.facebook.buck.parser.ProjectConfigRuleFactory;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.shell.ExportFileDescription;
-import com.facebook.buck.shell.GenruleBuildRuleFactory;
+import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
 import com.facebook.buck.util.AndroidDirectoryResolver;
@@ -115,8 +115,10 @@ public class KnownBuildRuleTypes {
     Builder builder = builder();
 
     builder.register(new AndroidManifestDescription());
+    builder.register(new ApkGenruleDescription());
     builder.register(new ExportFileDescription());
     builder.register(new GenAidlDescription());
+    builder.register(new GenruleDescription());
     builder.register(new IosBinaryDescription());
     builder.register(new IosLibraryDescription());
     builder.register(new IosTestDescription());
@@ -135,8 +137,6 @@ public class KnownBuildRuleTypes {
         new AndroidInstrumentationApkRuleFactory());
     builder.register(BuildRuleType.ANDROID_LIBRARY, new AndroidLibraryBuildRuleFactory());
     builder.register(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory());
-    builder.register(BuildRuleType.APK_GENRULE, new ApkGenruleBuildRuleFactory());
-    builder.register(BuildRuleType.GENRULE, new GenruleBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_BINARY, new JavaBinaryBuildRuleFactory());

@@ -31,10 +31,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccess;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
@@ -58,7 +58,8 @@ public class SimpleConsoleEventBusListenerTest {
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableList<BuildTarget> buildTargets = ImmutableList.of(fakeTarget);
-    FakeBuildRule fakeRule = new FakeBuildRule(BuildRuleType.GENRULE,
+    FakeBuildRule fakeRule = new FakeBuildRule(
+        GenruleDescription.TYPE,
         fakeTarget,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());

@@ -26,9 +26,7 @@ public final class BuildRuleType {
   public static final BuildRuleType ANDROID_LIBRARY = new BuildRuleType("android_library");
   public static final BuildRuleType ANDROID_MANIFEST = new BuildRuleType("android_manifest");
   public static final BuildRuleType ANDROID_RESOURCE = new BuildRuleType("android_resource");
-  public static final BuildRuleType APK_GENRULE = new BuildRuleType("apk_genrule");
   public static final BuildRuleType GEN_PARCELABLE = new BuildRuleType("gen_parcelable");
-  public static final BuildRuleType GENRULE = new BuildRuleType("genrule");
   public static final BuildRuleType JAVA_BINARY = new BuildRuleType("java_binary");
   public static final BuildRuleType JAVA_LIBRARY = new BuildRuleType("java_library");
   public static final BuildRuleType JAVA_TEST = new BuildRuleType("java_test");

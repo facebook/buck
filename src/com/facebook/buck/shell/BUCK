@@ -4,7 +4,7 @@ java_library(
     'ExportFile.java',
     'ExportFileDescription.java',
     'Genrule.java',
-    'GenruleBuildRuleFactory.java',
+    'GenruleDescription.java',
     'ShBinaryRule.java',
     'ShBinaryBuildRuleFactory.java',
     'ShTestBuildRuleFactory.java',
