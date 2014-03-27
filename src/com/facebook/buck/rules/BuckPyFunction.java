@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.SortedSet;
 
+import javax.annotation.Nullable;
+
 /**
  * Used to generate a function for use within buck.py for the rule described by a
  * {@link Description}.
@@ -58,8 +60,14 @@ public class BuckPyFunction {
       }
     }
 
+    @Nullable TargetName defaultName = dto.getClass().getAnnotation(TargetName.class);
+
     builder.append("@provide_for_build\n")
-        .append("def ").append(type.getName()).append("(name, ");
+        .append("def ").append(type.getName()).append("(");
+
+    if (defaultName == null) {
+      builder.append("name, ");
+    }
 
     // Construct the args.
     for (ParamInfo param : Iterables.concat(mandatory, optional)) {
@@ -69,8 +77,14 @@ public class BuckPyFunction {
 
         // Define the rule.
         .append("  add_rule({\n")
-        .append("    'type' : '").append(type.getName()).append("',\n")
-        .append("    'name' : name,\n");
+        .append("    'type' : '").append(type.getName()).append("',\n");
+
+
+    if (defaultName != null) {
+      builder.append("    'name' : '").append(defaultName.name()).append("',\n");
+    } else {
+      builder.append("    'name' : name,\n");
+    }
 
     // Iterate over args.
     for (ParamInfo param : Iterables.concat(mandatory, optional)) {

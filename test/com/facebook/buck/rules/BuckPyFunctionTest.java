@@ -81,6 +81,27 @@ public class BuckPyFunctionTest {
     ), definition);
   }
 
+  @Test
+  public void testHasDefaultName() {
+    @TargetName(name = "lollerskates")
+    class NoName implements ConstructorArg { public String foobar; }
+
+    String definition = buckPyFunction.toPythonFunction(new BuildRuleType("noname"), new NoName());
+
+    assertEquals(Joiner.on("\n").join(
+            "@provide_for_build",
+            "def noname(foobar, visibility=[], build_env=None):",
+            "  add_rule({",
+            "    'type' : 'noname',",
+            "    'name' : 'lollerskates',",
+            "    'foobar' : foobar,",
+            "    'visibility' : visibility,",
+            "  }, build_env)",
+            "",
+            ""
+        ), definition);
+  }
+
   @Test(expected = HumanReadableException.class)
   public void theNameFieldMustBeAString() {
     class BadName implements ConstructorArg { public int name; }

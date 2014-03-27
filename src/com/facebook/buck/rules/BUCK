@@ -67,6 +67,7 @@ java_library(
     'Description.java',
     'ExportDependencies.java',
     'FileSourcePath.java',
+    'TargetName.java',
     'Hint.java',
     'JavaPackageFinder.java',
     'OnDiskBuildInfo.java',
