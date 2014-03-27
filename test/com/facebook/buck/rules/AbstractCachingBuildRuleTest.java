@@ -28,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -582,7 +583,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     public FutureReturningFakeBuildRule(String buildTarget,
         String ruleKeyHash,
         BuildRuleSuccess.Type successType) {
-      super(BuildRuleType.ANDROID_RESOURCE, BuildTargetFactory.newInstance(buildTarget));
+      super(AndroidResourceDescription.TYPE, BuildTargetFactory.newInstance(buildTarget));
       super.setRuleKey(new RuleKey(ruleKeyHash));
       this.ruleSuccess = new BuildRuleSuccess(this, successType);
     }

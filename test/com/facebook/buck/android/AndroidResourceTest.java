@@ -16,16 +16,19 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.AndroidResource.BuildOutput;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -34,9 +37,13 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.FileHashCache;
+import com.google.common.base.Function;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMock;
@@ -46,18 +53,16 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 
-public class AndroidResourceRuleTest {
+public class AndroidResourceTest {
 
   @Test
   public void testGetInputsToCompareToOutput() {
     // Create an android_resource rule with all sorts of input files that it depends on. If any of
     // these files is modified, then this rule should not be cached.
     BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
+    AndroidResource androidResource = new AndroidResource(
         buildTarget,
-        ImmutableSortedSet.<BuildRule>of());
-    AndroidResourceRule androidResourceRule = new AndroidResourceRule(
-        buildRuleParams,
+        /* deps */ ImmutableSortedSet.<BuildRule>of(),
         Paths.get("java/src/com/facebook/base/res"),
         ImmutableSortedSet.of(
             Paths.get("java/src/com/facebook/base/res/drawable/E.xml"),
@@ -84,37 +89,35 @@ public class AndroidResourceRuleTest {
             Paths.get("java/src/com/facebook/base/res/drawable/A.xml"),
             Paths.get("java/src/com/facebook/base/res/drawable/C.xml"),
             Paths.get("java/src/com/facebook/base/res/drawable/E.xml")),
-        androidResourceRule.getInputsToCompareToOutput());
+        androidResource.getInputsToCompareToOutput());
   }
 
   @Test
   public void testRuleKeyForDifferentInputFilenames() throws IOException {
     BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        buildTarget,
-        ImmutableSortedSet.<BuildRule>of());
-    AndroidResourceRule androidResourceRule1 = new AndroidResourceRule(
-        buildRuleParams,
-        Paths.get("java/src/com/facebook/base/res"),
-        ImmutableSortedSet.of(
-            Paths.get("java/src/com/facebook/base/res/drawable/A.xml")),
-        "com.facebook",
-        Paths.get("java/src/com/facebook/base/assets"),
-        ImmutableSortedSet.of(
-            Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")),
-        Paths.get("java/src/com/facebook/base/AndroidManifest.xml"),
-        /* hasWhitelisted */ false);
-    AndroidResourceRule androidResourceRule2 = new AndroidResourceRule(
-        buildRuleParams,
-        Paths.get("java/src/com/facebook/base/res"),
-        ImmutableSortedSet.of(
-            Paths.get("java/src/com/facebook/base/res/drawable/C.xml")),
-        "com.facebook",
-        Paths.get("java/src/com/facebook/base/assets"),
-        ImmutableSortedSet.of(
-            Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")),
-        Paths.get("java/src/com/facebook/base/AndroidManifest.xml"),
-        /* hasWhitelisted */ false);
+    AndroidResource androidResource1 = AndroidResourceRuleBuilder.newBuilder()
+        .setBuildTarget(buildTarget)
+        .setRes(Paths.get("java/src/com/facebook/base/res"))
+        .setResSrcs(ImmutableSortedSet.of(
+            Paths.get("java/src/com/facebook/base/res/drawable/A.xml")))
+        .setRDotJavaPackage("com.facebook")
+        .setAssets(Paths.get("java/src/com/facebook/base/assets"))
+        .setAssetsSrcs(ImmutableSortedSet.of(
+            Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
+        .setManifest(Paths.get("java/src/com/facebook/base/AndroidManifest.xml"))
+        .buildAsBuildable();
+
+    AndroidResource androidResource2 = AndroidResourceRuleBuilder.newBuilder()
+        .setBuildTarget(buildTarget)
+        .setRes(Paths.get("java/src/com/facebook/base/res"))
+        .setResSrcs(ImmutableSortedSet.of(
+                Paths.get("java/src/com/facebook/base/res/drawable/C.xml")))
+        .setRDotJavaPackage("com.facebook")
+        .setAssets(Paths.get("java/src/com/facebook/base/assets"))
+        .setAssetsSrcs(ImmutableSortedSet.of(
+                Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
+        .setManifest(Paths.get("java/src/com/facebook/base/AndroidManifest.xml"))
+        .buildAsBuildable();
 
     String commonHash = Strings.repeat("a", 40);
     FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
@@ -123,20 +126,31 @@ public class AndroidResourceRuleTest {
         "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
         "java/src/com/facebook/base/AndroidManifest.xml", Strings.repeat("d", 40)));
 
-    RuleKey.Builder.RuleKeyPair pair1 = androidResourceRule1.appendToRuleKey(
-        RuleKey.builder(androidResourceRule1, fakeFileHashCache))
-        .build();
-    RuleKey.Builder.RuleKeyPair pair2 = androidResourceRule2.appendToRuleKey(
-        RuleKey.builder(androidResourceRule2, fakeFileHashCache))
-        .build();
+    RuleKey ruleKey1 =
+        getRuleKeyWithoutDepsFromResource(buildTarget, androidResource1, fakeFileHashCache);
+    RuleKey ruleKey2 =
+        getRuleKeyWithoutDepsFromResource(buildTarget, androidResource2, fakeFileHashCache);
 
     assertNotEquals("The two android_resource rules should have different rule keys.",
-        pair1.getRuleKeyWithoutDeps(),
-        pair2.getRuleKeyWithoutDeps());
+        ruleKey1,
+        ruleKey2);
   }
 
+  private RuleKey getRuleKeyWithoutDepsFromResource(
+      BuildTarget buildTarget,
+      AndroidResource resource,
+      FileHashCache fileHashCache) throws IOException {
+    BuildRule rule = new AbstractBuildable.AnonymousBuildRule(
+        AndroidResourceDescription.TYPE,
+        resource,
+        new FakeBuildRuleParams(buildTarget,
+            ImmutableSortedSet.<BuildRule>of(),
+            ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+            fileHashCache));
+    return rule.getRuleKeyWithoutDeps();
+  }
   /**
-   * Create the following dependency graph of {@link AndroidResourceRule}s:
+   * Create the following dependency graph of {@link AndroidResource}s:
    * <pre>
    *    A
    *  / | \
@@ -154,41 +168,53 @@ public class AndroidResourceRuleTest {
   @Test
   public void testGetAndroidResourceDeps() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    AndroidResourceRule c = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+    BuildRule c = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
             .setRes(Paths.get("res_c"))
-            .setRDotJavaPackage("com.facebook"));
+            .setRDotJavaPackage("com.facebook")
+            .build());
 
-    AndroidResourceRule b = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
-        .setRes(Paths.get("res_b"))
-        .setRDotJavaPackage("com.facebook")
-        .addDep(BuildTargetFactory.newInstance("//:c")));
+    BuildRule b = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
+            .setRes(Paths.get("res_b"))
+            .setRDotJavaPackage("com.facebook")
+            .setDeps(ImmutableSortedSet.of(c))
+            .build());
 
-    AndroidResourceRule d = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+    BuildRule d = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
             .setRes(Paths.get("res_d"))
             .setRDotJavaPackage("com.facebook")
-            .addDep(BuildTargetFactory.newInstance("//:c")));
+            .setDeps(ImmutableSortedSet.of(c))
+            .build());
 
-    AndroidResourceRule a = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
-        .setRes(Paths.get("res_a"))
-        .setRDotJavaPackage("com.facebook")
-        .addDep(BuildTargetFactory.newInstance("//:b"))
-        .addDep(BuildTargetFactory.newInstance("//:c"))
-        .addDep(BuildTargetFactory.newInstance("//:d")));
+    BuildRule a = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
+            .setRes(Paths.get("res_a"))
+            .setRDotJavaPackage("com.facebook")
+            .setDeps(ImmutableSortedSet.of(b, c, d))
+            .build());
 
     ImmutableList<HasAndroidResourceDeps> deps = UberRDotJavaUtil.getAndroidResourceDeps(a);
 
+    Function<BuildRule, Buildable> ruleToBuildable = new Function<BuildRule, Buildable>() {
+      @Override
+      public Buildable apply(BuildRule input) {
+        return input.getBuildable();
+      }
+    };
     // Note that a topological sort for a DAG is not guaranteed to be unique. In this particular
     // case, there are two possible valid outcomes.
-    ImmutableList<AndroidResourceRule> validResult1 = ImmutableList.of(a, b, d, c);
-    ImmutableList<AndroidResourceRule> validResult2 = ImmutableList.of(a, d, b, c);
+    ImmutableList<Buildable> validResult1 = FluentIterable.from(ImmutableList.of(a, b, d, c))
+        .transform(ruleToBuildable)
+        .toList();
+    ImmutableList<Buildable> validResult2 = FluentIterable.from(ImmutableList.of(a, d, b, c))
+        .transform(ruleToBuildable)
+        .toList();
 
     assertTrue(
         String.format(
@@ -223,35 +249,51 @@ public class AndroidResourceRuleTest {
   @Test
   public void testAbiKeyIsAbiKeyForDepsWhenResourcesAreAbsent() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    AndroidResourceRule resourceRule1 = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+    BuildRule resourceRule1 = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res1")));
-    resourceRule1.getBuildOutputInitializer().setBuildOutput(
-        new AndroidResourceRule.BuildOutput(new Sha1HashCode(Strings.repeat("a", 40))));
-    AndroidResourceRule resourceRule2 = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setRes(Paths.get("android_res/com/example/res1"))
+            .build()
+    );
+    setAndroidResourceBuildOutput(resourceRule1, "a");
+    BuildRule resourceRule2 = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res2")));
-    resourceRule2.getBuildOutputInitializer().setBuildOutput(
-        new AndroidResourceRule.BuildOutput(new Sha1HashCode(Strings.repeat("b", 40))));
-    AndroidResourceRule resourceRule3 = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setRes(Paths.get("android_res/com/example/res2"))
+            .build()
+    );
+    setAndroidResourceBuildOutput(resourceRule2, "b");
+    BuildRule resourceRule3 = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res3"))
-            .addDep(resourceRule1.getBuildTarget())
-            .addDep(resourceRule2.getBuildTarget()));
+            .setDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
+            .build());
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     assertTrue(
-        resourceRule3.getBuildSteps(EasyMock.createMock(BuildContext.class), buildableContext)
+        resourceRule3
+            .getBuildable()
+            .getBuildSteps(
+                EasyMock.createMock(BuildContext.class),
+                buildableContext)
             .isEmpty());
 
     Sha1HashCode expectedSha1 = HasAndroidResourceDeps.ABI_HASHER.apply(
-        ImmutableList.<HasAndroidResourceDeps>of(resourceRule1, resourceRule2));
+        ImmutableList.of(
+            (HasAndroidResourceDeps) resourceRule1.getBuildable(),
+            (HasAndroidResourceDeps) resourceRule2.getBuildable()));
     buildableContext.assertContainsMetadataMapping(
-        AndroidResourceRule.METADATA_KEY_FOR_ABI,
+        AndroidResource.METADATA_KEY_FOR_ABI,
         expectedSha1.getHash());
+  }
+
+  private void setAndroidResourceBuildOutput(BuildRule resourceRule, String hashChar) {
+    if (resourceRule.getBuildable() instanceof AndroidResource) {
+      ((AndroidResource) resourceRule.getBuildable())
+          .getBuildOutputInitializer()
+          .setBuildOutput(new BuildOutput(new Sha1HashCode(Strings.repeat(hashChar, 40))));
+    }
   }
 }

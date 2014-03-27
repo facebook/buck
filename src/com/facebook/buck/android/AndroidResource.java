@@ -20,19 +20,14 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
@@ -40,7 +35,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -76,16 +70,15 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class AndroidResourceRule extends DoNotUseAbstractBuildable
-    implements AbiRule, HasAndroidResourceDeps,
-    InitializableFromDisk<AndroidResourceRule.BuildOutput> {
+public class AndroidResource extends AbstractBuildable
+    implements AbiRule, HasAndroidResourceDeps, InitializableFromDisk<AndroidResource.BuildOutput> {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
   @VisibleForTesting
   static final String METADATA_KEY_FOR_ABI = "ANDROID_RESOURCE_ABI_KEY";
 
-  /** {@link Function} that invokes {@link #getRes()} on an {@link AndroidResourceRule}. */
+  /** {@link Function} that invokes {@link #getRes()} on an {@link AndroidResource}. */
   private static final Function<HasAndroidResourceDeps, Path> GET_RES_FOR_RULE =
       new Function<HasAndroidResourceDeps, Path>() {
     @Override
@@ -94,6 +87,8 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
       return rule.getRes();
     }
   };
+
+  private final BuildTarget buildTarget;
 
   @Nullable
   private final Path res;
@@ -123,15 +118,17 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
-  protected AndroidResourceRule(BuildRuleParams buildRuleParams,
-      @Nullable Path res,
+  protected AndroidResource(
+      BuildTarget buildTarget,
+      final ImmutableSortedSet<BuildRule> deps,
+      @Nullable final Path res,
       ImmutableSortedSet<Path> resSrcs,
       @Nullable String rDotJavaPackage,
       @Nullable Path assets,
       ImmutableSortedSet<Path> assetsSrcs,
       @Nullable Path manifestFile,
       boolean hasWhitelistedStrings) {
-    super(buildRuleParams);
+    this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.res = res;
     this.resSrcs = Preconditions.checkNotNull(resSrcs);
     this.rDotJavaPackage = rDotJavaPackage;
@@ -144,7 +141,6 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
       pathToTextSymbolsDir = null;
       pathToTextSymbolsFile = null;
     } else {
-      BuildTarget buildTarget = buildRuleParams.getBuildTarget();
       pathToTextSymbolsDir = BuildTargets.getGenPath(buildTarget, "__%s_text_symbols__");
       pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
     }
@@ -153,13 +149,17 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
         new Supplier<ImmutableList<HasAndroidResourceDeps>>() {
           @Override
           public ImmutableList<HasAndroidResourceDeps> get() {
-            return UberRDotJavaUtil.getAndroidResourceDeps(AndroidResourceRule.this);
+            ImmutableList.Builder<HasAndroidResourceDeps> resDeps = ImmutableList.builder();
+            if (res != null) {
+              resDeps.add(AndroidResource.this);
+            }
+            resDeps.addAll(UberRDotJavaUtil.getAndroidResourceDeps(deps));
+            return resDeps.build();
           }
         }
     );
 
-    this.buildOutputInitializer =
-        new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   @Override
@@ -187,6 +187,11 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
   @Override
   public boolean hasWhitelistedStrings() {
     return hasWhitelistedStrings;
+  }
+
+  @Override
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
   }
 
   @Nullable
@@ -237,6 +242,13 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
   }
 
   @Override
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder
+        .set("rDotJavaPackage", rDotJavaPackage)
+        .set("hasWhitelistedStrings", hasWhitelistedStrings);
+  }
+
+  @Override
   @Nullable
   public Path getPathToOutputFile() {
     return Optional.fromNullable(pathToTextSymbolsFile).orNull();
@@ -256,32 +268,14 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
   @Override
   public String getRDotJavaPackage() {
     if (rDotJavaPackage == null) {
-      throw new RuntimeException("No package for " + getFullyQualifiedName());
+      throw new RuntimeException("No package for " + buildTarget.getFullyQualifiedName());
     }
     return rDotJavaPackage;
   }
 
   @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.ANDROID_RESOURCE;
-  }
-
-  @Override
   public BuildableProperties getProperties() {
     return PROPERTIES;
-  }
-
-  @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    // TODO(#2493457): This rule uses the aapt binary (part of the Android SDK), so the RuleKey
-    // should incorporate which version of aapt is used.
-    return super.appendToRuleKey(builder)
-        .set("rDotJavaPackage", rDotJavaPackage)
-        .set("hasWhitelistedStrings", hasWhitelistedStrings);
-  }
-
-  public static Builder newAndroidResourceRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
   }
 
   @Override
@@ -292,7 +286,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
     return HasAndroidResourceDeps.ABI_HASHER.apply(Iterables.filter(
         transitiveAndroidResourceDeps.get(),
         Predicates.not(
-            Predicates.equalTo((HasAndroidResourceDeps) AndroidResourceRule.this))));
+            Predicates.equalTo((HasAndroidResourceDeps) AndroidResource.this))));
   }
 
   @Override
@@ -311,101 +305,6 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
 
     public BuildOutput(Sha1HashCode textSymbolsAbiKey) {
       this.textSymbolsAbiKey = Preconditions.checkNotNull(textSymbolsAbiKey);
-    }
-  }
-
-  public static class Builder extends AbstractBuildRuleBuilder<AndroidResourceRule> {
-    @Nullable
-    private Path res = null;
-
-    private ImmutableSortedSet.Builder<Path> resSrcs = ImmutableSortedSet.naturalOrder();
-
-    @Nullable
-    private String rDotJavaPackage = null;
-
-    @Nullable
-    private Path assetsDirectory = null;
-
-    private ImmutableSortedSet.Builder<Path> assetsSrcs = ImmutableSortedSet.naturalOrder();
-
-    @Nullable
-    private Path manifestFile = null;
-
-    private boolean hasWhitelistedStrings = false;
-
-    private Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public AndroidResourceRule build(BuildRuleResolver ruleResolver) {
-      if ((res == null && rDotJavaPackage != null)
-          || (res != null && rDotJavaPackage == null)) {
-        throw new HumanReadableException("Both res and package must be set together in %s.",
-            getBuildTarget().getFullyQualifiedName());
-      }
-
-      return new AndroidResourceRule(createBuildRuleParams(ruleResolver),
-          res,
-          resSrcs.build(),
-          rDotJavaPackage,
-          assetsDirectory,
-          assetsSrcs.build(),
-          manifestFile,
-          hasWhitelistedStrings);
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    public Builder addDep(BuildTarget dep) {
-      super.addDep(dep);
-      return this;
-    }
-
-    @Override
-    public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
-      visibilityPatterns.add(visibilityPattern);
-      return this;
-    }
-
-    public Builder setRes(Path res) {
-      this.res = res;
-      return this;
-    }
-
-    public Builder addResSrc(Path resSrc) {
-      this.resSrcs.add(resSrc);
-      return this;
-    }
-
-    public Builder setRDotJavaPackage(String rDotJavaPackage) {
-      this.rDotJavaPackage = rDotJavaPackage;
-      return this;
-    }
-
-    public Builder setAssetsDirectory(Path assets) {
-      this.assetsDirectory = assets;
-      return this;
-    }
-
-    public Builder addAssetsSrc(Path assetsSrc) {
-      this.assetsSrcs.add(assetsSrc);
-      return this;
-    }
-
-    public Builder setManifestFile(Path manifestFile) {
-      this.manifestFile = manifestFile;
-      return this;
-    }
-
-    public Builder setHasWhitelistedStrings(boolean hasWhitelistedStrings) {
-      this.hasWhitelistedStrings = hasWhitelistedStrings;
-      return this;
     }
   }
 }

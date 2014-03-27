@@ -23,7 +23,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibraryRule;
-import com.facebook.buck.android.AndroidResourceRule;
+import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -376,7 +376,7 @@ public class Project {
     Preconditions.checkState(projectRule instanceof JavaLibraryRule
         || buildable instanceof JavaBinary
         || projectRule instanceof AndroidLibraryRule
-        || projectRule instanceof AndroidResourceRule
+        || buildable instanceof AndroidResource
         || projectRule instanceof AndroidBinaryRule
         || buildable instanceof NdkLibrary,
         "project_config() does not know how to process a src_target of type %s.",
@@ -455,9 +455,9 @@ public class Project {
         module.keystorePath = null;
         module.nativeLibs =
             Paths.get(relativePath).relativize(ndkLibrary.getLibraryPath()).toString();
-      } else if (projectRule instanceof AndroidResourceRule) {
-        AndroidResourceRule androidResourceRule = (AndroidResourceRule)projectRule;
-        module.resFolder = createRelativePath(androidResourceRule.getRes(), target);
+      } else if (projectRule.getBuildable() instanceof AndroidResource) {
+        AndroidResource androidResource = (AndroidResource) projectRule.getBuildable();
+        module.resFolder = createRelativePath(androidResource.getRes(), target);
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
       } else if (projectRule instanceof AndroidBinaryRule) {
@@ -777,7 +777,7 @@ public class Project {
       public ImmutableSet<BuildRule> visit(BuildRule dep) {
         ImmutableSet<BuildRule> depsToVisit;
         if (rule.getProperties().is(PACKAGING) ||
-            dep instanceof AndroidResourceRule ||
+            dep.getBuildable() instanceof AndroidResource ||
             dep == rule) {
           depsToVisit = dep.getDeps();
         } else if (dep.getProperties().is(LIBRARY) && dep instanceof ExportDependencies) {
@@ -831,7 +831,8 @@ public class Project {
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
           return depsToVisit;
-        } else if (dep instanceof JavaLibraryRule || dep instanceof AndroidResourceRule) {
+        } else if (dep instanceof JavaLibraryRule ||
+                   dep.getBuildable() instanceof AndroidResource) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else {

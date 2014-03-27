@@ -431,42 +431,6 @@ def android_library(
 
 
 @provide_for_build
-def android_resource(
-    name,
-    res=None,
-    has_whitelisted_strings=False,
-    package=None,
-    assets=None,
-    manifest=None,
-    deps=[],
-    visibility=[],
-    build_env=None):
-  if res:
-    res_srcs = glob([res + '/**'], wantdots=True, build_env=build_env)
-  else:
-    res_srcs = None
-
-  if assets:
-    assets_srcs = glob([assets + '/**'], wantdots=True, build_env=build_env)
-  else:
-    assets_srcs = None
-
-  add_rule({
-    'type' : 'android_resource',
-    'name' : name,
-    'res' : res,
-    'has_whitelisted_strings' : has_whitelisted_strings,
-    'res_srcs' : res_srcs,
-    'package' : package,
-    'assets' : assets,
-    'assets_srcs' : assets_srcs,
-    'manifest' : manifest,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def android_binary(
       name,
       manifest,

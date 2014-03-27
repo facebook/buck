@@ -23,7 +23,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidLibraryRule;
-import com.facebook.buck.android.AndroidResourceRule;
+import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.command.Project.SourceFolder;
@@ -106,20 +106,20 @@ public class ProjectTest {
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // android_resouce android_res/base:res
-    BuildRule androidResRule = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:res"))
-        .setRes(Paths.get("android_res/base/res"))
-        .setRDotJavaPackage("com.facebook")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+    BuildRule androidResRule = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:res"))
+            .setRes(Paths.get("android_res/base/res"))
+            .setRDotJavaPackage("com.facebook")
+            .build());
 
     // project_config android_res/base:res
-    BuildRule projectConfigForResource =
+    BuildRule projectConfigForResource = ruleResolver.addToIndex(
         ProjectConfigBuilder.newProjectConfigRuleBuilder()
           .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:project_config"))
           .setSrcRule(androidResRule)
-          .setSrcRoots(ImmutableList.of("res")).build();
-    ruleResolver.addToIndex(projectConfigForResource.getBuildTarget(), projectConfigForResource);
+          .setSrcRoots(ImmutableList.of("res"))
+          .build());
 
     // java_library //java/src/com/facebook/grandchild:grandchild
     BuildTarget grandchild = BuildTargetFactory.newInstance(
@@ -215,7 +215,7 @@ public class ProjectTest {
         .setSrcRule(barAppBuildRule).build());
 
     return getModulesForPartialGraph(ruleResolver,
-        ImmutableList.<BuildRule>of(
+        ImmutableList.of(
             projectConfigForExportLibrary,
             projectConfigForLibrary,
             projectConfigForResource,
@@ -612,14 +612,18 @@ public class ProjectTest {
   public void testSrcRoots() throws IOException {
     // Create a project_config() with src_roots=None.
     BuildRuleResolver ruleResolver1 = new BuildRuleResolver();
-    BuildRule resBuildRule = ruleResolver1.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:res")));
+    BuildRule resBuildRule = ruleResolver1.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:res"))
+            .build()
+    );
     BuildRule projectConfigNullSrcRoots = ruleResolver1.addToIndex(
         ProjectConfigBuilder.newProjectConfigRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:project_config"))
-        .setSrcRule(resBuildRule)
-        .setSrcRoots(null).build());
+            .setBuildTarget(
+                BuildTargetFactory.newInstance("//resources/com/example:project_config"))
+            .setSrcRule(resBuildRule)
+            .setSrcRoots(null)
+            .build());
     ProjectWithModules projectWithModules1 = getModulesForPartialGraph(ruleResolver1,
         ImmutableList.of(projectConfigNullSrcRoots),
         null /* javaPackageFinder */);

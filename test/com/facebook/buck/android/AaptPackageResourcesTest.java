@@ -107,8 +107,9 @@ public class AaptPackageResourcesTest {
     ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
     EasyMock.replay(resourcesFilter);
 
-    AndroidResourceRule resourceOne = (AndroidResourceRule) ruleResolver
-        .get(BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"));
+    AndroidResource resourceOne = (AndroidResource) ruleResolver
+        .get(BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"))
+        .getBuildable();
 
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
@@ -174,10 +175,10 @@ public class AaptPackageResourcesTest {
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
 
-    AndroidResourceRule resourceOne = (AndroidResourceRule) ruleResolver.get(
-        BuildTargetFactory.newInstance("//facebook/base:libraryOne_resources"));
-    AndroidResourceRule resourceTwo = (AndroidResourceRule) ruleResolver.get(
-        BuildTargetFactory.newInstance("//facebook/base:libraryTwo_resources"));
+    AndroidResource resourceOne = (AndroidResource) ruleResolver.get(
+        BuildTargetFactory.newInstance("//facebook/base:libraryOne_resources")).getBuildable();
+    AndroidResource resourceTwo = (AndroidResource) ruleResolver.get(
+        BuildTargetFactory.newInstance("//facebook/base:libraryTwo_resources")).getBuildable();
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     Set<Path> assetsDirectories = ImmutableSet.of(

@@ -20,7 +20,7 @@ import com.facebook.buck.android.AndroidBinaryBuildRuleFactory;
 import com.facebook.buck.android.AndroidInstrumentationApkRuleFactory;
 import com.facebook.buck.android.AndroidLibraryBuildRuleFactory;
 import com.facebook.buck.android.AndroidManifestDescription;
-import com.facebook.buck.android.AndroidResourceBuildRuleFactory;
+import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkLibraryDescription;
@@ -112,6 +112,7 @@ public class KnownBuildRuleTypes {
     Builder builder = builder();
 
     builder.register(new AndroidManifestDescription());
+    builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new ExportFileDescription());
     builder.register(new GenAidlDescription());
@@ -138,7 +139,6 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.ANDROID_INSTRUMENTATION_APK,
         new AndroidInstrumentationApkRuleFactory());
     builder.register(BuildRuleType.ANDROID_LIBRARY, new AndroidLibraryBuildRuleFactory());
-    builder.register(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
     builder.register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());

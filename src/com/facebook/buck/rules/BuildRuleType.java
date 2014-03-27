@@ -25,7 +25,6 @@ public final class BuildRuleType {
       new BuildRuleType("android_instrumentation_apk");
   public static final BuildRuleType ANDROID_LIBRARY = new BuildRuleType("android_library");
   public static final BuildRuleType ANDROID_MANIFEST = new BuildRuleType("android_manifest");
-  public static final BuildRuleType ANDROID_RESOURCE = new BuildRuleType("android_resource");
   public static final BuildRuleType JAVA_LIBRARY = new BuildRuleType("java_library");
   public static final BuildRuleType JAVA_TEST = new BuildRuleType("java_test");
   public static final BuildRuleType PREBUILT_JAR = new BuildRuleType("prebuilt_jar");

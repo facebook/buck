@@ -24,14 +24,14 @@ import java.nio.file.Path;
 import java.util.Iterator;
 
 /**
- * Aggregate information about a list of {@link AndroidResourceRule}s.
+ * Aggregate information about a list of {@link AndroidResource}s.
  */
 public class AndroidResourceDetails {
   /**
-   * The {@code res} directories associated with the {@link AndroidResourceRule}s.
+   * The {@code res} directories associated with the {@link AndroidResource}s.
    * <p>
    * An {@link Iterator} over this collection will reflect the order of the original list of
-   * {@link AndroidResourceRule}s that were specified.
+   * {@link AndroidResource}s that were specified.
    */
   public final ImmutableSet<Path> resDirectories;
 

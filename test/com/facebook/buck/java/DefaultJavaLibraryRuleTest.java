@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryRule;
+import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
@@ -696,7 +697,8 @@ public class DefaultJavaLibraryRuleTest {
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
 
     String javaAbiRuleKeyHash = Strings.repeat("b", 40);
-    FakeJavaAbiRule fakeJavaAbiRule = new FakeJavaAbiRule(BuildRuleType.ANDROID_RESOURCE,
+    FakeJavaAbiRule fakeJavaAbiRule = new FakeJavaAbiRule(
+        AndroidResourceDescription.TYPE,
         BuildTargetFactory.newInstance("//:tinylibfakejavaabi"),
         javaAbiRuleKeyHash);
 

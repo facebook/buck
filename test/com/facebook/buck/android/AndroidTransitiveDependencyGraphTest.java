@@ -83,11 +83,12 @@ public class AndroidTransitiveDependencyGraphTest {
             .addDep(prebuiltNativeLibraryBuild.getBuildTarget())
             .addDep(ndkLibrary.getBuildTarget()));
 
-    AndroidResourceRule manifestRule = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:res"))
-        .setManifestFile(Paths.get("java/src/com/facebook/module/AndroidManifest.xml"))
-        .setAssetsDirectory(Paths.get("assets")));
+    BuildRule manifestRule = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:res"))
+            .setManifest(Paths.get("java/src/com/facebook/module/AndroidManifest.xml"))
+            .setAssets(Paths.get("assets"))
+            .build());
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     KeystoreBuilder.createBuilder(keystoreTarget)

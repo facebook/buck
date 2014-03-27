@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.FileHashCache;
+import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -35,11 +37,18 @@ public class FakeBuildRuleParams extends BuildRuleParams {
   public FakeBuildRuleParams(BuildTarget buildTarget,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
+    this(buildTarget, deps, visibilityPatterns, new NullFileHashCache());
+  }
+
+  public FakeBuildRuleParams(BuildTarget buildTarget,
+      ImmutableSortedSet<BuildRule> deps,
+      ImmutableSet<BuildTargetPattern> visibilityPatterns,
+      FileHashCache fileHashCache) {
     super(buildTarget,
         deps,
         visibilityPatterns,
         new FakeProjectFilesystem(),
-        new FakeRuleKeyBuilderFactory());
+        new FakeRuleKeyBuilderFactory(fileHashCache));
   }
 
 }

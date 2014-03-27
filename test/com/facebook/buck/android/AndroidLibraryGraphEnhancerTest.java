@@ -64,20 +64,22 @@ public class AndroidLibraryGraphEnhancerTest {
   public void testBuildableIsCreated() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    AndroidResourceRule resourceRule1 = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+    BuildRule resourceRule1 = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res1")));
-    AndroidResourceRule resourceRule2 = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setRes(Paths.get("android_res/com/example/res1"))
+            .build());
+    BuildRule resourceRule2 = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res2")));
+            .setRes(Paths.get("android_res/com/example/res2"))
+            .build());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         buildTarget,
-        ImmutableSortedSet.<BuildRule>of(resourceRule1, resourceRule2));
+        ImmutableSortedSet.of(resourceRule1, resourceRule2));
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
@@ -90,7 +92,7 @@ public class AndroidLibraryGraphEnhancerTest {
     assertTrue(result.getOptionalDummyRDotJava().isPresent());
     assertEquals(
         "DummyRDotJava must contain these exact AndroidResourceRules.",
-        ImmutableList.of(resourceRule1, resourceRule2),
+        ImmutableList.of(resourceRule1.getBuildable(), resourceRule2.getBuildable()),
         result.getOptionalDummyRDotJava().get().getAndroidResourceDeps());
 
     ImmutableSortedSet<BuildRule> newDeps = result.getBuildRuleParams().getDeps();
@@ -111,20 +113,22 @@ public class AndroidLibraryGraphEnhancerTest {
   public void testCreatedBuildableHasOverriddenJavacConfig() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    AndroidResourceRule resourceRule1 = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+    BuildRule resourceRule1 = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res1")));
-    AndroidResourceRule resourceRule2 = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setRes(Paths.get("android_res/com/example/res1"))
+            .build());
+    BuildRule resourceRule2 = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res2")));
+            .setRes(Paths.get("android_res/com/example/res2"))
+            .build());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         buildTarget,
-        ImmutableSortedSet.<BuildRule>of(resourceRule1, resourceRule2));
+        ImmutableSortedSet.of(resourceRule1, resourceRule2));
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,

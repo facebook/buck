@@ -54,7 +54,7 @@ public class UberRDotJavaUtil {
       BuildRuleType.ANDROID_BINARY,
       BuildRuleType.ANDROID_INSTRUMENTATION_APK,
       BuildRuleType.ANDROID_LIBRARY,
-      BuildRuleType.ANDROID_RESOURCE,
+      AndroidResourceDescription.TYPE,
       ApkGenruleDescription.TYPE,
       BuildRuleType.JAVA_LIBRARY,
       BuildRuleType.JAVA_TEST,
@@ -66,7 +66,7 @@ public class UberRDotJavaUtil {
   private UberRDotJavaUtil() {}
 
   /**
-   * Finds the transitive set of {@code rule}'s {@link AndroidResourceRule} dependencies with
+   * Finds the transitive set of {@code rule}'s {@link AndroidResource} dependencies with
    * non-null {@code res} directories, which can also include {@code rule} itself.
    * This set will be returned as an {@link ImmutableList} with the rules topologically sorted.
    * Rules will be ordered from least dependent to most dependent.
@@ -76,7 +76,7 @@ public class UberRDotJavaUtil {
   }
 
   /**
-   * Finds the transitive set of {@code rules}' {@link AndroidResourceRule} dependencies with
+   * Finds the transitive set of {@code rules}' {@link AndroidResource} dependencies with
    * non-null {@code res} directories, which can also include any of the {@code rules} themselves.
    * This set will be returned as an {@link ImmutableList} with the rules topologically sorted.
    * Rules will be ordered from least dependent to most dependent.
@@ -125,7 +125,8 @@ public class UberRDotJavaUtil {
     Predicate<BuildRule> inclusionPredicate = new Predicate<BuildRule>() {
       @Override
       public boolean apply(BuildRule rule) {
-        return allAndroidResourceRules.contains(rule);
+        return allAndroidResourceRules.contains(rule)
+            || allAndroidResourceRules.contains(rule.getBuildable());
       }
     };
     ImmutableList<BuildRule> sortedAndroidResourceRules = TopologicalSort.sort(mutableGraph,
@@ -144,7 +145,9 @@ public class UberRDotJavaUtil {
       new Function<BuildRule, HasAndroidResourceDeps>() {
         @Override
         public HasAndroidResourceDeps apply(BuildRule rule) {
-          return (HasAndroidResourceDeps)rule;
+          return (rule instanceof HasAndroidResourceDeps)
+              ? (HasAndroidResourceDeps) rule
+              : (HasAndroidResourceDeps) rule.getBuildable();
         }
       };
 

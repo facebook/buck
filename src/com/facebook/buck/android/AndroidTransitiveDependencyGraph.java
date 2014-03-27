@@ -181,8 +181,8 @@ public class AndroidTransitiveDependencyGraph {
           if (rule.getBuildable() instanceof PrebuiltNativeLibrary) {
             return rule.getDeps();
           }
-        } else if (rule instanceof AndroidResourceRule) {
-          AndroidResourceRule androidRule = (AndroidResourceRule) rule;
+        } else if (rule.getBuildable() instanceof AndroidResource) {
+          AndroidResource androidRule = (AndroidResource) rule.getBuildable();
           Path assetsDirectory = androidRule.getAssets();
           if (assetsDirectory != null) {
             assetsDirectories.add(assetsDirectory);

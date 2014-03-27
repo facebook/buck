@@ -179,12 +179,12 @@ public class AndroidBinaryRuleTest {
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
       BuildTarget resourceOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_resources");
-      AndroidResourceRule androidResourceRule = ruleResolver.buildAndAddToIndex(
-          AndroidResourceRule.newAndroidResourceRuleBuilder(
-              new FakeAbstractBuildRuleBuilderParams())
-          .setAssetsDirectory(Paths.get(assetDirectory))
-          .setRes(resDirectory == null ? null : Paths.get(resDirectory))
-          .setBuildTarget(resourceOnebuildTarget));
+      BuildRule androidResourceRule = ruleResolver.addToIndex(
+          AndroidResourceRuleBuilder.newBuilder()
+              .setAssets(Paths.get(assetDirectory))
+              .setRes(resDirectory == null ? null : Paths.get(resDirectory))
+              .setBuildTarget(resourceOnebuildTarget)
+              .build());
 
       androidLibraryRuleBuilder.addDep(androidResourceRule.getBuildTarget());
     }
