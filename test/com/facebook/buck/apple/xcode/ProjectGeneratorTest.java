@@ -498,7 +498,9 @@ public class ProjectGeneratorTest {
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
         AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
-    arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
+    arg.frameworks = ImmutableSortedSet.of(
+        "$SDKROOT/Foo.framework",
+        "$DEVELOPER_DIR/XCTest.framework");
     arg.sourceUnderTest = ImmutableSortedSet.of();
 
     BuildRule rule = new DescribedRule(
@@ -525,7 +527,7 @@ public class ProjectGeneratorTest {
 
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of(
-        "$SDKROOT/Foo.framework"));
+            "$DEVELOPER_DIR/XCTest.framework", "$SDKROOT/Foo.framework"));
   }
 
   @Test

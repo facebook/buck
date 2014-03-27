@@ -52,6 +52,12 @@ public class PBXReference extends PBXContainerItem {
      * Relative to the directory containing the project file {@code SOURCE_ROOT}.
      */
     SOURCE_ROOT("SOURCE_ROOT"),
+
+    /**
+     * Relative to the Developer content directory inside the Xcode application
+     * (e.g. {@code /Applications/Xcode.app/Contents/Developer}).
+     */
+    DEVELOPER_DIR("DEVELOPER_DIR"),
     ;
 
     private final String rep;
@@ -78,6 +84,8 @@ public class PBXReference extends PBXContainerItem {
           return Optional.of(SDKROOT);
         case "SOURCE_ROOT":
           return Optional.of(SOURCE_ROOT);
+        case "DEVELOPER_DIR":
+          return Optional.of(DEVELOPER_DIR);
         default:
           return Optional.absent();
       }
