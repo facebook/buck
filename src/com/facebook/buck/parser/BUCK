@@ -33,7 +33,6 @@ java_library(
   name = 'project',
   # TODO(simons): Find a proper home for these.
   srcs = [
-    'ProjectConfigRuleFactory.java',
     'RawRulePredicate.java',
     'RawRulePredicates.java',
   ],

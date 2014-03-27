@@ -40,7 +40,7 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
-import com.facebook.buck.rules.ProjectConfigRule;
+import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
@@ -50,7 +50,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -82,10 +81,10 @@ public class ProjectCommandTest {
         .addSrc(Paths.get("javasrc/JavaLibrary.java")));
 
     String projectConfigTargetName = "//javasrc:project-config";
-    ProjectConfigRule ruleConfig = ruleResolver.buildAndAddToIndex(
-        ProjectConfigRule.newProjectConfigRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+    BuildRule ruleConfig = ruleResolver.addToIndex(
+        ProjectConfigBuilder.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(projectConfigTargetName))
-        .setSrcTarget(Optional.of(javaLibraryTargetName)));
+        .setSrcRule(javaLibraryRule).build());
 
     BuckConfig buckConfig = createBuckConfig(
         Joiner.on("\n").join(
@@ -94,7 +93,7 @@ public class ProjectCommandTest {
 
     ProjectCommandForTest command = new ProjectCommandForTest();
     command.createPartialGraphCallReturnValues.push(
-        createGraphFromBuildRules(ImmutableList.<BuildRule>of(ruleConfig)));
+        createGraphFromBuildRules(ImmutableList.of(ruleConfig)));
 
     command.runCommandWithOptions(createOptions(buckConfig));
 

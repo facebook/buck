@@ -28,7 +28,7 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.parser.RawRulePredicates;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -80,7 +80,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     try {
       partialGraph = createPartialGraph(
-          RawRulePredicates.matchBuildRuleType(BuildRuleType.PROJECT_CONFIG),
+          RawRulePredicates.matchBuildRuleType(ProjectConfigDescription.TYPE),
           options);
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);

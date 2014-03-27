@@ -636,32 +636,6 @@ def include_defs(name, build_env=None):
 
 
 @provide_for_build
-def project_config(
-    src_target=None,
-    src_roots=[],
-    test_target=None,
-    test_roots=[],
-    is_intellij_plugin=False,
-    build_env=None):
-  deps = []
-  if src_target:
-    deps.append(src_target)
-  if test_target:
-    deps.append(test_target)
-  add_rule({
-    'type' : 'project_config',
-    'name' : 'project_config',
-    'src_target' : src_target,
-    'src_roots' : src_roots,
-    'test_target' : test_target,
-    'test_roots' : test_roots,
-    'is_intellij_plugin': is_intellij_plugin,
-    'deps' : deps,
-    'visibility' : [],
-  }, build_env)
-
-
-@provide_for_build
 def get_base_path(build_env=None):
   """Get the base path to the build file that was initially evaluated.
 

@@ -23,16 +23,19 @@ import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.facebook.buck.step.Step;
 
 import org.easymock.EasyMockSupport;
 import org.junit.After;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.util.List;
+
 /**
- * Unit test for {@link ProjectConfigRule}.
+ * Unit test for {@link ProjectConfig}.
  */
-public class ProjectConfigRuleTest extends EasyMockSupport {
+public class ProjectConfigTest extends EasyMockSupport {
 
   @After
   public void tearDown() {
@@ -40,32 +43,30 @@ public class ProjectConfigRuleTest extends EasyMockSupport {
   }
 
   @Test
-  public void testBuildIsIdempotent() {
-    BuildContext context = createMock(BuildContext.class);
+  public void testBuildIsIdempotent() throws IOException {
+    BuildContext buildContext = createMock(BuildContext.class);
+    BuildableContext buildableContext = createMock(BuildableContext.class);
     replayAll();
 
-    ProjectConfigRule projectConfig = createProjectConfig();
-    ListenableFuture<BuildRuleSuccess> result1 = projectConfig.build(context);
-    ListenableFuture<BuildRuleSuccess> result2 = projectConfig.build(context);
+    ProjectConfig projectConfig = createProjectConfig();
+    List<Step> result1 =
+        projectConfig.getBuildSteps(buildContext, buildableContext);
+    List<Step> result2 =
+        projectConfig.getBuildSteps(buildContext, buildableContext);
 
     assertNotNull("build() should return a non-null result", result1);
     assertSame("build() must be idempotent", result1, result2);
   }
 
-  private ProjectConfigRule createProjectConfig() {
+  private ProjectConfig createProjectConfig() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     JavaLibraryRule javaRule = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//javatests:lib")));
 
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        new BuildTarget("//javatests", "project_config"));
-    return new ProjectConfigRule(
-        buildRuleParams,
-        /* srcRule */ javaRule,
-        /* srcRoots */ null,
-        /* testRule */ null,
-        /* testRoots */ null,
-        /* isIntelliJPlugin */ false);
+    return ProjectConfigBuilder.newProjectConfigRuleBuilder()
+        .setBuildTarget(new BuildTarget("//javatests", "project_config"))
+        .setSrcRule(javaRule)
+        .buildAsBuildable();
   }
 }

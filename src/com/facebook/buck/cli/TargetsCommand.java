@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -247,7 +248,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       Buildable buildable = buildRule.getBuildable();
       if (buildable != null) {
         outputPath = buildable.getPathToOutputFile();
-      } else if (BuildRuleType.PROJECT_CONFIG.equals(buildRule.getType())) {
+      } else if (ProjectConfigDescription.TYPE.equals(buildRule.getType())) {
         // We know that project_config() rules are special.
         outputPath = null;
       } else {

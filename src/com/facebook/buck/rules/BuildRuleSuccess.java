@@ -60,9 +60,6 @@ public class BuildRuleSuccess {
         Property.SHOULD_UPDATE_METADATA_ON_DISK
         ),
 
-    /** Created trivially, such as a {@link ProjectConfigRule}. */
-    BY_DEFINITION,
-
     ;
 
     private final EnumSet<Property> properties;

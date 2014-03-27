@@ -20,8 +20,8 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -148,7 +148,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       File file = projectFilesystem.getFileForRelativePath(nonExistentFile);
       File buck = findBuckFileFor(file);
       for (BuildRule rule : graph.getNodes()) {
-        if (rule.getType() == BuildRuleType.PROJECT_CONFIG) {
+        if (rule.getType() == ProjectConfigDescription.TYPE) {
           continue;
         }
         try {

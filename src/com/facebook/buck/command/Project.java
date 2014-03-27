@@ -38,7 +38,7 @@ import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.JavaPackageFinder;
-import com.facebook.buck.rules.ProjectConfigRule;
+import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -349,9 +349,9 @@ public class Project {
     ImmutableSet.Builder<String> noDxJarsBuilder = ImmutableSet.builder();
     for (BuildTarget target : partialGraph.getTargets()) {
       BuildRule buildRule = dependencyGraph.findBuildRuleByTarget(target);
-      ProjectConfigRule projectConfigRule = (ProjectConfigRule)buildRule;
+      ProjectConfig projectConfig = (ProjectConfig) buildRule.getBuildable();
 
-      BuildRule srcRule = projectConfigRule.getSrcRule();
+      BuildRule srcRule = projectConfig.getSrcRule();
       if (srcRule instanceof AndroidBinaryRule) {
         AndroidBinaryRule androidBinary = (AndroidBinaryRule)srcRule;
         AndroidDexTransitiveDependencies binaryDexTransitiveDependencies =
@@ -359,7 +359,7 @@ public class Project {
         noDxJarsBuilder.addAll(binaryDexTransitiveDependencies.noDxClasspathEntries);
       }
 
-      Module module = createModuleForProjectConfig(projectConfigRule);
+      Module module = createModuleForProjectConfig(projectConfig);
       modules.add(module);
     }
     ImmutableSet<String> noDxJars = noDxJarsBuilder.build();
@@ -370,7 +370,7 @@ public class Project {
     return modules;
   }
 
-  private Module createModuleForProjectConfig(ProjectConfigRule projectConfig) throws IOException {
+  private Module createModuleForProjectConfig(ProjectConfig projectConfig) throws IOException {
     BuildRule projectRule = projectConfig.getProjectRule();
     Buildable buildable = projectRule.getBuildable();
     Preconditions.checkState(projectRule instanceof JavaLibraryRule

@@ -17,27 +17,22 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
 
-public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
-
-  private static final BuildRuleSuccess.Type SUCCESS_TYPE = BuildRuleSuccess.Type.BY_DEFINITION;
+public class ProjectConfig extends AbstractBuildable {
 
   @Nullable
   private final BuildRule srcRule;
@@ -54,23 +49,24 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
 
   private final boolean isIntelliJPlugin;
 
-  private final ListenableFuture<BuildRuleSuccess> buildOutput;
+  private final BuildTarget buildTarget;
 
-  public ProjectConfigRule(BuildRuleParams buildRuleParams,
+  protected ProjectConfig(
+      BuildTarget buildTarget,
       @Nullable BuildRule srcRule,
       @Nullable List<String> srcRoots,
       @Nullable BuildRule testRule,
       @Nullable List<String> testRoots,
       boolean isIntelliJPlugin) {
-    super(buildRuleParams);
     Preconditions.checkArgument(srcRule != null || testRule != null,
         "At least one of src_target or test_target must be specified in %s.",
-        buildRuleParams.getBuildTarget().getFullyQualifiedName());
+        buildTarget.getFullyQualifiedName());
     Preconditions.checkArgument(testRule == null || testRule.getType().isTestRule(),
         "The test_target for a project_config() must correspond to a test rule, if specified, " +
         "but was %s.",
         testRule);
 
+    this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.srcRule = srcRule;
     if (srcRoots != null) {
       this.srcSourceRoots = ImmutableList.copyOf(Iterables.transform(srcRoots,
@@ -98,21 +94,10 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     }
 
     this.isIntelliJPlugin = isIntelliJPlugin;
-
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, SUCCESS_TYPE);
-    this.buildOutput = Futures.immediateFuture(buildRuleSuccess);
   }
 
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.PROJECT_CONFIG;
-  }
-
-  @Nullable
-  @Override
-  public Buildable getBuildable() {
-    // TODO(simons): Perhaps return some sort of no-op buildable?
-    return null;
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
   }
 
   /**
@@ -152,94 +137,25 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
-    return buildOutput;
+  public Collection<Path> getInputsToCompareToOutput() {
+    return ImmutableSet.of();
   }
 
   @Override
-  public BuildRuleSuccess.Type getBuildResultType() {
-    return SUCCESS_TYPE;
-  }
-
-  @Override
-  public final Iterable<Path> getInputs() {
+  public List<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) throws IOException {
     return ImmutableList.of();
   }
 
-  public static Builder newProjectConfigRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildRuleBuilder<ProjectConfigRule> {
-
-    private Optional<BuildTarget> srcTargetId = Optional.absent();
-    @Nullable private List<String> srcRoots = null;
-    private Optional<BuildTarget> testTargetId = Optional.absent();
-    @Nullable private List<String> testRoots = null;
-    private boolean isIntelliJPlugin = false;
-
-    private Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public ProjectConfigRule build(final BuildRuleResolver ruleResolver) {
-      BuildRule srcRule = ruleResolver.get(srcTargetId.orNull());
-      BuildRule testRule = ruleResolver.get(testTargetId.orNull());
-
-      return new ProjectConfigRule(createBuildRuleParams(ruleResolver),
-          srcRule,
-          srcRoots,
-          testRule,
-          testRoots,
-          isIntelliJPlugin);
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    public Builder setSrcTarget(Optional<BuildTarget> srcTargetId) {
-      this.srcTargetId = Preconditions.checkNotNull(srcTargetId);
-      return this;
-    }
-
-    public Builder setSrcRoots(@Nullable List<String> srcRoots) {
-      this.srcRoots = srcRoots;
-      return this;
-    }
-
-    public Builder setTestTarget(Optional<BuildTarget> testTargetId) {
-      this.testTargetId = Preconditions.checkNotNull(testTargetId);
-      return this;
-    }
-
-    public Builder setTestRoots(@Nullable List<String> testRoots) {
-      this.testRoots = testRoots;
-      return this;
-    }
-
-    public Builder setIsIntelliJPlugin(boolean isIntellijPlugin) {
-      this.isIntelliJPlugin = isIntellijPlugin;
-      return this;
-    }
-
-    @Override
-    public Set<BuildTarget> getDeps() {
-      ImmutableSet.Builder<BuildTarget> depsBuilder = ImmutableSet.builder();
-
-      Optionals.addIfPresent(srcTargetId, depsBuilder);
-      Optionals.addIfPresent(testTargetId, depsBuilder);
-
-      return depsBuilder.build();
-    }
+  @Nullable
+  @Override
+  public Path getPathToOutputFile() {
+    return null;
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return super.appendToRuleKey(builder)
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder
         .set("srcRule", srcRule)
         .set("srcSourceRoots", srcSourceRoots)
         .set("testRule", testRule)

@@ -23,7 +23,6 @@ import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceBuildRuleFactory;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
-import com.facebook.buck.parcelable.GenParcelableDescription;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuildRuleFactory;
 import com.facebook.buck.android.RobolectricTestBuildRuleFactory;
@@ -36,14 +35,14 @@ import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cpp.CppBinaryDescription;
 import com.facebook.buck.cpp.CppLibraryDescription;
-import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaBinaryDescription;
+import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.java.JavaTestBuildRuleFactory;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarBuildRuleFactory;
-import com.facebook.buck.parser.ProjectConfigRuleFactory;
+import com.facebook.buck.parcelable.GenParcelableDescription;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.shell.ExportFileDescription;
@@ -131,6 +130,7 @@ public class KnownBuildRuleTypes {
     builder.register(new XcodeNativeDescription());
     builder.register(new NdkLibraryDescription(Optional.<String>absent()));
     builder.register(new GenParcelableDescription());
+    builder.register(new ProjectConfigDescription());
 
     // TODO(simons): Consider once more whether we actually want to have default rules
     builder.register(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory());
@@ -143,7 +143,6 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());
     builder.register(BuildRuleType.PREBUILT_NATIVE_LIBRARY,
         new PrebuiltNativeLibraryBuildRuleFactory());
-    builder.register(BuildRuleType.PROJECT_CONFIG, new ProjectConfigRuleFactory());
     builder.register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
     builder.register(BuildRuleType.SH_BINARY, new ShBinaryBuildRuleFactory());
     builder.register(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory());
