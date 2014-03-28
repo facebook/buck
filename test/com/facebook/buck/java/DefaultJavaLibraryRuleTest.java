@@ -468,7 +468,7 @@ public class DefaultJavaLibraryRuleTest {
     // libraryOne responds like an ordinary prebuilt_jar with no dependencies. We have to use a
     // FakeJavaLibraryRule so that we can override the behavior of getAbiKey().
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    JavaLibraryRule libraryOne = new FakeJavaLibraryRule(libraryOneTarget) {
+    FakeJavaLibraryRule libraryOne = new FakeJavaLibraryRule(libraryOneTarget) {
       @Override
       public Sha1HashCode getAbiKey() {
         return new Sha1HashCode(Strings.repeat("cafebabe", 5));
@@ -688,7 +688,7 @@ public class DefaultJavaLibraryRuleTest {
   @Test
   public void testGetAbiKeyForDepsWithMixedDeps() {
     String tinyLibAbiKeyHash = Strings.repeat("a", 40);
-    JavaLibraryRule tinyLibrary = createDefaultJavaLibaryRuleWithAbiKey(
+    BuildRule tinyLibrary = createDefaultJavaLibaryRuleWithAbiKey(
         tinyLibAbiKeyHash,
         BuildTargetFactory.newInstance("//:tinylib"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
@@ -723,7 +723,7 @@ public class DefaultJavaLibraryRuleTest {
   public void testGetAbiKeyForDepsInThePresenceOfExportedDeps() throws IOException {
     // Create a java_library named //:tinylib with a hardcoded ABI key.
     String tinyLibAbiKeyHash = Strings.repeat("a", 40);
-    JavaLibraryRule tinyLibrary = createDefaultJavaLibaryRuleWithAbiKey(
+    BuildRule tinyLibrary = createDefaultJavaLibaryRuleWithAbiKey(
         tinyLibAbiKeyHash,
         BuildTargetFactory.newInstance("//:tinylib"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
@@ -804,7 +804,7 @@ public class DefaultJavaLibraryRuleTest {
   public void testGetAbiKeyInThePresenceOfExportedDeps() throws IOException {
     // Create a java_library named //:commonlib with a hardcoded ABI key.
     String commonLibAbiKeyHash = Strings.repeat("a", 40);
-    JavaLibraryRule commonLibrary = createDefaultJavaLibaryRuleWithAbiKey(
+    BuildRule commonLibrary = createDefaultJavaLibaryRuleWithAbiKey(
         commonLibAbiKeyHash,
         BuildTargetFactory.newInstance("//:commonlib"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
@@ -859,21 +859,21 @@ public class DefaultJavaLibraryRuleTest {
 
     // Test the following dependency graph:
     // a(export_deps=true) -> b(export_deps=true) -> c(export_deps=true) -> d(export_deps=true)
-    JavaLibraryRule libD = createDefaultJavaLibaryRuleWithAbiKey(
+    BuildRule libD = createDefaultJavaLibaryRuleWithAbiKey(
         libDAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_d"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
         /* deps */ ImmutableSet.<BuildRule>of(),
         /* exporedtDeps */ ImmutableSet.<BuildRule>of());
-    JavaLibraryRule libC = createDefaultJavaLibaryRuleWithAbiKey(
+    BuildRule libC = createDefaultJavaLibaryRuleWithAbiKey(
         libCAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_c"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
         /* deps */ ImmutableSet.<BuildRule>of(libD),
         /* exporedtDeps */ ImmutableSet.<BuildRule>of(libD));
-    JavaLibraryRule libB = createDefaultJavaLibaryRuleWithAbiKey(
+    BuildRule libB = createDefaultJavaLibaryRuleWithAbiKey(
         libBAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_b"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
@@ -891,7 +891,7 @@ public class DefaultJavaLibraryRuleTest {
     assertEquals(
         "If a rule has no dependencies its final ABI key should be the rule's own ABI key.",
         libDAbiKeyHash,
-        libD.getAbiKey().getHash());
+        ((HasJavaAbi) libD).getAbiKey().getHash());
 
     String expectedLibCAbiKeyHash = Hashing.sha1().newHasher()
         .putUnencodedChars(libDAbiKeyHash)
@@ -901,7 +901,7 @@ public class DefaultJavaLibraryRuleTest {
     assertEquals(
         "The ABI key for lib_c should contain lib_d's ABI key.",
         expectedLibCAbiKeyHash,
-        libC.getAbiKey().getHash());
+        ((HasJavaAbi) libC).getAbiKey().getHash());
 
     String expectedLibBAbiKeyHash = Hashing.sha1().newHasher()
         .putUnencodedChars(expectedLibCAbiKeyHash)
@@ -912,7 +912,7 @@ public class DefaultJavaLibraryRuleTest {
     assertEquals(
         "The ABI key for lib_b should contain lib_c's and lib_d's ABI keys.",
         expectedLibBAbiKeyHash,
-        libB.getAbiKey().getHash());
+        ((HasJavaAbi) libB).getAbiKey().getHash());
 
     String expectedLibAAbiKeyHash = Hashing.sha1().newHasher()
         .putUnencodedChars(expectedLibBAbiKeyHash)
@@ -959,12 +959,12 @@ public class DefaultJavaLibraryRuleTest {
     assertEquals(
         "If export_deps is false, the final ABI key should be the rule's own ABI key.",
         libDAbiKeyHash,
-        libD.getAbiKey().getHash());
+        ((HasJavaAbi) libD).getAbiKey().getHash());
 
     assertEquals(
         "If export_deps is false, the final ABI key should be the rule's own ABI key.",
         libCAbiKeyHash,
-        libC.getAbiKey().getHash());
+        ((HasJavaAbi) libC).getAbiKey().getHash());
 
     expectedLibBAbiKeyHash = Hashing.sha1().newHasher()
         .putUnencodedChars(libCAbiKeyHash)
@@ -974,7 +974,7 @@ public class DefaultJavaLibraryRuleTest {
     assertEquals(
         "The ABI key for lib_b should contain lib_c's ABI key.",
         expectedLibBAbiKeyHash,
-        libB.getAbiKey().getHash());
+        ((HasJavaAbi) libB).getAbiKey().getHash());
 
     expectedLibAAbiKeyHash = Hashing.sha1().newHasher()
         .putUnencodedChars(expectedLibBAbiKeyHash)
@@ -1201,7 +1201,8 @@ public class DefaultJavaLibraryRuleTest {
         .setJavaCompilerEnviornment(
             new JavaCompilerEnvironment(
                 Optional.of(Paths.get("javac")),
-                Optional.<JavacVersion> absent()))
+                Optional.<JavacVersion>absent())
+        )
         .build();
     rule.createCommandsForJavac(
         rule.getPathToOutputFile(),
@@ -1432,7 +1433,7 @@ public class DefaultJavaLibraryRuleTest {
     }
   }
 
-  private static class FakeJavaAbiRule extends FakeBuildRule implements JavaAbiRule {
+  private static class FakeJavaAbiRule extends FakeBuildRule implements HasJavaAbi {
     private final String abiKeyHash;
 
     public FakeJavaAbiRule(BuildRuleType type, BuildTarget buildTarget, String abiKeyHash) {

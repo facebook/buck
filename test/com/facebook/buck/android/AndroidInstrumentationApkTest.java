@@ -41,10 +41,10 @@ public class AndroidInstrumentationApkTest {
 
   @Test
   public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() {
-    final JavaLibraryRule javaLibrary1 = new FakeJavaLibraryRule(
+    final FakeJavaLibraryRule javaLibrary1 = new FakeJavaLibraryRule(
         new BuildTarget("//java/com/example", "lib1"));
 
-    JavaLibraryRule javaLibrary2 = new FakeJavaLibraryRule(
+    FakeJavaLibraryRule javaLibrary2 = new FakeJavaLibraryRule(
         new BuildTarget("//java/com/example", "lib2"),
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary1)) {
       @Override
@@ -57,10 +57,10 @@ public class AndroidInstrumentationApkTest {
       }
     };
 
-    final JavaLibraryRule javaLibrary3 = new FakeJavaLibraryRule(
+    final FakeJavaLibraryRule javaLibrary3 = new FakeJavaLibraryRule(
         new BuildTarget("//java/com/example", "lib3"));
 
-    JavaLibraryRule javaLibrary4 = new FakeJavaLibraryRule(
+    FakeJavaLibraryRule javaLibrary4 = new FakeJavaLibraryRule(
         new BuildTarget("//java/com/example", "lib4"),
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary3)) {
       @Override

@@ -55,7 +55,7 @@ public class AndroidTransitiveDependencyGraph {
    */
   public AndroidDexTransitiveDependencies findDexDependencies(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
-      ImmutableSet<BuildRule> buildRulesToExcludeFromDex,
+      ImmutableSet<JavaLibraryRule> buildRulesToExcludeFromDex,
       UberRDotJava uberRDotJava) {
     // These are paths that will be dex'ed. They may be either directories of compiled .class files,
     // or paths to compiled JAR files.

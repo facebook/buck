@@ -30,6 +30,7 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -66,6 +67,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -156,7 +158,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final ImmutableSortedSet<BuildRule> classpathDeps;
   private final Keystore keystore;
   private final PackageType packageType;
-  private final ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex;
+  private final ImmutableSortedSet<JavaLibraryRule> buildRulesToExcludeFromDex;
   private DexSplitMode dexSplitMode;
   private final boolean useAndroidProguardConfigWithOptimizations;
   private final Optional<Integer> optimizationPasses;
@@ -187,7 +189,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       ImmutableSortedSet<BuildRule> classpathDeps,
       Keystore keystore,
       PackageType packageType,
-      Set<BuildRule> buildRulesToExcludeFromDex,
+      Set<JavaLibraryRule> buildRulesToExcludeFromDex,
       DexSplitMode dexSplitMode,
       boolean useAndroidProguardConfigWithOptimizations,
       Optional<Integer> proguardOptimizationPasses,
@@ -263,7 +265,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("keystore", keystore.getBuildTarget().getFullyQualifiedName())
         .setRuleNames("classpathDeps", classpathDeps)
         .set("packageType", packageType.toString())
-        .set("buildRulesToExcludeFromDex", buildRulesToExcludeFromDex)
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
         .set("optimizationPasses", optimizationPasses.toString())
         .set("resourceCompressionMode", resourceCompressionMode.toString())
@@ -271,10 +272,15 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("exopackage", exopackage)
         .set("preprocessJavaClassesBash", preprocessJavaClassesBash)
         .set("preprocessJavaClassesDeps", preprocessJavaClassesDeps);
+
+    for (JavaLibraryRule buildable : buildRulesToExcludeFromDex) {
+      buildable.appendDetailsToRuleKey(builder);
+    }
+
     return dexSplitMode.appendToRuleKey("dexSplitMode", builder);
   }
 
-  public ImmutableSortedSet<BuildRule> getBuildRulesToExcludeFromDex() {
+  public ImmutableSortedSet<JavaLibraryRule> getBuildRulesToExcludeFromDex() {
     return buildRulesToExcludeFromDex;
   }
 
@@ -736,11 +742,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         getTransitiveClasspathEntries();
     ImmutableSet.Builder<String> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
-    for (BuildRule buildRule : buildRulesToExcludeFromDex) {
-      if (buildRule instanceof JavaLibraryRule) {
-        additionalLibraryJarsForProguardBuilder.addAll(
-            classpathEntriesMap.get((JavaLibraryRule)buildRule));
-      }
+    for (JavaLibraryRule buildRule : buildRulesToExcludeFromDex) {
+      additionalLibraryJarsForProguardBuilder.addAll(classpathEntriesMap.get(buildRule));
     }
 
     // Clean out the directory for generated ProGuard files.
@@ -1043,10 +1046,28 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       // Create the BuildRule and Buildable for UberRDotJava.
       boolean allowNonExistentRule =
           false;
-      ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = getBuildTargetsAsBuildRules(
+      ImmutableSortedSet<BuildRule> allRules = getBuildTargetsAsBuildRules(
           ruleResolver,
           buildTargetsToExcludeFromDex,
           allowNonExistentRule);
+
+      ImmutableSortedSet<JavaLibraryRule> buildRulesToExcludeFromDex = FluentIterable.from(allRules)
+          .filter(
+              new Predicate<BuildRule>() {
+                @Override
+                public boolean apply(BuildRule input) {
+                  return input.getBuildable() instanceof JavaLibraryRule;
+                }
+              })
+          .transform(
+              new Function<BuildRule, JavaLibraryRule>() {
+                @Override
+                public JavaLibraryRule apply(BuildRule input) {
+                  return (JavaLibraryRule) input.getBuildable();
+                }
+              })
+          .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
+
       AndroidResourceDepsFinder androidResourceDepsFinder = new AndroidResourceDepsFinder(
           androidTransitiveDependencyGraph,
           buildRulesToExcludeFromDex) {

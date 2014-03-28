@@ -306,7 +306,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       return abiKey;
     }
 
-    SortedSet<JavaAbiRule> depsForAbiKey = getDepsForAbiKey();
+    SortedSet<HasJavaAbi> depsForAbiKey = getDepsForAbiKey();
 
     // Hash the ABI keys of all dependencies together with ABI key for the current rule.
     Hasher hasher = createHasherWithAbiKeyForDeps(depsForAbiKey);
@@ -354,17 +354,17 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * Returns a sorted set containing the dependencies which will be hashed in the final ABI key.
    * @return the dependencies to be hashed in the final ABI key.
    */
-  private SortedSet<JavaAbiRule> getDepsForAbiKey() {
-    SortedSet<JavaAbiRule> rulesWithAbiToConsider = Sets.newTreeSet(BUILD_TARGET_COMPARATOR);
+  private SortedSet<HasJavaAbi> getDepsForAbiKey() {
+    SortedSet<HasJavaAbi> rulesWithAbiToConsider = Sets.newTreeSet(BUILD_TARGET_COMPARATOR);
     for (BuildRule dep : getDeps()) {
       // This looks odd. DummyJavaAbiRule contains a Buildable that isn't a JavaAbiRule.
-      if (dep.getBuildable() instanceof JavaAbiRule || dep instanceof JavaAbiRule) {
+      if (dep.getBuildable() instanceof HasJavaAbi || dep instanceof HasJavaAbi) {
         if (dep.getBuildable() instanceof JavaLibraryRule) {
           JavaLibraryRule javaRule = (JavaLibraryRule) dep.getBuildable();
           rulesWithAbiToConsider.addAll(javaRule.getOutputClasspathEntries().keys());
         } else {
           // DummyJavaAbiRule -> JavaAbiRule, but the buildable isn't
-          rulesWithAbiToConsider.add((JavaAbiRule) dep);
+          rulesWithAbiToConsider.add((HasJavaAbi) dep);
         }
       }
     }
@@ -377,9 +377,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    *     added to the hasher.
    * @return a Hasher containing the ABI keys of the dependencies.
    */
-  private Hasher createHasherWithAbiKeyForDeps(SortedSet<JavaAbiRule> rulesWithAbiToConsider) {
+  private Hasher createHasherWithAbiKeyForDeps(SortedSet<HasJavaAbi> rulesWithAbiToConsider) {
     Hasher hasher = Hashing.sha1().newHasher();
-    for (JavaAbiRule ruleWithAbiToConsider : rulesWithAbiToConsider) {
+    for (HasJavaAbi ruleWithAbiToConsider : rulesWithAbiToConsider) {
       if (ruleWithAbiToConsider == this) {
         continue;
       }

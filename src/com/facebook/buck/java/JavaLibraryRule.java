@@ -26,7 +26,7 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
-public interface JavaLibraryRule extends Buildable, HasClasspathEntries, JavaAbiRule {
+public interface JavaLibraryRule extends Buildable, HasClasspathEntries, HasJavaAbi {
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
    *     build a jar associated with this rule.  Contains the classpath entries for the transitive

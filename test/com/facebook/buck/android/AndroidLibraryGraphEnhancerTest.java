@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.java.JavaAbiRule;
+import com.facebook.buck.java.HasJavaAbi;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacVersion;
@@ -69,13 +69,15 @@ public class AndroidLibraryGraphEnhancerTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res1"))
-            .build());
+            .build()
+    );
     BuildRule resourceRule2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res2"))
-            .build());
+            .build()
+    );
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         buildTarget,
@@ -100,7 +102,7 @@ public class AndroidLibraryGraphEnhancerTest {
         3, newDeps.size());
 
     BuildRule dummyRDotJavaRule = newDeps.last();
-    assertTrue(dummyRDotJavaRule instanceof JavaAbiRule);
+    assertTrue(dummyRDotJavaRule instanceof HasJavaAbi);
     assertEquals("//java/com/example:library#dummy_r_dot_java",
         dummyRDotJavaRule.getFullyQualifiedName());
     assertEquals("DummyRDotJava must depend on the two AndroidResourceRules.",
@@ -118,13 +120,15 @@ public class AndroidLibraryGraphEnhancerTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res1"))
-            .build());
+            .build()
+    );
     BuildRule resourceRule2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res2"))
-            .build());
+            .build()
+    );
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         buildTarget,
@@ -138,7 +142,8 @@ public class AndroidLibraryGraphEnhancerTest {
             .setJavaCompilerEnviornment(
                 new JavaCompilerEnvironment(
                     Optional.of(Paths.get("javac")),
-                    Optional.of(new JavacVersion("1.7"))))
+                    Optional.of(new JavacVersion("1.7")))
+            )
             .build());
     Result result = graphEnhancer.createBuildableForAndroidResources(ruleResolver,
         /* createBuildableIfEmptyDeps */ false);

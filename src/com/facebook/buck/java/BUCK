@@ -7,7 +7,7 @@ java_library(
     'AnnotationProcessingParams.java',
     'DefaultJavaPackageFinder.java',
     'HasClasspathEntries.java',
-    'JavaAbiRule.java',
+    'HasJavaAbi.java',
     'JavaLibraryRule.java',
     'JavacVersion.java',
     'JavacOptions.java',
