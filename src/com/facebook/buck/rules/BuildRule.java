@@ -35,6 +35,7 @@ import javax.annotation.Nullable;
     setterVisibility = JsonAutoDetect.Visibility.NONE)
 public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
 
+  @Override
   public BuildTarget getBuildTarget();
 
   @JsonProperty("name")

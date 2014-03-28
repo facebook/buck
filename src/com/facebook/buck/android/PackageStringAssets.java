@@ -170,6 +170,7 @@ public class PackageStringAssets extends AbstractBuildable
       super(params);
     }
 
+    @Override
     public Builder setBuildTarget(BuildTarget buildTarget) {
       super.setBuildTarget(buildTarget);
       return this;

@@ -592,7 +592,7 @@ public class BuckConfig {
   }
 
   /**
-   * Clients should use {@link #createArtifactCache(Optional<String>, BuckEventBus)} unless it
+   * Clients should use {@link #createArtifactCache(Optional, BuckEventBus)} unless it
    * is expected that the user has defined a {@code cassandra} cache, and that it should be used
    * exclusively.
    */

@@ -55,6 +55,7 @@ public class CompilerStep extends ShellStep {
     this.includePaths = Preconditions.checkNotNull(includePaths);
   }
 
+  @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> cmdBuilder = ImmutableList.builder();
 
@@ -86,6 +87,7 @@ public class CompilerStep extends ShellStep {
     return cmdBuilder.build();
   }
 
+  @Override
   public String getShortName() {
     return Paths.get(compiler).getFileName().toString();
   }

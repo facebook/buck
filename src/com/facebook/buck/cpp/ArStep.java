@@ -39,6 +39,7 @@ public class ArStep extends ShellStep {
     this.outputFile = Preconditions.checkNotNull(outputFile);
   }
 
+  @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> cmdBuilder = ImmutableList.builder();
 
@@ -53,6 +54,7 @@ public class ArStep extends ShellStep {
     return cmdBuilder.build();
   }
 
+  @Override
   public String getShortName() {
     return AR;
   }

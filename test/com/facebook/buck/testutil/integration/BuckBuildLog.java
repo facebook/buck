@@ -44,7 +44,9 @@ public class BuckBuildLog {
   static class BuildLogEntry {
     private final BuildRuleStatus status;
     private final Optional<BuildRuleSuccess.Type> successType;
+    @SuppressWarnings("unused")
     private final Optional<CacheResult> cacheResult;
+    @SuppressWarnings("unused")
     private final Sha1HashCode ruleKey;
 
     private BuildLogEntry(

@@ -137,6 +137,9 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     return vmArgs;
   }
 
+  /**
+   * @param context That may be useful in producing the bootclasspath entries.
+   */
   protected Set<String> getBootClasspathEntries(ExecutionContext context) {
     return ImmutableSet.of();
   }

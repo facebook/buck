@@ -398,6 +398,7 @@ public class AdbHelper {
   /**
    * An exception that indicates that an executed command returned an unsuccessful exit code.
    */
+  @SuppressWarnings("serial")
   public static class CommandFailedException extends IOException {
     public final String command;
     public final int exitCode;

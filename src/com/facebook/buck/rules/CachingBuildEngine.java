@@ -74,6 +74,7 @@ public class CachingBuildEngine {
    * In order to make sure that we clear results when a build finishes, so that we do not re-use
    * them in a subsequent run, we register this object on the buck event bus and listen to the
    * build finished event.
+   * @param finished Signals that the command finished.
    */
   @Subscribe
   public synchronized void commandFinished(CommandEvent.Finished finished) {
