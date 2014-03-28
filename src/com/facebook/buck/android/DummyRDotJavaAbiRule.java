@@ -26,9 +26,6 @@ import com.google.common.base.Preconditions;
 
 import javax.annotation.Nullable;
 
-/**
-*
-*/
 public class DummyRDotJavaAbiRule extends AbstractCachingBuildRule implements JavaAbiRule {
 
   private final DummyRDotJava dummyRDotJava;

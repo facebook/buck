@@ -357,11 +357,13 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   private SortedSet<JavaAbiRule> getDepsForAbiKey() {
     SortedSet<JavaAbiRule> rulesWithAbiToConsider = Sets.newTreeSet(BUILD_TARGET_COMPARATOR);
     for (BuildRule dep : getDeps()) {
-      if (dep instanceof JavaAbiRule) {
-        if (dep instanceof JavaLibraryRule) {
-          JavaLibraryRule javaRule = (JavaLibraryRule) dep;
+      // This looks odd. DummyJavaAbiRule contains a Buildable that isn't a JavaAbiRule.
+      if (dep.getBuildable() instanceof JavaAbiRule || dep instanceof JavaAbiRule) {
+        if (dep.getBuildable() instanceof JavaLibraryRule) {
+          JavaLibraryRule javaRule = (JavaLibraryRule) dep.getBuildable();
           rulesWithAbiToConsider.addAll(javaRule.getOutputClasspathEntries().keys());
         } else {
+          // DummyJavaAbiRule -> JavaAbiRule, but the buildable isn't
           rulesWithAbiToConsider.add((JavaAbiRule) dep);
         }
       }
