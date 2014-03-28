@@ -20,12 +20,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.java.FakeJavaLibraryRule;
 import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -80,36 +80,38 @@ public class AndroidInstrumentationApkTest {
     buildRuleIndex.put(javaLibrary4.getBuildTarget(), javaLibrary4);
     BuildRuleResolver ruleResolver = new BuildRuleResolver(buildRuleIndex);
 
-    BuildRule keystore = KeystoreBuilder.createBuilder(new BuildTarget("//keystores", "debug"))
+    Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(
+        new BuildTarget("//keystores", "debug"))
         .setProperties(Paths.get("keystores/debug.properties"))
         .setStore(Paths.get("keystores/debug.keystore"))
-        .build(ruleResolver);
+        .build(ruleResolver)
+        .getBuildable();
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.
-    AndroidBinaryRule.Builder androidBinaryBuilder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
-        new FakeBuildRuleBuilderParams());
+    AndroidBinaryBuilder.Builder androidBinaryBuilder = AndroidBinaryBuilder.newBuilder();
     androidBinaryBuilder
         .setBuildTarget(new BuildTarget("//apps", "app"))
         .setManifest(new FileSourcePath("apps/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:18")
-        .setKeystore(keystore.getBuildTarget())
-        .addClasspathDep(javaLibrary2.getBuildTarget())
-        .addClasspathDep(javaLibrary3.getBuildTarget());
-    AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(androidBinaryBuilder);
+        .setKeystore(keystore)
+        .setOriginalDeps(ImmutableSortedSet.<BuildRule>of(
+                javaLibrary2,
+                javaLibrary3));
+    BuildRule androidBinaryRule = androidBinaryBuilder.build(ruleResolver);
+    AndroidBinary androidBinary = (AndroidBinary) androidBinaryRule.getBuildable();
+    androidBinary.getEnhancedDeps(ruleResolver);
 
     // AndroidInstrumentationApk transitively depends on :lib1, :lib2, :lib3, and :lib4.
-    AndroidInstrumentationApk.Builder androidInstrumentationApkBuilder = AndroidInstrumentationApk
-        .newAndroidInstrumentationApkRuleBuilder(new FakeBuildRuleBuilderParams());
-    androidInstrumentationApkBuilder
-        .setBuildTarget(new BuildTarget("//apps", "instrumentation"))
-        .setManifest(new FileSourcePath("apps/InstrumentationAndroidManifest.xml"))
-        .setApk(androidBinary.getBuildTarget())
-        .addClasspathDep(javaLibrary2.getBuildTarget())
-        .addClasspathDep(javaLibrary4.getBuildTarget());
-    AndroidInstrumentationApk androidInstrumentationApk = ruleResolver.buildAndAddToIndex(
-        androidInstrumentationApkBuilder);
+    AndroidInstrumentationApk androidInstrumentationApk = new AndroidInstrumentationApk(
+        new FakeBuildRuleParams(new BuildTarget("//apps", "instrumentation")),
+        new FileSourcePath("apps/InstrumentationAndroidManifest.xml"),
+        androidBinary,
+        androidBinaryRule,
+        ImmutableSortedSet.<BuildRule>of(
+            javaLibrary2,
+            javaLibrary4));
+    androidInstrumentationApk.getEnhancedDeps(ruleResolver);
 
-    assertEquals(BuildRuleType.ANDROID_INSTRUMENTATION_APK, androidInstrumentationApk.getType());
     assertEquals(
         "//apps:app should have three JAR files to dex.",
         ImmutableSet.of(

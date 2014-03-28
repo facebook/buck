@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import javax.annotation.Nullable;
 
 /**
- * This is something that an {@link AndroidBinaryRule} must create to find the transitive closure
+ * This is something that an {@link AndroidBinary} must create to find the transitive closure
  * of Android resources that it depends on (in order).
  */
 abstract class AndroidResourceDepsFinder {

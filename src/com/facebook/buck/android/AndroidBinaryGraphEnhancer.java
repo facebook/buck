@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.AndroidBinaryRule.PackageType;
-import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
+import com.facebook.buck.android.AndroidBinary.PackageType;
+import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;

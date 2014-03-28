@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.android.AndroidBinaryBuildRuleFactory;
-import com.facebook.buck.android.AndroidInstrumentationApkRuleFactory;
+import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidInstrumentationApkDescription;
 import com.facebook.buck.android.AndroidLibraryBuildRuleFactory;
 import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -153,6 +153,13 @@ public class KnownBuildRuleTypes {
 
     Builder builder = builder();
 
+    JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
+        .setJavaCompilerEnviornment(javacEnv)
+        .build();
+    builder.register(new AndroidBinaryDescription(
+            androidBinaryOptions,
+            config.getProguardJarOverride()));
+    builder.register(new AndroidInstrumentationApkDescription());
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
@@ -178,14 +185,6 @@ public class KnownBuildRuleTypes {
     builder.register(new XcodeProjectConfigDescription());
 
     // TODO(simons): Consider once more whether we actually want to have default rules
-    JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
-        .setJavaCompilerEnviornment(javacEnv)
-        .build();
-    builder.register(BuildRuleType.ANDROID_BINARY,
-        new AndroidBinaryBuildRuleFactory(androidBinaryOptions, config.getProguardJarOverride()));
-
-    builder.register(BuildRuleType.ANDROID_INSTRUMENTATION_APK,
-        new AndroidInstrumentationApkRuleFactory());
     builder.register(BuildRuleType.ANDROID_LIBRARY,
         new AndroidLibraryBuildRuleFactory(javacEnv.getJavacPath(), javacEnv.getJavacVersion()));
     builder.register(BuildRuleType.JAVA_LIBRARY,

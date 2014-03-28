@@ -20,9 +20,6 @@ import com.google.common.base.Preconditions;
 
 public final class BuildRuleType {
   // TODO(simons): Move each of these closer to the BuildRules they represent.
-  public static final BuildRuleType ANDROID_BINARY = new BuildRuleType("android_binary");
-  public static final BuildRuleType ANDROID_INSTRUMENTATION_APK =
-      new BuildRuleType("android_instrumentation_apk");
   public static final BuildRuleType ANDROID_LIBRARY = new BuildRuleType("android_library");
   public static final BuildRuleType ANDROID_MANIFEST = new BuildRuleType("android_manifest");
   public static final BuildRuleType JAVA_LIBRARY = new BuildRuleType("java_library");

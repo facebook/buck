@@ -146,8 +146,8 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
       successDir = workDir.resolve("success");
       // These directories must use SECONDARY_DEX_SUBDIR because that mirrors the paths that
       // they will appear at in the APK.
-      metadataSubdir = metadataDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
-      jarfilesSubdir = jarfilesDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
+      metadataSubdir = metadataDir.resolve(AndroidBinary.SECONDARY_DEX_SUBDIR);
+      jarfilesSubdir = jarfilesDir.resolve(AndroidBinary.SECONDARY_DEX_SUBDIR);
       metadataFile = metadataSubdir.resolve("metadata.txt");
     }
   }
@@ -205,7 +205,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
         Optional.of(Suppliers.ofInstance(sortResult.secondaryOutputToInputs)),
         paths.successDir,
         /* numThreads */ Optional.<Integer>absent(),
-        AndroidBinaryRule.DX_MERGE_OPTIONS));
+        AndroidBinary.DX_MERGE_OPTIONS));
 
     // Record the primary dex SHA1 so exopackage apks can use it to compute their ABI keys.
     // Single dex apks cannot be exopackages, so they will never need ABI keys.
@@ -271,7 +271,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     buildableContext.recordArtifact(primaryDexPath);
 
     // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
-    steps.add(new DxStep(primaryDexPath, filesToDex, AndroidBinaryRule.DX_MERGE_OPTIONS));
+    steps.add(new DxStep(primaryDexPath, filesToDex, AndroidBinary.DX_MERGE_OPTIONS));
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,

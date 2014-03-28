@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AaptPackageResources.BuildOutput;
-import com.facebook.buck.android.AndroidBinaryRule.PackageType;
-import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
+import com.facebook.buck.android.AndroidBinary.PackageType;
+import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleBuilderParams;
@@ -177,7 +177,7 @@ public class AaptPackageResources extends AbstractBuildable
       Path nativeLibAssetsDir = assetsDirectory.get().resolve("lib");
       steps.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
       for (Path nativeLibDir : androidTransitiveDependencies.nativeLibAssetsDirectories) {
-        AndroidBinaryRule.copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, cpuFilters, steps);
+        AndroidBinary.copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, cpuFilters, steps);
       }
     }
 

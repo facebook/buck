@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
@@ -90,20 +92,23 @@ public class AndroidTransitiveDependencyGraphTest {
             .build());
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    KeystoreBuilder.createBuilder(keystoreTarget)
+    Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .build(ruleResolver);
+        .build(ruleResolver)
+        .getBuildable();
 
-    AndroidBinaryRule binaryRule = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeBuildRuleBuilderParams())
+    AndroidBinary binaryRule = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
-        .addClasspathDep(libraryRule.getBuildTarget())
-        .addClasspathDep(manifestRule.getBuildTarget())
-        .addBuildRuleToExcludeFromDex(guavaTarget)
+        .setOriginalDeps(ImmutableSortedSet.of(libraryRule, manifestRule))
+        .setBuildTargetsToExcludeFromDex(
+            ImmutableSet.of(BuildTargetFactory.newInstance("//third_party/guava:guava")))
         .setManifest(new FileSourcePath("java/src/com/facebook/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(keystoreTarget));
+        .setKeystore(keystore)
+        .build(ruleResolver)
+        .getBuildable();
+    binaryRule.getEnhancedDeps(ruleResolver);
 
     // Verify that the correct transitive dependencies are found.
     AndroidTransitiveDependencies transitiveDeps = binaryRule.findTransitiveDependencies();
@@ -167,28 +172,31 @@ public class AndroidTransitiveDependencyGraphTest {
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     BuildTarget keystoreTarget = new BuildTarget("//keystore", "debug");
-    KeystoreBuilder.createBuilder(keystoreTarget)
+    Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
         .addDep(androidLibraryKeystore)
-        .build(ruleResolver);
+        .build(ruleResolver)
+        .getBuildable();
 
     BuildTarget androidLibraryTarget = new BuildTarget("//java/com/facebook/base", "base");
-    ruleResolver.buildAndAddToIndex(
+    BuildRule androidLibrary = ruleResolver.buildAndAddToIndex(
         AndroidLibrary.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(androidLibraryTarget)
             .addSrc(Paths.get("java/com/facebook/base/Base.java"))
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    AndroidBinaryRule androidBinaryRule = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeBuildRuleBuilderParams())
+    AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(new BuildTarget("//apps/sample", "app"))
         .setManifest(new FileSourcePath("apps/sample/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(keystoreTarget)
-        .addClasspathDep(androidLibraryTarget));
+        .setKeystore(keystore)
+        .setOriginalDeps(ImmutableSortedSet.of(androidLibrary))
+        .build(ruleResolver)
+        .getBuildable();
+    androidBinary.getEnhancedDeps(ruleResolver);
 
-    AndroidDexTransitiveDependencies androidTransitiveDeps = androidBinaryRule
+    AndroidDexTransitiveDependencies androidTransitiveDeps = androidBinary
         .findDexTransitiveDependencies();
     assertEquals(
         "Classpath entries should include facebook/base but not keystore/base.",

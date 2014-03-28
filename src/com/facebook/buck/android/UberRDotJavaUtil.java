@@ -51,8 +51,8 @@ import java.util.Set;
 public class UberRDotJavaUtil {
 
   private static final ImmutableSet<BuildRuleType> TRAVERSABLE_TYPES = ImmutableSet.of(
-      BuildRuleType.ANDROID_BINARY,
-      BuildRuleType.ANDROID_INSTRUMENTATION_APK,
+      AndroidBinaryDescription.TYPE,
+      AndroidInstrumentationApkDescription.TYPE,
       BuildRuleType.ANDROID_LIBRARY,
       AndroidResourceDescription.TYPE,
       ApkGenruleDescription.TYPE,

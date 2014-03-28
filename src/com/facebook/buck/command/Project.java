@@ -20,7 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
-import com.facebook.buck.android.AndroidBinaryRule;
+import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidResource;
@@ -352,11 +352,14 @@ public class Project {
       ProjectConfig projectConfig = (ProjectConfig) buildRule.getBuildable();
 
       BuildRule srcRule = projectConfig.getSrcRule();
-      if (srcRule instanceof AndroidBinaryRule) {
-        AndroidBinaryRule androidBinary = (AndroidBinaryRule)srcRule;
-        AndroidDexTransitiveDependencies binaryDexTransitiveDependencies =
-            androidBinary.findDexTransitiveDependencies();
-        noDxJarsBuilder.addAll(binaryDexTransitiveDependencies.noDxClasspathEntries);
+      if (srcRule != null) {
+        Buildable buildable = srcRule.getBuildable();
+        if (buildable instanceof AndroidBinary) {
+          AndroidBinary androidBinary = (AndroidBinary) buildable;
+          AndroidDexTransitiveDependencies binaryDexTransitiveDependencies =
+              androidBinary.findDexTransitiveDependencies();
+          noDxJarsBuilder.addAll(binaryDexTransitiveDependencies.noDxClasspathEntries);
+        }
       }
 
       Module module = createModuleForProjectConfig(projectConfig);
@@ -378,7 +381,7 @@ public class Project {
         || buildable instanceof JavaBinary
         || projectRule instanceof AndroidLibrary
         || buildable instanceof AndroidResource
-        || projectRule instanceof AndroidBinaryRule
+        || buildable instanceof AndroidBinary
         || buildable instanceof NdkLibrary,
         "project_config() does not know how to process a src_target of type %s.",
         projectRule.getType().getName());
@@ -461,13 +464,13 @@ public class Project {
         module.resFolder = createRelativePath(androidResource.getRes(), target);
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
-      } else if (projectRule instanceof AndroidBinaryRule) {
-        AndroidBinaryRule androidBinaryRule = (AndroidBinaryRule)projectRule;
+      } else if (projectRule.getBuildable() instanceof AndroidBinary) {
+        AndroidBinary androidBinary = (AndroidBinary) projectRule.getBuildable();
         module.resFolder = null;
         module.isAndroidLibraryProject = false;
         KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
-            androidBinaryRule.getKeystore().getPathToStore(),
-            androidBinaryRule.getKeystore().getPathToPropertiesFile(),
+            androidBinary.getKeystore().getPathToStore(),
+            androidBinary.getKeystore().getPathToPropertiesFile(),
             projectFilesystem);
 
         // getKeystore() returns a path relative to the project root, but an IntelliJ module
@@ -720,10 +723,10 @@ public class Project {
       // is in this set for this android_binary rule, then it should be scope="COMPILE" rather than
       // scope="PROVIDED".
       Set<String> classpathEntriesToDex;
-      if (module.srcRule instanceof AndroidBinaryRule) {
-        AndroidBinaryRule androidBinaryRule = (AndroidBinaryRule)module.srcRule;
+      if (module.srcRule.getBuildable() instanceof AndroidBinary) {
+        AndroidBinary androidBinary = (AndroidBinary) module.srcRule.getBuildable();
         AndroidDexTransitiveDependencies dexTransitiveDependencies =
-            androidBinaryRule.findDexTransitiveDependencies();
+            androidBinary.findDexTransitiveDependencies();
         classpathEntriesToDex = Sets.newHashSet(Sets.intersection(noDxJars,
             dexTransitiveDependencies.classpathEntriesToDex));
       } else {

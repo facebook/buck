@@ -16,11 +16,15 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -82,5 +86,12 @@ public final class Sha1HashCode {
   @Override
   public String toString() {
     return getHash();
+  }
+
+  public static Sha1HashCode newRandomHashCode() {
+    HashCode randomHashCode = Hashing.sha1().newHasher()
+        .putString(UUID.randomUUID().toString(), Charsets.UTF_8)
+        .hash();
+    return new Sha1HashCode(randomHashCode.toString());
   }
 }

@@ -55,6 +55,7 @@ java_library(
     'BuildRuleResolver.java',
     'BuildRuleParams.java',
     'BuildRule.java',
+    'BuildRules.java',
     'BuildRuleSuccess.java',
     'BuildRuleType.java',
     'BuildTargetSourcePath.java',

@@ -30,7 +30,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class AndroidBinaryRuleIntegrationTest {
+public class AndroidBinaryIntegrationTest {
 
   public static DebuggableTemporaryFolder projectFolderWithPrebuiltTargets
       = new DebuggableTemporaryFolder();
@@ -47,7 +47,7 @@ public class AndroidBinaryRuleIntegrationTest {
   public static void setUpOnce() throws IOException {
     projectFolderWithPrebuiltTargets.create();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        new AndroidBinaryRuleIntegrationTest(),
+        new AndroidBinaryIntegrationTest(),
         "android_project",
         projectFolderWithPrebuiltTargets);
     workspace.setUp();

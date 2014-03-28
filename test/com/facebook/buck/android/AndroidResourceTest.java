@@ -20,6 +20,7 @@ import static com.facebook.buck.android.AndroidResource.BuildOutput;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FileSourcePath;
@@ -225,19 +225,20 @@ public class AndroidResourceTest {
     // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
     // right thing when it gets a non-AndroidResourceRule as well as an AndroidResourceRule.
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    KeystoreBuilder.createBuilder(keystoreTarget)
+    Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .build(ruleResolver);
+        .build(ruleResolver)
+        .getBuildable();
 
-    AndroidBinaryRule e = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
-        .setManifest(new FileSourcePath("AndroidManfiest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(keystoreTarget)
-        .addDep(BuildTargetFactory.newInstance("//:a"))
-        .addDep(BuildTargetFactory.newInstance("//:c")));
+    BuildRule e = AndroidBinaryBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
+            .setManifest(new FileSourcePath("AndroidManfiest.xml"))
+            .setTarget("Google Inc.:Google APIs:16")
+            .setKeystore(keystore)
+            .setOriginalDeps(ImmutableSortedSet.of(a, c))
+            .build(ruleResolver);
+    e.getBuildable().getEnhancedDeps(ruleResolver);
 
     ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(e);
     assertTrue(

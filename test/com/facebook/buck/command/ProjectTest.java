@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidLibrary;
+import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
@@ -30,6 +30,7 @@ import com.facebook.buck.command.Project.SourceFolder;
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaTest;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -180,35 +181,39 @@ public class ProjectTest {
 
     // keystore //keystore:debug
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    KeystoreBuilder.createBuilder(keystoreTarget)
+    Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .build(ruleResolver);
+        .build(ruleResolver)
+        .getBuildable();
 
     // android_binary //foo:app
-    BuildRule fooAppBuildRule = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//foo:app"))
-        .addClasspathDep(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
-        .setManifest(new FileSourcePath("foo/AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(keystoreTarget)
-        .addBuildRuleToExcludeFromDex(BuildTargetFactory.newInstance("//third_party/guava:guava")));
+    BuildRule androidBinaryRule = AndroidBinaryBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//foo:app"))
+            .setOriginalDeps(ImmutableSortedSet.of(baseRule))
+            .setManifest(new FileSourcePath("foo/AndroidManifest.xml"))
+            .setTarget("Google Inc.:Google APIs:16")
+            .setKeystore(keystore)
+            .setBuildTargetsToExcludeFromDex(ImmutableSet.of(
+                    BuildTargetFactory.newInstance("//third_party/guava:guava")))
+            .build(ruleResolver);
+    androidBinaryRule.getBuildable().getEnhancedDeps(ruleResolver);
 
     // project_config //foo:project_config
     BuildRule projectConfigUsingNoDx = ruleResolver.addToIndex(
         ProjectConfigBuilder.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:project_config"))
-        .setSrcRule(fooAppBuildRule).build());
+        .setSrcRule(androidBinaryRule).build());
 
     // android_binary //bar:app
-    BuildRule barAppBuildRule = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//bar:app"))
-        .addClasspathDep(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
+    BuildRule barAppBuildRule = AndroidBinaryBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//bar:app"))
+            .setOriginalDeps(ImmutableSortedSet.of(baseRule))
             .setManifest(new FileSourcePath("foo/AndroidManifest.xml"))
             .setTarget("Google Inc.:Google APIs:16")
-            .setKeystore(keystoreTarget));
+            .setKeystore(keystore)
+            .build(ruleResolver);
+    barAppBuildRule.getBuildable().getEnhancedDeps(ruleResolver);
 
     // project_config //bar:project_config
     BuildRule projectConfig = ruleResolver.addToIndex(

@@ -12,12 +12,12 @@ java_library(
 
 RULES_SRCS = [
   'AaptPackageResources.java',
-  'AndroidBinaryBuildRuleFactory.java',
   'AndroidBinaryGraphEnhancer.java',
-  'AndroidBinaryRule.java',
+  'AndroidBinary.java',
+  'AndroidBinaryDescription.java',
   'AndroidDexTransitiveDependencies.java',
   'AndroidInstrumentationApk.java',
-  'AndroidInstrumentationApkRuleFactory.java',
+  'AndroidInstrumentationApkDescription.java',
   'AndroidLibraryBuildRuleFactory.java',
   'AndroidLibraryGraphEnhancer.java',
   'AndroidLibrary.java',

@@ -28,21 +28,17 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -57,7 +53,6 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.zip.RepackZipEntriesStep;
@@ -101,7 +96,7 @@ import java.util.Set;
  * )
  * </pre>
  */
-public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
+public class AndroidBinary extends AbstractBuildable implements
     HasAndroidPlatformTarget, HasClasspathEntries, InstallableApk, AbiRule {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
@@ -155,86 +150,171 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     MIPS,
   }
 
+  private final BuildRuleParams originalBuildRuleParams;
+  private final JavacOptions javacOptions;
   private final SourcePath manifest;
   private final String target;
+  private final ImmutableSortedSet<BuildRule> originalDeps;
   private final ImmutableSortedSet<BuildRule> classpathDeps;
   private final Keystore keystore;
   private final PackageType packageType;
-  private final ImmutableSortedSet<JavaLibrary> buildRulesToExcludeFromDex;
   private DexSplitMode dexSplitMode;
+  private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final boolean useAndroidProguardConfigWithOptimizations;
   private final Optional<Integer> optimizationPasses;
   private final Optional<SourcePath> proguardConfig;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<TargetCpuType> cpuFilters;
+  private final ResourceFilter resourceFilter;
   private final Path primaryDexPath;
-  private final FilteredResourcesProvider filteredResourcesProvider;
-  private final UberRDotJava uberRDotJava;
-  private final Optional<PackageStringAssets> packageStringAssets;
-  private final AaptPackageResources aaptPackageResources;
-  private final Optional<PreDexMerge> preDexMerge;
-  private final Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
+  private final boolean buildStringSourceMap;
+  private final boolean disablePreDex;
   private final boolean exopackage;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Optional<String> preprocessJavaClassesBash;
-  private final AndroidResourceDepsFinder androidResourceDepsFinder;
+
+  // All the following fields are set in {@link #getEnhancedDeps(BuildRuleResolver)}.
+  protected ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
+  protected AndroidResourceDepsFinder androidResourceDepsFinder;
+  private FilteredResourcesProvider filteredResourcesProvider;
+  private UberRDotJava uberRDotJava;
+  private Optional<PackageStringAssets> packageStringAssets;
+  private AaptPackageResources aaptPackageResources;
+  private Optional<PreDexMerge> preDexMerge;
+  private Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
 
   /**
    * @param target the Android platform version to target, e.g., "Google Inc.:Google APIs:16". You
    *     can find the list of valid values on your system by running
    *     {@code android list targets --compact}.
    */
-  protected AndroidBinaryRule(
-      BuildRuleParams buildRuleParams,
+  AndroidBinary(
+      BuildRuleParams params,
+      JavacOptions javacOptions,
+      Optional<Path> proguardJarOverride,
       SourcePath manifest,
       String target,
-      ImmutableSortedSet<BuildRule> classpathDeps,
+      ImmutableSortedSet<BuildRule> originalDeps,
       Keystore keystore,
       PackageType packageType,
-      Set<JavaLibrary> buildRulesToExcludeFromDex,
       DexSplitMode dexSplitMode,
+      Set<BuildTarget> buildTargetsToExcludeFromDex,
       boolean useAndroidProguardConfigWithOptimizations,
       Optional<Integer> proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
       ResourceCompressionMode resourceCompressionMode,
       Set<TargetCpuType> cpuFilters,
-      Path primaryDexPath,
-      FilteredResourcesProvider filteredResourcesProvider,
-      UberRDotJava uberRDotJava,
-      Optional<PackageStringAssets> packageStringAssets,
-      AaptPackageResources aaptPackageResources,
-      Optional<PreDexMerge> preDexMerge,
-      Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
+      ResourceFilter resourceFilter,
+      boolean buildStringSourceMap,
+      boolean disablePreDex,
       boolean exopackage,
       Set<BuildRule> preprocessJavaClassesDeps,
-      Optional<String> preprocessJavaClassesBash,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
-      Optional<Path> proguardJarOverride) {
-    super(buildRuleParams);
+      Optional<String> preprocessJavaClassesBash) {
+    this.originalBuildRuleParams = Preconditions.checkNotNull(params);
+    this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
-    this.classpathDeps = ImmutableSortedSet.copyOf(classpathDeps);
+    this.originalDeps = Preconditions.checkNotNull(originalDeps);
+    this.classpathDeps = originalDeps;
     this.keystore = Preconditions.checkNotNull(keystore);
     this.packageType = Preconditions.checkNotNull(packageType);
-    this.buildRulesToExcludeFromDex = ImmutableSortedSet.copyOf(buildRulesToExcludeFromDex);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
+    this.buildTargetsToExcludeFromDex = ImmutableSet.copyOf(
+        Preconditions.checkNotNull(buildTargetsToExcludeFromDex));
     this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
     this.optimizationPasses = Preconditions.checkNotNull(proguardOptimizationPasses);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
-    this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
-    this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
-    this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
-    this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);
-    this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
-    this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
-    this.computeExopackageDepsAbi = Preconditions.checkNotNull(computeExopackageDepsAbi);
+    this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
+    this.buildStringSourceMap = buildStringSourceMap;
+    this.disablePreDex = disablePreDex;
     this.exopackage = exopackage;
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
-    this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
-    this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
+    this.primaryDexPath = getPrimaryDexPath(params.getBuildTarget());
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver resolver) {
+    final ImmutableSortedSet<BuildRule> enhancedDeps =
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(originalDeps)
+            .addAll(preprocessJavaClassesDeps)
+            .add(resolver.get(keystore.getBuildTarget()))
+            .build();
+
+    AndroidTransitiveDependencyGraph androidTransitiveDependencyGraph =
+        new AndroidTransitiveDependencyGraph(getClasspathDeps());
+    // Create the BuildRule and Buildable for UberRDotJava.
+    boolean allowNonExistentRule =
+          false;
+    ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = BuildRules.toBuildRulesFor(
+        getBuildTarget(),
+        resolver,
+        buildTargetsToExcludeFromDex,
+        allowNonExistentRule);
+    rulesToExcludeFromDex = FluentIterable.from(buildRulesToExcludeFromDex)
+        .filter(
+            new Predicate<BuildRule>() {
+              @Override
+              public boolean apply(BuildRule input) {
+                return input.getBuildable() instanceof JavaLibrary;
+              }
+            })
+        .transform(
+            new Function<BuildRule, JavaLibrary>() {
+              @Override
+              public JavaLibrary apply(BuildRule input) {
+                return (JavaLibrary) input.getBuildable();
+              }
+            })
+        .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
+    androidResourceDepsFinder = new AndroidResourceDepsFinder(
+        androidTransitiveDependencyGraph,
+        rulesToExcludeFromDex) {
+      @Override
+      protected ImmutableList<HasAndroidResourceDeps> findMyAndroidResourceDeps() {
+        return UberRDotJavaUtil.getAndroidResourceDeps(enhancedDeps);
+      }
+    };
+
+    boolean shouldPreDex = !disablePreDex
+        && PackageType.DEBUG.equals(packageType)
+        && !preprocessJavaClassesBash.isPresent();
+
+    AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        originalBuildRuleParams.copyWithChangedDeps(enhancedDeps),
+        resolver,
+        resourceCompressionMode,
+        resourceFilter,
+        androidResourceDepsFinder,
+        manifest,
+        packageType,
+        cpuFilters,
+        buildStringSourceMap,
+        shouldPreDex,
+        primaryDexPath,
+        dexSplitMode,
+        buildTargetsToExcludeFromDex,
+        javacOptions,
+        exopackage,
+        keystore);
+    AndroidBinaryGraphEnhancer.EnhancementResult result =
+        graphEnhancer.createAdditionalBuildables();
+    setGraphEnhancementResult(result);
+
+    return result.getFinalDeps();
+  }
+
+  protected void setGraphEnhancementResult(AndroidBinaryGraphEnhancer.EnhancementResult result) {
+    filteredResourcesProvider = result.getFilteredResourcesProvider();
+    uberRDotJava = result.getUberRDotJava();
+    packageStringAssets = result.getPackageStringAssets();
+    aaptPackageResources = result.getAaptPackageResources();
+    preDexMerge = result.getPreDexMerge();
+    computeExopackageDepsAbi = result.getComputeExopackageDepsAbi();
 
     if (exopackage && !preDexMerge.isPresent()) {
       throw new IllegalArgumentException(getBuildTarget() +
@@ -247,9 +327,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     }
   }
 
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.ANDROID_BINARY;
+  public static Path getPrimaryDexPath(BuildTarget buildTarget) {
+    return BuildTargets.getBinPath(buildTarget, ".dex/%s/classes.dex");
   }
 
   @Override
@@ -258,16 +337,21 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   @Override
+  public BuildTarget getBuildTarget() {
+    return originalBuildRuleParams.getBuildTarget();
+  }
+
+  @Override
   public String getAndroidPlatformTarget() {
     return target;
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    super.appendToRuleKey(builder)
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    builder
         .set("target", target)
         .set("keystore", keystore.getBuildTarget().getFullyQualifiedName())
-        .setRuleNames("classpathDeps", classpathDeps)
+        .setRuleNames("classpathDeps", getClasspathDeps())
         .set("packageType", packageType.toString())
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
         .set("optimizationPasses", optimizationPasses.toString())
@@ -278,15 +362,19 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("preprocessJavaClassesDeps", preprocessJavaClassesDeps)
         .set("proguardJarOverride", proguardJarOverride.transform(Functions.toStringFunction()));
 
-    for (JavaLibrary buildable : buildRulesToExcludeFromDex) {
+    for (JavaLibrary buildable : rulesToExcludeFromDex) {
       buildable.appendDetailsToRuleKey(builder);
     }
 
     return dexSplitMode.appendToRuleKey("dexSplitMode", builder);
   }
 
-  public ImmutableSortedSet<JavaLibrary> getBuildRulesToExcludeFromDex() {
-    return buildRulesToExcludeFromDex;
+  public ImmutableSortedSet<JavaLibrary> getRulesToExcludeFromDex() {
+    return rulesToExcludeFromDex;
+  }
+
+  public Set<BuildTarget> getBuildTargetsToExcludeFromDex() {
+    return buildTargetsToExcludeFromDex;
   }
 
   public Optional<SourcePath> getProguardConfig() {
@@ -309,13 +397,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return this.cpuFilters;
   }
 
+  public ResourceFilter getResourceFilter() {
+    return resourceFilter;
+  }
   @VisibleForTesting
   FilteredResourcesProvider getFilteredResourcesProvider() {
     return filteredResourcesProvider;
-  }
-
-  public UberRDotJava getUberRDotJava() {
-    return uberRDotJava;
   }
 
   public ImmutableSortedSet<BuildRule> getPreprocessJavaClassesDeps() {
@@ -506,7 +593,9 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     // Inform the user where the APK can be found.
     EchoStep success = new EchoStep(
-        String.format("built APK for %s at %s", getFullyQualifiedName(), apkPath));
+        String.format("built APK for %s at %s",
+            getBuildTarget().getFullyQualifiedName(),
+            apkPath));
     steps.add(success);
 
     buildableContext.recordArtifact(getApkPath());
@@ -519,7 +608,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Returning our RuleKey has this effect because we will never get an ABI match after a
     // RuleKey miss.
     if (!exopackage) {
-      return new Sha1HashCode(getRuleKey().toString());
+      // TODO(user): This is a hack which avoids having to return rule key from the buildable.
+      // Once we figure out a way to expose the build engine to a buildable, this should return the
+      // rule key as before.
+      return Sha1HashCode.newRandomHashCode();
     }
 
     return computeExopackageDepsAbi.get().getAndroidBinaryAbiHash();
@@ -563,7 +655,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           /* bash */ preprocessJavaClassesBash,
           /* cmdExe */ Optional.<String>absent());
       steps.add(new AbstractGenruleStep(
-          BuildRuleType.ANDROID_BINARY,
+          AndroidBinaryDescription.TYPE,
           this.getBuildTarget(),
           commandString,
           preprocessJavaClassesDeps,
@@ -747,7 +839,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         getTransitiveClasspathEntries();
     ImmutableSet.Builder<String> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
-    for (JavaLibrary buildRule : buildRulesToExcludeFromDex) {
+    for (JavaLibrary buildRule : rulesToExcludeFromDex) {
       additionalLibraryJarsForProguardBuilder.addAll(classpathEntriesMap.get(buildRule));
     }
 
@@ -947,9 +1039,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     if (!exopackage) {
       return Optional.absent();
     }
-    return Optional.of(new ExopackageInfo(
-        preDexMerge.get().getMetadataTxtPath(),
-        preDexMerge.get().getDexDirectory()));
+    return Optional.of(
+        new ExopackageInfo(
+            preDexMerge.get().getMetadataTxtPath(),
+            preDexMerge.get().getDexDirectory())
+    );
   }
 
   boolean isUseAndroidProguardConfigWithOptimizations() {
@@ -963,21 +1057,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   @Override
   public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
-    return Classpaths.getClasspathEntries(classpathDeps);
-  }
-
-  public static Builder newAndroidBinaryRuleBuilder(BuildRuleBuilderParams params) {
-    return newAndroidBinaryRuleBuilder(
-        params,
-        JavacOptions.DEFAULTS,
-        /* proguardJarOverride */ Optional.<Path>absent());
-  }
-
-  public static Builder newAndroidBinaryRuleBuilder(
-      BuildRuleBuilderParams params,
-      JavacOptions javacOptions,
-      Optional<Path> proguardJarOverride) {
-    return new Builder(params, javacOptions, proguardJarOverride);
+    return Classpaths.getClasspathEntries(getClasspathDeps());
   }
 
   /**
@@ -990,291 +1070,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     DexFilesInfo(Path primaryDexPath, ImmutableSet<Path> secondaryDexZips) {
       this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
       this.secondaryDexZips = Preconditions.checkNotNull(secondaryDexZips);
-    }
-  }
-
-  public static class Builder extends AbstractBuildRuleBuilder<AndroidBinaryRule> {
-    private static final PackageType DEFAULT_PACKAGE_TYPE = PackageType.DEBUG;
-
-    private final JavacOptions javacOptions;
-    private final Optional<Path> proguardJarOverride;
-    private SourcePath manifest;
-    private String target;
-
-    /** This should always be a subset of {@link #getDeps()}. */
-    private ImmutableSet.Builder<BuildTarget> classpathDepsBuilder = ImmutableSet.builder();
-
-    private BuildTarget keystoreTarget;
-    private PackageType packageType = DEFAULT_PACKAGE_TYPE;
-    private ImmutableSet.Builder<BuildTarget> buildTargetsToExcludeFromDexBuilder =
-        ImmutableSet.builder();
-    private boolean disablePreDex = false;
-    private boolean exopackage = false;
-    private DexSplitMode dexSplitMode = DexSplitMode.NO_SPLIT;
-    private boolean useAndroidProguardConfigWithOptimizations = false;
-    private Optional<Integer> optimizationPasses = Optional.absent();
-    private Optional<SourcePath> proguardConfig = Optional.absent();
-    private ResourceCompressionMode resourceCompressionMode = ResourceCompressionMode.DISABLED;
-    private boolean buildStringSourceMap = false;
-    private FilterResourcesStep.ResourceFilter resourceFilter = ResourceFilter.EMPTY_FILTER;
-    private ImmutableSet.Builder<TargetCpuType> cpuFilters = ImmutableSet.builder();
-    private ImmutableSet.Builder<BuildTarget> preprocessJavaClassesDeps = ImmutableSet.builder();
-    private Optional<String> preprocessJavaClassesBash = Optional.absent();
-
-    private Builder(
-        BuildRuleBuilderParams params,
-        JavacOptions javacOptions,
-        Optional<Path> proguardJarOverride) {
-      super(params);
-      this.javacOptions = Preconditions.checkNotNull(javacOptions);
-      this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
-    }
-
-    @Override
-    public AndroidBinaryRule build(BuildRuleResolver ruleResolver) {
-      // Make sure the "keystore" argument refers to a KeystoreRule.
-      BuildRule rule = ruleResolver.get(keystoreTarget);
-
-      Buildable keystore = rule.getBuildable();
-      if (!(keystore instanceof Keystore)) {
-        throw new HumanReadableException(
-            "In %s, keystore='%s' must be a keystore() but was %s().",
-            getBuildTarget(),
-            rule.getFullyQualifiedName(),
-            rule.getType().getName());
-      }
-
-      ImmutableSortedSet<BuildRule> classpathDeps = getBuildTargetsAsBuildRules(ruleResolver,
-          classpathDepsBuilder.build());
-      AndroidTransitiveDependencyGraph androidTransitiveDependencyGraph =
-          new AndroidTransitiveDependencyGraph(classpathDeps);
-
-      BuildRuleParams originalParams = createBuildRuleParams(ruleResolver);
-      final ImmutableSortedSet<BuildRule> originalDeps = originalParams.getDeps();
-
-      ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex =
-          buildTargetsToExcludeFromDexBuilder.build();
-      boolean shouldPreDex = !disablePreDex
-          && PackageType.DEBUG.equals(packageType)
-          && !preprocessJavaClassesBash.isPresent();
-
-      // Create the BuildRule and Buildable for UberRDotJava.
-      boolean allowNonExistentRule =
-          false;
-      ImmutableSortedSet<BuildRule> allRules = getBuildTargetsAsBuildRules(
-          ruleResolver,
-          buildTargetsToExcludeFromDex,
-          allowNonExistentRule);
-
-      ImmutableSortedSet<JavaLibrary> buildRulesToExcludeFromDex = FluentIterable.from(allRules)
-          .filter(
-              new Predicate<BuildRule>() {
-                @Override
-                public boolean apply(BuildRule input) {
-                  return input.getBuildable() instanceof JavaLibrary;
-                }
-              })
-          .transform(
-              new Function<BuildRule, JavaLibrary>() {
-                @Override
-                public JavaLibrary apply(BuildRule input) {
-                  return (JavaLibrary) input.getBuildable();
-                }
-              })
-          .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
-
-      AndroidResourceDepsFinder androidResourceDepsFinder = new AndroidResourceDepsFinder(
-          androidTransitiveDependencyGraph,
-          buildRulesToExcludeFromDex) {
-        @Override
-        protected ImmutableList<HasAndroidResourceDeps> findMyAndroidResourceDeps() {
-          return UberRDotJavaUtil.getAndroidResourceDeps(originalDeps);
-        }
-      };
-
-      Path primaryDexPath = BuildTargets.getBinPath(getBuildTarget(), ".dex/%s/classes.dex");
-      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-          originalParams,
-          ruleResolver,
-          resourceCompressionMode,
-          resourceFilter,
-          androidResourceDepsFinder,
-          manifest,
-          packageType,
-          cpuFilters.build(),
-          buildStringSourceMap,
-          shouldPreDex,
-          primaryDexPath,
-          dexSplitMode,
-          buildTargetsToExcludeFromDex,
-          javacOptions,
-          exopackage,
-          (Keystore) keystore);
-      AndroidBinaryGraphEnhancer.EnhancementResult result =
-          graphEnhancer.createAdditionalBuildables();
-
-      ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();
-      BuildRuleParams newParams = originalParams.copyWithChangedDeps(finalDeps);
-
-      return new AndroidBinaryRule(
-          newParams,
-          manifest,
-          target,
-          getBuildTargetsAsBuildRules(ruleResolver, classpathDepsBuilder.build()),
-          (Keystore)keystore,
-          packageType,
-          buildRulesToExcludeFromDex,
-          dexSplitMode,
-          useAndroidProguardConfigWithOptimizations,
-          optimizationPasses,
-          proguardConfig,
-          resourceCompressionMode,
-          cpuFilters.build(),
-          primaryDexPath,
-          result.getFilteredResourcesProvider(),
-          result.getUberRDotJava(),
-          result.getPackageStringAssets(),
-          result.getAaptPackageResources(),
-          result.getPreDexMerge(),
-          result.getComputeExopackageDepsAbi(),
-          exopackage,
-          getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
-          preprocessJavaClassesBash,
-          androidResourceDepsFinder,
-          proguardJarOverride);
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    public Builder addDep(BuildTarget dep) {
-      super.addDep(dep);
-      return this;
-    }
-
-    @Override
-    public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
-      super.addVisibilityPattern(visibilityPattern);
-      return this;
-    }
-
-    public Builder setManifest(SourcePath manifest) {
-      this.manifest = manifest;
-      return this;
-    }
-
-    public Builder setTarget(String target) {
-      this.target = target;
-      return this;
-    }
-
-    public Builder addClasspathDep(BuildTarget classpathDep) {
-      this.classpathDepsBuilder.add(classpathDep);
-      addDep(classpathDep);
-      return this;
-    }
-
-    public Builder setKeystore(BuildTarget keystoreTarget) {
-      this.keystoreTarget = keystoreTarget;
-      addDep(keystoreTarget);
-      return this;
-    }
-
-    public Builder setPackageType(String packageType) {
-      if (packageType == null) {
-        this.packageType = DEFAULT_PACKAGE_TYPE;
-      } else {
-        this.packageType = PackageType.valueOf(packageType.toUpperCase());
-      }
-      return this;
-    }
-
-    public Builder addBuildRuleToExcludeFromDex(BuildTarget entry) {
-      this.buildTargetsToExcludeFromDexBuilder.add(entry);
-      return this;
-    }
-
-    public Builder setDisablePreDex(boolean disablePreDex) {
-      this.disablePreDex = disablePreDex;
-      return this;
-    }
-
-    public Builder setExopackage(boolean exopackage) {
-      this.exopackage = exopackage;
-      return this;
-    }
-
-    public Builder setDexSplitMode(DexSplitMode dexSplitMode) {
-      this.dexSplitMode = dexSplitMode;
-      return this;
-    }
-
-    public Builder setUseAndroidProguardConfigWithOptimizations(
-        boolean useAndroidProguardConfigWithOptimizations) {
-      this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
-      return this;
-    }
-
-    public Builder setOptimizationPasses(Optional<Integer> optimizationPasses) {
-      this.optimizationPasses = optimizationPasses;
-      return this;
-    }
-
-    public Builder setProguardConfig(Optional<SourcePath> proguardConfig) {
-      this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
-      return this;
-    }
-
-    public Builder setResourceFilter(ResourceFilter resourceFilter) {
-      this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
-      return this;
-    }
-
-    public Builder setResourceCompressionMode(String resourceCompressionMode) {
-      Preconditions.checkNotNull(resourceCompressionMode);
-      try {
-        this.resourceCompressionMode = ResourceCompressionMode.valueOf(
-            resourceCompressionMode.toUpperCase());
-      } catch (IllegalArgumentException e) {
-        throw new HumanReadableException(String.format(
-            "In %s, android_binary() was passed an invalid resource compression mode: %s",
-            buildTarget.getFullyQualifiedName(),
-            resourceCompressionMode));
-      }
-      return this;
-    }
-
-    public Builder setBuildStringSourceMap(boolean buildStringSourceMap) {
-      this.buildStringSourceMap = buildStringSourceMap;
-      return this;
-    }
-
-    public Builder addCpuFilter(String cpuFilter) {
-      if (cpuFilter != null) {
-        try {
-          this.cpuFilters.add(TargetCpuType.valueOf(cpuFilter.toUpperCase()));
-        } catch (IllegalArgumentException e) {
-          throw new HumanReadableException(
-              "android_binary() was passed an invalid cpu filter: " + cpuFilter);
-        }
-      }
-      return this;
-    }
-
-    public Builder addPreprocessJavaClassesDep(BuildTarget preprocessJavaClassesDep) {
-      this.preprocessJavaClassesDeps.add(preprocessJavaClassesDep);
-      this.addDep(preprocessJavaClassesDep);
-      return this;
-    }
-
-    public Builder setPreprocessJavaClassesBash(
-        Optional<String> preprocessJavaClassesBash) {
-      this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
-      return this;
     }
   }
 }

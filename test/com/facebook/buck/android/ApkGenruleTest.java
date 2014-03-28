@@ -23,10 +23,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
@@ -35,7 +35,6 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
@@ -90,25 +89,25 @@ public class ApkGenruleTest {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
     BuildTarget libAndroidTarget = BuildTargetFactory.newInstance("//:lib-android");
-    ruleResolver.buildAndAddToIndex(
+    BuildRule androidLibRule = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(libAndroidTarget)
-            .addSrc(Paths.get("java/com/facebook/util/Facebook.java")));
+        .setBuildTarget(libAndroidTarget)
+        .addSrc(Paths.get("java/com/facebook/util/Facebook.java")));
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    KeystoreBuilder.createBuilder(keystoreTarget)
+    Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .build(ruleResolver);
+        .build(ruleResolver)
+        .getBuildable();
 
-    ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
-            .setManifest(new FileSourcePath("AndroidManifest.xml"))
-            .setTarget("Google Inc.:Google APIs:16")
-            .setKeystore(keystoreTarget)
-            .addDep(libAndroidTarget)
-            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+    AndroidBinaryBuilder.newBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
+        .setManifest(new FileSourcePath("AndroidManifest.xml"))
+        .setTarget("Google Inc.:Google APIs:16")
+        .setKeystore(keystore)
+        .setOriginalDeps(ImmutableSortedSet.of(androidLibRule))
+        .build(ruleResolver);
   }
 
   @Test
@@ -128,7 +127,7 @@ public class ApkGenruleTest {
     BuildTarget buildTarget = new BuildTarget("//src/com/facebook", "sign_fb4a");
     ApkGenruleDescription description = new ApkGenruleDescription();
     ApkGenruleDescription.Arg arg = description.createUnpopulatedConstructorArg();
-    arg.apk = new FakeBuildRule(BuildRuleType.ANDROID_BINARY, apkTarget) {
+    arg.apk = new FakeBuildRule(AndroidBinaryDescription.TYPE, apkTarget) {
       @Override
       public Buildable getBuildable() {
         class Dummy extends FakeBuildable implements InstallableApk {

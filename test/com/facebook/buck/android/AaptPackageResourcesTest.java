@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidBinaryRule.PackageType;
-import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
+import com.facebook.buck.android.AndroidBinary.PackageType;
+import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -92,13 +92,13 @@ public class AaptPackageResourcesTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, one of which has an assets directory.
-    AndroidBinaryRuleTest.createAndroidLibraryRule(
+    AndroidBinaryTest.createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryOne",
         ruleResolver,
         null, /* resDirectory */
         null, /* assetDirectory */
         null /* nativeLibsDirectory */);
-    AndroidBinaryRuleTest.createAndroidLibraryRule(
+    AndroidBinaryTest.createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryTwo",
         ruleResolver,
         null, /* resDirectory */
@@ -151,13 +151,13 @@ public class AaptPackageResourcesTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, each with an assets directory.
-    AndroidBinaryRuleTest.createAndroidLibraryRule(
+    AndroidBinaryTest.createAndroidLibraryRule(
         "//facebook/base:libraryOne",
         ruleResolver,
         null, /* resDirectory */
         "facebook/base/assets1",
         null /* nativeLibsDirectory */);
-    AndroidBinaryRuleTest.createAndroidLibraryRule(
+    AndroidBinaryTest.createAndroidLibraryRule(
         "//facebook/base:libraryTwo",
         ruleResolver,
         null, /* resDirectory */

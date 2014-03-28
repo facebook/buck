@@ -104,6 +104,7 @@ java_test(
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/timing:timing',
+    '//test/com/facebook/buck/android:testutil',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/java:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
