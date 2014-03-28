@@ -519,22 +519,6 @@ def android_instrumentation_apk(
 
 
 @provide_for_build
-def gen_parcelable(
-    name,
-    srcs,
-    deps=[],
-    visibility=[],
-    build_env=None):
-  add_rule({
-    'type' : 'gen_parcelable',
-    'name' : name,
-    'srcs' : srcs,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def sh_binary(
     name,
     main,
