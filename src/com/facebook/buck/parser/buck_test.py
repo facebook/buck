@@ -18,7 +18,7 @@ class TestBuck(unittest.TestCase):
     self.assertEqual(['foo', 'bar', 'baz.java'], split_path('foo/bar/baz.java'))
     self.assertEqual(['', 'foo', 'bar', ''], split_path('/foo/bar/'))
 
-  def glob_match_using_glob_walk(self, pattern_to_test, path_to_test, wantdots=False):
+  def glob_match_using_glob_walk(self, pattern_to_test, path_to_test, include_dotfiles=False):
     def normpath(path):
       if path is not None:
         self.assertTrue(isinstance(path, basestring))
@@ -36,7 +36,7 @@ class TestBuck(unittest.TestCase):
       self.assertEqual(chunks[:n-1], tokens[:n-1])
       token = tokens[n-1]
       chunk = chunks[n-1]
-      if not wantdots and (not token or token[0] != '.') and chunk and chunk[0] == '.':
+      if not include_dotfiles and (not token or token[0] != '.') and chunk and chunk[0] == '.':
         return
       if fnmatch.fnmatch(chunk, token):
         yield os.path.sep.join(chunks[:n])
@@ -50,13 +50,13 @@ class TestBuck(unittest.TestCase):
     tokens = split_path(pattern_to_test)
     return next(glob_walk_internal(normpath, iglob, isresult, visited, tokens, None), None) is not None
 
-  def run_test_glob_match_both_ways(self, result, pattern, path, wantdots=False):
+  def run_test_glob_match_both_ways(self, result, pattern, path, include_dotfiles=False):
     self.assertEqual(result,
-                     glob_match(pattern, path, wantdots=wantdots),
-                     "glob_match('%s', '%s', wantdots=%s) should be %s" % (pattern, path, wantdots, result))
+                     glob_match(pattern, path, include_dotfiles=include_dotfiles),
+                     "glob_match('%s', '%s', include_dotfiles=%s) should be %s" % (pattern, path, include_dotfiles, result))
     self.assertEqual(result,
-                     self.glob_match_using_glob_walk(pattern, path, wantdots=wantdots),
-                     "glob_match_using_glob_walk('%s', '%s', wantdots=%s) should be %s" % (pattern, path, wantdots, result))
+                     self.glob_match_using_glob_walk(pattern, path, include_dotfiles=include_dotfiles),
+                     "glob_match_using_glob_walk('%s', '%s', include_dotfiles=%s) should be %s" % (pattern, path, include_dotfiles, result))
 
   def test_glob_match_simple(self):
     patterns = ['', '/', 'src', '/src', 'foo/bar', 'foo//bar', 'foo/bar/']
@@ -128,10 +128,10 @@ class TestBuck(unittest.TestCase):
 
   def test_glob_match_can_include_dot_files_and_dirs(self):
     all_java_tests = '**/*Test.java'
-    self.run_test_glob_match_both_ways(True, all_java_tests, 'path/to/MyJavaTest.java', wantdots=True)
-    self.run_test_glob_match_both_ways(True, all_java_tests, 'path/to/.MyJavaTest.java', wantdots=True)
-    self.run_test_glob_match_both_ways(True, all_java_tests, 'path/.to/MyJavaTest.java', wantdots=True)
-    self.run_test_glob_match_both_ways(True, all_java_tests, './path/to/MyJavaTest.java', wantdots=True)
+    self.run_test_glob_match_both_ways(True, all_java_tests, 'path/to/MyJavaTest.java', include_dotfiles=True)
+    self.run_test_glob_match_both_ways(True, all_java_tests, 'path/to/.MyJavaTest.java', include_dotfiles=True)
+    self.run_test_glob_match_both_ways(True, all_java_tests, 'path/.to/MyJavaTest.java', include_dotfiles=True)
+    self.run_test_glob_match_both_ways(True, all_java_tests, './path/to/MyJavaTest.java', include_dotfiles=True)
 
   def test_lazy_build_env_partial(self):
     def cobol_binary(name,

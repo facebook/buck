@@ -14,7 +14,7 @@ def main():
   origins = opts.origins if opts.origins else ['']
   for origin in origins:
     env = {'BUILD_FILE_DIRECTORY' : origin}
-    for path in glob(opts.include, opts.exclude, wantdots=opts.all, build_env=env):
+    for path in glob(opts.include, opts.exclude, include_dotfiles=opts.all, build_env=env):
       print path
 
 if __name__ == "__main__":

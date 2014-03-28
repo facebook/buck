@@ -182,14 +182,14 @@ def glob_walk_internal(normpath, iglob, isresult, visited, tokens, path):
       for x in glob_walk_internal(normpath, iglob, isresult, visited, next_tokens, child):
         yield x
 
-def glob_walk(pattern, root, wantdots=False):
+def glob_walk(pattern, root, include_dotfiles=False):
   """Walk the path hierarchy, following symlinks, and emit relative paths to plain files matching 'pattern'.
 
   Patterns can be any combination of chars recognized by shell globs.
   The special path token '**' expands to zero or more consecutive '*'.
   E.g. '**/foo.java' will match the union of 'foo.java', '*/foo.java.', '*/*/foo.java', etc.
 
-  Names starting with dots will not be matched by '?', '*' and '**' unless wantdots=True
+  Names starting with dots will not be matched by '?', '*' and '**' unless include_dotfiles=True
   """
   # Relativized version of os.path.realpath
   def normpath(path):
@@ -200,7 +200,7 @@ def glob_walk(pattern, root, wantdots=False):
   # Relativized version of glob.iglob
   # Note that glob.iglob already optimizes paths with no special char.
   root_len = len(os.path.join(root, ''))
-  special_rules_for_dots = ((r'^\*', '.*'), (r'^\?', '.'), (r'/\*', '/.*'), (r'/\?', '/.')) if wantdots else []
+  special_rules_for_dots = ((r'^\*', '.*'), (r'^\?', '.'), (r'/\*', '/.*'), (r'/\?', '/.')) if include_dotfiles else []
   def iglob(pattern):
     for p in glob_module.iglob(os.path.join(root, pattern)):
       yield p[root_len:]
@@ -225,7 +225,7 @@ def glob_walk(pattern, root, wantdots=False):
   assert well_formed_tokens(tokens), "Glob patterns cannot be empty, start or end with a slash, or contain consecutive slashes."
   return glob_walk_internal(normpath, iglob, isresult, visited, tokens, None)
 
-def glob_match_internal(wantdots, tokens, chunks):
+def glob_match_internal(include_dotfiles, tokens, chunks):
   """Recursive routine for glob_match.
 
   Works as glob_walk_internal but on a linear path instead of some filesystem.
@@ -236,33 +236,33 @@ def glob_match_internal(wantdots, tokens, chunks):
   token = tokens[0]
   next_tokens = tokens[1:]
   if not chunks:
-    return glob_match_internal(wantdots, next_tokens, chunks) if token == '**' else False
+    return glob_match_internal(include_dotfiles, next_tokens, chunks) if token == '**' else False
   chunk = chunks[0]
   next_chunks = chunks[1:]
 
   # Plain name (possibly empty)
   if not glob_module.has_magic(token):
-    return token == chunk and glob_match_internal(wantdots, next_tokens, next_chunks)
+    return token == chunk and glob_match_internal(include_dotfiles, next_tokens, next_chunks)
 
   # Special glob token.
   elif token == '**':
-    if glob_match_internal(wantdots, next_tokens, chunks):
+    if glob_match_internal(include_dotfiles, next_tokens, chunks):
       return True
     # Simulate glob pattern '*'
-    if not wantdots and chunk and chunk[0] == '.':
+    if not include_dotfiles and chunk and chunk[0] == '.':
       return False
-    return glob_match_internal(wantdots, tokens, next_chunks)
+    return glob_match_internal(include_dotfiles, tokens, next_chunks)
 
   # Usual glob pattern.
   else:
     # We use the same internal library fnmatch as the original code:
     #    http://hg.python.org/cpython/file/2.7/Lib/glob.py#l76
     # TODO(user): to match glob.glob, '.*' should not match '.' or '..'
-    if not wantdots and token[0] != '.' and chunk and chunk[0] == '.':
+    if not include_dotfiles and token[0] != '.' and chunk and chunk[0] == '.':
       return False
-    return fnmatch.fnmatch(chunk, token) and glob_match_internal(wantdots, next_tokens, next_chunks)
+    return fnmatch.fnmatch(chunk, token) and glob_match_internal(include_dotfiles, next_tokens, next_chunks)
 
-def glob_match(pattern, path, wantdots=False):
+def glob_match(pattern, path, include_dotfiles=False):
   """Checks if a given (non necessarily existing) path matches a 'pattern'.
 
   Patterns can include the same special tokens as glob_walk.
@@ -271,10 +271,10 @@ def glob_match(pattern, path, wantdots=False):
   """
   tokens = split_path(pattern)
   chunks = split_path(path)
-  return glob_match_internal(wantdots, tokens, chunks)
+  return glob_match_internal(include_dotfiles, tokens, chunks)
 
 @provide_for_build
-def glob(includes, excludes=[], wantdots=True, build_env=None):
+def glob(includes, excludes=[], include_dotfiles=True, build_env=None):
   search_base = build_env['BUILD_FILE_DIRECTORY']
 
   # Ensure the user passes lists of strings rather than just a string.
@@ -285,11 +285,11 @@ def glob(includes, excludes=[], wantdots=True, build_env=None):
 
   paths = set()
   for pattern in includes:
-    for path in glob_walk(pattern, search_base, wantdots=wantdots):
+    for path in glob_walk(pattern, search_base, include_dotfiles=include_dotfiles):
       paths.add(path)
 
   def exclusion(path):
-    exclusions = (e for e in excludes if glob_match(e, path, wantdots=wantdots))
+    exclusions = (e for e in excludes if glob_match(e, path, include_dotfiles=include_dotfiles))
     return next(exclusions, None)
 
   paths = [p for p in paths if not exclusion(p)]
