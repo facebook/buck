@@ -16,10 +16,11 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
 
-public interface JavaAbiRule extends BuildRule {
+public interface JavaAbiRule extends BuildRule, HasBuildTarget {
 
   /**
    * Returns a SHA-1 hash that represents the ABI for the Java files that are compiled by this rule.

@@ -31,13 +31,13 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -355,7 +355,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * @return the dependencies to be hashed in the final ABI key.
    */
   private SortedSet<JavaAbiRule> getDepsForAbiKey() {
-    SortedSet<JavaAbiRule> rulesWithAbiToConsider = Sets.newTreeSet();
+    SortedSet<JavaAbiRule> rulesWithAbiToConsider = Sets.newTreeSet(BUILD_TARGET_COMPARATOR);
     for (BuildRule dep : getDeps()) {
       if (dep instanceof JavaAbiRule) {
         if (dep instanceof JavaLibraryRule) {
@@ -786,7 +786,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       this.params = params;
 
       javacOptions.setJavaCompilerEnviornment(
-        new JavaCompilerEnvironment(javac, javacVersion));
+          new JavaCompilerEnvironment(javac, javacVersion));
     }
 
     @Override

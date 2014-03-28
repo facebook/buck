@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.HasBuildTarget;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableSet;
@@ -32,7 +33,7 @@ import javax.annotation.Nullable;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
-public interface BuildRule extends Comparable<BuildRule> {
+public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
 
   public BuildTarget getBuildTarget();
 
