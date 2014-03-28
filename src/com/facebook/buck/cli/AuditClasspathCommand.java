@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
+import javax.annotation.Nullable;
+
 public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOptions> {
 
   public AuditClasspathCommand(CommandRunnerParams params) {
@@ -121,8 +123,8 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
     for (BuildTarget target : targets) {
       BuildRule rule = graph.findBuildRuleByTarget(target);
-      if (rule instanceof HasClasspathEntries) {
-        HasClasspathEntries hasClasspathEntries = (HasClasspathEntries)rule;
+      HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
+      if (hasClasspathEntries != null) {
         classpathEntries.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
       } else {
         throw new HumanReadableException(rule.getFullyQualifiedName() + " is not a java-based" +
@@ -145,19 +147,13 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
     for (BuildTarget target : targets) {
       BuildRule rule = graph.findBuildRuleByTarget(target);
-      HasClasspathEntries classpathEntries;
-      // TODO(user): Remove the double checks once Buildable becomes a BuildRule.
-      if (rule instanceof HasClasspathEntries) {
-        classpathEntries = (HasClasspathEntries) rule;
-      } else if (rule.getBuildable() instanceof HasClasspathEntries) {
-        classpathEntries = (HasClasspathEntries) rule.getBuildable();
-      } else {
+      HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
+      if (hasClasspathEntries == null) {
         continue;
       }
-
       targetClasspaths.putAll(
           target.getFullyQualifiedName(),
-          classpathEntries.getTransitiveClasspathEntries().values());
+          hasClasspathEntries.getTransitiveClasspathEntries().values());
     }
 
     ObjectMapper mapper = new ObjectMapper();
@@ -170,6 +166,16 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     return 0;
   }
 
+  @Nullable
+  private HasClasspathEntries getHasClasspathEntriesFrom(BuildRule rule) {
+    // TODO(user): Remove this once buildables and buildrules merge.
+    if (rule instanceof HasClasspathEntries) {
+      return (HasClasspathEntries) rule;
+    } else if (rule.getBuildable() instanceof HasClasspathEntries) {
+      return (HasClasspathEntries) rule.getBuildable();
+    }
+    return null;
+  }
 
   @Override
   String getUsageIntro() {

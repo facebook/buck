@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableApk;
 import com.google.common.base.Optional;
@@ -57,14 +58,15 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
     Build build = buildCommand.getBuild();
     DependencyGraph graph = build.getDependencyGraph();
     BuildRule buildRule = graph.findBuildRuleByTarget(buildCommand.getBuildTargets().get(0));
-    if (!(buildRule instanceof InstallableApk)) {
+    Buildable buildable = buildRule.getBuildable();
+    if (buildable == null || !(buildable instanceof InstallableApk)) {
       console.printBuildFailure(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
           buildRule.getFullyQualifiedName(),
           buildRule.getType().getName()));
       return 1;
     }
-    InstallableApk installableApk = (InstallableApk)buildRule;
+    InstallableApk installableApk = (InstallableApk) buildable;
 
     final AdbHelper adbHelper = new AdbHelper(
         options.adbOptions(),

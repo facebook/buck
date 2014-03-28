@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Builder;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
@@ -150,8 +151,9 @@ public class Build implements Closeable {
           isEncounteredAndroidRuleInTraversal = true;
         }
 
-        if (rule instanceof HasAndroidPlatformTarget) {
-          String target = ((HasAndroidPlatformTarget)rule).getAndroidPlatformTarget();
+        Buildable buildable = rule.getBuildable();
+        if (buildable != null && buildable instanceof HasAndroidPlatformTarget) {
+          String target = ((HasAndroidPlatformTarget) buildable).getAndroidPlatformTarget();
           if (androidPlatformTargetId == null) {
             androidPlatformTargetId = target;
           } else if (!target.equals(androidPlatformTargetId)) {

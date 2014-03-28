@@ -23,6 +23,7 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
@@ -74,14 +75,15 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
 
     // Find the android_binary() rule from the parse.
     BuildRule buildRule = dependencyGraph.findBuildRuleByTarget(buildTarget);
-    if (!(buildRule instanceof InstallableApk)) {
+    Buildable buildable = buildRule.getBuildable();
+    if (buildable == null || !(buildable instanceof InstallableApk)) {
       console.printBuildFailure(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
           buildRule.getFullyQualifiedName(),
           buildRule.getType().getName()));
       return 1;
     }
-    InstallableApk installableApk = (InstallableApk)buildRule;
+    InstallableApk installableApk = (InstallableApk) buildable;
 
     // We need this in case adb isn't already running.
     ExecutionContext context = createExecutionContext(options, dependencyGraph);
