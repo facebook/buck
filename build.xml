@@ -21,6 +21,7 @@
   <property name="test.class" value="Test" />
   <property name="javacc.gensrc.dir" value="${build.dir}/javacc" />
   <property name="javacc.test.dir" value="${build.dir}/testjavacc" />
+  <property name="lint.outputpath" value="${build.dir}/lint.output" />
 
   <fileset dir="${lib.dir}" id="buck.jars">
     <include name="args4j-2.0.26.jar" />
@@ -262,6 +263,25 @@
     <fileset dir="${basedir}/pmd" includes="*.jar" />
   </path>
 
+  <!--
+  Runs pmd on the file(s) specified in the property "lint.files",
+  separated by commas. Writes output to ${lint.outputpath}.
+  -->
+  <target name="pmd-files-xml" if="lint.files">
+    <taskdef name="pmd"
+             classpathref="pmd-classpath"
+             classname="net.sourceforge.pmd.ant.PMDTask"
+             />
+    <pmd failOnRuleViolation="true" rulesetfiles="pmd/rules.xml">
+      <ruleset>buck</ruleset>
+      <formatter type="xml" toFile="${lint.outputpath}" />
+      <fileset dir="${basedir}" includes="${lint.files}" />
+    </pmd>
+  </target>
+
+  <!--
+  Runs pmd on all source, test, and plugin files.
+  -->
   <target name="pmd">
     <taskdef name="pmd"
              classpathref="pmd-classpath"
@@ -286,6 +306,22 @@
     <fileset dir="${basedir}/third-party/java/checkstyle" includes="*.jar" />
   </path>
 
+  <!--
+  Runs checkstyle on the file(s) specified in the property "lint.files",
+  separated by commas.
+  -->
+  <target name="checkstyle-files-xml" if="lint.files">
+    <taskdef resource="checkstyletask.properties"
+           classpathref="checkstyle-classpath"/>
+    <checkstyle config="checkstyle.xml">
+      <formatter type="xml" toFile="${lint.outputpath}" />
+      <fileset dir="${basedir}" includes="${lint.files}" />
+    </checkstyle>
+  </target>
+
+  <!--
+  Runs checkstyle on all source and test files.
+  -->
   <target name="checkstyle">
     <taskdef resource="checkstyletask.properties"
            classpathref="checkstyle-classpath"/>
