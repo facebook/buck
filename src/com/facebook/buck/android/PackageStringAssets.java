@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -155,7 +155,7 @@ public class PackageStringAssets extends AbstractBuildable
     return BuildTargets.getBinPath(buildTarget, "__strings_%s__");
   }
 
-  public static Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -166,7 +166,7 @@ public class PackageStringAssets extends AbstractBuildable
     @Nullable
     private UberRDotJava uberRDotJava;
 
-    protected Builder(AbstractBuildRuleBuilderParams params) {
+    protected Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

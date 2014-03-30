@@ -24,7 +24,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -114,7 +114,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
   }
 
   public static Builder newAndroidInstrumentationApkRuleBuilder(
-      AbstractBuildRuleBuilderParams params) {
+      BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -126,7 +126,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
     /** This should always be a subset of {@link #getDeps()}. */
     private ImmutableSet.Builder<BuildTarget> classpathDeps = ImmutableSet.builder();
 
-    private Builder(AbstractBuildRuleBuilderParams params) {
+    private Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

@@ -29,7 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -76,7 +76,7 @@ public class RobolectricTestBuildRuleFactoryTest {
     // Create a builder using the factory.
     RobolectricTestBuildRuleFactory factory = new RobolectricTestBuildRuleFactory();
     RobolectricTestRule.Builder builder = factory
-        .newBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .newBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(buildTarget);
 
     // Invoke the method under test.

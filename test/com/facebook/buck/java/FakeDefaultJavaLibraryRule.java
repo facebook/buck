@@ -19,7 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -62,7 +62,7 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
     private boolean ruleInputsAreCached;
 
     public Builder() {
-      super(new FakeAbstractBuildRuleBuilderParams());
+      super(new FakeBuildRuleBuilderParams());
     }
 
     @Override

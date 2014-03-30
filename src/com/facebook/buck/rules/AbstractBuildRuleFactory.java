@@ -33,7 +33,7 @@ import java.nio.file.Path;
 public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilder<?>>
     implements BuildRuleFactory<T> {
 
-  protected abstract T newBuilder(AbstractBuildRuleBuilderParams params);
+  protected abstract T newBuilder(BuildRuleBuilderParams params);
 
   /**
    * Subclasses should override this method to extract any information from the Python object that

@@ -30,7 +30,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -52,7 +52,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
-        new FakeAbstractBuildRuleBuilderParams(),
+        new FakeBuildRuleBuilderParams(),
         JavacOptions.DEFAULTS);
     Result result = graphEnhancer.createBuildableForAndroidResources(new BuildRuleResolver(),
         /* createdBuildableIfEmptyDeps */ false);
@@ -86,7 +86,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
-        new FakeAbstractBuildRuleBuilderParams(),
+        new FakeBuildRuleBuilderParams(),
         JavacOptions.DEFAULTS);
     Result result = graphEnhancer.createBuildableForAndroidResources(ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -137,7 +137,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
-        new FakeAbstractBuildRuleBuilderParams(),
+        new FakeBuildRuleBuilderParams(),
         JavacOptions.builder(JavacOptions.DEFAULTS)
             .setJavaCompilerEnviornment(
                 new JavaCompilerEnvironment(

@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -258,7 +258,7 @@ public class ResourcesFilter extends AbstractBuildable
     }
   }
 
-  public static Builder newResourcesFilterBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newResourcesFilterBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -274,7 +274,7 @@ public class ResourcesFilter extends AbstractBuildable
     @Nullable private FilterResourcesStep.ResourceFilter resourceFilter;
     @Nullable private AndroidResourceDepsFinder androidResourceDepsFinder;
 
-    protected Builder(AbstractBuildRuleBuilderParams params) {
+    protected Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

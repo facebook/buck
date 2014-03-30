@@ -18,7 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractTestRuleFactory;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.google.common.base.Function;
@@ -31,7 +31,7 @@ import java.util.List;
 public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory<JavaTestRule.Builder> {
 
   @Override
-  public JavaTestRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+  public JavaTestRule.Builder newBuilder(BuildRuleBuilderParams params) {
     return JavaTestRule.newJavaTestRuleBuilder(params);
   }
 

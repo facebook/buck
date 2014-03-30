@@ -21,7 +21,7 @@ import com.facebook.buck.android.AndroidBinaryRule.PackageType;
 import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -297,7 +297,7 @@ public class AaptPackageResources extends AbstractBuildable
   }
 
   public static Builder newAaptPackageResourcesBuildableBuilder(
-      AbstractBuildRuleBuilderParams params) {
+      BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -309,7 +309,7 @@ public class AaptPackageResources extends AbstractBuildable
     @Nullable private PackageType packageType;
     @Nullable private ImmutableSet<TargetCpuType> cpuFilters;
 
-    private Builder(AbstractBuildRuleBuilderParams params) {
+    private Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

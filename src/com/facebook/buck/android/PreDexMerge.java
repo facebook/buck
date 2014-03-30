@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.PreDexMerge.BuildOutput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -341,7 +341,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     return buildOutputInitializer;
   }
 
-  public static Builder newPreDexMergeBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newPreDexMergeBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -353,7 +353,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     @Nullable private UberRDotJava uberRDotJava;
 
 
-    private Builder(AbstractBuildRuleBuilderParams params) {
+    private Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

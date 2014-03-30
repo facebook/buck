@@ -22,7 +22,7 @@ import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -292,7 +292,7 @@ public class UberRDotJava extends AbstractBuildable implements
     return BuildTargets.getBinPath(buildTarget, "__%s_uber_rdotjava_src__");
   }
 
-  public static Builder newUberRDotJavaBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newUberRDotJavaBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -304,7 +304,7 @@ public class UberRDotJava extends AbstractBuildable implements
     private boolean rDotJavaNeedsDexing = false;
     private boolean shouldBuildStringSourceMap = false;
 
-    private Builder(AbstractBuildRuleBuilderParams params) {
+    private Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

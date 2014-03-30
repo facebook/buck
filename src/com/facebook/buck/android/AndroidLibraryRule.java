@@ -25,7 +25,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -97,7 +97,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     }
   }
 
-  public static Builder newAndroidLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newAndroidLibraryRuleBuilder(BuildRuleBuilderParams params) {
     return newAndroidLibraryRuleBuilder(
       Optional.<Path>absent(),
       Optional.<JavacVersion>absent(),
@@ -107,7 +107,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   public static Builder newAndroidLibraryRuleBuilder(
       Optional<Path> javac,
       Optional<JavacVersion> javacVersion,
-      AbstractBuildRuleBuilderParams params) {
+      BuildRuleBuilderParams params) {
     return new Builder(javac, javacVersion, params);
   }
 
@@ -117,7 +117,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     private Builder(
         Optional<Path> javac,
         Optional<JavacVersion> javacVersion,
-        AbstractBuildRuleBuilderParams params) {
+        BuildRuleBuilderParams params) {
       super(javac, javacVersion, params);
     }
 

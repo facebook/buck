@@ -18,7 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -117,7 +117,7 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
           .toString());
   }
 
-  public static Builder newShBinaryBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newShBinaryBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -148,7 +148,7 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
     private Path main;
     private ImmutableSet.Builder<SourcePath> resources = ImmutableSet.builder();
 
-    protected Builder(AbstractBuildRuleBuilderParams params) {
+    protected Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

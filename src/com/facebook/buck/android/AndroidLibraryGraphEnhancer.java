@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -33,13 +33,13 @@ public class AndroidLibraryGraphEnhancer {
 
   private final BuildTarget dummyRDotJavaBuildTarget;
   private final BuildRuleParams originalBuildRuleParams;
-  private final AbstractBuildRuleBuilderParams buildRuleBuilderParams;
+  private final BuildRuleBuilderParams buildRuleBuilderParams;
   private final JavacOptions javacOptions;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
       BuildRuleParams buildRuleParams,
-      AbstractBuildRuleBuilderParams buildRuleBuilderParams,
+      BuildRuleBuilderParams buildRuleBuilderParams,
       JavacOptions javacOptions) {
     Preconditions.checkNotNull(buildTarget);
     this.dummyRDotJavaBuildTarget = new BuildTarget(

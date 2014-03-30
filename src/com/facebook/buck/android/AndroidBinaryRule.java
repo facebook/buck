@@ -33,7 +33,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -960,12 +960,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return Classpaths.getClasspathEntries(classpathDeps);
   }
 
-  public static Builder newAndroidBinaryRuleBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newAndroidBinaryRuleBuilder(BuildRuleBuilderParams params) {
     return newAndroidBinaryRuleBuilder(params, JavacOptions.DEFAULTS);
   }
 
   public static Builder newAndroidBinaryRuleBuilder(
-      AbstractBuildRuleBuilderParams params,
+      BuildRuleBuilderParams params,
       JavacOptions javacOptions) {
     return new Builder(params, javacOptions);
   }
@@ -1010,7 +1010,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private ImmutableSet.Builder<BuildTarget> preprocessJavaClassesDeps = ImmutableSet.builder();
     private Optional<String> preprocessJavaClassesBash = Optional.absent();
 
-    private Builder(AbstractBuildRuleBuilderParams params, JavacOptions javacOptions) {
+    private Builder(BuildRuleBuilderParams params, JavacOptions javacOptions) {
       super(params);
       this.javacOptions = Preconditions.checkNotNull(javacOptions);
     }

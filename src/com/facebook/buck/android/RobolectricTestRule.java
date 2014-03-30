@@ -24,7 +24,7 @@ import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -142,14 +142,14 @@ public class RobolectricTestRule extends JavaTestRule {
         resourceDirectories);
   }
 
-  public static Builder newRobolectricTestRuleBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newRobolectricTestRuleBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
   public static class Builder extends JavaTestRule.Builder {
 
 
-    private Builder(AbstractBuildRuleBuilderParams params) {
+    private Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

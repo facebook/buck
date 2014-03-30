@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -255,7 +255,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
         .set("javadocUrl", javadocUrl);
   }
 
-  public static Builder newPrebuiltJarRuleBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newPrebuiltJarRuleBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -265,7 +265,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
     private Optional<Path> sourceJar = Optional.absent();
     private Optional<String> javadocUrl = Optional.absent();
 
-    private Builder(AbstractBuildRuleBuilderParams params) {
+    private Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildRuleFactory;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 
@@ -26,7 +26,7 @@ import java.nio.file.Path;
 public class ShTestBuildRuleFactory extends AbstractBuildRuleFactory<ShTestRule.Builder> {
 
   @Override
-  public ShTestRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+  public ShTestRule.Builder newBuilder(BuildRuleBuilderParams params) {
     return ShTestRule.newShTestRuleBuilder(params);
   }
 

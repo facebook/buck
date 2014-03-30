@@ -17,7 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -396,7 +396,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     }
   }
 
-  public static Builder newJavaTestRuleBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newJavaTestRuleBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -408,7 +408,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     protected ImmutableSet<Label> labels = ImmutableSet.of();
     protected ImmutableSet<String> contacts = ImmutableSet.of();
 
-    protected Builder(AbstractBuildRuleBuilderParams params) {
+    protected Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

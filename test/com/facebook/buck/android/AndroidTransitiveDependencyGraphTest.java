@@ -26,7 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableSet;
@@ -48,13 +48,13 @@ public class AndroidTransitiveDependencyGraphTest {
     // Create an AndroidBinaryRule that transitively depends on two prebuilt JARs. One of the two
     // prebuilt JARs will be listed in the AndroidBinaryRule's no_dx list.
     PrebuiltJarRule guavaRule = ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(Paths.get("third_party/guava/guava-10.0.1.jar"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     PrebuiltJarRule jsr305Rule = ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/jsr-305:jsr-305"))
         .setBinaryJar(Paths.get("third_party/jsr-305/jsr305.jar"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
@@ -76,7 +76,7 @@ public class AndroidTransitiveDependencyGraphTest {
     ruleResolver.addToIndex(prebuiltNativeLibraryTarget, prebuiltNativeLibraryBuild);
 
     DefaultJavaLibraryRule libraryRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:example"))
             .addDep(guavaRule.getBuildTarget())
             .addDep(jsr305Rule.getBuildTarget())
@@ -97,7 +97,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .build(ruleResolver);
 
     AndroidBinaryRule binaryRule = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
         .addClasspathDep(libraryRule.getBuildTarget())
         .addClasspathDep(manifestRule.getBuildTarget())
@@ -162,7 +162,7 @@ public class AndroidTransitiveDependencyGraphTest {
 
     BuildTarget androidLibraryKeystoreTarget = new BuildTarget("//java/com/keystore/base", "base");
     BuildRule androidLibraryKeystore = ruleResolver.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(androidLibraryKeystoreTarget)
         .addSrc(Paths.get("java/com/facebook/keystore/Base.java"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
@@ -176,13 +176,13 @@ public class AndroidTransitiveDependencyGraphTest {
 
     BuildTarget androidLibraryTarget = new BuildTarget("//java/com/facebook/base", "base");
     ruleResolver.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(androidLibraryTarget)
         .addSrc(Paths.get("java/com/facebook/base/Base.java"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     AndroidBinaryRule androidBinaryRule = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(new BuildTarget("//apps/sample", "app"))
         .setManifest(new FileSourcePath("apps/sample/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")

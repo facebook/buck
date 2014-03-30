@@ -40,7 +40,7 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   private final ProjectFilesystem projectFilesystem;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
-  protected AbstractBuildRuleBuilder(AbstractBuildRuleBuilderParams params) {
+  protected AbstractBuildRuleBuilder(BuildRuleBuilderParams params) {
     this.projectFilesystem = params.getProjectFilesystem();
     this.ruleKeyBuilderFactory = params.getRuleKeyBuilderFactory();
   }

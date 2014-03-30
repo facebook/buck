@@ -25,7 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -87,7 +87,7 @@ public class AndroidInstrumentationApkTest {
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.
     AndroidBinaryRule.Builder androidBinaryBuilder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
-        new FakeAbstractBuildRuleBuilderParams());
+        new FakeBuildRuleBuilderParams());
     androidBinaryBuilder
         .setBuildTarget(new BuildTarget("//apps", "app"))
         .setManifest(new FileSourcePath("apps/AndroidManifest.xml"))
@@ -99,7 +99,7 @@ public class AndroidInstrumentationApkTest {
 
     // AndroidInstrumentationApk transitively depends on :lib1, :lib2, :lib3, and :lib4.
     AndroidInstrumentationApk.Builder androidInstrumentationApkBuilder = AndroidInstrumentationApk
-        .newAndroidInstrumentationApkRuleBuilder(new FakeAbstractBuildRuleBuilderParams());
+        .newAndroidInstrumentationApkRuleBuilder(new FakeBuildRuleBuilderParams());
     androidInstrumentationApkBuilder
         .setBuildTarget(new BuildTarget("//apps", "instrumentation"))
         .setManifest(new FileSourcePath("apps/InstrumentationAndroidManifest.xml"))

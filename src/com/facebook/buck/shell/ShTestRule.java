@@ -18,7 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -156,7 +156,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
     };
   }
 
-  public static Builder newShTestRuleBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newShTestRuleBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -166,7 +166,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
     private Path test;
     private ImmutableSet<Label> labels = ImmutableSet.of();
 
-    private Builder(AbstractBuildRuleBuilderParams params) {
+    private Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

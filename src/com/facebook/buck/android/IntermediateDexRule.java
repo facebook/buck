@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -58,7 +58,7 @@ public class IntermediateDexRule extends AbstractCachingBuildRule implements Abi
     return buildable.getAbiKeyForDeps();
   }
 
-  public static Builder newPreDexBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newPreDexBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -66,7 +66,7 @@ public class IntermediateDexRule extends AbstractCachingBuildRule implements Abi
 
     private JavaLibraryRule javaLibrary;
 
-    protected Builder(AbstractBuildRuleBuilderParams params) {
+    protected Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

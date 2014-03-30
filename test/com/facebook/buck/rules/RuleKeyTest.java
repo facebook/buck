@@ -56,7 +56,7 @@ public class RuleKeyTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
     final FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem,
         new TestConsole());
-    AbstractBuildRuleBuilderParams builderParams = new DefaultBuildRuleBuilderParams(
+    BuildRuleBuilderParams builderParams = new BuildRuleBuilderParams(
         projectFilesystem,
         new RuleKeyBuilderFactory() {
           @Override

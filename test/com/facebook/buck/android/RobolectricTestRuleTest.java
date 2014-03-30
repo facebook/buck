@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 
@@ -95,7 +95,7 @@ public class RobolectricTestRuleTest {
         "//java/src/com/facebook/base/robolectricTest:robolectricTest");
 
     RobolectricTestRule testRule = (RobolectricTestRule)ruleResolver.buildAndAddToIndex(
-        RobolectricTestRule.newRobolectricTestRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        RobolectricTestRule.newRobolectricTestRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(robolectricBuildTarget));
 
     String result = testRule.getRobolectricResourceDirectories(resDeps);
@@ -125,7 +125,7 @@ public class RobolectricTestRuleTest {
         "//java/src/com/facebook/base/robolectricTest:robolectricTest");
 
     RobolectricTestRule testRule = (RobolectricTestRule)ruleResolver.buildAndAddToIndex(
-        RobolectricTestRule.newRobolectricTestRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        RobolectricTestRule.newRobolectricTestRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(robolectricBuildTarget));
 
     String result = testRule.getRobolectricResourceDirectories(

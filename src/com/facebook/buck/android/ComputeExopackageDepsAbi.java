@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.ComputeExopackageDepsAbi.BuildOutput;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -206,7 +206,7 @@ public class ComputeExopackageDepsAbi
   }
 
   public static Builder newBuildableBuilder(
-      AbstractBuildRuleBuilderParams params,
+      BuildRuleBuilderParams params,
       BuildTarget buildTarget,
       Collection<BuildRule> deps,
       AndroidResourceDepsFinder androidResourceDepsFinder,
@@ -237,7 +237,7 @@ public class ComputeExopackageDepsAbi
     @Nullable private Optional<PreDexMerge> preDexMerge;
     @Nullable private Keystore keystore;
 
-    protected Builder(AbstractBuildRuleBuilderParams params) {
+    protected Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

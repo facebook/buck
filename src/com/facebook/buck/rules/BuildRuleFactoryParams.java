@@ -54,7 +54,7 @@ public final class BuildRuleFactoryParams {
   public final BuildTarget target;
   private final ParseContext buildFileParseContext;
   private final boolean ignoreFileExistenceChecks;
-  private final AbstractBuildRuleBuilderParams abstractBuildRuleFactoryParams;
+  private final BuildRuleBuilderParams abstractBuildRuleFactoryParams;
 
   private final Function<String, Path> resolveFilePathRelativeToBuildFileDirectoryTransform;
 
@@ -99,12 +99,12 @@ public final class BuildRuleFactoryParams {
       }
     };
 
-    this.abstractBuildRuleFactoryParams = new DefaultBuildRuleBuilderParams(filesystem,
+    this.abstractBuildRuleFactoryParams = new BuildRuleBuilderParams(filesystem,
         ruleKeyBuilderFactory);
   }
 
   /** This is package-private so that only AbstractBuildRuleFactory can access it. */
-  AbstractBuildRuleBuilderParams getAbstractBuildRuleFactoryParams() {
+  BuildRuleBuilderParams getAbstractBuildRuleFactoryParams() {
     return abstractBuildRuleFactoryParams;
   }
 

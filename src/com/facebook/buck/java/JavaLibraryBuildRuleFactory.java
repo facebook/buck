@@ -18,7 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildRuleFactory;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -55,7 +55,7 @@ public class JavaLibraryBuildRuleFactory extends
   }
 
   @Override
-  public DefaultJavaLibraryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+  public DefaultJavaLibraryRule.Builder newBuilder(BuildRuleBuilderParams params) {
     return DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(javac, javacVersion, params);
   }
 

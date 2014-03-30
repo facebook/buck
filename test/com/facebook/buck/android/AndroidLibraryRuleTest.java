@@ -25,7 +25,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -66,7 +66,7 @@ public class AndroidLibraryRuleTest {
 
   private AndroidLibraryRule getAndroidLibraryRuleFoo(BuildRuleResolver params) {
     return (AndroidLibraryRule)params.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/foo:foo"))
             .addSrc(Paths.get("java/src/com/foo/Foo.java"))
             .setManifestFile((Optional.of(Paths.get("java/src/com/foo/AndroidManifest.xml"))))
@@ -76,7 +76,7 @@ public class AndroidLibraryRuleTest {
 
   private AndroidLibraryRule getAndroidLibraryRuleBar(BuildRuleResolver params) {
     return (AndroidLibraryRule)params.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/bar:bar"))
             .addSrc(Paths.get("java/src/com/bar/Bar.java"))
             .setManifestFile((Optional.<Path>absent()))

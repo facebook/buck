@@ -40,7 +40,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -66,21 +66,21 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildTarget javaDep1BuildTarget = new BuildTarget("//java/com/example", "dep1");
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
-            new FakeAbstractBuildRuleBuilderParams(ruleKeyBuilderFactory))
+            new FakeBuildRuleBuilderParams(ruleKeyBuilderFactory))
             .setBuildTarget(javaDep1BuildTarget)
             .addSrc(Paths.get("java/com/example/Dep1.java")));
 
     BuildTarget javaDep2BuildTarget = new BuildTarget("//java/com/example", "dep2");
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
-            new FakeAbstractBuildRuleBuilderParams(ruleKeyBuilderFactory))
+            new FakeBuildRuleBuilderParams(ruleKeyBuilderFactory))
             .setBuildTarget(javaDep2BuildTarget)
             .addSrc(Paths.get("java/com/example/Dep2.java")));
 
     BuildTarget javaLibBuildTarget = new BuildTarget("//java/com/example", "lib");
     DefaultJavaLibraryRule javaLib = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
-            new FakeAbstractBuildRuleBuilderParams(ruleKeyBuilderFactory))
+            new FakeBuildRuleBuilderParams(ruleKeyBuilderFactory))
             .setBuildTarget(javaLibBuildTarget)
             .addSrc(Paths.get("java/com/example/Lib.java"))
             .addDep(javaDep1BuildTarget)

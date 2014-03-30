@@ -35,7 +35,7 @@ public class BuildRuleResolverTest {
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
     RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory();
-    AbstractBuildRuleBuilderParams params = new DefaultBuildRuleBuilderParams(projectFilesystem,
+    BuildRuleBuilderParams params = new BuildRuleBuilderParams(projectFilesystem,
         ruleKeyBuilderFactory);
 
     DefaultJavaLibraryRule.Builder builder1 = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(

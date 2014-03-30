@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -178,7 +178,7 @@ public class DummyRDotJava extends AbstractBuildable
     return BuildTargets.getGenPath(buildTarget, "__%s_dummyrdotjava_abi__");
   }
 
-  public static Builder newDummyRDotJavaBuildableBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newDummyRDotJavaBuildableBuilder(BuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -236,7 +236,7 @@ public class DummyRDotJava extends AbstractBuildable
     @Nullable
     private JavacOptions javacOptions;
 
-    protected Builder(AbstractBuildRuleBuilderParams params) {
+    protected Builder(BuildRuleBuilderParams params) {
       super(params);
     }
 

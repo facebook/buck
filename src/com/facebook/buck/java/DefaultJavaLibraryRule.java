@@ -27,7 +27,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
@@ -751,7 +751,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     return outputJar.orNull();
   }
 
-  public static Builder newJavaLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newJavaLibraryRuleBuilder(BuildRuleBuilderParams params) {
     return newJavaLibraryRuleBuilder(
         Optional.<Path>absent(),
         Optional.<JavacVersion>absent(),
@@ -760,14 +760,14 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   public static Builder newJavaLibraryRuleBuilder(Optional<Path> javac,
       Optional<JavacVersion> javacVersion,
-      AbstractBuildRuleBuilderParams params) {
+      BuildRuleBuilderParams params) {
     return new Builder(javac, javacVersion, params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<DefaultJavaLibraryRule> implements
       SrcsAttributeBuilder, ResourcesAttributeBuilder {
 
-    protected final AbstractBuildRuleBuilderParams params;
+    protected final BuildRuleBuilderParams params;
 
     protected Set<Path> srcs = Sets.newHashSet();
     protected Set<SourcePath> resources = Sets.newHashSet();
@@ -777,13 +777,13 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     protected JavacOptions.Builder javacOptions = JavacOptions.builder();
     protected Optional<Path> proguardConfig = Optional.absent();
 
-    protected Builder(AbstractBuildRuleBuilderParams params) {
+    protected Builder(BuildRuleBuilderParams params) {
       this(Optional.<Path>absent(), Optional.<JavacVersion>absent(), params);
     }
 
     protected Builder(Optional<Path> javac,
         Optional<JavacVersion> javacVersion,
-        AbstractBuildRuleBuilderParams params) {
+        BuildRuleBuilderParams params) {
       super(params);
       this.params = params;
 

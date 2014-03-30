@@ -26,7 +26,7 @@ import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -62,7 +62,7 @@ public class PythonBinaryTest {
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:javalib");
     DefaultJavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(javaLibraryTarget)
             .addSrc(Paths.get("java/src/com/javalib/Bar.java"))
             .addDep(orphanPyLibraryTarget)

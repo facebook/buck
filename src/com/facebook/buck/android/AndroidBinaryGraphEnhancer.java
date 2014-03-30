@@ -26,11 +26,10 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -52,7 +51,7 @@ public class AndroidBinaryGraphEnhancer {
 
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
-  private final AbstractBuildRuleBuilderParams buildRuleBuilderParams;
+  private final BuildRuleBuilderParams buildRuleBuilderParams;
   private final BuildRuleResolver ruleResolver;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ResourceFilter resourceFilter;
@@ -88,7 +87,7 @@ public class AndroidBinaryGraphEnhancer {
       Keystore keystore) {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
-    this.buildRuleBuilderParams = new DefaultBuildRuleBuilderParams(
+    this.buildRuleBuilderParams = new BuildRuleBuilderParams(
         originalParams.getProjectFilesystem(),
         originalParams.getRuleKeyBuilderFactory());
 
