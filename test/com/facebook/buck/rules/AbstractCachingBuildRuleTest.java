@@ -184,6 +184,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     BuildContext context = createMock(BuildContext.class);
     expect(context.getArtifactCache()).andReturn(artifactCache).times(2);
     expect(context.getProjectRoot()).andReturn(createMock(Path.class));
+    expect(context.getBuildEngine()).andReturn(new CachingBuildEngine());
 
     // Configure the OnDiskBuildInfo.
     OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
@@ -364,6 +365,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
     expect(buildContext.getStepRunner()).andReturn(createSameThreadStepRunner());
     expect(buildContext.getEventBus()).andReturn(buckEventBus).anyTimes();
+    expect(buildContext.getBuildEngine()).andStubReturn(new CachingBuildEngine());
 
     replayAll();
 
@@ -420,7 +422,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     buildContext.logBuildInfo(anyObject(String.class), anyObject());
     expectLastCall().asStub();
     expect(buildContext.getStepRunner()).andStubReturn(null);
-
+    expect(buildContext.getBuildEngine()).andStubReturn(new CachingBuildEngine());
 
     BuildInfoRecorder buildInfoRecorder = createMock(BuildInfoRecorder.class);
     expect(buildContext.createBuildInfoRecorder(
@@ -514,6 +516,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         .setDependencyGraph(RuleMap.createGraphFromSingleRule(cachingRule))
         .setStepRunner(stepRunner)
         .setProjectFilesystem(projectFilesystem)
+        .setBuildEngine(new CachingBuildEngine())
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
         .setEventBus(buckEventBus)

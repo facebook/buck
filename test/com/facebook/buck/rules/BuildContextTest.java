@@ -53,6 +53,7 @@ public class BuildContextTest {
     builder.setArtifactCache(createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());
+    builder.setBuildEngine(createMock(BuildEngine.class));
 
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     List<Path> entries = ImmutableList.of(
@@ -94,6 +95,7 @@ public class BuildContextTest {
     builder.setArtifactCache(createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());
+    builder.setBuildEngine(createMock(BuildEngine.class));
 
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
@@ -114,6 +116,7 @@ public class BuildContextTest {
     builder.setArtifactCache(createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());
+    builder.setBuildEngine(createMock(BuildEngine.class));
 
     // Set to absent value.
     builder.setAndroidBootclasspathForAndroidPlatformTarget(
@@ -136,6 +139,7 @@ public class BuildContextTest {
         .setDependencyGraph(createMock(DependencyGraph.class))
         .setStepRunner(createMock(StepRunner.class))
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
+        .setBuildEngine(createMock(BuildEngine.class))
         .setArtifactCache(createMock(ArtifactCache.class))
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
         .setEventBus(eventBus)
@@ -155,6 +159,7 @@ public class BuildContextTest {
         .setDependencyGraph(createMock(DependencyGraph.class))
         .setStepRunner(createMock(StepRunner.class))
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
+        .setBuildEngine(createMock(BuildEngine.class))
         .setArtifactCache(createMock(ArtifactCache.class))
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
         .setEventBus(eventBus)

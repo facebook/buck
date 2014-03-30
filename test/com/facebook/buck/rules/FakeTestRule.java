@@ -74,11 +74,6 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public BuildRuleSuccess.Type getBuildResultType() {
-    throw new UnsupportedOperationException("getBuildResultType() not supported in fake");
-  }
-
-  @Override
   public boolean hasTestResultFiles(ExecutionContext executionContext) {
     return false;
   }

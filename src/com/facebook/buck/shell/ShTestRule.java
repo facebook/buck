@@ -111,7 +111,6 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
       BuildContext buildContext,
       ExecutionContext executionContext,
       TestSelectorList testSelectorList) {
-    Preconditions.checkState(isRuleBuilt(), "%s must be built before tests can be run.", this);
 
     Step mkdirClean = new MakeCleanDirectoryStep(getPathToTestOutputDirectory());
 

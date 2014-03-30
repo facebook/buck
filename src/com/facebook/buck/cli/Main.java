@@ -30,6 +30,7 @@ import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
@@ -562,6 +563,7 @@ public final class Main {
             createRuleKeyBuilderFactory(new DefaultFileHashCache(projectFilesystem, console)));
       }
 
+      CachingBuildEngine buildEngine = new CachingBuildEngine();
       exitCode = executingCommand.execute(remainingArgs,
           config,
           new CommandRunnerParams(
@@ -569,6 +571,7 @@ public final class Main {
               projectFilesystem,
               androidDirectoryResolver,
               buildRuleTypes,
+              buildEngine,
               artifactCacheFactory,
               buildEventBus,
               parser,

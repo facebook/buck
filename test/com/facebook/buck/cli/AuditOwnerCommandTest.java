@@ -127,11 +127,6 @@ public class AuditOwnerCommandTest {
     }
 
     @Override
-    public BuildRuleSuccess.Type getBuildResultType() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
     public final RuleKey getRuleKey() {
       throw new UnsupportedOperationException();
     }

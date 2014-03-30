@@ -18,7 +18,9 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
@@ -44,6 +46,7 @@ class CommandRunnerParams {
 
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
+  private final BuildEngine buildEngine;
   private final ArtifactCacheFactory artifactCacheFactory;
   private final Console console;
   private final Parser parser;
@@ -65,6 +68,7 @@ class CommandRunnerParams {
         projectFilesystem,
         androidDirectoryResolver,
         buildRuleTypes,
+        new CachingBuildEngine(),
         artifactCacheFactory,
         eventBus,
         new Parser(projectFilesystem,
@@ -86,6 +90,7 @@ class CommandRunnerParams {
       ProjectFilesystem projectFilesystem,
       AndroidDirectoryResolver androidDirectoryResolver,
       KnownBuildRuleTypes buildRuleTypes,
+      BuildEngine buildEngine,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       Parser parser,
@@ -93,6 +98,7 @@ class CommandRunnerParams {
     this.console = Preconditions.checkNotNull(console);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
+    this.buildEngine = Preconditions.checkNotNull(buildEngine);
     this.artifactCacheFactory = Preconditions.checkNotNull(artifactCacheFactory);
     this.eventBus = Preconditions.checkNotNull(eventBus);
     this.parser = Preconditions.checkNotNull(parser);
@@ -138,5 +144,9 @@ class CommandRunnerParams {
 
   public Platform getPlatform() {
     return platform;
+  }
+
+  public BuildEngine getBuildEngine() {
+    return buildEngine;
   }
 }

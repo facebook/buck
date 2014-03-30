@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.model.BuildTarget;
@@ -31,7 +30,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -43,7 +41,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
@@ -52,7 +49,7 @@ import javax.annotation.Nullable;
  * {@link RuleKey} of the build rules matches the one on disk, it does not do any work. It also
  * tries to fetch its output from an {@link ArtifactCache} to avoid doing any computation.
  */
-public class CachingBuildEngine {
+public class CachingBuildEngine implements BuildEngine {
 
   /**
    * Key for {@link OnDiskBuildInfo} to identify the ABI key for the deps of a build rule.
@@ -61,27 +58,13 @@ public class CachingBuildEngine {
   public static final String ABI_KEY_FOR_DEPS_ON_DISK_METADATA = "ABI_KEY_FOR_DEPS";
 
   /**
-   * These are the values returned by {@link AbstractCachingBuildRule#build(BuildContext)}.
+   * These are the values returned by {@link AbstractBuildRule#build(BuildContext)}.
    * This must always return the same value for the build of each target.
    */
   private final ConcurrentMap<BuildTarget, SettableFuture<BuildRuleSuccess>> results
       = Maps.newConcurrentMap();
 
-  private final AtomicBoolean isRegistered = new AtomicBoolean(false);
-
   public CachingBuildEngine() {
-  }
-
-  /**
-   * In order to make sure that we clear results when a build finishes, so that we do not re-use
-   * them in a subsequent run, we register this object on the buck event bus and listen to the
-   * build finished event.
-   * @param finished Signals that the command finished.
-   */
-  @Subscribe
-  public synchronized void commandFinished(CommandEvent.Finished finished) {
-    results.clear();
-    isRegistered.set(false);
   }
 
   /**
@@ -92,22 +75,16 @@ public class CachingBuildEngine {
     results.put(buildTarget, SettableFuture.<BuildRuleSuccess>create());
   }
 
-  /**
-   * @return Whether {@code rule} has been built
-   */
-  public boolean isRuleBuilt(BuildRule rule) {
-    SettableFuture<BuildRuleSuccess> resultFuture = results.get(rule.getBuildTarget());
+  @Override
+  public boolean isRuleBuilt(BuildTarget buildTarget) {
+    SettableFuture<BuildRuleSuccess> resultFuture = results.get(buildTarget);
     return resultFuture != null && MoreFutures.isSuccess(resultFuture);
   }
 
+  @Override
   public final ListenableFuture<BuildRuleSuccess> build(
       final BuildContext context,
       final BuildRule rule) {
-
-    if (!isRegistered.get()) {
-      context.getEventBus().register(this);
-      isRegistered.set(true);
-    }
 
     // Avoid acquiring a lock if the future is already set, since reading a concurrentHashMap is
     // thread safe.
@@ -510,9 +487,14 @@ public class CachingBuildEngine {
     buildOutputInitializer.setBuildOutput(buildOutput);
   }
 
-  public BuildRuleSuccess getBuildRuleResult(BuildRule rule)
+  @Nullable
+  @Override
+  public BuildRuleSuccess getBuildRuleResult(BuildTarget buildTarget)
       throws ExecutionException, InterruptedException {
-    SettableFuture<BuildRuleSuccess> result = results.get(rule.getBuildTarget());
+    SettableFuture<BuildRuleSuccess> result = results.get(buildTarget);
+    if (result == null) {
+      return null;
+    }
     return result.get();
   }
 

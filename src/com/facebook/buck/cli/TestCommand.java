@@ -32,6 +32,7 @@ import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.parser.RawRulePredicates;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.DependencyGraph;
@@ -56,6 +57,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -116,7 +118,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     if (options.isRunAllTests()) {
       try {
         return runAllTests(options);
-      } catch (BuildTargetException | BuildFileParseException e) {
+      } catch (BuildTargetException | BuildFileParseException | ExecutionException e) {
         console.printBuildFailureWithoutStacktrace(e);
         return 1;
       }
@@ -146,10 +148,15 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         setTargetDevice(options.getTargetDeviceOptional()).
         build();
 
-    return runTestsAndShutdownExecutor(results,
-        buildContext,
-        testExecutionContext,
-        options);
+    try {
+      return runTestsAndShutdownExecutor(results,
+          buildContext,
+          testExecutionContext,
+          options);
+    } catch (ExecutionException e) {
+      console.printBuildFailureWithoutStacktrace(e);
+      return 1;
+    }
   }
 
   /**
@@ -278,7 +285,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   private int runAllTests(TestCommandOptions options) throws IOException,
-      BuildTargetException, BuildFileParseException {
+      BuildTargetException, BuildFileParseException, ExecutionException {
     Logging.setLoggingLevelForVerbosity(console.getVerbosity());
 
     // The first step is to parse all of the build files. This will populate the parser and find all
@@ -313,6 +320,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         graph,
         getProjectFilesystem(),
         getAndroidDirectoryResolver(),
+        getBuildEngine(),
         artifactCache,
         console,
         getBuckEventBus(),
@@ -417,7 +425,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       Iterable<TestRule> tests,
       BuildContext buildContext,
       ExecutionContext executionContext,
-      TestCommandOptions options) throws IOException {
+      TestCommandOptions options) throws IOException, ExecutionException {
 
     try (DefaultStepRunner stepRunner =
             new DefaultStepRunner(executionContext, options.getNumThreads())) {
@@ -430,7 +438,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       BuildContext buildContext,
       ExecutionContext executionContext,
       StepRunner stepRunner,
-      final TestCommandOptions options) throws IOException {
+      final TestCommandOptions options)
+      throws IOException, ExecutionException {
 
     ImmutableSet<JavaLibrary> rulesUnderTest;
     // If needed, we first run instrumentation on the class files.
@@ -483,20 +492,28 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(
         executionContext.getProjectFilesystem());
     for (TestRule test : tests) {
-      List<Step> steps;
-
       // Determine whether the test needs to be executed.
-      boolean isTestRunRequired =
-          isTestRunRequiredForTest(
-              test,
-              executionContext,
-              testRuleKeyFileHelper,
-              options.isResultsCacheEnabled(),
-              !options.getTestSelectorList().isEmpty());
+      boolean isTestRunRequired;
+      try {
+        isTestRunRequired = isTestRunRequiredForTest(
+            test,
+            getBuildEngine(),
+            executionContext,
+            testRuleKeyFileHelper,
+            options.isResultsCacheEnabled(),
+            !options.getTestSelectorList().isEmpty());
+      } catch (InterruptedException e) {
+        e.printStackTrace(getStdErr());
+        return 1;
+      }
+
+      List<Step> steps;
       if (isTestRunRequired) {
         getBuckEventBus().post(IndividualTestEvent.started(
             options.getArgumentsFormattedAsBuildTargets()));
         ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+        BuildEngine cachingBuildEngine = getBuildEngine();
+        Preconditions.checkState(cachingBuildEngine.isRuleBuilt(test.getBuildTarget()));
         List<Step> testSteps = test.runTests(
             buildContext,
             executionContext,
@@ -640,13 +657,14 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   @VisibleForTesting
   static boolean isTestRunRequiredForTest(
       TestRule test,
+      BuildEngine cachingBuildEngine,
       ExecutionContext executionContext,
       TestRuleKeyFileHelper testRuleKeyFileHelper,
       boolean isResultsCacheEnabled,
       boolean isRunningWithTestSelectors)
-      throws IOException {
+      throws IOException, ExecutionException, InterruptedException {
     boolean isTestRunRequired;
-    BuildRuleSuccess.Type successType;
+    BuildRuleSuccess success;
     if (executionContext.isDebugEnabled()) {
       // If debug is enabled, then we should always run the tests as the user is expecting to
       // hook up a debugger.
@@ -656,8 +674,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // we should always run each test (and never look at the cache.)
       // TODO(user) When #3090004 and #3436849 are closed we can respect the cache again.
       isTestRunRequired = true;
-    } else if (((successType = test.getBuildResultType()) != null)
-               && successType == BuildRuleSuccess.Type.MATCHING_RULE_KEY
+    } else if (((success = cachingBuildEngine.getBuildRuleResult(
+        test.getBuildTarget())) != null)
+               && success.getType() == BuildRuleSuccess.Type.MATCHING_RULE_KEY
                && isResultsCacheEnabled
                && test.hasTestResultFiles(executionContext)
                && testRuleKeyFileHelper.isRuleKeyInDir(test)) {

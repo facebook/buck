@@ -29,7 +29,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -40,8 +39,6 @@ import javax.annotation.Nullable;
  */
 @Beta
 public abstract class AbstractBuildRule implements BuildRule {
-
-  private static final CachingBuildEngine engine = new CachingBuildEngine();
 
   private final BuildTarget buildTarget;
   private final Buildable buildable;
@@ -122,29 +119,6 @@ public abstract class AbstractBuildRule implements BuildRule {
     return false;
   }
 
-  /**
-   * This rule is designed to be used for precondition checks in subclasses. For example, before
-   * running the tests associated with a build rule, it is reasonable to do a sanity check to
-   * ensure that the rule has been built.
-   */
-  // TODO(simons): This is a responsibility of the engine, not the rule
-  // TODO(user): This is only used by *TestRule
-  protected final synchronized boolean isRuleBuilt() {
-    return engine.isRuleBuilt(this);
-  }
-
-  @Override
-  // TODO(simons): This is a responsibility of the engine, not the rule
-  // TODO(user): This can be gotten rid by using BuildEngine in TestCommand.
-  public BuildRuleSuccess.Type getBuildResultType() {
-    Preconditions.checkState(isRuleBuilt());
-    try {
-      return engine.getBuildRuleResult(this).getType();
-    } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   @Override
   public Iterable<Path> getInputs() {
     if (inputsToCompareToOutputs == null) {
@@ -180,7 +154,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   // Note: this method SHOULD be final, but test constraints mean it must be overrideable.
   @Override
   public ListenableFuture<BuildRuleSuccess> build(final BuildContext context) {
-    return engine.build(context, this);
+    return context.getBuildEngine().build(context, this);
   }
 
   /**

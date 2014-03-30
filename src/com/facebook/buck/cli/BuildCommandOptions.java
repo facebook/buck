@@ -20,6 +20,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.AndroidDirectoryResolver;
@@ -123,6 +124,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       DependencyGraph graph,
       ProjectFilesystem projectFilesystem,
       AndroidDirectoryResolver androidDirectoryResolver,
+      BuildEngine buildEngine,
       ArtifactCache artifactCache,
       Console console,
       BuckEventBus eventBus,
@@ -135,6 +137,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         targetDevice,
         projectFilesystem,
         androidDirectoryResolver,
+        buildEngine,
         artifactCache,
         getNumThreads(),
         getBuckConfig().createDefaultJavaPackageFinder(),

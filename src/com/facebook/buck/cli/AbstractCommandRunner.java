@@ -23,6 +23,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
@@ -48,6 +49,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   protected final Console console;
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
+  private final BuildEngine buildEngine;
   private final ArtifactCacheFactory artifactCacheFactory;
   private final Parser parser;
   private final BuckEventBus eventBus;
@@ -65,6 +67,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     this.console = Preconditions.checkNotNull(params.getConsole());
     this.projectFilesystem = Preconditions.checkNotNull(params.getProjectFilesystem());
     this.buildRuleTypes = Preconditions.checkNotNull(params.getBuildRuleTypes());
+    this.buildEngine = Preconditions.checkNotNull(params.getBuildEngine());
     this.artifactCacheFactory = Preconditions.checkNotNull(params.getArtifactCacheFactory());
     this.parser = Preconditions.checkNotNull(params.getParser());
     this.eventBus = Preconditions.checkNotNull(params.getBuckEventBus());
@@ -199,6 +202,10 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
    */
   public Parser getParser() {
     return parser;
+  }
+
+  protected BuildEngine getBuildEngine() {
+    return buildEngine;
   }
 
   private static class ParserAndOptions<T> {

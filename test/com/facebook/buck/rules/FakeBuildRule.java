@@ -76,11 +76,6 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   }
 
   @Override
-  public BuildRuleSuccess.Type getBuildResultType() {
-    throw new UnsupportedOperationException("getBuildResultType() not supported in fake");
-  }
-
-  @Override
   public Iterable<Path> getInputs() {
     return ImmutableList.of();
   }

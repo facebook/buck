@@ -41,6 +41,7 @@ public class BuildContext {
   private final DependencyGraph dependencyGraph;
   private final StepRunner stepRunner;
   private final ProjectFilesystem projectFilesystem;
+  private final BuildEngine buildEngine;
   private final ArtifactCache artifactCache;
   private final JavaPackageFinder javaPackageFinder;
   private final BuckEventBus events;
@@ -52,6 +53,7 @@ public class BuildContext {
       DependencyGraph dependencyGraph,
       StepRunner stepRunner,
       ProjectFilesystem projectFilesystem,
+      BuildEngine buildEngine,
       ArtifactCache artifactCache,
       JavaPackageFinder javaPackageFinder,
       BuckEventBus events,
@@ -60,6 +62,7 @@ public class BuildContext {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
     this.stepRunner = Preconditions.checkNotNull(stepRunner);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.buildEngine = Preconditions.checkNotNull(buildEngine);
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.events = Preconditions.checkNotNull(events);
@@ -127,7 +130,7 @@ public class BuildContext {
   /**
    * Creates an {@link OnDiskBuildInfo}.
    * <p>
-   * This method should be visible to {@link AbstractCachingBuildRule}, but not {@link Buildable}s
+   * This method should be visible to {@link AbstractBuildRule}, but not {@link Buildable}s
    * in general.
    */
   OnDiskBuildInfo createOnDiskBuildInfoFor(BuildTarget target) {
@@ -137,7 +140,7 @@ public class BuildContext {
   /**
    * Creates an {@link BuildInfoRecorder}.
    * <p>
-   * This method should be visible to {@link AbstractCachingBuildRule}, but not {@link Buildable}s
+   * This method should be visible to {@link AbstractBuildRule}, but not {@link Buildable}s
    * in general.
    */
   BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget,
@@ -162,6 +165,10 @@ public class BuildContext {
     return new Builder();
   }
 
+  public BuildEngine getBuildEngine() {
+    return buildEngine;
+  }
+
   public static class Builder {
 
     private DependencyGraph dependencyGraph = null;
@@ -172,6 +179,7 @@ public class BuildContext {
     private BuckEventBus events = null;
     private Supplier<String> androidBootclasspathSupplier = null;
     private BuildDependencies buildDependencies = BuildDependencies.getDefault();
+    private BuildEngine buildEngine;
 
     private Builder() {}
 
@@ -183,6 +191,7 @@ public class BuildContext {
           dependencyGraph,
           stepRunner,
           projectFilesystem,
+          buildEngine,
           artifactCache,
           javaPackgeFinder,
           events,
@@ -253,6 +262,11 @@ public class BuildContext {
           throw new NoAndroidSdkException();
         }
       };
+    }
+
+    public Builder setBuildEngine(BuildEngine buildEngine) {
+      this.buildEngine = buildEngine;
+      return this;
     }
   }
 }

@@ -40,6 +40,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
@@ -75,6 +76,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -522,7 +524,8 @@ public class TestCommandTest {
   }
 
   @Test
-  public void testIsTestRunRequiredForTestInDebugMode() throws IOException {
+  public void testIsTestRunRequiredForTestInDebugMode()
+      throws IOException, ExecutionException, InterruptedException {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(true);
 
@@ -533,6 +536,7 @@ public class TestCommandTest {
             "the user is expecting to hook up a debugger.",
         TestCommand.isTestRunRequiredForTest(
             createMock(TestRule.class),
+            createMock(CachingBuildEngine.class),
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
             true,
@@ -543,7 +547,8 @@ public class TestCommandTest {
   }
 
   @Test
-  public void testIsTestRunRequiredForTestBuiltFromCacheIfHasTestResultFiles() throws IOException {
+  public void testIsTestRunRequiredForTestBuiltFromCacheIfHasTestResultFiles()
+      throws IOException, ExecutionException, InterruptedException {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
@@ -551,30 +556,30 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of()) {
+        ImmutableSet.<BuildTargetPattern>of());
 
-      @Override
-      public BuildRuleSuccess.Type getBuildResultType() {
-        return BuildRuleSuccess.Type.FETCHED_FROM_CACHE;
-      }
-    };
-    replay(executionContext);
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(new BuildRuleSuccess(testRule, BuildRuleSuccess.Type.FETCHED_FROM_CACHE));
+    replay(executionContext, cachingBuildEngine);
 
     assertTrue(
         "A cache hit updates the build artifact but not the test results. " +
             "Therefore, the test should be re-run to ensure the test results are up to date.",
         TestCommand.isTestRunRequiredForTest(
             testRule,
+            cachingBuildEngine,
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
             /* results cache enabled */ true,
             /* running with test selectors */ false));
 
-    verify(executionContext);
+    verify(executionContext, cachingBuildEngine);
   }
 
   @Test
-  public void testIsTestRunRequiredForTestBuiltLocally() throws IOException {
+  public void testIsTestRunRequiredForTestBuiltLocally()
+      throws IOException, ExecutionException, InterruptedException {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
@@ -582,29 +587,29 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of()) {
+        ImmutableSet.<BuildTargetPattern>of());
 
-      @Override
-      public BuildRuleSuccess.Type getBuildResultType() {
-        return BuildRuleSuccess.Type.BUILT_LOCALLY;
-      }
-    };
-    replay(executionContext);
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(new BuildRuleSuccess(testRule, BuildRuleSuccess.Type.BUILT_LOCALLY));
+    replay(executionContext, cachingBuildEngine);
 
     assertTrue(
         "A test built locally should always run regardless of any cached result. ",
         TestCommand.isTestRunRequiredForTest(
             testRule,
+            cachingBuildEngine,
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
             /* results cache enabled */ true,
             /* running with test selectors */ false));
 
-    verify(executionContext);
+    verify(executionContext, cachingBuildEngine);
   }
 
   @Test
-  public void testIsTestRunRequiredIfRuleKeyNotPresent() throws IOException {
+  public void testIsTestRunRequiredIfRuleKeyNotPresent()
+      throws IOException, ExecutionException, InterruptedException {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
@@ -613,11 +618,6 @@ public class TestCommandTest {
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of()) {
-
-      @Override
-      public BuildRuleSuccess.Type getBuildResultType() {
-        return BuildRuleSuccess.Type.MATCHING_RULE_KEY;
-      }
 
       @Override
       public boolean hasTestResultFiles(ExecutionContext context) {
@@ -628,19 +628,23 @@ public class TestCommandTest {
     TestRuleKeyFileHelper testRuleKeyFileHelper = createNiceMock(TestRuleKeyFileHelper.class);
     expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(false);
 
-    replay(executionContext, testRuleKeyFileHelper);
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(new BuildRuleSuccess(testRule, BuildRuleSuccess.Type.MATCHING_RULE_KEY));
+    replay(executionContext, cachingBuildEngine, testRuleKeyFileHelper);
 
     assertTrue(
         "A cached build should run the tests if the test output directory\'s rule key is not " +
             "present or does not matche the rule key for the test.",
         TestCommand.isTestRunRequiredForTest(
             testRule,
+            cachingBuildEngine,
             executionContext,
             testRuleKeyFileHelper,
             /* results cache enabled */ true,
             /* running with test selectors */ false));
 
-    verify(executionContext, testRuleKeyFileHelper);
+    verify(executionContext, cachingBuildEngine, testRuleKeyFileHelper);
   }
 
   @Test

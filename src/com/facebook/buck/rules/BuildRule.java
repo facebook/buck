@@ -87,14 +87,6 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
   public ListenableFuture<BuildRuleSuccess> build(BuildContext context);
 
   /**
-   * Returns the way in which this rule was built.
-   * <p>
-   * <strong>IMPORTANT:</strong> This rule must have finished building before this method is
-   * invoked.
-   */
-  public BuildRuleSuccess.Type getBuildResultType();
-
-  /**
    * @return key based on the BuildRule's state, including the transitive closure of its
    *     dependencies' keys.
    */

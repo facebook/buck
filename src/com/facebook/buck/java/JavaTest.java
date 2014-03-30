@@ -155,8 +155,6 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       BuildContext buildContext,
       ExecutionContext executionContext,
       TestSelectorList testSelectorList) {
-    Preconditions.checkState(isRuleBuilt(), "%s must be built before tests can be run.", this);
-
     // If no classes were generated, then this is probably a java_test() that declares a number of
     // other java_test() rules as deps, functioning as a test suite. In this case, simply return an
     // empty list of commands.
@@ -308,8 +306,6 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     private final Set<String> classNamesForSources;
 
     CompiledClassFileFinder(JavaTest rule, ExecutionContext context) {
-      Preconditions.checkState(rule.isRuleBuilt(),
-          "Rule must be built so that the classes folder is available");
       Path outputPath;
       Path relativeOutputPath = rule.getPathToOutputFile();
       if (relativeOutputPath != null) {

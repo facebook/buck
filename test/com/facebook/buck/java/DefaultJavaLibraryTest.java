@@ -36,6 +36,7 @@ import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
@@ -128,6 +129,7 @@ public class DefaultJavaLibraryTest {
 
     stubContext = BuildContext.builder()
         .setArtifactCache(new NoopArtifactCache())
+        .setBuildEngine(EasyMock.createMock(BuildEngine.class))
         .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
         .setEventBus(BuckEventBusFactory.newInstance())
         .setJavaPackageFinder(packageFinder)
@@ -1292,6 +1294,7 @@ public class DefaultJavaLibraryTest {
         .setDependencyGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
         .setStepRunner(EasyMock.createMock(StepRunner.class))
         .setProjectFilesystem(projectFilesystem)
+        .setBuildEngine(EasyMock.createMock(BuildEngine.class))
         .setArtifactCache(new NoopArtifactCache())
         .setBuildDependencies(BuildDependencies.TRANSITIVE)
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))

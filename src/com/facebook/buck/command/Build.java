@@ -26,6 +26,7 @@ import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.Buildable;
@@ -61,6 +62,8 @@ public class Build implements Closeable {
 
   private final ArtifactCache artifactCache;
 
+  private final BuildEngine buildEngine;
+
   private final DefaultStepRunner stepRunner;
 
   private final JavaPackageFinder javaPackageFinder;
@@ -79,6 +82,7 @@ public class Build implements Closeable {
       Optional<TargetDevice> targetDevice,
       ProjectFilesystem projectFilesystem,
       AndroidDirectoryResolver androidDirectoryResolver,
+      BuildEngine buildEngine,
       ArtifactCache artifactCache,
       int numThreads,
       JavaPackageFinder javaPackageFinder,
@@ -107,6 +111,7 @@ public class Build implements Closeable {
         .setPlatform(platform)
         .build();
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
+    this.buildEngine = Preconditions.checkNotNull(buildEngine);
     this.stepRunner = new DefaultStepRunner(executionContext, numThreads);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
@@ -196,12 +201,14 @@ public class Build implements Closeable {
     return traversal.getResult();
   }
 
-  public ListenableFuture<List<BuildRuleSuccess>> executeBuild(Set<BuildRule> rulesToBuild)
+  public ListenableFuture<List<BuildRuleSuccess>> executeBuild(
+      Set<BuildRule> rulesToBuild)
       throws IOException, StepFailedException {
     buildContext = BuildContext.builder()
         .setDependencyGraph(dependencyGraph)
         .setStepRunner(stepRunner)
         .setProjectFilesystem(executionContext.getProjectFilesystem())
+        .setBuildEngine(buildEngine)
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(executionContext.getBuckEventBus())
