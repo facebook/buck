@@ -17,6 +17,7 @@
 package com.facebook.buck.cpp;
 
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -97,9 +98,12 @@ public class CppBinaryRuleTest {
           new FileSourcePath("source2.c")),
           ImmutableSortedSet.<BuildRule>of(library)).getBuildable();
 
-    assertThat(binary.getInputsToCompareToOutput(), hasItems(
-        Paths.get("source1.c"),
-        Paths.get("source2.c")));
+    assertThat(binary.getInputsToCompareToOutput(), hasSize(2));
+    assertThat(
+        binary.getInputsToCompareToOutput(),
+        hasItems(
+          Paths.get("source1.c"),
+          Paths.get("source2.c")));
 
     List<Step> buildSteps = null;
     try {
@@ -117,6 +121,7 @@ public class CppBinaryRuleTest {
       }
     });
 
+    assertThat(descriptions, hasSize(5));
     assertThat(descriptions, hasItems(
         "mkdir -p buck-out/bin/foo",
         "mkdir -p buck-out/gen",
@@ -145,9 +150,12 @@ public class CppBinaryRuleTest {
             new FileSourcePath("source.h")),
         ImmutableSortedSet.<BuildRule>of(library)).getBuildable();
 
-    assertThat(targetLibrary.getInputsToCompareToOutput(), hasItems(
-        Paths.get("source1.c"),
-        Paths.get("source2.c")));
+    assertThat(targetLibrary.getInputsToCompareToOutput(), hasSize(3));
+    assertThat(targetLibrary.getInputsToCompareToOutput(),
+        hasItems(
+            Paths.get("source1.c"),
+            Paths.get("source2.c"),
+            Paths.get("source.h")));
 
     List<Step> buildSteps = null;
     try {
@@ -165,6 +173,7 @@ public class CppBinaryRuleTest {
       }
     });
 
+    assertThat(descriptions, hasSize(5));
     assertThat(descriptions, hasItems(
         "mkdir -p buck-out/bin/foo",
         "mkdir -p buck-out/gen",
