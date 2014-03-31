@@ -46,6 +46,12 @@ ORIGINAL_WORKING_DIRECTORY="$PWD"
 # Keep track of the project root directory.
 PROJECT_ROOT="$PWD"
 
+# Navigate upwards until either a .buckconfig file is found or the root directory is reached.
+while ! [ -f "$PROJECT_ROOT/.buckconfig" ] && [ "$PROJECT_ROOT" != "/" ] ; do
+  cd ..
+  PROJECT_ROOT="$PWD"
+done
+
 if ! [ -f "$PROJECT_ROOT/.buckconfig" ] ; then
   echo >&2 'This does not appear to be the root of a Buck project.'
   echo >&2 'Please "cd" to the root of your project before running buck.'
