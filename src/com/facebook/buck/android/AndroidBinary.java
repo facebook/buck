@@ -178,7 +178,6 @@ public class AndroidBinary extends AbstractBuildable implements
   protected AndroidResourceDepsFinder androidResourceDepsFinder;
   private FilteredResourcesProvider filteredResourcesProvider;
   private UberRDotJava uberRDotJava;
-  private Optional<PackageStringAssets> packageStringAssets;
   private AaptPackageResources aaptPackageResources;
   private Optional<PreDexMerge> preDexMerge;
   private Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
@@ -311,7 +310,6 @@ public class AndroidBinary extends AbstractBuildable implements
   protected void setGraphEnhancementResult(AndroidBinaryGraphEnhancer.EnhancementResult result) {
     filteredResourcesProvider = result.getFilteredResourcesProvider();
     uberRDotJava = result.getUberRDotJava();
-    packageStringAssets = result.getPackageStringAssets();
     aaptPackageResources = result.getAaptPackageResources();
     preDexMerge = result.getPreDexMerge();
     computeExopackageDepsAbi = result.getComputeExopackageDepsAbi();
@@ -552,20 +550,13 @@ public class AndroidBinary extends AbstractBuildable implements
       nativeLibraryDirectories = ImmutableSet.of();
     }
 
-    // If non-english strings are to be stored as assets, pass them to ApkBuilder.
-    ImmutableSet.Builder<Path> zipFiles = ImmutableSet.builder();
-    zipFiles.addAll(dexFilesInfo.secondaryDexZips);
-    if (packageStringAssets.isPresent()) {
-      zipFiles.add(packageStringAssets.get().getPathToStringAssetsZip());
-    }
-
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
         aaptPackageResources.getResourceApkPath(),
         getSignedApkPath(),
         dexFilesInfo.primaryDexPath,
         /* javaResourcesDirectories */ ImmutableSet.<String>of(),
         nativeLibraryDirectories,
-        zipFiles.build(),
+        dexFilesInfo.secondaryDexZips,
         dexTransitiveDependencies.pathsToThirdPartyJars,
         keystore.getPathToStore(),
         keystore.getPathToPropertiesFile(),

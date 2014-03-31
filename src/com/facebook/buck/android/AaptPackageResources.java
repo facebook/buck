@@ -40,6 +40,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -77,6 +78,7 @@ public class AaptPackageResources extends AbstractBuildable
   private final BuildTarget buildTarget;
   private final SourcePath manifest;
   private final FilteredResourcesProvider filteredResourcesProvider;
+  private final UberRDotJava uberRDotJava;
   private final AndroidTransitiveDependencies androidTransitiveDependencies;
   private final PackageType packageType;
   private final ImmutableSet<TargetCpuType> cpuFilters;
@@ -85,12 +87,14 @@ public class AaptPackageResources extends AbstractBuildable
   AaptPackageResources(BuildTarget buildTarget,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
+      UberRDotJava uberRDotJava,
       AndroidTransitiveDependencies androidTransitiveDependencies,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
+    this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.androidTransitiveDependencies = Preconditions.checkNotNull(androidTransitiveDependencies);
     this.packageType = Preconditions.checkNotNull(packageType);
     this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
@@ -122,6 +126,17 @@ public class AaptPackageResources extends AbstractBuildable
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
     // commands to ensure that it is available at the desired path.
     steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(context), getAndroidManifestXml()));
+
+    // If the strings should be stored as assets, then we need to create the .fbstr bundles.
+    final ImmutableSet<Path> resDirectories = filteredResourcesProvider.getResDirectories();
+    if (!resDirectories.isEmpty() && isStoreStringsAsAssets()) {
+      Path tmpStringsDirPath = getPathForTmpStringAssetsDirectory();
+      steps.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
+      steps.add(new CompileStringsStep(
+          filteredResourcesProvider.getNonEnglishStringFiles(),
+          uberRDotJava.getPathToGeneratedRDotJavaSrcFiles(),
+          tmpStringsDirPath));
+    }
 
     // Copy the transitive closure of files in assets to a single directory, if any.
     // TODO(mbolin): Older versions of aapt did not support multiple -A flags, so we can probably
@@ -167,7 +182,8 @@ public class AaptPackageResources extends AbstractBuildable
 
     Optional<Path> assetsDirectory;
     if (androidTransitiveDependencies.assetsDirectories.isEmpty()
-        && androidTransitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+        && androidTransitiveDependencies.nativeLibAssetsDirectories.isEmpty()
+        && !isStoreStringsAsAssets()) {
       assetsDirectory = Optional.absent();
     } else {
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
@@ -181,11 +197,20 @@ public class AaptPackageResources extends AbstractBuildable
       }
     }
 
+    if (isStoreStringsAsAssets()) {
+      Path stringAssetsDir = assetsDirectory.get().resolve("strings");
+      steps.add(new MakeCleanDirectoryStep(stringAssetsDir));
+      steps.add(CopyStep.forDirectory(
+          getPathForTmpStringAssetsDirectory(),
+          stringAssetsDir,
+          CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
+
     steps.add(new MkdirStep(getResourceApkPath().getParent()));
 
     steps.add(new AaptStep(
         getAndroidManifestXml(),
-        filteredResourcesProvider.getResDirectories(),
+        resDirectories,
         assetsDirectory,
         getResourceApkPath(),
         packageType.isCrunchPngFiles()));
@@ -211,6 +236,10 @@ public class AaptPackageResources extends AbstractBuildable
    */
   Path getAndroidManifestXml() {
     return BuildTargets.getBinPath(buildTarget, "__manifest_%s__/AndroidManifest.xml");
+  }
+
+  private boolean isStoreStringsAsAssets() {
+    return filteredResourcesProvider.isStoreStringsAsAssets();
   }
 
   /**
@@ -269,6 +298,10 @@ public class AaptPackageResources extends AbstractBuildable
     return BuildTargets.getBinPath(buildTarget, "__assets_%s__");
   }
 
+  private Path getPathForTmpStringAssetsDirectory() {
+    return BuildTargets.getBinPath(buildTarget, "__strings_%s__");
+  }
+
   public Sha1HashCode getResourcePackageHash() {
     return buildOutputInitializer.getBuildOutput().resourcePackageHash;
   }
@@ -305,6 +338,7 @@ public class AaptPackageResources extends AbstractBuildable
 
     @Nullable private SourcePath manifest;
     @Nullable private FilteredResourcesProvider filteredResourcesProvider;
+    @Nullable private UberRDotJava uberRDotJava;
     @Nullable private AndroidTransitiveDependencies androidTransitiveDependencies;
     @Nullable private PackageType packageType;
     @Nullable private ImmutableSet<TargetCpuType> cpuFilters;
@@ -327,20 +361,18 @@ public class AaptPackageResources extends AbstractBuildable
     public Builder setAllParams(
         SourcePath manifest,
         FilteredResourcesProvider filteredResourcesProvider,
-        AndroidResourceDepsFinder androidResourceDepsFinder,
+        UberRDotJava uberRDotJava,
+        AndroidTransitiveDependencies androidTransitiveDependencies,
         PackageType packageType,
         ImmutableSet<TargetCpuType> cpuFilters) {
       this.manifest = manifest;
       this.filteredResourcesProvider = filteredResourcesProvider;
-      this.androidTransitiveDependencies =
-          androidResourceDepsFinder.getAndroidTransitiveDependencies();
+      this.uberRDotJava = uberRDotJava;
+      this.androidTransitiveDependencies = androidTransitiveDependencies;
       this.packageType = packageType;
       this.cpuFilters = cpuFilters;
 
-      for (HasAndroidResourceDeps deps: androidResourceDepsFinder.getAndroidResources()) {
-        addDep(deps.getBuildTarget());
-      }
-
+      addDep(uberRDotJava.getBuildTarget());
       if (manifest instanceof BuildTargetSourcePath) {
         addDep(((BuildTargetSourcePath) manifest).getTarget());
       }
@@ -358,6 +390,7 @@ public class AaptPackageResources extends AbstractBuildable
           getBuildTarget(),
           manifest,
           filteredResourcesProvider,
+          uberRDotJava,
           androidTransitiveDependencies,
           packageType,
           cpuFilters);

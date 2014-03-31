@@ -47,7 +47,6 @@ public class AndroidBinaryGraphEnhancer {
   private static final String UBER_R_DOT_JAVA_FLAVOR = "uber_r_dot_java";
   private static final String AAPT_PACKAGE_FLAVOR = "aapt_package";
   private static final String CALCULATE_ABI_FLAVOR = "calculate_exopackage_abi";
-  private static final String PACKAGE_STRING_ASSETS_FLAVOR = "package_string_assets";
 
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
@@ -149,21 +148,6 @@ public class AndroidBinaryGraphEnhancer {
     UberRDotJava uberRDotJava = (UberRDotJava) uberRDotJavaBuildRule.getBuildable();
     enhancedDeps.add(uberRDotJavaBuildRule);
 
-    Optional<PackageStringAssets> packageStringAssets = Optional.absent();
-    if (resourceCompressionMode.isStoreStringsAsAssets()) {
-      BuildTarget buildTargetForPackageStringAssets =
-          createBuildTargetWithFlavor(PACKAGE_STRING_ASSETS_FLAVOR);
-      BuildRule packageStringAssetsRule = ruleResolver.buildAndAddToIndex(
-          PackageStringAssets
-              .newBuilder(buildRuleBuilderParams)
-              .setBuildTarget(buildTargetForPackageStringAssets)
-              .setFilteredResourcesProvider(filteredResourcesProvider)
-              .setUberRDotJava(uberRDotJava));
-      packageStringAssets =
-          Optional.of((PackageStringAssets) packageStringAssetsRule.getBuildable());
-      enhancedDeps.add(packageStringAssetsRule);
-    }
-
     // Create the AaptPackageResourcesBuildable.
     BuildTarget buildTargetForAapt = createBuildTargetWithFlavor(AAPT_PACKAGE_FLAVOR);
     AaptPackageResources.Builder aaptPackageResourcesBuilder =
@@ -172,7 +156,8 @@ public class AndroidBinaryGraphEnhancer {
             .setBuildTarget(buildTargetForAapt)
             .setAllParams(manifest,
                 filteredResourcesProvider,
-                androidResourceDepsFinder,
+                uberRDotJava,
+                androidResourceDepsFinder.getAndroidTransitiveDependencies(),
                 packageType,
                 cpuFilters);
     if (needsResourceFiltering) {
@@ -203,7 +188,6 @@ public class AndroidBinaryGraphEnhancer {
               androidResourceDepsFinder,
               uberRDotJava,
               aaptPackageResources,
-              packageStringAssets,
               preDexMerge,
               keystore));
       computeExopackageDepsAbi = Optional.of(
@@ -217,7 +201,6 @@ public class AndroidBinaryGraphEnhancer {
         filteredResourcesProvider,
         uberRDotJava,
         aaptPackageResources,
-        packageStringAssets,
         preDexMerge,
         computeExopackageDepsAbi,
         finalDeps);
@@ -287,7 +270,6 @@ public class AndroidBinaryGraphEnhancer {
     private final FilteredResourcesProvider filteredResourcesProvider;
     private final UberRDotJava uberRDotJava;
     private final AaptPackageResources aaptPackageResources;
-    private final Optional<PackageStringAssets> packageStringAssets;
     private final Optional<PreDexMerge> preDexMerge;
     private final Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
     private final ImmutableSortedSet<BuildRule> finalDeps;
@@ -296,14 +278,12 @@ public class AndroidBinaryGraphEnhancer {
         FilteredResourcesProvider filteredResourcesProvider,
         UberRDotJava uberRDotJava,
         AaptPackageResources aaptPackageBuildable,
-        Optional<PackageStringAssets> packageStringAssets,
         Optional<PreDexMerge> preDexMerge,
         Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
         ImmutableSortedSet<BuildRule> finalDeps) {
       this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
       this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
       this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageBuildable);
-      this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);
       this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
       this.computeExopackageDepsAbi = Preconditions.checkNotNull(computeExopackageDepsAbi);
       this.finalDeps = Preconditions.checkNotNull(finalDeps);
@@ -331,10 +311,6 @@ public class AndroidBinaryGraphEnhancer {
 
     public Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi() {
       return computeExopackageDepsAbi;
-    }
-
-    public Optional<PackageStringAssets> getPackageStringAssets() {
-      return packageStringAssets;
     }
   }
 

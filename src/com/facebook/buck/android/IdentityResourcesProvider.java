@@ -38,4 +38,9 @@ public class IdentityResourcesProvider implements FilteredResourcesProvider {
   public ImmutableSet<Path> getNonEnglishStringFiles() {
     return ImmutableSet.of();
   }
+
+  @Override
+  public boolean isStoreStringsAsAssets() {
+    return false;
+  }
 }
