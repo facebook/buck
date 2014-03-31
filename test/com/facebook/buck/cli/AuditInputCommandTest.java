@@ -27,6 +27,7 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -61,7 +62,8 @@ public class AuditInputCommandTest {
   public void setUp() {
     console = new TestConsole();
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getDefault();
+    KnownBuildRuleTypes buildRuleTypes =
+        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem);
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 

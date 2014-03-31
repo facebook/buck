@@ -20,7 +20,6 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
@@ -90,11 +89,12 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
   @Override
   int runCommandWithOptionsInternal(AuditRulesOptions options) throws IOException {
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
+
     ProjectBuildFileParserFactory factory = new DefaultProjectBuildFileParserFactory(
         projectFilesystem,
         options.getBuckConfig().getPythonInterpreter(),
         // TODO(simons): When we land dynamic loading, this MUST change.
-        KnownBuildRuleTypes.getDefault().getAllDescriptions());
+        getBuildRuleTypes().getAllDescriptions());
     try (ProjectBuildFileParser parser =
              factory.createParser(
                  options.getBuckConfig().getDefaultIncludes(),

@@ -46,6 +46,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
@@ -142,7 +143,7 @@ public class ParserTest extends EasyMockSupport {
     File root = tempDir.getRoot();
     filesystem = new ProjectFilesystem(root);
 
-    buildRuleTypes = KnownBuildRuleTypes.getDefault();
+    buildRuleTypes = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);
     DefaultProjectBuildFileParserFactory testBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             filesystem,
@@ -221,7 +222,7 @@ public class ParserTest extends EasyMockSupport {
 
     Parser parser = new Parser(
         new ProjectFilesystem(new File(".")),
-        KnownBuildRuleTypes.getDefault(),
+        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem),
         new TestConsole(),
         BuckTestConstant.PYTHON_INTERPRETER,
         tempFilePatterns,

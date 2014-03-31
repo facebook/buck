@@ -501,7 +501,7 @@ public final class Main {
     // to the Daemon and implement equals/hashCode so we can invalidate the Parser if values used
     // for configuring buildRuleTypes have changed between builds.
     KnownBuildRuleTypes buildRuleTypes =
-        KnownBuildRuleTypes.getConfigured(
+        KnownBuildRuleTypes.createInstance(
             config,
             androidDirectoryResolver,
             javacEnv);

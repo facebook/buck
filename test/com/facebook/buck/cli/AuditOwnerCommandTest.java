@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -233,7 +234,8 @@ public class AuditOwnerCommandTest {
 
   private AuditOwnerCommand createAuditOwnerCommand(ProjectFilesystem filesystem) {
     Console console = new TestConsole();
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getDefault();
+    KnownBuildRuleTypes buildRuleTypes =
+        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();

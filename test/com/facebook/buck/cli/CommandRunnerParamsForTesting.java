@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.BuckTestConstant;
@@ -62,7 +63,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
 
     private ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
     private AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-    private KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getDefault();
+    private KnownBuildRuleTypes buildRuleTypes =
+        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem);
     private ArtifactCacheFactory artifactCacheFactory = new InstanceArtifactCacheFactory(
         new NoopArtifactCache());
     private Console console = new TestConsole();

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.rules.DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -38,7 +39,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
@@ -169,9 +169,9 @@ public class ProjectCommandTest {
     ProjectCommandForTest() {
       super(new CommandRunnerParams(
           new TestConsole(),
-          new ProjectFilesystem(new File(".")),
+              new ProjectFilesystem(new File(".")),
           new FakeAndroidDirectoryResolver(),
-          KnownBuildRuleTypes.getDefault(),
+          getDefaultKnownBuildRuleTypes(new ProjectFilesystem(new File("."))),
           new InstanceArtifactCacheFactory(artifactCache),
           BuckEventBusFactory.newInstance(),
           BuckTestConstant.PYTHON_INTERPRETER,

@@ -51,6 +51,7 @@ import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -68,8 +69,7 @@ public class KnownBuildRuleTypes {
   private final ImmutableSet<Description<?>> descriptions;
   private final ImmutableMap<BuildRuleType, BuildRuleFactory<?>> factories;
   private final ImmutableMap<String, BuildRuleType> types;
-  private static final KnownBuildRuleTypes DEFAULT = createDefaultBuilder().build();
-
+  private static KnownBuildRuleTypes defaultRules = null;
 
   private KnownBuildRuleTypes(Set<Description<?>> descriptions,
       Map<BuildRuleType, BuildRuleFactory<?>> factories,
@@ -104,11 +104,53 @@ public class KnownBuildRuleTypes {
     return new Builder();
   }
 
-  public static KnownBuildRuleTypes getDefault() {
-    return DEFAULT;
+  @VisibleForTesting
+  static void resetDefaultInstance() {
+    defaultRules = null;
   }
 
-  public static Builder createDefaultBuilder() {
+  @VisibleForTesting
+  static KnownBuildRuleTypes replaceDefaultInstance(
+      BuckConfig config,
+      AndroidDirectoryResolver androidDirectoryResolver,
+      JavaCompilerEnvironment javacEnv) {
+    resetDefaultInstance();
+    return createInstance(config, androidDirectoryResolver, javacEnv);
+  }
+
+
+  public static KnownBuildRuleTypes createInstance(
+      BuckConfig config,
+      AndroidDirectoryResolver androidDirectoryResolver,
+      JavaCompilerEnvironment javacEnv) {
+    // Fast path
+    if (defaultRules != null) {
+      return defaultRules;
+    }
+
+    // Slow path
+    synchronized (KnownBuildRuleTypes.class) {
+      if (defaultRules == null) {
+        defaultRules = createBuilder(config, androidDirectoryResolver, javacEnv).build();
+      }
+    }
+
+    return defaultRules;
+  }
+
+  @VisibleForTesting
+  static Builder createBuilder(
+      BuckConfig config,
+      AndroidDirectoryResolver androidDirectoryResolver,
+      JavaCompilerEnvironment javacEnv) {
+
+    Optional<String> ndkVersion = config.getNdkVersion();
+    // If a NDK version isn't specified, we've got to reach into the runtime environment to find
+    // out which one we will end up using.
+    if (!ndkVersion.isPresent()) {
+      ndkVersion = androidDirectoryResolver.getNdkVersion();
+    }
+
     Builder builder = builder();
 
     builder.register(new AndroidManifestDescription());
@@ -126,7 +168,7 @@ public class KnownBuildRuleTypes {
     builder.register(new IosResourceDescription());
     builder.register(new IosTestDescription());
     builder.register(new JavaBinaryDescription());
-    builder.register(new NdkLibraryDescription(Optional.<String>absent()));
+    builder.register(new NdkLibraryDescription(ndkVersion));
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());
     builder.register(new ProjectConfigDescription());
@@ -136,55 +178,22 @@ public class KnownBuildRuleTypes {
     builder.register(new XcodeProjectConfigDescription());
 
     // TODO(simons): Consider once more whether we actually want to have default rules
-    builder.register(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory());
+    JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
+        .setJavaCompilerEnviornment(javacEnv)
+        .build();
+    builder.register(BuildRuleType.ANDROID_BINARY,
+        new AndroidBinaryBuildRuleFactory(androidBinaryOptions, config.getProguardJarOverride()));
+
     builder.register(BuildRuleType.ANDROID_INSTRUMENTATION_APK,
         new AndroidInstrumentationApkRuleFactory());
-    builder.register(BuildRuleType.ANDROID_LIBRARY, new AndroidLibraryBuildRuleFactory());
-    builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
+    builder.register(BuildRuleType.ANDROID_LIBRARY,
+        new AndroidLibraryBuildRuleFactory(javacEnv.getJavacPath(), javacEnv.getJavacVersion()));
+    builder.register(BuildRuleType.JAVA_LIBRARY,
+        new JavaLibraryBuildRuleFactory(javacEnv.getJavacPath(), javacEnv.getJavacVersion()));
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
     builder.register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
     builder.register(BuildRuleType.SH_BINARY, new ShBinaryBuildRuleFactory());
     builder.register(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory());
-
-    return builder;
-  }
-
-  public static KnownBuildRuleTypes getConfigured(
-      BuckConfig buckConfig,
-      AndroidDirectoryResolver androidDirectoryResolver,
-      JavaCompilerEnvironment javacEnv) {
-    return createConfiguredBuilder(
-        buckConfig, androidDirectoryResolver, javacEnv).build();
-  }
-
-  public static Builder createConfiguredBuilder(
-      BuckConfig buckConfig,
-      AndroidDirectoryResolver androidDirectoryResolver,
-      JavaCompilerEnvironment javacEnv) {
-
-    Builder builder = createDefaultBuilder();
-    builder.register(BuildRuleType.JAVA_LIBRARY,
-        new JavaLibraryBuildRuleFactory(
-            javacEnv.getJavacPath(),
-            javacEnv.getJavacVersion()));
-    builder.register(BuildRuleType.ANDROID_LIBRARY,
-        new AndroidLibraryBuildRuleFactory(
-            javacEnv.getJavacPath(),
-            javacEnv.getJavacVersion()));
-    builder.register(BuildRuleType.ANDROID_BINARY,
-        new AndroidBinaryBuildRuleFactory(
-            JavacOptions.builder(JavacOptions.DEFAULTS)
-                .setJavaCompilerEnviornment(javacEnv)
-                .build(),
-            buckConfig.getProguardJarOverride()));
-
-    Optional<String> ndkVersion = buckConfig.getNdkVersion();
-    // If a NDK version isn't specified, we've got to reach into the runtime environment to find
-    // out which one we will end up using.
-    if (!ndkVersion.isPresent()) {
-      ndkVersion = androidDirectoryResolver.getNdkVersion();
-    }
-    builder.register(new NdkLibraryDescription(ndkVersion));
 
     return builder;
   }

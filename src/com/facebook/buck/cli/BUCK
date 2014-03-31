@@ -45,6 +45,7 @@ java_library(
     '//src/com/facebook/buck/rules:types',
     '//test/com/facebook/buck/cli:',
     '//test/com/facebook/buck/rules:rules',
+    '//test/com/facebook/buck/rules:testutil',
   ]
 )
 
