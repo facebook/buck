@@ -114,25 +114,25 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
+    builder.register(new CppBinaryDescription());
+    builder.register(new CppLibraryDescription());
     builder.register(new ExportFileDescription());
-    builder.register(new GenAidlDescription());
     builder.register(new GenruleDescription());
+    builder.register(new GenAidlDescription());
+    builder.register(new GenParcelableDescription());
     builder.register(new KeystoreDescription());
     builder.register(new IosBinaryDescription());
     builder.register(new IosLibraryDescription());
-    builder.register(new IosTestDescription());
     builder.register(new IosResourceDescription());
-    builder.register(new CppBinaryDescription());
-    builder.register(new CppLibraryDescription());
+    builder.register(new IosTestDescription());
     builder.register(new JavaBinaryDescription());
-    builder.register(new PrebuiltNativeLibraryDescription());
-    builder.register(new PythonLibraryDescription());
-    builder.register(new PythonBinaryDescription());
-    builder.register(new XcodeProjectConfigDescription());
-    builder.register(new XcodeNativeDescription());
     builder.register(new NdkLibraryDescription(Optional.<String>absent()));
-    builder.register(new GenParcelableDescription());
+    builder.register(new PrebuiltNativeLibraryDescription());
     builder.register(new ProjectConfigDescription());
+    builder.register(new PythonBinaryDescription());
+    builder.register(new PythonLibraryDescription());
+    builder.register(new XcodeNativeDescription());
+    builder.register(new XcodeProjectConfigDescription());
 
     // TODO(simons): Consider once more whether we actually want to have default rules
     builder.register(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory());
