@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.dalvik.ZipSplitter;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -71,13 +71,13 @@ public class AndroidBinaryRuleTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, neither with an assets directory.
-    JavaLibraryRule libraryOne = createAndroidLibraryRule(
+    JavaLibrary libraryOne = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryOne",
         ruleResolver,
         null, /* resDirectory */
         null, /* assetDirectory */
         null /* nativeLibsDirectory */);
-    JavaLibraryRule libraryTwo = createAndroidLibraryRule(
+    JavaLibrary libraryTwo = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryTwo",
         ruleResolver,
         null, /* resDirectory */
@@ -166,7 +166,7 @@ public class AndroidBinaryRuleTest {
     assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
   }
 
-  static JavaLibraryRule createAndroidLibraryRule(String buildTarget,
+  static JavaLibrary createAndroidLibraryRule(String buildTarget,
       BuildRuleResolver ruleResolver,
       String resDirectory,
       String assetDirectory,

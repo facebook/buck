@@ -22,7 +22,7 @@ import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.java.InstrumentStep;
 import com.facebook.buck.java.JUnitStep;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -158,11 +158,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
    * and generate a EMMA instr shell command object, which can run in a CommandRunner.
    */
   private Step getInstrumentCommand(
-      ImmutableSet<JavaLibraryRule> rulesUnderTest, ProjectFilesystem projectFilesystem) {
+      ImmutableSet<JavaLibrary> rulesUnderTest, ProjectFilesystem projectFilesystem) {
     ImmutableSet.Builder<Path> pathsToInstrumentedClasses = ImmutableSet.builder();
 
     // Add all JAR files produced by java libraries that we are testing to -instrpath.
-    for (JavaLibraryRule path : rulesUnderTest) {
+    for (JavaLibrary path : rulesUnderTest) {
       Path pathToOutput = path.getPathToOutputFile();
       if (pathToOutput == null) {
         continue;
@@ -181,7 +181,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
    * files tested during the test run.
    */
   private Step getReportCommand(
-      ImmutableSet<JavaLibraryRule> rulesUnderTest,
+      ImmutableSet<JavaLibrary> rulesUnderTest,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       ProjectFilesystem projectFilesystem,
       Path outputDirectory) {
@@ -189,7 +189,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     ImmutableSet.Builder<Path> pathsToClasses = ImmutableSet.builder();
 
     // Add all source directories of java libraries that we are testing to -sourcepath.
-    for (JavaLibraryRule rule : rulesUnderTest) {
+    for (JavaLibrary rule : rulesUnderTest) {
       ImmutableSet<String> sourceFolderPath =
           getPathToSourceFolders(rule, defaultJavaPackageFinderOptional, projectFilesystem);
       if (!sourceFolderPath.isEmpty()) {
@@ -212,7 +212,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
    */
   @VisibleForTesting
   static ImmutableSet<String> getPathToSourceFolders(
-      JavaLibraryRule rule,
+      JavaLibrary rule,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       ProjectFilesystem projectFilesystem) {
     ImmutableSet<Path> javaSrcPaths = rule.getJavaSrcs();
@@ -432,7 +432,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       StepRunner stepRunner,
       final TestCommandOptions options) throws IOException {
 
-    ImmutableSet<JavaLibraryRule> rulesUnderTest;
+    ImmutableSet<JavaLibrary> rulesUnderTest;
     // If needed, we first run instrumentation on the class files.
     if (options.isCodeCoverageEnabled()) {
       rulesUnderTest = getRulesUnderTest(tests);
@@ -674,8 +674,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   /**
    * Generates the set of Java library rules under test.
    */
-  private ImmutableSet<JavaLibraryRule> getRulesUnderTest(Iterable<TestRule> tests) {
-    ImmutableSet.Builder<JavaLibraryRule> rulesUnderTest = ImmutableSet.builder();
+  private ImmutableSet<JavaLibrary> getRulesUnderTest(Iterable<TestRule> tests) {
+    ImmutableSet.Builder<JavaLibrary> rulesUnderTest = ImmutableSet.builder();
 
     // Gathering all rules whose source will be under test.
     for (TestRule test : tests) {
@@ -683,9 +683,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         JavaTestRule javaTestRule = (JavaTestRule) test;
         ImmutableSet<BuildRule> sourceUnderTest = javaTestRule.getSourceUnderTest();
         for (BuildRule buildRule : sourceUnderTest) {
-          if (buildRule instanceof JavaLibraryRule) {
-            JavaLibraryRule javaLibraryRule = (JavaLibraryRule) buildRule;
-            rulesUnderTest.add(javaLibraryRule);
+          if (buildRule instanceof JavaLibrary) {
+            JavaLibrary javaLibrary = (JavaLibrary) buildRule;
+            rulesUnderTest.add(javaLibrary);
           } else {
             throw new HumanReadableException(
                 "Test '%s' is a java_test() " +

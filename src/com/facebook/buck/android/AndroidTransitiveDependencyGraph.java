@@ -20,7 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
@@ -55,7 +55,7 @@ public class AndroidTransitiveDependencyGraph {
    */
   public AndroidDexTransitiveDependencies findDexDependencies(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
-      ImmutableSet<JavaLibraryRule> buildRulesToExcludeFromDex,
+      ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex,
       UberRDotJava uberRDotJava) {
     // These are paths that will be dex'ed. They may be either directories of compiled .class files,
     // or paths to compiled JAR files.
@@ -72,9 +72,9 @@ public class AndroidTransitiveDependencyGraph {
         findAndroidResourceDetails(androidResourceDeps);
 
     // Update pathsToDex.
-    ImmutableSet<Map.Entry<JavaLibraryRule, String>> classpath =
+    ImmutableSet<Map.Entry<JavaLibrary, String>> classpath =
         Classpaths.getClasspathEntries(rulesToTraverseForTransitiveDeps).entries();
-    for (Map.Entry<JavaLibraryRule, String> entry : classpath) {
+    for (Map.Entry<JavaLibrary, String> entry : classpath) {
       if (!buildRulesToExcludeFromDex.contains(entry.getKey())) {
         pathsToDexBuilder.add(entry.getValue());
       } else {

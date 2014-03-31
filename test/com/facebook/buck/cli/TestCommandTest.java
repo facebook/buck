@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.FakeJavaLibraryRule;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -100,7 +100,7 @@ public class TestCommandTest {
     assertTrue(JavaTestRule.isGeneratedFile(pathToGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
-    JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -112,7 +112,7 @@ public class TestCommandTest {
     replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
-        javaLibraryRule, Optional.of(defaultJavaPackageFinder), projectFilesystem);
+        javaLibrary, Optional.of(defaultJavaPackageFinder), projectFilesystem);
 
     assertTrue("No path should be returned if the library contains only generated files.",
         result.isEmpty());
@@ -130,7 +130,7 @@ public class TestCommandTest {
     assertFalse(JavaTestRule.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
-    JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
     File parentFile = createMock(File.class);
@@ -157,7 +157,7 @@ public class TestCommandTest {
     replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
-        javaLibraryRule, Optional.of(defaultJavaPackageFinder), projectFilesystem);
+        javaLibrary, Optional.of(defaultJavaPackageFinder), projectFilesystem);
 
     assertEquals("All non-generated source files are under one source tmp.",
         ImmutableSet.of("package/src/"), result);
@@ -175,7 +175,7 @@ public class TestCommandTest {
     assertFalse(JavaTestRule.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
-    JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -188,7 +188,7 @@ public class TestCommandTest {
     replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
-        javaLibraryRule, Optional.of(defaultJavaPackageFinder), projectFilesystem);
+        javaLibrary, Optional.of(defaultJavaPackageFinder), projectFilesystem);
 
     assertEquals("All non-generated source files are under one source tmp.",
         ImmutableSet.of("java/"), result);
@@ -235,7 +235,7 @@ public class TestCommandTest {
     expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile2))
         .andReturn(sourceFile2);
 
-    JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
     Object[] mocks = new Object[] {
@@ -248,7 +248,7 @@ public class TestCommandTest {
     replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
-        javaLibraryRule, Optional.of(defaultJavaPackageFinder), projectFilesystem);
+        javaLibrary, Optional.of(defaultJavaPackageFinder), projectFilesystem);
 
     assertEquals("The non-generated source files are under two different source folders.",
         ImmutableSet.of("package/src-gen/", "package/src/"), result);

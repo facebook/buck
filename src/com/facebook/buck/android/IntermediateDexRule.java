@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
@@ -65,7 +65,7 @@ public class IntermediateDexRule extends AbstractBuildRule implements AbiRule, B
 
   public static class Builder extends AbstractBuildRuleBuilder<IntermediateDexRule> {
 
-    private JavaLibraryRule javaLibrary;
+    private JavaLibrary javaLibrary;
 
     protected Builder(BuildRuleBuilderParams params) {
       super(params);
@@ -80,7 +80,7 @@ public class IntermediateDexRule extends AbstractBuildRule implements AbiRule, B
           createBuildRuleParams(ruleResolver));
     }
 
-    public Builder setJavaLibraryRuleToDex(JavaLibraryRule javaLibrary) {
+    public Builder setJavaLibraryToDex(JavaLibrary javaLibrary) {
       this.javaLibrary = javaLibrary;
       addDep(javaLibrary.getBuildTarget());
       return this;

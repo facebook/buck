@@ -26,7 +26,7 @@ import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaBinary;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -373,8 +373,8 @@ public class Project {
   private Module createModuleForProjectConfig(ProjectConfig projectConfig) throws IOException {
     BuildRule projectRule = projectConfig.getProjectRule();
     Buildable buildable = projectRule.getBuildable();
-    Preconditions.checkState(projectRule instanceof JavaLibraryRule
-        || buildable instanceof JavaLibraryRule
+    Preconditions.checkState(projectRule instanceof JavaLibrary
+        || buildable instanceof JavaLibrary
         || buildable instanceof JavaBinary
         || projectRule instanceof AndroidLibraryRule
         || buildable instanceof AndroidResource
@@ -520,14 +520,14 @@ public class Project {
 
     // Annotation processing generates sources for IntelliJ to consume, but does so outside
     // the module directory to avoid messing up globbing.
-    JavaLibraryRule javaLibraryRule = null;
-    if (projectRule.getBuildable() instanceof JavaLibraryRule) {
-      javaLibraryRule = (JavaLibraryRule) projectRule.getBuildable();
-    } else if (projectRule instanceof JavaLibraryRule) {
-      javaLibraryRule = (JavaLibraryRule) projectRule;
+    JavaLibrary javaLibrary = null;
+    if (projectRule.getBuildable() instanceof JavaLibrary) {
+      javaLibrary = (JavaLibrary) projectRule.getBuildable();
+    } else if (projectRule instanceof JavaLibrary) {
+      javaLibrary = (JavaLibrary) projectRule;
     }
-    if (javaLibraryRule != null) {
-      AnnotationProcessingData processingData = javaLibraryRule.getAnnotationProcessingData();
+    if (javaLibrary != null) {
+      AnnotationProcessingData processingData = javaLibrary.getAnnotationProcessingData();
 
       Path annotationGenSrc = processingData.getGeneratedSourceFolderName();
       if (annotationGenSrc != null) {
@@ -840,7 +840,7 @@ public class Project {
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
           return depsToVisit;
-        } else if (dep instanceof JavaLibraryRule ||
+        } else if (dep instanceof JavaLibrary ||
                    dep.getBuildable() instanceof AndroidResource) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);

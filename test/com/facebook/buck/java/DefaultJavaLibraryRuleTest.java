@@ -437,20 +437,20 @@ public class DefaultJavaLibraryRuleTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    JavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
+    JavaLibrary libraryOne = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(libraryOneTarget)
         .addSrc(Paths.get("java/src/com/libone/Bar.java")));
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    JavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
+    JavaLibrary libraryTwo = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(libraryTwoTarget)
         .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
         .addDep(BuildTargetFactory.newInstance("//:libone")));
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
-    JavaLibraryRule parent = ruleResolver.buildAndAddToIndex(
+    JavaLibrary parent = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(parentTarget)
             .addSrc(Paths.get("java/src/com/parent/Meh.java"))
@@ -475,21 +475,21 @@ public class DefaultJavaLibraryRuleTest {
       }
 
       @Override
-      public ImmutableSetMultimap<JavaLibraryRule, String> getDeclaredClasspathEntries() {
-        return ImmutableSetMultimap.<JavaLibraryRule, String>builder()
+      public ImmutableSetMultimap<JavaLibrary, String> getDeclaredClasspathEntries() {
+        return ImmutableSetMultimap.<JavaLibrary, String>builder()
             .put(this, "java/src/com/libone/bar.jar")
             .build();
       }
 
       @Override
-      public ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries() {
-        return ImmutableSetMultimap.<JavaLibraryRule, String>builder()
+      public ImmutableSetMultimap<JavaLibrary, String> getOutputClasspathEntries() {
+        return ImmutableSetMultimap.<JavaLibrary, String>builder()
             .put(this, "java/src/com/libone/bar.jar")
             .build();
       }
 
       @Override
-      public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
+      public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
         return ImmutableSetMultimap.of();
       }
     };
@@ -499,7 +499,7 @@ public class DefaultJavaLibraryRuleTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver(buildRuleIndex);
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    JavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
+    JavaLibrary libraryTwo = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(libraryTwoTarget)
         .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
@@ -587,19 +587,19 @@ public class DefaultJavaLibraryRuleTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget nonIncludedTarget = BuildTargetFactory.newInstance("//:not_included");
-    JavaLibraryRule notIncluded = ruleResolver.buildAndAddToIndex(
+    JavaLibrary notIncluded = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(nonIncludedTarget)
             .addSrc(Paths.get("java/src/com/not_included/Raz.java")));
 
     BuildTarget includedTarget = BuildTargetFactory.newInstance("//:included");
-    JavaLibraryRule included = ruleResolver.buildAndAddToIndex(
+    JavaLibrary included = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(includedTarget)
             .addSrc(Paths.get("java/src/com/included/Rofl.java")));
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    JavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
+    JavaLibrary libraryOne = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(libraryOneTarget)
             .addDep(BuildTargetFactory.newInstance("//:not_included"))
@@ -608,7 +608,7 @@ public class DefaultJavaLibraryRuleTest {
             .addSrc(Paths.get("java/src/com/libone/Bar.java")));
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    JavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
+    JavaLibrary libraryTwo = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(libraryTwoTarget)
         .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
@@ -616,7 +616,7 @@ public class DefaultJavaLibraryRuleTest {
         .addExportedDep(BuildTargetFactory.newInstance("//:libone")));
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
-    JavaLibraryRule parent = ruleResolver.buildAndAddToIndex(
+    JavaLibrary parent = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(parentTarget)
         .addSrc(Paths.get("java/src/com/parent/Meh.java"))
@@ -880,7 +880,7 @@ public class DefaultJavaLibraryRuleTest {
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
         /* deps */ ImmutableSet.<BuildRule>of(libC),
         /* exportedDeps */ ImmutableSet.<BuildRule>of(libC));
-    JavaLibraryRule libA = createDefaultJavaLibaryRuleWithAbiKey(
+    JavaLibrary libA = createDefaultJavaLibaryRuleWithAbiKey(
         libAAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_a"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
@@ -1031,7 +1031,7 @@ public class DefaultJavaLibraryRuleTest {
     BuildContext context = createSuggestContext(ruleResolver,
         BuildDependencies.FIRST_ORDER_ONLY);
 
-    ImmutableSetMultimap<JavaLibraryRule, String> classpathEntries =
+    ImmutableSetMultimap<JavaLibrary, String> classpathEntries =
         libraryOne.getTransitiveClasspathEntries();
 
     assertEquals(
@@ -1081,7 +1081,7 @@ public class DefaultJavaLibraryRuleTest {
     BuildContext context = createSuggestContext(ruleResolver,
         BuildDependencies.WARN_ON_TRANSITIVE);
 
-    ImmutableSetMultimap<JavaLibraryRule, String> transitive =
+    ImmutableSetMultimap<JavaLibrary, String> transitive =
         parent.getTransitiveClasspathEntries();
 
     ImmutableMap<String, String> classToSymbols = ImmutableMap.of(
@@ -1092,7 +1092,7 @@ public class DefaultJavaLibraryRuleTest {
     Optional<JavacInMemoryStep.SuggestBuildRules> suggestFn =
         grandparent.createSuggestBuildFunction(context,
             transitive,
-            /* declaredClasspathEntries */ ImmutableSetMultimap.<JavaLibraryRule, String>of(),
+            /* declaredClasspathEntries */ ImmutableSetMultimap.<JavaLibrary, String>of(),
             createJarResolver(classToSymbols));
 
     assertTrue(suggestFn.isPresent());

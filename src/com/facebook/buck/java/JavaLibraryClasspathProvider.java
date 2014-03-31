@@ -32,15 +32,15 @@ public class JavaLibraryClasspathProvider {
   private JavaLibraryClasspathProvider() {
   }
 
-  public static ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries(
+  public static ImmutableSetMultimap<JavaLibrary, String> getOutputClasspathEntries(
       DefaultJavaLibraryRule javaLibraryRule,
       Optional<Path> outputJar) {
-    ImmutableSetMultimap.Builder<JavaLibraryRule, String> outputClasspathBuilder =
+    ImmutableSetMultimap.Builder<JavaLibrary, String> outputClasspathBuilder =
         ImmutableSetMultimap.builder();
-    Iterable<JavaLibraryRule> javaExportedLibraryDeps =
+    Iterable<JavaLibrary> javaExportedLibraryDeps =
         getJavaLibraryDeps(javaLibraryRule.getExportedDeps());
 
-    for (JavaLibraryRule rule : javaExportedLibraryDeps) {
+    for (JavaLibrary rule : javaExportedLibraryDeps) {
       outputClasspathBuilder.putAll(rule, rule.getOutputClasspathEntries().values());
       // If we have any exported deps, add an entry mapping ourselves to to their,
       // classpaths so when suggesting libraries to add we know that adding this library
@@ -57,15 +57,15 @@ public class JavaLibraryClasspathProvider {
     return outputClasspathBuilder.build();
   }
 
-  public static ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries(
+  public static ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries(
       DefaultJavaLibraryRule javaLibraryRule,
       Optional<Path> outputJar) {
-    final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
+    final ImmutableSetMultimap.Builder<JavaLibrary, String> classpathEntries =
         ImmutableSetMultimap.builder();
-    ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForDeps =
+    ImmutableSetMultimap<JavaLibrary, String> classpathEntriesForDeps =
         Classpaths.getClasspathEntries(javaLibraryRule.getDeps());
 
-    ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForExportedsDeps =
+    ImmutableSetMultimap<JavaLibrary, String> classpathEntriesForExportedsDeps =
         Classpaths.getClasspathEntries(javaLibraryRule.getExportedDeps());
 
     classpathEntries.putAll(classpathEntriesForDeps);
@@ -87,32 +87,32 @@ public class JavaLibraryClasspathProvider {
     return classpathEntries.build();
   }
 
-  public static ImmutableSetMultimap<JavaLibraryRule, String> getDeclaredClasspathEntries(
+  public static ImmutableSetMultimap<JavaLibrary, String> getDeclaredClasspathEntries(
       DefaultJavaLibraryRule javaLibraryRule) {
-    final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
+    final ImmutableSetMultimap.Builder<JavaLibrary, String> classpathEntries =
         ImmutableSetMultimap.builder();
 
-    Iterable<JavaLibraryRule> javaLibraryDeps = getJavaLibraryDeps(javaLibraryRule.getDeps());
+    Iterable<JavaLibrary> javaLibraryDeps = getJavaLibraryDeps(javaLibraryRule.getDeps());
 
-    for (JavaLibraryRule rule : javaLibraryDeps) {
+    for (JavaLibrary rule : javaLibraryDeps) {
       classpathEntries.putAll(rule, rule.getOutputClasspathEntries().values());
     }
     return classpathEntries.build();
   }
 
-  private static FluentIterable<JavaLibraryRule> getJavaLibraryDeps(Iterable<BuildRule> deps) {
+  private static FluentIterable<JavaLibrary> getJavaLibraryDeps(Iterable<BuildRule> deps) {
     return FluentIterable
         .from(deps)
         .transform(
-            new Function<BuildRule, JavaLibraryRule>() {
+            new Function<BuildRule, JavaLibrary>() {
               @Nullable
               @Override
-              public JavaLibraryRule apply(BuildRule input) {
-                if (input.getBuildable() instanceof JavaLibraryRule) {
-                  return (JavaLibraryRule) input.getBuildable();
+              public JavaLibrary apply(BuildRule input) {
+                if (input.getBuildable() instanceof JavaLibrary) {
+                  return (JavaLibrary) input.getBuildable();
                 }
-                if (input instanceof JavaLibraryRule) {
-                  return (JavaLibraryRule) input;
+                if (input instanceof JavaLibrary) {
+                  return (JavaLibrary) input;
                 }
                 return null;
               }

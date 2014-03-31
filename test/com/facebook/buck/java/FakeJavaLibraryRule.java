@@ -36,7 +36,7 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
-public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRule {
+public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibrary {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -69,18 +69,18 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibraryRule, String> getDeclaredClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, String> getDeclaredClasspathEntries() {
     return ImmutableSetMultimap.of();
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, String> getOutputClasspathEntries() {
     return ImmutableSetMultimap.of();
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
-    return ImmutableSetMultimap.of((JavaLibraryRule) this, getPathToOutputFile().toString());
+  public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
+    return ImmutableSetMultimap.of((JavaLibrary) this, getPathToOutputFile().toString());
   }
 
   @Override

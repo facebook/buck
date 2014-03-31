@@ -28,7 +28,7 @@ import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.command.Project.SourceFolder;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
@@ -143,7 +143,8 @@ public class ProjectTest {
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(
                 BuildTargetFactory.newInstance(
-                    "//java/src/com/facebook/exportlib:exportlib"))
+                    "//java/src/com/facebook/exportlib:exportlib")
+            )
             .addSrc(Paths.get("ExportLib.java"))
             .addDep(BuildTargetFactory.newInstance("//third_party/guava:guava"))
             .addExportedDep(BuildTargetFactory.newInstance("//third_party/guava:guava"))
@@ -541,7 +542,7 @@ public class ProjectTest {
   public void testThatJarsAreListedBeforeModules() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
-    JavaLibraryRule supportV4 = ruleResolver.buildAndAddToIndex(
+    JavaLibrary supportV4 = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/com/android/support/v4:v4"))
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));

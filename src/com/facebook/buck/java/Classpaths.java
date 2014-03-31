@@ -42,16 +42,16 @@ public class Classpaths {
    * that depend on B. However, if C depended on E as well as F and G, then E would be included in
    * A's classpath.
    */
-  public static ImmutableSetMultimap<JavaLibraryRule, String> getClasspathEntries(
+  public static ImmutableSetMultimap<JavaLibrary, String> getClasspathEntries(
       Set<BuildRule> deps) {
-    final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
+    final ImmutableSetMultimap.Builder<JavaLibrary, String> classpathEntries =
         ImmutableSetMultimap.builder();
     for (BuildRule dep : deps) {
-      JavaLibraryRule library = null;
-      if (dep.getBuildable() instanceof JavaLibraryRule) {
-        library = (JavaLibraryRule) dep.getBuildable();
-      } else if (dep instanceof JavaLibraryRule) {
-        library = (JavaLibraryRule) dep;
+      JavaLibrary library = null;
+      if (dep.getBuildable() instanceof JavaLibrary) {
+        library = (JavaLibrary) dep.getBuildable();
+      } else if (dep instanceof JavaLibrary) {
+        library = (JavaLibrary) dep;
       }
 
       if (library != null) {

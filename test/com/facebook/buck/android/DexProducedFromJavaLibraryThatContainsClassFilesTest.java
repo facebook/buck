@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.FakeJavaLibraryRule;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -134,7 +134,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testGetBuildStepsWhenThereAreNoClassesToDex() throws IOException {
-    JavaLibraryRule javaLibrary = createMock(JavaLibraryRule.class);
+    JavaLibrary javaLibrary = createMock(JavaLibrary.class);
     expect(javaLibrary.getClassNamesToHashes()).andReturn(
         ImmutableSortedMap.<String, HashCode>of());
 
@@ -186,7 +186,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testObserverMethods() {
-    JavaLibraryRule accumulateClassNames = createMock(JavaLibraryRule.class);
+    JavaLibrary accumulateClassNames = createMock(JavaLibrary.class);
     expect(accumulateClassNames.getClassNamesToHashes())
         .andReturn(ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe")))
         .anyTimes();

@@ -108,8 +108,8 @@ import javax.annotation.Nullable;
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
 public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
-    implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibraryRule.Data> {
+    implements JavaLibrary, AbiRule, HasJavaSrcs, HasClasspathEntries, ExportDependencies,
+    InitializableFromDisk<JavaLibrary.Data> {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -119,11 +119,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   private final Optional<Path> proguardConfig;
   private final ImmutableSortedSet<BuildRule> exportedDeps;
   protected final ImmutableSet<String> additionalClasspathEntries;
-  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
       outputClasspathEntriesSupplier;
-  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
       transitiveClasspathEntriesSupplier;
-  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
       declaredClasspathEntriesSupplier;
   private final BuildOutputInitializer<Data> buildOutputInitializer;
 
@@ -189,9 +189,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     }
 
     this.outputClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, String>>() {
           @Override
-          public ImmutableSetMultimap<JavaLibraryRule, String> get() {
+          public ImmutableSetMultimap<JavaLibrary, String> get() {
             return JavaLibraryClasspathProvider.getOutputClasspathEntries(
                 DefaultJavaLibraryRule.this,
                 outputJar);
@@ -199,9 +199,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         });
 
     this.transitiveClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, String>>() {
           @Override
-          public ImmutableSetMultimap<JavaLibraryRule, String> get() {
+          public ImmutableSetMultimap<JavaLibrary, String> get() {
             return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
                 DefaultJavaLibraryRule.this,
                 outputJar);
@@ -209,9 +209,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         });
 
     this.declaredClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, String>>() {
           @Override
-          public ImmutableSetMultimap<JavaLibraryRule, String> get() {
+          public ImmutableSetMultimap<JavaLibrary, String> get() {
             return JavaLibraryClasspathProvider.getDeclaredClasspathEntries(
                 DefaultJavaLibraryRule.this);
           }
@@ -359,8 +359,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     for (BuildRule dep : getDeps()) {
       // This looks odd. DummyJavaAbiRule contains a Buildable that isn't a JavaAbiRule.
       if (dep.getBuildable() instanceof HasJavaAbi || dep instanceof HasJavaAbi) {
-        if (dep.getBuildable() instanceof JavaLibraryRule) {
-          JavaLibraryRule javaRule = (JavaLibraryRule) dep.getBuildable();
+        if (dep.getBuildable() instanceof JavaLibrary) {
+          JavaLibrary javaRule = (JavaLibrary) dep.getBuildable();
           rulesWithAbiToConsider.addAll(javaRule.getOutputClasspathEntries().keys());
         } else {
           // DummyJavaAbiRule -> JavaAbiRule, but the buildable isn't
@@ -413,17 +413,17 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
     return transitiveClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibraryRule, String> getDeclaredClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, String> getDeclaredClasspathEntries() {
     return declaredClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, String> getOutputClasspathEntries() {
     return outputClasspathEntriesSupplier.get();
   }
 
@@ -466,14 +466,14 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           .build();
     }
 
-    ImmutableSetMultimap<JavaLibraryRule, String> transitiveClasspathEntries =
-        ImmutableSetMultimap.<JavaLibraryRule, String>builder()
+    ImmutableSetMultimap<JavaLibrary, String> transitiveClasspathEntries =
+        ImmutableSetMultimap.<JavaLibrary, String>builder()
             .putAll(getTransitiveClasspathEntries())
             .putAll(this, additionalClasspathEntries)
             .build();
 
-    ImmutableSetMultimap<JavaLibraryRule, String> declaredClasspathEntries =
-        ImmutableSetMultimap.<JavaLibraryRule, String>builder()
+    ImmutableSetMultimap<JavaLibrary, String> declaredClasspathEntries =
+        ImmutableSetMultimap.<JavaLibrary, String>builder()
             .putAll(getDeclaredClasspathEntries())
             .putAll(this, additionalClasspathEntries)
             .build();
@@ -566,13 +566,13 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       BuildRule transitiveNotDeclaredDep,
       Set<String> failedImports,
       JarResolver jarResolver) {
-    if (!(transitiveNotDeclaredDep instanceof JavaLibraryRule)) {
+    if (!(transitiveNotDeclaredDep instanceof JavaLibrary)) {
       return false;
     }
 
     ImmutableSet<String> classPaths =
         ImmutableSet.copyOf(
-            ((JavaLibraryRule) transitiveNotDeclaredDep).getOutputClasspathEntries().values());
+            ((JavaLibrary) transitiveNotDeclaredDep).getOutputClasspathEntries().values());
     boolean containsMissingBuildRule = false;
     // Open the output jar for every jar contained as the output of transitiveNotDeclaredDep.  With
     // the exception of rules that export their dependencies, this will result in a single
@@ -602,13 +602,13 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   @VisibleForTesting
   Optional<JavacInMemoryStep.SuggestBuildRules> createSuggestBuildFunction(
       BuildContext context,
-      ImmutableSetMultimap<JavaLibraryRule, String> transitiveClasspathEntries,
-      ImmutableSetMultimap<JavaLibraryRule, String> declaredClasspathEntries,
+      ImmutableSetMultimap<JavaLibrary, String> transitiveClasspathEntries,
+      ImmutableSetMultimap<JavaLibrary, String> declaredClasspathEntries,
       final JarResolver jarResolver) {
     if (context.getBuildDependencies() != BuildDependencies.WARN_ON_TRANSITIVE) {
       return Optional.absent();
     }
-    final Set<JavaLibraryRule> transitiveNotDeclaredDeps = Sets.difference(
+    final Set<JavaLibrary> transitiveNotDeclaredDeps = Sets.difference(
         transitiveClasspathEntries.keySet(),
         Sets.union(ImmutableSet.of(this), declaredClasspathEntries.keySet()));
 
@@ -656,7 +656,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * Instructs this rule to report the ABI it has on disk as its current ABI.
    */
   @Override
-  public JavaLibraryRule.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+  public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
     return JavaLibraryRules.initializeFromDisk(getBuildTarget(), onDiskBuildInfo);
   }
 

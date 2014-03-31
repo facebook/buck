@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.facebook.buck.java.FakeJavaLibraryRule;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +36,7 @@ public class DexWithClassesTest {
   @Test
   public void testIntermediateDexRuleToDexWithClasses() {
     BuildTarget javaLibraryTarget = new BuildTarget("//java/com/example", "lib");
-    JavaLibraryRule javaLibrary = new FakeJavaLibraryRule(javaLibraryTarget) {
+    JavaLibrary javaLibrary = new FakeJavaLibraryRule(javaLibraryTarget) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
         return ImmutableSortedMap.of("com/example/Main", HashCode.fromString("cafebabe"));
@@ -66,7 +66,7 @@ public class DexWithClassesTest {
   @Test
   public void testIntermediateDexRuleToDexWithClassesWhenIntermediateDexHasNoClasses() {
     BuildTarget javaLibraryTarget = new BuildTarget("//java/com/example", "lib");
-    JavaLibraryRule javaLibrary = new FakeJavaLibraryRule(javaLibraryTarget) {
+    JavaLibrary javaLibrary = new FakeJavaLibraryRule(javaLibraryTarget) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
         return ImmutableSortedMap.of();

@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.DexProducedFromJavaLibraryThatContainsClassFiles.BuildOutput;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildable;
@@ -57,10 +57,9 @@ import javax.annotation.Nullable;
 
 /**
  * {@link DexProducedFromJavaLibraryThatContainsClassFiles} is a {@link Buildable} that serves a
- * very specific purpose: it takes a {@link JavaLibraryRule} and dexes the
- * output of the {@link JavaLibraryRule} if its list of classes is non-empty. Because it is
- * expected to be used with pre-dexing, we always pass the {@code --force-jumbo} flag to {@code dx}
- * in this buildable.
+ * very specific purpose: it takes a {@link JavaLibrary} and dexes the output of the
+ * {@link JavaLibrary} if its list of classes is non-empty. Because it is expected to be used with
+ * pre-dexing, we always pass the {@code --force-jumbo} flag to {@code dx} in this buildable.
  * <p>
  * Most {@link Buildable}s can determine the (possibly null) path to their output file from their
  * definition. This is an anomaly because we do not know whether this will write a {@code .dex} file
@@ -74,12 +73,12 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
   static final String LINEAR_ALLOC_KEY_ON_DISK_METADATA = "linearalloc";
 
   private final BuildTarget buildTarget;
-  private final JavaLibraryRule javaLibrary;
+  private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   @VisibleForTesting
   DexProducedFromJavaLibraryThatContainsClassFiles(BuildTarget buildTarget,
-      JavaLibraryRule javaLibrary) {
+      JavaLibrary javaLibrary) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.javaLibrary = Preconditions.checkNotNull(javaLibrary);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);

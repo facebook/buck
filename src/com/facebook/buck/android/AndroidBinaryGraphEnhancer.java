@@ -21,7 +21,7 @@ import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -232,23 +232,23 @@ public class AndroidBinaryGraphEnhancer {
   @VisibleForTesting
   BuildRule createPreDexMergeRule(UberRDotJava uberRDotJava) {
     ImmutableSet.Builder<IntermediateDexRule> preDexDeps = ImmutableSet.builder();
-    ImmutableSet<JavaLibraryRule> transitiveJavaDeps = Classpaths
+    ImmutableSet<JavaLibrary> transitiveJavaDeps = Classpaths
         .getClasspathEntries(originalDeps).keySet();
-    for (JavaLibraryRule javaLibraryRule : transitiveJavaDeps) {
+    for (JavaLibrary javaLibrary : transitiveJavaDeps) {
       // If the rule has no output file (which happens when a java_library has no srcs or
       // resources, but export_deps is true), then there will not be anything to dx.
-      if (javaLibraryRule.getPathToOutputFile() == null) {
+      if (javaLibrary.getPathToOutputFile() == null) {
         continue;
       }
 
       // If the rule is in the no_dx list, then do not pre-dex it.
-      if (buildRulesToExcludeFromDex.contains(javaLibraryRule.getBuildTarget())) {
+      if (buildRulesToExcludeFromDex.contains(javaLibrary.getBuildTarget())) {
         continue;
       }
 
       // See whether the corresponding IntermediateDexRule has already been added to the
       // ruleResolver.
-      BuildTarget originalTarget = javaLibraryRule.getBuildTarget();
+      BuildTarget originalTarget = javaLibrary.getBuildTarget();
       BuildTarget preDexTarget = new BuildTarget(originalTarget.getBaseName(),
           originalTarget.getShortName(),
           DEX_FLAVOR);
@@ -263,7 +263,7 @@ public class AndroidBinaryGraphEnhancer {
           IntermediateDexRule
               .newPreDexBuilder(buildRuleBuilderParams)
               .setBuildTarget(preDexTarget)
-              .setJavaLibraryRuleToDex(javaLibraryRule)
+              .setJavaLibraryToDex(javaLibrary)
               .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
       preDexDeps.add(preDex);
     }

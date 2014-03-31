@@ -28,5 +28,5 @@ public interface HasClasspathEntries {
    * @return A map of rule names to classpath entries for this rule and its dependencies.
    */
   // TODO(simons): We only ever compile from resources on disk. Use Path instead of String?
-  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries();
+  public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries();
 }

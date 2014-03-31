@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -64,7 +64,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
   private AndroidInstrumentationApk(BuildRuleParams buildRuleParams,
       SourcePath manifest,
       AndroidBinaryRule apkUnderTest,
-      ImmutableSet<JavaLibraryRule> buildRulesToExcludeFromDex,
+      ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex,
       FilteredResourcesProvider filteredResourcesProvider,
       UberRDotJava uberRDotJava,
       Optional<PackageStringAssets> packageStringAssets,
@@ -150,8 +150,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
           (InstallableApk) apkRule.getBuildable());
 
       // Create the AndroidBinaryGraphEnhancer for this rule.
-      ImmutableSet<JavaLibraryRule> buildRulesToExcludeFromDex =
-          ImmutableSet.<JavaLibraryRule>builder()
+      ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex =
+          ImmutableSet.<JavaLibrary>builder()
           .addAll(apkUnderTest.getBuildRulesToExcludeFromDex())
           .addAll(Classpaths.getClasspathEntries(apkUnderTest.getClasspathDeps()).keySet())
           .build();

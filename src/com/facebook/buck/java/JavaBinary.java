@@ -150,7 +150,7 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
     return Classpaths.getClasspathEntries(deps);
   }
 

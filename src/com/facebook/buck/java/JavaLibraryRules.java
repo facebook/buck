@@ -35,28 +35,28 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Common utilities for working with {@link JavaLibraryRule} objects.
+ * Common utilities for working with {@link JavaLibrary} objects.
  */
 public class JavaLibraryRules {
 
   /** Utility class: do not instantiate. */
   private JavaLibraryRules() {}
 
-  static void addAccumulateClassNamesStep(JavaLibraryRule javaLibraryRule,
+  static void addAccumulateClassNamesStep(JavaLibrary javaLibrary,
       BuildableContext buildableContext,
       ImmutableList.Builder<Step> steps) {
-    Preconditions.checkNotNull(javaLibraryRule);
+    Preconditions.checkNotNull(javaLibrary);
 
     Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(
-        javaLibraryRule.getBuildTarget());
+        javaLibrary.getBuildTarget());
     steps.add(new MkdirStep(pathToClassHashes.getParent()));
     steps.add(new AccumulateClassNamesStep(
-        Optional.fromNullable(javaLibraryRule.getPathToOutputFile()),
+        Optional.fromNullable(javaLibrary.getPathToOutputFile()),
         pathToClassHashes));
     buildableContext.recordArtifact(pathToClassHashes);
   }
 
-  static JavaLibraryRule.Data initializeFromDisk(
+  static JavaLibrary.Data initializeFromDisk(
       BuildTarget buildTarget,
       OnDiskBuildInfo onDiskBuildInfo) {
     Optional<Sha1HashCode> abiKeyHash = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
@@ -75,7 +75,7 @@ public class JavaLibraryRules {
     ImmutableSortedMap<String, HashCode> classHashes = AccumulateClassNamesStep.parseClassHashes(
         lines);
 
-    return new JavaLibraryRule.Data(abiKeyHash.get(), classHashes);
+    return new JavaLibrary.Data(abiKeyHash.get(), classHashes);
   }
 
   private static Path getPathToClassHashes(BuildTarget buildTarget) {

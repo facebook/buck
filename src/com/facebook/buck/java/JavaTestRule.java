@@ -484,7 +484,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         // Generates the set by matching its path with the full path names that are passed in.
         BuildRule rule = ruleResolver.get(sourceUnderTestName);
 
-        if (rule instanceof JavaLibraryRule || rule.getBuildable() instanceof JavaLibraryRule) {
+        if (rule instanceof JavaLibrary || rule.getBuildable() instanceof JavaLibrary) {
           sourceUnderTest.add(rule);
         } else if (rule == null) {
           throw new HumanReadableException(

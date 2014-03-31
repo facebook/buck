@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaLibrary;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 abstract class AndroidResourceDepsFinder {
 
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
-  private final ImmutableSet<JavaLibraryRule> buildRulesToExcludeFromDex;
+  private final ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex;
   private final AndroidTransitiveDependencies androidTransitiveDependencies;
 
   /*
@@ -41,7 +41,7 @@ abstract class AndroidResourceDepsFinder {
   private volatile ImmutableList<HasAndroidResourceDeps> androidResources;
 
   public AndroidResourceDepsFinder(AndroidTransitiveDependencyGraph transitiveDependencyGraph,
-      ImmutableSet<JavaLibraryRule> buildRulesToExcludeFromDex) {
+      ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex) {
     this.transitiveDependencyGraph = Preconditions.checkNotNull(transitiveDependencyGraph);
     this.buildRulesToExcludeFromDex = Preconditions.checkNotNull(buildRulesToExcludeFromDex);
     this.androidTransitiveDependencies = transitiveDependencyGraph.findDependencies();

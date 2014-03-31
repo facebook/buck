@@ -8,7 +8,7 @@ java_library(
     'DefaultJavaPackageFinder.java',
     'HasClasspathEntries.java',
     'HasJavaAbi.java',
-    'JavaLibraryRule.java',
+    'JavaLibrary.java',
     'JavacVersion.java',
     'JavacOptions.java',
     'JavaCompilerEnvironment.java',
