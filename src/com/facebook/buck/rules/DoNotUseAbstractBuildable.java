@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
  */
 // This currently extends AbstractCachingBuildRule. The next step is to cut that inheritance.
 public abstract class DoNotUseAbstractBuildable
-    extends AbstractCachingBuildRule implements Buildable {
+    extends AbstractBuildRule implements Buildable, BuildRule {
 
   protected DoNotUseAbstractBuildable(BuildRuleParams buildRuleParams) {
     super(buildRuleParams);

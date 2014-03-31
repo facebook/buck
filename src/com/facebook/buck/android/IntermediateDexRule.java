@@ -20,22 +20,23 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Preconditions;
 
-public class IntermediateDexRule extends AbstractCachingBuildRule implements AbiRule {
+public class IntermediateDexRule extends AbstractBuildRule implements AbiRule, BuildRule {
 
   private final DexProducedFromJavaLibraryThatContainsClassFiles buildable;
 
   IntermediateDexRule(DexProducedFromJavaLibraryThatContainsClassFiles buildable,
       BuildRuleParams params) {
-    super(buildable, params);
+    super(params, buildable);
     this.buildable = Preconditions.checkNotNull(buildable);
   }
 

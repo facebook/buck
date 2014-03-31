@@ -135,7 +135,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     replayAll();
     String pathToOutputFile = "buck-out/gen/src/com/facebook/orca/some_file";
     List<Step> buildSteps = Lists.newArrayList();
-    AbstractCachingBuildRule cachingRule = createRule(
+    AbstractBuildRule cachingRule = createRule(
         ImmutableSet.of(dep),
         ImmutableList.of(Paths.get("/dev/null")),
         buildSteps,
@@ -269,7 +269,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         return 0;
       }
     };
-    AbstractCachingBuildRule cachingBuildRule = createRule(
+    AbstractBuildRule cachingBuildRule = createRule(
         ImmutableSet.of(dep1, dep2),
         ImmutableList.of(Paths.get("/dev/null")),
         ImmutableList.of(buildStep),
@@ -661,7 +661,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
   }
 
   /**
-   * {@link AbstractCachingBuildRule} that implements {@link AbiRule}.
+   * {@link AbstractBuildRule} that implements {@link AbiRule}.
    */
   private static class TestAbstractCachingBuildRule extends DoNotUseAbstractBuildable
       implements AbiRule, Buildable, InitializableFromDisk<Object> {

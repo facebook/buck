@@ -214,7 +214,7 @@ public class AbstractBuildRuleTest {
       @Nullable
       @Override
       public Buildable getBuildable() {
-        throw new IllegalStateException("This method should not be called");
+        return null;
       }
 
       @Override

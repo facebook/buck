@@ -20,26 +20,47 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
-abstract class AbstractBuildRule implements BuildRule {
+/**
+ * Abstract implementation of a {@link BuildRule} that can be cached. If its current {@link RuleKey}
+ * matches the one on disk, then it has no work to do. It should also try to fetch its output from
+ * an {@link ArtifactCache} to avoid doing any computation.
+ */
+@Beta
+public abstract class AbstractBuildRule implements BuildRule {
+
+  private static final CachingBuildEngine engine = new CachingBuildEngine();
 
   private final BuildTarget buildTarget;
+  private final Buildable buildable;
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+  /** @see Buildable#getInputsToCompareToOutput()  */
+  private Iterable<Path> inputsToCompareToOutputs;
   @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
 
+
   protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
+    this(buildRuleParams, null);
+  }
+
+  // TODO(simons): Get rid of nullable check once DoNotUseAbstractBuildable is deleted.
+  protected AbstractBuildRule(BuildRuleParams buildRuleParams, @Nullable Buildable buildable) {
     Preconditions.checkNotNull(buildRuleParams);
     this.buildTarget = buildRuleParams.getBuildTarget();
+    this.buildable = buildable == null ? getBuildable() : buildable;
     this.deps = buildRuleParams.getDeps();
     this.visibilityPatterns = buildRuleParams.getVisibilityPatterns();
     this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
@@ -100,6 +121,37 @@ abstract class AbstractBuildRule implements BuildRule {
     return false;
   }
 
+  /**
+   * This rule is designed to be used for precondition checks in subclasses. For example, before
+   * running the tests associated with a build rule, it is reasonable to do a sanity check to
+   * ensure that the rule has been built.
+   */
+  // TODO(simons): This is a responsibility of the engine, not the rule
+  // TODO(user): This is only used by *TestRule
+  protected final synchronized boolean isRuleBuilt() {
+    return engine.isRuleBuilt(this);
+  }
+
+  @Override
+  // TODO(simons): This is a responsibility of the engine, not the rule
+  // TODO(user): This can be gotten rid by using BuildEngine in TestCommand.
+  public BuildRuleSuccess.Type getBuildResultType() {
+    Preconditions.checkState(isRuleBuilt());
+    try {
+      return engine.getBuildRuleResult(this).getType();
+    } catch (InterruptedException | ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public Iterable<Path> getInputs() {
+    if (inputsToCompareToOutputs == null) {
+      inputsToCompareToOutputs = buildable.getInputsToCompareToOutput();
+    }
+    return inputsToCompareToOutputs;
+  }
+
   @Override
   public final int compareTo(BuildRule that) {
     return this.getFullyQualifiedName().compareTo(that.getFullyQualifiedName());
@@ -124,6 +176,12 @@ abstract class AbstractBuildRule implements BuildRule {
     return getFullyQualifiedName();
   }
 
+  // Note: this method SHOULD be final, but test constraints mean it must be overrideable.
+  @Override
+  public ListenableFuture<BuildRuleSuccess> build(final BuildContext context) {
+    return engine.build(context, this);
+  }
+
   /**
    * {@link #getRuleKey()} and {@link #getRuleKeyWithoutDeps()} uses this when constructing
    * {@link RuleKey}s for this class. Every subclass that extends the rule state in a way that
@@ -141,8 +199,19 @@ abstract class AbstractBuildRule implements BuildRule {
    * </pre>
    */
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return builder;
+    // For a rule that lists its inputs via a "srcs" argument, this may seem redundant, but it is
+    // not. Here, the inputs are specified as InputRules, which means that the _contents_ of the
+    // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
+    // hashed. It turns out that we need both of these in order to construct a RuleKey correctly.
+    // Note: appendToRuleKey() should not set("srcs", srcs) if the inputs are order-independent.
+    Iterable<Path> inputs = getInputs();
+    builder = builder
+        .setInputs("buck.inputs", inputs.iterator())
+        .setSourcePaths("buck.sourcepaths", SourcePaths.toSourcePathsSortedByNaturalOrder(inputs));
+    // TODO(simons): Rename this when no Buildables extend this class.
+    return buildable.appendDetailsToRuleKey(builder);
   }
+
 
   /**
    * This method should be overridden only for unit testing.

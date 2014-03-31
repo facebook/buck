@@ -110,7 +110,6 @@ java_library(
     'AbstractBuildRule.java',
     'AbstractBuildRuleFactory.java',
     'AbstractTestRuleFactory.java',
-    'AbstractCachingBuildRule.java',
     'AbstractDependencyVisitor.java',
     'ArtifactCacheConnectEvent.java',
     'ArtifactCacheEvent.java',

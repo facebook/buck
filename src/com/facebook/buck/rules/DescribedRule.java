@@ -24,13 +24,13 @@ import com.google.common.base.Preconditions;
  */
 // TODO(simons): Delete once everything has migrated to using Buildables.
 @Beta
-public class DescribedRule extends AbstractCachingBuildRule {
+public class DescribedRule extends AbstractBuildRule implements BuildRule {
 
   private final BuildRuleType type;
   private final Buildable buildable;
 
   public DescribedRule(BuildRuleType type, Buildable buildable, BuildRuleParams params) {
-    super(buildable, params);
+    super(params, buildable);
 
     this.type = Preconditions.checkNotNull(type);
     this.buildable = Preconditions.checkNotNull(buildable);

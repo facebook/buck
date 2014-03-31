@@ -17,7 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.java.HasJavaAbi;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
@@ -26,12 +27,12 @@ import com.google.common.base.Preconditions;
 
 import javax.annotation.Nullable;
 
-public class DummyRDotJavaAbiRule extends AbstractCachingBuildRule implements HasJavaAbi {
+public class DummyRDotJavaAbiRule extends AbstractBuildRule implements HasJavaAbi, BuildRule {
 
   private final DummyRDotJava dummyRDotJava;
 
   DummyRDotJavaAbiRule(DummyRDotJava dummyRDotJava, BuildRuleParams params) {
-    super(dummyRDotJava, params);
+    super(params, dummyRDotJava);
     this.dummyRDotJava = Preconditions.checkNotNull(dummyRDotJava);
   }
 

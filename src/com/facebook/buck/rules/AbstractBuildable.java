@@ -43,7 +43,7 @@ public abstract class AbstractBuildable implements Buildable {
   }
 
   protected abstract static class Builder
-      extends AbstractBuildRuleBuilder<AbstractCachingBuildRule> {
+      extends AbstractBuildRuleBuilder<AbstractBuildRule> {
 
     protected Builder(BuildRuleBuilderParams params) {
       super(params);
@@ -53,7 +53,7 @@ public abstract class AbstractBuildable implements Buildable {
     protected abstract Buildable newBuildable(BuildRuleParams params, BuildRuleResolver resolver);
 
     @Override
-    public final AbstractCachingBuildRule build(BuildRuleResolver ruleResolver) {
+    public final AbstractBuildRule build(BuildRuleResolver ruleResolver) {
       BuildRuleParams params = createBuildRuleParams(ruleResolver);
 
       final Buildable buildable = newBuildable(params, ruleResolver);
@@ -63,12 +63,12 @@ public abstract class AbstractBuildable implements Buildable {
     }
   }
 
-  public static class AnonymousBuildRule extends AbstractCachingBuildRule {
+  public static class AnonymousBuildRule extends AbstractBuildRule implements BuildRule {
     private final Buildable buildable;
     private final BuildRuleType type;
 
     public AnonymousBuildRule(BuildRuleType type, Buildable buildable, BuildRuleParams params) {
-      super(buildable, params);
+      super(params, buildable);
       this.buildable = buildable;
       this.type = type;
     }
