@@ -46,10 +46,10 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 
 /**
- * Integration test that verifies that a {@link DefaultJavaLibraryRule} writes its ABI key as part
+ * Integration test that verifies that a {@link DefaultJavaLibrary} writes its ABI key as part
  * of compilation.
  */
-public class DefaultJavaLibraryRuleIntegrationTest {
+public class DefaultJavaLibraryIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();

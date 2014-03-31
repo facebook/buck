@@ -33,7 +33,7 @@ public class JavaLibraryClasspathProvider {
   }
 
   public static ImmutableSetMultimap<JavaLibrary, String> getOutputClasspathEntries(
-      DefaultJavaLibraryRule javaLibraryRule,
+      DefaultJavaLibrary javaLibraryRule,
       Optional<Path> outputJar) {
     ImmutableSetMultimap.Builder<JavaLibrary, String> outputClasspathBuilder =
         ImmutableSetMultimap.builder();
@@ -58,7 +58,7 @@ public class JavaLibraryClasspathProvider {
   }
 
   public static ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries(
-      DefaultJavaLibraryRule javaLibraryRule,
+      DefaultJavaLibrary javaLibraryRule,
       Optional<Path> outputJar) {
     final ImmutableSetMultimap.Builder<JavaLibrary, String> classpathEntries =
         ImmutableSetMultimap.builder();
@@ -88,7 +88,7 @@ public class JavaLibraryClasspathProvider {
   }
 
   public static ImmutableSetMultimap<JavaLibrary, String> getDeclaredClasspathEntries(
-      DefaultJavaLibraryRule javaLibraryRule) {
+      DefaultJavaLibrary javaLibraryRule) {
     final ImmutableSetMultimap.Builder<JavaLibrary, String> classpathEntries =
         ImmutableSetMultimap.builder();
 

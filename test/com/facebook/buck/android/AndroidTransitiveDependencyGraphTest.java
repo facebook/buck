@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -74,8 +74,8 @@ public class AndroidTransitiveDependencyGraphTest {
         .build();
     ruleResolver.addToIndex(prebuiltNativeLibraryTarget, prebuiltNativeLibraryBuild);
 
-    DefaultJavaLibraryRule libraryRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+    DefaultJavaLibrary libraryRule = ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:example"))
             .addDep(guavaRule.getBuildTarget())
             .addDep(jsr305Rule.getBuildTarget())
@@ -87,8 +87,7 @@ public class AndroidTransitiveDependencyGraphTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:res"))
             .setManifest(Paths.get("java/src/com/facebook/module/AndroidManifest.xml"))
             .setAssets(Paths.get("assets"))
-            .build()
-    );
+            .build());
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     KeystoreBuilder.createBuilder(keystoreTarget)
@@ -162,10 +161,10 @@ public class AndroidTransitiveDependencyGraphTest {
 
     BuildTarget androidLibraryKeystoreTarget = new BuildTarget("//java/com/keystore/base", "base");
     BuildRule androidLibraryKeystore = ruleResolver.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(androidLibraryKeystoreTarget)
-        .addSrc(Paths.get("java/com/facebook/keystore/Base.java"))
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        AndroidLibrary.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+            .setBuildTarget(androidLibraryKeystoreTarget)
+            .addSrc(Paths.get("java/com/facebook/keystore/Base.java"))
+            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     BuildTarget keystoreTarget = new BuildTarget("//keystore", "debug");
     KeystoreBuilder.createBuilder(keystoreTarget)
@@ -176,10 +175,10 @@ public class AndroidTransitiveDependencyGraphTest {
 
     BuildTarget androidLibraryTarget = new BuildTarget("//java/com/facebook/base", "base");
     ruleResolver.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(androidLibraryTarget)
-        .addSrc(Paths.get("java/com/facebook/base/Base.java"))
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        AndroidLibrary.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+            .setBuildTarget(androidLibraryTarget)
+            .addSrc(Paths.get("java/com/facebook/base/Base.java"))
+            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     AndroidBinaryRule androidBinaryRule = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeBuildRuleBuilderParams())

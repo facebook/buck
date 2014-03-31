@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.java.Classpaths;
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
@@ -191,12 +191,12 @@ public class AndroidTransitiveDependencyGraph {
           if (manifestFile != null) {
             manifestFiles.add(manifestFile);
           }
-        } else if (rule instanceof DefaultJavaLibraryRule) {
-          DefaultJavaLibraryRule defaultJavaLibraryRule = (DefaultJavaLibraryRule)rule;
-          Optionals.addIfPresent(defaultJavaLibraryRule.getProguardConfig(), proguardConfigs);
+        } else if (rule instanceof DefaultJavaLibrary) {
+          DefaultJavaLibrary defaultJavaLibrary = (DefaultJavaLibrary) rule;
+          Optionals.addIfPresent(defaultJavaLibrary.getProguardConfig(), proguardConfigs);
 
-          if (rule instanceof AndroidLibraryRule) {
-            AndroidLibraryRule androidLibraryRule = (AndroidLibraryRule)rule;
+          if (rule instanceof AndroidLibrary) {
+            AndroidLibrary androidLibraryRule = (AndroidLibrary) rule;
             Optionals.addIfPresent(androidLibraryRule.getManifestFile(), manifestFiles);
           }
         }

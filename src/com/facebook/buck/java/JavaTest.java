@@ -62,7 +62,8 @@ import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
 
-public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
+public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
   private final ImmutableList<String> vmArgs;
 
@@ -77,7 +78,8 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
   private final ImmutableSet<String> contacts;
 
-  protected JavaTestRule(BuildRuleParams buildRuleParams,
+  protected JavaTest(
+      BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<SourcePath> resources,
       Set<Label> labels,
@@ -305,7 +307,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
     private final Set<String> classNamesForSources;
 
-    CompiledClassFileFinder(JavaTestRule rule, ExecutionContext context) {
+    CompiledClassFileFinder(JavaTest rule, ExecutionContext context) {
       Preconditions.checkState(rule.isRuleBuilt(),
           "Rule must be built so that the classes folder is available");
       Path outputPath;
@@ -400,7 +402,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     return new Builder(params);
   }
 
-  public static class Builder extends DefaultJavaLibraryRule.Builder
+  public static class Builder extends DefaultJavaLibrary.Builder
       implements LabelsAttributeBuilder {
 
     @Nullable protected List<String> vmArgs = ImmutableList.of();
@@ -413,7 +415,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     }
 
     @Override
-    public JavaTestRule build(BuildRuleResolver ruleResolver) {
+    public JavaTest build(BuildRuleResolver ruleResolver) {
       ImmutableSet<BuildRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
           ruleResolver);
       AnnotationProcessingParams processingParams =
@@ -422,7 +424,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
 
-      return new JavaTestRule(
+      return new JavaTest(
           buildRuleParams,
           srcs,
           resources,

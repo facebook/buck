@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -37,15 +37,15 @@ public class AndroidLibraryBuildRuleFactory extends JavaLibraryBuildRuleFactory 
   }
 
   @Override
-  public AndroidLibraryRule.Builder newBuilder(BuildRuleBuilderParams params) {
-    return AndroidLibraryRule.newAndroidLibraryRuleBuilder(getJavac(), getJavacVersion(), params);
+  public AndroidLibrary.Builder newBuilder(BuildRuleBuilderParams params) {
+    return AndroidLibrary.newAndroidLibraryRuleBuilder(getJavac(), getJavacVersion(), params);
   }
 
   @Override
-  protected void amendBuilder(DefaultJavaLibraryRule.Builder abstractBuilder,
+  protected void amendBuilder(DefaultJavaLibrary.Builder abstractBuilder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     super.amendBuilder(abstractBuilder, params);
-    AndroidLibraryRule.Builder builder = (AndroidLibraryRule.Builder)abstractBuilder;
+    AndroidLibrary.Builder builder = (AndroidLibrary.Builder)abstractBuilder;
 
     // manifest
     Optional<String> manifestFile = params.getOptionalStringAttribute("manifest");

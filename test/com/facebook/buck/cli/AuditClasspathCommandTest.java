@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.java.DefaultJavaLibraryRule;
-import com.facebook.buck.java.JavaTestRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -116,11 +116,11 @@ public class AuditClasspathCommandTest {
 
     // Add build rules such that all implementations of HasClasspathEntries are tested.
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-java-library"))
         .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java")));
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-library"))
         .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
         .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
@@ -138,7 +138,7 @@ public class AuditClasspathCommandTest {
         .addClasspathDep(BuildTargetFactory.newInstance("//:test-android-library"))
         .addClasspathDep(BuildTargetFactory.newInstance("//:test-java-library")));
     ruleResolver.buildAndAddToIndex(
-        JavaTestRule.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
+        JavaTest.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:project-tests"))
             .addDep(BuildTargetFactory.newInstance("//:test-java-library"))
             .setSourceUnderTest(
@@ -163,8 +163,7 @@ public class AuditClasspathCommandTest {
         Arrays.asList(
             GEN_DIR + "/lib__test-android-library__output/test-android-library.jar",
             GEN_DIR + "/lib__test-java-library__output/test-java-library.jar"
-        )
-    );
+        ));
     String expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
 
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
@@ -209,11 +208,11 @@ public class AuditClasspathCommandTest {
         "//:test-java-library");
 
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:test-java-library"))
             .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java")));
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-library"))
             .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
             .addDep(BuildTargetFactory.newInstance("//:test-java-library")));

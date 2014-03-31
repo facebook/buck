@@ -172,7 +172,7 @@ public class AndroidBinaryRuleTest {
       String assetDirectory,
       String nativeLibsDirectory) {
     BuildTarget libraryOnebuildTarget = BuildTargetFactory.newInstance(buildTarget);
-    AndroidLibraryRule.Builder androidLibraryRuleBuilder = AndroidLibraryRule
+    AndroidLibrary.Builder androidLibraryRuleBuilder = AndroidLibrary
         .newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .addSrc(Paths.get(buildTarget.split(":")[1] + ".java"))
         .setBuildTarget(libraryOnebuildTarget);

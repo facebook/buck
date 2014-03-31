@@ -28,15 +28,15 @@ import com.google.common.collect.Iterables;
 
 import java.util.List;
 
-public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory<JavaTestRule.Builder> {
+public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory<JavaTest.Builder> {
 
   @Override
-  public JavaTestRule.Builder newBuilder(BuildRuleBuilderParams params) {
-    return JavaTestRule.newJavaTestRuleBuilder(params);
+  public JavaTest.Builder newBuilder(BuildRuleBuilderParams params) {
+    return JavaTest.newJavaTestRuleBuilder(params);
   }
 
   @Override
-  protected void amendBuilder(JavaTestRule.Builder builder,
+  protected void amendBuilder(JavaTest.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     JavaLibraryBuildRuleFactory.extractAnnotationProcessorParameters(
         builder.getAnnotationProcessingBuilder(), builder, params);

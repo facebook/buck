@@ -23,7 +23,7 @@ import com.facebook.buck.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.java.InstrumentStep;
 import com.facebook.buck.java.JUnitStep;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaTestRule;
+import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -236,7 +236,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     Set<String> srcFolders = Sets.newHashSet();
     loopThroughSourcePath:
     for (Path javaSrcPath : javaSrcPaths) {
-      if (!JavaTestRule.isGeneratedFile(javaSrcPath)) {
+      if (!JavaTest.isGeneratedFile(javaSrcPath)) {
 
         // If the source path is already under a known source folder, then we can skip this
         // source path.
@@ -679,8 +679,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // Gathering all rules whose source will be under test.
     for (TestRule test : tests) {
-      if (test instanceof JavaTestRule) {
-        JavaTestRule javaTestRule = (JavaTestRule) test;
+      if (test instanceof JavaTest) {
+        JavaTest javaTestRule = (JavaTest) test;
         ImmutableSet<BuildRule> sourceUnderTest = javaTestRule.getSourceUnderTest();
         for (BuildRule buildRule : sourceUnderTest) {
           if (buildRule instanceof JavaLibrary) {

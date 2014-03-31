@@ -41,7 +41,7 @@ public class JavaTestRuleTest {
     Path classesFolder = Paths.get("testdata/javatestrule/default.jar");
     Set<Path> sources = ImmutableSet.of(Paths.get("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
-        JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
+        JavaTest.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
 
@@ -50,7 +50,7 @@ public class JavaTestRuleTest {
     Path classesFolder = Paths.get("testdata/javatestrule/case1.jar");
     Set<Path> sources = ImmutableSet.of(Paths.get("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
-        JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
+        JavaTest.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
 
@@ -59,7 +59,7 @@ public class JavaTestRuleTest {
     Path classesFolder = Paths.get("testdata/javatestrule/case2.jar");
     Set<Path> sources = ImmutableSet.of(Paths.get("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
-        JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
+        JavaTest.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
 
@@ -70,7 +70,7 @@ public class JavaTestRuleTest {
         Paths.get("src/com/facebook/feed/DummyTest.java"),
         Paths.get("src/com/facebook/nav/OtherDummyTest.java"));
     Set<String> classNames =
-        JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
+        JavaTest.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals("Ideally, if the implementation of getClassNamesForSources() were tightened up,"
         + " the set would not include com.facebook.feed.OtherDummyTest because"
         + " it was not specified in sources.",
@@ -85,7 +85,7 @@ public class JavaTestRuleTest {
   @Test
   public void shouldNotAmendVmArgsIfTargetDeviceIsNotPresent() {
     List<String> vmArgs = ImmutableList.of("--one", "--two", "--three");
-    JavaTestRule rule = newRule(vmArgs);
+    JavaTest rule = newRule(vmArgs);
 
     List<String> amended = rule.amendVmArgs(vmArgs, Optional.<TargetDevice>absent());
 
@@ -95,7 +95,7 @@ public class JavaTestRuleTest {
   @Test
   public void shouldAddEmulatorTargetDeviceToVmArgsIfPresent() {
     List<String> vmArgs = ImmutableList.of("--one");
-    JavaTestRule rule = newRule(vmArgs);
+    JavaTest rule = newRule(vmArgs);
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, null);
     List<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
@@ -107,7 +107,7 @@ public class JavaTestRuleTest {
   @Test
   public void shouldAddRealTargetDeviceToVmArgsIfPresent() {
     List<String> vmArgs = ImmutableList.of("--one");
-    JavaTestRule rule = newRule(vmArgs);
+    JavaTest rule = newRule(vmArgs);
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.REAL_DEVICE, null);
     List<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
@@ -119,7 +119,7 @@ public class JavaTestRuleTest {
   @Test
   public void shouldAddDeviceSerialIdToVmArgsIfPresent() {
     List<String> vmArgs = ImmutableList.of("--one");
-    JavaTestRule rule = newRule(vmArgs);
+    JavaTest rule = newRule(vmArgs);
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, "123");
     List<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
@@ -129,8 +129,8 @@ public class JavaTestRuleTest {
     assertEquals(expected, amended);
   }
 
-  private JavaTestRule newRule(List<String> vmArgs) {
-    return JavaTestRule.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
+  private JavaTest newRule(List<String> vmArgs) {
+    return JavaTest.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//example:test"))
         .setVmArgs(vmArgs)
         .addSrc(Paths.get("ExampleTest.java"))

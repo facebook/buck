@@ -27,13 +27,13 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Set;
 
-public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
+public class FakeDefaultJavaLibrary extends DefaultJavaLibrary {
 
   // TODO(mbolin): Find a way to make use of this field or delete it.
   @SuppressWarnings("unused")
   private final boolean ruleInputsAreCached;
 
-  protected FakeDefaultJavaLibraryRule(
+  protected FakeDefaultJavaLibrary(
       BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<SourcePath> resources,
@@ -54,11 +54,11 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
     this.ruleInputsAreCached = ruleInputsAreCached;
   }
 
-  public static FakeDefaultJavaLibraryRule.Builder newFakeJavaLibraryRuleBuilder() {
-    return new FakeDefaultJavaLibraryRule.Builder();
+  public static FakeDefaultJavaLibrary.Builder newFakeJavaLibraryRuleBuilder() {
+    return new FakeDefaultJavaLibrary.Builder();
   }
 
-  public static class Builder extends DefaultJavaLibraryRule.Builder {
+  public static class Builder extends DefaultJavaLibrary.Builder {
     private boolean ruleInputsAreCached;
 
     public Builder() {
@@ -66,12 +66,12 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
     }
 
     @Override
-    public FakeDefaultJavaLibraryRule build(BuildRuleResolver ruleResolver) {
+    public FakeDefaultJavaLibrary build(BuildRuleResolver ruleResolver) {
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(ruleResolver);
 
-      return new FakeDefaultJavaLibraryRule(
+      return new FakeDefaultJavaLibrary(
           buildRuleParams,
           srcs,
           resources,

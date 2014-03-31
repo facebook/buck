@@ -18,7 +18,7 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -61,8 +61,8 @@ public class PythonBinaryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver(rules);
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:javalib");
-    DefaultJavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+    DefaultJavaLibrary javaLibrary = ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(javaLibraryTarget)
             .addSrc(Paths.get("java/src/com/javalib/Bar.java"))
             .addDep(orphanPyLibraryTarget)

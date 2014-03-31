@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class JavaLibraryBuildRuleFactory extends
-    AbstractBuildRuleFactory<DefaultJavaLibraryRule.Builder> {
+    AbstractBuildRuleFactory<DefaultJavaLibrary.Builder> {
 
   public static final String ANNOTATION_PROCESSORS = "annotation_processors";
 
@@ -55,12 +55,12 @@ public class JavaLibraryBuildRuleFactory extends
   }
 
   @Override
-  public DefaultJavaLibraryRule.Builder newBuilder(BuildRuleBuilderParams params) {
-    return DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(javac, javacVersion, params);
+  public DefaultJavaLibrary.Builder newBuilder(BuildRuleBuilderParams params) {
+    return DefaultJavaLibrary.newJavaLibraryRuleBuilder(javac, javacVersion, params);
   }
 
   @Override
-  protected void amendBuilder(DefaultJavaLibraryRule.Builder builder,
+  protected void amendBuilder(DefaultJavaLibrary.Builder builder,
                               BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     Optional<String> proguardConfig = params.getOptionalStringAttribute("proguard_config");
     builder.setProguardConfig(
@@ -88,7 +88,7 @@ public class JavaLibraryBuildRuleFactory extends
 
   static void extractAnnotationProcessorParameters(
       AnnotationProcessingParams.Builder annotationProcessingBuilder,
-      DefaultJavaLibraryRule.Builder buildRuleBuilder,
+      DefaultJavaLibrary.Builder buildRuleBuilder,
       BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
 

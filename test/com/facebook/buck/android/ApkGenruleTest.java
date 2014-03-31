@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -91,9 +91,9 @@ public class ApkGenruleTest {
     // java_binary rule with a classpath entry and a main class.
     BuildTarget libAndroidTarget = BuildTargetFactory.newInstance("//:lib-android");
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(libAndroidTarget)
-        .addSrc(Paths.get("java/com/facebook/util/Facebook.java")));
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+            .setBuildTarget(libAndroidTarget)
+            .addSrc(Paths.get("java/com/facebook/util/Facebook.java")));
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     KeystoreBuilder.createBuilder(keystoreTarget)
@@ -108,8 +108,7 @@ public class ApkGenruleTest {
             .setTarget("Google Inc.:Google APIs:16")
             .setKeystore(keystoreTarget)
             .addDep(libAndroidTarget)
-            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-    );
+            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
   }
 
   @Test
@@ -256,8 +255,7 @@ public class ApkGenruleTest {
     assertEquals(new ImmutableMap.Builder<String, String>()
         .put("APK", relativeToAbsolutePathFunction.apply(GEN_PATH.resolve("fb4a.apk")).toString())
         .put("OUT", expectedApkOutput).build(),
-        environmentVariables
-    );
+        environmentVariables);
     assertEquals(
         ImmutableList.of("/bin/bash", "-e", "-c", "python signer.py $APK key.properties > $OUT"),
         genruleCommand.getShellCommand(executionContext));

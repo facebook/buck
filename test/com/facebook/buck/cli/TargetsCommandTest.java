@@ -24,8 +24,8 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.cli.TargetsCommand.TargetsCommandPredicate;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.java.DefaultJavaLibraryRule;
-import com.facebook.buck.java.JavaTestRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -275,16 +275,17 @@ public class TargetsCommandTest {
         .setBinaryJar(Paths.get("spoof"))
         .build(ruleResolver);
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//javasrc:java-library"))
         .addSrc(Paths.get("javasrc/JavaLibrary.java"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .addDep(BuildTargetFactory.newInstance("//empty:empty")));
     ruleResolver.buildAndAddToIndex(
-        JavaTestRule.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//javatest:test-java-library"))
-        .addSrc(Paths.get("javatest/TestJavaLibrary.java"))
-        .addDep(BuildTargetFactory.newInstance("//javasrc:java-library")));
+        JavaTest.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance("//javatest:test-java-library"))
+            .addSrc(Paths.get("javatest/TestJavaLibrary.java"))
+            .addDep(BuildTargetFactory.newInstance("//javasrc:java-library"))
+    );
 
     List<String> targets = Lists.newArrayList();
     targets.add("//empty:empty");

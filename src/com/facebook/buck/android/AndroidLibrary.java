@@ -20,7 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.model.BuildTarget;
@@ -42,7 +42,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 
-public class AndroidLibraryRule extends DefaultJavaLibraryRule {
+public class AndroidLibrary extends DefaultJavaLibrary {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
@@ -53,7 +53,8 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   private final Optional<Path> manifestFile;
 
   @VisibleForTesting
-  public AndroidLibraryRule(BuildRuleParams buildRuleParams,
+  public AndroidLibrary(
+      BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<SourcePath> resources,
       Optional<Path> proguardConfig,
@@ -111,7 +112,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     return new Builder(javac, javacVersion, params);
   }
 
-  public static class Builder extends DefaultJavaLibraryRule.Builder {
+  public static class Builder extends DefaultJavaLibrary.Builder {
     private Optional<Path> manifestFile = Optional.absent();
 
     private Builder(
@@ -122,7 +123,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     }
 
     @Override
-    public AndroidLibraryRule build(BuildRuleResolver ruleResolver) {
+    public AndroidLibrary build(BuildRuleResolver ruleResolver) {
       // TODO(user): Avoid code duplication by calling super.build() and defining a new
       // constructor in DefaultJavaLibraryRule that takes an instance of itself.
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
@@ -141,7 +142,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
           ? ImmutableSet.of(uberRDotJava.get().getRDotJavaBinFolder().toString())
           : ImmutableSet.<String>of();
 
-      return new AndroidLibraryRule(
+      return new AndroidLibrary(
           result.getBuildRuleParams(),
           srcs,
           resources,
@@ -165,8 +166,8 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     }
 
     @Override
-    public AndroidLibraryRule.Builder addSrc(Path src) {
-      return (AndroidLibraryRule.Builder)super.addSrc(src);
+    public AndroidLibrary.Builder addSrc(Path src) {
+      return (AndroidLibrary.Builder)super.addSrc(src);
     }
 
     @Override

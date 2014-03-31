@@ -20,7 +20,7 @@ RULES_SRCS = [
   'AndroidInstrumentationApkRuleFactory.java',
   'AndroidLibraryBuildRuleFactory.java',
   'AndroidLibraryGraphEnhancer.java',
-  'AndroidLibraryRule.java',
+  'AndroidLibrary.java',
   'AndroidManifest.java',
   'AndroidManifestDescription.java',
   'AndroidResourceDepsFinder.java',
@@ -56,7 +56,7 @@ RULES_SRCS = [
   'PrebuiltNativeLibraryDescription.java',
   'ResourcesFilter.java',
   'RobolectricTestBuildRuleFactory.java',
-  'RobolectricTestRule.java',
+  'RobolectricTest.java',
   'UberRDotJava.java',
   'UberRDotJavaUtil.java',
 ]

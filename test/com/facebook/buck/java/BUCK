@@ -1,7 +1,7 @@
 java_library(
   name = 'testutil',
   srcs = [
-    'FakeDefaultJavaLibraryRule.java',
+    'FakeDefaultJavaLibrary.java',
     'FakeJavaLibraryRule.java',
     'JavaBinaryRuleBuilder.java',
     'KeystoreBuilder.java',

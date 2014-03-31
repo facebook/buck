@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -215,7 +215,7 @@ public class BuildRuleFactoryParamsTest {
         parser,
         target,
         new FakeRuleKeyBuilderFactory());
-    DefaultJavaLibraryRule.Builder builder = createMock(DefaultJavaLibraryRule.Builder.class);
+    DefaultJavaLibrary.Builder builder = createMock(DefaultJavaLibrary.Builder.class);
     expect(builder.addDep(
         new BuildTarget(
             "//src/com/facebook",
@@ -268,7 +268,7 @@ public class BuildRuleFactoryParamsTest {
         parser,
         target,
         new FakeRuleKeyBuilderFactory());
-    DefaultJavaLibraryRule.Builder builder = createMock(DefaultJavaLibraryRule.Builder.class);
+    DefaultJavaLibrary.Builder builder = createMock(DefaultJavaLibrary.Builder.class);
     expect(builder.addDep(
         new BuildTarget(
             "//src/com/facebook",

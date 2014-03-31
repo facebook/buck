@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 
@@ -38,13 +38,13 @@ public class BuildRuleResolverTest {
     BuildRuleBuilderParams params = new BuildRuleBuilderParams(projectFilesystem,
         ruleKeyBuilderFactory);
 
-    DefaultJavaLibraryRule.Builder builder1 = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
+    DefaultJavaLibrary.Builder builder1 = DefaultJavaLibrary.newJavaLibraryRuleBuilder(
         params);
     BuildTarget buildTarget = new BuildTarget("//foo", "bar");
     builder1.setBuildTarget(buildTarget);
     buildRuleResolver.buildAndAddToIndex(builder1);
 
-    DefaultJavaLibraryRule.Builder builder2 = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
+    DefaultJavaLibrary.Builder builder2 = DefaultJavaLibrary.newJavaLibraryRuleBuilder(
         params);
     builder2.setBuildTarget(buildTarget);
 

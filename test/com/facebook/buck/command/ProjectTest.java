@@ -22,14 +22,14 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinaryRule;
-import com.facebook.buck.android.AndroidLibraryRule;
+import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.command.Project.SourceFolder;
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaTestRule;
+import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -93,7 +93,7 @@ public class ProjectTest {
 
     // java_library //buck-out/android/com/facebook:R
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//buck-out/android/com/facebook:R"))
         .addSrc(Paths.get("buck-out/android/com/facebook/R.java"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
@@ -124,14 +124,14 @@ public class ProjectTest {
     BuildTarget grandchild = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/grandchild:grandchild");
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(grandchild)
         .addSrc(Paths.get("Grandchild.java"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // java_library //java/src/com/facebook/child:child
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//java/src/com/facebook/child:child"))
         .addSrc(Paths.get("Child.java"))
@@ -140,7 +140,7 @@ public class ProjectTest {
 
     // java_library //java/src/com/facebook/exportlib:exportlib
     BuildRule exportLib = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(
                 BuildTargetFactory.newInstance(
                     "//java/src/com/facebook/exportlib:exportlib")
@@ -152,7 +152,7 @@ public class ProjectTest {
 
     // android_library //java/src/com/facebook/base:base
     BuildRule baseRule = ruleResolver.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        AndroidLibrary.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
             .addSrc(Paths.get("Base.java"))
             .addDep(BuildTargetFactory.newInstance("//buck-out/android/com/facebook:R"))
@@ -448,7 +448,7 @@ public class ProjectTest {
     BuildTarget easyMockExampleTarget = BuildTargetFactory.newInstance(
         "//third_party/java/easymock:example");
     BuildRule mockRule = ruleResolver.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        AndroidLibrary.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(easyMockExampleTarget)
             .addDep(BuildTargetFactory.newInstance("//third_party/java/easymock:easymock")));
 
@@ -494,12 +494,12 @@ public class ProjectTest {
         .build(ruleResolver);
 
     BuildRule baseBuildRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addDep(BuildTargetFactory.newInstance("//third_party/java/guava:guava")));
 
     BuildRule testBuildRule = ruleResolver.buildAndAddToIndex(
-        JavaTestRule.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
+        JavaTest.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:tests"))
             .addDep(BuildTargetFactory.newInstance("//third_party/java/guava:guava")));
 
@@ -543,7 +543,7 @@ public class ProjectTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     JavaLibrary supportV4 = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/com/android/support/v4:v4"))
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
@@ -557,7 +557,7 @@ public class ProjectTest {
     BuildTarget robolectricTarget =
         BuildTargetFactory.newInstance("//third_party/java/robolectric:robolectric");
     BuildRule robolectricRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(robolectricTarget)
             .addDep(BuildTargetFactory.newInstance("//java/com/android/support/v4:v4"))
             .addDep(BuildTargetFactory.newInstance("//third_party/java/httpcore:httpcore")));
@@ -640,7 +640,7 @@ public class ProjectTest {
     // Create a project_config() with src_roots=[].
     BuildRuleResolver ruleResolver2 = new BuildRuleResolver();
     BuildRule baseBuildRule = ruleResolver2.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        AndroidLibrary.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base")));
     BuildRule inPackageProjectConfig = ruleResolver2.addToIndex(
         ProjectConfigBuilder.newProjectConfigRuleBuilder()
@@ -671,7 +671,7 @@ public class ProjectTest {
     // Create a project_config() with src_roots=['src'].
     BuildRuleResolver ruleResolver3 = new BuildRuleResolver();
     BuildRule baseBuildRule3 = ruleResolver3.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        AndroidLibrary.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base")));
     BuildRule hasSrcFolderProjectConfig = ruleResolver3.addToIndex(
         ProjectConfigBuilder.newProjectConfigRuleBuilder()
@@ -811,21 +811,21 @@ public class ProjectTest {
       throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
-    DefaultJavaLibraryRule ex1 = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+    DefaultJavaLibrary ex1 = ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//example/parent:ex1"))
             .addSrc(Paths.get("DoesNotExist.java"))
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    DefaultJavaLibraryRule ex2 = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+    DefaultJavaLibrary ex2 = ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//example/child:ex2"))
             .addSrc(Paths.get("AlsoDoesNotExist.java"))
             .addDep(ex1.getBuildTarget())
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    DefaultJavaLibraryRule tests = ruleResolver.buildAndAddToIndex(
-        JavaTestRule.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
+    DefaultJavaLibrary tests = ruleResolver.buildAndAddToIndex(
+        JavaTest.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//example/child:tests"))
             .addSrc(Paths.get("SomeTestFile.java"))
             .addDep(ex2.getBuildTarget())

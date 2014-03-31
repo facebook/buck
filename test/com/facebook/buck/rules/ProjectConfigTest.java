@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.Step;
@@ -60,8 +60,9 @@ public class ProjectConfigTest extends EasyMockSupport {
   private ProjectConfig createProjectConfig() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     BuildRule javaRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//javatests:lib")));
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance("//javatests:lib"))
+    );
 
     return ProjectConfigBuilder.newProjectConfigRuleBuilder()
         .setBuildTarget(new BuildTarget("//javatests", "project_config"))

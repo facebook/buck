@@ -21,7 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
 import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.JavaTestRule;
+import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleBuilderParams;
@@ -51,7 +51,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public class RobolectricTestRule extends JavaTestRule {
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
+public class RobolectricTest extends JavaTest {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(
       ANDROID, LIBRARY, TEST);
@@ -72,7 +73,7 @@ public class RobolectricTestRule extends JavaTestRule {
     }
   };
 
-  protected RobolectricTestRule(
+  protected RobolectricTest(
       BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<SourcePath> resources,
@@ -146,7 +147,7 @@ public class RobolectricTestRule extends JavaTestRule {
     return new Builder(params);
   }
 
-  public static class Builder extends JavaTestRule.Builder {
+  public static class Builder extends JavaTest.Builder {
 
 
     private Builder(BuildRuleBuilderParams params) {
@@ -154,7 +155,7 @@ public class RobolectricTestRule extends JavaTestRule {
     }
 
     @Override
-    public RobolectricTestRule build(BuildRuleResolver ruleResolver) {
+    public RobolectricTest build(BuildRuleResolver ruleResolver) {
       ImmutableSet<BuildRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
           ruleResolver);
 
@@ -178,7 +179,7 @@ public class RobolectricTestRule extends JavaTestRule {
           ? ImmutableSet.of(dummyRDotJava.get().getRDotJavaBinFolder().toString())
           : ImmutableSet.<String>of();
 
-      return new RobolectricTestRule(
+      return new RobolectricTest(
           result.getBuildRuleParams(),
           srcs,
           resources,

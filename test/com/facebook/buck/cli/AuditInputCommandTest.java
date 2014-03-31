@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.PartialGraph;
@@ -100,15 +100,16 @@ public class AuditInputCommandTest {
         "//:test-java-library");
 
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:test-java-library"))
             .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java")));
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-library"))
             .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
             .addSrc(Paths.get("src/com/facebook/AndroidLibraryTwo.java"))
-            .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
+            .addDep(BuildTargetFactory.newInstance("//:test-java-library"))
+    );
 
     List<BuildTarget> buildTargets = Lists.transform(targets, new Function<String, BuildTarget>() {
       @Override

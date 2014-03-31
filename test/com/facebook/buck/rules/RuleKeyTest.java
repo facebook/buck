@@ -21,7 +21,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.testutil.TestConsole;
@@ -66,14 +66,14 @@ public class RuleKeyTest {
         });
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
-    DefaultJavaLibraryRule.Builder commonJavaLibraryRuleBuilder = DefaultJavaLibraryRule
+    DefaultJavaLibrary.Builder commonJavaLibraryRuleBuilder = DefaultJavaLibrary
         .newJavaLibraryRuleBuilder(builderParams)
         .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"));
     ruleResolver1.buildAndAddToIndex(commonJavaLibraryRuleBuilder);
     ruleResolver2.buildAndAddToIndex(commonJavaLibraryRuleBuilder);
 
     // Create a java_library() rule with no deps.
-    DefaultJavaLibraryRule.Builder javaLibraryBuilder = DefaultJavaLibraryRule
+    DefaultJavaLibrary.Builder javaLibraryBuilder = DefaultJavaLibrary
         .newJavaLibraryRuleBuilder(builderParams)
         .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:cli"))
         // The source file must be an existing file or else RuleKey.Builder.setVal(File) will throw
@@ -82,12 +82,12 @@ public class RuleKeyTest {
         // TODO(mbolin): Update RuleKey.Builder.setVal(File) to use a ProjectFilesystem so that file
         // access can be mocked appropriately during a unit test.
         .addSrc(Paths.get("src/com/facebook/buck/cli/Main.java"));
-    DefaultJavaLibraryRule libraryNoCommon = ruleResolver1.buildAndAddToIndex(
+    DefaultJavaLibrary libraryNoCommon = ruleResolver1.buildAndAddToIndex(
         javaLibraryBuilder);
 
     // Create the same java_library() rule, but with a dep on //src/com/facebook/buck/cli:common.
     javaLibraryBuilder.addDep(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"));
-    DefaultJavaLibraryRule libraryWithCommon = ruleResolver2.buildAndAddToIndex(
+    DefaultJavaLibrary libraryWithCommon = ruleResolver2.buildAndAddToIndex(
         javaLibraryBuilder);
 
     // Assert that the RuleKeys are distinct.

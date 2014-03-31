@@ -107,7 +107,7 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
+public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
     implements JavaLibrary, AbiRule, HasJavaSrcs, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibrary.Data> {
 
@@ -165,7 +165,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     }
   };
 
-  protected DefaultJavaLibraryRule(
+  protected DefaultJavaLibrary(
       BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<? extends SourcePath> resources,
@@ -193,7 +193,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           @Override
           public ImmutableSetMultimap<JavaLibrary, String> get() {
             return JavaLibraryClasspathProvider.getOutputClasspathEntries(
-                DefaultJavaLibraryRule.this,
+                DefaultJavaLibrary.this,
                 outputJar);
           }
         });
@@ -203,7 +203,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           @Override
           public ImmutableSetMultimap<JavaLibrary, String> get() {
             return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
-                DefaultJavaLibraryRule.this,
+                DefaultJavaLibrary.this,
                 outputJar);
           }
         });
@@ -213,7 +213,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           @Override
           public ImmutableSetMultimap<JavaLibrary, String> get() {
             return JavaLibraryClasspathProvider.getDeclaredClasspathEntries(
-                DefaultJavaLibraryRule.this);
+                DefaultJavaLibrary.this);
           }
         });
 
@@ -633,7 +633,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
         for (BuildRule transitiveNotDeclaredDep : sortedTransitiveNotDeclaredDeps) {
           boolean ruleCanSeeDep = transitiveNotDeclaredDep.isVisibleTo(
-              DefaultJavaLibraryRule.this.getBuildTarget());
+              DefaultJavaLibrary.this.getBuildTarget());
           if (ruleCanSeeDep &&
               isMissingBuildRule(filesystem,
                   transitiveNotDeclaredDep,
@@ -764,7 +764,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     return new Builder(javac, javacVersion, params);
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder<DefaultJavaLibraryRule> implements
+  public static class Builder extends AbstractBuildRuleBuilder<DefaultJavaLibrary> implements
       SrcsAttributeBuilder, ResourcesAttributeBuilder {
 
     protected final BuildRuleBuilderParams params;
@@ -792,14 +792,14 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     }
 
     @Override
-    public DefaultJavaLibraryRule build(BuildRuleResolver ruleResolver) {
+    public DefaultJavaLibrary build(BuildRuleResolver ruleResolver) {
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
 
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      return new DefaultJavaLibraryRule(
+      return new DefaultJavaLibrary(
           buildRuleParams,
           srcs,
           resources,

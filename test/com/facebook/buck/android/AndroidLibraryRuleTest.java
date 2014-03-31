@@ -41,8 +41,8 @@ public class AndroidLibraryRuleTest {
   @Test
   public void testGetInputsToCompareToOuts() {
     BuildRuleResolver params = new BuildRuleResolver();
-    AndroidLibraryRule androidLibraryRuleBuilderBar = getAndroidLibraryRuleBar(params);
-    AndroidLibraryRule androidLibraryRuleBuilderFoo = getAndroidLibraryRuleFoo(params);
+    AndroidLibrary androidLibraryRuleBuilderBar = getAndroidLibraryRuleBar(params);
+    AndroidLibrary androidLibraryRuleBuilderFoo = getAndroidLibraryRuleFoo(params);
     BuildContext context = createMock(BuildContext.class);
     replay(context);
 
@@ -64,9 +64,9 @@ public class AndroidLibraryRuleTest {
         androidLibraryRuleBuilderFoo.getExportedDeps());
   }
 
-  private AndroidLibraryRule getAndroidLibraryRuleFoo(BuildRuleResolver params) {
-    return (AndroidLibraryRule)params.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+  private AndroidLibrary getAndroidLibraryRuleFoo(BuildRuleResolver params) {
+    return (AndroidLibrary) params.buildAndAddToIndex(
+        AndroidLibrary.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/foo:foo"))
             .addSrc(Paths.get("java/src/com/foo/Foo.java"))
             .setManifestFile((Optional.of(Paths.get("java/src/com/foo/AndroidManifest.xml"))))
@@ -74,9 +74,9 @@ public class AndroidLibraryRuleTest {
             .addDep(new BuildTarget("//java/src/com/bar", "bar")));
   }
 
-  private AndroidLibraryRule getAndroidLibraryRuleBar(BuildRuleResolver params) {
-    return (AndroidLibraryRule)params.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+  private AndroidLibrary getAndroidLibraryRuleBar(BuildRuleResolver params) {
+    return (AndroidLibrary) params.buildAndAddToIndex(
+        AndroidLibrary.newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/bar:bar"))
             .addSrc(Paths.get("java/src/com/bar/Bar.java"))
             .setManifestFile((Optional.<Path>absent()))

@@ -33,7 +33,7 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.FakeJavaLibraryRule;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaTestRule;
+import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -97,7 +97,7 @@ public class TestCommandTest {
   @Test
   public void testGeneratedSourceFile() {
     Path pathToGenFile = GEN_PATH.resolve("GeneratedFile.java");
-    assertTrue(JavaTestRule.isGeneratedFile(pathToGenFile));
+    assertTrue(JavaTest.isGeneratedFile(pathToGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
     JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
@@ -127,7 +127,7 @@ public class TestCommandTest {
   @Test
   public void testNonGeneratedSourceFile() {
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
-    assertFalse(JavaTestRule.isGeneratedFile(pathToNonGenFile));
+    assertFalse(JavaTest.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
     JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
@@ -172,7 +172,7 @@ public class TestCommandTest {
   @Test
   public void testUnifiedSourceFile() {
     Path pathToNonGenFile = Paths.get("java/package/SourceFile1.java");
-    assertFalse(JavaTestRule.isGeneratedFile(pathToNonGenFile));
+    assertFalse(JavaTest.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
     JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))

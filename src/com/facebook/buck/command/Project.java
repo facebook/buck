@@ -22,7 +22,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidDexTransitiveDependencies;
-import com.facebook.buck.android.AndroidLibraryRule;
+import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaBinary;
@@ -376,7 +376,7 @@ public class Project {
     Preconditions.checkState(projectRule instanceof JavaLibrary
         || buildable instanceof JavaLibrary
         || buildable instanceof JavaBinary
-        || projectRule instanceof AndroidLibraryRule
+        || projectRule instanceof AndroidLibrary
         || buildable instanceof AndroidResource
         || projectRule instanceof AndroidBinaryRule
         || buildable instanceof NdkLibrary,

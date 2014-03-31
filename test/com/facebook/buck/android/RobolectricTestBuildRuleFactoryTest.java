@@ -75,7 +75,7 @@ public class RobolectricTestBuildRuleFactoryTest {
 
     // Create a builder using the factory.
     RobolectricTestBuildRuleFactory factory = new RobolectricTestBuildRuleFactory();
-    RobolectricTestRule.Builder builder = factory
+    RobolectricTest.Builder builder = factory
         .newBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(buildTarget);
 
@@ -89,7 +89,7 @@ public class RobolectricTestBuildRuleFactoryTest {
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
     buildRuleIndex.put(BuildTargetFactory.newInstance("//java/com/facebook/base:base"), base);
-    RobolectricTestRule robolectricRule = (RobolectricTestRule) ruleResolver
+    RobolectricTest robolectricRule = (RobolectricTest) ruleResolver
         .buildAndAddToIndex(builder);
 
     // Verify the build rule built from the builder.

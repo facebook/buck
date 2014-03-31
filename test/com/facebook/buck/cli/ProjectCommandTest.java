@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -75,10 +75,11 @@ public class ProjectCommandTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget javaLibraryTargetName = BuildTargetFactory.newInstance("//javasrc:java-library");
-    DefaultJavaLibraryRule javaLibraryRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(javaLibraryTargetName)
-        .addSrc(Paths.get("javasrc/JavaLibrary.java")));
+    DefaultJavaLibrary javaLibraryRule = ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+            .setBuildTarget(javaLibraryTargetName)
+            .addSrc(Paths.get("javasrc/JavaLibrary.java"))
+    );
 
     String projectConfigTargetName = "//javasrc:project-config";
     BuildRule ruleConfig = ruleResolver.addToIndex(

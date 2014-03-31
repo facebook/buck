@@ -16,7 +16,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavaTestBuildRuleFactory;
-import com.facebook.buck.java.JavaTestRule;
+import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
@@ -25,12 +25,12 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 public class RobolectricTestBuildRuleFactory extends JavaTestBuildRuleFactory {
 
   @Override
-  public RobolectricTestRule.Builder newBuilder(BuildRuleBuilderParams params) {
-    return RobolectricTestRule.newRobolectricTestRuleBuilder(params);
+  public RobolectricTest.Builder newBuilder(BuildRuleBuilderParams params) {
+    return RobolectricTest.newRobolectricTestRuleBuilder(params);
   }
 
   @Override
-  protected void amendBuilder(JavaTestRule.Builder abstractBuilder,
+  protected void amendBuilder(JavaTest.Builder abstractBuilder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     super.amendBuilder(abstractBuilder, params);
 

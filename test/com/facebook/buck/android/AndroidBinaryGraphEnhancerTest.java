@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -65,21 +65,21 @@ public class AndroidBinaryGraphEnhancerTest {
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
     BuildTarget javaDep1BuildTarget = new BuildTarget("//java/com/example", "dep1");
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(
             new FakeBuildRuleBuilderParams(ruleKeyBuilderFactory))
             .setBuildTarget(javaDep1BuildTarget)
             .addSrc(Paths.get("java/com/example/Dep1.java")));
 
     BuildTarget javaDep2BuildTarget = new BuildTarget("//java/com/example", "dep2");
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(
             new FakeBuildRuleBuilderParams(ruleKeyBuilderFactory))
             .setBuildTarget(javaDep2BuildTarget)
             .addSrc(Paths.get("java/com/example/Dep2.java")));
 
     BuildTarget javaLibBuildTarget = new BuildTarget("//java/com/example", "lib");
-    DefaultJavaLibraryRule javaLib = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
+    DefaultJavaLibrary javaLib = ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(
             new FakeBuildRuleBuilderParams(ruleKeyBuilderFactory))
             .setBuildTarget(javaLibBuildTarget)
             .addSrc(Paths.get("java/com/example/Lib.java"))

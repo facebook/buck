@@ -94,8 +94,8 @@ public class RobolectricTestRuleTest {
     BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base/robolectricTest:robolectricTest");
 
-    RobolectricTestRule testRule = (RobolectricTestRule)ruleResolver.buildAndAddToIndex(
-        RobolectricTestRule.newRobolectricTestRuleBuilder(new FakeBuildRuleBuilderParams())
+    RobolectricTest testRule = (RobolectricTest)ruleResolver.buildAndAddToIndex(
+        RobolectricTest.newRobolectricTestRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(robolectricBuildTarget));
 
     String result = testRule.getRobolectricResourceDirectories(resDeps);
@@ -113,7 +113,7 @@ public class RobolectricTestRuleTest {
     Path resDep3 = Paths.get("res3");
     StringBuilder expectedVmArgBuilder = new StringBuilder();
     expectedVmArgBuilder.append("-D")
-        .append(RobolectricTestRule.LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME)
+        .append(RobolectricTest.LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME)
         .append("=")
         .append(resDep1)
         .append(File.pathSeparator)
@@ -124,8 +124,8 @@ public class RobolectricTestRuleTest {
     BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base/robolectricTest:robolectricTest");
 
-    RobolectricTestRule testRule = (RobolectricTestRule)ruleResolver.buildAndAddToIndex(
-        RobolectricTestRule.newRobolectricTestRuleBuilder(new FakeBuildRuleBuilderParams())
+    RobolectricTest testRule = (RobolectricTest)ruleResolver.buildAndAddToIndex(
+        RobolectricTest.newRobolectricTestRuleBuilder(new FakeBuildRuleBuilderParams())
             .setBuildTarget(robolectricBuildTarget));
 
     String result = testRule.getRobolectricResourceDirectories(
