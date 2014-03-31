@@ -41,7 +41,7 @@ import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.java.JavaTestBuildRuleFactory;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreDescription;
-import com.facebook.buck.java.PrebuiltJarBuildRuleFactory;
+import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.parcelable.GenParcelableDescription;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonLibraryDescription;
@@ -127,6 +127,7 @@ public class KnownBuildRuleTypes {
     builder.register(new IosTestDescription());
     builder.register(new JavaBinaryDescription());
     builder.register(new NdkLibraryDescription(Optional.<String>absent()));
+    builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());
     builder.register(new ProjectConfigDescription());
     builder.register(new PythonBinaryDescription());
@@ -141,7 +142,6 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.ANDROID_LIBRARY, new AndroidLibraryBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
-    builder.register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());
     builder.register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
     builder.register(BuildRuleType.SH_BINARY, new ShBinaryBuildRuleFactory());
     builder.register(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory());

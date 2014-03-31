@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -52,16 +53,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class PrebuiltJarRuleTest {
+public class PrebuiltJarTest {
 
   private static final Path PATH_TO_JUNIT_JAR = Paths.get("lib/junit-4.11.jar");
 
-  private PrebuiltJarRule junitJarRule;
+  private PrebuiltJar junitJarRule;
 
   @Before
   public void setUp() {
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(new BuildTarget("//lib", "junit"));
-    junitJarRule = new PrebuiltJarRule(buildRuleParams,
+
+    junitJarRule = new PrebuiltJar(buildRuleParams,
         PATH_TO_JUNIT_JAR,
         Optional.of(Paths.get("lib/junit-4.11-sources.jar")),
         Optional.of("http://junit-team.github.io/junit/javadoc/latest/"));
@@ -75,7 +77,7 @@ public class PrebuiltJarRuleTest {
 
     // Execute the CalculateAbiStep.
     Step calculateAbiStep = buildSteps.get(0);
-    assertTrue(calculateAbiStep instanceof PrebuiltJarRule.CalculateAbiStep);
+    assertTrue(calculateAbiStep instanceof PrebuiltJar.CalculateAbiStep);
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
     int exitCode = calculateAbiStep.execute(executionContext);
     assertEquals("Step should execute successfully.", 0, exitCode);
@@ -95,7 +97,13 @@ public class PrebuiltJarRuleTest {
     CachingBuildEngine buildEngine = new CachingBuildEngine();
     buildEngine.createFutureFor(junitJarRule.getBuildTarget());
     buildEngine.doHydrationAfterBuildStepsFinish(
-        junitJarRule, buildResult, onDiskBuildInfo);
+        // I am ashamed. Temporary hack, I hope.
+        new AbstractBuildable.AnonymousBuildRule(
+            PrebuiltJarDescription.TYPE,
+            junitJarRule,
+            new FakeBuildRuleParams(junitJarRule.getBuildTarget())
+        ),
+        buildResult, onDiskBuildInfo);
 
     // Make sure the ABI key is set as expected.
     HashCode hashForJar = ByteStreams.hash(

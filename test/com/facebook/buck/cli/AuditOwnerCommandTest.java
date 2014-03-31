@@ -25,6 +25,7 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -140,8 +141,8 @@ public class AuditOwnerCommandTest {
     }
 
     @Override
-    public int compareTo(BuildRule buildRule) {
-      return this.getFullyQualifiedName().compareTo(buildRule.getFullyQualifiedName());
+    public int compareTo(HasBuildTarget other) {
+      return this.getBuildTarget().compareTo(other.getBuildTarget());
     }
   }
 

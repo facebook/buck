@@ -42,8 +42,8 @@ java_library(
     'JavaTestBuildRuleFactory.java',
     'Keystore.java',
     'KeystoreDescription.java',
-    'PrebuiltJarRule.java',
-    'PrebuiltJarBuildRuleFactory.java',
+    'PrebuiltJar.java',
+    'PrebuiltJarDescription.java',
   ],
   deps = [
     ':steps',

@@ -26,7 +26,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
-import com.facebook.buck.java.PrebuiltJarRule;
+import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -42,8 +42,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.BuckTestConstant;
@@ -269,11 +269,9 @@ public class TargetsCommandTest {
   @Test
   public void testGetMachingBuildTargets() throws CmdLineException, IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//empty:empty"))
+    PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//empty:empty"))
         .setBinaryJar(Paths.get("spoof"))
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .build(ruleResolver);
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//javasrc:java-library"))

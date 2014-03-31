@@ -47,9 +47,15 @@ public class Classpaths {
     final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
         ImmutableSetMultimap.builder();
     for (BuildRule dep : deps) {
-      if (dep instanceof JavaLibraryRule) {
-        JavaLibraryRule libraryRule = (JavaLibraryRule)dep;
-        classpathEntries.putAll(libraryRule.getTransitiveClasspathEntries());
+      JavaLibraryRule library = null;
+      if (dep.getBuildable() instanceof JavaLibraryRule) {
+        library = (JavaLibraryRule) dep.getBuildable();
+      } else if (dep instanceof JavaLibraryRule) {
+        library = (JavaLibraryRule) dep;
+      }
+
+      if (library != null) {
+        classpathEntries.putAll(library.getTransitiveClasspathEntries());
       }
     }
     return classpathEntries.build();

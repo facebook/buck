@@ -16,11 +16,16 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.rules.BuildRule;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+
+import javax.annotation.Nullable;
 
 public class JavaLibraryClasspathProvider {
 
@@ -33,7 +38,7 @@ public class JavaLibraryClasspathProvider {
     ImmutableSetMultimap.Builder<JavaLibraryRule, String> outputClasspathBuilder =
         ImmutableSetMultimap.builder();
     Iterable<JavaLibraryRule> javaExportedLibraryDeps =
-        Iterables.filter(javaLibraryRule.getExportedDeps(), JavaLibraryRule.class);
+        getJavaLibraryDeps(javaLibraryRule.getExportedDeps());
 
     for (JavaLibraryRule rule : javaExportedLibraryDeps) {
       outputClasspathBuilder.putAll(rule, rule.getOutputClasspathEntries().values());
@@ -87,12 +92,31 @@ public class JavaLibraryClasspathProvider {
     final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
         ImmutableSetMultimap.builder();
 
-    Iterable<JavaLibraryRule> javaLibraryDeps =
-        Iterables.filter(javaLibraryRule.getDeps(), JavaLibraryRule.class);
+    Iterable<JavaLibraryRule> javaLibraryDeps = getJavaLibraryDeps(javaLibraryRule.getDeps());
 
     for (JavaLibraryRule rule : javaLibraryDeps) {
       classpathEntries.putAll(rule, rule.getOutputClasspathEntries().values());
     }
     return classpathEntries.build();
+  }
+
+  private static FluentIterable<JavaLibraryRule> getJavaLibraryDeps(Iterable<BuildRule> deps) {
+    return FluentIterable
+        .from(deps)
+        .transform(
+            new Function<BuildRule, JavaLibraryRule>() {
+              @Nullable
+              @Override
+              public JavaLibraryRule apply(BuildRule input) {
+                if (input.getBuildable() instanceof JavaLibraryRule) {
+                  return (JavaLibraryRule) input.getBuildable();
+                }
+                if (input instanceof JavaLibraryRule) {
+                  return (JavaLibraryRule) input;
+                }
+                return null;
+              }
+            })
+        .filter(Predicates.notNull());
   }
 }

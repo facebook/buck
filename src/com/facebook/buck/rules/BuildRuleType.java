@@ -27,7 +27,6 @@ public final class BuildRuleType {
   public static final BuildRuleType ANDROID_MANIFEST = new BuildRuleType("android_manifest");
   public static final BuildRuleType JAVA_LIBRARY = new BuildRuleType("java_library");
   public static final BuildRuleType JAVA_TEST = new BuildRuleType("java_test");
-  public static final BuildRuleType PREBUILT_JAR = new BuildRuleType("prebuilt_jar");
   public static final BuildRuleType ROBOLECTRIC_TEST = new BuildRuleType("robolectric_test");
   public static final BuildRuleType SH_BINARY = new BuildRuleType("sh_binary");
   public static final BuildRuleType SH_TEST = new BuildRuleType("sh_test");

@@ -1302,11 +1302,9 @@ public class DefaultJavaLibraryRuleTest {
     VALID_PREBUILT_JAR("//tools/java/src/com/facebook/library:prebuilt-processors") {
       @Override
       public BuildRule createRule(BuildTarget target) {
-        return new PrebuiltJarRule(
-            new FakeBuildRuleParams(target),
-            Paths.get("MyJar"),
-            Optional.<Path>absent(),
-            Optional.<String>absent());
+        return PrebuiltJarBuilder.createBuilder(target)
+            .setBinaryJar(Paths.get("MyJar"))
+            .build(new BuildRuleResolver());
       }
     },
     VALID_JAVA_BINARY("//tools/java/src/com/facebook/annotations:custom-processors") {

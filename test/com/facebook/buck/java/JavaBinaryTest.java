@@ -24,7 +24,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
@@ -51,18 +50,16 @@ public class JavaBinaryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // prebuilt_jar //third_party/generator:generator
-    ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//third_party/generator:generator"))
+    PrebuiltJarBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third_party/generator:generator"))
         .setBinaryJar(PATH_TO_GENERATOR_JAR)
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .build(ruleResolver);
 
     // prebuilt_jar //third_party/guava:guava
-    ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
+    PrebuiltJarBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(PATH_TO_GUAVA_JAR)
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .build(ruleResolver);
 
     // java_library //java/com/facebook/base:base
     BuildRule libraryRule = ruleResolver.buildAndAddToIndex(

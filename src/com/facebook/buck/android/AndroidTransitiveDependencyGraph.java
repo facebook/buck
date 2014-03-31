@@ -21,7 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
-import com.facebook.buck.java.PrebuiltJarRule;
+import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
@@ -89,9 +89,9 @@ public class AndroidTransitiveDependencyGraph {
         // We need to include the transitive closure of the compiled .class files when dex'ing, as
         // well as the third-party jars that they depend on.
         // Update pathsToThirdPartyJars.
-        if (rule instanceof PrebuiltJarRule) {
-          PrebuiltJarRule prebuiltJarRule = (PrebuiltJarRule) rule;
-          pathsToThirdPartyJarsBuilder.add(prebuiltJarRule.getBinaryJar().toString());
+        if (rule.getBuildable() instanceof PrebuiltJar) {
+          PrebuiltJar prebuiltJar = (PrebuiltJar) rule.getBuildable();
+          pathsToThirdPartyJarsBuilder.add(prebuiltJar.getBinaryJar().toString());
         }
         return maybeVisitAllDeps(rule, rule.getProperties().is(LIBRARY));
       }

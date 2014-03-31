@@ -27,7 +27,7 @@ import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibraryRule;
-import com.facebook.buck.java.PrebuiltJarRule;
+import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
@@ -139,7 +139,7 @@ public class Project {
   private final ProjectFilesystem projectFilesystem;
   private final Optional<String> pathToDefaultAndroidManifest;
   private final Optional<String> pathToPostProcessScript;
-  private final Set<PrebuiltJarRule> libraryJars;
+  private final Set<BuildRule> libraryJars;
   private final String pythonInterpreter;
 
   public Project(PartialGraph partialGraph,
@@ -335,7 +335,7 @@ public class Project {
    * This is used exclusively for testing and will only be populated after the modules are created.
    */
   @VisibleForTesting
-  ImmutableSet<PrebuiltJarRule> getLibraryJars() {
+  ImmutableSet<BuildRule> getLibraryJars() {
     return ImmutableSet.copyOf(libraryJars);
   }
 
@@ -374,6 +374,7 @@ public class Project {
     BuildRule projectRule = projectConfig.getProjectRule();
     Buildable buildable = projectRule.getBuildable();
     Preconditions.checkState(projectRule instanceof JavaLibraryRule
+        || buildable instanceof JavaLibraryRule
         || buildable instanceof JavaBinary
         || projectRule instanceof AndroidLibraryRule
         || buildable instanceof AndroidResource
@@ -519,8 +520,13 @@ public class Project {
 
     // Annotation processing generates sources for IntelliJ to consume, but does so outside
     // the module directory to avoid messing up globbing.
-    if (projectRule instanceof JavaLibraryRule) {
-      JavaLibraryRule javaLibraryRule = (JavaLibraryRule)projectRule;
+    JavaLibraryRule javaLibraryRule = null;
+    if (projectRule.getBuildable() instanceof JavaLibraryRule) {
+      javaLibraryRule = (JavaLibraryRule) projectRule.getBuildable();
+    } else if (projectRule instanceof JavaLibraryRule) {
+      javaLibraryRule = (JavaLibraryRule) projectRule;
+    }
+    if (javaLibraryRule != null) {
       AnnotationProcessingData processingData = javaLibraryRule.getAnnotationProcessingData();
 
       Path annotationGenSrc = processingData.getGeneratedSourceFolderName();
@@ -781,7 +787,10 @@ public class Project {
             dep == rule) {
           depsToVisit = dep.getDeps();
         } else if (dep.getProperties().is(LIBRARY) && dep instanceof ExportDependencies) {
-          depsToVisit = ((ExportDependencies)dep).getExportedDeps();
+            depsToVisit = ((ExportDependencies) dep).getExportedDeps();
+        } else if (dep.getProperties().is(LIBRARY) &&
+            dep.getBuildable() instanceof ExportDependencies) {
+            depsToVisit = ((ExportDependencies) dep.getBuildable()).getExportedDeps();
         } else {
           depsToVisit = ImmutableSet.of();
         }
@@ -822,8 +831,8 @@ public class Project {
         }
 
         DependentModule dependentModule;
-        if (dep instanceof PrebuiltJarRule) {
-          libraryJars.add((PrebuiltJarRule) dep);
+        if (dep.getBuildable() instanceof PrebuiltJar) {
+          libraryJars.add(dep);
           String libraryName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
         } else if (dep instanceof NdkLibrary) {
@@ -880,15 +889,15 @@ public class Project {
 
   /**
    * @param rule whose corresponding IntelliJ module name will be returned
-   * @param basePathToAliasMap may be null if rule is a {@link PrebuiltJarRule}
+   * @param basePathToAliasMap may be null if rule is a {@link PrebuiltJar}
    */
   private static String getIntellijNameForRule(BuildRule rule,
       @Nullable Map<String, String> basePathToAliasMap) {
     // Get basis for the library/module name.
     String name;
-    if (rule instanceof PrebuiltJarRule) {
-      PrebuiltJarRule prebuiltJarRule = (PrebuiltJarRule)rule;
-      String binaryJar = prebuiltJarRule.getBinaryJar().toString();
+    if (rule.getBuildable() instanceof PrebuiltJar) {
+      PrebuiltJar prebuiltJar = (PrebuiltJar) rule.getBuildable();
+      String binaryJar = prebuiltJar.getBinaryJar().toString();
       return getIntellijNameForBinaryJar(binaryJar);
     } else {
       String basePath = rule.getBuildTarget().getBasePath();
@@ -931,7 +940,7 @@ public class Project {
   private void writeJsonConfig(File jsonTempFile, List<Module> modules) throws IOException {
     List<SerializablePrebuiltJarRule> libraries = Lists.newArrayListWithCapacity(
         libraryJars.size());
-    for (PrebuiltJarRule libraryJar : libraryJars) {
+    for (BuildRule libraryJar : libraryJars) {
       libraries.add(new SerializablePrebuiltJarRule(libraryJar));
     }
 
@@ -1068,15 +1077,19 @@ public class Project {
     @JsonProperty private final String sourceJar;
     @JsonProperty private final String javadocUrl;
 
-    private SerializablePrebuiltJarRule(PrebuiltJarRule rule) {
+    private SerializablePrebuiltJarRule(BuildRule rule) {
+      Preconditions.checkState(rule.getBuildable() instanceof PrebuiltJar);
       this.name = getIntellijNameForRule(rule, null /* basePathToAliasMap */);
-      this.binaryJar = rule.getBinaryJar().toString();
-      if (rule.getSourceJar().isPresent()) {
-        this.sourceJar = rule.getSourceJar().get().toString();
+
+      PrebuiltJar prebuiltJar = (PrebuiltJar) rule.getBuildable();
+
+      this.binaryJar = prebuiltJar.getBinaryJar().toString();
+      if (prebuiltJar.getSourceJar().isPresent()) {
+        this.sourceJar = prebuiltJar.getSourceJar().get().toString();
       } else {
         this.sourceJar = null;
       }
-      this.javadocUrl = rule.getJavadocUrl().orNull();
+      this.javadocUrl = prebuiltJar.getJavadocUrl().orNull();
     }
 
     @Override

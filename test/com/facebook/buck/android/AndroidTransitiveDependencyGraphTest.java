@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.KeystoreBuilder;
-import com.facebook.buck.java.PrebuiltJarRule;
+import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -47,17 +47,16 @@ public class AndroidTransitiveDependencyGraphTest {
 
     // Create an AndroidBinaryRule that transitively depends on two prebuilt JARs. One of the two
     // prebuilt JARs will be listed in the AndroidBinaryRule's no_dx list.
-    PrebuiltJarRule guavaRule = ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
+    BuildTarget guavaTarget = BuildTargetFactory.newInstance("//third_party/guava:guava");
+    BuildRule guavaRule =
+        PrebuiltJarBuilder.createBuilder(guavaTarget)
         .setBinaryJar(Paths.get("third_party/guava/guava-10.0.1.jar"))
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .build(ruleResolver);
 
-    PrebuiltJarRule jsr305Rule = ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//third_party/jsr-305:jsr-305"))
+    BuildRule jsr305Rule = PrebuiltJarBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third_party/jsr-305:jsr-305"))
         .setBinaryJar(Paths.get("third_party/jsr-305/jsr305.jar"))
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+        .build(ruleResolver);
 
     BuildRule ndkLibrary =
         NdkLibraryBuilder.createNdkLibrary(BuildTargetFactory.newInstance(
@@ -88,7 +87,8 @@ public class AndroidTransitiveDependencyGraphTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:res"))
             .setManifest(Paths.get("java/src/com/facebook/module/AndroidManifest.xml"))
             .setAssets(Paths.get("assets"))
-            .build());
+            .build()
+    );
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     KeystoreBuilder.createBuilder(keystoreTarget)
@@ -101,7 +101,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
         .addClasspathDep(libraryRule.getBuildTarget())
         .addClasspathDep(manifestRule.getBuildTarget())
-        .addBuildRuleToExcludeFromDex(BuildTargetFactory.newInstance("//third_party/guava:guava"))
+        .addBuildRuleToExcludeFromDex(guavaTarget)
         .setManifest(new FileSourcePath("java/src/com/facebook/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreTarget));

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.Beta;
@@ -153,8 +154,8 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public final int compareTo(BuildRule that) {
-    return this.getFullyQualifiedName().compareTo(that.getFullyQualifiedName());
+  public final int compareTo(HasBuildTarget that) {
+    return this.getBuildTarget().compareTo(that.getBuildTarget());
   }
 
   @Override

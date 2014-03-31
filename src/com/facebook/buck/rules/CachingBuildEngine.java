@@ -45,6 +45,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.Nullable;
+
 /**
  * A build engine used to build a {@link BuildRule} which also caches the results. If the current
  * {@link RuleKey} of the build rules matches the one on disk, it does not do any work. It also
@@ -474,24 +476,31 @@ public class CachingBuildEngine {
       OnDiskBuildInfo onDiskBuildInfo) {
     // Give the rule a chance to populate its internal data structures now that all of the
     // files should be in a valid state.
-    if (rule instanceof InitializableFromDisk) {
-      InitializableFromDisk<?> initializable = (InitializableFromDisk<?>) rule;
-      doInitializeFromDisk(initializable, onDiskBuildInfo);
-    }
-
-    // We're moving to a world where BuildRule becomes Buildable. In many cases, that
-    // refactoring hasn't happened yet, and in that case "self" and self's Buildable are
-    // the same instance. We don't want to call initializeFromDisk more than once, so
-    // handle this case gracefully-ish.
-    Buildable buildable = rule.getBuildable();
-    if (rule != buildable && buildable instanceof InitializableFromDisk) {
-      InitializableFromDisk<?> initializable = (InitializableFromDisk<?>) buildable;
+    InitializableFromDisk<?> initializable = deriveInitializable(rule);
+    if (initializable != null) {
       doInitializeFromDisk(initializable, onDiskBuildInfo);
     }
 
     // Only now that the rule should be in a completely valid state, resolve the future.
     BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(rule, result.getSuccess());
     results.get(rule.getBuildTarget()).set(buildRuleSuccess);
+  }
+
+  /**
+   * We're moving to a world where BuildRule becomes Buildable. In many cases, that refactoring
+   * hasn't happened yet, and in that case "self" and self's Buildable are the same instance. We
+   * don't want to call initializeFromDisk more than once, so handle this case gracefully-ish.
+   */
+   @Nullable
+  private InitializableFromDisk<?> deriveInitializable(BuildRule rule) {
+    if (rule.getBuildable() instanceof InitializableFromDisk) {
+      return (InitializableFromDisk) rule.getBuildable();
+    }
+    if (rule instanceof InitializableFromDisk) {
+      return (InitializableFromDisk) rule;
+    }
+
+    return null;
   }
 
   private <T> void doInitializeFromDisk(InitializableFromDisk<T> initializable,

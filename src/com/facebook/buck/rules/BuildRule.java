@@ -30,10 +30,15 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
+// This should be Comparable<BuildRule>, but we need to also compare with PrebuiltJar (and, later,
+// the other java library rules once they've migrated to Buildable. As such, the only sane interface
+// to compare to is HasBuildTarget. Ultimately, when we collapse BuildRule and Buildable, this
+// should be Comparable<Buildable>
+// TODO(simons): Fix the horror of Comparable.
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
-public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
+public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
 
   @Override
   public BuildTarget getBuildTarget();

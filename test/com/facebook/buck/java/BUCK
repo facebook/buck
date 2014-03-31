@@ -5,6 +5,7 @@ java_library(
     'FakeJavaLibraryRule.java',
     'JavaBinaryRuleBuilder.java',
     'KeystoreBuilder.java',
+    'PrebuiltJarBuilder.java',
   ],
   deps = [
     '//lib:guava',

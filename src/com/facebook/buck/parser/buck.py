@@ -387,26 +387,6 @@ def robolectric_test(
 
 
 @provide_for_build
-def prebuilt_jar(
-    name,
-    binary_jar,
-    source_jar=None,
-    javadoc_url=None,
-    deps=[],
-    visibility=[],
-    build_env=None):
-  add_rule({
-    'type': 'prebuilt_jar',
-    'name': name,
-    'binary_jar': binary_jar,
-    'source_jar': source_jar,
-    'javadoc_url': javadoc_url,
-    'deps': deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def android_library(
     name,
     srcs=[],

@@ -19,20 +19,16 @@ package com.facebook.buck.java;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -59,9 +55,9 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
-public class PrebuiltJarRule extends DoNotUseAbstractBuildable
+public class PrebuiltJar extends AbstractBuildable
     implements JavaLibraryRule, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibraryRule.Data> {
+    InitializableFromDisk<JavaLibraryRule.Data>, Comparable<HasBuildTarget> {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -75,12 +71,17 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
       declaredClasspathEntriesSupplier;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
+  private final BuildTarget target;
+  private final ImmutableSortedSet<BuildRule> deps;
 
-  PrebuiltJarRule(BuildRuleParams buildRuleParams,
+  PrebuiltJar(
+      BuildRuleParams buildRuleParams,
       Path classesJar,
       Optional<Path> sourceJar,
       Optional<String> javadocUrl) {
-    super(buildRuleParams);
+    this.target = buildRuleParams.getBuildTarget();
+    this.deps = buildRuleParams.getDeps();
+
     this.binaryJar = Preconditions.checkNotNull(classesJar);
     this.sourceJar = Preconditions.checkNotNull(sourceJar);
     this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
@@ -91,8 +92,8 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
           public ImmutableSetMultimap<JavaLibraryRule, String> get() {
             ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
                 ImmutableSetMultimap.builder();
-            classpathEntries.put(PrebuiltJarRule.this, getBinaryJar().toString());
-            classpathEntries.putAll(Classpaths.getClasspathEntries(getDeps()));
+            classpathEntries.put(PrebuiltJar.this, getBinaryJar().toString());
+            classpathEntries.putAll(Classpaths.getClasspathEntries(deps));
             return classpathEntries.build();
           }
         });
@@ -103,18 +104,13 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
           public ImmutableSetMultimap<JavaLibraryRule, String> get() {
             ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
                 ImmutableSetMultimap.builder();
-            classpathEntries.put(PrebuiltJarRule.this, getBinaryJar().toString());
+            classpathEntries.put(PrebuiltJar.this, getBinaryJar().toString());
             return classpathEntries.build();
           }
         });
 
     buildOutputInitializer =
         new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
-  }
-
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.PREBUILT_JAR;
   }
 
   @Override
@@ -132,6 +128,11 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
   public Optional<String> getJavadocUrl() {
     return javadocUrl;
+  }
+
+  @Override
+  public BuildTarget getBuildTarget() {
+    return target;
   }
 
   @Override
@@ -185,7 +186,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
   @Override
   public ImmutableSortedSet<BuildRule> getExportedDeps() {
-    return getDeps();
+    return deps;
   }
 
   @Override
@@ -250,65 +251,16 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return super.appendToRuleKey(builder)
-        .set("javadocUrl", javadocUrl);
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder.set("javadocUrl", javadocUrl);
   }
 
-  public static Builder newPrebuiltJarRuleBuilder(BuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildRuleBuilder<PrebuiltJarRule> {
-
-    private Path binaryJar;
-    private Optional<Path> sourceJar = Optional.absent();
-    private Optional<String> javadocUrl = Optional.absent();
-
-    private Builder(BuildRuleBuilderParams params) {
-      super(params);
+  @Override
+  public int compareTo(HasBuildTarget other) {
+    if (this == other) {
+      return 0;
     }
 
-    @Override
-    public PrebuiltJarRule build(BuildRuleResolver ruleResolver) {
-      return new PrebuiltJarRule(createBuildRuleParams(ruleResolver),
-          binaryJar,
-          sourceJar,
-          javadocUrl);
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    public Builder addDep(BuildTarget dep) {
-      super.addDep(dep);
-      return this;
-    }
-
-    @Override
-    public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
-      super.addVisibilityPattern(visibilityPattern);
-      return this;
-    }
-
-    public Builder setBinaryJar(Path binaryJar) {
-      this.binaryJar = binaryJar;
-      return this;
-    }
-
-    public Builder setSourceJar(Optional<Path> sourceJar) {
-      this.sourceJar = Preconditions.checkNotNull(sourceJar);
-      return this;
-    }
-
-    public Builder setJavadocUrl(Optional<String> javadocUrl) {
-      this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
-      return this;
-    }
-
+    return getBuildTarget().compareTo(other.getBuildTarget());
   }
 }
