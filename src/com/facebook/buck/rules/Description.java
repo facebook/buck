@@ -44,5 +44,5 @@ public interface Description<T extends ConstructorArg> {
    * @param args A constructor argument, as returned by {@link #createUnpopulatedConstructorArg()}.
    * @return The {@link Buildable} that describes the default flavour of the rule being described.
    */
-  Buildable createBuildable(BuildRuleParams params, T args);
+  <A extends T> Buildable createBuildable(BuildRuleParams params, A args);
 }
