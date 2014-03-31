@@ -30,6 +30,8 @@ import java.util.List;
 
 public class ProjectCommandOptions extends AbstractCommandOptions {
 
+  private static final String DEFAULT_IDE_VALUE = "intellij";
+
   @Option(
       name = "--combined-project",
       usage = "Generate an xcode project of a target and its dependencies.")
@@ -41,6 +43,12 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
       usage = "(In Alpha) When generating a project slice, also include all tests that test " +
           "code in that slice.")
   private boolean withTests = false;
+
+  @Option(
+      name = "--ide",
+      usage = "The type of IDE for which to generate a project. Defaults to '" +
+          DEFAULT_IDE_VALUE + "' if not specified in .buckconfig.")
+  private String ide = null;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -83,8 +91,12 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   }
 
   public String getIde() {
-    Optional<String> ide = getBuckConfig().getValue("project", "ide");
-    return ide.or("intellij");
+    if (ide != null) {
+      return ide;
+    } else {
+      Optional<String> ide = getBuckConfig().getValue("project", "ide");
+      return ide.or(DEFAULT_IDE_VALUE);
+    }
   }
 
   public boolean isWithTests() {
