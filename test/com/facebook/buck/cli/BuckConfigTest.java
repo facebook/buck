@@ -36,6 +36,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -624,9 +625,33 @@ public class BuckConfigTest {
         config.getPythonInterpreter());
   }
 
+  @Test
+  public void whenRelativeProguardJarOverrideUsed() throws IOException {
+    String proguardJarName = "proguard.jar";
+    File proguardJar = temporaryFolder.newFile(proguardJarName);
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[tools]",
+        "    proguard = " + proguardJarName));
+    BuckConfig config = createWithDefaultFilesystem(reader, null);
+    assertEquals(
+        "Should resolve to the fully qualified path",
+        proguardJar.getAbsolutePath(),
+        config.getProguardJarOverride().transform(Functions.toStringFunction()).orNull());
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void whenProguardJarNotFound() throws IOException {
+    String proguardJarName = "proguard.jar";
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[tools]",
+        "    proguard = " + proguardJarName));
+    BuckConfig config = createWithDefaultFilesystem(reader, null);
+    config.getProguardJarOverride();
+  }
+
   private BuckConfig createWithDefaultFilesystem(Reader reader, @Nullable BuildTargetParser parser)
       throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     if (parser == null) {
       parser = new BuildTargetParser(projectFilesystem);
     }

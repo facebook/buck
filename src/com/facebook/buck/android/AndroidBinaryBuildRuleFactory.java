@@ -27,25 +27,35 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class AndroidBinaryBuildRuleFactory
     extends AbstractBuildRuleFactory<AndroidBinaryRule.Builder> {
 
   private final JavacOptions javacOptions;
+  private final Optional<Path> proguardJarOverride;
 
   public AndroidBinaryBuildRuleFactory() {
-    this(JavacOptions.DEFAULTS);
+    this(
+        JavacOptions.DEFAULTS,
+        /* proguardJarOverride */ Optional.<Path>absent());
   }
 
-  public AndroidBinaryBuildRuleFactory(JavacOptions javacOptions) {
+  public AndroidBinaryBuildRuleFactory(
+      JavacOptions javacOptions,
+      Optional<Path> proguardJarOverride) {
     super();
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
   }
 
   @Override
   public AndroidBinaryRule.Builder newBuilder(BuildRuleBuilderParams params) {
-    return AndroidBinaryRule.newAndroidBinaryRuleBuilder(params, javacOptions);
+    return AndroidBinaryRule.newAndroidBinaryRuleBuilder(
+        params,
+        javacOptions,
+        proguardJarOverride);
   }
 
   @Override

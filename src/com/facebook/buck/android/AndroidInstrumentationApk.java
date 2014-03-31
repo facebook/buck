@@ -95,7 +95,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         /* exopackage */ false,
         apkUnderTest.getPreprocessJavaClassesDeps(),
         apkUnderTest.getPreprocessJavaClassesBash(),
-        androidResourceDepsFinder);
+        androidResourceDepsFinder,
+        /* proguardJarOverride */ Optional.<Path>absent());
     this.apkUnderTest = apkUnderTest;
     this.classpathDepsForInstrumentationApk = Preconditions.checkNotNull(
         classpathDepsForInstrumentationApk);

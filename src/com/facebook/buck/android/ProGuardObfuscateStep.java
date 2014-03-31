@@ -48,6 +48,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
   private final Map<Path, Path> inputAndOutputEntries;
   private final Path pathToProGuardCommandLineArgsFile;
+  private final Optional<Path> proguardJarOverride;
 
   /**
    * @return step that writes out ProGuard's command line arguments to a text file and then runs
@@ -55,6 +56,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
    *     exec()'s ARG_MAX limit.
    */
   public static Step create(
+      Optional<Path> proguardJarOverride,
       Path generatedProGuardConfig,
       Set<Path> customProguardConfigs,
       boolean useProguardOptimizations,
@@ -77,12 +79,12 @@ public final class ProGuardObfuscateStep extends ShellStep {
         pathToProGuardCommandLineArgsFile);
 
     ProGuardObfuscateStep proGuardStep = new ProGuardObfuscateStep(
-        inputAndOutputEntries, pathToProGuardCommandLineArgsFile);
-
+        inputAndOutputEntries,
+        pathToProGuardCommandLineArgsFile,
+        proguardJarOverride);
 
     buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
     buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
-
 
     return new CompositeStep(ImmutableList.of(commandLineHelperStep, proGuardStep));
   }
@@ -94,10 +96,12 @@ public final class ProGuardObfuscateStep extends ShellStep {
    */
   private ProGuardObfuscateStep(
       Map<Path, Path> inputAndOutputEntries,
-      Path pathToProGuardCommandLineArgsFile) {
+      Path pathToProGuardCommandLineArgsFile,
+      Optional<Path> proguardJarOverride) {
     this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
     this.pathToProGuardCommandLineArgsFile = Preconditions.checkNotNull(
         pathToProGuardCommandLineArgsFile);
+    this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
   }
 
   @Override
@@ -107,15 +111,19 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-
     // Run ProGuard as a standalone executable JAR file.
-    String proguardJar = androidPlatformTarget.getProguardJar().getAbsolutePath();
+    File proguardJar;
+    if (proguardJarOverride.isPresent()) {
+      proguardJar = proguardJarOverride.get().toFile();
+    } else {
+      AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
+      proguardJar = androidPlatformTarget.getProguardJar();
+    }
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("java")
         .add("-Xmx1024M")
-        .add("-jar").add(proguardJar)
+        .add("-jar").add(proguardJar.getAbsolutePath())
         .add("@" + pathToProGuardCommandLineArgsFile);
     return args.build();
   }

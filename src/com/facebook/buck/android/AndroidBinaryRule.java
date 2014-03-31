@@ -64,6 +64,7 @@ import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -120,6 +121,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   static final EnumSet<DxStep.Option> DX_MERGE_OPTIONS = EnumSet.of(
       DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
       DxStep.Option.NO_OPTIMIZE);
+  private final Optional<Path> proguardJarOverride;
 
   /**
    * This list of package types is taken from the set of targets that the default build.xml provides
@@ -206,7 +208,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       boolean exopackage,
       Set<BuildRule> preprocessJavaClassesDeps,
       Optional<String> preprocessJavaClassesBash,
-      AndroidResourceDepsFinder androidResourceDepsFinder) {
+      AndroidResourceDepsFinder androidResourceDepsFinder,
+      Optional<Path> proguardJarOverride) {
     super(buildRuleParams);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
@@ -231,6 +234,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
+    this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
 
     if (exopackage && !preDexMerge.isPresent()) {
       throw new IllegalArgumentException(getBuildTarget() +
@@ -271,7 +275,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
         .set("exopackage", exopackage)
         .set("preprocessJavaClassesBash", preprocessJavaClassesBash)
-        .set("preprocessJavaClassesDeps", preprocessJavaClassesDeps);
+        .set("preprocessJavaClassesDeps", preprocessJavaClassesDeps)
+        .set("proguardJarOverride", proguardJarOverride.transform(Functions.toStringFunction()));
 
     for (JavaLibraryRule buildable : buildRulesToExcludeFromDex) {
       buildable.appendDetailsToRuleKey(builder);
@@ -780,6 +785,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Run ProGuard on the classpath entries.
     // TODO(user): ProGuardObfuscateStep's final argument should be a Path
     Step obfuscateCommand = ProGuardObfuscateStep.create(
+        proguardJarOverride,
         generatedProGuardConfig,
         proguardConfigsBuilder.build(),
         useAndroidProguardConfigWithOptimizations,
@@ -961,13 +967,17 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   public static Builder newAndroidBinaryRuleBuilder(BuildRuleBuilderParams params) {
-    return newAndroidBinaryRuleBuilder(params, JavacOptions.DEFAULTS);
+    return newAndroidBinaryRuleBuilder(
+        params,
+        JavacOptions.DEFAULTS,
+        /* proguardJarOverride */ Optional.<Path>absent());
   }
 
   public static Builder newAndroidBinaryRuleBuilder(
       BuildRuleBuilderParams params,
-      JavacOptions javacOptions) {
-    return new Builder(params, javacOptions);
+      JavacOptions javacOptions,
+      Optional<Path> proguardJarOverride) {
+    return new Builder(params, javacOptions, proguardJarOverride);
   }
 
   /**
@@ -987,6 +997,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private static final PackageType DEFAULT_PACKAGE_TYPE = PackageType.DEBUG;
 
     private final JavacOptions javacOptions;
+    private final Optional<Path> proguardJarOverride;
     private SourcePath manifest;
     private String target;
 
@@ -1010,9 +1021,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private ImmutableSet.Builder<BuildTarget> preprocessJavaClassesDeps = ImmutableSet.builder();
     private Optional<String> preprocessJavaClassesBash = Optional.absent();
 
-    private Builder(BuildRuleBuilderParams params, JavacOptions javacOptions) {
+    private Builder(
+        BuildRuleBuilderParams params,
+        JavacOptions javacOptions,
+        Optional<Path> proguardJarOverride) {
       super(params);
       this.javacOptions = Preconditions.checkNotNull(javacOptions);
+      this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
     }
 
     @Override
@@ -1125,7 +1140,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           exopackage,
           getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
           preprocessJavaClassesBash,
-          androidResourceDepsFinder);
+          androidResourceDepsFinder,
+          proguardJarOverride);
     }
 
     @Override

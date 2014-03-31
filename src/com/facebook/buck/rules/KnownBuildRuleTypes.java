@@ -175,7 +175,8 @@ public class KnownBuildRuleTypes {
         new AndroidBinaryBuildRuleFactory(
             JavacOptions.builder(JavacOptions.DEFAULTS)
                 .setJavaCompilerEnviornment(javacEnv)
-                .build()));
+                .build(),
+            buckConfig.getProguardJarOverride()));
 
     Optional<String> ndkVersion = buckConfig.getNdkVersion();
     // If a NDK version isn't specified, we've got to reach into the runtime environment to find

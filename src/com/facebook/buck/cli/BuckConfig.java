@@ -751,6 +751,28 @@ public class BuckConfig {
     }
   }
 
+  /**
+   * Returns the path to the proguard.jar file that is overridden by the current project.  If
+   * not specified, the Android platform proguard.jar will be used.
+   */
+  public Optional<Path> getProguardJarOverride() {
+    Optional<String> pathString = getValue("tools", "proguard");
+    if (pathString.isPresent()) {
+      Path path = Paths.get(pathString.get());
+      if (!path.isAbsolute()) {
+        path = projectFilesystem.getAbsolutifier().apply(path);
+      }
+      File file = path.toFile();
+      if (!file.exists()) {
+        throw new HumanReadableException("Overridden proguard path not found: " +
+            file.getAbsolutePath());
+      }
+      return Optional.of(path);
+    } else {
+      return Optional.absent();
+    }
+  }
+
   @VisibleForTesting
   String getProperty(String key, String def) {
     return System.getProperty(key, def);
