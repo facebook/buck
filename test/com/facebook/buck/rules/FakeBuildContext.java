@@ -58,7 +58,6 @@ public class FakeBuildContext {
     return BuildContext.builder()
         .setStepRunner(new DefaultStepRunner(executionContext, MoreExecutors.sameThreadExecutor()))
         .setProjectFilesystem(projectFilesystem)
-        .setBuildEngine(new CachingBuildEngine())
         .setArtifactCache(new NoopArtifactCache())
         .setEventBus(BuckEventBusFactory.newInstance())
         .setBuildDependencies(BuildDependencies.FIRST_ORDER_ONLY)

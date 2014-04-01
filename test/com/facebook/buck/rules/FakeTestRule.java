@@ -24,7 +24,6 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -66,11 +65,6 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   @Override
   public Iterable<Path> getInputs() {
     return ImmutableList.of();
-  }
-
-  @Override
-  public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
-    throw new UnsupportedOperationException("build() not supported in fake");
   }
 
   @Override

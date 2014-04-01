@@ -25,7 +25,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -149,12 +148,6 @@ public abstract class AbstractBuildRule implements BuildRule {
   @Override
   public final String toString() {
     return getFullyQualifiedName();
-  }
-
-  // Note: this method SHOULD be final, but test constraints mean it must be overrideable.
-  @Override
-  public ListenableFuture<BuildRuleSuccess> build(final BuildContext context) {
-    return context.getBuildEngine().build(context, this);
   }
 
   /**

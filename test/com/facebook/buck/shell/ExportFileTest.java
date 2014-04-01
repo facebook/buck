@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -150,7 +149,6 @@ public class ExportFileTest {
   private BuildContext getBuildContext(File root) {
     return BuildContext.builder()
         .setProjectFilesystem(new ProjectFilesystem(root))
-        .setBuildEngine(new CachingBuildEngine())
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setEventBus(BuckEventBusFactory.newInstance())
         .setAndroidBootclasspathForAndroidPlatformTarget(Optional.<AndroidPlatformTarget>absent())

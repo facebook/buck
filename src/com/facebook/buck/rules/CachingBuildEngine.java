@@ -58,7 +58,7 @@ public class CachingBuildEngine implements BuildEngine {
   public static final String ABI_KEY_FOR_DEPS_ON_DISK_METADATA = "ABI_KEY_FOR_DEPS";
 
   /**
-   * These are the values returned by {@link AbstractBuildRule#build(BuildContext)}.
+   * These are the values returned by {@link #build(BuildContext, BuildRule)}.
    * This must always return the same value for the build of each target.
    */
   private final ConcurrentMap<BuildTarget, SettableFuture<BuildRuleSuccess>> results
@@ -67,12 +67,19 @@ public class CachingBuildEngine implements BuildEngine {
   public CachingBuildEngine() {
   }
 
-  /**
-   * Only to be used in unit tests.
-   */
   @VisibleForTesting
-  public void createFutureFor(BuildTarget buildTarget) {
+  public synchronized void createFutureFor(BuildTarget buildTarget) {
     results.put(buildTarget, SettableFuture.<BuildRuleSuccess>create());
+  }
+
+  @VisibleForTesting
+  synchronized void setBuildRuleResult(
+      BuildTarget buildTarget,
+      BuildRuleSuccess success) {
+    if (results.get(buildTarget) == null) {
+      createFutureFor(buildTarget);
+    }
+    results.get(buildTarget).set(success);
   }
 
   @Override
@@ -111,7 +118,7 @@ public class CachingBuildEngine implements BuildEngine {
       List<ListenableFuture<BuildRuleSuccess>> builtDeps =
           Lists.newArrayListWithCapacity(rule.getDeps().size());
       for (BuildRule dep : rule.getDeps()) {
-        builtDeps.add(dep.build(context));
+        builtDeps.add(build(context, dep));
       }
       ListenableFuture<List<BuildRuleSuccess>> allBuiltDeps = Futures.allAsList(builtDeps);
 

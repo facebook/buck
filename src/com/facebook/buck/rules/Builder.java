@@ -33,14 +33,16 @@ public class Builder {
     return instance;
   }
 
-  public ListenableFuture<List<BuildRuleSuccess>> buildRules(Iterable<BuildRule> rules,
+  public ListenableFuture<List<BuildRuleSuccess>> buildRules(
+      final BuildEngine buildEngine,
+      Iterable<BuildRule> rules,
       final BuildContext context) {
     return Futures.allAsList(Iterables.transform(
         rules,
         new Function<BuildRule, ListenableFuture<BuildRuleSuccess>>() {
           @Override
           public ListenableFuture<BuildRuleSuccess> apply(BuildRule rule) {
-            return rule.build(context);
+            return buildEngine.build(context, rule);
           }
         }));
   }

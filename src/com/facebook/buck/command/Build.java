@@ -208,7 +208,6 @@ public class Build implements Closeable {
         .setDependencyGraph(dependencyGraph)
         .setStepRunner(stepRunner)
         .setProjectFilesystem(executionContext.getProjectFilesystem())
-        .setBuildEngine(buildEngine)
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(executionContext.getBuckEventBus())
@@ -217,7 +216,7 @@ public class Build implements Closeable {
         .setBuildDependencies(buildDependencies)
         .build();
 
-    return Builder.getInstance().buildRules(rulesToBuild, buildContext);
+    return Builder.getInstance().buildRules(buildEngine, rulesToBuild, buildContext);
   }
 
   @Override

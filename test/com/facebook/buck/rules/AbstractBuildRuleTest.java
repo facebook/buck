@@ -28,7 +28,6 @@ import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
 
@@ -214,11 +213,6 @@ public class AbstractBuildRuleTest {
       @Override
       public Buildable getBuildable() {
         return null;
-      }
-
-      @Override
-      public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
-        throw new IllegalStateException("This method should not be called");
       }
 
       @Override

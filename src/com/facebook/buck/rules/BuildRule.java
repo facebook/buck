@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -80,11 +79,6 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
    * @return the inputs needed to build this build rule
    */
   public Iterable<Path> getInputs();
-
-  /**
-   * This method must be idempotent.
-   */
-  public ListenableFuture<BuildRuleSuccess> build(BuildContext context);
 
   /**
    * @return key based on the BuildRule's state, including the transitive closure of its

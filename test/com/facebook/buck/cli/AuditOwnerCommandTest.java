@@ -27,9 +27,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
@@ -47,7 +45,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -118,11 +115,6 @@ public class AuditOwnerCommandTest {
 
     @Override
     public boolean isVisibleTo(BuildTarget target) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
       throw new UnsupportedOperationException();
     }
 

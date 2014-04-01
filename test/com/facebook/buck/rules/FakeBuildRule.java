@@ -23,7 +23,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -68,11 +67,6 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   @Override
   public BuildRuleType getType() {
     return type;
-  }
-
-  @Override
-  public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
-    throw new UnsupportedOperationException("build() not supported in fake");
   }
 
   @Override

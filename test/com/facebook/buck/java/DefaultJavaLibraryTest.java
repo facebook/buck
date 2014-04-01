@@ -36,19 +36,18 @@ import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildEngine;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
@@ -129,7 +128,6 @@ public class DefaultJavaLibraryTest {
 
     stubContext = BuildContext.builder()
         .setArtifactCache(new NoopArtifactCache())
-        .setBuildEngine(EasyMock.createMock(BuildEngine.class))
         .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
         .setEventBus(BuckEventBusFactory.newInstance())
         .setJavaPackageFinder(packageFinder)
@@ -1294,7 +1292,6 @@ public class DefaultJavaLibraryTest {
         .setDependencyGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
         .setStepRunner(EasyMock.createMock(StepRunner.class))
         .setProjectFilesystem(projectFilesystem)
-        .setBuildEngine(EasyMock.createMock(BuildEngine.class))
         .setArtifactCache(new NoopArtifactCache())
         .setBuildDependencies(BuildDependencies.TRANSITIVE)
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
