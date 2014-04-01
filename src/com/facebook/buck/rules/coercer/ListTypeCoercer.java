@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -30,6 +31,11 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
   @Override
   public Class<ImmutableList<T>> getOutputClass() {
     return (Class<ImmutableList<T>>) (Class<?>) ImmutableList.class;
+  }
+
+  @Override
+  public Optional<ImmutableList<T>> getOptionalValue() {
+    return Optional.of(ImmutableList.<T>of());
   }
 
   @Override

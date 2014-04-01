@@ -18,7 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -68,6 +68,11 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
     } else {
       return false;
     }
+  }
+
+  @Override
+  public Optional<AppleSource> getOptionalValue() {
+    return Optional.absent();
   }
 
   @Override

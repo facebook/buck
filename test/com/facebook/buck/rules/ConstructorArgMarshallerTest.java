@@ -240,6 +240,21 @@ public class ConstructorArgMarshallerTest {
     assertEquals(Optional.of(Sets.newHashSet()), dto.targets);
   }
 
+  @Test
+  public void optionalCollectionsWithoutAValueWillBeSetToAnEmptyOptionalCollection() {
+    class Dto implements ConstructorArg {
+      public Optional<Set<String>> strings;
+    }
+
+    Dto dto = new Dto();
+    Map<String, Object> args = Maps.newHashMap();
+    // Deliberately not populating args
+
+    marshaller.populate(ruleResolver, buildRuleFactoryParams(args), dto);
+
+    assertEquals(Optional.of(Sets.newHashSet()), dto.strings);
+  }
+
   @Test(expected = RuntimeException.class)
   public void shouldBeAnErrorToAttemptToSetASingleValueToACollection() {
     class Dto implements ConstructorArg {

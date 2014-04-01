@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 
@@ -60,6 +61,14 @@ public interface TypeCoercer<T> {
       BuildRuleResolver buildRuleResolver,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException;
+
+  /**
+   * Get a value suitable for an Optional field. This will typically be {@link Optional#absent()},
+   * but may be some other value, such as an empty collection.
+   *
+   * @return A value suitable for fields of type Optional when no value has been set.
+   */
+  public Optional<T> getOptionalValue();
 
   public static interface Traversal {
     public void traverse(Object object);

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -31,6 +32,11 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
   @Override
   public Class<ImmutableSortedSet<T>> getOutputClass() {
     return (Class<ImmutableSortedSet<T>>) (Class<?>) ImmutableSortedSet.class;
+  }
+
+  @Override
+  public Optional<ImmutableSortedSet<T>> getOptionalValue() {
+    return Optional.of(ImmutableSortedSet.<T>of());
   }
 
   @Override

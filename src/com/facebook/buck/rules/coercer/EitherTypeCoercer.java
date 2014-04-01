@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
@@ -48,6 +49,11 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
   @Override
   public boolean hasElementClass(Class<?>... types) {
     return leftTypeCoercer.hasElementClass(types) || rightTypeCoercer.hasElementClass(types);
+  }
+
+  @Override
+  public Optional<Either<Left, Right>> getOptionalValue() {
+    return Optional.absent();
   }
 
   @Override

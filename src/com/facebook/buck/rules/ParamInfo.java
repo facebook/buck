@@ -113,7 +113,7 @@ class ParamInfo implements Comparable<ParamInfo> {
 
     if (value == null) {
       if (isOptional) {
-        result = Optional.absent();
+        result = typeCoercer.getOptionalValue();
       } else {
         throw new IllegalArgumentException(String.format(
             "Field '%s' of object '%s' cannot be null. Build file can be found in %s.",

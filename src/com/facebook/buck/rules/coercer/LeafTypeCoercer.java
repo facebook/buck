@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.google.common.base.Optional;
+
 /**
  * Superclass of coercers for non-collection/map types.
  */
@@ -35,5 +37,10 @@ public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
   public boolean traverse(Object object, Traversal traversal) {
     traversal.traverse(object);
     return true;
+  }
+
+  @Override
+  public Optional<T> getOptionalValue() {
+    return Optional.absent();
   }
 }

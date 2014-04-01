@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
@@ -45,6 +46,11 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
   @Override
   public boolean hasElementClass(Class<?>... types) {
     return firstTypeCoercer.hasElementClass(types) || secondTypeCoercer.hasElementClass(types);
+  }
+
+  @Override
+  public Optional<Pair<FIRST, SECOND>> getOptionalValue() {
+    return Optional.absent();
   }
 
   @Override
