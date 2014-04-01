@@ -133,7 +133,7 @@ public class AndroidLibrary extends DefaultJavaLibrary {
       JavacOptions options = javacOptions.build();
 
       AndroidLibraryGraphEnhancer.Result result =
-          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, params, options)
+          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, options)
               .createBuildableForAndroidResources(
                   ruleResolver, /* createBuildableIfEmptyDeps */ false);
 

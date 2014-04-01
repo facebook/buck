@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -33,13 +32,11 @@ public class AndroidLibraryGraphEnhancer {
 
   private final BuildTarget dummyRDotJavaBuildTarget;
   private final BuildRuleParams originalBuildRuleParams;
-  private final BuildRuleBuilderParams buildRuleBuilderParams;
   private final JavacOptions javacOptions;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
       BuildRuleParams buildRuleParams,
-      BuildRuleBuilderParams buildRuleBuilderParams,
       JavacOptions javacOptions) {
     Preconditions.checkNotNull(buildTarget);
     this.dummyRDotJavaBuildTarget = new BuildTarget(
@@ -47,7 +44,6 @@ public class AndroidLibraryGraphEnhancer {
         buildTarget.getShortName(),
         DUMMY_R_DOT_JAVA_FLAVOR);
     this.originalBuildRuleParams = Preconditions.checkNotNull(buildRuleParams);
-    this.buildRuleBuilderParams = Preconditions.checkNotNull(buildRuleBuilderParams);
     // Override javacoptions because DummyRDotJava doesn't require annotation processing
     // params data and more importantly, because javacoptions' rule key is not available when
     // DummyRDotJava is built.
@@ -68,13 +64,28 @@ public class AndroidLibraryGraphEnhancer {
       return new Result(originalBuildRuleParams, Optional.<DummyRDotJava>absent());
     }
 
-    BuildRule dummyRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(
-        DummyRDotJava
-            .newDummyRDotJavaBuildableBuilder(buildRuleBuilderParams)
-            .setBuildTarget(dummyRDotJavaBuildTarget)
-            .setAndroidResourceDeps(androidResourceDeps)
-            .setJavacOptions(javacOptions));
-    final DummyRDotJava dummyRDotJava = (DummyRDotJava) dummyRDotJavaBuildRule.getBuildable();
+    // The androidResourceDeps may contain Buildables, but we need the actual BuildRules. Since this
+    // is going to be used to modify the build graph, we can't just wrap the buildables. Fortunately
+    // we know that the buildables come from the originalDeps.
+    ImmutableSortedSet.Builder<BuildRule> actualDeps = ImmutableSortedSet.naturalOrder();
+    for (HasAndroidResourceDeps dep : androidResourceDeps) {
+      // If this ever returns null, something has gone horrifically awry.
+      actualDeps.add(ruleResolver.get(dep.getBuildTarget()));
+    }
+
+    DummyRDotJava dummyRDotJava = new DummyRDotJava(
+        androidResourceDeps,
+        dummyRDotJavaBuildTarget,
+        javacOptions);
+    BuildRuleParams params = new BuildRuleParams(
+        dummyRDotJavaBuildTarget,
+        actualDeps.build(),
+        originalBuildRuleParams.getVisibilityPatterns(),
+        originalBuildRuleParams.getProjectFilesystem(),
+        originalBuildRuleParams.getRuleKeyBuilderFactory());
+    BuildRule dummyRDotJavaBuildRule = new DummyRDotJavaAbiRule(
+        dummyRDotJava, params);
+    ruleResolver.addToIndex(dummyRDotJavaBuildTarget, dummyRDotJavaBuildRule);
 
     ImmutableSortedSet<BuildRule> totalDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(originalDeps)
