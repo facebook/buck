@@ -133,11 +133,10 @@ public class ApkBuilderStep implements Step {
         builder.addSourceFolder(projectFilesystem.getFileForRelativePath(assetDirectory));
       }
       for (Path zipFile : zipFiles) {
-        Preconditions.checkState(projectFilesystem.exists(zipFile),
-            "Input zip file does not exist: %s", zipFile);
-        Preconditions.checkState(projectFilesystem.isFile(zipFile),
-            "Input zip file is not a regular file: %s", zipFile);
-        builder.addZipFile(projectFilesystem.getFileForRelativePath(zipFile));
+        // TODO(user): Skipping silently is bad. These should really be assertions.
+        if (projectFilesystem.exists(zipFile) && projectFilesystem.isFile(zipFile)) {
+          builder.addZipFile(projectFilesystem.getFileForRelativePath(zipFile));
+        }
       }
       for (String jarFileThatMayContainResources : jarFilesThatMayContainResources) {
         File jarFile  = projectFilesystem.getFileForRelativePath(jarFileThatMayContainResources);
