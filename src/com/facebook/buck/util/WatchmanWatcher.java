@@ -24,7 +24,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteStreams;
 
@@ -44,7 +43,6 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
 
   private final Supplier<Process> watchmanProcessSupplier;
   private final EventBus eventBus;
-  private final ImmutableSet<Path> ignoredPrefixes;
   private final JsonFactory jsonFactory;
   private final String query;
 
@@ -59,11 +57,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   private final int overflow;
 
   public WatchmanWatcher(ProjectFilesystem filesystem,
-                         EventBus fileChangeEventBus,
-                         ImmutableSet<Path> excludeDirectories) {
+                         EventBus fileChangeEventBus) {
     this(createProcessSupplier(),
         fileChangeEventBus,
-        excludeDirectories,
         DEFAULT_OVERFLOW_THRESHOLD,
         createQuery(filesystem));
   }
@@ -71,13 +67,10 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   @VisibleForTesting
   WatchmanWatcher(Supplier<Process> processSupplier,
                   EventBus fileChangeEventBus,
-                  ImmutableSet<Path> excludeDirectories,
                   int overflow,
                   String query) {
-
     this.watchmanProcessSupplier = Preconditions.checkNotNull(processSupplier);
     this.eventBus = Preconditions.checkNotNull(fileChangeEventBus);
-    this.ignoredPrefixes = Preconditions.checkNotNull(excludeDirectories);
     this.jsonFactory = new JsonFactory();
     this.overflow = overflow;
     this.query = Preconditions.checkNotNull(query);
@@ -144,7 +137,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
           switch (fieldName) {
             case "name":
               File file = new File(jsonParser.nextTextValue());
-              if (!file.isDirectory() && !shouldIgnore(file.toPath())) {
+              if (!file.isDirectory()) {
                 builder.setPath(file.toPath());
               }
               break;
@@ -205,15 +198,6 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         return null;
       }
     };
-  }
-
-  private boolean shouldIgnore(Path path) {
-    for (Path prefix : ignoredPrefixes) {
-      if (path.startsWith(prefix)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   @Override

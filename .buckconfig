@@ -7,6 +7,9 @@
 [buildfile]
     includes = //DEFS
 [project]
+    # Directories that do not contain input files.
+    # All of these directories should also appear in the "ignore_dirs" list
+    # in .watchmanconfig, with the exception of ".git".
     ignore = \
       .git, \
       .buckd, \

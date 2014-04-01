@@ -1,0 +1,20 @@
+{
+  "ignore_dirs": [
+    "buck-out",
+    "buck-cache",
+    ".idea",
+    ".buckd",
+    "build",
+    "src/com/facebook/buck/cli/quickstart",
+    "test/com/facebook/buck/android/testdata",
+    "test/com/facebook/buck/cli/testdata",
+    "test/com/facebook/buck/java/testdata",
+    "test/com/facebook/buck/junit/testdata",
+    "test/com/facebook/buck/parser/testdata",
+    "test/com/facebook/buck/shell/testdata",
+    "test/com/facebook/buck/test/cache/testdata",
+    "test/com/facebook/buck/test/labels/testdata",
+    "test/com/facebook/buck/test/result/groups/testdata",
+    "third-party/java/dx-from-kitkat"
+  ]
+}

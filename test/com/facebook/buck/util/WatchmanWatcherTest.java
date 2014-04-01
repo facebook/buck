@@ -29,7 +29,6 @@ import static org.junit.Assert.fail;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 
 import org.easymock.Capture;
@@ -39,7 +38,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 
@@ -183,26 +181,6 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenNameExcludedThenNoEventsGenerated() throws IOException {
-    String watchmanOutput = Joiner.on('\n').join(
-        "{\"files\": [",
-            "{",
-                "\"name\": \"foo/bar/baz\"",
-            "}",
-        "]}");
-    EventBus eventBus = createStrictMock(EventBus.class);
-    Process process = createWaitForProcessMock(watchmanOutput);
-    replay(eventBus, process);
-    WatchmanWatcher watcher = createWatcher(
-        eventBus,
-        process,
-        ImmutableSet.<Path>of(Paths.get("foo/bar/")),
-        200 /* overflow */);
-    watcher.postEvents();
-    verify(eventBus, process);
-  }
-
-  @Test
   public void whenTooManyChangesThenOverflowEventGenerated() throws IOException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
@@ -218,7 +196,6 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         process,
-        ImmutableSet.<Path>of() /* excludeDirectories */,
         -1 /* overflow */);
     watcher.postEvents();
     verify(eventBus, process);
@@ -246,18 +223,15 @@ public class WatchmanWatcherTest {
     return createWatcher(
         eventBus,
         process,
-        ImmutableSet.<Path>of() /* excludeDirectories */,
         200 /* overflow */);
   }
 
   private WatchmanWatcher createWatcher(EventBus eventBus,
                                         Process process,
-                                        ImmutableSet<Path> excludeDirectories,
                                         int overflow) {
     return new WatchmanWatcher(
         Suppliers.ofInstance(process),
         eventBus,
-        excludeDirectories,
         overflow,
         "" /* query */);
   }
