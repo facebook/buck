@@ -69,7 +69,7 @@ public class KnownBuildRuleTypes {
   private final ImmutableSet<Description<?>> descriptions;
   private final ImmutableMap<BuildRuleType, BuildRuleFactory<?>> factories;
   private final ImmutableMap<String, BuildRuleType> types;
-  private static KnownBuildRuleTypes defaultRules = null;
+  private static volatile KnownBuildRuleTypes defaultRules = null;
 
   private KnownBuildRuleTypes(Set<Description<?>> descriptions,
       Map<BuildRuleType, BuildRuleFactory<?>> factories,
@@ -124,14 +124,12 @@ public class KnownBuildRuleTypes {
       AndroidDirectoryResolver androidDirectoryResolver,
       JavaCompilerEnvironment javacEnv) {
     // Fast path
-    if (defaultRules != null) {
-      return defaultRules;
-    }
-
-    // Slow path
-    synchronized (KnownBuildRuleTypes.class) {
-      if (defaultRules == null) {
-        defaultRules = createBuilder(config, androidDirectoryResolver, javacEnv).build();
+    if (defaultRules == null) {
+      // Slow path
+      synchronized (KnownBuildRuleTypes.class) {
+        if (defaultRules == null) {
+          defaultRules = createBuilder(config, androidDirectoryResolver, javacEnv).build();
+        }
       }
     }
 
