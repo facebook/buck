@@ -348,6 +348,20 @@ public class TypeCoercerTest {
     assertEquals(expectedResult, result);
   }
 
+  @Test
+  public void coerceToLabels() throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("labels").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    ImmutableList<String> input = ImmutableList.of("cheese", "cake", "tastes", "good");
+
+    Object result = coercer.coerce(buildRuleResolver, Paths.get(""), input);
+    ImmutableSortedSet<Label> expected = ImmutableSortedSet.of(
+        new Label("cake"), new Label("cheese"), new Label("good"), new Label("tastes"));
+
+    assertEquals( expected, result);
+  }
+
   @SuppressWarnings("unused")
   static class TestFields {
     public ImmutableMap<String, ImmutableList<Integer>> stringMapOfLists;
@@ -364,5 +378,6 @@ public class TypeCoercerTest {
     public Either<String, List<String>> eitherStringOrStringList;
     public Pair<Path, String> pairOfPathsAndStrings;
     public ImmutableList<AppleSource> listOfAppleSources;
+    public ImmutableSortedSet<Label> labels;
   }
 }

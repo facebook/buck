@@ -18,11 +18,19 @@ package com.facebook.buck.rules;
 
 import com.google.common.base.Preconditions;
 
-public class Label {
+public class Label implements Comparable<Label> {
   private final String labelString;
 
   public Label(String labelString) {
     this.labelString = Preconditions.checkNotNull(labelString);
+  }
+
+  @Override
+  public int compareTo(Label that) {
+    if (that == this) {
+      return 0;
+    }
+    return labelString.compareTo(that.labelString);
   }
 
   @Override
