@@ -127,7 +127,7 @@ public final class Main {
    * invocations is static so that it can outlive Main() objects and survive for the lifetime
    * of the potentially long running Buck process.
    */
-  private final class Daemon implements Closeable {
+  private static final class Daemon implements Closeable {
 
     private final Parser parser;
     private final AndroidDirectoryResolver androidDirectoryResolver;
