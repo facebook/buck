@@ -70,18 +70,19 @@ public class CachingBuildEngine implements BuildEngine {
   }
 
   @VisibleForTesting
-  public synchronized void createFutureFor(BuildTarget buildTarget) {
-    results.put(buildTarget, SettableFuture.<BuildRuleSuccess>create());
+  public SettableFuture<BuildRuleSuccess> createFutureFor(BuildTarget buildTarget) {
+    SettableFuture<BuildRuleSuccess> newFuture = SettableFuture.create();
+    SettableFuture<BuildRuleSuccess> result = results.putIfAbsent(
+        buildTarget,
+        newFuture);
+    return result == null ? newFuture : result;
   }
 
   @VisibleForTesting
-  synchronized void setBuildRuleResult(
+  void setBuildRuleResult(
       BuildTarget buildTarget,
       BuildRuleSuccess success) {
-    if (results.get(buildTarget) == null) {
-      createFutureFor(buildTarget);
-    }
-    results.get(buildTarget).set(success);
+    createFutureFor(buildTarget).set(success);
   }
 
   @Override
