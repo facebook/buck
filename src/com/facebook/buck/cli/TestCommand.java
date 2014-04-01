@@ -490,7 +490,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     }
 
     TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(
-        executionContext.getProjectFilesystem());
+        executionContext.getProjectFilesystem(),
+        getBuildEngine());
     for (TestRule test : tests) {
       // Determine whether the test needs to be executed.
       boolean isTestRunRequired;

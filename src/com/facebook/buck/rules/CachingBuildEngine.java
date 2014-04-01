@@ -64,6 +64,8 @@ public class CachingBuildEngine implements BuildEngine {
   private final ConcurrentMap<BuildTarget, SettableFuture<BuildRuleSuccess>> results
       = Maps.newConcurrentMap();
 
+  private final ConcurrentMap<BuildTarget, RuleKey> ruleKeys = Maps.newConcurrentMap();
+
   public CachingBuildEngine() {
   }
 
@@ -86,6 +88,12 @@ public class CachingBuildEngine implements BuildEngine {
   public boolean isRuleBuilt(BuildTarget buildTarget) {
     SettableFuture<BuildRuleSuccess> resultFuture = results.get(buildTarget);
     return resultFuture != null && MoreFutures.isSuccess(resultFuture);
+  }
+
+  @Nullable
+  @Override
+  public RuleKey getRuleKey(BuildTarget buildTarget) {
+    return ruleKeys.get(buildTarget);
   }
 
   @Override
@@ -174,6 +182,7 @@ public class CachingBuildEngine implements BuildEngine {
               startOfBuildWasRecordedOnTheEventBus = true;
 
               try {
+                ruleKeys.putIfAbsent(rule.getBuildTarget(), rule.getRuleKey());
                 BuildResult result = buildOnceDepsAreBuilt(rule,
                     context,
                     onDiskBuildInfo,

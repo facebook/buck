@@ -30,8 +30,7 @@ import java.util.concurrent.Callable;
 /**
  * A {@link BuildRule} that is designed to run tests.
  */
-public interface TestRule
-    extends HasBuildTarget, DoNotImplementHasRuleKey {
+public interface TestRule extends HasBuildTarget {
 
   /**
    * Returns a boolean indicating whether the files that contain the test results for this rule are

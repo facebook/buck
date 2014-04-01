@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.Step;
@@ -35,9 +36,11 @@ public class TestRuleKeyFileHelper {
   public static final String RULE_KEY_FILE = ".rulekey";
 
   private final ProjectFilesystem projectFilesystem;
+  private final BuildEngine buildEngine;
 
-  public TestRuleKeyFileHelper(ProjectFilesystem projectFilesystem) {
+  public TestRuleKeyFileHelper(ProjectFilesystem projectFilesystem, BuildEngine buildEngine) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.buildEngine = Preconditions.checkNotNull(buildEngine);
   }
 
   /**
@@ -45,7 +48,7 @@ public class TestRuleKeyFileHelper {
    * @return A {@link Step} that writes the rule key for the test to it's output directory
    */
   public Step createRuleKeyInDirStep(TestRule testRule) throws IOException {
-    RuleKey ruleKey = Preconditions.checkNotNull(testRule.getRuleKey());
+    RuleKey ruleKey = Preconditions.checkNotNull(buildEngine.getRuleKey(testRule.getBuildTarget()));
     Path outputDir = Preconditions.checkNotNull(testRule.getPathToTestOutputDirectory());
     return new WriteFileStep(ruleKey.toString(), getRuleKeyFilePath(outputDir));
   }
@@ -55,7 +58,7 @@ public class TestRuleKeyFileHelper {
    * @return true if a rule key is written in the specified directory.
    */
   public boolean isRuleKeyInDir(TestRule testRule) throws IOException {
-    RuleKey ruleKey = Preconditions.checkNotNull(testRule.getRuleKey());
+    RuleKey ruleKey = Preconditions.checkNotNull(buildEngine.getRuleKey(testRule.getBuildTarget()));
     Path outputDir = Preconditions.checkNotNull(testRule.getPathToTestOutputDirectory());
     Optional<String> ruleKeyOnDisk = projectFilesystem.readFirstLine(getRuleKeyFilePath(outputDir));
     return ruleKeyOnDisk.isPresent() && ruleKeyOnDisk.get().equals(ruleKey.toString());
