@@ -24,6 +24,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -290,11 +291,23 @@ public class ProjectFilesystem {
     java.nio.file.Files.walkFileTree(root, fileVisitor);
   }
 
-  // TODO(user): create a variant that always follows the links
+  public Set<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
+    return getFilesUnderPath(pathRelativeToProjectRoot, Predicates.<Path>alwaysTrue());
+  }
+
   public Set<Path> getFilesUnderPath(
       Path pathRelativeToProjectRoot,
-      EnumSet<FileVisitOption> visitOptions,
-      final Predicate<Path> predicate) throws IOException {
+      Predicate<Path> predicate) throws IOException {
+    return getFilesUnderPath(
+        pathRelativeToProjectRoot,
+        predicate,
+        EnumSet.of(FileVisitOption.FOLLOW_LINKS));
+  }
+
+  public Set<Path> getFilesUnderPath(
+      Path pathRelativeToProjectRoot,
+      final Predicate<Path> predicate,
+      EnumSet<FileVisitOption> visitOptions) throws IOException {
     final ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
     walkRelativeFileTree(
         getPathForRelativePath(pathRelativeToProjectRoot),

@@ -24,13 +24,10 @@ import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Path;
-import java.util.EnumSet;
 
 public class PrebuiltNativeLibraryDescription
     implements Description<PrebuiltNativeLibraryDescription.Args> {
@@ -52,10 +49,7 @@ public class PrebuiltNativeLibraryDescription
     ImmutableSortedSet<Path> librarySources;
     try {
       librarySources = ImmutableSortedSet.copyOf(
-          params.getProjectFilesystem().getFilesUnderPath(
-              args.nativeLibs,
-              EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-              Predicates.<Path>alwaysTrue()));
+          params.getProjectFilesystem().getFilesUnderPath(args.nativeLibs));
     } catch (IOException e) {
       throw new HumanReadableException(e, "Error traversing directory %s.", args.nativeLibs);
     }

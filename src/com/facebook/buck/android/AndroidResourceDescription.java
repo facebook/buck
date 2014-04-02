@@ -26,13 +26,10 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Path;
-import java.util.EnumSet;
 
 public class AndroidResourceDescription implements Description<AndroidResourceDescription.Arg> {
 
@@ -73,10 +70,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     }
     ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
     try {
-      paths.addAll(filesystem.getFilesUnderPath(
-              inputDir.get(),
-              EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-              Predicates.<Path>alwaysTrue()));
+      paths.addAll(filesystem.getFilesUnderPath(inputDir.get()));
     } catch (IOException e) {
       throw new HumanReadableException(e, "Error traversing directory: %s.", inputDir.get());
     }

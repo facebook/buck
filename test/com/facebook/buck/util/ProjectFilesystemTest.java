@@ -353,15 +353,23 @@ public class ProjectFilesystemTest {
 
     assertThat(filesystem.getFilesUnderPath(
             Paths.get("dir1"),
-            EnumSet.noneOf(FileVisitOption.class),
-            Predicates.<Path>alwaysTrue()),
-            containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
+            Predicates.<Path>alwaysTrue(),
+            EnumSet.noneOf(FileVisitOption.class)),
+        containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
 
     assertThat(filesystem.getFilesUnderPath(
             Paths.get("dir1"),
-            EnumSet.noneOf(FileVisitOption.class),
-            Predicates.equalTo(Paths.get("dir1/dir2/file3"))),
+            Predicates.equalTo(Paths.get("dir1/dir2/file3")),
+            EnumSet.noneOf(FileVisitOption.class)),
         containsInAnyOrder(Paths.get("dir1/dir2/file3")));
+
+    assertThat(filesystem.getFilesUnderPath(Paths.get("dir1")),
+        containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
+
+    assertThat(filesystem.getFilesUnderPath(
+            Paths.get("dir1"),
+            Predicates.equalTo(Paths.get("dir1/file2"))),
+        containsInAnyOrder(Paths.get("dir1/file2")));
   }
 }
 
