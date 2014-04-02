@@ -952,14 +952,15 @@ public class Project {
         "libraries", libraries);
 
     // Write out the JSON config to be consumed by the Python.
-    Writer writer = new FileWriter(jsonTempFile);
-    JsonFactory jsonFactory = new JsonFactory();
-    ObjectMapper objectMapper = new ObjectMapper(jsonFactory);
-    if (executionContext.getVerbosity().shouldPrintOutput()) {
-      ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
-      objectWriter.writeValue(writer, config);
-    } else {
-      objectMapper.writeValue(writer, config);
+    try (Writer writer = new FileWriter(jsonTempFile)) {
+      JsonFactory jsonFactory = new JsonFactory();
+      ObjectMapper objectMapper = new ObjectMapper(jsonFactory);
+      if (executionContext.getVerbosity().shouldPrintOutput()) {
+        ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+        objectWriter.writeValue(writer, config);
+      } else {
+        objectMapper.writeValue(writer, config);
+      }
     }
   }
 
