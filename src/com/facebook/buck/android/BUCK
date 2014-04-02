@@ -36,7 +36,6 @@ RULES_SRCS = [
   'DexRDotJavaStep.java',
   'DexWithClasses.java',
   'DummyRDotJava.java',
-  'DummyRDotJavaAbiRule.java',
   'FilteredResourcesProvider.java',
   'IdentityResourcesProvider.java',
   'GenAidl.java',

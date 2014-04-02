@@ -18,9 +18,11 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -83,8 +85,10 @@ public class AndroidLibraryGraphEnhancer {
         originalBuildRuleParams.getVisibilityPatterns(),
         originalBuildRuleParams.getProjectFilesystem(),
         originalBuildRuleParams.getRuleKeyBuilderFactory());
-    BuildRule dummyRDotJavaBuildRule = new DummyRDotJavaAbiRule(
-        dummyRDotJava, params);
+    BuildRule dummyRDotJavaBuildRule = new AbstractBuildable.AnonymousBuildRule(
+        BuildRuleType.DUMMY_R_DOT_JAVA,
+        dummyRDotJava,
+        params);
     ruleResolver.addToIndex(dummyRDotJavaBuildTarget, dummyRDotJavaBuildRule);
 
     ImmutableSortedSet<BuildRule> totalDeps = ImmutableSortedSet.<BuildRule>naturalOrder()

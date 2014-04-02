@@ -99,7 +99,7 @@ public class AndroidLibraryGraphEnhancerTest {
         3, newDeps.size());
 
     BuildRule dummyRDotJavaRule = newDeps.last();
-    assertTrue(dummyRDotJavaRule instanceof HasJavaAbi);
+    assertTrue(dummyRDotJavaRule.getBuildable() instanceof HasJavaAbi);
     assertEquals("//java/com/example:library#dummy_r_dot_java",
         dummyRDotJavaRule.getFullyQualifiedName());
     assertEquals("DummyRDotJava must depend on the two AndroidResourceRules.",

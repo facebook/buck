@@ -16,18 +16,15 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.HasJavaAbi;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -62,7 +59,7 @@ import javax.annotation.Nullable;
  * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
  */
 public class DummyRDotJava extends AbstractBuildable
-    implements AbiRule, InitializableFromDisk<DummyRDotJava.BuildOutput> {
+    implements AbiRule, HasJavaAbi, InitializableFromDisk<DummyRDotJava.BuildOutput> {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final BuildTarget buildTarget;
@@ -178,10 +175,6 @@ public class DummyRDotJava extends AbstractBuildable
     return BuildTargets.getGenPath(buildTarget, "__%s_dummyrdotjava_abi__");
   }
 
-  public static Builder newDummyRDotJavaBuildableBuilder(BuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
   @Nullable
   @Override
   public Path getPathToOutputFile() {
@@ -212,13 +205,19 @@ public class DummyRDotJava extends AbstractBuildable
     return new BuildOutput(abiKey.get());
   }
 
-  public Sha1HashCode getRDotTxtSha1() {
+  @Override
+  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
+    return buildOutputInitializer;
+  }
+
+  @Override
+  public Sha1HashCode getAbiKey() {
     return buildOutputInitializer.getBuildOutput().rDotTxtSha1;
   }
 
   @Override
-  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
-    return buildOutputInitializer;
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
   }
 
   public static class BuildOutput {
@@ -227,45 +226,6 @@ public class DummyRDotJava extends AbstractBuildable
 
     public BuildOutput(Sha1HashCode rDotTxtSha1) {
       this.rDotTxtSha1 = Preconditions.checkNotNull(rDotTxtSha1);
-    }
-  }
-
-  public static class Builder extends AbstractBuildRuleBuilder<DummyRDotJavaAbiRule> {
-
-    @Nullable private ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
-    @Nullable
-    private JavacOptions javacOptions;
-
-    protected Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public DummyRDotJavaAbiRule build(BuildRuleResolver ruleResolver) {
-      BuildRuleParams params = createBuildRuleParams(ruleResolver);
-      DummyRDotJava dummyRDotJava =
-          new DummyRDotJava(androidResourceDeps, buildTarget, javacOptions);
-      return new DummyRDotJavaAbiRule(dummyRDotJava, params);
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    public Builder setAndroidResourceDeps(
-        ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
-      this.androidResourceDeps = Preconditions.checkNotNull(androidResourceDeps);
-      for (HasAndroidResourceDeps dep : androidResourceDeps) {
-        addDep(dep.getBuildTarget());
-      }
-      return this;
-    }
-
-    public Builder setJavacOptions(JavacOptions javacOptions) {
-      this.javacOptions = Preconditions.checkNotNull(javacOptions);
-      return this;
     }
   }
 }
