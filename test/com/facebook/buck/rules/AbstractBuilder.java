@@ -27,6 +27,14 @@ import com.google.common.collect.Maps;
 import java.lang.reflect.Field;
 import java.nio.file.Paths;
 
+/**
+ * Support class for writing builders, which can create {@link Buildable} and {@link BuildRule} \
+ * instances at test time. It does this by as closely as possible mirroring the behavior seen when
+ * running the actual parser.
+ *
+ * @param <B> The subclass of {@link Buildable} which this builds.
+ * @param <A> The type of the constructor arg returned by the Buildable's {@link Description}.
+ */
 public abstract class AbstractBuilder<B extends Buildable, A extends ConstructorArg> {
 
   private final Description<A> description;

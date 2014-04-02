@@ -90,7 +90,7 @@ public class ConstructorArgMarshaller {
       BuildRuleResolver ruleResolver,
       BuildRuleFactoryParams params,
       ConstructorArg dto) {
-    populate(ruleResolver, params, dto, false);
+    populate(ruleResolver, params, dto, /* populate all fields, optional and required */false);
   }
 
   public void populate(
