@@ -610,6 +610,25 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void whenPython2OnPathThenItIsUsed() throws IOException {
+    File python = temporaryFolder.newFile("python");
+    assertTrue("Should be able to set file executable", python.setExecutable(true));
+    File python2 = temporaryFolder.newFile("python2");
+    assertTrue("Should be able to set file executable", python2.setExecutable(true));
+    FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
+        ImmutableMap.<String, String>builder()
+            .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
+            .put("PATHEXT", "")
+            .build(),
+        ImmutableMap.<String, String>of()
+    );
+    assertEquals(
+        "Should return path to python2.",
+        python2.getAbsolutePath(),
+        config.getPythonInterpreter());
+  }
+
+  @Test
   public void whenPythonOnPathNotFoundThenJythonUsed() throws IOException {
     File jython = temporaryFolder.newFile("jython");
     assertTrue("Should be able to set file executable", jython.setExecutable(true));

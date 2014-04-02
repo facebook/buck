@@ -94,6 +94,10 @@ public class BuckConfig {
   private static final String DEFAULT_CASSANDRA_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
 
+  // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
+  private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
+      ImmutableList.of("python2", "python");
+
   private final ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
   private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
@@ -733,12 +737,15 @@ public class BuckConfig {
       }
       throw new HumanReadableException("Not a python executable: " + configPath.get());
     } else {
-      // For each path in PATH, test "python" with each PATHEXT suffix to allow for file extensions.
-      for (String path : getEnv("PATH", File.pathSeparator)) {
-        for (String pathExt : getEnv("PATHEXT", File.pathSeparator)) {
-          File python = new File(path, "python" + pathExt);
-          if (isExecutableFile(python)) {
-            return python.getAbsolutePath();
+      for (String interpreterName : PYTHON_INTERPRETER_NAMES) {
+        // For each path in PATH, test "python" with each PATHEXT suffix to allow
+        // for file extensions.
+        for (String path : getEnv("PATH", File.pathSeparator)) {
+          for (String pathExt : getEnv("PATHEXT", File.pathSeparator)) {
+            File python = new File(path, interpreterName + pathExt);
+            if (isExecutableFile(python)) {
+              return python.getAbsolutePath();
+            }
           }
         }
       }
