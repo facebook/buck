@@ -61,5 +61,6 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
     public ImmutableSortedSet<String> frameworks;
     public ImmutableSortedSet<BuildRule> sourceUnderTest;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<String> testType;
   }
 }

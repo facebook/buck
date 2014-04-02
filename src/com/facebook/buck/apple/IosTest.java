@@ -24,6 +24,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,19 +40,21 @@ import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class IosTest extends AbstractBuildable {
-
   private final Path infoPlist;
   private final ImmutableSet<XcodeRuleConfiguration> configurations;
   private final ImmutableList<GroupedSource> srcs;
   private final ImmutableMap<SourcePath, String> perFileFlags;
   private final ImmutableSortedSet<String> frameworks;
   private final ImmutableSortedSet<BuildRule> sourceUnderTest;
+  private final IosTestType testType;
 
   public IosTest(IosTestDescription.Arg arg) {
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
     frameworks = Preconditions.checkNotNull(arg.frameworks);
     sourceUnderTest = Preconditions.checkNotNull(arg.sourceUnderTest);
+    Optional<String> argTestType = Preconditions.checkNotNull(arg.testType);
+    testType = IosTestType.fromString(argTestType.or("octest"));
 
     ImmutableList.Builder<GroupedSource> srcsBuilder = ImmutableList.builder();
     ImmutableMap.Builder<SourcePath, String> perFileFlagsBuilder = ImmutableMap.builder();
@@ -85,6 +88,10 @@ public class IosTest extends AbstractBuildable {
 
   public ImmutableSortedSet<BuildRule> getSourceUnderTest() {
     return sourceUnderTest;
+  }
+
+  public IosTestType getTestType() {
+    return testType;
   }
 
   @Nullable

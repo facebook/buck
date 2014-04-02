@@ -487,7 +487,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testIosTestRule() throws IOException {
+  public void testIosTestRuleDefaultType() throws IOException {
     BuildRuleParams params = new FakeBuildRuleParams(
         new BuildTarget("//foo", "test"), ImmutableSortedSet.<BuildRule>of());
 
@@ -502,6 +502,8 @@ public class ProjectGeneratorTest {
         "$SDKROOT/Foo.framework",
         "$DEVELOPER_DIR/XCTest.framework");
     arg.sourceUnderTest = ImmutableSortedSet.of();
+    arg.testType = Optional.absent();
+
 
     BuildRule rule = new DescribedRule(
         IosTestDescription.TYPE,
@@ -517,7 +519,58 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:test");
     assertEquals("PBXNativeTarget", target.isa());
-    assertEquals(PBXTarget.ProductType.IOS_TEST, target.getProductType());
+    assertEquals(PBXTarget.ProductType.IOS_TEST_OCTEST, target.getProductType());
+    PBXFileReference productReference = target.getProductReference();
+    assertEquals("test.octest", productReference.getName());
+    assertEquals(Optional.of("wrapper.cfbundle"), productReference.getExplicitFileType());
+
+    assertHasConfigurations(target, "Debug");
+    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target, ImmutableMap.of(
+        "foo.m", Optional.of("-foo")));
+
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target, ImmutableList.of(
+            "$DEVELOPER_DIR/XCTest.framework", "$SDKROOT/Foo.framework"));
+  }
+
+  @Test
+  public void testIosTestRuleXctestType() throws IOException {
+    BuildRuleParams params = new FakeBuildRuleParams(
+        new BuildTarget("//foo", "test"), ImmutableSortedSet.<BuildRule>of());
+
+    IosTestDescription.Arg arg = iosTestDescription.createUnpopulatedConstructorArg();
+    arg.infoPlist = Paths.get("Info.plist");
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
+    arg.frameworks = ImmutableSortedSet.of(
+        "$SDKROOT/Foo.framework",
+        "$DEVELOPER_DIR/XCTest.framework");
+    arg.sourceUnderTest = ImmutableSortedSet.of();
+    arg.testType = Optional.of("xctest");
+
+    BuildRule rule = new DescribedRule(
+        IosTestDescription.TYPE,
+        iosTestDescription.createBuildable(params, arg), params);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:test");
+    assertEquals("PBXNativeTarget", target.isa());
+    assertEquals(PBXTarget.ProductType.IOS_TEST_XCTEST, target.getProductType());
+    PBXFileReference productReference = target.getProductReference();
+    assertEquals("test.xctest", productReference.getName());
+    assertEquals(Optional.of("wrapper.cfbundle"), productReference.getExplicitFileType());
 
     assertHasConfigurations(target, "Debug");
     assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
@@ -559,6 +612,7 @@ public class ProjectGeneratorTest {
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("fooTest.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
       arg.sourceUnderTest = ImmutableSortedSet.of();
+      arg.testType = Optional.absent();
 
       testRule = new DescribedRule(
           IosTestDescription.TYPE,
@@ -1086,6 +1140,7 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.srcs = ImmutableList.of();
     arg.sourceUnderTest = sourceUnderTest;
+    arg.testType = Optional.absent();
     return new DescribedRule(
         iosTestDescription.getBuildRuleType(),
         iosTestDescription.createBuildable(buildRuleParams, arg),

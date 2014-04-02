@@ -1,0 +1,50 @@
+/*
+ * Copyright 2014-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.apple;
+
+import com.facebook.buck.util.HumanReadableException;
+
+import com.google.common.base.Ascii;
+
+public enum IosTestType {
+    /// SenTestingKit bundle (.octest), used prior to Xcode 5.
+    OCTEST,
+    /// XCTest bundle (.xctest), used for Xcode 5 and later.
+    XCTEST;
+
+    public static IosTestType fromString(String s) {
+      switch (Ascii.toLowerCase(s)) {
+        case "octest":
+          return IosTestType.OCTEST;
+        case "xctest":
+          return IosTestType.XCTEST;
+        default:
+          throw new HumanReadableException("Invalid test_type value %s.", s);
+      }
+    }
+
+    public String toFileExtension() {
+      switch (this) {
+        case OCTEST:
+          return "octest";
+        case XCTEST:
+          return "xctest";
+        default:
+          throw new IllegalStateException("Invalid test type value: " + this.toString());
+      }
+    }
+};

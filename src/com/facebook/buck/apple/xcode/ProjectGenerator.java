@@ -29,6 +29,7 @@ import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTest;
 import com.facebook.buck.apple.IosTestDescription;
+import com.facebook.buck.apple.IosTestType;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
@@ -361,7 +362,7 @@ public class ProjectGenerator {
   private PBXNativeTarget generateIosTestTarget(
       PBXProject project, BuildRule rule, IosTest buildable) throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
-    target.setProductType(PBXTarget.ProductType.IOS_TEST);
+    target.setProductType(testTypeToTargetProductType(buildable.getTestType()));
 
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
@@ -398,7 +399,9 @@ public class ProjectGenerator {
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
     String productName = getProductName(rule.getBuildTarget());
-    String productOutputName = productName + ".octest";
+    String productOutputName = Joiner.on(".").join(
+        productName,
+        buildable.getTestType().toFileExtension());
     PBXFileReference productReference = new PBXFileReference(
         productOutputName, productOutputName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
     productsGroup.getChildren().add(productReference);
@@ -1158,6 +1161,17 @@ public class ProjectGenerator {
       // We'll leave the builder empty in this case and return an empty map.
     }
     return targetNameToGIDMapBuilder.build();
+  }
+
+  private static PBXTarget.ProductType testTypeToTargetProductType(IosTestType testType) {
+      switch (testType) {
+        case OCTEST:
+          return PBXTarget.ProductType.IOS_TEST_OCTEST;
+        case XCTEST:
+          return PBXTarget.ProductType.IOS_TEST_XCTEST;
+        default:
+          throw new IllegalStateException("Invalid test type value: " + testType.toString());
+      }
   }
 
   /**

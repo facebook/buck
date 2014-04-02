@@ -82,6 +82,7 @@ public class PBXFileReference extends PBXReference {
           .put("xcodeproj", "wrapper.pb-project")
           .put("xcdatamodel", "wrapper.xcdatamodel")
           .put("xcdatamodeld", "wrapper.xcdatamodeld")
+          .put("xctest", "wrapper.cfbundle")
           .put("xib", "file.xib")
           .put("y", "sourcecode.yacc")
           .put("zip", "archive.zip")
