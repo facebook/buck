@@ -16,18 +16,16 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.LabelsAttributeBuilder;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -44,38 +42,38 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Nullable;
+
 /**
  * Test whose correctness is determined by running a specified shell script. If running the shell
  * script returns a non-zero error code, the test is considered a failure.
  */
-public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
+public class ShTest extends AbstractBuildable implements TestRule {
 
-  private final Path test;
+  private final BuildTarget buildTarget;
+  private final SourcePath test;
   private final ImmutableSet<Label> labels;
 
-  protected ShTestRule(
-      BuildRuleParams buildRuleParams,
-      Path test,
+  protected ShTest(
+      BuildTarget buildTarget,
+      SourcePath test,
       Set<Label> labels) {
-    super(buildRuleParams);
+    this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.test = Preconditions.checkNotNull(test);
     this.labels = ImmutableSet.copyOf(labels);
   }
 
   @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.SH_TEST;
-  }
-
-  @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of(test);
+    return SourcePaths.filterInputsToCompareToOutput(ImmutableList.of(test));
   }
 
   @Override
@@ -100,6 +98,17 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
   }
 
   @Override
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
+  }
+
+  @Nullable
+  @Override
+  public Path getPathToOutputFile() {
+    return null;
+  }
+
+  @Override
   public boolean hasTestResultFiles(ExecutionContext executionContext) {
     // If result.json was not written, then the test needs to be run.
     ProjectFilesystem filesystem = executionContext.getProjectFilesystem();
@@ -111,11 +120,12 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
       BuildContext buildContext,
       ExecutionContext executionContext,
       TestSelectorList testSelectorList) {
-
     Step mkdirClean = new MakeCleanDirectoryStep(getPathToTestOutputDirectory());
 
     // Return a single command that runs an .sh file with no arguments.
-    Step runTest = new RunShTestAndRecordResultStep(test, getPathToTestOutputResult());
+    Step runTest = new RunShTestAndRecordResultStep(
+        test.resolve(buildContext),
+        getPathToTestOutputResult());
 
     return ImmutableList.of(mkdirClean, runTest);
   }
@@ -148,42 +158,16 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
         TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
             TestResultSummary.class);
         TestCaseSummary testCaseSummary = new TestCaseSummary(
-            getFullyQualifiedName(), ImmutableList.of(testResultSummary));
+            buildTarget.getFullyQualifiedName(),
+            ImmutableList.of(testResultSummary));
         return new TestResults(getBuildTarget(), ImmutableList.of(testCaseSummary), contacts);
       }
 
     };
   }
 
-  public static Builder newShTestRuleBuilder(BuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildRuleBuilder<ShTestRule> implements
-      LabelsAttributeBuilder {
-
-    private Path test;
-    private ImmutableSet<Label> labels = ImmutableSet.of();
-
-    private Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public ShTestRule build(BuildRuleResolver ruleResolver) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
-      return new ShTestRule(buildRuleParams, test, labels);
-    }
-
-    public Builder setTest(Path test) {
-      this.test = test;
-      return this;
-    }
-
-    @Override
-    public Builder setLabels(ImmutableSet<Label> labels) {
-      this.labels = labels;
-      return this;
-    }
+  @Override
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder;
   }
 }

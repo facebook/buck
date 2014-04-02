@@ -7,8 +7,8 @@ java_library(
     'GenruleDescription.java',
     'ShBinary.java',
     'ShBinaryDescription.java',
-    'ShTestBuildRuleFactory.java',
-    'ShTestRule.java',
+    'ShTest.java',
+    'ShTestDescription.java',
   ],
   deps = [
     ':steps',

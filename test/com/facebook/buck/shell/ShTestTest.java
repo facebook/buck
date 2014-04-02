@@ -19,7 +19,7 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -30,9 +30,7 @@ import org.easymock.EasyMockSupport;
 import org.junit.After;
 import org.junit.Test;
 
-import java.nio.file.Paths;
-
-public class ShTestRuleTest extends EasyMockSupport {
+public class ShTestTest extends EasyMockSupport {
 
   @After
   public void tearDown() {
@@ -42,9 +40,9 @@ public class ShTestRuleTest extends EasyMockSupport {
 
   @Test
   public void testHasTestResultFiles() {
-    ShTestRule shTest = new ShTestRule(
-        new FakeBuildRuleParams(new BuildTarget("//test/com/example", "my_sh_test")),
-        Paths.get("run_test.sh"),
+    ShTest shTest = new ShTest(
+        new BuildTarget("//test/com/example", "my_sh_test"),
+        new FileSourcePath("run_test.sh"),
         /* labels */ ImmutableSet.<Label>of());
 
     ProjectFilesystem filesystem = createMock(ProjectFilesystem.class);

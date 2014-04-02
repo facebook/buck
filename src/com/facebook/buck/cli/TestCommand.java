@@ -303,7 +303,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     Iterable<TestRule> testRules = Iterables.transform(partialGraph.getTargets(),
         new Function<BuildTarget, TestRule>() {
       @Override public TestRule apply(BuildTarget buildTarget) {
-        return (TestRule)graph.findBuildRuleByTarget(buildTarget);
+        return (TestRule) graph.findBuildRuleByTarget(buildTarget).getBuildable();
       }
     });
 
