@@ -102,21 +102,14 @@ public class CachingBuildEngine implements BuildEngine {
       final BuildContext context,
       final BuildRule rule) {
 
-    // Avoid acquiring a lock if the future is already set, since reading a concurrentHashMap is
-    // thread safe.
-    SettableFuture<BuildRuleSuccess> theFuture = results.get(rule.getBuildTarget());
-    if (theFuture != null) {
-      return theFuture;
-    }
+    final SettableFuture<BuildRuleSuccess> newFuture = SettableFuture.create();
+    SettableFuture<BuildRuleSuccess> existingFuture = results.putIfAbsent(
+        rule.getBuildTarget(),
+        newFuture);
 
-    synchronized (results) {
-      theFuture = results.get(rule.getBuildTarget());
-      if (theFuture != null) {
-        return theFuture;
-      } else {
-        SettableFuture<BuildRuleSuccess> result = SettableFuture.create();
-        results.put(rule.getBuildTarget(), result);
-      }
+    // If the future was already in results for this build rule, return what was there.
+    if (existingFuture != null) {
+      return existingFuture;
     }
 
     // Build all of the deps first and then schedule a callback for this rule to build itself once
@@ -220,7 +213,7 @@ public class CachingBuildEngine implements BuildEngine {
 
               // Only now that the rule should be in a completely valid state, resolve the future.
               BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(rule, result.getSuccess());
-              results.get(rule.getBuildTarget()).set(buildRuleSuccess);
+              newFuture.set(buildRuleSuccess);
 
               // Finally, upload to the artifact cache.
               if (result.getSuccess().shouldUploadResultingArtifact()) {
@@ -247,7 +240,7 @@ public class CachingBuildEngine implements BuildEngine {
               // It seems possible (albeit unlikely) that something could go wrong in
               // recordBuildRuleSuccess() after buildRuleResult has been resolved such that Buck
               // would attempt to resolve the future again, which would fail.
-              results.get(rule.getBuildTarget()).setException(result.getFailure());
+              newFuture.setException(result.getFailure());
             }
 
             private void logBuildRuleFinished(BuildResult result) {
@@ -261,10 +254,10 @@ public class CachingBuildEngine implements BuildEngine {
       // This is a defensive catch block: if buildRuleResult is never satisfied, then Buck will
       // hang because a callback that is waiting for this rule's future to complete will never be
       // executed.
-      results.get(rule.getBuildTarget()).setException(failure);
+      newFuture.setException(failure);
     }
 
-    return results.get(rule.getBuildTarget());
+    return newFuture;
   }
 
 
