@@ -90,9 +90,20 @@ public class ConstructorArgMarshaller {
       BuildRuleResolver ruleResolver,
       BuildRuleFactoryParams params,
       ConstructorArg dto) {
+    populate(ruleResolver, params, dto, false);
+  }
+
+  public void populate(
+      BuildRuleResolver ruleResolver,
+      BuildRuleFactoryParams params,
+      ConstructorArg dto,
+      boolean onlyOptional) {
     Set<ParamInfo> allInfo = getAllParamInfo(dto);
 
     for (ParamInfo info : allInfo) {
+      if (onlyOptional && !info.isOptional()) {
+        continue;
+      }
       info.setFromParams(ruleResolver, dto, params);
     }
   }

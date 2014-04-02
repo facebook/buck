@@ -17,66 +17,33 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
+import com.facebook.buck.rules.AbstractBuilder;
 
 import java.nio.file.Path;
-import java.util.Set;
 
-public class KeystoreBuilder {
+public class KeystoreBuilder extends AbstractBuilder<Keystore, KeystoreDescription.Arg> {
 
-  private KeystoreBuilder() {
-    // Utility class
+  private KeystoreBuilder(BuildTarget target) {
+    super(new KeystoreDescription(), target);
   }
 
-  public static Builder createBuilder(BuildTarget target) {
-    return new Builder(target);
+  public static KeystoreBuilder createBuilder(BuildTarget target) {
+    return new KeystoreBuilder(target);
   }
 
-  public static class Builder {
+  public KeystoreBuilder setStore(Path store) {
+    arg.store = store;
+    return this;
+  }
 
-    private final BuildTarget target;
-    private final Set<BuildRule> deps;
-    private Path store;
-    private Path properties;
+  public KeystoreBuilder setProperties(Path properties) {
+    arg.properties = properties;
+    return this;
+  }
 
-    public Builder(BuildTarget target) {
-      this.target = target;
-      this.deps = Sets.newHashSet();
-    }
-
-    public Builder setStore(Path store) {
-      this.store = store;
-      return this;
-    }
-
-    public Builder setProperties(Path properties) {
-      this.properties = properties;
-      return this;
-    }
-
-    public Builder addDep(BuildRule dep) {
-      deps.add(dep);
-      return this;
-    }
-
-    public Keystore build() {
-      return new Keystore(target, store, properties);
-    }
-
-    public BuildRule build(BuildRuleResolver resolver) {
-      AbstractBuildable.AnonymousBuildRule rule = new AbstractBuildable.AnonymousBuildRule(
-          KeystoreDescription.TYPE,
-          build(),
-          new FakeBuildRuleParams(target, ImmutableSortedSet.copyOf(deps)));
-
-      resolver.addToIndex(target, rule);
-
-      return rule;
-    }
+  public KeystoreBuilder addDep(BuildRule dep) {
+    arg.deps = amend(arg.deps, dep);
+    return this;
   }
 }
