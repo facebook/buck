@@ -47,7 +47,7 @@ import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
-import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
+import com.facebook.buck.shell.ShBinaryDescription;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -179,6 +179,7 @@ public class KnownBuildRuleTypes {
     builder.register(new ProjectConfigDescription());
     builder.register(new PythonBinaryDescription());
     builder.register(new PythonLibraryDescription());
+    builder.register(new ShBinaryDescription());
     builder.register(new XcodeNativeDescription());
     builder.register(new XcodeProjectConfigDescription());
 
@@ -189,7 +190,6 @@ public class KnownBuildRuleTypes {
         new JavaLibraryBuildRuleFactory(javacEnv.getJavacPath(), javacEnv.getJavacVersion()));
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
     builder.register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
-    builder.register(BuildRuleType.SH_BINARY, new ShBinaryBuildRuleFactory());
     builder.register(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory());
 
     return builder;

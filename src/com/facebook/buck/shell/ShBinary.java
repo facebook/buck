@@ -16,20 +16,15 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BinaryBuildRule;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.ResourcesAttributeBuilder;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
@@ -46,32 +41,31 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 
-public class ShBinaryRule extends DoNotUseAbstractBuildable
+public class ShBinary extends AbstractBuildable
     implements BinaryBuildRule, InitializableFromDisk<Object> {
 
   private final Path main;
   private final ImmutableSet<SourcePath> resources;
+  private final BuildTarget target;
 
   /** The path where the output will be written. */
   private final Path output;
 
   private final BuildOutputInitializer<Object> buildOutputInitializer;
 
-  protected ShBinaryRule(BuildRuleParams buildRuleParams,
+  protected ShBinary(BuildTarget buildTarget,
       Path main,
       ImmutableSet<SourcePath> resources) {
-    super(buildRuleParams);
     this.main = Preconditions.checkNotNull(main);
     this.resources = Preconditions.checkNotNull(resources);
 
-    BuildTarget target = buildRuleParams.getBuildTarget();
+    this.target = Preconditions.checkNotNull(buildTarget);
     this.output = Paths.get(
         BuckConstant.GEN_DIR,
         target.getBasePath(),
         "__" + target.getShortName() + "__",
         target.getShortName() + ".sh");
-    this.buildOutputInitializer =
-        new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   @Override
@@ -90,7 +84,7 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
     // Generate an .sh file that builds up an environment and invokes the user's script.
     // This generated .sh file will be returned by getExecutableCommand().
     GenerateShellScriptStep generateShellScript = new GenerateShellScriptStep(
-        Paths.get(getBuildTarget().getBasePath()),
+        Paths.get(target.getBasePath()),
         main,
         SourcePaths.toPaths(resources, context),
         output);
@@ -100,13 +94,13 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.SH_BINARY;
+  public Path getPathToOutputFile() {
+    return output;
   }
 
   @Override
-  public Path getPathToOutputFile() {
-    return output;
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder;
   }
 
   @Override
@@ -115,10 +109,6 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
           .getFileForRelativePath(output.toString())
           .getAbsolutePath()
           .toString());
-  }
-
-  public static Builder newShBinaryBuilder(BuildRuleBuilderParams params) {
-    return new Builder(params);
   }
 
   /*
@@ -140,35 +130,5 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
   @Override
   public BuildOutputInitializer<Object> getBuildOutputInitializer() {
     return buildOutputInitializer;
-  }
-
-  public static class Builder extends AbstractBuildRuleBuilder<ShBinaryRule>
-      implements ResourcesAttributeBuilder {
-
-    private Path main;
-    private ImmutableSet.Builder<SourcePath> resources = ImmutableSet.builder();
-
-    protected Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public ShBinaryRule build(BuildRuleResolver ruleResolver) {
-      BuildRuleParams params = createBuildRuleParams(ruleResolver);
-      return new ShBinaryRule(params,
-          main,
-          resources.build());
-    }
-
-    public Builder setMain(Path main) {
-      this.main = main;
-      return this;
-    }
-
-    @Override
-    public Builder addResource(SourcePath relativePathToResource) {
-      resources.add(relativePathToResource);
-      return this;
-    }
   }
 }

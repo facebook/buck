@@ -411,24 +411,6 @@ def android_library(
 
 
 @provide_for_build
-def sh_binary(
-    name,
-    main,
-    resources=[],
-    deps=[],
-    visibility=[],
-    build_env=None):
-  add_rule({
-    'type' : 'sh_binary',
-    'name' : name,
-    'main' : main,
-    'resources' : resources,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def sh_test(name, test, labels=[], deps=[], visibility=[], build_env=None):
   add_rule({
     'type' : 'sh_test',
