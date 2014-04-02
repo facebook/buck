@@ -50,29 +50,44 @@ public final class AgentUtil {
   public static String getJarSignature(String packagePath) throws IOException {
     Pattern signatureFilePattern = Pattern.compile("META-INF/[A-Z]+\\.SF");
 
-    ZipFile packageZip = new ZipFile(packagePath);
-    // For each file in the zip.
-    for (ZipEntry entry : Collections.list(packageZip.entries())) {
-      // Ignore non-signature files.
-      if (!signatureFilePattern.matcher(entry.getName()).matches()) {
-        continue;
-      }
+    ZipFile packageZip = null;
+    try {
+      packageZip = new ZipFile(packagePath);
+      // For each file in the zip.
+      for (ZipEntry entry : Collections.list(packageZip.entries())) {
+        // Ignore non-signature files.
+        if (!signatureFilePattern.matcher(entry.getName()).matches()) {
+          continue;
+        }
 
-      BufferedReader sigContents =
-          new BufferedReader(
-              new InputStreamReader(
-                  packageZip.getInputStream(entry)));
-      // For each line in the signature file.
-      while (true) {
-        String line = sigContents.readLine();
-        if (line == null || line.equals("")) {
-          throw new IllegalArgumentException(
-              "Failed to find manifest digest in " + entry.getName());
+        BufferedReader sigContents = null;
+        try {
+          sigContents =
+              new BufferedReader(
+                  new InputStreamReader(
+                      packageZip.getInputStream(entry))
+              );
+          // For each line in the signature file.
+          while (true) {
+            String line = sigContents.readLine();
+            if (line == null || line.equals("")) {
+              throw new IllegalArgumentException(
+                  "Failed to find manifest digest in " + entry.getName());
+            }
+            String prefix = "SHA1-Digest-Manifest: ";
+            if (line.startsWith(prefix)) {
+              return line.substring(prefix.length());
+            }
+          }
+        } finally {
+          if (sigContents != null) {
+            sigContents.close();
+          }
         }
-        String prefix = "SHA1-Digest-Manifest: ";
-        if (line.startsWith(prefix)) {
-          return line.substring(prefix.length());
-        }
+      }
+    } finally {
+      if (packageZip != null) {
+        packageZip.close();
       }
     }
 
