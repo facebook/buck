@@ -76,9 +76,11 @@ public class CompositeStep implements Step, Iterable<Step> {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
+    if (obj == null) {
+      return false;
+    } else if (this == obj) {
       return true;
-    } else if (!(obj instanceof CompositeStep)) {
+    } else if (!(getClass() == obj.getClass())) {
       return false;
     }
 
