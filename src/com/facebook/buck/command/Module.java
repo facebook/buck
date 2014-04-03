@@ -33,7 +33,7 @@ import java.util.SortedSet;
 
 @JsonInclude(Include.NON_NULL)
 @VisibleForTesting
-final class Module implements Comparable<Module> {
+final class Module {
 
   @VisibleForTesting
   static final Comparator<SourceFolder> ALPHABETIZER = new Comparator<SourceFolder>() {
@@ -43,6 +43,13 @@ final class Module implements Comparable<Module> {
       return a.getUrl().compareTo(b.getUrl());
     }
 
+  };
+
+  static final Comparator<Module> BUILDTARGET_NAME_COMARATOR = new Comparator<Module>() {
+    @Override
+    public int compare(Module a, Module b) {
+        return a.target.getFullyQualifiedName().compareTo(b.target.getFullyQualifiedName());
+    }
   };
 
   // In IntelliJ, options in an .iml file that correspond to file paths should be relative to the
@@ -104,10 +111,5 @@ final class Module implements Comparable<Module> {
 
   boolean isIntelliJPlugin() {
     return isIntelliJPlugin != null && isIntelliJPlugin.booleanValue();
-  }
-
-  @Override
-  public int compareTo(Module module) {
-    return this.target.getFullyQualifiedName().compareTo(module.target.getFullyQualifiedName());
   }
 }

@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.AnnotationProcessingData;
@@ -57,7 +56,7 @@ import java.util.List;
 
 public class PrebuiltJar extends AbstractBuildable
     implements JavaLibrary, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibrary.Data>, Comparable<HasBuildTarget> {
+    InitializableFromDisk<JavaLibrary.Data> {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -253,14 +252,5 @@ public class PrebuiltJar extends AbstractBuildable
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder.set("javadocUrl", javadocUrl);
-  }
-
-  @Override
-  public int compareTo(HasBuildTarget other) {
-    if (this == other) {
-      return 0;
-    }
-
-    return getBuildTarget().compareTo(other.getBuildTarget());
   }
 }
