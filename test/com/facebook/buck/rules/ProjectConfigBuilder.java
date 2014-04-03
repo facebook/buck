@@ -16,75 +16,39 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nullable;
 
-public class ProjectConfigBuilder {
+public class ProjectConfigBuilder
+    extends AbstractBuilder<ProjectConfig, ProjectConfigDescription.Arg> {
 
-  private ProjectConfigBuilder() {
-    // Utility class
+  protected ProjectConfigBuilder(BuildTarget target) {
+    super(new ProjectConfigDescription(), target);
   }
 
-  public static Builder newProjectConfigRuleBuilder() {
-    return new Builder();
+  public static ProjectConfigBuilder newProjectConfigRuleBuilder(BuildTarget buildTarget) {
+    return new ProjectConfigBuilder(buildTarget);
   }
 
-  public static class Builder {
+  public ProjectConfigBuilder setSrcRule(@Nullable BuildRule srcRule) {
+    arg.srcTarget = Optional.fromNullable(srcRule);
+    return this;
+  }
 
-    private BuildTarget buildTarget;
-    @Nullable private BuildRule srcRule = null;
-    @Nullable private ImmutableList<String> srcRoots = null;
-    @Nullable private BuildRule testRule = null;
-    @Nullable private ImmutableList<String> testRoots = null;
-    boolean isIntellijProject = false;
+  public ProjectConfigBuilder setSrcRoots(@Nullable ImmutableList<String> srcRoots) {
+    arg.srcRoots = Optional.fromNullable(srcRoots);
+    return this;
+  }
 
-    public Builder setBuildTarget (BuildTarget target) {
-      this.buildTarget = Preconditions.checkNotNull(target);
-      return this;
-    }
+  public ProjectConfigBuilder setTestRule(@Nullable BuildRule testRule) {
+    arg.testTarget = Optional.fromNullable(testRule);
+    return this;
+  }
 
-    public Builder setSrcRule(@Nullable BuildRule srcRule) {
-      this.srcRule = srcRule;
-      return this;
-    }
-
-    public Builder setSrcRoots(@Nullable ImmutableList<String> srcRoots) {
-      this.srcRoots = srcRoots;
-      return this;
-    }
-
-    public Builder setTestRule(@Nullable BuildRule testRule) {
-      this.testRule = testRule;
-      return this;
-    }
-
-    public Builder setTestRoots(@Nullable ImmutableList<String> testRoots) {
-      this.testRoots = testRoots;
-      return this;
-    }
-
-    public Builder setIntellijProject(boolean isIntellijProject) {
-      this.isIntellijProject = isIntellijProject;
-      return this;
-    }
-
-    public ProjectConfig buildAsBuildable() {
-      return new ProjectConfig(
-          buildTarget,
-          srcRule,
-          srcRoots,
-          testRule,
-          testRoots,
-          isIntellijProject);
-    }
-
-    public BuildRule build() {
-      return new AbstractBuildable.AnonymousBuildRule(
-          ProjectConfigDescription.TYPE,
-          buildAsBuildable(),
-          new FakeBuildRuleParams(buildTarget));
-    }
+  public ProjectConfigBuilder setTestRoots(@Nullable ImmutableList<String> testRoots) {
+    arg.testRoots = Optional.fromNullable(testRoots);
+    return this;
   }
 }

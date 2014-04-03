@@ -82,10 +82,10 @@ public class ProjectCommandTest {
     );
 
     String projectConfigTargetName = "//javasrc:project-config";
-    BuildRule ruleConfig = ruleResolver.addToIndex(
-        ProjectConfigBuilder.newProjectConfigRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance(projectConfigTargetName))
-        .setSrcRule(javaLibraryRule).build());
+    BuildRule ruleConfig = ProjectConfigBuilder
+        .newProjectConfigRuleBuilder(BuildTargetFactory.newInstance(projectConfigTargetName))
+        .setSrcRule(javaLibraryRule)
+        .build(ruleResolver);
 
     BuckConfig buckConfig = createBuckConfig(
         Joiner.on("\n").join(
