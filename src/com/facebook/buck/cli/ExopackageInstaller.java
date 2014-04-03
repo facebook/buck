@@ -246,6 +246,8 @@ public class ExopackageInstaller {
           // Extra split to get rid of the SDK thing.
           versionCode = parts.get(1).split(" ", 2)[0];
           break;
+        default:
+          break;
       }
     }
 
