@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
@@ -35,7 +36,10 @@ public class IdentityTypeCoercer<T> extends LeafTypeCoercer<T> {
 
   @Override
   public T coerce(
-      BuildRuleResolver buildRuleResolver, Path pathRelativeToProjectRoot, Object object)
+      BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
+      Object object)
       throws CoerceFailedException {
     if (type.isAssignableFrom(object.getClass())) {
       return type.cast(object);

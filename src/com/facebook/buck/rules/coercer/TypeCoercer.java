@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -59,6 +60,7 @@ public interface TypeCoercer<T> {
    */
   public T coerce(
       BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException;
 

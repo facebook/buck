@@ -19,11 +19,13 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProjectFilesystem;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PathTypeCoercer extends LeafTypeCoercer<Path> {
+
   @Override
   public Class<Path> getOutputClass() {
     return Path.class;
@@ -32,6 +34,7 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
   @Override
   public Path coerce(
       BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
     if (object instanceof String) {
@@ -39,12 +42,17 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
       if (path.startsWith(BuildRuleFactoryParams.GENFILE_PREFIX)) {
         path = path.substring(BuildRuleFactoryParams.GENFILE_PREFIX.length());
 
+        // A genfile is created during the build, so it's legit that it might not exist.
         return Paths.get(BuckConstant.GEN_DIR)
             .resolve(pathRelativeToProjectRoot)
             .resolve(path)
             .normalize();
       } else {
-        return pathRelativeToProjectRoot.resolve(path).normalize();
+        Path normalizedPath = pathRelativeToProjectRoot.resolve(path).normalize();
+        // Verify that the path exists
+        filesystem.getPathForRelativeExistingPath(normalizedPath);
+
+        return normalizedPath;
       }
     } else {
       throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -66,7 +67,10 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
 
   @Override
   public ImmutableMap<K, V> coerce(
-      BuildRuleResolver buildRuleResolver, Path pathRelativeToProjectRoot, Object object)
+      BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
+      Object object)
       throws CoerceFailedException {
     if (object instanceof Map) {
       ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
@@ -74,9 +78,9 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
       for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
         try {
           K key = keyTypeCoercer.coerce(
-              buildRuleResolver, pathRelativeToProjectRoot, entry.getKey());
+              buildRuleResolver, filesystem, pathRelativeToProjectRoot, entry.getKey());
           V value = valueTypeCoercer.coerce(
-              buildRuleResolver, pathRelativeToProjectRoot, entry.getValue());
+              buildRuleResolver, filesystem, pathRelativeToProjectRoot, entry.getValue());
           builder.put(key, value);
         } catch (CoerceFailedException e) {
           CoerceFailedException wrappedException =

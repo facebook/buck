@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
@@ -37,11 +38,14 @@ public class BuildRuleTypeCoercer extends LeafTypeCoercer<BuildRule> {
 
   @Override
   public BuildRule coerce(
-      BuildRuleResolver buildRuleResolver, Path pathRelativeToProjectRoot, Object object)
+      BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
+      Object object)
       throws CoerceFailedException {
     try {
       BuildTarget buildTarget = buildTargetTypeCoercer.coerce(
-          buildRuleResolver, pathRelativeToProjectRoot, object);
+          buildRuleResolver, filesystem, pathRelativeToProjectRoot, object);
       return buildRuleResolver.get(buildTarget);
     } catch (CoerceFailedException e) {
       throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());

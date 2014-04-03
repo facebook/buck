@@ -99,12 +99,13 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
 
   private void populateWithDefaultValues(A arg, BuildTarget target) {
     BuildRuleResolver resolver = new BuildRuleResolver(Maps.<BuildTarget, BuildRule>newHashMap());
+    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
     BuildRuleFactoryParams factoryParams = NonCheckingBuildRuleFactoryParams
         .createNonCheckingBuildRuleFactoryParams(
             Maps.<String, Object>newHashMap(),
-            new BuildTargetParser(new ProjectFilesystem(Paths.get("."))),
+            new BuildTargetParser(filesystem),
             target);
     new ConstructorArgMarshaller(Paths.get("."))
-        .populate(resolver, factoryParams, arg, true);
+        .populate(resolver, filesystem, factoryParams, arg, true);
   }
 }

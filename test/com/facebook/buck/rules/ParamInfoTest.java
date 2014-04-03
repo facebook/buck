@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 
 import org.junit.Test;
@@ -110,16 +112,17 @@ public class ParamInfoTest {
     Example example = new Example();
 
     BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     ParamInfo info = new ParamInfo(typeCoercerFactory, path, Example.class.getField("field"));
 
-    info.set(resolver, example, null);
+    info.set(resolver, filesystem, example, null);
     assertEquals(Optional.<String>absent(), example.field);
 
-    info.set(resolver, example, "");
+    info.set(resolver, filesystem, example, "");
     assertEquals(Optional.<String>absent(), example.field);
 
-    info.set(resolver, example, "foo");
+    info.set(resolver, filesystem, example, "foo");
     assertEquals(Optional.of("foo"), example.field);
   }
 }

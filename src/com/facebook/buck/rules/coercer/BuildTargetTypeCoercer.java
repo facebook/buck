@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.util.ProjectFilesystem;
 
 import java.nio.file.Path;
 
@@ -30,7 +31,10 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
   @Override
   public BuildTarget coerce(
-      BuildRuleResolver unused, Path pathRelativeToProjectRoot, Object object)
+      BuildRuleResolver unused,
+      ProjectFilesystem alsoUnused,
+      Path pathRelativeToProjectRoot,
+      Object object)
       throws CoerceFailedException {
     if (object instanceof BuildTarget) {
       return (BuildTarget) object;

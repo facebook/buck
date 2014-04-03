@@ -108,6 +108,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   public FakeProjectFilesystem() {
     super(Paths.get("."));
     fileContents = Maps.newHashMap();
+
+    // Generally, tests don't care whether files exist.
+    ignoreValidityOfPaths = true;
   }
 
   private byte[] getFileBytes(Path path) {

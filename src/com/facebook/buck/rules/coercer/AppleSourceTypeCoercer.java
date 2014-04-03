@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -79,6 +80,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public AppleSource coerce(
       BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
     if (object instanceof AppleSource) {
@@ -87,6 +89,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       try {
         return AppleSource.ofSourcePath(sourcePathTypeCoercer.coerce(
             buildRuleResolver,
+            filesystem,
             pathRelativeToProjectRoot,
             object));
       } catch (CoerceFailedException e) {
@@ -96,6 +99,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       try {
         return AppleSource.ofSourcePathWithFlags(sourcePathWithFlagsTypeCoercer.coerce(
             buildRuleResolver,
+            filesystem,
             pathRelativeToProjectRoot,
             object));
       } catch (CoerceFailedException e) {
@@ -105,6 +109,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       try {
         return AppleSource.ofSourceGroup(sourceGroupTypeCoercer.coerce(
             buildRuleResolver,
+            filesystem,
             pathRelativeToProjectRoot,
             object));
       } catch (CoerceFailedException e) {

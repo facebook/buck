@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,7 +55,10 @@ public class TypeCoercerFactory {
       new IdentityTypeCoercer<BuildTargetPattern>(BuildTargetPattern.class) {
         @Override
         public BuildTargetPattern coerce(
-            BuildRuleResolver buildRuleResolver, Path pathRelativeToProjectRoot, Object object)
+            BuildRuleResolver buildRuleResolver,
+            ProjectFilesystem filesystem,
+            Path pathRelativeToProjectRoot,
+            Object object)
             throws CoerceFailedException {
           throw new UnsupportedOperationException();
         }

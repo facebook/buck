@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -97,18 +98,26 @@ class ParamInfo implements Comparable<ParamInfo> {
   }
 
   public void setFromParams(
-      BuildRuleResolver ruleResolver, Object arg, BuildRuleFactoryParams params) {
-    set(ruleResolver, arg, params.getNullableRawAttribute(name));
+      BuildRuleResolver ruleResolver,
+      ProjectFilesystem filesystem,
+      Object arg,
+      BuildRuleFactoryParams params) {
+    set(ruleResolver, filesystem, arg, params.getNullableRawAttribute(name));
   }
 
   /**
    * Sets a single property of the {@code dto}, coercing types as necessary.
    *
    * @param ruleResolver {@link BuildRuleResolver} used for {@link BuildRule} instances.
+   * @param filesystem {@link ProjectFilesystem} used to ensure {@link Path}s exist.
    * @param dto The constructor DTO on which the value should be set.
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
-  public void set(BuildRuleResolver ruleResolver, Object dto, @Nullable Object value) {
+  public void set(
+      BuildRuleResolver ruleResolver,
+      ProjectFilesystem filesystem,
+      Object dto,
+      @Nullable Object value) {
     Object result;
 
     if (value == null) {
@@ -123,7 +132,7 @@ class ParamInfo implements Comparable<ParamInfo> {
       result = Optional.absent();
     } else {
       try {
-        result = typeCoercer.coerce(ruleResolver, pathRelativeToProjectRoot, value);
+        result = typeCoercer.coerce(ruleResolver, filesystem, pathRelativeToProjectRoot, value);
       } catch (CoerceFailedException e) {
         throw new RuntimeException(String.format("Failed to coerce field named: %s", name), e);
       }

@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -89,13 +90,17 @@ public class ProjectFilesystem {
        * contents to the destination path, which must be a directory.
        */
       DIRECTORY_AND_CONTENTS,
-  };
+  }
 
   private final Path projectRoot;
 
   private final Function<Path, Path> pathAbsolutifier;
 
   private final ImmutableSet<Path> ignorePaths;
+
+  // Defaults to false, and so paths should be valid.
+  @VisibleForTesting
+  protected boolean ignoreValidityOfPaths;
 
   /**
    * There should only be one {@link ProjectFilesystem} created per process.
@@ -115,6 +120,7 @@ public class ProjectFilesystem {
       }
     };
     this.ignorePaths = MorePaths.filterForSubpaths(ignorePaths, this.projectRoot);
+    this.ignoreValidityOfPaths = false;
   }
 
   public ProjectFilesystem(Path projectRoot) {
@@ -182,6 +188,30 @@ public class ProjectFilesystem {
 
   public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
     return projectRoot.resolve(pathRelativeToProjectRoot);
+  }
+
+  /**
+   * As {@link #getFileForRelativePath(java.nio.file.Path)}, but with the added twist that the
+   * existence of the path is checked before returning.
+   */
+  public Path getPathForRelativeExistingPath(Path pathRelativeToProjectRoot) {
+    Path file = getPathForRelativePath(pathRelativeToProjectRoot);
+
+    if (ignoreValidityOfPaths) {
+      return file;
+    }
+
+    // TODO(mbolin): Eliminate this temporary exemption for symbolic links.
+    if (java.nio.file.Files.isSymbolicLink(file)) {
+      return file;
+    }
+
+    if (!java.nio.file.Files.exists(file)) {
+      throw new RuntimeException(
+          String.format( "Not an ordinary file: '%s'.", pathRelativeToProjectRoot));
+    }
+
+    return file;
   }
 
   /**

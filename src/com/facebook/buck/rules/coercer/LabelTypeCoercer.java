@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.util.ProjectFilesystem;
 
 import java.nio.file.Path;
 
@@ -30,6 +31,7 @@ public class LabelTypeCoercer extends LeafTypeCoercer<Label> {
   @Override
   public Label coerce(
       BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
     if (object instanceof String) {

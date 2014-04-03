@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
@@ -43,15 +44,20 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
 
   @Override
   public SourcePath coerce(
-      BuildRuleResolver buildRuleResolver, Path pathRelativeToProjectRoot, Object object)
+      BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
+      Object object)
       throws CoerceFailedException {
     try {
       BuildTarget buildTarget =
-          buildTargetTypeCoercer.coerce(buildRuleResolver, pathRelativeToProjectRoot, object);
+          buildTargetTypeCoercer.coerce(
+              buildRuleResolver, filesystem, pathRelativeToProjectRoot, object);
       return new BuildTargetSourcePath(buildTarget);
     } catch (CoerceFailedException e) {
       try {
-        Path path = pathTypeCoercer.coerce(buildRuleResolver, pathRelativeToProjectRoot, object);
+        Path path = pathTypeCoercer.coerce(
+            buildRuleResolver, filesystem, pathRelativeToProjectRoot, object);
         return new FileSourcePath(path.toString());
       } catch (CoerceFailedException e1) {
         throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());

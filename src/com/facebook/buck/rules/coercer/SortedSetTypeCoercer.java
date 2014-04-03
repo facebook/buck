@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -41,10 +42,13 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
 
   @Override
   public ImmutableSortedSet<T> coerce(
-      BuildRuleResolver buildRuleResolver, Path pathRelativeToProjectRoot, Object object)
+      BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
+      Object object)
       throws CoerceFailedException {
     ImmutableSortedSet.Builder<T> builder = ImmutableSortedSet.naturalOrder();
-    fill(buildRuleResolver, pathRelativeToProjectRoot, builder, object);
+    fill(buildRuleResolver, filesystem, pathRelativeToProjectRoot, builder, object);
     return builder.build();
   }
 }

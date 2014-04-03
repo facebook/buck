@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -88,13 +89,20 @@ public class ConstructorArgMarshaller {
    */
   public void populate(
       BuildRuleResolver ruleResolver,
+      ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       ConstructorArg dto) {
-    populate(ruleResolver, params, dto, /* populate all fields, optional and required */false);
+    populate(
+        ruleResolver,
+        filesystem,
+        params,
+        dto,
+        /* populate all fields, optional and required */ false);
   }
 
   public void populate(
       BuildRuleResolver ruleResolver,
+      ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       ConstructorArg dto,
       boolean onlyOptional) {
@@ -104,7 +112,7 @@ public class ConstructorArgMarshaller {
       if (onlyOptional && !info.isOptional()) {
         continue;
       }
-      info.setFromParams(ruleResolver, dto, params);
+      info.setFromParams(ruleResolver, filesystem, dto, params);
     }
   }
 

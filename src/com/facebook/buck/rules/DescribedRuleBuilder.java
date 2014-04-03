@@ -103,7 +103,11 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
     ConstructorArgMarshaller inspector =
         new ConstructorArgMarshaller(Paths.get(target.getBasePath()));
     T arg = description.createUnpopulatedConstructorArg();
-    inspector.populate(ruleResolver, ruleFactoryParams, arg);
+    inspector.populate(
+        ruleResolver,
+        ruleFactoryParams.getProjectFilesystem(),
+        ruleFactoryParams,
+        arg);
 
     Buildable buildable = description.createBuildable(params, arg);
 

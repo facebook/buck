@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 
@@ -53,14 +54,17 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
    * Helper method to add coerced elements to the builder.
    */
   protected void fill(
-      BuildRuleResolver buildRuleResolver, Path pathRelativeToProjectRoot, C.Builder<T> builder,
+      BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
+      C.Builder<T> builder,
       Object object) throws CoerceFailedException {
     if (object instanceof Collection) {
       for (Object element : (Iterable<?>) object) {
         // if any element failed, the entire collection fails
         try {
           T coercedElement = elementTypeCoercer.coerce(
-              buildRuleResolver, pathRelativeToProjectRoot, element);
+              buildRuleResolver, filesystem, pathRelativeToProjectRoot, element);
           builder.add(coercedElement);
         } catch (CoerceFailedException e) {
           CoerceFailedException wrappingException =
