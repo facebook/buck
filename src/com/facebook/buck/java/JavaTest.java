@@ -93,6 +93,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         srcs,
         resources,
         proguardConfig,
+        ImmutableList.<String>of(),
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
         additionalClasspathEntries,
         javacOptions);

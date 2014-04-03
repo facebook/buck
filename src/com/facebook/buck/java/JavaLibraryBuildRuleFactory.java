@@ -66,6 +66,9 @@ public class JavaLibraryBuildRuleFactory extends
     builder.setProguardConfig(
         proguardConfig.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
 
+    List<String> postprocessClassesCommands = params.getOptionalListAttribute(
+        "postprocess_classes_commands");
+    builder.addPostprocessClassesCommands(postprocessClassesCommands);
 
     for (String exportedDep : params.getOptionalListAttribute("exported_deps")) {
       BuildTarget buildTarget = params.resolveBuildTarget(exportedDep);

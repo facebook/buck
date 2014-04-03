@@ -58,6 +58,7 @@ public class AndroidLibrary extends DefaultJavaLibrary {
       Set<Path> srcs,
       Set<SourcePath> resources,
       Optional<Path> proguardConfig,
+      ImmutableList<String> postprocessClassesCommands,
       Set<BuildRule> exportedDeps,
       ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions,
@@ -66,6 +67,7 @@ public class AndroidLibrary extends DefaultJavaLibrary {
         srcs,
         resources,
         proguardConfig,
+        postprocessClassesCommands,
         exportedDeps,
         additionalClasspathEntries,
         javacOptions);
@@ -147,6 +149,7 @@ public class AndroidLibrary extends DefaultJavaLibrary {
           srcs,
           resources,
           proguardConfig,
+          postprocessClassesCommands.build(),
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           additionalClasspathEntries,
           options,

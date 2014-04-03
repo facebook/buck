@@ -49,6 +49,7 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
+import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -117,6 +118,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
   private final ImmutableSortedSet<SourcePath> resources;
   private final Optional<Path> outputJar;
   private final Optional<Path> proguardConfig;
+  private final ImmutableList<String> postprocessClassesCommands;
   private final ImmutableSortedSet<BuildRule> exportedDeps;
   protected final ImmutableSet<String> additionalClasspathEntries;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
@@ -170,6 +172,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
       Set<Path> srcs,
       Set<? extends SourcePath> resources,
       Optional<Path> proguardConfig,
+      ImmutableList<String> postprocessClassesCommands,
       Set<BuildRule> exportedDeps,
       ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions) {
@@ -178,6 +181,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
+    this.postprocessClassesCommands = Preconditions.checkNotNull(postprocessClassesCommands);
     this.exportedDeps = ImmutableSortedSet.copyOf(exportedDeps);
     this.additionalClasspathEntries = Preconditions.checkNotNull(additionalClasspathEntries);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
@@ -393,6 +397,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     super.appendToRuleKey(builder);
+    builder.set("postprocessClassesCommands", postprocessClassesCommands);
     return javacOptions.appendToRuleKey(builder);
   }
 
@@ -509,6 +514,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
         steps,
         getBuildTarget());
 
+    addPostprocessClassesCommands(steps, postprocessClassesCommands, outputDirectory);
 
     // If there are resources, then link them to the appropriate place in the classes directory.
     addResourceCommands(context, steps, outputDirectory, context.getJavaPackageFinder());
@@ -674,6 +680,31 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
     return buildOutputInitializer.getBuildOutput().getClassNamesToHashes();
   }
 
+  /**
+   * Adds a BashStep for each postprocessClasses command that runs the command followed by the
+   * outputDirectory of javac outputs.
+   *
+   * The expectation is that the command will inspect and update the directory by
+   * modifying, adding, and deleting the .class files in the directory.
+   *
+   * The outputDirectory should be a valid java root.  I.e., if outputDirectory
+   * is buck-out/bin/java/abc/lib__abc__classes/, then a contained class abc.AbcModule
+   * should be at buck-out/bin/java/abc/lib__abc__classes/abc/AbcModule.class
+   *
+   * @param commands the list of Steps we are building.
+   * @param postprocessClassesCommands the list of commands to post-process .class files.
+   * @param outputDirectory the directory that will contain all the javac output.
+   */
+  @VisibleForTesting
+  static void addPostprocessClassesCommands(
+      ImmutableList.Builder<Step> commands,
+      List<String> postprocessClassesCommands,
+      Path outputDirectory) {
+    for (final String postprocessClassesCommand : postprocessClassesCommands) {
+      BashStep bashStep = new BashStep(postprocessClassesCommand + " " + outputDirectory);
+      commands.add(bashStep);
+    }
+  }
 
   @VisibleForTesting
   public Optional<Path> getJavac() {
@@ -775,6 +806,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
     protected Set<BuildTarget> exportedDeps = Sets.newHashSet();
     protected JavacOptions.Builder javacOptions = JavacOptions.builder();
     protected Optional<Path> proguardConfig = Optional.absent();
+    protected ImmutableList.Builder<String> postprocessClassesCommands = ImmutableList.builder();
 
     protected Builder(BuildRuleBuilderParams params) {
       this(Optional.<Path>absent(), Optional.<JavacVersion>absent(), params);
@@ -803,6 +835,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
           srcs,
           resources,
           proguardConfig,
+          postprocessClassesCommands.build(),
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           /* additionaLClasspathEntries */ ImmutableSet.<String>of(),
           javacOptions.build());
@@ -848,6 +881,10 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
       return this;
     }
 
+    public Builder addPostprocessClassesCommands(Iterable<String> commands) {
+      postprocessClassesCommands.addAll(commands);
+      return this;
+    }
 
     public Builder setSourceLevel(String sourceLevel) {
       javacOptions.setSourceLevel(sourceLevel);

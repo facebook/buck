@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -45,6 +46,7 @@ public class FakeDefaultJavaLibrary extends DefaultJavaLibrary {
         srcs,
         resources,
         proguardConfig,
+        ImmutableList.<String>of(),
         exportedDeps,
         /* addtionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.builder()

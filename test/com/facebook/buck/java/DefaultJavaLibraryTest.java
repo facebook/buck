@@ -59,6 +59,7 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
@@ -152,6 +153,7 @@ public class DefaultJavaLibraryTest {
             new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
         ),
         /* proguardConfig */ Optional.<Path>absent(),
+        /* postprocessClassesCommands */ ImmutableList.<String>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.DEFAULTS
@@ -187,6 +189,7 @@ public class DefaultJavaLibraryTest {
             new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
         ),
         /* proguargConfig */ Optional.<Path>absent(),
+        /* postprocessClassesCommands */ ImmutableList.<String>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.DEFAULTS);
@@ -223,6 +226,7 @@ public class DefaultJavaLibraryTest {
             new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
         ),
         /* proguargConfig */ Optional.<Path>absent(),
+        /* postprocessClassesCommands */ ImmutableList.<String>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.DEFAULTS);
@@ -1006,6 +1010,7 @@ public class DefaultJavaLibraryTest {
         srcsAsPaths,
         /* resources */ ImmutableSet.<SourcePath>of(),
         /* proguardConfig */ Optional.<Path>absent(),
+        /* postprocessClassesCommands */ ImmutableList.<String>of(),
         exportedDeps,
         /* additionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.DEFAULTS) {
@@ -1222,6 +1227,32 @@ public class DefaultJavaLibraryTest {
     assertTrue(steps.get(2) instanceof ExternalJavacStep);
   }
 
+  @Test
+  public void testAddPostprocessClassesCommands() {
+    ImmutableList<String> postprocessClassesCommands = ImmutableList.of("tool arg1", "tool2");
+    Path outputDirectory = BIN_PATH.resolve("android/java/lib__java__classes");
+    ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
+    DefaultJavaLibrary.addPostprocessClassesCommands(
+        commands,
+        postprocessClassesCommands,
+        outputDirectory);
+
+    ImmutableList<Step> steps = commands.build();
+    assertEquals(2, steps.size());
+
+    assertTrue(steps.get(0) instanceof ShellStep);
+    ShellStep step0 = (ShellStep) steps.get(0);
+    assertEquals(
+        ImmutableList.of("bash", "-c", "tool arg1 " + outputDirectory),
+        step0.getShellCommand(executionContext));
+
+    assertTrue(steps.get(1) instanceof ShellStep);
+    ShellStep step1 = (ShellStep) steps.get(1);
+    assertEquals(
+        ImmutableList.of("bash", "-c", "tool2 " + outputDirectory),
+        step1.getShellCommand(executionContext));
+  }
 
   // Utilities
 
@@ -1325,6 +1356,7 @@ public class DefaultJavaLibraryTest {
             ImmutableSet.of(Paths.get("MyClass.java")),
             ImmutableSet.<SourcePath>of(),
             Optional.of(Paths.get("MyProguardConfig")),
+            /* postprocessClassesCommands */ ImmutableList.<String>of(),
             /* exportedDeps */ ImmutableSet.<BuildRule>of(),
             /* additionalClasspathEntries */ ImmutableSet.<String>of(),
             JavacOptions.DEFAULTS);
@@ -1414,6 +1446,7 @@ public class DefaultJavaLibraryTest {
           ImmutableSet.of(Paths.get(src)),
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<Path>absent(),
+          /* postprocessClassesCommands */ ImmutableList.<String>of(),
           /* exortDeps */ ImmutableSet.<BuildRule>of(),
           /* additionalClasspathEntries */ ImmutableSet.<String>of(),
           options.build(),

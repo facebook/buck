@@ -26,6 +26,7 @@ import com.facebook.buck.command.Project;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -110,6 +111,66 @@ public class ProjectCommandTest {
         buildOptions.getArguments(), javaLibraryTargetName.getFullyQualifiedName());
   }
 
+  @Test
+  public void testProjectCommandWithAnnotations() throws IOException {
+    List<String> processorNames = ImmutableList.of("com.facebook.AnnotationProcessor");
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    BuckConfig buckConfig = new FakeBuckConfig();
+
+    String targetNameWithout = "//javasrc:java-library-without-processor";
+    DefaultJavaLibrary ruleWithout = ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance(targetNameWithout))
+            .addSrc(Paths.get("javasrc/JavaLibrary.java"))
+    );
+
+    BuildTarget targetNameWith = BuildTargetFactory.newInstance(
+        "//javasrc:java-library-with-processor");
+    DefaultJavaLibrary.Builder builderWith =
+        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
+        .setBuildTarget(targetNameWith)
+        .addSrc(Paths.get("javasrc/JavaLibrary.java"));
+    builderWith.getAnnotationProcessingBuilder().addAllProcessors(processorNames);
+    BuildRule ruleWith = ruleResolver.buildAndAddToIndex(builderWith);
+    ImmutableMap<String, Object> annotationParseData =
+        ImmutableMap.<String, Object>of(
+            JavaLibraryBuildRuleFactory.ANNOTATION_PROCESSORS,
+            processorNames);
+
+    String projectConfigName = "//javasrc:project-config";
+    BuildRule ruleConfig = ProjectConfigBuilder
+        .newProjectConfigRuleBuilder(BuildTargetFactory.newInstance(projectConfigName))
+        .setSrcRule(ruleWith)
+        .build(ruleResolver);
+
+    ProjectCommandForTest command = new ProjectCommandForTest();
+    command.createPartialGraphCallReturnValues.addLast(
+        createGraphFromBuildRules(ImmutableList.<BuildRule>of(ruleConfig)));
+    command.createPartialGraphCallReturnValues.addLast(
+        createGraphFromBuildRules(ImmutableList.of(ruleWith)));
+
+    ProjectCommandOptions projectCommandOptions = createOptions(buckConfig);
+    projectCommandOptions.setProcessAnnotations(true);
+    command.runCommandWithOptions(projectCommandOptions);
+
+    assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
+
+    // The first PartialGraph comprises build config rules.
+    RawRulePredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
+    checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, ruleWithout, false);
+    checkPredicate(projectConfigPredicate, annotationParseData, ruleWith, false);
+    checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, ruleConfig, true);
+
+    // The second PartialGraph comprises java rules with annotations
+    RawRulePredicate annotationUsagePredicate = command.createPartialGraphCallPredicates.get(1);
+    checkPredicate(annotationUsagePredicate, EMPTY_PARSE_DATA, ruleWithout, false);
+    checkPredicate(annotationUsagePredicate, annotationParseData, ruleWith, true);
+    checkPredicate(annotationUsagePredicate, EMPTY_PARSE_DATA, ruleConfig, false);
+
+    BuildCommandOptions buildOptions = command.buildCommandOptions;
+    MoreAsserts.assertContainsOne(buildOptions.getArguments(), ruleWith.getFullyQualifiedName());
+  }
 
   BuckConfig createBuckConfig(String contents)
       throws IOException, NoSuchBuildTargetException {

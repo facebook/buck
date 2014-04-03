@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.rules.JavaPackageFinder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +38,8 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
       usage = "Generate an xcode project of a target and its dependencies.")
   private String combinedProject;
 
+  @Option(name = "--process-annotations", usage = "Enable annotation processing")
+  private boolean processAnnotations;
 
   @Option(
       name = "--with-tests",
@@ -73,6 +76,14 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     return combinedProject;
   }
 
+  public boolean shouldProcessAnnotations() {
+    return processAnnotations;
+  }
+
+  @VisibleForTesting
+  public void setProcessAnnotations(boolean value) {
+    processAnnotations = value;
+  }
 
   public ImmutableMap<String, String> getBasePathToAliasMap() {
     return getBuckConfig().getBasePathToAliasMap();
