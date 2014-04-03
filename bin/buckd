@@ -25,7 +25,18 @@ function killBuckdIfRunning()
   # Kill any existing buckd process.
   if [ $BUCKD_RUNNING -eq 0 ]; then
     echo "Killing existing buckd process"
-    kill `cat $BUCKD_PID_FILE 2> /dev/null` &> /dev/null || true
+    BUCK_PID=$(cat $BUCKD_PID_FILE)
+    kill $BUCK_PID &> /dev/null || true
+    WAIT_COUNT=1
+    echo "Waiting for existing buckd process to exit"
+    while [ $(ps -p $BUCK_PID &> /dev/null; echo $? || true) -eq 0 ];
+      do sleep 0.1
+      WAIT_COUNT=$((WAIT_COUNT + 1))
+      if [ $WAIT_COUNT -gt 100 ]; then
+        echo "Could not kill existing buckd process after 10 seconds!"
+        exit 1
+      fi
+    done
   fi
 }
 
@@ -58,19 +69,15 @@ fi
 
 killBuckdIfRunning
 
-# Find an unused port.
-for BUCKD_PORT in $(seq 2000 65000); do
-  nc -z localhost $BUCKD_PORT &> /dev/null || break
-done
-
-# Persist port.
+# Create .buckd directory if required.
 mkdir -p "$BUCKD_DIR" &> /dev/null || true
-echo $BUCKD_PORT > "$BUCKD_PORT_FILE"
 
 # Run buckd. Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
 # Set timeout to 30s (longer than the biggest GC pause seen for a 2GB heap)
 # and GC target to 15s. This means that the GC has to miss its target by 100%
 # or many 500ms heartbeats must be missed before a client disconnection occurs.
+# Specify port 0 to allow Nailgun to find an available port, then parse the
+# port number out of the first log entry.
 BUCKD_CLIENT_TIMEOUT_MILLIS=30000
 GC_MAX_PAUSE_TARGET=15000
 java \
@@ -80,6 +87,9 @@ $BUCK_JAVA_ARGS \
 -classpath \
 ${BUCK_JAVA_CLASSPATH} \
 com.martiansoftware.nailgun.NGServer \
-localhost:${BUCKD_PORT} $BUCKD_CLIENT_TIMEOUT_MILLIS \
-&> $BUCKD_LOG_FILE &
+localhost:0 $BUCKD_CLIENT_TIMEOUT_MILLIS &> \
+$BUCKD_LOG_FILE &
 echo $! > "$BUCKD_PID_FILE"
+# Block until we read the port number from the buckd log file.
+sed -n '1 s/.*port \([0-9]*\)\.$/\1/;p;q' > $BUCKD_PORT_FILE \
+<(tail -n +1 -f $BUCKD_LOG_FILE)
