@@ -17,59 +17,29 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuilder;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class PrebuiltJarBuilder {
+public class PrebuiltJarBuilder extends AbstractBuilder<PrebuiltJar, PrebuiltJarDescription.Arg> {
 
-  private PrebuiltJarBuilder() {
-    // Utility class
+  protected PrebuiltJarBuilder(BuildTarget target) {
+    super(new PrebuiltJarDescription(), target);
   }
 
-  public static Builder createBuilder(BuildTarget target) {
-    return new Builder(target);
+  public static PrebuiltJarBuilder createBuilder(BuildTarget target) {
+    return new PrebuiltJarBuilder(target);
   }
 
-  public static class Builder {
-
-    private Path binaryJar;
-    private Optional<String> javadocUrl = Optional.absent();
-    private Optional<Path> sourceJar = Optional.absent();
-    private final BuildTarget target;
-    private final ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-
-    public Builder(BuildTarget target) {
-      this.target = target;
-    }
-
-    public Builder setBinaryJar(Path binaryJar) {
-      this.binaryJar = binaryJar;
-      return this;
-    }
-
-    public Builder addDep(BuildRule dep) {
-      deps.add(dep);
-      return this;
-    }
-
-    public PrebuiltJar build() {
-      FakeBuildRuleParams params = new FakeBuildRuleParams(target, deps.build());
-      return new PrebuiltJar(params, binaryJar, sourceJar, javadocUrl);
-    }
-
-    public BuildRule build(BuildRuleResolver resolver) {
-      BuildRule rule = new AbstractBuildable.AnonymousBuildRule(
-          PrebuiltJarDescription.TYPE,
-          build(),
-          new FakeBuildRuleParams(target, deps.build()));
-      resolver.addToIndex(target, rule);
-      return rule;
-    }
+  public PrebuiltJarBuilder setBinaryJar(Path binaryJar) {
+    arg.binaryJar = binaryJar;
+    return this;
   }
+
+  public PrebuiltJarBuilder addDep(BuildRule dep) {
+    arg.deps = amend(arg.deps, dep);
+    return this;
+  }
+
 }
