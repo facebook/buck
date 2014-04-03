@@ -134,7 +134,9 @@ class ParamInfo implements Comparable<ParamInfo> {
       try {
         result = typeCoercer.coerce(ruleResolver, filesystem, pathRelativeToProjectRoot, value);
       } catch (CoerceFailedException e) {
-        throw new RuntimeException(String.format("Failed to coerce field named: %s", name), e);
+        throw new RuntimeException(
+            String.format("Failed to coerce field named: %s, %s", name, e.getMessage()),
+            e);
       }
       if (isOptional) {
         result = Optional.of(result);

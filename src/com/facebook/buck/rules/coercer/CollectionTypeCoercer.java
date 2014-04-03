@@ -67,8 +67,11 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
               buildRuleResolver, filesystem, pathRelativeToProjectRoot, element);
           builder.add(coercedElement);
         } catch (CoerceFailedException e) {
-          CoerceFailedException wrappingException =
-              CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+          CoerceFailedException wrappingException = CoerceFailedException.simple(
+              pathRelativeToProjectRoot,
+              object,
+              getOutputClass(),
+              e.getMessage());
           wrappingException.initCause(e);
           throw wrappingException;
         }
