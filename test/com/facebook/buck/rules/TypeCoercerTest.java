@@ -369,7 +369,7 @@ public class TypeCoercerTest {
     ImmutableSortedSet<Label> expected = ImmutableSortedSet.of(
         new Label("cake"), new Label("cheese"), new Label("good"), new Label("tastes"));
 
-    assertEquals( expected, result);
+    assertEquals(expected, result);
   }
 
   @SuppressWarnings("unused")
