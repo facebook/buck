@@ -19,11 +19,11 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.ComputeExopackageDepsAbi.BuildOutput;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -35,7 +35,6 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -44,7 +43,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -121,7 +119,7 @@ public class ComputeExopackageDepsAbi
               // a native library to an asset will change the ABI key.
               // We assume that these are all order-insensitive to avoid having our ABI key
               // affected by filesystem iteration order.
-              final ImmutableSortedMap.Builder<Path, String> filesToHash =
+              ImmutableSortedMap.Builder<Path, String> filesToHash =
                   ImmutableSortedMap.naturalOrder();
 
               // We add native libraries in apkbuilder, so we need to include their hashes.
@@ -129,12 +127,9 @@ public class ComputeExopackageDepsAbi
               // We could augment it, but our current native libraries are small enough that
               // we can just hash them all without too much of a perf hit.
               for (final Path libDir : transitiveDependencies.nativeLibsDirectories) {
-                new DirectoryTraversal(filesystem.resolve(libDir).toFile()) {
-                  @Override
-                  public void visit(File file, String relativePath) throws IOException {
-                    filesToHash.put(libDir.resolve(relativePath), "native lib");
-                  }
-                }.traverse();
+                for (Path nativeFile : filesystem.getFilesUnderPath(libDir)) {
+                  filesToHash.put(nativeFile, "native_lib");
+                }
               }
 
               // Resources get copied from third-party JARs, so hash them.
