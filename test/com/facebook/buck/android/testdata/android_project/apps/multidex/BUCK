@@ -11,6 +11,7 @@ android_binary(
     '//java/com/sample/app:app',
     '//java/com/sample/lib:lib',
     '//native/fakenative/jni:fakenative',
+    '//native/mybinary/jni:mybinary',
   ],
 )
 
@@ -28,6 +29,7 @@ android_binary(
     '//java/com/sample/app:app',
     '//java/com/sample/lib:lib',
     '//native/fakenative/jni:fakenative',
+    '//native/mybinary/jni:mybinary',
     '//third-party:kiwi',
   ],
 )

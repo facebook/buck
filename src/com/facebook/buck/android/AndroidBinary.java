@@ -47,6 +47,7 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
+import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -55,6 +56,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -77,8 +79,11 @@ import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -439,7 +444,7 @@ public class AndroidBinary extends AbstractBuildable implements
 
   @VisibleForTesting
   static void copyNativeLibrary(Path sourceDir,
-      Path destinationDir,
+      final Path destinationDir,
       ImmutableSet<TargetCpuType> cpuFilters,
       ImmutableList.Builder<Step> steps) {
 
@@ -490,6 +495,42 @@ public class AndroidBinary extends AbstractBuildable implements
         });
       }
     }
+
+    // Rename native files named like "*-disguised-exe" to "lib*.so" so they will be unpacked
+    // by the Android package installer.  Then they can be executed like normal binaries
+    // on the device.
+    steps.add(
+        new AbstractExecutionStep("rename_native_executables") {
+
+          @Override
+          public int execute(ExecutionContext context) {
+
+            ProjectFilesystem filesystem = context.getProjectFilesystem();
+            final ImmutableSet.Builder<Path> executablesBuilder = ImmutableSet.builder();
+            try {
+              filesystem.walkRelativeFileTree(destinationDir, new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException {
+                      if (file.toString().endsWith("-disguised-exe")) {
+                        executablesBuilder.add(file);
+                      }
+                      return FileVisitResult.CONTINUE;
+                    }
+                  });
+              for (Path exePath : executablesBuilder.build()) {
+                Path fakeSoPath = Paths.get(
+                    exePath.toString().replaceAll("/([^/]+)-disguised-exe$", "/lib$1.so"));
+                filesystem.move(exePath, fakeSoPath);
+              }
+            } catch (IOException e) {
+              context.logError(e, "Renaming native executables failed.");
+              return 1;
+            }
+            return 0;
+          }
+        }
+    );
   }
 
   /** The APK at this path is the final one that points to an APK that a user should install. */

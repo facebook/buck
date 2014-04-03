@@ -338,7 +338,8 @@ public class AndroidBinaryTest {
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
-            "cp -R /path/to/source/* /path/to/destination"));
+            "cp -R /path/to/source/* /path/to/destination",
+            "rename_native_executables"));
   }
 
   @Test
@@ -349,7 +350,8 @@ public class AndroidBinaryTest {
         "/path/to/destination/",
         ImmutableList.of(
             "[ -d /path/to/source/armeabi-v7a ] && mkdir -p /path/to/destination/armeabi-v7a " +
-                "&& cp -R /path/to/source/armeabi-v7a/* /path/to/destination/armeabi-v7a"));
+                "&& cp -R /path/to/source/armeabi-v7a/* /path/to/destination/armeabi-v7a",
+            "rename_native_executables"));
   }
 
   @Test
@@ -362,7 +364,8 @@ public class AndroidBinaryTest {
             "[ -d /path/to/source/armeabi ] && mkdir -p /path/to/destination/armeabi " +
                 "&& cp -R /path/to/source/armeabi/* /path/to/destination/armeabi",
             "[ -d /path/to/source/x86 ] && mkdir -p /path/to/destination/x86 " +
-                "&& cp -R /path/to/source/x86/* /path/to/destination/x86"));
+                "&& cp -R /path/to/source/x86/* /path/to/destination/x86",
+            "rename_native_executables"));
   }
 
   @Test

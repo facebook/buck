@@ -1,0 +1,7 @@
+ndk_library(
+  name = 'mybinary',
+  flags = [
+    'NDK_APPLICATION_MK=${PWD}/native/mybinary/jni/Application.mk',
+  ],
+  visibility = ['PUBLIC'],
+)

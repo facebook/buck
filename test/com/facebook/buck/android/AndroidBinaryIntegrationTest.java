@@ -93,6 +93,15 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testDisguisedExecutableIsRenamed() throws IOException {
+    ApkInspector apkInspector = new ApkInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/multidex/app.apk"));
+
+    apkInspector.assertFileExists("lib/armeabi/libmybinary.so");
+  }
+
+  @Test
   public void testEditingStringForcesRebuild() throws IOException {
     workspace.replaceFileContents("res/com/sample/base/res/values/strings.xml", "Hello", "Bye");
 

@@ -45,6 +45,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -597,6 +598,11 @@ public class ProjectFilesystem {
         MoreFiles.copyRecursively(resolve(source), resolve(target.resolve(source.getFileName())));
         break;
     }
+  }
+
+  public void move(Path source, Path target, CopyOption... options) throws IOException {
+    java.nio.file.Files.move(resolve(source), resolve(target), options);
+
   }
 
   public void copyFolder(Path source, Path target) throws IOException {
