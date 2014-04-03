@@ -17,14 +17,11 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.LabelsAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestRule;
@@ -70,13 +67,15 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   /**
    * Build rules for which this test rule will be testing.
    */
-  private final ImmutableSet<BuildRule> sourceUnderTest;
+  private final ImmutableSet<BuildTarget> sourceTargetsUnderTest;
 
   private CompiledClassFileFinder compiledClassFileFinder;
 
   private final ImmutableSet<Label> labels;
 
   private final ImmutableSet<String> contacts;
+
+  private ImmutableSet<BuildRule> sourceUnderTest;
 
   protected JavaTest(
       BuildRuleParams buildRuleParams,
@@ -85,28 +84,51 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       Set<Label> labels,
       Set<String> contacts,
       Optional<Path> proguardConfig,
-      ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions,
       List<String> vmArgs,
-      ImmutableSet<BuildRule> sourceUnderTest) {
+      ImmutableSet<BuildTarget> sourceUnderTest) {
     super(buildRuleParams,
         srcs,
         resources,
         proguardConfig,
         ImmutableList.<String>of(),
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
-        additionalClasspathEntries,
         javacOptions);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
-    this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
+    this.sourceTargetsUnderTest = Preconditions.checkNotNull(sourceUnderTest);
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
   }
 
+
   @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.JAVA_TEST;
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
+    ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
+    for (BuildTarget target : sourceTargetsUnderTest) {
+      BuildRule rule = ruleResolver.get(target);
+      if (rule == null) {
+        throw new HumanReadableException(
+            "Specified source under test for %s is not among its dependencies: %s",
+            getBuildTarget().getFullyQualifiedName(),
+            target);
+      }
+      if (rule.getBuildable() instanceof JavaLibrary) {
+        builder.add(rule);
+      } else {
+        // In this case, the source under test specified in the build file was not a Java library
+        // rule. Since EMMA requires the sources to be in Java, we will throw this exception and
+        // not continue with the tests.
+        throw new HumanReadableException(
+            "Specified source under test for %s is not a Java library: %s (%s).",
+            getBuildTarget().getFullyQualifiedName(),
+            rule.getFullyQualifiedName(),
+            rule.getType().getName());
+      }
+    }
+    sourceUnderTest = builder.build();
+    return deps;
   }
+
 
   @Override
   public ImmutableSet<Label> getLabels() {
@@ -119,10 +141,10 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     ImmutableSortedSet<? extends BuildRule> srcUnderTest = ImmutableSortedSet.copyOf(
         sourceUnderTest);
-    super.appendToRuleKey(builder)
+    super.appendDetailsToRuleKey(builder)
         .set("vmArgs", vmArgs)
         .set("sourceUnderTest", srcUnderTest);
     return builder;
@@ -392,118 +414,6 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       }
 
       return testClassNames.build();
-    }
-  }
-
-  public static Builder newJavaTestRuleBuilder(BuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends DefaultJavaLibrary.Builder
-      implements LabelsAttributeBuilder {
-
-    @Nullable protected List<String> vmArgs = ImmutableList.of();
-    protected ImmutableSet<BuildTarget> sourcesUnderTest = ImmutableSet.of();
-    protected ImmutableSet<Label> labels = ImmutableSet.of();
-    protected ImmutableSet<String> contacts = ImmutableSet.of();
-
-    protected Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public JavaTest build(BuildRuleResolver ruleResolver) {
-      ImmutableSet<BuildRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
-          ruleResolver);
-      AnnotationProcessingParams processingParams =
-          getAnnotationProcessingBuilder().build(ruleResolver);
-      javacOptions.setAnnotationProcessingData(processingParams);
-
-      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
-
-      return new JavaTest(
-          buildRuleParams,
-          srcs,
-          resources,
-          labels,
-          contacts,
-          proguardConfig,
-          /* additionalClasspathEntries */ ImmutableSet.<String>of(),
-          javacOptions.build(),
-          vmArgs,
-          sourceUnderTest);
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    public Builder addDep(BuildTarget dep) {
-      super.addDep(dep);
-      return this;
-    }
-
-    @Override
-    public Builder addSrc(Path src) {
-      super.addSrc(src);
-      return this;
-    }
-
-    public Builder setVmArgs(List<String> vmArgs) {
-      this.vmArgs = ImmutableList.copyOf(vmArgs);
-      return this;
-    }
-
-    public Builder setSourceUnderTest(ImmutableSet<BuildTarget> sourceUnderTestNames) {
-      this.sourcesUnderTest = sourceUnderTestNames;
-      return this;
-    }
-
-    @Override
-    public Builder setLabels(ImmutableSet<Label> labels) {
-      this.labels = labels;
-      return this;
-    }
-
-    public Builder setContacts(ImmutableSet<String> contacts) {
-      this.contacts = contacts;
-      return this;
-    }
-
-    /**
-     * Generates the set of build rules that contain the source that will be under test.
-     */
-    protected ImmutableSet<BuildRule> generateSourceUnderTest(
-        ImmutableSet<BuildTarget> sourceUnderTestNames, BuildRuleResolver ruleResolver) {
-      ImmutableSet.Builder<BuildRule> sourceUnderTest = ImmutableSet.builder();
-      for (BuildTarget sourceUnderTestName : sourceUnderTestNames) {
-        // Generates the set by matching its path with the full path names that are passed in.
-        BuildRule rule = ruleResolver.get(sourceUnderTestName);
-
-        if (rule instanceof JavaLibrary ||
-            (rule != null && rule.getBuildable() instanceof JavaLibrary)) {
-          sourceUnderTest.add(rule);
-        } else if (rule == null) {
-          throw new HumanReadableException(
-              "Specified source under test for %s is not among its dependencies: %s",
-              getBuildTarget().getFullyQualifiedName(),
-              sourceUnderTestName);
-        } else {
-          // In this case, the source under test specified in the build file was not a Java library
-          // rule. Since EMMA requires the sources to be in Java, we will throw this exception and
-          // not continue with the tests.
-          throw new HumanReadableException(
-              "Specified source under test for %s is not a Java library: %s (%s).",
-              getBuildTarget().getFullyQualifiedName(),
-              rule.getFullyQualifiedName(),
-              rule.getType().getName());
-        }
-      }
-
-      return sourceUnderTest.build();
     }
   }
 }

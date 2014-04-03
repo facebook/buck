@@ -119,7 +119,8 @@ public class PartialGraph {
     // Iterate through all possible test targets, looking for ones who's src_under_test intersects
     // with our build graph.
     for (BuildTarget buildTarget : testGraph.getTargets()) {
-      TestRule testRule = (TestRule) testDependencyGraph.findBuildRuleByTarget(buildTarget);
+      TestRule testRule =
+          (TestRule) testDependencyGraph.findBuildRuleByTarget(buildTarget).getBuildable();
       for (BuildRule buildRuleUnderTest : testRule.getSourceUnderTest()) {
         if (buildGraph.findBuildRuleByTarget(buildRuleUnderTest.getBuildTarget()) != null) {
           buildAndTestTargetsBuilder.add(testRule.getBuildTarget());

@@ -21,17 +21,11 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.RuleKey.Builder;
-import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.DefaultFileHashCache;
-import com.facebook.buck.util.FileHashCache;
-import com.facebook.buck.util.ProjectFilesystem;
 
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
@@ -53,42 +47,27 @@ public class RuleKeyTest {
   public void testRuleKeyDependsOnDeps() throws IOException {
     BuildRuleResolver ruleResolver1 = new BuildRuleResolver();
     BuildRuleResolver ruleResolver2 = new BuildRuleResolver();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
-    final FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem,
-        new TestConsole());
-    BuildRuleBuilderParams builderParams = new BuildRuleBuilderParams(
-        projectFilesystem,
-        new RuleKeyBuilderFactory() {
-          @Override
-          public Builder newInstance(BuildRule buildRule) {
-            return RuleKey.builder(buildRule, fileHashCache);
-          }
-        });
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
-    DefaultJavaLibrary.Builder commonJavaLibraryRuleBuilder = DefaultJavaLibrary
-        .newJavaLibraryRuleBuilder(builderParams)
-        .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"));
-    ruleResolver1.buildAndAddToIndex(commonJavaLibraryRuleBuilder);
-    ruleResolver2.buildAndAddToIndex(commonJavaLibraryRuleBuilder);
+    JavaLibraryBuilder builder = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"));
+    BuildRule commonJavaLibrary = builder.build(ruleResolver1);
+    builder.build(ruleResolver2);
 
     // Create a java_library() rule with no deps.
-    DefaultJavaLibrary.Builder javaLibraryBuilder = DefaultJavaLibrary
-        .newJavaLibraryRuleBuilder(builderParams)
-        .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:cli"))
-        // The source file must be an existing file or else RuleKey.Builder.setVal(File) will throw
-        // an IOException, which is caught and then results in the rule being flagged as
-        // "not idempotent", which screws up this test.
-        // TODO(mbolin): Update RuleKey.Builder.setVal(File) to use a ProjectFilesystem so that file
-        // access can be mocked appropriately during a unit test.
+    JavaLibraryBuilder javaLibraryBuilder = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:cli"))
+            // The source file must be an existing file or else RuleKey.Builder.setVal(File) will
+            // throw an IOException, which is caught and then results in the rule being flagged as
+            // "not idempotent", which screws up this test.
+            // TODO(mbolin): Update RuleKey.Builder.setVal(File) to use a ProjectFilesystem so that
+            // file access can be mocked appropriately during a unit test.
         .addSrc(Paths.get("src/com/facebook/buck/cli/Main.java"));
-    DefaultJavaLibrary libraryNoCommon = ruleResolver1.buildAndAddToIndex(
-        javaLibraryBuilder);
+    BuildRule libraryNoCommon = javaLibraryBuilder.build(ruleResolver1);
 
     // Create the same java_library() rule, but with a dep on //src/com/facebook/buck/cli:common.
-    javaLibraryBuilder.addDep(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"));
-    DefaultJavaLibrary libraryWithCommon = ruleResolver2.buildAndAddToIndex(
-        javaLibraryBuilder);
+    javaLibraryBuilder.addDep(commonJavaLibrary);
+    BuildRule libraryWithCommon = javaLibraryBuilder.build(ruleResolver2);
 
     // Assert that the RuleKeys are distinct.
     RuleKey r1 = libraryNoCommon.getRuleKey();

@@ -19,8 +19,6 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
@@ -130,11 +128,10 @@ public class JavaTestRuleTest {
   }
 
   private JavaTest newRule(List<String> vmArgs) {
-    return JavaTest.newJavaTestRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//example:test"))
+    return JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//example:test"))
         .setVmArgs(vmArgs)
         .addSrc(Paths.get("ExampleTest.java"))
-        .build(new BuildRuleResolver());
+        .build();
   }
 
 }

@@ -26,7 +26,6 @@ import static org.junit.Assert.assertFalse;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
@@ -56,18 +55,17 @@ public class JavaBinaryTest {
         .build(ruleResolver);
 
     // prebuilt_jar //third_party/guava:guava
-    PrebuiltJarBuilder
+    BuildRule guava = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(PATH_TO_GUAVA_JAR)
         .build(ruleResolver);
 
     // java_library //java/com/facebook/base:base
-    BuildRule libraryRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
-            .addSrc(Paths.get("java/com/facebook/base/Base.java"))
-            .addDep(BuildTargetFactory.newInstance("//third_party/guava:guava"))
-    );
+    BuildRule libraryRule = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
+        .addSrc(Paths.get("java/com/facebook/base/Base.java"))
+        .addDep(guava)
+        .build(ruleResolver);
 
     // java_binary //java/com/facebook/base:Main
     JavaBinary javaBinary = new JavaBinary(
@@ -83,8 +81,7 @@ public class JavaBinaryTest {
 
     // Each classpath entry is specified via its absolute path so that the executable command can be
     // run from a /tmp directory, if necessary.
-    String expectedClasspath =
-        basePath + javaBinary.getPathToOutputFile();
+    String expectedClasspath = basePath + javaBinary.getPathToOutputFile();
 
     List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);

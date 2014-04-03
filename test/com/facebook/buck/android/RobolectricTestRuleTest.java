@@ -22,8 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 
@@ -82,8 +80,6 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricContainsAllResourceDependenciesInResVmArg() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
     ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder =
         ImmutableList.builder();
     for (int i = 0; i < 10; i++) {
@@ -94,11 +90,11 @@ public class RobolectricTestRuleTest {
     BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base/robolectricTest:robolectricTest");
 
-    RobolectricTest testRule = (RobolectricTest)ruleResolver.buildAndAddToIndex(
-        RobolectricTest.newRobolectricTestRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(robolectricBuildTarget));
+    RobolectricTest robolectricTest = RobolectricTestBuilder
+        .createBuilder(robolectricBuildTarget)
+        .build();
 
-    String result = testRule.getRobolectricResourceDirectories(resDeps);
+    String result = robolectricTest.getRobolectricResourceDirectories(resDeps);
     for (HasAndroidResourceDeps dep : resDeps) {
       assertTrue(result.contains(dep.getRes().toString()));
     }
@@ -106,8 +102,6 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
     Path resDep1 = Paths.get("res1");
     Path resDep2 = Paths.get("res2");
     Path resDep3 = Paths.get("res3");
@@ -124,11 +118,11 @@ public class RobolectricTestRuleTest {
     BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base/robolectricTest:robolectricTest");
 
-    RobolectricTest testRule = (RobolectricTest)ruleResolver.buildAndAddToIndex(
-        RobolectricTest.newRobolectricTestRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(robolectricBuildTarget));
+    RobolectricTest robolectricTest = RobolectricTestBuilder
+        .createBuilder(robolectricBuildTarget)
+        .build();
 
-    String result = testRule.getRobolectricResourceDirectories(
+    String result = robolectricTest.getRobolectricResourceDirectories(
         ImmutableList.<HasAndroidResourceDeps>of(
             new ResourceRule(resDep1),
             new ResourceRule(resDep2),

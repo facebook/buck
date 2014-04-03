@@ -74,6 +74,11 @@ public abstract class AbstractBuildable implements Buildable {
     }
 
     @Override
+    public BuildableProperties getProperties() {
+      return buildable.getProperties();
+    }
+
+    @Override
     public Buildable getBuildable() {
       return buildable;
     }

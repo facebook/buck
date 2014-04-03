@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRule;
@@ -51,6 +52,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.result.groups.TestResultsGrouper;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
@@ -243,8 +245,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     Set<String> srcFolders = Sets.newHashSet();
     loopThroughSourcePath:
     for (Path javaSrcPath : javaSrcPaths) {
-      if (!JavaTest.isGeneratedFile(javaSrcPath)) {
-
+      if (!MorePaths.isGeneratedFile(javaSrcPath)) {
         // If the source path is already under a known source folder, then we can skip this
         // source path.
         for (String srcFolder : srcFolders) {
@@ -302,10 +303,16 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Look up all of the test rules in the dependency graph.
     Iterable<TestRule> testRules = Iterables.transform(partialGraph.getTargets(),
         new Function<BuildTarget, TestRule>() {
-      @Override public TestRule apply(BuildTarget buildTarget) {
-        return (TestRule) graph.findBuildRuleByTarget(buildTarget).getBuildable();
-      }
-    });
+          @Override
+          public TestRule apply(BuildTarget buildTarget) {
+            Buildable test = graph.findBuildRuleByTarget(buildTarget).getBuildable();
+            if (test instanceof TestRule) {
+              return (TestRule) test;
+            }
+            throw new RuntimeException(
+                "Unexpectedly asked to find a test rule, but could not: " + buildTarget);
+          }
+        });
 
     testRules = filterTestRules(options, testRules);
     if (options.isPrintMatchingTestRules()) {
@@ -700,11 +707,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Gathering all rules whose source will be under test.
     for (TestRule test : tests) {
       if (test instanceof JavaTest) {
-        JavaTest javaTestRule = (JavaTest) test;
-        ImmutableSet<BuildRule> sourceUnderTest = javaTestRule.getSourceUnderTest();
+        JavaTest javaTest = (JavaTest) test;
+        ImmutableSet<BuildRule> sourceUnderTest = javaTest.getSourceUnderTest();
         for (BuildRule buildRule : sourceUnderTest) {
-          if (buildRule instanceof JavaLibrary) {
-            JavaLibrary javaLibrary = (JavaLibrary) buildRule;
+          if (buildRule.getBuildable() instanceof JavaLibrary) {
+            JavaLibrary javaLibrary = (JavaLibrary) buildRule.getBuildable();
             rulesUnderTest.add(javaLibrary);
           } else {
             throw new HumanReadableException(

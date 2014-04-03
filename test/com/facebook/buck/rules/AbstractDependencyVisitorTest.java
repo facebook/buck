@@ -18,7 +18,8 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.FakeJavaLibraryRule;
+import com.facebook.buck.java.FakeJavaLibrary;
+import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.google.common.base.Predicate;
@@ -133,10 +134,10 @@ public class AbstractDependencyVisitorTest {
         buildRuleTraversalOrder);
   }
 
-  private FakeJavaLibraryRule createRule(String name, BuildRule... deps) {
+  private FakeJavaLibrary createRule(String name, BuildRule... deps) {
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
-    FakeJavaLibraryRule rule = new FakeJavaLibraryRule(
-        BuildRuleType.JAVA_LIBRARY,
+    FakeJavaLibrary rule = new FakeJavaLibrary(
+        JavaLibraryDescription.TYPE,
         new BuildTarget(BUILD_RULE_BASE_NAME, name),
         ImmutableSortedSet.copyOf(deps),
         visibilityPatterns);

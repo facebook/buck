@@ -19,10 +19,9 @@ package com.facebook.buck.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -129,10 +128,7 @@ public class BuildFileTreeTest {
     List<BuildTarget> targets = Lists.newArrayList();
     for (String ruleName : ruleNames) {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ruleName);
-      ruleResolver.buildAndAddToIndex(
-          DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-              .setBuildTarget(buildTarget)
-      );
+      JavaLibraryBuilder.createBuilder(buildTarget).build(ruleResolver);
       targets.add(buildTarget);
     }
 

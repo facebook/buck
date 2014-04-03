@@ -16,6 +16,7 @@ java_test(
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
+    '//test/com/facebook/buck/java:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/step:testutil',

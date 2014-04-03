@@ -35,6 +35,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -615,7 +616,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     @Override
     public BuildRuleType getType() {
-      return BuildRuleType.JAVA_LIBRARY;
+      return JavaLibraryDescription.TYPE;
     }
 
     @Override

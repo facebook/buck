@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
@@ -211,12 +210,5 @@ public abstract class AbstractBuildRule implements BuildRule {
       }
     }
     return ruleKeyPair;
-  }
-
-  /**
-   * @return Whether the input path directs to a file in the buck generated files folder.
-   */
-  public static boolean isGeneratedFile(Path pathRelativeToProjectRoot) {
-    return pathRelativeToProjectRoot.startsWith(BuckConstant.GEN_PATH);
   }
 }

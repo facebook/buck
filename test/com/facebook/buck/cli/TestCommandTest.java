@@ -31,9 +31,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
-import com.facebook.buck.java.FakeJavaLibraryRule;
+import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaTest;
+import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -50,6 +50,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -99,10 +100,10 @@ public class TestCommandTest {
   @Test
   public void testGeneratedSourceFile() {
     Path pathToGenFile = GEN_PATH.resolve("GeneratedFile.java");
-    assertTrue(JavaTest.isGeneratedFile(pathToGenFile));
+    assertTrue(MorePaths.isGeneratedFile(pathToGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
-    JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibrary(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -129,10 +130,10 @@ public class TestCommandTest {
   @Test
   public void testNonGeneratedSourceFile() {
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
-    assertFalse(JavaTest.isGeneratedFile(pathToNonGenFile));
+    assertFalse(MorePaths.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
-    JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibrary(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
     File parentFile = createMock(File.class);
@@ -174,10 +175,10 @@ public class TestCommandTest {
   @Test
   public void testUnifiedSourceFile() {
     Path pathToNonGenFile = Paths.get("java/package/SourceFile1.java");
-    assertFalse(JavaTest.isGeneratedFile(pathToNonGenFile));
+    assertFalse(MorePaths.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
-    JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibrary(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -237,7 +238,7 @@ public class TestCommandTest {
     expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile2))
         .andReturn(sourceFile2);
 
-    JavaLibrary javaLibrary = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibrary(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
     Object[] mocks = new Object[] {
@@ -392,19 +393,22 @@ public class TestCommandTest {
 
   @Test
   public void testGetCandidateRulesByIncludedLabels() throws CmdLineException {
-    FakeTestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    FakeTestRule rule1 = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
-    FakeTestRule rule2 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    FakeTestRule rule2 = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("android")),
         BuildTargetFactory.newInstance("//:teh"),
         ImmutableSortedSet.<BuildRule>of(rule1),
         ImmutableSet.<BuildTargetPattern>of());
 
-    FakeTestRule rule3 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    FakeTestRule rule3 = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(rule2),
@@ -423,19 +427,22 @@ public class TestCommandTest {
   public void testFilterBuilds() throws CmdLineException {
     TestCommandOptions options = getOptions("--exclude", "linux", "windows");
 
-    TestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    TestRule rule1 = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
-    TestRule rule2 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    TestRule rule2 = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("android")),
         BuildTargetFactory.newInstance("//:teh"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
-    TestRule rule3 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    TestRule rule3 = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
@@ -451,13 +458,15 @@ public class TestCommandTest {
   public void testLabelConjunctionsWithInclude() throws CmdLineException {
     TestCommandOptions options = getOptions("--include", "windows+linux");
 
-    TestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    TestRule rule1 = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
-    TestRule rule2 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    TestRule rule2 = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
@@ -473,13 +482,15 @@ public class TestCommandTest {
   public void testLabelConjunctionsWithExclude() throws CmdLineException {
     TestCommandOptions options = getOptions("--exclude", "windows+linux");
 
-    TestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    TestRule rule1 = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
-    TestRule rule2 = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    TestRule rule2 = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
@@ -495,7 +506,8 @@ public class TestCommandTest {
   public void testLabelPriority() throws CmdLineException {
     TestCommandOptions options = getOptions("--exclude", "c", "--include", "a+b");
 
-    TestRule rule = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    TestRule rule = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("a"), new Label("b"), new Label("c")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
@@ -511,7 +523,8 @@ public class TestCommandTest {
   public void testLabelPlingSyntax() throws CmdLineException {
     TestCommandOptions options = getOptions("--labels", "!c", "a+b");
 
-    TestRule rule = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    TestRule rule = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("a"), new Label("b"), new Label("c")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
@@ -540,8 +553,7 @@ public class TestCommandTest {
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
             true,
-            false)
-    );
+            false));
 
     verify(executionContext);
   }
@@ -552,7 +564,8 @@ public class TestCommandTest {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
-    FakeTestRule testRule = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    FakeTestRule testRule = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
@@ -583,7 +596,8 @@ public class TestCommandTest {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
-    FakeTestRule testRule = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    FakeTestRule testRule = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
@@ -613,7 +627,8 @@ public class TestCommandTest {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
-    FakeTestRule testRule = new FakeTestRule(BuildRuleType.JAVA_TEST,
+    FakeTestRule testRule = new FakeTestRule(
+        JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),

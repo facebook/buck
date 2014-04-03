@@ -19,10 +19,14 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
-import com.facebook.buck.util.NullFileHashCache;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.nio.file.Paths;
 
 public class FakeBuildRuleParams extends BuildRuleParams {
 
@@ -37,7 +41,11 @@ public class FakeBuildRuleParams extends BuildRuleParams {
   public FakeBuildRuleParams(BuildTarget buildTarget,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
-    this(buildTarget, deps, visibilityPatterns, new NullFileHashCache());
+    this(
+        buildTarget,
+        deps,
+        visibilityPatterns,
+        new DefaultFileHashCache(new ProjectFilesystem(Paths.get(".")), new TestConsole()));
   }
 
   public FakeBuildRuleParams(BuildTarget buildTarget,

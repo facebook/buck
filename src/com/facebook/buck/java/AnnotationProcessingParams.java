@@ -18,12 +18,10 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -144,7 +142,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
   public static class Builder {
     @Nullable
     private BuildTarget ownerTarget;
-    private Set<BuildTarget> targets = Sets.newHashSet();
+    private Set<BuildRule> rules = Sets.newHashSet();
     private Set<String> names = Sets.newHashSet();
     private Set<String> parameters = Sets.newHashSet();
     private boolean processOnly;
@@ -154,8 +152,8 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
       return this;
     }
 
-    public Builder addProcessorBuildTarget(BuildTarget target) {
-      targets.add(target);
+    public Builder addProcessorBuildTarget(BuildRule rule) {
+      rules.add(rule);
       return this;
     }
 
@@ -174,18 +172,15 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
       return this;
     }
 
-    public AnnotationProcessingParams build(BuildRuleResolver ruleResolver) {
-      Preconditions.checkNotNull(ruleResolver);
-
-      if (names.isEmpty() && targets.isEmpty() && parameters.isEmpty()) {
+    public AnnotationProcessingParams build() {
+      if (names.isEmpty() && rules.isEmpty() && parameters.isEmpty()) {
         return EMPTY;
       }
 
       Set<Path> searchPathElements = Sets.newHashSet();
       ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
 
-      for (BuildTarget target : targets) {
-        BuildRule rule = ruleResolver.get(target);
+      for (BuildRule rule : this.rules) {
         String type = rule.getType().getName();
 
         rules.add(rule);
@@ -208,7 +203,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
               "%1$s: Error adding '%2$s' to annotation_processing_deps: " +
               "must refer only to prebuilt jar, java binary, or java library targets.",
               ownerTarget,
-              target.getFullyQualifiedName());
+              rule.getFullyQualifiedName());
         }
       }
 

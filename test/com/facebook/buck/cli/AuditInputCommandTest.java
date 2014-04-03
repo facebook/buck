@@ -20,16 +20,16 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.BuckTestConstant;
@@ -99,17 +99,16 @@ public class AuditInputCommandTest {
         "//:test-android-library",
         "//:test-java-library");
 
-    ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(BuildTargetFactory.newInstance("//:test-java-library"))
-            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java")));
-    ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-library"))
-            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
-            .addSrc(Paths.get("src/com/facebook/AndroidLibraryTwo.java"))
-            .addDep(BuildTargetFactory.newInstance("//:test-java-library"))
-    );
+    BuildRule rootRule = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//:test-java-library"))
+        .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+        .build(ruleResolver);
+
+    JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:test-android-library"))
+        .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+        .addSrc(Paths.get("src/com/facebook/AndroidLibraryTwo.java"))
+        .addDep(rootRule)
+        .build(ruleResolver);
 
     List<BuildTarget> buildTargets = Lists.transform(targets, new Function<String, BuildTarget>() {
       @Override

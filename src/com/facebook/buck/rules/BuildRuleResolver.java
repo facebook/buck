@@ -41,7 +41,8 @@ public class BuildRuleResolver {
 
   @VisibleForTesting
   public BuildRuleResolver(Map<BuildTarget, BuildRule> buildRuleIndex) {
-    this.buildRuleIndex = Preconditions.checkNotNull(buildRuleIndex);
+    Preconditions.checkNotNull(buildRuleIndex);
+    this.buildRuleIndex = Maps.newHashMap(buildRuleIndex);
   }
 
   @VisibleForTesting

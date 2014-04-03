@@ -20,7 +20,7 @@ import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.ProjectGenerator;
 import com.facebook.buck.apple.xcode.SeparatedProjectsGenerator;
 import com.facebook.buck.command.Project;
-import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
+import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -64,7 +64,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         Map<String, Object> rawParseData,
         BuildRuleType buildRuleType,
         BuildTarget buildTarget) {
-      Object rawValue = rawParseData.get(JavaLibraryBuildRuleFactory.ANNOTATION_PROCESSORS);
+      Object rawValue = rawParseData.get(JavaLibraryDescription.ANNOTATION_PROCESSORS);
       return ((rawValue instanceof Iterable) && !Iterables.isEmpty((Iterable<?>) rawValue));
     }
   };

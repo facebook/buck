@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
 public class ProjectConfigBuilder
     extends AbstractBuilder<ProjectConfig, ProjectConfigDescription.Arg> {
 
-  protected ProjectConfigBuilder(BuildTarget target) {
+  private ProjectConfigBuilder(BuildTarget target) {
     super(new ProjectConfigDescription(), target);
   }
 

@@ -23,7 +23,7 @@ import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -56,31 +55,28 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
     BuildTarget javaDep1BuildTarget = new BuildTarget("//java/com/example", "dep1");
-    ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(
-            new FakeBuildRuleBuilderParams(ruleKeyBuilderFactory))
-            .setBuildTarget(javaDep1BuildTarget)
-            .addSrc(Paths.get("java/com/example/Dep1.java")));
+    BuildRule javaDep1 = JavaLibraryBuilder
+        .createBuilder(javaDep1BuildTarget)
+        .addSrc(Paths.get("java/com/example/Dep1.java"))
+        .build(ruleResolver);
 
     BuildTarget javaDep2BuildTarget = new BuildTarget("//java/com/example", "dep2");
-    ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(
-            new FakeBuildRuleBuilderParams(ruleKeyBuilderFactory))
-            .setBuildTarget(javaDep2BuildTarget)
-            .addSrc(Paths.get("java/com/example/Dep2.java")));
+    BuildRule javaDep2 = JavaLibraryBuilder
+        .createBuilder(javaDep2BuildTarget)
+        .addSrc(Paths.get("java/com/example/Dep2.java"))
+        .build(ruleResolver);
 
     BuildTarget javaLibBuildTarget = new BuildTarget("//java/com/example", "lib");
-    DefaultJavaLibrary javaLib = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(
-            new FakeBuildRuleBuilderParams(ruleKeyBuilderFactory))
-            .setBuildTarget(javaLibBuildTarget)
-            .addSrc(Paths.get("java/com/example/Lib.java"))
-            .addDep(javaDep1BuildTarget)
-            .addDep(javaDep2BuildTarget));
+    BuildRule javaLib = JavaLibraryBuilder
+        .createBuilder(javaLibBuildTarget)
+        .addSrc(Paths.get("java/com/example/Lib.java"))
+        .addDep(javaDep1)
+        .addDep(javaDep2)
+        .build(ruleResolver);
 
     // Assume we are enhancing an android_binary rule whose only dep
     // is //java/com/example:lib, and that //java/com/example:dep2 is in its no_dx list.
-    ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.<BuildRule>of(javaLib);
+    ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
     ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
     BuildTarget apkTarget = new BuildTarget("//java/com/example", "apk");
     BuildRuleParams originalParams = new BuildRuleParams(

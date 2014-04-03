@@ -44,6 +44,7 @@ java_library(
   name = 'io',
   srcs = IO_SRCS,
   deps = [
+    ':constants',
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/util/environment:platform',

@@ -14,32 +14,27 @@
  * under the License.
  */
 
-package com.facebook.buck.java;
+package com.facebook.buck.android;
 
+import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
-import com.facebook.buck.rules.BuildRule;
 
 import java.nio.file.Path;
 
-public class PrebuiltJarBuilder extends AbstractBuilder<PrebuiltJar, PrebuiltJarDescription.Arg> {
+public class RobolectricTestBuilder
+    extends AbstractBuilder<RobolectricTest, RobolectricTestDescription.Arg> {
 
-  private PrebuiltJarBuilder(BuildTarget target) {
-    super(new PrebuiltJarDescription(), target);
+  private RobolectricTestBuilder(BuildTarget target) {
+    super(new RobolectricTestDescription(JavaCompilerEnvironment.DEFAULT), target);
   }
 
-  public static PrebuiltJarBuilder createBuilder(BuildTarget target) {
-    return new PrebuiltJarBuilder(target);
+  public static RobolectricTestBuilder createBuilder(BuildTarget target) {
+    return new RobolectricTestBuilder(target);
   }
 
-  public PrebuiltJarBuilder setBinaryJar(Path binaryJar) {
-    arg.binaryJar = binaryJar;
+  public RobolectricTestBuilder addSrc(Path path) {
+    arg.srcs = amend(arg.srcs, path);
     return this;
   }
-
-  public PrebuiltJarBuilder addDep(BuildRule dep) {
-    arg.deps = amend(arg.deps, dep);
-    return this;
-  }
-
 }

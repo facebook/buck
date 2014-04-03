@@ -23,32 +23,26 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -108,19 +102,22 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
+public class DefaultJavaLibrary extends AbstractBuildable
     implements JavaLibrary, AbiRule, HasJavaSrcs, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibrary.Data> {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
+  private final BuildTarget target;
+  protected ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSortedSet<Path> srcs;
   private final ImmutableSortedSet<SourcePath> resources;
   private final Optional<Path> outputJar;
   private final Optional<Path> proguardConfig;
   private final ImmutableList<String> postprocessClassesCommands;
   private final ImmutableSortedSet<BuildRule> exportedDeps;
-  protected final ImmutableSet<String> additionalClasspathEntries;
+  // Some classes need to override this when enhancing deps (see AndroidLibrary).
+  protected ImmutableSet<String> additionalClasspathEntries;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
       outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
@@ -174,16 +171,15 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
       Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
       Set<BuildRule> exportedDeps,
-      ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions) {
-
-    super(buildRuleParams);
+    this.target = buildRuleParams.getBuildTarget();
+    this.deps = buildRuleParams.getDeps();
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.postprocessClassesCommands = Preconditions.checkNotNull(postprocessClassesCommands);
     this.exportedDeps = ImmutableSortedSet.copyOf(exportedDeps);
-    this.additionalClasspathEntries = Preconditions.checkNotNull(additionalClasspathEntries);
+    this.additionalClasspathEntries = ImmutableSet.of();
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
@@ -225,6 +221,15 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
         new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
   }
 
+  @Override
+  public BuildTarget getBuildTarget() {
+    return target;
+  }
+
+  public ImmutableSortedSet<BuildRule> getDeps() {
+    return deps;
+  }
+
   /**
    * @param outputDirectory Directory to write class files to
    * @param transitiveClasspathEntries Classpaths of all transitive dependencies.
@@ -264,7 +269,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
             declaredClasspathEntries,
             javacOptions,
             Optional.of(getPathToAbiOutputFile()),
-            Optional.of(getFullyQualifiedName()),
+            Optional.of(target.getFullyQualifiedName()),
             buildDependencies,
             suggestBuildRules,
             Optional.of(pathToSrcsList),
@@ -277,7 +282,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
             declaredClasspathEntries,
             javacOptions,
             Optional.of(getPathToAbiOutputFile()),
-            Optional.of(getFullyQualifiedName()),
+            Optional.of(target.getFullyQualifiedName()),
             buildDependencies,
             suggestBuildRules,
             Optional.of(pathToSrcsList));
@@ -360,7 +365,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
    */
   private SortedSet<HasJavaAbi> getDepsForAbiKey() {
     SortedSet<HasJavaAbi> rulesWithAbiToConsider = Sets.newTreeSet(BUILD_TARGET_COMPARATOR);
-    for (BuildRule dep : getDeps()) {
+    for (BuildRule dep : deps) {
       // This looks odd. DummyJavaAbiRule contains a Buildable that isn't a JavaAbiRule.
       if (dep.getBuildable() instanceof HasJavaAbi) {
         if (dep.getBuildable() instanceof JavaLibrary) {
@@ -394,16 +399,9 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
     return hasher;
   }
 
-  @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    super.appendToRuleKey(builder);
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     builder.set("postprocessClassesCommands", postprocessClassesCommands);
     return javacOptions.appendToRuleKey(builder);
-  }
-
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.JAVA_LIBRARY;
   }
 
   @Override
@@ -560,7 +558,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
   }
 
   /**
-   *  @param transitiveNotDeclaredDep A {@link BuildRule} that is contained in the transitive
+   *  @param transitiveNotDeclaredRule A {@link BuildRule} that is contained in the transitive
    *      dependency list but is not declared as a dependency.
    *  @param failedImports A Set of remaining failed imports.  This function will mutate this set
    *      and remove any imports satisfied by {@code transitiveNotDeclaredDep}.
@@ -568,9 +566,10 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
    *      rule would have satisfied one of the {@code failedImports}.
    */
   private boolean isMissingBuildRule(ProjectFilesystem filesystem,
-      BuildRule transitiveNotDeclaredDep,
+      BuildRule transitiveNotDeclaredRule,
       Set<String> failedImports,
       JarResolver jarResolver) {
+    Buildable transitiveNotDeclaredDep = transitiveNotDeclaredRule.getBuildable();
     if (!(transitiveNotDeclaredDep instanceof JavaLibrary)) {
       return false;
     }
@@ -623,7 +622,7 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
             new Predicate<BuildRule>() {
               @Override
               public boolean apply(BuildRule input) {
-                return transitiveNotDeclaredDeps.contains(input);
+                return transitiveNotDeclaredDeps.contains(input.getBuildable());
               }
             })).reverse();
 
@@ -779,126 +778,5 @@ public class DefaultJavaLibrary extends DoNotUseAbstractBuildable
   @Nullable
   public Path getPathToOutputFile() {
     return outputJar.orNull();
-  }
-
-  public static Builder newJavaLibraryRuleBuilder(BuildRuleBuilderParams params) {
-    return newJavaLibraryRuleBuilder(
-        Optional.<Path>absent(),
-        Optional.<JavacVersion>absent(),
-        params);
-  }
-
-  public static Builder newJavaLibraryRuleBuilder(Optional<Path> javac,
-      Optional<JavacVersion> javacVersion,
-      BuildRuleBuilderParams params) {
-    return new Builder(javac, javacVersion, params);
-  }
-
-  public static class Builder extends AbstractBuildRuleBuilder<DefaultJavaLibrary> implements
-      SrcsAttributeBuilder, ResourcesAttributeBuilder {
-
-    protected final BuildRuleBuilderParams params;
-
-    protected Set<Path> srcs = Sets.newHashSet();
-    protected Set<SourcePath> resources = Sets.newHashSet();
-    protected final AnnotationProcessingParams.Builder annotationProcessingBuilder =
-        new AnnotationProcessingParams.Builder();
-    protected Set<BuildTarget> exportedDeps = Sets.newHashSet();
-    protected JavacOptions.Builder javacOptions = JavacOptions.builder();
-    protected Optional<Path> proguardConfig = Optional.absent();
-    protected ImmutableList.Builder<String> postprocessClassesCommands = ImmutableList.builder();
-
-    protected Builder(BuildRuleBuilderParams params) {
-      this(Optional.<Path>absent(), Optional.<JavacVersion>absent(), params);
-    }
-
-    protected Builder(Optional<Path> javac,
-        Optional<JavacVersion> javacVersion,
-        BuildRuleBuilderParams params) {
-      super(params);
-      this.params = params;
-
-      javacOptions.setJavaCompilerEnviornment(
-          new JavaCompilerEnvironment(javac, javacVersion));
-    }
-
-    @Override
-    public DefaultJavaLibrary build(BuildRuleResolver ruleResolver) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
-
-      AnnotationProcessingParams processingParams =
-          annotationProcessingBuilder.build(ruleResolver);
-      javacOptions.setAnnotationProcessingData(processingParams);
-
-      return new DefaultJavaLibrary(
-          buildRuleParams,
-          srcs,
-          resources,
-          proguardConfig,
-          postprocessClassesCommands.build(),
-          getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
-          /* additionaLClasspathEntries */ ImmutableSet.<String>of(),
-          javacOptions.build());
-    }
-
-    public AnnotationProcessingParams.Builder getAnnotationProcessingBuilder() {
-      return annotationProcessingBuilder;
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      annotationProcessingBuilder.setOwnerTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    public Builder addDep(BuildTarget dep) {
-      super.addDep(dep);
-      return this;
-    }
-
-    @Override
-    public Builder addSrc(Path src) {
-      srcs.add(src);
-      return this;
-    }
-
-    @Override
-    public Builder addResource(SourcePath relativePathToResource) {
-      resources.add(relativePathToResource);
-      return this;
-    }
-
-    @Override
-    public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
-      super.addVisibilityPattern(visibilityPattern);
-      return this;
-    }
-
-    public Builder setProguardConfig(Optional<Path> proguardConfig) {
-      this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
-      return this;
-    }
-
-    public Builder addPostprocessClassesCommands(Iterable<String> commands) {
-      postprocessClassesCommands.addAll(commands);
-      return this;
-    }
-
-    public Builder setSourceLevel(String sourceLevel) {
-      javacOptions.setSourceLevel(sourceLevel);
-      return this;
-    }
-
-    public Builder setTargetLevel(String targetLevel) {
-      javacOptions.setTargetLevel(targetLevel);
-      return this;
-    }
-
-    public Builder addExportedDep(BuildTarget buildTarget) {
-      this.exportedDeps.add(buildTarget);
-      return this;
-    }
   }
 }

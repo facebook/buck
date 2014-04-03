@@ -18,14 +18,14 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
-import com.facebook.buck.android.AndroidLibraryBuildRuleFactory;
+import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
-import com.facebook.buck.android.RobolectricTestBuildRuleFactory;
+import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosResourceDescription;
@@ -37,8 +37,8 @@ import com.facebook.buck.cpp.CppBinaryDescription;
 import com.facebook.buck.cpp.CppLibraryDescription;
 import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaCompilerEnvironment;
-import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
-import com.facebook.buck.java.JavaTestBuildRuleFactory;
+import com.facebook.buck.java.JavaLibraryDescription;
+import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarDescription;
@@ -158,6 +158,7 @@ public class KnownBuildRuleTypes {
             androidBinaryOptions,
             config.getProguardJarOverride()));
     builder.register(new AndroidInstrumentationApkDescription());
+    builder.register(new AndroidLibraryDescription(javacEnv));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
@@ -168,6 +169,9 @@ public class KnownBuildRuleTypes {
     builder.register(new GenAidlDescription());
     builder.register(new GenParcelableDescription());
     builder.register(new KeystoreDescription());
+    builder.register(new JavaBinaryDescription());
+    builder.register(new JavaLibraryDescription(javacEnv));
+    builder.register(new JavaTestDescription(javacEnv));
     builder.register(new IosBinaryDescription());
     builder.register(new IosLibraryDescription());
     builder.register(new IosResourceDescription());
@@ -179,18 +183,11 @@ public class KnownBuildRuleTypes {
     builder.register(new ProjectConfigDescription());
     builder.register(new PythonBinaryDescription());
     builder.register(new PythonLibraryDescription());
+    builder.register(new RobolectricTestDescription(javacEnv));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription());
     builder.register(new XcodeNativeDescription());
     builder.register(new XcodeProjectConfigDescription());
-
-    // TODO(simons): Consider once more whether we actually want to have default rules
-    builder.register(BuildRuleType.ANDROID_LIBRARY,
-        new AndroidLibraryBuildRuleFactory(javacEnv.getJavacPath(), javacEnv.getJavacVersion()));
-    builder.register(BuildRuleType.JAVA_LIBRARY,
-        new JavaLibraryBuildRuleFactory(javacEnv.getJavacPath(), javacEnv.getJavacVersion()));
-    builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
-    builder.register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
 
     return builder;
   }
@@ -204,13 +201,6 @@ public class KnownBuildRuleTypes {
       this.descriptions = Maps.newConcurrentMap();
       this.factories = Maps.newConcurrentMap();
       this.types = Maps.newConcurrentMap();
-    }
-
-    public void register(BuildRuleType type, BuildRuleFactory<?> factory) {
-      Preconditions.checkNotNull(type);
-      Preconditions.checkNotNull(factory);
-      types.put(type.getName(), type);
-      factories.put(type, factory);
     }
 
     public void register(Description<?> description) {

@@ -18,15 +18,13 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -47,6 +45,7 @@ public class PythonBinaryTest {
         new FakeBuildRuleParams(orphanPyLibraryTarget),
         ImmutableSortedSet.<SourcePath>of(
             new FileSourcePath("java/src/com/javalib/orphan/sadpanda.py")));
+    BuildRule orphanPyLibraryRule = createBuildRule(orphanPyLibrary, orphanPyLibraryTarget);
 
     BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
     PythonLibrary pyLibrary = new PythonLibrary(
@@ -61,13 +60,11 @@ public class PythonBinaryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver(rules);
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:javalib");
-    DefaultJavaLibrary javaLibrary = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(javaLibraryTarget)
-            .addSrc(Paths.get("java/src/com/javalib/Bar.java"))
-            .addDep(orphanPyLibraryTarget)
-            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-    );
+    BuildRule javaLibrary = JavaLibraryBuilder
+        .createBuilder(javaLibraryTarget)
+        .addSrc(Paths.get("java/src/com/javalib/Bar.java"))
+        .addDep(orphanPyLibraryRule)
+        .build(ruleResolver);
 
     PythonBinary buildable = new PythonBinary(
         ImmutableSortedSet.<BuildRule>of(javaLibrary, pyLibraryRule),

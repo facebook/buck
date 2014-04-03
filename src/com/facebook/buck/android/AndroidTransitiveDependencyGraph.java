@@ -191,12 +191,12 @@ public class AndroidTransitiveDependencyGraph {
           if (manifestFile != null) {
             manifestFiles.add(manifestFile);
           }
-        } else if (rule instanceof DefaultJavaLibrary) {
-          DefaultJavaLibrary defaultJavaLibrary = (DefaultJavaLibrary) rule;
+        } else if (rule.getBuildable() instanceof DefaultJavaLibrary) {
+          DefaultJavaLibrary defaultJavaLibrary = (DefaultJavaLibrary) rule.getBuildable();
           Optionals.addIfPresent(defaultJavaLibrary.getProguardConfig(), proguardConfigs);
 
-          if (rule instanceof AndroidLibrary) {
-            AndroidLibrary androidLibraryRule = (AndroidLibrary) rule;
+          if (rule.getBuildable() instanceof AndroidLibrary) {
+            AndroidLibrary androidLibraryRule = (AndroidLibrary) rule.getBuildable();
             Optionals.addIfPresent(androidLibraryRule.getManifestFile(), manifestFiles);
           }
         }

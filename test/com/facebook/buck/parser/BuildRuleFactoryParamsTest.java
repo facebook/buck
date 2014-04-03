@@ -24,13 +24,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -194,14 +197,12 @@ public class BuildRuleFactoryParamsTest {
         parser,
         target,
         new FakeRuleKeyBuilderFactory());
-    AbstractBuildRuleBuilder<?> builder = createMock(AbstractBuildRuleBuilder.class);
-    replay(builder);
+    SourcePath first = params.asSourcePath(
+        "A.java",
+        new FakeBuildRuleBuilder(new FakeBuildRuleBuilderParams()));
 
-    SourcePath first = params.asSourcePath("A.java", builder);
     assertTrue(first instanceof FileSourcePath);
     assertEquals("src/com/facebook/A.java", first.asReference());
-
-    verify(builder);
   }
 
   @Test
@@ -215,7 +216,10 @@ public class BuildRuleFactoryParamsTest {
         parser,
         target,
         new FakeRuleKeyBuilderFactory());
-    DefaultJavaLibrary.Builder builder = createMock(DefaultJavaLibrary.Builder.class);
+    // No human is clever enough to figure out the correct pile of generics to use here. Since the
+    // type is erased, the raw type is just fine. "Good day, sir! I said, good day!"
+    @SuppressWarnings("rawtypes")
+    AbstractBuildRuleBuilder builder = createMock(AbstractBuildRuleBuilder.class);
     expect(builder.addDep(
         new BuildTarget(
             "//src/com/facebook",
@@ -241,11 +245,11 @@ public class BuildRuleFactoryParamsTest {
         parser,
         target,
         new FakeRuleKeyBuilderFactory());
-    AbstractBuildRuleBuilder<?> builder = createMock(AbstractBuildRuleBuilder.class);
-    replay(builder);
 
     try {
-      params.asSourcePath("//does/not:exist", builder);
+      params.asSourcePath(
+          "//does/not:exist",
+          new FakeBuildRuleBuilder(new FakeBuildRuleBuilderParams()));
       fail("Should not have succeeded");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -253,8 +257,6 @@ public class BuildRuleFactoryParamsTest {
               "of //src/com/facebook:Main",
           e.getMessage());
     }
-
-    verify(builder);
   }
 
   @Test
@@ -268,19 +270,11 @@ public class BuildRuleFactoryParamsTest {
         parser,
         target,
         new FakeRuleKeyBuilderFactory());
-    DefaultJavaLibrary.Builder builder = createMock(DefaultJavaLibrary.Builder.class);
-    expect(builder.addDep(
-        new BuildTarget(
-            "//src/com/facebook",
-            "works")
-        )).andReturn(builder);
-    replay(builder);
-
-    SourcePath first = params.asSourcePath(":works", builder);
+    SourcePath first = params.asSourcePath(
+        ":works",
+        new FakeBuildRuleBuilder(new FakeBuildRuleBuilderParams()));
     assertTrue(first instanceof BuildTargetSourcePath);
     assertEquals("//src/com/facebook:works", first.asReference());
-
-    verify(builder);
   }
 
   @Test
@@ -370,4 +364,18 @@ public class BuildRuleFactoryParamsTest {
           e.getMessage());
     }
   }
+
+  private static class FakeBuildRuleBuilder
+      extends AbstractBuildRuleBuilder<AbstractBuildable.AnonymousBuildRule> {
+
+    protected FakeBuildRuleBuilder(BuildRuleBuilderParams params) {
+      super(params);
+    }
+
+    @Override
+    public AbstractBuildable.AnonymousBuildRule build(BuildRuleResolver ruleResolver) {
+      return null;
+    }
+  }
+
 }

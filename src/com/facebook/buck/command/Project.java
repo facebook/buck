@@ -379,7 +379,7 @@ public class Project {
     Preconditions.checkState(projectRule instanceof JavaLibrary
         || buildable instanceof JavaLibrary
         || buildable instanceof JavaBinary
-        || projectRule instanceof AndroidLibrary
+        || buildable instanceof AndroidLibrary
         || buildable instanceof AndroidResource
         || buildable instanceof AndroidBinary
         || buildable instanceof NdkLibrary,
@@ -843,7 +843,7 @@ public class Project {
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
           return depsToVisit;
-        } else if (dep instanceof JavaLibrary ||
+        } else if ((dep.getBuildable() instanceof JavaLibrary) ||
                    dep.getBuildable() instanceof AndroidResource) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);

@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -105,7 +104,7 @@ public class AndroidManifestTest {
     final Buildable androidManifest = description.createBuildable(buildRuleParams, arg);
 
     // Then create a BuildRule whose Buildable is the AndroidManifest.
-    return new FakeBuildRule(BuildRuleType.ANDROID_MANIFEST, buildRuleParams) {
+    return new FakeBuildRule(AndroidManifestDescription.TYPE, buildRuleParams) {
       @Override
       public Buildable getBuildable() {
         return androidManifest;

@@ -30,7 +30,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.dalvik.ZipSplitter;
-import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -38,7 +37,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -74,14 +72,14 @@ public class AndroidBinaryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, neither with an assets directory.
-    JavaLibrary libraryOne = createAndroidLibraryRule(
+    BuildRule libraryOne = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryOne",
         ruleResolver,
         null, /* resDirectory */
         null, /* assetDirectory */
         null /* nativeLibsDirectory */);
     BuildRule libraryOneRule = ruleResolver.get(libraryOne.getBuildTarget());
-    JavaLibrary libraryTwo = createAndroidLibraryRule(
+    BuildRule libraryTwo = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryTwo",
         ruleResolver,
         null, /* resDirectory */
@@ -171,16 +169,15 @@ public class AndroidBinaryTest {
     assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
   }
 
-  static JavaLibrary createAndroidLibraryRule(String buildTarget,
+  static BuildRule createAndroidLibraryRule(String buildTarget,
       BuildRuleResolver ruleResolver,
       String resDirectory,
       String assetDirectory,
       String nativeLibsDirectory) {
     BuildTarget libraryOnebuildTarget = BuildTargetFactory.newInstance(buildTarget);
-    AndroidLibrary.Builder androidLibraryRuleBuilder = AndroidLibrary
-        .newAndroidLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-        .addSrc(Paths.get(buildTarget.split(":")[1] + ".java"))
-        .setBuildTarget(libraryOnebuildTarget);
+    AndroidLibraryBuilder androidLibraryRuleBuilder = AndroidLibraryBuilder
+        .createBuilder(libraryOnebuildTarget)
+        .addSrc(Paths.get(buildTarget.split(":")[1] + ".java"));
 
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
       BuildTarget resourceOnebuildTarget =
@@ -192,7 +189,7 @@ public class AndroidBinaryTest {
               .setBuildTarget(resourceOnebuildTarget)
               .build());
 
-      androidLibraryRuleBuilder.addDep(androidResourceRule.getBuildTarget());
+      androidLibraryRuleBuilder.addDep(androidResourceRule);
     }
 
     if (!Strings.isNullOrEmpty(nativeLibsDirectory)) {
@@ -202,10 +199,10 @@ public class AndroidBinaryTest {
           .setNativeLibs(Paths.get(nativeLibsDirectory))
           .build();
       ruleResolver.addToIndex(nativeLibOnebuildTarget, nativeLibsRule);
-      androidLibraryRuleBuilder.addDep(nativeLibsRule.getBuildTarget());
+      androidLibraryRuleBuilder.addDep(nativeLibsRule);
     }
 
-    return ruleResolver.buildAndAddToIndex(androidLibraryRuleBuilder);
+    return androidLibraryRuleBuilder.build(ruleResolver);
   }
 
   @Test

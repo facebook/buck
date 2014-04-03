@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.java.JavaLibraryDescription;
+import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
@@ -53,12 +55,12 @@ public class UberRDotJavaUtil {
   private static final ImmutableSet<BuildRuleType> TRAVERSABLE_TYPES = ImmutableSet.of(
       AndroidBinaryDescription.TYPE,
       AndroidInstrumentationApkDescription.TYPE,
-      BuildRuleType.ANDROID_LIBRARY,
+      AndroidLibraryDescription.TYPE,
       AndroidResourceDescription.TYPE,
       ApkGenruleDescription.TYPE,
-      BuildRuleType.JAVA_LIBRARY,
-      BuildRuleType.JAVA_TEST,
-      BuildRuleType.ROBOLECTRIC_TEST
+      JavaLibraryDescription.TYPE,
+      JavaTestDescription.TYPE,
+      RobolectricTestDescription.TYPE
   );
 
 

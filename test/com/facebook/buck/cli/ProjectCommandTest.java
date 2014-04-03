@@ -25,8 +25,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.java.DefaultJavaLibrary;
-import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
+import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -39,7 +39,6 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
@@ -76,11 +75,10 @@ public class ProjectCommandTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget javaLibraryTargetName = BuildTargetFactory.newInstance("//javasrc:java-library");
-    DefaultJavaLibrary javaLibraryRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(javaLibraryTargetName)
-            .addSrc(Paths.get("javasrc/JavaLibrary.java"))
-    );
+    BuildRule javaLibraryRule = JavaLibraryBuilder
+        .createBuilder(javaLibraryTargetName)
+        .addSrc(Paths.get("javasrc/JavaLibrary.java"))
+        .build(ruleResolver);
 
     String projectConfigTargetName = "//javasrc:project-config";
     BuildRule ruleConfig = ProjectConfigBuilder
@@ -119,23 +117,21 @@ public class ProjectCommandTest {
     BuckConfig buckConfig = new FakeBuckConfig();
 
     String targetNameWithout = "//javasrc:java-library-without-processor";
-    DefaultJavaLibrary ruleWithout = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(BuildTargetFactory.newInstance(targetNameWithout))
-            .addSrc(Paths.get("javasrc/JavaLibrary.java"))
-    );
+    BuildRule ruleWithout = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance(targetNameWithout))
+        .addSrc(Paths.get("javasrc/JavaLibrary.java"))
+        .build(ruleResolver);
 
     BuildTarget targetNameWith = BuildTargetFactory.newInstance(
         "//javasrc:java-library-with-processor");
-    DefaultJavaLibrary.Builder builderWith =
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-        .setBuildTarget(targetNameWith)
+    JavaLibraryBuilder builderWith = JavaLibraryBuilder
+        .createBuilder(targetNameWith)
         .addSrc(Paths.get("javasrc/JavaLibrary.java"));
-    builderWith.getAnnotationProcessingBuilder().addAllProcessors(processorNames);
-    BuildRule ruleWith = ruleResolver.buildAndAddToIndex(builderWith);
+    builderWith.addAllAnnotationProcessors(processorNames);
+    BuildRule ruleWith = builderWith.build(ruleResolver);
     ImmutableMap<String, Object> annotationParseData =
         ImmutableMap.<String, Object>of(
-            JavaLibraryBuildRuleFactory.ANNOTATION_PROCESSORS,
+            JavaLibraryDescription.ANNOTATION_PROCESSORS,
             processorNames);
 
     String projectConfigName = "//javasrc:project-config";

@@ -21,6 +21,7 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
@@ -86,11 +87,23 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
     }
   }
 
-  protected  <C extends Comparable<?>> Optional<ImmutableSortedSet<C>> amend(
+  protected <C extends Comparable<?>> Optional<ImmutableSortedSet<C>> amend(
       Optional<ImmutableSortedSet<C>> existing,
       C instance) {
     ImmutableSortedSet.Builder<C> toReturn = ImmutableSortedSet.naturalOrder();
     if (existing != null && existing.isPresent()) {
+      toReturn.addAll(existing.get());
+    }
+    toReturn.add(instance);
+    return Optional.of(toReturn.build());
+  }
+
+  // Thanks to type erasure, this needs a unique name.
+  protected <C extends Comparable<?>> Optional<ImmutableSet<C>> amendSet(
+      Optional<ImmutableSet<C>> existing,
+      C instance) {
+    ImmutableSet.Builder<C> toReturn = ImmutableSet.builder();
+    if (existing.isPresent()) {
       toReturn.addAll(existing.get());
     }
     toReturn.add(instance);

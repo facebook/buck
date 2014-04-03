@@ -32,6 +32,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
+import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -45,7 +46,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -1080,7 +1080,7 @@ public class ParserTest extends EasyMockSupport {
       @Override
       public BuildRule build(final BuildRuleResolver ruleResolver) {
         return new FakeBuildRule(
-            BuildRuleType.JAVA_LIBRARY,
+            JavaLibraryDescription.TYPE,
             buildTarget,
             ImmutableSortedSet.<BuildRule>naturalOrder()
               .addAll(Iterables.transform(deps, new Function<BuildTarget, BuildRule>() {

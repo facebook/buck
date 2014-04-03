@@ -19,17 +19,11 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.JavacVersion;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,10 +31,13 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 public class AndroidLibrary extends DefaultJavaLibrary {
 
@@ -51,6 +48,9 @@ public class AndroidLibrary extends DefaultJavaLibrary {
    * generation logic.
    */
   private final Optional<Path> manifestFile;
+  private final BuildRuleParams buildRuleParams;
+  // Potentially modified as we build the enhanced deps.
+  private JavacOptions javacOptions;
 
   @VisibleForTesting
   public AndroidLibrary(
@@ -60,7 +60,6 @@ public class AndroidLibrary extends DefaultJavaLibrary {
       Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
       Set<BuildRule> exportedDeps,
-      ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> manifestFile) {
     super(buildRuleParams,
@@ -69,14 +68,10 @@ public class AndroidLibrary extends DefaultJavaLibrary {
         proguardConfig,
         postprocessClassesCommands,
         exportedDeps,
-        additionalClasspathEntries,
         javacOptions);
+    this.buildRuleParams = Preconditions.checkNotNull(buildRuleParams);
+    this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);
-  }
-
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.ANDROID_LIBRARY;
   }
 
   @Override
@@ -86,6 +81,26 @@ public class AndroidLibrary extends DefaultJavaLibrary {
 
   public Optional<Path> getManifestFile() {
     return manifestFile;
+  }
+
+  @Nullable
+  @Override
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
+    AndroidLibraryGraphEnhancer.Result result = new AndroidLibraryGraphEnhancer(
+        buildRuleParams.getBuildTarget(),
+        buildRuleParams,
+        javacOptions)
+        .createBuildableForAndroidResources(
+            ruleResolver,
+            /* createBuildableIfEmptyDeps */ true);
+
+    Optional<DummyRDotJava> uberRDotJava = result.getOptionalDummyRDotJava();
+    this.additionalClasspathEntries = uberRDotJava.isPresent()
+        ? ImmutableSet.of(uberRDotJava.get().getRDotJavaBinFolder().toString())
+        : ImmutableSet.<String>of();
+
+    deps = result.getBuildRuleParams().getDeps();
+    return deps;
   }
 
   @Override
@@ -98,96 +113,5 @@ public class AndroidLibrary extends DefaultJavaLibrary {
     } else {
       return super.getInputsToCompareToOutput();
     }
-  }
-
-  public static Builder newAndroidLibraryRuleBuilder(BuildRuleBuilderParams params) {
-    return newAndroidLibraryRuleBuilder(
-      Optional.<Path>absent(),
-      Optional.<JavacVersion>absent(),
-      params);
-  }
-
-  public static Builder newAndroidLibraryRuleBuilder(
-      Optional<Path> javac,
-      Optional<JavacVersion> javacVersion,
-      BuildRuleBuilderParams params) {
-    return new Builder(javac, javacVersion, params);
-  }
-
-  public static class Builder extends DefaultJavaLibrary.Builder {
-    private Optional<Path> manifestFile = Optional.absent();
-
-    private Builder(
-        Optional<Path> javac,
-        Optional<JavacVersion> javacVersion,
-        BuildRuleBuilderParams params) {
-      super(javac, javacVersion, params);
-    }
-
-    @Override
-    public AndroidLibrary build(BuildRuleResolver ruleResolver) {
-      // TODO(user): Avoid code duplication by calling super.build() and defining a new
-      // constructor in DefaultJavaLibraryRule that takes an instance of itself.
-      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
-      AnnotationProcessingParams processingParams =
-          annotationProcessingBuilder.build(ruleResolver);
-      javacOptions.setAnnotationProcessingData(processingParams);
-      JavacOptions options = javacOptions.build();
-
-      AndroidLibraryGraphEnhancer.Result result =
-          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, options)
-              .createBuildableForAndroidResources(
-                  ruleResolver, /* createBuildableIfEmptyDeps */ false);
-
-      Optional<DummyRDotJava> uberRDotJava = result.getOptionalDummyRDotJava();
-      ImmutableSet<String> additionalClasspathEntries = uberRDotJava.isPresent()
-          ? ImmutableSet.of(uberRDotJava.get().getRDotJavaBinFolder().toString())
-          : ImmutableSet.<String>of();
-
-      return new AndroidLibrary(
-          result.getBuildRuleParams(),
-          srcs,
-          resources,
-          proguardConfig,
-          postprocessClassesCommands.build(),
-          getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
-          additionalClasspathEntries,
-          options,
-          manifestFile);
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    public Builder addDep(BuildTarget dep) {
-      super.addDep(dep);
-      return this;
-    }
-
-    @Override
-    public AndroidLibrary.Builder addSrc(Path src) {
-      return (AndroidLibrary.Builder)super.addSrc(src);
-    }
-
-    @Override
-    public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
-      super.addVisibilityPattern(visibilityPattern);
-      return this;
-    }
-
-    @Override
-    public AnnotationProcessingParams.Builder getAnnotationProcessingBuilder() {
-      return annotationProcessingBuilder;
-    }
-
-    public Builder setManifestFile(Optional<Path> manifestFile) {
-      this.manifestFile = Preconditions.checkNotNull(manifestFile);
-      return this;
-    }
-
   }
 }

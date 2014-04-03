@@ -18,6 +18,7 @@ package com.facebook.buck.event;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccess;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -191,7 +191,8 @@ public class EventSerializationTest {
 
   private BuildRule generateFakeBuildRule() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//fake:rule");
-    FakeBuildRule result = new FakeBuildRule(BuildRuleType.JAVA_LIBRARY,
+    FakeBuildRule result = new FakeBuildRule(
+        JavaLibraryDescription.TYPE,
         buildTarget,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());

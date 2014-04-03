@@ -23,19 +23,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavaBinaryRuleBuilder;
+import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
@@ -227,7 +225,7 @@ public class GenruleTest {
   @Test
   public void testDepsEnvironmentVariableIsComplete() {
     BuildTarget depTarget = new BuildTarget("//foo", "bar");
-    BuildRule dep = new FakeBuildRule(BuildRuleType.JAVA_LIBRARY, depTarget) {
+    BuildRule dep = new FakeBuildRule(JavaLibraryDescription.TYPE, depTarget) {
       @Override
       public Path getPathToOutputFile() {
         return Paths.get("buck-out/gen/foo/bar.jar");
@@ -446,12 +444,10 @@ public class GenruleTest {
   private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
-    BuildRule javaLibrary = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibrary.newJavaLibraryRuleBuilder(new FakeBuildRuleBuilderParams())
-            .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
-            .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-            .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java"))
-    );
+    BuildRule javaLibrary = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
+        .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java"))
+        .build(ruleResolver);
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator");

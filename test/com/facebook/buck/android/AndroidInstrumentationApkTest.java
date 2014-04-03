@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.FakeJavaLibraryRule;
+import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
@@ -41,10 +41,10 @@ public class AndroidInstrumentationApkTest {
 
   @Test
   public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() {
-    final FakeJavaLibraryRule javaLibrary1 = new FakeJavaLibraryRule(
+    final FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(
         new BuildTarget("//java/com/example", "lib1"));
 
-    FakeJavaLibraryRule javaLibrary2 = new FakeJavaLibraryRule(
+    FakeJavaLibrary javaLibrary2 = new FakeJavaLibrary(
         new BuildTarget("//java/com/example", "lib2"),
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary1)) {
       @Override
@@ -57,10 +57,10 @@ public class AndroidInstrumentationApkTest {
       }
     };
 
-    final FakeJavaLibraryRule javaLibrary3 = new FakeJavaLibraryRule(
+    final FakeJavaLibrary javaLibrary3 = new FakeJavaLibrary(
         new BuildTarget("//java/com/example", "lib3"));
 
-    FakeJavaLibraryRule javaLibrary4 = new FakeJavaLibraryRule(
+    FakeJavaLibrary javaLibrary4 = new FakeJavaLibrary(
         new BuildTarget("//java/com/example", "lib4"),
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary3)) {
       @Override

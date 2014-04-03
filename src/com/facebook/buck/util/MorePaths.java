@@ -176,4 +176,11 @@ public class MorePaths {
         })
         .toSet();
   }
+
+  /**
+   * @return Whether the input path directs to a file in the buck generated files folder.
+   */
+  public static boolean isGeneratedFile(Path pathRelativeToProjectRoot) {
+    return pathRelativeToProjectRoot.startsWith(BuckConstant.GEN_PATH);
+  }
 }

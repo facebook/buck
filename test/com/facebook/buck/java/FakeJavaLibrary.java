@@ -36,22 +36,22 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
-public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibrary {
+public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private ImmutableSortedSet<Path> srcs = ImmutableSortedSet.of();
 
-  public FakeJavaLibraryRule(
+  public FakeJavaLibrary(
       BuildTarget target,
       ImmutableSortedSet<BuildRule> deps) {
-    this(BuildRuleType.JAVA_LIBRARY,
+    this(JavaLibraryDescription.TYPE,
         target,
         deps,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
   }
 
-  public FakeJavaLibraryRule(
+  public FakeJavaLibrary(
       BuildRuleType type,
       BuildTarget target,
       ImmutableSortedSet<BuildRule> deps,
@@ -59,8 +59,8 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibrary {
     super(type, target, deps, visibilityPatterns);
   }
 
-  public FakeJavaLibraryRule(BuildTarget target) {
-    super(BuildRuleType.JAVA_LIBRARY, target);
+  public FakeJavaLibrary(BuildTarget target) {
+    super(JavaLibraryDescription.TYPE, target);
   }
 
   @Override
@@ -93,7 +93,7 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibrary {
     return srcs;
   }
 
-  public FakeJavaLibraryRule setJavaSrcs(ImmutableSortedSet<Path> srcs) {
+  public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<Path> srcs) {
     Preconditions.checkNotNull(srcs);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     return this;

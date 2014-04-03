@@ -20,15 +20,12 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
-import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -43,6 +40,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
@@ -57,7 +55,9 @@ public class RobolectricTest extends JavaTest {
   private static final BuildableProperties PROPERTIES = new BuildableProperties(
       ANDROID, LIBRARY, TEST);
 
-  private final Optional<DummyRDotJava> optionalDummyRDotJava;
+  private final BuildRuleParams buildRuleParams;
+  private final JavacOptions javacOptions;
+  private Optional<DummyRDotJava> optionalDummyRDotJava;
   /**
    * Used by robolectric test runner to get list of resource directories that
    * can be used for tests.
@@ -80,27 +80,20 @@ public class RobolectricTest extends JavaTest {
       Set<Label> labels,
       Set<String> contacts,
       Optional<Path> proguardConfig,
-      ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions,
       List<String> vmArgs,
-      ImmutableSet<BuildRule> sourceUnderTest,
-      Optional<DummyRDotJava> optionalDummyRDotJava) {
+      ImmutableSet<BuildTarget> sourceTargetsUnderTest) {
     super(buildRuleParams,
         srcs,
         resources,
         labels,
         contacts,
         proguardConfig,
-        additionalClasspathEntries,
         javacOptions,
         vmArgs,
-        sourceUnderTest);
-    this.optionalDummyRDotJava = Preconditions.checkNotNull(optionalDummyRDotJava);
-  }
-
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.ROBOLECTRIC_TEST;
+        sourceTargetsUnderTest);
+    this.buildRuleParams = Preconditions.checkNotNull(buildRuleParams);
+    this.javacOptions = Preconditions.checkNotNull(javacOptions);
   }
 
   @Override
@@ -112,6 +105,27 @@ public class RobolectricTest extends JavaTest {
   public Collection<Path> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
   }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
+    super.getEnhancedDeps(ruleResolver);
+    AndroidLibraryGraphEnhancer.Result result = new AndroidLibraryGraphEnhancer(
+        buildRuleParams.getBuildTarget(),
+        buildRuleParams,
+        javacOptions)
+        .createBuildableForAndroidResources(
+            ruleResolver,
+            /* createBuildableIfEmptyDeps */ true);
+
+    optionalDummyRDotJava = result.getOptionalDummyRDotJava();
+    this.additionalClasspathEntries = optionalDummyRDotJava.isPresent()
+        ? ImmutableSet.of(optionalDummyRDotJava.get().getRDotJavaBinFolder().toString())
+        : ImmutableSet.<String>of();
+
+    this.deps = result.getBuildRuleParams().getDeps();
+    return deps;
+  }
+
 
   @Override
   protected Set<String> getBootClasspathEntries(ExecutionContext context) {
@@ -141,63 +155,5 @@ public class RobolectricTest extends JavaTest {
     return String.format("-D%s=%s",
         LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME,
         resourceDirectories);
-  }
-
-  public static Builder newRobolectricTestRuleBuilder(BuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends JavaTest.Builder {
-
-
-    private Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public RobolectricTest build(BuildRuleResolver ruleResolver) {
-      ImmutableSet<BuildRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
-          ruleResolver);
-
-      ImmutableList.Builder<String> allVmArgs = ImmutableList.builder();
-      allVmArgs.addAll(vmArgs);
-
-      AnnotationProcessingParams processingParams =
-          getAnnotationProcessingBuilder().build(ruleResolver);
-      javacOptions.setAnnotationProcessingData(processingParams);
-      JavacOptions options = javacOptions.build();
-
-      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
-
-      AndroidLibraryGraphEnhancer.Result result =
-          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, options)
-              .createBuildableForAndroidResources(
-                  ruleResolver, /* createBuildableIfEmptyDeps */ true);
-
-      Optional<DummyRDotJava> dummyRDotJava = result.getOptionalDummyRDotJava();
-      ImmutableSet<String> additionalClasspathEntries = dummyRDotJava.isPresent()
-          ? ImmutableSet.of(dummyRDotJava.get().getRDotJavaBinFolder().toString())
-          : ImmutableSet.<String>of();
-
-      return new RobolectricTest(
-          result.getBuildRuleParams(),
-          srcs,
-          resources,
-          labels,
-          contacts,
-          proguardConfig,
-          additionalClasspathEntries,
-          options,
-          allVmArgs.build(),
-          sourceUnderTest,
-          result.getOptionalDummyRDotJava());
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
   }
 }

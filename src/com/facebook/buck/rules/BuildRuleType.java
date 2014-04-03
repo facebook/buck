@@ -19,15 +19,6 @@ package com.facebook.buck.rules;
 import com.google.common.base.Preconditions;
 
 public final class BuildRuleType {
-  // TODO(simons): Move each of these closer to the BuildRules they represent.
-  public static final BuildRuleType ANDROID_LIBRARY = new BuildRuleType("android_library");
-  public static final BuildRuleType ANDROID_MANIFEST = new BuildRuleType("android_manifest");
-  public static final BuildRuleType JAVA_LIBRARY = new BuildRuleType("java_library");
-  public static final BuildRuleType JAVA_TEST = new BuildRuleType("java_test");
-  public static final BuildRuleType ROBOLECTRIC_TEST = new BuildRuleType("robolectric_test");
-  public static final BuildRuleType SH_BINARY = new BuildRuleType("sh_binary");
-  public static final BuildRuleType SH_TEST = new BuildRuleType("sh_test");
-
   // Internal rule types. Denoted by leading trailing underscore.
   public static final BuildRuleType AAPT_PACKAGE = new BuildRuleType("_aapt_package");
   public static final BuildRuleType EXOPACKAGE_DEPS_ABI = new BuildRuleType("_exopackage_deps_abi");
