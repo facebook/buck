@@ -30,6 +30,8 @@ import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTest;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.IosTestType;
+import com.facebook.buck.apple.MacosxFramework;
+import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
@@ -310,7 +312,10 @@ public class ProjectGenerator {
           project, rule, (IosTest) rule.getBuildable()));
     } else if (rule.getType().equals(IosBinaryDescription.TYPE)) {
       result = Optional.of((PBXTarget) generateIOSBinaryTarget(
-          project, rule, (IosBinary) rule.getBuildable()));
+              project, rule, (IosBinary) rule.getBuildable()));
+    } else if (rule.getType().equals(MacosxFrameworkDescription.TYPE)) {
+      result = Optional.of((PBXTarget) generateMacosxFrameworkTarget(
+              project, rule, (MacosxFramework) rule.getBuildable()));
     } else {
       result = Optional.absent();
     }
@@ -458,6 +463,43 @@ public class ProjectGenerator {
         productOutputName, productOutputName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
     productsGroup.getChildren().add(productReference);
     target.setProductName(productName);
+    target.setProductReference(productReference);
+
+    project.getTargets().add(target);
+    return target;
+  }
+
+    private PBXNativeTarget generateMacosxFrameworkTarget(
+      PBXProject project,
+      BuildRule rule,
+      MacosxFramework buildable)
+      throws IOException {
+    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
+    target.setProductType(PBXTarget.ProductType.MACOSX_FRAMEWORK);
+
+    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
+
+    // -- configurations
+    setTargetBuildConfigurations(
+        rule.getBuildTarget(), target, targetGroup,
+        buildable.getConfigurations(), ImmutableMap.<String, String>of());
+
+    // -- build phases
+    // TODO(Task #3772930): Go through all dependencies of the rule
+    // and add any shell script rules here
+    addRunScriptBuildPhasesForDependencies(rule, target);
+    addSourcesAndHeadersBuildPhases(
+        target,
+        targetGroup,
+        buildable.getSrcs(),
+        buildable.getPerFileFlags());
+
+    // -- products
+    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
+    String frameworkName = getProductName(rule.getBuildTarget()) + ".framework";
+    PBXFileReference productReference = new PBXFileReference(
+        frameworkName, frameworkName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
+    productsGroup.getChildren().add(productReference);
     target.setProductReference(productReference);
 
     project.getTargets().add(target);

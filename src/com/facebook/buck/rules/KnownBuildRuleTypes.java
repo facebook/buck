@@ -30,6 +30,7 @@ import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTestDescription;
+import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
@@ -177,6 +178,7 @@ public class KnownBuildRuleTypes {
     builder.register(new IosResourceDescription());
     builder.register(new IosTestDescription());
     builder.register(new JavaBinaryDescription());
+    builder.register(new MacosxFrameworkDescription());
     builder.register(new NdkLibraryDescription(ndkVersion));
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());

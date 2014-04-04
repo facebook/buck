@@ -45,6 +45,7 @@ import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTestDescription;
+import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
@@ -119,6 +120,7 @@ public class ProjectGeneratorTest {
   private IosTestDescription iosTestDescription;
   private IosBinaryDescription iosBinaryDescription;
   private IosResourceDescription iosResourceDescription;
+  private MacosxFrameworkDescription macosxFrameworkDescription;
 
   @Before
   public void setUp() {
@@ -129,6 +131,7 @@ public class ProjectGeneratorTest {
     iosTestDescription = new IosTestDescription();
     iosBinaryDescription = new IosBinaryDescription();
     iosResourceDescription = new IosResourceDescription();
+    macosxFrameworkDescription = new MacosxFrameworkDescription();
   }
 
   @Test
@@ -459,6 +462,65 @@ public class ProjectGeneratorTest {
         "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.IOS_LIBRARY));
+
+    assertHasConfigurations(target, "Debug");
+    assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target, ImmutableMap.of(
+        "foo.m", Optional.of("-foo"),
+        "bar.m", Optional.<String>absent()));
+
+   // check headers
+    {
+      PBXBuildPhase headersBuildPhase =
+          Iterables.find(target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
+            @Override
+            public boolean apply(PBXBuildPhase input) {
+              return input instanceof PBXHeadersBuildPhase;
+            }
+          });
+      PBXBuildFile headerBuildFile = Iterables.getOnlyElement(headersBuildPhase.getFiles());
+
+      String headerBuildFilePath = assertFileRefIsRelativeAndResolvePath(
+          headerBuildFile.getFileRef());
+      assertEquals(
+          projectFilesystem.getRootPath().resolve("foo.h").toAbsolutePath().normalize().toString(),
+          headerBuildFilePath);
+    }
+  }
+
+  @Test
+  public void testMacosxFrameworkRule() throws IOException {
+
+    BuildRuleParams params = new FakeBuildRuleParams(
+        new BuildTarget("//foo", "lib"), ImmutableSortedSet.<BuildRule>of());
+    MacosxFrameworkDescription.Arg arg =
+        macosxFrameworkDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.srcs = ImmutableList.of(
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new FileSourcePath("foo.h")),
+        AppleSource.ofSourcePath(new FileSourcePath("bar.m")));
+    arg.frameworks = ImmutableSortedSet.of();
+    BuildRule rule = new DescribedRule(
+        MacosxFrameworkDescription.TYPE,
+        macosxFrameworkDescription.createBuildable(params, arg), params);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    PBXFileReference productReference = target.getProductReference();
+    assertEquals("lib.framework", productReference.getName());
+    assertEquals(Optional.of("wrapper.framework"), productReference.getExplicitFileType());
 
     assertHasConfigurations(target, "Debug");
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
