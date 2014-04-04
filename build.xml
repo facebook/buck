@@ -351,17 +351,8 @@
              failonerror="true"
              >
       <fileset dir="${src.dir}">
+        <include name="**/*.java" />
         <exclude name="com/facebook/buck/cli/quickstart/**" />
-        <exclude name="**/BUCK" />
-        <exclude name="**/*.iml"/>
-        <exclude name="**/*.jj"/>
-        <exclude name="**/*.py"/>
-        <exclude name="**/*.pyc"/>
-        <exclude name="**/*.sh"/>
-        <exclude name="**/*.soy"/>
-        <exclude name="**/*.xml"/>
-        <exclude name="**/*.keystore"/>
-        <exclude name="**/*.properties"/>
       </fileset>
       <fileset dir="${javacc.gensrc.dir}">
       </fileset>
