@@ -70,6 +70,5 @@ public class AndroidLibraryDescription implements Description<AndroidLibraryDesc
 
   public static class Arg extends JavaLibraryDescription.Arg {
     public Optional<Path> manifest;
-    public Optional<Path> proguardConfig;
   }
 }
