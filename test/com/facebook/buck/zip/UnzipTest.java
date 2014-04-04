@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.Zip;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -29,6 +30,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class UnzipTest {
   private static final byte[] DUMMY_FILE_CONTENTS = "BUCK Unzip Test String!\nNihao\n".getBytes();
@@ -51,7 +53,8 @@ public class UnzipTest {
   @Test
   public void testExtractZipFile() throws IOException {
     File extractFolder = tmpFolder.newFolder();
-    Unzip.extractZipFile(zipFile.getAbsolutePath(),
+    ImmutableList<Path> result = Unzip.extractZipFile(
+        zipFile.getAbsolutePath(),
         extractFolder.getAbsolutePath(),
         false);
     assertTrue(new File(extractFolder.getAbsolutePath() + "/1.bin").exists());
@@ -66,5 +69,10 @@ public class UnzipTest {
         assertEquals(DUMMY_FILE_CONTENTS[i], buffer[i]);
       }
     }
+    assertEquals(
+        ImmutableList.of(
+          extractFolder.toPath().resolve("1.bin"),
+          extractFolder.toPath().resolve("subdir/2.bin")),
+        result);
   }
 }

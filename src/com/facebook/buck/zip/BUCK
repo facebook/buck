@@ -19,8 +19,19 @@ java_library(
 )
 
 java_library(
+  name = 'unzip',
+  srcs = [ 'Unzip.java' ],
+  deps = [
+    ':stream',
+    '//lib:guava',
+    '//lib:jsr305',
+  ],
+  visibility = [ 'PUBLIC' ],
+)
+
+java_library(
   name = 'steps',
-  srcs = glob(['*Step.java']) + [ 'Unzip.java' ],
+  srcs = glob(['*Step.java']),
   deps = [
     ':stream',
     '//lib:guava',

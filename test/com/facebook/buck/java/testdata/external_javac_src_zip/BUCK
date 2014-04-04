@@ -1,0 +1,32 @@
+# This is a canonical example of a genrule() that generates Java source code
+# paired with a java_library() that compiles the output of the genrule() along
+# with some hard-coded Java source code into a single library.
+
+java_library(
+  name = 'zip',
+  source = '7',
+  target = '7',
+  srcs = ['Zip.java'],
+)
+
+java_binary(
+  name = 'run_zip',
+  main_class = 'com.example.Zip',
+  deps = ['//:zip'],
+)
+
+genrule(
+  name = 'generate_java_sources',
+  deps = ['//:run_zip'],
+  bash = '$(exe :run_zip) $OUT',
+  cmd_exe = '$(exe :run_zip) %OUT%',
+  out = 'output.src.zip',
+)
+
+java_library(
+  name = 'lib',
+  srcs = ['Yin.java', genfile('output.src.zip')],
+  deps = [
+    '//:generate_java_sources',
+  ],
+)

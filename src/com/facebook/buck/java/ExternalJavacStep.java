@@ -16,16 +16,22 @@
 
 package com.facebook.buck.java;
 
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -40,6 +46,7 @@ public class ExternalJavacStep extends JavacStep {
 
   private final Path pathToJavac;
   private final BuildTarget target;
+  private final Optional<Path> workingDirectory;
 
   public ExternalJavacStep(
       Path outputDirectory,
@@ -52,7 +59,8 @@ public class ExternalJavacStep extends JavacStep {
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList,
-      BuildTarget target) {
+      BuildTarget target,
+      Optional<Path> workingDirectory) {
     super(outputDirectory,
         javaSourceFilePaths,
         transitiveClasspathEntries,
@@ -65,6 +73,7 @@ public class ExternalJavacStep extends JavacStep {
         pathToSrcsList);
     this.pathToJavac = javacOptions.getJavaCompilerEnvironment().getJavacPath().get();
     this.target = Preconditions.checkNotNull(target);
+    this.workingDirectory = Preconditions.checkNotNull(workingDirectory);
   }
 
   @Override
@@ -94,11 +103,19 @@ public class ExternalJavacStep extends JavacStep {
     command.add(pathToJavac.toString());
     command.addAll(getOptions(context, buildClasspathEntries));
 
-    // Add sources file or sources list to command
+    ImmutableList<Path> expandedSources;
+    try {
+      expandedSources = getExpandedSourcePaths(context);
+    } catch (IOException e) {
+      throw new HumanReadableException(
+          "Unable to expand sources for %s into %s",
+          target,
+          workingDirectory);
+    }
     if (pathToSrcsList.isPresent()) {
       try {
         context.getProjectFilesystem().writeLinesToPath(
-            Iterables.transform(javaSourceFilePaths, Functions.toStringFunction()),
+            Iterables.transform(expandedSources, Functions.toStringFunction()),
             pathToSrcsList.get());
         command.add("@" + pathToSrcsList.get());
       } catch (IOException e) {
@@ -108,24 +125,25 @@ public class ExternalJavacStep extends JavacStep {
         return 1;
       }
     } else {
-      for (Path source : getSrcs()) {
+      for (Path source : expandedSources) {
         command.add(source.toString());
       }
     }
 
-    ProcessBuilder pb = new ProcessBuilder(command.build());
+    ProcessBuilder processBuilder = new ProcessBuilder(command.build());
 
     // Add additional information to the environment
-    Map<String, String> env = pb.environment();
+    Map<String, String> env = processBuilder.environment();
     env.put("BUCK_INVOKING_RULE", invokingRule.or(""));
     env.put("BUCK_TARGET", target.toString());
     env.put("BUCK_DIRECTORY_ROOT", context.getProjectDirectoryRoot().toString());
     env.put("BUCK_OUTPUT_ABI_FILE", pathToOutputAbiFile.or(new File("").toPath()).toString());
 
+    processBuilder.directory(context.getProjectDirectoryRoot());
     // Run the command
     int exitCode = -1;
     try {
-      ProcessExecutor.Result result = context.getProcessExecutor().execute(pb.start());
+      ProcessExecutor.Result result = context.getProcessExecutor().execute(processBuilder.start());
       exitCode = result.getExitCode();
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
@@ -150,6 +168,42 @@ public class ExternalJavacStep extends JavacStep {
       }
     }
     return 0;
+  }
+
+  private ImmutableList<Path> getExpandedSourcePaths(ExecutionContext context)
+      throws IOException {
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
+    // Add sources file or sources list to command
+    ImmutableList.Builder<Path> sources = ImmutableList.builder();
+    for (Path path : javaSourceFilePaths) {
+      if (path.toString().endsWith(".java")) {
+        sources.add(path);
+      } else if (path.toString().endsWith(".src.zip")) {
+        if (!workingDirectory.isPresent()) {
+          throw new HumanReadableException(
+              "Attempting to compile target %s which specified a .src.zip input %s but no " +
+                  "working directory was specified.",
+              target.toString(),
+              path);
+        }
+        // For a Zip of .java files, create a JavaFileObject for each .java entry.
+        ImmutableList<Path> zipPaths = Unzip.extractZipFile(
+            projectFilesystem.resolve(path).toString(),
+            projectFilesystem.resolve(workingDirectory.get()).toString(),
+            /* overwriteExistingFiles */ true);
+        sources.addAll(
+            FluentIterable.from(zipPaths)
+                .filter(
+                    new Predicate<Path>() {
+                      @Override
+                      public boolean apply(Path input) {
+                        return input.toString().endsWith(".java");
+                      }
+                    }));
+      }
+    }
+    return sources.build();
   }
 
 }

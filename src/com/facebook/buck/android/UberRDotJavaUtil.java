@@ -186,6 +186,7 @@ public class UberRDotJavaUtil {
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
         /* pathToSrcsList */ Optional.<Path>absent(),
-        buildTarget);
+        buildTarget,
+        /* workingDirectory */ Optional.<Path>absent());
   }
 }

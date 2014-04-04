@@ -262,6 +262,8 @@ public class DefaultJavaLibrary extends AbstractBuildable
 
       final JavacStep javacStep;
       if (javacOptions.getJavaCompilerEnvironment().getJavacPath().isPresent()) {
+        Path workingDirectory = BuildTargets.getGenPath(target, "lib__%s____working_directory");
+        commands.add(new MakeCleanDirectoryStep(workingDirectory));
         javacStep = new ExternalJavacStep(
             outputDirectory,
             getJavaSrcs(),
@@ -273,7 +275,8 @@ public class DefaultJavaLibrary extends AbstractBuildable
             buildDependencies,
             suggestBuildRules,
             Optional.of(pathToSrcsList),
-            target);
+            target,
+            Optional.of(workingDirectory));
       } else {
         javacStep = new JavacInMemoryStep(
             outputDirectory,

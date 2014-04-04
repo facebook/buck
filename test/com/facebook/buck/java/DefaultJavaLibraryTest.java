@@ -1220,8 +1220,8 @@ public class DefaultJavaLibraryTest {
     );
 
     List<Step> steps = stepsBuilder.build();
-    assertEquals(steps.size(), 3);
-    assertTrue(steps.get(2) instanceof ExternalJavacStep);
+    assertEquals(steps.size(), 4);
+    assertTrue(steps.get(3) instanceof ExternalJavacStep);
   }
 
   @Test

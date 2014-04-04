@@ -20,8 +20,8 @@ for i in "$@"; do
     esac
 done
 
-echo $CLASS_OUT >> ~/Desktop/log
-echo $ABI_OUT >> ~/Desktop/log
+echo $CLASS_OUT >> log
+echo $ABI_OUT >> log
 
 echo "fakeClass" > "$CLASS_OUT/Example.class"
 echo "0000000000000000000000000000000000000000" > $ABI_OUT

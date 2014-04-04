@@ -40,7 +40,8 @@ public class JavacStepUtil {
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList,
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget,
+      Optional<Path> workingDirectory) {
 
     if (javacOptions.getJavaCompilerEnvironment().getJavacPath().isPresent()) {
       return new ExternalJavacStep(
@@ -54,7 +55,8 @@ public class JavacStepUtil {
           buildDependencies,
           suggestBuildRules,
           pathToSrcsList,
-          buildTarget);
+          buildTarget,
+          workingDirectory);
     } else {
       return new JavacInMemoryStep(
           outputDirectory,

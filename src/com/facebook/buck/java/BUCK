@@ -105,6 +105,7 @@ java_library(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/zip:stream',
+    '//src/com/facebook/buck/zip:unzip',
   ],
   visibility = ['PUBLIC'],
 )

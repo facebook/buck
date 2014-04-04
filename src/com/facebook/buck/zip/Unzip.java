@@ -16,6 +16,7 @@
 
 package com.facebook.buck.zip;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
 import java.io.File;
@@ -23,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -31,7 +33,11 @@ public class Unzip {
   /** Utility class: do not instantiate. */
   private Unzip() {}
 
-  public static void extractZipFile(String zipFile,
+
+  /**
+   * Unzips a file to a destination and returns the paths of the written files.
+   */
+  public static ImmutableList<Path> extractZipFile(String zipFile,
       String destination,
       boolean overwriteExistingFiles) throws IOException {
     // Create output directory if it does not exist
@@ -40,6 +46,7 @@ public class Unzip {
     // dir.
     Files.createDirectories(folder.toPath());
 
+    ImmutableList.Builder<Path> filesWritten = ImmutableList.builder();
     try (ZipInputStream zip = new ZipInputStream(new FileInputStream(zipFile))) {
       for (ZipEntry entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
         String fileName = entry.getName();
@@ -58,6 +65,8 @@ public class Unzip {
         } else {
           // Create parent folder
           Files.createDirectories(target.toPath().getParent());
+
+          filesWritten.add(target.toPath());
           // Write file
           try (FileOutputStream out = new FileOutputStream(target)) {
             ByteStreams.copy(zip, out);
@@ -65,6 +74,7 @@ public class Unzip {
         }
       }
     }
+    return filesWritten.build();
   }
 
 }

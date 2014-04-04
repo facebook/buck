@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.java;
 
 import static org.junit.Assert.assertThat;
 
@@ -29,7 +29,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 
-public class BuildWithExternalJavacIntegrationTest {
+public class ExternalJavacIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -47,6 +47,22 @@ public class BuildWithExternalJavacIntegrationTest {
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.getAbsolutePath());
     workspace.runBuckCommand("build", "example").assertSuccess();
+  }
+
+  @Test
+  public void whenExternalSrcZipUsedCompilationSucceeds()
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "external_javac_src_zip", tmp);
+
+    workspace.setUp();
+
+    File javac = workspace.getFile("javac.sh");
+    javac.setExecutable(true);
+
+    workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.getAbsolutePath());
+
+    workspace.runBuckCommand("build", "//:lib", "-v", "2").assertSuccess();
   }
 
   @Test
