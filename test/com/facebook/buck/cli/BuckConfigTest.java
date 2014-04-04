@@ -647,7 +647,6 @@ public class BuckConfigTest {
   @Test
   public void whenRelativeProguardJarOverrideUsed() throws IOException {
     String proguardJarName = "proguard.jar";
-    File proguardJar = temporaryFolder.newFile(proguardJarName);
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[tools]",
         "    proguard = " + proguardJarName));
