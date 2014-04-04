@@ -654,7 +654,7 @@ public class BuckConfigTest {
     BuckConfig config = createWithDefaultFilesystem(reader, null);
     assertEquals(
         "Should resolve to the fully qualified path",
-        proguardJar.getAbsolutePath(),
+        proguardJarName,
         config.getProguardJarOverride().transform(Functions.toStringFunction()).orNull());
   }
 

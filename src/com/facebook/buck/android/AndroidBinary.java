@@ -352,13 +352,14 @@ public class AndroidBinary extends AbstractBuildable implements
         .setRuleNames("classpathDeps", getClasspathDeps())
         .set("packageType", packageType.toString())
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
-        .set("optimizationPasses", optimizationPasses.toString())
+        .set("optimizationPasses", optimizationPasses.transform(Functions.toStringFunction()))
         .set("resourceCompressionMode", resourceCompressionMode.toString())
         .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
         .set("exopackage", exopackage)
         .set("preprocessJavaClassesBash", preprocessJavaClassesBash)
         .set("preprocessJavaClassesDeps", preprocessJavaClassesDeps)
-        .set("proguardJarOverride", proguardJarOverride.transform(Functions.toStringFunction()));
+        .set("proguardJarOverride",
+            proguardJarOverride.transform(Functions.toStringFunction()));
 
     for (JavaLibrary buildable : rulesToExcludeFromDex) {
       buildable.appendDetailsToRuleKey(builder);

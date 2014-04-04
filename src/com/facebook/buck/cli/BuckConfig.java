@@ -766,10 +766,7 @@ public class BuckConfig {
     Optional<String> pathString = getValue("tools", "proguard");
     if (pathString.isPresent()) {
       Path path = Paths.get(pathString.get());
-      if (!path.isAbsolute()) {
-        path = projectFilesystem.getAbsolutifier().apply(path);
-      }
-      File file = path.toFile();
+      File file = projectFilesystem.getAbsolutifier().apply(path).toFile();
       if (!file.exists()) {
         throw new HumanReadableException("Overridden proguard path not found: " +
             file.getAbsolutePath());

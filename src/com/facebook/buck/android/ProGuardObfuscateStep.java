@@ -114,7 +114,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
     // Run ProGuard as a standalone executable JAR file.
     File proguardJar;
     if (proguardJarOverride.isPresent()) {
-      proguardJar = proguardJarOverride.get().toFile();
+      proguardJar =
+          context.getProjectFilesystem().getFileForRelativePath(proguardJarOverride.get());
     } else {
       AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
       proguardJar = androidPlatformTarget.getProguardJar();
