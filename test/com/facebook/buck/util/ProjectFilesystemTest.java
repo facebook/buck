@@ -335,6 +335,30 @@ public class ProjectFilesystemTest {
   }
 
   @Test
+  public void testWalkFileTreeFollowsSymlinks() throws IOException {
+    tmp.newFolder("dir");
+    tmp.newFile("dir/file.txt");
+    java.nio.file.Files.createSymbolicLink(
+        tmp.getRoot().toPath().resolve("linkdir"),
+        tmp.getRoot().toPath().resolve("dir"));
+
+    final ImmutableList.Builder<Path> filePaths = ImmutableList.builder();
+
+    filesystem.walkRelativeFileTree(
+        Paths.get(""), new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            filePaths.add(file);
+            return FileVisitResult.CONTINUE;
+          }
+        });
+
+    assertThat(
+        filePaths.build(),
+        containsInAnyOrder(Paths.get("dir/file.txt"), Paths.get("linkdir/file.txt")));
+  }
+
+  @Test
   public void whenContextNullThenCreateContextStringReturnsValidString() {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
     assertThat(
@@ -363,7 +387,8 @@ public class ProjectFilesystemTest {
             EnumSet.noneOf(FileVisitOption.class)),
         containsInAnyOrder(Paths.get("dir1/dir2/file3")));
 
-    assertThat(filesystem.getFilesUnderPath(Paths.get("dir1")),
+    assertThat(
+        filesystem.getFilesUnderPath(Paths.get("dir1")),
         containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
 
     assertThat(filesystem.getFilesUnderPath(

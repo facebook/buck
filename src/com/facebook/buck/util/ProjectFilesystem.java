@@ -209,7 +209,7 @@ public class ProjectFilesystem {
 
     if (!java.nio.file.Files.exists(file)) {
       throw new RuntimeException(
-          String.format( "Not an ordinary file: '%s'.", pathRelativeToProjectRoot));
+          String.format("Not an ordinary file: '%s'.", pathRelativeToProjectRoot));
     }
 
     return file;
@@ -277,7 +277,7 @@ public class ProjectFilesystem {
       Path pathRelativeToProjectRoot,
       final FileVisitor<Path> fileVisitor) throws IOException {
     walkRelativeFileTree(pathRelativeToProjectRoot,
-        EnumSet.noneOf(FileVisitOption.class),
+        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
         fileVisitor);
   }
 
