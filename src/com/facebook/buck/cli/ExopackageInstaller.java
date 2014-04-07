@@ -585,7 +585,7 @@ public class ExopackageInstaller {
     eventBus.post(LogEvent.fine(message, args));
   }
 
-  public void logFiner(String message, Object... args) {
+  private void logFiner(String message, Object... args) {
     eventBus.post(LogEvent.finer(message, args));
   }
 }
