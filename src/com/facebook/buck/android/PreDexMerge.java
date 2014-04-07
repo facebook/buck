@@ -19,15 +19,14 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.PreDexMerge.BuildOutput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
@@ -88,7 +87,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
   private final BuildTarget buildTarget;
   private final Path primaryDexPath;
   private final DexSplitMode dexSplitMode;
-  private final ImmutableSet<IntermediateDexRule> preDexDeps;
+  private final ImmutableSet<DexProducedFromJavaLibrary> preDexDeps;
   private final UberRDotJava uberRDotJava;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -96,7 +95,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
       BuildTarget buildTarget,
       Path primaryDexPath,
       DexSplitMode dexSplitMode,
-      ImmutableSet<IntermediateDexRule> preDexDeps,
+      ImmutableSet<DexProducedFromJavaLibrary> preDexDeps,
       UberRDotJava uberRDotJava) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
@@ -245,12 +244,10 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     // For single-dex apps with pre-dexing, we just add the steps directly.
     Iterable<Path> filesToDex = FluentIterable.from(preDexDeps)
         .transform(
-            new Function<IntermediateDexRule, Path>() {
+            new Function<DexProducedFromJavaLibrary, Path>() {
               @Override
               @Nullable
-              public Path apply(IntermediateDexRule preDexDep) {
-                DexProducedFromJavaLibraryThatContainsClassFiles preDex = preDexDep
-                    .getBuildable();
+              public Path apply(DexProducedFromJavaLibrary preDex) {
                 if (preDex.hasOutput()) {
                   return preDex.getPathToDex();
                 } else {
@@ -349,7 +346,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
 
     @Nullable private Path primaryDexPath;
     @Nullable private DexSplitMode dexSplitMode;
-    @Nullable private ImmutableSet<IntermediateDexRule> preDexDeps;
+    @Nullable private ImmutableSet<DexProducedFromJavaLibrary> preDexDeps;
     @Nullable private UberRDotJava uberRDotJava;
 
 
@@ -378,9 +375,9 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
       return this;
     }
 
-    public Builder setPreDexDeps(ImmutableSet<IntermediateDexRule> preDexDeps) {
+    public Builder setPreDexDeps(ImmutableSet<DexProducedFromJavaLibrary> preDexDeps) {
       this.preDexDeps = preDexDeps;
-      for (BuildRule dep : preDexDeps) {
+      for (DexProducedFromJavaLibrary dep : preDexDeps) {
         addDep(dep.getBuildTarget());
       }
       return this;

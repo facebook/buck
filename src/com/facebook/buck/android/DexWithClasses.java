@@ -44,12 +44,11 @@ public interface DexWithClasses {
    */
   public int getSizeEstimate();
 
-  public static Function<IntermediateDexRule, DexWithClasses> TO_DEX_WITH_CLASSES =
-      new Function<IntermediateDexRule, DexWithClasses>() {
+  public static Function<DexProducedFromJavaLibrary, DexWithClasses> TO_DEX_WITH_CLASSES
+      = new Function<DexProducedFromJavaLibrary, DexWithClasses>() {
     @Override
     @Nullable
-    public DexWithClasses apply(IntermediateDexRule preDexDep) {
-      DexProducedFromJavaLibraryThatContainsClassFiles preDex = preDexDep.getBuildable();
+    public DexWithClasses apply(DexProducedFromJavaLibrary preDex) {
       if (!preDex.hasOutput()) {
         return null;
       }

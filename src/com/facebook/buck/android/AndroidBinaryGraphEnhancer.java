@@ -214,7 +214,7 @@ public class AndroidBinaryGraphEnhancer {
    */
   @VisibleForTesting
   BuildRule createPreDexMergeRule(UberRDotJava uberRDotJava) {
-    ImmutableSet.Builder<IntermediateDexRule> preDexDeps = ImmutableSet.builder();
+    ImmutableSet.Builder<DexProducedFromJavaLibrary> preDexDeps = ImmutableSet.builder();
     ImmutableSet<JavaLibrary> transitiveJavaDeps = Classpaths
         .getClasspathEntries(originalDeps).keySet();
     for (JavaLibrary javaLibrary : transitiveJavaDeps) {
@@ -235,23 +235,22 @@ public class AndroidBinaryGraphEnhancer {
       BuildTarget preDexTarget = new BuildTarget(originalTarget.getBaseName(),
           originalTarget.getShortName(),
           DEX_FLAVOR);
-      IntermediateDexRule preDexRule = (IntermediateDexRule) ruleResolver.get(preDexTarget);
+      BuildRule preDexRule = ruleResolver.get(preDexTarget);
       if (preDexRule != null) {
-        preDexDeps.add(preDexRule);
+        preDexDeps.add((DexProducedFromJavaLibrary) preDexRule.getBuildable());
         continue;
       }
 
       // Create the IntermediateDexRule and add it to both the ruleResolver and preDexDeps.
-      IntermediateDexRule preDex = ruleResolver.buildAndAddToIndex(
-          IntermediateDexRule
-              .newPreDexBuilder(buildRuleBuilderParams)
+       preDexRule = ruleResolver.buildAndAddToIndex(
+          DexProducedFromJavaLibrary.newBuilder(buildRuleBuilderParams)
               .setBuildTarget(preDexTarget)
               .setJavaLibraryToDex(javaLibrary)
               .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
-      preDexDeps.add(preDex);
+      preDexDeps.add((DexProducedFromJavaLibrary) preDexRule.getBuildable());
     }
 
-    ImmutableSet<IntermediateDexRule> allPreDexDeps = preDexDeps.build();
+    ImmutableSet<DexProducedFromJavaLibrary> allPreDexDeps = preDexDeps.build();
 
     BuildTarget buildTargetForDexMerge = createBuildTargetWithFlavor(DEX_MERGE_FLAVOR);
     BuildRule preDexMergeBuildRule = ruleResolver.buildAndAddToIndex(

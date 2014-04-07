@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
@@ -44,19 +43,15 @@ public class DexWithClassesTest {
     };
 
     BuildTarget buildTarget = new BuildTarget("//java/com/example", "lib", "dex");
-    DexProducedFromJavaLibraryThatContainsClassFiles dexFromJavaLibrary =
-        new DexProducedFromJavaLibraryThatContainsClassFiles(buildTarget, javaLibrary) {
+    DexProducedFromJavaLibrary dexFromJavaLibrary =
+        new DexProducedFromJavaLibrary(buildTarget, javaLibrary) {
       @Override
       public int getLinearAllocEstimate() {
         return 1600;
       }
     };
 
-    IntermediateDexRule intermediateDexRule = new IntermediateDexRule(
-        dexFromJavaLibrary,
-        new FakeBuildRuleParams(buildTarget));
-
-    DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(intermediateDexRule);
+    DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertEquals(Paths.get("buck-out/gen/java/com/example/lib#dex.dex.jar"),
         dexWithClasses.getPathToDexFile());
     assertEquals(ImmutableSet.of("com/example/Main"), dexWithClasses.getClassNames());
@@ -74,19 +69,15 @@ public class DexWithClassesTest {
     };
 
     BuildTarget buildTarget = new BuildTarget("//java/com/example", "lib", "dex");
-    DexProducedFromJavaLibraryThatContainsClassFiles dexFromJavaLibrary =
-        new DexProducedFromJavaLibraryThatContainsClassFiles(buildTarget, javaLibrary) {
+    DexProducedFromJavaLibrary dexFromJavaLibrary =
+        new DexProducedFromJavaLibrary(buildTarget, javaLibrary) {
       @Override
       public int getLinearAllocEstimate() {
         return 1600;
       }
     };
 
-    IntermediateDexRule intermediateDexRule = new IntermediateDexRule(
-        dexFromJavaLibrary,
-        new FakeBuildRuleParams(buildTarget));
-
-    DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(intermediateDexRule);
+    DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertNull(
         "If the JavaLibraryRule does not produce any .class files, " +
             "then DexWithClasses.TO_DEX_WITH_CLASSES should return null.",

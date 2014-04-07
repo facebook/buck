@@ -75,8 +75,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     replayAll();
 
     BuildTarget buildTarget = new BuildTarget("//foo", "bar", "dex");
-    DexProducedFromJavaLibraryThatContainsClassFiles preDex =
-        new DexProducedFromJavaLibraryThatContainsClassFiles(buildTarget, javaLibraryRule);
+    DexProducedFromJavaLibrary preDex =
+        new DexProducedFromJavaLibrary(buildTarget, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     verifyAll();
@@ -127,7 +127,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         buildableContext.getRecordedArtifacts());
 
     buildableContext.assertContainsMetadataMapping(
-        DexProducedFromJavaLibraryThatContainsClassFiles.LINEAR_ALLOC_KEY_ON_DISK_METADATA, "250");
+        DexProducedFromJavaLibrary.LINEAR_ALLOC_KEY_ON_DISK_METADATA, "250");
 
     verifyAll();
   }
@@ -144,8 +144,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     replayAll();
 
     BuildTarget buildTarget = new BuildTarget("//foo", "bar");
-    DexProducedFromJavaLibraryThatContainsClassFiles preDex =
-        new DexProducedFromJavaLibraryThatContainsClassFiles(buildTarget, javaLibrary);
+    DexProducedFromJavaLibrary preDex =
+        new DexProducedFromJavaLibrary(buildTarget, javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     verifyAll();
@@ -194,8 +194,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     replayAll();
 
     BuildTarget buildTarget = new BuildTarget("//foo", "bar");
-    DexProducedFromJavaLibraryThatContainsClassFiles preDexWithClasses =
-        new DexProducedFromJavaLibraryThatContainsClassFiles(buildTarget, accumulateClassNames);
+    DexProducedFromJavaLibrary preDexWithClasses =
+        new DexProducedFromJavaLibrary(buildTarget, accumulateClassNames);
     assertNull(preDexWithClasses.getPathToOutputFile());
     assertTrue(Iterables.isEmpty(preDexWithClasses.getInputsToCompareToOutput()));
     assertEquals(Paths.get("buck-out/gen/foo/bar.dex.jar"), preDexWithClasses.getPathToDex());
@@ -211,7 +211,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         "com/example/Bar", HashCode.fromString("087b7707a5f8e0a2adf5652e3cd2072d89a197dc"),
         "com/example/Baz", HashCode.fromString("62b1c2510840c0de55c13f66065a98a719be0f19")
     );
-    String observedSha1 = DexProducedFromJavaLibraryThatContainsClassFiles
+    String observedSha1 = DexProducedFromJavaLibrary
         .computeAbiKey(classNamesAndHashes)
         .getHash();
 

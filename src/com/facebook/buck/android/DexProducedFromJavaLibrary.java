@@ -16,14 +16,20 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.DexProducedFromJavaLibraryThatContainsClassFiles.BuildOutput;
+import com.facebook.buck.android.DexProducedFromJavaLibrary.BuildOutput;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -56,7 +62,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * {@link DexProducedFromJavaLibraryThatContainsClassFiles} is a {@link Buildable} that serves a
+ * {@link DexProducedFromJavaLibrary} is a {@link Buildable} that serves a
  * very specific purpose: it takes a {@link JavaLibrary} and dexes the output of the
  * {@link JavaLibrary} if its list of classes is non-empty. Because it is expected to be used with
  * pre-dexing, we always pass the {@code --force-jumbo} flag to {@code dx} in this buildable.
@@ -66,8 +72,8 @@ import javax.annotation.Nullable;
  * until runtime. Unfortunately, because there is no such thing as an empty {@code .dex} file, we
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
-public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBuildable
-    implements InitializableFromDisk<BuildOutput> {
+public class DexProducedFromJavaLibrary extends AbstractBuildable
+    implements AbiRule, HasBuildTarget, InitializableFromDisk<BuildOutput> {
 
   @VisibleForTesting
   static final String LINEAR_ALLOC_KEY_ON_DISK_METADATA = "linearalloc";
@@ -77,7 +83,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   @VisibleForTesting
-  DexProducedFromJavaLibraryThatContainsClassFiles(BuildTarget buildTarget,
+  DexProducedFromJavaLibrary(
+      BuildTarget buildTarget,
       JavaLibrary javaLibrary) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.javaLibrary = Preconditions.checkNotNull(javaLibrary);
@@ -156,6 +163,11 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
     return buildOutputInitializer;
   }
 
+  @Override
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
+  }
+
   static class BuildOutput {
     private final int linearAllocEstimate;
     private BuildOutput(int linearAllocEstimate) {
@@ -192,7 +204,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
    * The only dep for this rule should be {@link #javaLibrary}. Therefore, the ABI key for the deps
    * of this buildable is the hash of the {@code .class} files for {@link #javaLibrary}.
    */
-  Sha1HashCode getAbiKeyForDeps() {
+  @Override
+  public Sha1HashCode getAbiKeyForDeps() {
     return computeAbiKey(javaLibrary.getClassNamesToHashes());
   }
 
@@ -206,5 +219,41 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
       hasher.putByte((byte)0);
     }
     return new Sha1HashCode(hasher.hash().toString());
+  }
+
+  public static Builder newBuilder(BuildRuleBuilderParams params) {
+    return new Builder(params);
+  }
+
+  public static class Builder extends AbstractBuildable.Builder {
+
+    private JavaLibrary javaLibrary;
+
+    protected Builder(BuildRuleBuilderParams params) {
+      super(params);
+    }
+
+    @Override
+    protected BuildRuleType getType() {
+      return BuildRuleType.PRE_DEX;
+    }
+
+    @Override
+    protected Buildable newBuildable(
+        BuildRuleParams params, BuildRuleResolver resolver) {
+      return new DexProducedFromJavaLibrary(buildTarget, javaLibrary);
+    }
+
+    public Builder setJavaLibraryToDex(JavaLibrary javaLibrary) {
+      this.javaLibrary = javaLibrary;
+      addDep(javaLibrary.getBuildTarget());
+      return this;
+    }
+
+    @Override
+    public Builder setBuildTarget(BuildTarget buildTarget) {
+      super.setBuildTarget(buildTarget);
+      return this;
+    }
   }
 }
