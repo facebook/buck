@@ -26,10 +26,6 @@ import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -219,41 +215,5 @@ public class DexProducedFromJavaLibrary extends AbstractBuildable
       hasher.putByte((byte)0);
     }
     return new Sha1HashCode(hasher.hash().toString());
-  }
-
-  public static Builder newBuilder(BuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildable.Builder {
-
-    private JavaLibrary javaLibrary;
-
-    protected Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    protected BuildRuleType getType() {
-      return BuildRuleType.PRE_DEX;
-    }
-
-    @Override
-    protected Buildable newBuildable(
-        BuildRuleParams params, BuildRuleResolver resolver) {
-      return new DexProducedFromJavaLibrary(buildTarget, javaLibrary);
-    }
-
-    public Builder setJavaLibraryToDex(JavaLibrary javaLibrary) {
-      this.javaLibrary = javaLibrary;
-      addDep(javaLibrary.getBuildTarget());
-      return this;
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
   }
 }

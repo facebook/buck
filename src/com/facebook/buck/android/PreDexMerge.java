@@ -22,10 +22,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -336,67 +332,5 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
   @Override
   public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
     return buildOutputInitializer;
-  }
-
-  public static Builder newPreDexMergeBuilder(BuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  static class Builder extends AbstractBuildable.Builder {
-
-    @Nullable private Path primaryDexPath;
-    @Nullable private DexSplitMode dexSplitMode;
-    @Nullable private ImmutableSet<DexProducedFromJavaLibrary> preDexDeps;
-    @Nullable private UberRDotJava uberRDotJava;
-
-
-    private Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    protected BuildRuleType getType() {
-      return BuildRuleType.DEX_MERGE;
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    public Builder setPrimaryDexPath(Path primaryDexPath) {
-      this.primaryDexPath = primaryDexPath;
-      return this;
-    }
-
-    public Builder setDexSplitMode(DexSplitMode dexSplitMode) {
-      this.dexSplitMode = dexSplitMode;
-      return this;
-    }
-
-    public Builder setPreDexDeps(ImmutableSet<DexProducedFromJavaLibrary> preDexDeps) {
-      this.preDexDeps = preDexDeps;
-      for (DexProducedFromJavaLibrary dep : preDexDeps) {
-        addDep(dep.getBuildTarget());
-      }
-      return this;
-    }
-
-    public Builder setUberRDotJava(UberRDotJava uberRDotJava) {
-      this.uberRDotJava = uberRDotJava;
-      addDep(uberRDotJava.getBuildTarget());
-      return this;
-    }
-
-    @Override
-    protected PreDexMerge newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      return new PreDexMerge(
-          buildTarget,
-          primaryDexPath,
-          dexSplitMode,
-          preDexDeps,
-          uberRDotJava);
-    }
   }
 }

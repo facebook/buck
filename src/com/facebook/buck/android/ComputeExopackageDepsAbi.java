@@ -22,11 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -190,62 +185,5 @@ public class ComputeExopackageDepsAbi
   @Override
   public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
     return buildOutputInitializer;
-  }
-
-  public static Builder newBuildableBuilder(
-      BuildRuleBuilderParams params,
-      BuildTarget buildTarget,
-      Collection<BuildRule> deps,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
-      UberRDotJava uberRDotJava,
-      AaptPackageResources aaptPackageResources,
-      Optional<PreDexMerge> preDexMerge,
-      Keystore keystore) {
-    Builder builder = new Builder(params);
-    builder.setBuildTarget(buildTarget);
-    builder.androidResourceDepsFinder = androidResourceDepsFinder;
-    builder.uberRDotJava = uberRDotJava;
-    builder.aaptPackageResources = aaptPackageResources;
-    builder.preDexMerge = preDexMerge;
-    builder.keystore = keystore;
-    for (BuildRule dep : deps) {
-      builder.addDep(dep.getBuildTarget());
-    }
-    return builder;
-  }
-
-  static class Builder extends AbstractBuildable.Builder {
-    @Nullable private AndroidResourceDepsFinder androidResourceDepsFinder;
-    @Nullable private UberRDotJava uberRDotJava;
-    @Nullable private AaptPackageResources aaptPackageResources;
-    @Nullable private Optional<PreDexMerge> preDexMerge;
-    @Nullable private Keystore keystore;
-
-    protected Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    protected BuildRuleType getType() {
-      return BuildRuleType.EXOPACKAGE_DEPS_ABI;
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    protected ComputeExopackageDepsAbi newBuildable(BuildRuleParams params,
-        BuildRuleResolver resolver) {
-      return new ComputeExopackageDepsAbi(
-          getBuildTarget(),
-          androidResourceDepsFinder,
-          uberRDotJava,
-          aaptPackageResources,
-          preDexMerge,
-          keystore);
-    }
   }
 }

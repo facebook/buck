@@ -22,13 +22,9 @@ import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -49,8 +45,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 /**
  * Buildable that is responsible for:
@@ -290,74 +284,5 @@ public class UberRDotJava extends AbstractBuildable implements
    */
   Path getPathToGeneratedRDotJavaSrcFiles() {
     return BuildTargets.getBinPath(buildTarget, "__%s_uber_rdotjava_src__");
-  }
-
-  public static Builder newUberRDotJavaBuilder(BuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  static class Builder extends AbstractBuildable.Builder {
-
-    @Nullable private FilteredResourcesProvider filteredResourcesProvider;
-    @Nullable private AndroidResourceDepsFinder androidResourceDepsFinder;
-    @Nullable private JavacOptions javacOptions;
-    private boolean rDotJavaNeedsDexing = false;
-    private boolean shouldBuildStringSourceMap = false;
-
-    private Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    protected BuildRuleType getType() {
-      return BuildRuleType.UBER_R_DOT_JAVA;
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    public Builder setFilteredResourcesProvider(
-        FilteredResourcesProvider filteredResourcesProvider) {
-      this.filteredResourcesProvider = filteredResourcesProvider;
-      return this;
-    }
-
-    public Builder setAndroidResourceDepsFinder(AndroidResourceDepsFinder resourceDepsFinder) {
-      this.androidResourceDepsFinder = resourceDepsFinder;
-      // Add the android_resource rules as deps.
-      for (HasAndroidResourceDeps dep : androidResourceDepsFinder.getAndroidResources()) {
-        addDep(dep.getBuildTarget());
-      }
-
-      return this;
-    }
-
-    public Builder setJavacOptions(JavacOptions javacOptions) {
-      this.javacOptions = javacOptions;
-      return this;
-    }
-
-    public Builder setRDotJavaNeedsDexing(boolean rDotJavaNeedsDexing) {
-      this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
-      return this;
-    }
-
-    public Builder setBuildStringSourceMap(boolean shouldBuildStringSourceMap) {
-      this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
-      return this;
-    }
-
-    @Override
-    protected UberRDotJava newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      return new UberRDotJava(buildTarget,
-          filteredResourcesProvider,
-          javacOptions,
-          androidResourceDepsFinder,
-          rDotJavaNeedsDexing,
-          shouldBuildStringSourceMap);
-    }
   }
 }

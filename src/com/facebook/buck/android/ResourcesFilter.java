@@ -18,14 +18,9 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -262,62 +257,9 @@ public class ResourcesFilter extends AbstractBuildable
     }
   }
 
-  public static Builder newResourcesFilterBuilder(BuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
   @Nullable
   @Override
   public Path getPathToOutputFile() {
     return null;
-  }
-
-  static class Builder extends AbstractBuildable.Builder {
-
-    @Nullable private ResourceCompressionMode resourceCompressionMode;
-    @Nullable private FilterResourcesStep.ResourceFilter resourceFilter;
-    @Nullable private AndroidResourceDepsFinder androidResourceDepsFinder;
-
-    protected Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    protected BuildRuleType getType() {
-      return BuildRuleType.RESOURCES_FILTER;
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    public Builder setResourceCompressionMode(ResourceCompressionMode mode) {
-      this.resourceCompressionMode = mode;
-      return this;
-    }
-
-    public Builder setResourceFilter(FilterResourcesStep.ResourceFilter resourceFilter) {
-      this.resourceFilter = resourceFilter;
-      return this;
-    }
-
-    public Builder setAndroidResourceDepsFinder(AndroidResourceDepsFinder resourceDepsFinder) {
-      this.androidResourceDepsFinder = resourceDepsFinder;
-      for (HasAndroidResourceDeps deps : androidResourceDepsFinder.getAndroidResources()) {
-        addDep(deps.getBuildTarget());
-      }
-      return this;
-    }
-
-    @Override
-    protected Buildable newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      return new ResourcesFilter(
-          buildTarget,
-          androidResourceDepsFinder,
-          resourceCompressionMode,
-          resourceFilter);
-    }
   }
 }

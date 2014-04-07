@@ -21,14 +21,9 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -64,8 +59,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 /**
  * Packages the resources using {@code aapt}.
@@ -327,73 +320,5 @@ public class AaptPackageResources extends AbstractBuildable
   @Override
   public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
     return buildOutputInitializer;
-  }
-
-  public static Builder newAaptPackageResourcesBuildableBuilder(
-      BuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  static class Builder extends AbstractBuildable.Builder {
-
-    @Nullable private SourcePath manifest;
-    @Nullable private FilteredResourcesProvider filteredResourcesProvider;
-    @Nullable private UberRDotJava uberRDotJava;
-    @Nullable private AndroidTransitiveDependencies androidTransitiveDependencies;
-    @Nullable private PackageType packageType;
-    @Nullable private ImmutableSet<TargetCpuType> cpuFilters;
-
-    private Builder(BuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    protected BuildRuleType getType() {
-      return BuildRuleType.AAPT_PACKAGE;
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    public Builder setAllParams(
-        SourcePath manifest,
-        FilteredResourcesProvider filteredResourcesProvider,
-        UberRDotJava uberRDotJava,
-        AndroidTransitiveDependencies androidTransitiveDependencies,
-        PackageType packageType,
-        ImmutableSet<TargetCpuType> cpuFilters) {
-      this.manifest = manifest;
-      this.filteredResourcesProvider = filteredResourcesProvider;
-      this.uberRDotJava = uberRDotJava;
-      this.androidTransitiveDependencies = androidTransitiveDependencies;
-      this.packageType = packageType;
-      this.cpuFilters = cpuFilters;
-
-      addDep(uberRDotJava.getBuildTarget());
-      if (manifest instanceof BuildTargetSourcePath) {
-        addDep(((BuildTargetSourcePath) manifest).getTarget());
-      }
-      for (BuildTarget nativeTarget : androidTransitiveDependencies.nativeTargetsWithAssets) {
-        addDep(nativeTarget);
-      }
-
-      return this;
-    }
-
-    @Override
-    protected AaptPackageResources newBuildable(BuildRuleParams params,
-        BuildRuleResolver resolver) {
-      return new AaptPackageResources(
-          getBuildTarget(),
-          manifest,
-          filteredResourcesProvider,
-          uberRDotJava,
-          androidTransitiveDependencies,
-          packageType,
-          cpuFilters);
-    }
   }
 }
