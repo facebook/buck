@@ -85,7 +85,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -99,9 +98,9 @@ import java.io.InputStream;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
@@ -154,16 +153,14 @@ public class ProjectGenerator {
   /**
    * Standard options for generating a combined project
    */
-  public static final Option[] COMBINED_PROJECT_OPTIONS = new Option[] {
+  public static final ImmutableSet<Option> COMBINED_PROJECT_OPTIONS = ImmutableSet.of(
       Option.GENERATE_SCHEME,
       Option.GENERATE_TARGETS_FOR_DEPENDENCIES,
-      Option.GENERATE_WORKSPACE,
-  };
+      Option.GENERATE_WORKSPACE);
 
-  public static final Option[] SEPARATED_PROJECT_OPTIONS = new Option[] {
+  public static final ImmutableSet<Option> SEPARATED_PROJECT_OPTIONS = ImmutableSet.of(
       Option.REFERENCE_EXISTING_XCCONFIGS,
-      Option.USE_SHORT_NAMES_FOR_TARGETS,
-  };
+      Option.USE_SHORT_NAMES_FOR_TARGETS);
 
   private static final ImmutableSet<String> HEADER_FILE_EXTENSIONS =
     ImmutableSet.of("h", "hh", "hpp");
@@ -197,19 +194,19 @@ public class ProjectGenerator {
 
   public ProjectGenerator(
       PartialGraph partialGraph,
-      ImmutableSet<BuildTarget> initialTargets,
+      Set<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
       ExecutionContext executionContext,
       Path outputDirectory,
       String projectName,
-      Option... options) {
-    this.partialGraph = partialGraph;
-    this.initialTargets = initialTargets;
-    this.projectFilesystem = projectFilesystem;
-    this.executionContext = executionContext;
-    this.outputDirectory = outputDirectory;
-    this.projectName = projectName;
-    this.options = Sets.immutableEnumSet(Arrays.asList(options));
+      Set<Option> options) {
+    this.partialGraph = Preconditions.checkNotNull(partialGraph);
+    this.initialTargets = ImmutableSet.copyOf(initialTargets);
+    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.executionContext = Preconditions.checkNotNull(executionContext);
+    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
+    this.projectName = Preconditions.checkNotNull(projectName);
+    this.options = ImmutableSet.copyOf(options);
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.repoRootRelativeToOutputDirectory =
