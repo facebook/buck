@@ -46,7 +46,7 @@ public class XcodeNativeDescription implements Description<XcodeNativeDescriptio
     return new XcodeNative(params, args);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     @Hint(name = "xcodeproj")
     public SourcePath projectContainerPath;
     @Hint(name = "gid")

@@ -45,7 +45,7 @@ public class KeystoreDescription implements Description<KeystoreDescription.Arg>
     return new Keystore(params.getBuildTarget(), args.store, args.properties);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     public Path store;
     public Path properties;
 

@@ -57,7 +57,7 @@ public class PrebuiltNativeLibraryDescription
     return new PrebuiltNativeLibrary(args.nativeLibs, args.isAsset.or(false), librarySources);
   }
 
-  public class Args implements ConstructorArg {
+  public static class Args implements ConstructorArg {
     public Optional<Boolean> isAsset;
     public Path nativeLibs;
 

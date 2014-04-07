@@ -45,7 +45,7 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
     return new ShTest(params.getBuildTarget(), args.test, args.labels.get());
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     public SourcePath test;
     public Optional<ImmutableSortedSet<Label>> labels;
 

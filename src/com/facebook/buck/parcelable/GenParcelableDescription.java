@@ -44,7 +44,7 @@ public class GenParcelableDescription implements Description<GenParcelableDescri
     return new GenParcelable(params, args.srcs);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     public ImmutableSortedSet<SourcePath> srcs;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }

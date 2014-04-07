@@ -42,7 +42,7 @@ public class ExportFileDescription implements Description<ExportFileDescription.
     return new ExportFile(params, args);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     public Optional<? extends SourcePath> src;
     public Optional<String> out;
   }

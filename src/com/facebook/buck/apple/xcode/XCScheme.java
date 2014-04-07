@@ -41,7 +41,7 @@ public class XCScheme {
     return buildAction;
   }
 
-  public class BuildActionEntry {
+  public static class BuildActionEntry {
     private String containerRelativePath;
     private String blueprintIdentifier;
 

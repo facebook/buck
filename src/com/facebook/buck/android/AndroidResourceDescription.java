@@ -77,7 +77,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     return paths.build();
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     public Optional<Path> res;
     public Optional<Path> assets;
     public Optional<Boolean> hasWhitelistedStrings;

@@ -49,7 +49,7 @@ public class IosBinaryDescription implements Description<IosBinaryDescription.Ar
     return TYPE;
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     /**
      * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
      */

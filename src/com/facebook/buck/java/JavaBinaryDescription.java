@@ -55,7 +55,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
         new DefaultDirectoryTraverser());
   }
 
-  public class Args implements ConstructorArg {
+  public static class Args implements ConstructorArg {
     public Optional<ImmutableSortedSet<BuildRule>> deps;
     public Optional<String> mainClass;
     public Optional<Path> manifestFile;

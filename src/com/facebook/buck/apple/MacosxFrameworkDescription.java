@@ -49,7 +49,7 @@ public class MacosxFrameworkDescription implements Description<MacosxFrameworkDe
     return new MacosxFramework(args);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     /**
      * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
      */

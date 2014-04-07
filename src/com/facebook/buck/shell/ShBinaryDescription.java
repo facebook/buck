@@ -49,7 +49,7 @@ public class ShBinaryDescription implements Description<ShBinaryDescription.Arg>
     return new ShBinary(params.getBuildTarget(), args.main, args.resources.get());
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     public Path main;
 
     public Optional<ImmutableSortedSet<BuildRule>> deps;

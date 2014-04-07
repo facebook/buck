@@ -43,7 +43,7 @@ public class XcodeProjectConfigDescription
     return new XcodeProjectConfig(args);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     public String projectName;
     public ImmutableSet<BuildRule> rules;
   }

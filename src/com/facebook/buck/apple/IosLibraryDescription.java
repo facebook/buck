@@ -49,7 +49,7 @@ public class IosLibraryDescription implements Description<IosLibraryDescription.
     return new IosLibrary(args);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     /**
      * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
      */

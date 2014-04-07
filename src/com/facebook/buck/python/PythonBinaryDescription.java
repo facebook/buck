@@ -48,7 +48,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     return new PythonBinary(args.deps.get(), args.main);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     public Path main;
 
     public Optional<ImmutableSortedSet<BuildRule>> deps;

@@ -49,7 +49,7 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
     return new IosTest(args);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     /**
      * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
      */

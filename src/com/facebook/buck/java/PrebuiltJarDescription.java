@@ -45,7 +45,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     return new PrebuiltJar(params, args.binaryJar, args.sourceJar, args.javadocUrl);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     public Path binaryJar;
     public Optional<Path> sourceJar;
     public Optional<String> javadocUrl;

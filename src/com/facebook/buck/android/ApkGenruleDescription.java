@@ -64,7 +64,7 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
         installableApk);
   }
 
-  public class Arg implements ConstructorArg {
+  public static class Arg implements ConstructorArg {
     public BuildRule apk;
 
     public String out;
