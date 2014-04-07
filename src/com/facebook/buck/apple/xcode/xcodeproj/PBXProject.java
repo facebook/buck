@@ -21,6 +21,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.dd.plist.NSDictionary;
 
 import java.util.Collections;
 import java.util.List;
@@ -93,5 +94,10 @@ public class PBXProject extends PBXContainer {
     s.addField("targets", targets);
     s.addField("buildConfigurationList", buildConfigurationList);
     s.addField("compatibilityVersion", compatibilityVersion);
+
+    NSDictionary d = new NSDictionary();
+    d.put("LastUpgradeCheck", "0510");
+
+    s.addField("attributes", d);
   }
 }
