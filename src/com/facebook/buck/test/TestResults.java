@@ -26,12 +26,9 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 
-import javax.annotation.concurrent.Immutable;
-
 /**
  * Represents the test results from multiple test cases.
  */
-@Immutable
 public class TestResults {
 
   private static final BuildTarget DUMMY_TARGET_FOR_TESTING = new BuildTarget("//foo/bar", "baz");

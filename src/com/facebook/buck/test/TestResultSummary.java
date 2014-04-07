@@ -19,7 +19,9 @@ package com.facebook.buck.test;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -27,30 +29,25 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public class TestResultSummary {
 
-  private String testCaseName;
+  private final String testCaseName;
 
-  private String testName;
+  private final String testName;
 
-  private ResultType type;
+  private final ResultType type;
 
-  private long time;
-
-  @Nullable
-  private String message;
+  private final long time;
 
   @Nullable
-  private String stacktrace;
+  private final String message;
 
   @Nullable
-  private String stdOut;
+  private final String stacktrace;
 
   @Nullable
-  private String stdErr;
+  private final String stdOut;
 
-  /**
-   * Default constructor so this class can be deserialized by Jackson.
-   */
-  public TestResultSummary() {}
+  @Nullable
+  private final String stdErr;
 
   public TestResultSummary(
       String testCaseName,
@@ -71,6 +68,27 @@ public class TestResultSummary {
     this.stdErr = stdErr;
   }
 
+  @JsonCreator
+  public static TestResultSummary fromJson(
+      @JsonProperty("testCaseName") String testCaseName,
+      @JsonProperty("testCase") String testName,
+      @JsonProperty("type") String type,
+      @JsonProperty("time") long time,
+      @JsonProperty("message") @Nullable String message,
+      @JsonProperty("stacktrace") @Nullable String stacktrace,
+      @JsonProperty("stdOut") @Nullable String stdOut,
+      @JsonProperty("stdErr") @Nullable String stdErr) {
+    return new TestResultSummary(
+        testCaseName,
+        testName,
+        ResultType.valueOf(type),
+        time,
+        message,
+        stacktrace,
+        stdOut,
+        stdErr);
+  }
+
   public String getTestName() {
     return testName;
   }
@@ -84,10 +102,6 @@ public class TestResultSummary {
   @JsonIgnore
   public boolean isSuccess() {
     return type != ResultType.FAILURE;
-  }
-
-  public void setType(String stringType) {
-    type = ResultType.valueOf(stringType);
   }
 
   public ResultType getType() {

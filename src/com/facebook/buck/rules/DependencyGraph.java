@@ -23,9 +23,6 @@ import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 
-import javax.annotation.concurrent.Immutable;
-
-@Immutable
 public class DependencyGraph extends DefaultImmutableDirectedAcyclicGraph<BuildRule> {
 
   private Map<BuildTarget, BuildRule> index;
