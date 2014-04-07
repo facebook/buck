@@ -454,7 +454,7 @@ public class HeaderMap {
     }
     putStringByte((byte) 0);
 
-    addedStrings.put(str, new Integer(offset));
+    addedStrings.put(str, offset);
     return offset;
   }
 }

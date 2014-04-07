@@ -62,7 +62,7 @@ public class XmlTestResultParser {
     for (int i = 0; i < testElements.getLength(); i++) {
       Element node = (Element)testElements.item(i);
       String testName = node.getAttribute("name");
-      long time = Long.valueOf(node.getAttribute("time"));
+      long time = Long.parseLong(node.getAttribute("time"));
       String typeString = node.getAttribute("type");
       ResultType type = ResultType.valueOf(typeString);
 

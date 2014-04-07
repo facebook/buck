@@ -210,11 +210,10 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     getStdOut().println("[");
 
     ObjectMapper mapper = new ObjectMapper();
-    Iterator<String> keySetIterator = buildIndex.keySet().iterator();
+    Iterator<BuildRule> valueIterator = buildIndex.values().iterator();
 
-    while (keySetIterator.hasNext()) {
-      String key = keySetIterator.next();
-      BuildRule buildRule = buildIndex.get(key);
+    while (valueIterator.hasNext()) {
+      BuildRule buildRule = valueIterator.next();
       BuildTarget buildTarget = buildRule.getBuildTarget();
 
       List<Map<String, Object>> rules;
@@ -273,7 +272,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         throw Throwables.propagate(e);
       }
       String output = stringWriter.getBuffer().toString();
-      if (keySetIterator.hasNext()) {
+      if (valueIterator.hasNext()) {
         output += ",";
       }
       getStdOut().println(output);
