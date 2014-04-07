@@ -351,9 +351,10 @@ public class RuleKey {
       }
       separate();
 
-      if (rule instanceof ExportDependencies) {
+      Buildable buildable = rule.getBuildable();
+      if (buildable instanceof ExportDependencies) {
         setKey("exported_deps");
-        for (BuildRule buildRule : ((ExportDependencies) rule).getExportedDeps()) {
+        for (BuildRule buildRule : ((ExportDependencies) buildable).getExportedDeps()) {
           setVal(buildRule.getRuleKey());
         }
         separate();
