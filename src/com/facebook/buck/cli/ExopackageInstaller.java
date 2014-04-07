@@ -80,6 +80,11 @@ public class ExopackageInstaller {
    */
   private static final int AGENT_PORT = 2828;
 
+  /**
+   * Maximum length of commands that can be passed to "adb shell".
+   */
+  private static final int MAX_ADB_COMMAND_SIZE = 1019;
+
   private static final boolean USE_NATIVE_AGENT = true;
 
   private final ProjectFilesystem projectFilesystem;
@@ -392,8 +397,11 @@ public class ExopackageInstaller {
             }
           }).toList();
 
-      if (!filesToDelete.isEmpty()) {
-        String command = "run-as " + packageName + " rm " + Joiner.on(' ').join(filesToDelete);
+      String commandPrefix = "run-as " + packageName + " rm ";
+      // Add a fudge factor for separators and error checking.
+      final int overhead = commandPrefix.length() + 100;
+      for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
+        String command = commandPrefix + Joiner.on(' ').join(rmArgs);
         logFine("Running: %s", command);
         AdbHelper.executeCommandWithErrorChecking(device, command);
       }
@@ -587,5 +595,33 @@ public class ExopackageInstaller {
 
   private void logFiner(String message, Object... args) {
     eventBus.post(LogEvent.finer(message, args));
+  }
+
+  /**
+   * Breaks a list of strings into groups whose total size is within some limit.
+   * Kind of like the xargs command that groups arguments to avoid maximum argument length limits.
+   * Except that the limit in adb is about 1k instead of 512k or 2M on Linux.
+   */
+  @VisibleForTesting
+  static ImmutableList<ImmutableList<String>> chunkArgs(Iterable<String> args, int sizeLimit) {
+    ImmutableList.Builder<ImmutableList<String>> topLevelBuilder = ImmutableList.builder();
+    ImmutableList.Builder<String> chunkBuilder = ImmutableList.builder();
+    int chunkSize = 0;
+    for (String arg : args) {
+      if (chunkSize + arg.length() > sizeLimit) {
+        topLevelBuilder.add(chunkBuilder.build());
+        chunkBuilder = ImmutableList.builder();
+        chunkSize = 0;
+      }
+      // We don't check for an individual arg greater than the limit.
+      // We just put it in its own chunk and hope for the best.
+      chunkBuilder.add(arg);
+      chunkSize += arg.length();
+    }
+    ImmutableList<String> tail = chunkBuilder.build();
+    if (!tail.isEmpty()) {
+      topLevelBuilder.add(tail);
+    }
+    return topLevelBuilder.build();
   }
 }

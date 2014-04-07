@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
@@ -86,5 +87,28 @@ public class ExopackageInstallerTest {
     assertEquals("/data/app/com.facebook.katana-1.apk", info.apkPath);
     assertEquals("/data/app-lib/com.facebook.katana-1", info.nativeLibPath);
     assertEquals("1640376", info.versionCode);
+  }
+
+  @Test
+  public void testChunkArgs() {
+    assertEquals(
+        ImmutableList.of(),
+        ExopackageInstaller.chunkArgs(ImmutableList.<String>of(), 8)
+    );
+
+    assertEquals(
+        ImmutableList.of(
+            ImmutableList.of("abcd", "efg")
+        ),
+        ExopackageInstaller.chunkArgs(ImmutableList.of("abcd", "efg"), 8)
+    );
+
+    assertEquals(
+        ImmutableList.of(
+            ImmutableList.of("abcd", "efg"),
+            ImmutableList.of("hijkl")
+        ),
+        ExopackageInstaller.chunkArgs(ImmutableList.of("abcd", "efg", "hijkl"), 8)
+    );
   }
 }
