@@ -203,7 +203,7 @@ public class AbstractBuildRuleTest {
         buildTarget,
         sortedDeps,
         visibilityPatterns);
-    return new AbstractBuildRule(buildRuleParams) {
+    return new AbstractBuildRule(buildRuleParams, null) {
       @Override
       public BuildRuleType getType() {
         throw new IllegalStateException("This method should not be called");

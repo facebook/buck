@@ -47,7 +47,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   public FakeTestRule(BuildRuleType type,
                       ImmutableSet<Label> labels,
                       BuildRuleParams buildRuleParams) {
-    super(buildRuleParams);
+    super(buildRuleParams, null);
     this.labels = labels;
     this.type = type;
   }

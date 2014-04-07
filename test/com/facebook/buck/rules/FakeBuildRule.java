@@ -51,7 +51,7 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   }
 
   public FakeBuildRule(BuildRuleType type, BuildRuleParams buildRuleParams) {
-    super(buildRuleParams);
+    super(buildRuleParams, null);
     this.type = Preconditions.checkNotNull(type);
   }
 

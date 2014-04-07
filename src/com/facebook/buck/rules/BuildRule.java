@@ -27,8 +27,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import javax.annotation.Nullable;
-
 // This should be Comparable<BuildRule>, but we need to also compare with PrebuiltJar (and, later,
 // the other java library rules once they've migrated to Buildable. As such, the only sane interface
 // to compare to is HasBuildTarget. Ultimately, when we collapse BuildRule and Buildable, this
@@ -50,7 +48,6 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
 
   public BuildableProperties getProperties();
 
-  @Nullable
   public Buildable getBuildable();
 
   /**

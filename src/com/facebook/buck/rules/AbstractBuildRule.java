@@ -47,16 +47,10 @@ public abstract class AbstractBuildRule implements BuildRule {
   private Iterable<Path> inputsToCompareToOutputs;
   @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
 
-
-  protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
-    this(buildRuleParams, null);
-  }
-
-  // TODO(simons): Get rid of nullable check once DoNotUseAbstractBuildable is deleted.
-  protected AbstractBuildRule(BuildRuleParams buildRuleParams, @Nullable Buildable buildable) {
+  protected AbstractBuildRule(BuildRuleParams buildRuleParams, Buildable buildable) {
     Preconditions.checkNotNull(buildRuleParams);
     this.buildTarget = buildRuleParams.getBuildTarget();
-    this.buildable = buildable == null ? getBuildable() : buildable;
+    this.buildable = buildable;
     this.deps = buildRuleParams.getDeps();
     this.visibilityPatterns = buildRuleParams.getVisibilityPatterns();
     this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();

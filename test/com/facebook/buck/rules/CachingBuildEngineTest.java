@@ -38,6 +38,8 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -138,7 +140,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     replayAll();
     String pathToOutputFile = "buck-out/gen/src/com/facebook/orca/some_file";
     List<Step> buildSteps = Lists.newArrayList();
-    AbstractBuildRule ruleToTest = createRule(
+    BuildRule ruleToTest = createRule(
         ImmutableSet.of(dep),
         ImmutableList.of(Paths.get("/dev/null")),
         buildSteps,
@@ -281,7 +283,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         return 0;
       }
     };
-    AbstractBuildRule buildRuleToTest = createRule(
+    BuildRule buildRuleToTest = createRule(
         ImmutableSet.<BuildRule>of(dep1, dep2),
         ImmutableList.of(Paths.get("/dev/null")),
         ImmutableList.of(buildStep),
@@ -494,7 +496,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         throw new UnsupportedOperationException("build step should not be executed");
       }
     };
-    BuildableAbstractCachingBuildRule buildRule = createRule(
+    BuildRule buildRule = createRule(
         /* deps */ ImmutableSet.<BuildRule>of(),
         ImmutableList.<Path>of(),
         ImmutableList.of(step),
@@ -546,7 +548,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     );
     BuildRuleSuccess success = result.get();
     assertEquals(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, success.getType());
-    assertTrue(buildRule.isInitializedFromDisk());
+    assertTrue(
+        ((BuildableAbstractCachingBuildRule) buildRule.getBuildable()).isInitializedFromDisk());
     assertTrue(
         "The entries in the zip should be extracted as a result of building the rule.",
         new File(tmp.getRoot(), "buck-out/gen/src/com/facebook/orca/orca.jar").isFile());
@@ -563,7 +566,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   // TODO(mbolin): Test what happens when the cache's methods throw an exception.
 
-  private static BuildableAbstractCachingBuildRule createRule(
+  private static BuildRule createRule(
       ImmutableSet<BuildRule> deps,
       Iterable<Path> inputs,
       List<Step> buildSteps,
@@ -586,13 +589,19 @@ public class CachingBuildEngineTest extends EasyMockSupport {
       }
     };
 
-    return new BuildableAbstractCachingBuildRule(buildRuleParams,
+    BuildableAbstractCachingBuildRule buildRule = new BuildableAbstractCachingBuildRule(
+        buildRuleParams,
         inputs,
         pathToOutputFile,
         buildSteps);
+
+    return new AbstractBuildable.AnonymousBuildRule(
+        JavaLibraryDescription.TYPE,
+        buildRule,
+        buildRuleParams);
   }
 
-  private static class BuildableAbstractCachingBuildRule extends DoNotUseAbstractBuildable
+  private static class BuildableAbstractCachingBuildRule extends AbstractBuildable
       implements InitializableFromDisk<Object> {
 
     private final Iterable<Path> inputs;
@@ -606,22 +615,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         Iterable<Path> inputs,
         @Nullable String pathToOutputFile,
         List<Step> buildSteps) {
-      super(params);
       this.inputs = inputs;
       this.pathToOutputFile = pathToOutputFile == null ? null : Paths.get(pathToOutputFile);
       this.buildSteps = buildSteps;
       this.buildOutputInitializer =
           new BuildOutputInitializer<>(params.getBuildTarget(), this);
-    }
-
-    @Override
-    public BuildRuleType getType() {
-      return JavaLibraryDescription.TYPE;
-    }
-
-    @Override
-    public Iterable<Path> getInputs() {
-      return inputs;
     }
 
     @Override
@@ -638,8 +636,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
+    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+      return builder;
+    }
+
+    @Override
     public Collection<Path> getInputsToCompareToOutput() {
-      throw new UnsupportedOperationException();
+      return ImmutableList.copyOf(inputs);
     }
 
     @Override
@@ -661,19 +664,20 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   /**
    * {@link AbstractBuildRule} that implements {@link AbiRule}.
    */
-  private static class TestAbstractCachingBuildRule extends DoNotUseAbstractBuildable
-      implements AbiRule, Buildable, InitializableFromDisk<Object> {
+  private static class TestAbstractCachingBuildRule extends AbstractBuildable
+      implements AbiRule, BuildRule, InitializableFromDisk<Object> {
 
     private static final String RULE_KEY_HASH = "bfcd53a794e7c732019e04e08b30b32e26e19d50";
     private static final String RULE_KEY_WITHOUT_DEPS_HASH =
         "efd7d450d9f1c3d9e43392dec63b1f31692305b9";
     private static final String ABI_KEY_FOR_DEPS_HASH = "92d6de0a59080284055bcde5d2923f144b216a59";
+    private final BuildTarget buildTarget;
 
     private boolean isAbiLoadedFromDisk = false;
     private final BuildOutputInitializer<Object> buildOutputInitializer;
 
     TestAbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
-      super(buildRuleParams);
+      this.buildTarget = buildRuleParams.getBuildTarget();
       this.buildOutputInitializer =
           new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
     }
@@ -690,8 +694,61 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
+    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+      return builder;
+    }
+
+    @Nullable
+    @Override
+    public Path getPathToOutputFile() {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public ImmutableSortedSet<BuildRule> getEnhancedDeps(
+        BuildRuleResolver ruleResolver) {
+      return null;
+    }
+
+    @Override
+    public BuildTarget getBuildTarget() {
+      return buildTarget;
+    }
+
+    @Override
+    public String getFullyQualifiedName() {
+      return buildTarget.getFullyQualifiedName();
+    }
+
+    @Override
     public BuildRuleType getType() {
       throw new UnsupportedOperationException("method should not be called");
+    }
+
+    @Override
+    public Buildable getBuildable() {
+      return this;
+    }
+
+    @Override
+    public ImmutableSortedSet<BuildRule> getDeps() {
+      return ImmutableSortedSet.of();
+    }
+
+    @Override
+    public ImmutableSet<BuildTargetPattern> getVisibilityPatterns() {
+      return ImmutableSet.of();
+    }
+
+    @Override
+    public boolean isVisibleTo(BuildTarget target) {
+      return false;
+    }
+
+    @Override
+    public Iterable<Path> getInputs() {
+      return ImmutableSet.of();
     }
 
     @Override
@@ -722,6 +779,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     @Override
     public Sha1HashCode getAbiKeyForDeps() {
       return new Sha1HashCode(ABI_KEY_FOR_DEPS_HASH);
+    }
+
+    @Override
+    public int compareTo(HasBuildTarget o) {
+      return 0;
     }
   }
 

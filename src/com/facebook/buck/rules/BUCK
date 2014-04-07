@@ -132,7 +132,6 @@ java_library(
     'DescribedRuleBuilder.java',
     'DescribedRuleFactory.java',
     'DirArtifactCache.java',
-    'DoNotUseAbstractBuildable.java',
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',
     'InstallableApk.java',
