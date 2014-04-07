@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.java.classes.AbstractFileLike;
 import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.ClasspathTraverser;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
@@ -26,10 +27,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
+import com.google.common.io.ByteStreams;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
@@ -38,13 +43,22 @@ import java.util.Set;
  * Alternative to {@link DefaultZipSplitter} that uses estimates from {@link DalvikStatsTool}
  * to determine how many classes to pack into a dex.
  * <p>
- * It does two passes through the .class files:
+ * It does three passes through the .class files:
  * <ul>
- *   <li>During the first pass, it uses the {@code requiredInPrimaryZip} predicate to filter the set
- *       of classes that <em>must</em> be included in the primary dex. These classes are added to
- *       the primary zip.
- *   </li>During the second pass, classes that were not matched during the initial pass are added to
- *        zips as space allows. This is a simple, greedy algorithm.
+ *   <li>
+ *     During the first pass, it uses the {@code requiredInPrimaryZip} predicate to filter the set
+ *     of classes that <em>must</em> be included in the primary dex. These classes are added to
+ *     the primary zip.
+ *   </li>
+ *   <li>
+ *     During the second pass, it uses the {@code wantedInPrimaryZip} list to find classes that
+ *     were not included in the first pass but that should still be in the primary zip for
+ *     performance reasons, and adds them to the primary zip.
+ *   </li>
+ *   <li>
+ *     During the third pass, classes that were not matched during the earlier passes are added
+ *     to zips as space allows. This is a simple, greedy algorithm.
+ *   </li>
  * </ul>
  */
 public class DalvikAwareZipSplitter implements ZipSplitter {
@@ -139,7 +153,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         if (requiredInPrimaryZip.apply(relativePath)) {
           primaryOut.putEntry(entry);
         } else if (wantedInPrimaryZip.contains(relativePath)) {
-          entriesBuilder.put(relativePath, entry);
+          entriesBuilder.put(relativePath, new BufferedFileLike(entry));
         }
       }
     });
@@ -195,6 +209,48 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     @Override
     protected DalvikAwareOutputStreamHelper newZipOutput(File file) throws IOException {
       return DalvikAwareZipSplitter.this.newZipOutput(file);
+    }
+  }
+
+  private static class BufferedFileLike extends AbstractFileLike {
+    private final File container;
+    private final String relativePath;
+    private final HashCode hashCode;
+    private final byte[] contents;
+
+    public BufferedFileLike(FileLike original) throws IOException {
+      this.container = original.getContainer();
+      this.relativePath = original.getRelativePath();
+      this.hashCode = original.fastHash();
+
+      try (InputStream stream = original.getInput()) {
+        contents = ByteStreams.toByteArray(stream);
+      }
+    }
+
+    @Override
+    public File getContainer() {
+      return container;
+    }
+
+    @Override
+    public String getRelativePath() {
+      return relativePath;
+    }
+
+    @Override
+    public long getSize() {
+      return contents.length;
+    }
+
+    @Override
+    public InputStream getInput() throws IOException {
+      return new ByteArrayInputStream(contents);
+    }
+
+    @Override
+    public HashCode fastHash() throws IOException {
+      return hashCode;
     }
   }
 }
