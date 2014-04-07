@@ -31,9 +31,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.collect.TreeMultimap;
 
 import java.io.IOException;
 import java.util.List;
@@ -143,7 +143,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   int printJsonClasspath(PartialGraph partialGraph) throws IOException {
     DependencyGraph graph = partialGraph.getDependencyGraph();
     List<BuildTarget> targets = partialGraph.getTargets();
-    Multimap<String, String> targetClasspaths = TreeMultimap.create();
+    Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {
       BuildRule rule = graph.findBuildRuleByTarget(target);
