@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.Optionals;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -99,16 +98,9 @@ public class AndroidTransitiveDependencyGraph {
 
     // Include the directory of compiled R.java files on the classpath.
     ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
-    Optional<Path> pathToCompiledRDotJavaFilesOptional;
     if (!rDotJavaPackages.isEmpty()) {
       Path pathToCompiledRDotJavaFiles = uberRDotJava.getPathToCompiledRDotJavaFiles();
       pathsToDexBuilder.add(pathToCompiledRDotJavaFiles.toString());
-
-      // TODO(user): Ultimately, pathToCompiledRDotJavaFiles should be pre-dexed so that it does
-      // not need its own field in AndroidDexTransitiveDependencies.
-      pathToCompiledRDotJavaFilesOptional = Optional.of(pathToCompiledRDotJavaFiles);
-    } else {
-      pathToCompiledRDotJavaFilesOptional = Optional.absent();
     }
 
     ImmutableSet<String> noDxPaths = noDxPathsBuilder.build();
@@ -127,8 +119,7 @@ public class AndroidTransitiveDependencyGraph {
     return new AndroidDexTransitiveDependencies(
         classpathEntries,
         pathsToThirdPartyJars,
-        noDxPaths,
-        pathToCompiledRDotJavaFilesOptional);
+        noDxPaths);
   }
 
   public AndroidResourceDetails findAndroidResourceDetails(
