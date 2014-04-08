@@ -55,15 +55,13 @@ public class AaptPackageResourcesTest {
   @Test
   public void testCreateAllAssetsDirectoryWithZeroAssetsDirectories() throws IOException {
     ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
-    UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
-    EasyMock.replay(resourcesFilter, uberRDotJava);
+    EasyMock.replay(resourcesFilter);
 
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
         /* manifest */ new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
-        uberRDotJava,
         AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of());
@@ -76,7 +74,7 @@ public class AaptPackageResourcesTest {
         /* assetsDirectories */ ImmutableSet.<Path>of(),
         commands,
         new FakeProjectFilesystem());
-    EasyMock.verify(resourcesFilter, uberRDotJava);
+    EasyMock.verify(resourcesFilter);
 
     // Verify that no assets/ directory is used.
     assertFalse("There should not be an assets/ directory to pass to aapt.",
@@ -107,8 +105,7 @@ public class AaptPackageResourcesTest {
         "java/src/com/facebook/base/assets2",
         null /* nativeLibsDirectory */);
     ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
-    UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
-    EasyMock.replay(resourcesFilter, uberRDotJava);
+    EasyMock.replay(resourcesFilter);
 
     AndroidResource resourceOne = (AndroidResource) ruleResolver
         .get(BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"))
@@ -119,7 +116,6 @@ public class AaptPackageResourcesTest {
         new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
         /* manifest */ new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
-        uberRDotJava,
         AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
@@ -134,7 +130,7 @@ public class AaptPackageResourcesTest {
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
         assetsDirectories, commands, filesystem);
-    EasyMock.verify(resourcesFilter, uberRDotJava);
+    EasyMock.verify(resourcesFilter);
 
     // Verify that the existing assets/ directory will be passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());
@@ -168,15 +164,13 @@ public class AaptPackageResourcesTest {
         "facebook/base/assets2",
         null /* nativeLibsDirectory */);
     ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
-    UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
-    EasyMock.replay(resourcesFilter, uberRDotJava);
+    EasyMock.replay(resourcesFilter);
 
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//facebook/base", "apk", "aapt_package"),
         /* manifest */ new FileSourcePath("facebook/base/AndroidManifest.xml"),
         resourcesFilter,
-        uberRDotJava,
         AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
@@ -200,7 +194,7 @@ public class AaptPackageResourcesTest {
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
         assetsDirectories, commands, filesystem);
-    EasyMock.verify(resourcesFilter, uberRDotJava);
+    EasyMock.verify(resourcesFilter);
 
     // Verify that an assets/ directory will be created and passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());

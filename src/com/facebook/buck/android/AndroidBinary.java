@@ -22,6 +22,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibrary;
@@ -184,6 +185,7 @@ public class AndroidBinary extends AbstractBuildable implements
   private FilteredResourcesProvider filteredResourcesProvider;
   private UberRDotJava uberRDotJava;
   private AaptPackageResources aaptPackageResources;
+  private Optional<PackageStringAssets> packageStringAssets;
   private Optional<PreDexMerge> preDexMerge;
   private Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
 
@@ -316,6 +318,7 @@ public class AndroidBinary extends AbstractBuildable implements
     filteredResourcesProvider = result.getFilteredResourcesProvider();
     uberRDotJava = result.getUberRDotJava();
     aaptPackageResources = result.getAaptPackageResources();
+    packageStringAssets = result.getPackageStringAssets();
     preDexMerge = result.getPreDexMerge();
     computeExopackageDepsAbi = result.getComputeExopackageDepsAbi();
 
@@ -592,13 +595,36 @@ public class AndroidBinary extends AbstractBuildable implements
       nativeLibraryDirectories = ImmutableSet.of();
     }
 
+    // If non-english strings are to be stored as assets, pass them to ApkBuilder.
+    ImmutableSet.Builder<Path> zipFiles = ImmutableSet.builder();
+    zipFiles.addAll(dexFilesInfo.secondaryDexZips);
+    if (packageStringAssets.isPresent()) {
+      final Path pathToStringAssetsZip = packageStringAssets.get().getPathToStringAssetsZip();
+      zipFiles.add(pathToStringAssetsZip);
+      // TODO(user): Remove this check once we figure out what's exactly causing APKs missing
+      // string assets zip sometimes.
+      steps.add(
+          new AbstractExecutionStep("check_string_assets_zip_exists") {
+            @Override
+            public int execute(ExecutionContext context) {
+              if (!context.getProjectFilesystem().exists(pathToStringAssetsZip)) {
+                context.postEvent(LogEvent.severe(
+                        "Zip file containing non-english strings was not created: %s",
+                        pathToStringAssetsZip));
+                return 1;
+              }
+              return 0;
+            }
+          });
+    }
+
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
         aaptPackageResources.getResourceApkPath(),
         getSignedApkPath(),
         dexFilesInfo.primaryDexPath,
         /* javaResourcesDirectories */ ImmutableSet.<String>of(),
         nativeLibraryDirectories,
-        dexFilesInfo.secondaryDexZips,
+        zipFiles.build(),
         dexTransitiveDependencies.pathsToThirdPartyJars,
         keystore.getPathToStore(),
         keystore.getPathToPropertiesFile(),

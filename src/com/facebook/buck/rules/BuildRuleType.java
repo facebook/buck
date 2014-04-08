@@ -27,6 +27,8 @@ public final class BuildRuleType {
   public static final BuildRuleType PRE_DEX = new BuildRuleType("_pre_dex");
   public static final BuildRuleType DEX_MERGE = new BuildRuleType("_dex_merge");
   public static final BuildRuleType UBER_R_DOT_JAVA = new BuildRuleType("_uber_r_dot_java");
+  public static final BuildRuleType PACKAGE_STRING_ASSETS =
+      new BuildRuleType("_package_string_assets");
 
   private final String name;
   private final boolean isTestRule;

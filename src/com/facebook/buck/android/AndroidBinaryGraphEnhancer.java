@@ -53,6 +53,7 @@ public class AndroidBinaryGraphEnhancer {
   private static final String UBER_R_DOT_JAVA_FLAVOR = "uber_r_dot_java";
   private static final String AAPT_PACKAGE_FLAVOR = "aapt_package";
   private static final String CALCULATE_ABI_FLAVOR = "calculate_exopackage_abi";
+  private static final String PACKAGE_STRING_ASSETS_FLAVOR = "package_string_assets";
 
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
@@ -136,10 +137,7 @@ public class AndroidBinaryGraphEnhancer {
 
       filteredResourcesProvider = resourcesFilter;
       enhancedDeps.add(resourcesFilterBuildRule);
-      resourceRules = ImmutableSortedSet.<BuildRule>naturalOrder()
-          .addAll(resourceRules)
-          .add(resourcesFilterBuildRule)
-          .build();
+      resourceRules = ImmutableSortedSet.of(resourcesFilterBuildRule);
     } else {
       filteredResourcesProvider = new IdentityResourcesProvider(androidResourceDepsFinder);
     }
@@ -159,13 +157,29 @@ public class AndroidBinaryGraphEnhancer {
         resourceRules);
     enhancedDeps.add(uberRDotJavaBuildRule);
 
+    Optional<PackageStringAssets> packageStringAssets = Optional.absent();
+    if (resourceCompressionMode.isStoreStringsAsAssets()) {
+      BuildTarget buildTargetForPackageStringAssets =
+          createBuildTargetWithFlavor(PACKAGE_STRING_ASSETS_FLAVOR);
+      packageStringAssets = Optional.of(
+          new PackageStringAssets(
+              buildTargetForPackageStringAssets,
+              filteredResourcesProvider,
+              uberRDotJava));
+      BuildRule packageStringAssetsRule = buildRuleAndAddToIndex(
+          packageStringAssets.get(),
+          BuildRuleType.PACKAGE_STRING_ASSETS,
+          buildTargetForPackageStringAssets,
+          ImmutableSortedSet.of(uberRDotJavaBuildRule));
+      enhancedDeps.add(packageStringAssetsRule);
+    }
+
     // Create the AaptPackageResourcesBuildable.
     BuildTarget buildTargetForAapt = createBuildTargetWithFlavor(AAPT_PACKAGE_FLAVOR);
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         buildTargetForAapt,
         manifest,
         filteredResourcesProvider,
-        uberRDotJava,
         androidResourceDepsFinder.getAndroidTransitiveDependencies(),
         packageType,
         cpuFilters);
@@ -173,7 +187,7 @@ public class AndroidBinaryGraphEnhancer {
         aaptPackageResources,
         BuildRuleType.AAPT_PACKAGE,
         buildTargetForAapt,
-        getAdditionalAaptDeps(uberRDotJavaBuildRule));
+        getAdditionalAaptDeps(resourceRules));
     enhancedDeps.add(aaptPackageResourcesBuildRule);
 
     Optional<PreDexMerge> preDexMerge = Optional.absent();
@@ -193,6 +207,7 @@ public class AndroidBinaryGraphEnhancer {
               androidResourceDepsFinder,
               uberRDotJava,
               aaptPackageResources,
+              packageStringAssets,
               preDexMerge,
               keystore));
       BuildRule computeExopackageDepsAbiRule = buildRuleAndAddToIndex(
@@ -209,6 +224,7 @@ public class AndroidBinaryGraphEnhancer {
         filteredResourcesProvider,
         uberRDotJava,
         aaptPackageResources,
+        packageStringAssets,
         preDexMerge,
         computeExopackageDepsAbi,
         finalDeps);
@@ -251,7 +267,7 @@ public class AndroidBinaryGraphEnhancer {
 
       // Create the IntermediateDexRule and add it to both the ruleResolver and preDexDeps.
       DexProducedFromJavaLibrary preDex = new DexProducedFromJavaLibrary(preDexTarget, javaLibrary);
-      preDexRule = buildRuleAndAddToIndex(
+      buildRuleAndAddToIndex(
           preDex,
           BuildRuleType.PRE_DEX,
           preDexTarget,
@@ -281,6 +297,7 @@ public class AndroidBinaryGraphEnhancer {
     private final FilteredResourcesProvider filteredResourcesProvider;
     private final UberRDotJava uberRDotJava;
     private final AaptPackageResources aaptPackageResources;
+    private final Optional<PackageStringAssets> packageStringAssets;
     private final Optional<PreDexMerge> preDexMerge;
     private final Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
     private final ImmutableSortedSet<BuildRule> finalDeps;
@@ -289,12 +306,14 @@ public class AndroidBinaryGraphEnhancer {
         FilteredResourcesProvider filteredResourcesProvider,
         UberRDotJava uberRDotJava,
         AaptPackageResources aaptPackageBuildable,
+        Optional<PackageStringAssets> packageStringAssets,
         Optional<PreDexMerge> preDexMerge,
         Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
         ImmutableSortedSet<BuildRule> finalDeps) {
       this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
       this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
       this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageBuildable);
+      this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);
       this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
       this.computeExopackageDepsAbi = Preconditions.checkNotNull(computeExopackageDepsAbi);
       this.finalDeps = Preconditions.checkNotNull(finalDeps);
@@ -323,6 +342,10 @@ public class AndroidBinaryGraphEnhancer {
     public Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi() {
       return computeExopackageDepsAbi;
     }
+
+    public Optional<PackageStringAssets> getPackageStringAssets() {
+      return packageStringAssets;
+    }
   }
 
   private BuildTarget createBuildTargetWithFlavor(String flavor) {
@@ -345,9 +368,10 @@ public class AndroidBinaryGraphEnhancer {
             .toList());
   }
 
-  private ImmutableSortedSet<BuildRule> getAdditionalAaptDeps(BuildRule uberRDotJavaRule) {
+  private ImmutableSortedSet<BuildRule> getAdditionalAaptDeps(
+      ImmutableSortedSet<BuildRule> resourceRules) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .add(uberRDotJavaRule)
+        .addAll(resourceRules)
         .addAll(getTargetsAsRules(
             androidResourceDepsFinder.getAndroidTransitiveDependencies().nativeTargetsWithAssets));
     if (manifest instanceof BuildTargetSourcePath) {

@@ -16,17 +16,23 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildable;
@@ -38,6 +44,8 @@ import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.MoreAsserts;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -144,5 +152,110 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildRule preDexRule2 = depsForPreDexingIter.next();
     assertEquals("//java/com/example:lib#dex", preDexRule2.getBuildTarget().toString());
     assertNotNull(ruleResolver.get(preDexRule2.getBuildTarget()));
+  }
+
+  @Test
+  public void testAllBuildablesExceptPreDexRule() {
+    BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    BuildRuleParams originalParams = new BuildRuleParams(
+        apkTarget,
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSortedSet.<BuildTargetPattern>of(),
+        new FakeProjectFilesystem(),
+        new FakeRuleKeyBuilderFactory());
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    AndroidResourceDepsFinder depsFinder = createStrictMock(AndroidResourceDepsFinder.class);
+    expect(depsFinder.getAndroidResources()).andStubReturn(
+        ImmutableList.<HasAndroidResourceDeps>of());
+    expect(depsFinder.getAndroidTransitiveDependencies()).andStubReturn(
+        AndroidTransitiveDependencies.EMPTY);
+
+    // set it up.
+    Keystore keystore = createStrictMock(Keystore.class);
+    AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        originalParams,
+        ruleResolver,
+        ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
+        FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        depsFinder,
+        new FileSourcePath("AndroidManifest.xml"),
+        AndroidBinary.PackageType.DEBUG,
+        /* cpuFilters */ ImmutableSet.<AndroidBinary.TargetCpuType>of(),
+        /* shouldBuildStringSourceMap */ false,
+        /* shouldPreDex */ false,
+        BuildTargets.getBinPath(apkTarget, "%s/classes.dex"),
+        DexSplitMode.NO_SPLIT,
+        ImmutableSet.<BuildTarget>of(),
+        JavacOptions.DEFAULTS,
+        /* exopackage */ true,
+        keystore);
+    replay(depsFinder, keystore);
+    EnhancementResult result = graphEnhancer.createAdditionalBuildables();
+
+    ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();
+    // Verify that the only dep is computeExopackageDepsAbi
+    assertEquals(1, finalDeps.size());
+    BuildRule computeExopackageDepsAbiRule =
+        findRuleForBuilable(ruleResolver, ComputeExopackageDepsAbi.class);
+    assertEquals(computeExopackageDepsAbiRule, finalDeps.first());
+
+    FilteredResourcesProvider resourcesProvider = result.getFilteredResourcesProvider();
+    assertTrue(resourcesProvider instanceof ResourcesFilter);
+    BuildRule resourcesFilterRule = findRuleForBuilable(ruleResolver, ResourcesFilter.class);
+
+    BuildRule uberRDotJavaRule = findRuleForBuilable(ruleResolver, UberRDotJava.class);
+    MoreAsserts.assertDepends(
+        "UberRDotJava must depend on ResourcesFilter",
+        uberRDotJavaRule,
+        resourcesFilterRule);
+
+    BuildRule packageStringAssetsRule =
+        findRuleForBuilable(ruleResolver, PackageStringAssets.class);
+    MoreAsserts.assertDepends(
+        "PackageStringAssets must depend on ResourcesFilter",
+        packageStringAssetsRule,
+        uberRDotJavaRule);
+
+    BuildRule aaptPackageResourcesRule =
+        findRuleForBuilable(ruleResolver, AaptPackageResources.class);
+    MoreAsserts.assertDepends(
+        "AaptPackageResources must depend on ResourcesFilter",
+        aaptPackageResourcesRule,
+        resourcesFilterRule);
+
+    assertFalse(result.getPreDexMerge().isPresent());
+
+    MoreAsserts.assertDepends(
+        "ComputeExopackageDepsAbi must depend on ResourcesFilter",
+        computeExopackageDepsAbiRule,
+        resourcesFilterRule);
+    MoreAsserts.assertDepends(
+        "ComputeExopackageDepsAbi must depend on UberRDotJava",
+        computeExopackageDepsAbiRule,
+        uberRDotJavaRule);
+    MoreAsserts.assertDepends(
+        "ComputeExopackageDepsAbi must depend on PackageStringAssets",
+        computeExopackageDepsAbiRule,
+        packageStringAssetsRule);
+    MoreAsserts.assertDepends(
+        "ComputeExopackageDepsAbi must depend on AaptPackageResources",
+        computeExopackageDepsAbiRule,
+        aaptPackageResourcesRule);
+
+    assertTrue(result.getPackageStringAssets().isPresent());
+    assertTrue(result.getComputeExopackageDepsAbi().isPresent());
+
+    verify(depsFinder, keystore);
+  }
+
+  private BuildRule findRuleForBuilable(BuildRuleResolver ruleResolver, Class<?> buildableClass) {
+    for (BuildRule rule : ruleResolver.getBuildRules()) {
+      if (buildableClass.isAssignableFrom(rule.getBuildable().getClass())) {
+        return rule;
+      }
+    }
+    fail("Could not find builable of type " + buildableClass.getCanonicalName());
+    return null;
   }
 }
