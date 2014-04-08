@@ -50,6 +50,7 @@
     <exclude name="MethodArgumentCouldBeFinal" />
     <exclude name="RedundantFieldInitializer" />
     <exclude name="UseStringBufferForStringAppends" />
+    <exclude name="SimplifyStartsWith" />
   </rule>
 
 </ruleset>
