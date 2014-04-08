@@ -19,6 +19,7 @@ package com.facebook.buck.apple.xcode;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleBuildable;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
@@ -30,6 +31,8 @@ import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTest;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.IosTestType;
+import com.facebook.buck.apple.MacosxBinary;
+import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFramework;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.XcodeNative;
@@ -40,6 +43,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
@@ -59,6 +63,7 @@ import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
@@ -313,6 +318,9 @@ public class ProjectGenerator {
     } else if (rule.getType().equals(MacosxFrameworkDescription.TYPE)) {
       result = Optional.of((PBXTarget) generateMacosxFrameworkTarget(
               project, rule, (MacosxFramework) rule.getBuildable()));
+    } else if (rule.getType().equals(MacosxBinaryDescription.TYPE)) {
+    result = Optional.of((PBXTarget) generateMacosxBinaryTarget(
+            project, rule, (MacosxBinary) rule.getBuildable()));
     } else {
       result = Optional.absent();
     }
@@ -417,8 +425,71 @@ public class ProjectGenerator {
   private PBXNativeTarget generateIOSBinaryTarget(
       PBXProject project, BuildRule rule, IosBinary buildable)
       throws IOException {
+    PBXNativeTarget target =
+        generateBinaryTarget(project, rule, buildable, PBXTarget.ProductType.MACOSX_BINARY);
+
+    project.getTargets().add(target);
+    return target;
+  }
+
+  private PBXNativeTarget generateMacosxFrameworkTarget(
+      PBXProject project,
+      BuildRule rule,
+      MacosxFramework buildable)
+      throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
-    target.setProductType(PBXTarget.ProductType.IOS_BINARY);
+    target.setProductType(PBXTarget.ProductType.MACOSX_FRAMEWORK);
+
+    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
+
+    // -- configurations
+    setTargetBuildConfigurations(
+        rule.getBuildTarget(), target, targetGroup,
+        buildable.getConfigurations(), ImmutableMap.<String, String>of());
+
+    // -- build phases
+    // TODO(Task #3772930): Go through all dependencies of the rule
+    // and add any shell script rules here
+    addRunScriptBuildPhasesForDependencies(rule, target);
+    addSourcesAndHeadersBuildPhases(
+        target,
+        targetGroup,
+        buildable.getSrcs(),
+        buildable.getPerFileFlags());
+
+    // MacOSX frameworks actually link with libraries and other frameworks.
+    ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
+    frameworksBuilder.addAll(buildable.getFrameworks());
+    collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
+    addFrameworksBuildPhase(
+        rule.getBuildTarget(),
+        target,
+        project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
+        frameworksBuilder.build(),
+        collectRecursiveLibraryDependencies(rule));
+    addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule));
+
+    // -- products
+    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
+    String frameworkName = getProductName(rule.getBuildTarget()) + ".framework";
+    PBXFileReference productReference = new PBXFileReference(
+        frameworkName, frameworkName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
+    productsGroup.getChildren().add(productReference);
+    target.setProductReference(productReference);
+
+    project.getTargets().add(target);
+    return target;
+  }
+
+  private <BuildableBinary extends AbstractBuildable & AppleBuildable> PBXNativeTarget
+      generateBinaryTarget(
+          PBXProject project,
+          BuildRule rule,
+          BuildableBinary buildable,
+          PBXTarget.ProductType productType)
+          throws IOException {
+    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
+    target.setProductType(productType);
 
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
@@ -436,7 +507,7 @@ public class ProjectGenerator {
     // TODO(Task #3772930): Go through all dependencies of the rule
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
-    addSourcesBuildPhase(
+    addSourcesAndHeadersBuildPhases(
         target,
         targetGroup,
         buildable.getSrcs(),
@@ -462,42 +533,25 @@ public class ProjectGenerator {
     target.setProductName(productName);
     target.setProductReference(productReference);
 
-    project.getTargets().add(target);
     return target;
   }
 
-    private PBXNativeTarget generateMacosxFrameworkTarget(
-      PBXProject project,
-      BuildRule rule,
-      MacosxFramework buildable)
+  private PBXNativeTarget generateMacosxBinaryTarget(
+      PBXProject project, BuildRule rule, MacosxBinary buildable)
       throws IOException {
-    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
-    target.setProductType(PBXTarget.ProductType.MACOSX_FRAMEWORK);
+    PBXNativeTarget target =
+        generateBinaryTarget(project, rule, buildable, PBXTarget.ProductType.MACOSX_BINARY);
 
-    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
+    // Unlike an ios target, macosx targets collect their frameworks and copy them in.
+    ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
+    frameworksBuilder.addAll(buildable.getFrameworks());
+    collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
 
-    // -- configurations
-    setTargetBuildConfigurations(
-        rule.getBuildTarget(), target, targetGroup,
-        buildable.getConfigurations(), ImmutableMap.<String, String>of());
-
-    // -- build phases
-    // TODO(Task #3772930): Go through all dependencies of the rule
-    // and add any shell script rules here
-    addRunScriptBuildPhasesForDependencies(rule, target);
-    addSourcesAndHeadersBuildPhases(
+    addCopyFrameworksBuildPhase(
+        rule.getBuildTarget(),
         target,
-        targetGroup,
-        buildable.getSrcs(),
-        buildable.getPerFileFlags());
-
-    // -- products
-    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
-    String frameworkName = getProductName(rule.getBuildTarget()) + ".framework";
-    PBXFileReference productReference = new PBXFileReference(
-        frameworkName, frameworkName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
-    productsGroup.getChildren().add(productReference);
-    target.setProductReference(productReference);
+        project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
+        frameworksBuilder.build());
 
     project.getTargets().add(target);
     return target;
@@ -881,6 +935,45 @@ public class ProjectGenerator {
 
     for (PBXFileReference archive : archives) {
       frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
+    }
+  }
+
+  private void addCopyFrameworksBuildPhase(
+      BuildTarget buildTarget,
+      PBXNativeTarget target,
+      PBXGroup sharedFrameworksGroup,
+      Iterable<String> frameworks) {
+    PBXCopyFilesBuildPhase copyFrameworksBuildPhase =
+        new PBXCopyFilesBuildPhase(PBXCopyFilesBuildPhase.Destination.PRODUCTS, "Frameworks");
+    target.getBuildPhases().add(copyFrameworksBuildPhase);
+
+    for (String framework : frameworks) {
+      Path path = Paths.get(framework);
+
+      String firstElement =
+        Preconditions.checkNotNull(Iterables.getFirst(path, Paths.get(""))).toString();
+
+      if (firstElement.startsWith("$")) {
+        Optional<PBXReference.SourceTree> sourceTree =
+            PBXReference.SourceTree.fromBuildSetting(firstElement);
+        if (sourceTree.isPresent() &&
+            (sourceTree.get() == PBXReference.SourceTree.BUILT_PRODUCTS_DIR ||
+            sourceTree.get() == PBXReference.SourceTree.ABSOLUTE)) {
+          Path sdkRootRelativePath = path.subpath(1, path.getNameCount());
+          PBXFileReference fileReference =
+              sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
+                  new SourceTreePath(sourceTree.get(), sdkRootRelativePath));
+          copyFrameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+        }
+      } else {
+        // regular path
+        PBXFileReference fileReference =
+            sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.GROUP,
+                    relativizeBuckRelativePathToGeneratedProject(buildTarget, path.toString())));
+        copyFrameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+      }
     }
   }
 

@@ -36,7 +36,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-public class IosBinary extends AbstractBuildable implements AppleBuildable {
+public class MacosxBinary extends AbstractBuildable implements AppleBuildable {
 
   private final Path infoPlist;
   private final ImmutableSet<XcodeRuleConfiguration> configurations;
@@ -44,7 +44,7 @@ public class IosBinary extends AbstractBuildable implements AppleBuildable {
   private final ImmutableMap<SourcePath, String> perFileFlags;
   private final ImmutableSortedSet<String> frameworks;
 
-  public IosBinary(IosBinaryDescription.Arg arg) {
+  public MacosxBinary(MacosxBinaryDescription.Arg arg) {
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
     frameworks = Preconditions.checkNotNull(arg.frameworks);
@@ -102,7 +102,7 @@ public class IosBinary extends AbstractBuildable implements AppleBuildable {
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder;
   }
 }

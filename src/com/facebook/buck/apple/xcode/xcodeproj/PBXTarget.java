@@ -31,7 +31,8 @@ public abstract class PBXTarget extends PBXProjectItem {
     IOS_TEST_OCTEST("com.apple.product-type.bundle"),
     IOS_TEST_XCTEST("com.apple.product-type.bundle.unit-test"),
     IOS_BINARY("com.apple.product-type.application"),
-    MACOSX_FRAMEWORK("com.apple.product-type.framework");
+    MACOSX_FRAMEWORK("com.apple.product-type.framework"),
+    MACOSX_BINARY("com.apple.product-type.application");
 
     public final String identifier;
     private ProductType(String identifier) {

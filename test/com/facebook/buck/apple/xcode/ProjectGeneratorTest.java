@@ -45,11 +45,13 @@ import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTestDescription;
+import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
@@ -121,6 +123,7 @@ public class ProjectGeneratorTest {
   private IosBinaryDescription iosBinaryDescription;
   private IosResourceDescription iosResourceDescription;
   private MacosxFrameworkDescription macosxFrameworkDescription;
+  private MacosxBinaryDescription macosxBinaryDescription;
 
   @Before
   public void setUp() {
@@ -132,6 +135,7 @@ public class ProjectGeneratorTest {
     iosBinaryDescription = new IosBinaryDescription();
     iosResourceDescription = new IosResourceDescription();
     macosxFrameworkDescription = new MacosxFrameworkDescription();
+    macosxBinaryDescription = new MacosxBinaryDescription();
   }
 
   @Test
@@ -523,7 +527,7 @@ public class ProjectGeneratorTest {
     assertEquals(Optional.of("wrapper.framework"), productReference.getExplicitFileType());
 
     assertHasConfigurations(target, "Debug");
-    assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases", 4, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
         "foo.m", Optional.of("-foo"),
@@ -546,6 +550,57 @@ public class ProjectGeneratorTest {
           projectFilesystem.getRootPath().resolve("foo.h").toAbsolutePath().normalize().toString(),
           headerBuildFilePath);
     }
+  }
+
+  @Test
+  public void testMacosxBinaryRule() throws IOException {
+    BuildRule depRule = createBuildRuleWithDefaults(
+        new BuildTarget("//dep", "dep"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+    BuildRuleParams params = new FakeBuildRuleParams(
+        new BuildTarget("//foo", "binary"), ImmutableSortedSet.of(depRule));
+
+    MacosxBinaryDescription.Arg arg = macosxBinaryDescription.createUnpopulatedConstructorArg();
+    arg.infoPlist = Paths.get("Info.plist");
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
+    arg.frameworks = ImmutableSortedSet.of(
+        "$SDKROOT/SystemFramework.framework",
+        "$BUILT_PRODUCTS_DIR/LocalFramework.framework");
+
+    BuildRule rule = new DescribedRule(
+        MacosxBinaryDescription.TYPE,
+        macosxBinaryDescription.createBuildable(params, arg), params);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:binary");
+    assertHasConfigurations(target, "Debug");
+    assertEquals("Should have exact number of build phases", 5, target.getBuildPhases().size());
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target,
+        ImmutableMap.of(
+            "foo.m", Optional.of("-foo")));
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target,
+        ImmutableList.of(
+            "$SDKROOT/SystemFramework.framework",
+            "$BUILT_PRODUCTS_DIR/LocalFramework.framework",
+            // Propagated library from deps.
+            "$BUILT_PRODUCTS_DIR/libdep.a"));
+    PBXCopyFilesBuildPhase copyFrameworksBuildPhase =
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXCopyFilesBuildPhase.class);
+    PBXBuildFile frameworkFile = Iterables.getOnlyElement(copyFrameworksBuildPhase.getFiles());
+    assertEquals("LocalFramework.framework", frameworkFile.getFileRef().getName());
   }
 
   @Test
@@ -729,7 +784,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:binary");
     assertHasConfigurations(target, "Debug");
-    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases", 4, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
