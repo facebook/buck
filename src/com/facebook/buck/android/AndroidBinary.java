@@ -350,7 +350,7 @@ public class AndroidBinary extends AbstractBuildable implements
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
         .set("target", target)
         .set("keystore", keystore.getBuildTarget().getFullyQualifiedName())

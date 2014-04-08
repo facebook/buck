@@ -87,7 +87,7 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder.set("mainClass", mainClass);
   }
 

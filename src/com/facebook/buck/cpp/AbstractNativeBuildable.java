@@ -139,7 +139,7 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
         .set("compiler", getCompiler())
         .setSourcePaths("headers", headers);

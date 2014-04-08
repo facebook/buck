@@ -81,7 +81,7 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
    * @return key based on the BuildRule's state, including the transitive closure of its
    *     dependencies' keys.
    */
-  public RuleKey getRuleKey() throws IOException;
+  public RuleKey getRuleKey();
 
   /**
    * Normally, a {@link RuleKey} is a function of the {@link RuleKey} of each of its deps as well as

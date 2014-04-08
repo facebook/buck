@@ -23,8 +23,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
-import java.io.IOException;
-
 /**
  * Base class for events about build rules.
  */
@@ -64,11 +62,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
    */
   public String getRuleKeySafe() {
     String ruleKey;
-    try {
-      ruleKey = rule.getRuleKey().toString();
-    } catch (IOException e) {
-      ruleKey = "INACCESSIBLE: " + e.getMessage();
-    }
+    ruleKey = rule.getRuleKey().toString();
     return ruleKey;
   }
 
@@ -125,11 +119,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
     @Override
     public String toString() {
       RuleKey ruleKey;
-      try {
-        ruleKey = getBuildRule().getRuleKey();
-      } catch (IOException e) {
-        throw new RuntimeException("RuleKey should already be computed if this is built.", e);
-      }
+      ruleKey = getBuildRule().getRuleKey();
 
       String success = successType.isPresent() ? successType.get().toString() : "MISSING";
       return String.format("BuildRuleFinished(%s): %s %s %s %s",

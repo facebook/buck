@@ -144,7 +144,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   /**
-   * {@link #getRuleKey()} and {@link #getRuleKeyWithoutDeps()} uses this when constructing
+   * {@link BuildRule#getRuleKey()} and {@link #getRuleKeyWithoutDeps()} uses this when constructing
    * {@link RuleKey}s for this class. Every subclass that extends the rule state in a way that
    * matters to idempotency must override
    * {@link #appendToRuleKey(com.facebook.buck.rules.RuleKey.Builder)} and append its state to the
@@ -159,7 +159,7 @@ public abstract class AbstractBuildRule implements BuildRule {
    * }
    * </pre>
    */
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // For a rule that lists its inputs via a "srcs" argument, this may seem redundant, but it is
     // not. Here, the inputs are specified as InputRules, which means that the _contents_ of the
     // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
@@ -178,7 +178,7 @@ public abstract class AbstractBuildRule implements BuildRule {
    * This method should be overridden only for unit testing.
    */
   @Override
-  public RuleKey getRuleKey() throws IOException {
+  public RuleKey getRuleKey() {
     return getRuleKeyPair().getTotalRuleKey();
   }
 
@@ -191,7 +191,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     return getRuleKeyPair().getRuleKeyWithoutDeps();
   }
 
-  private RuleKey.Builder.RuleKeyPair getRuleKeyPair() throws IOException {
+  private RuleKey.Builder.RuleKeyPair getRuleKeyPair() {
     // This uses the "double-checked locking using volatile" pattern:
     // http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html.
     if (ruleKeyPair == null) {

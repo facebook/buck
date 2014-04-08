@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -82,7 +81,7 @@ public class AbiWritingAnnotationProcessingDataDecorator
       }
 
       @Override
-      public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
+      public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
         // We don't need to add any local state here since all RuleKeys change whenever
         // buck changes.
         return delegate.appendToRuleKey(builder);

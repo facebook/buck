@@ -26,7 +26,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
@@ -150,7 +149,7 @@ public class JavacOptions {
     }
   }
 
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(simons): Include bootclasspath params.
     builder.set("sourceLevel", sourceLevel)
         .set("targetLevel", targetLevel)

@@ -290,7 +290,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     dexSplitMode.appendToRuleKey("dexSplitMode", builder);
     return builder;
   }

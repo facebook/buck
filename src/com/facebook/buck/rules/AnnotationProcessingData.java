@@ -17,7 +17,6 @@ package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
@@ -45,7 +44,7 @@ public interface AnnotationProcessingData {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
       return builder;
     }
 
@@ -85,7 +84,7 @@ public interface AnnotationProcessingData {
   /**
    * Contributes state to builder.
    */
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException;
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder);
 
   /**
    * Controls whether compilation happens along with annotation processing:

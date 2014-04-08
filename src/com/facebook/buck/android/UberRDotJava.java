@@ -91,7 +91,7 @@ public class UberRDotJava extends AbstractBuildable implements
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     javacOptions.appendToRuleKey(builder);
     return builder
         .set("rDotJavaNeedsDexing", rDotJavaNeedsDexing)

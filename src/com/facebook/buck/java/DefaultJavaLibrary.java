@@ -402,7 +402,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
     return hasher;
   }
 
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder.set("postprocessClassesCommands", postprocessClassesCommands);
     return javacOptions.appendToRuleKey(builder);
   }

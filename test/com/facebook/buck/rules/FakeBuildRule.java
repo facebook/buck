@@ -94,7 +94,7 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   }
 
   @Override
-  public RuleKey getRuleKey() throws IOException {
+  public RuleKey getRuleKey() {
     if (ruleKey != null) {
       return ruleKey;
     } else {
@@ -108,7 +108,7 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     throw new IllegalStateException("This method should not be called");
   }
 

@@ -636,7 +636,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
       return builder;
     }
 
@@ -694,7 +694,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
       return builder;
     }
 

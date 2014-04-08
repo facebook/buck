@@ -87,7 +87,7 @@ public class GenAidl extends AbstractBuildable {
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
     // should incorporate which version of aidl is used.
     return builder

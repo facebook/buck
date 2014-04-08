@@ -107,7 +107,7 @@ public class AaptPackageResources extends AbstractBuildable
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
         .set("packageType", packageType.toString())
         .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString());

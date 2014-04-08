@@ -111,7 +111,7 @@ public class PythonBinary extends AbstractBuildable implements BinaryBuildRule {
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder.setInput("main", main);
   }
 

@@ -141,7 +141,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     ImmutableSortedSet<? extends BuildRule> srcUnderTest = ImmutableSortedSet.copyOf(
         sourceUnderTest);
     super.appendDetailsToRuleKey(builder)

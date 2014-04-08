@@ -33,7 +33,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
@@ -218,7 +217,7 @@ public class RuleKey {
       return setKey(key).setVal(val);
     }
 
-    public Builder set(String key, @Nullable BuildRule val) throws IOException {
+    public Builder set(String key, @Nullable BuildRule val) {
       return setKey(key).setVal(val != null ? val.getRuleKey() : null);
     }
 
@@ -247,7 +246,7 @@ public class RuleKey {
      *     implements {@link Iterable} and we want to protect against passing a single {@link Path}
      *     instead of multiple {@link Path}s.
      */
-    public Builder setInputs(String key, Iterator<Path> inputs) throws IOException {
+    public Builder setInputs(String key, Iterator<Path> inputs) {
       Preconditions.checkNotNull(key);
       Preconditions.checkNotNull(inputs);
       setKey(key);
@@ -300,8 +299,7 @@ public class RuleKey {
             .toList());
     }
 
-    public Builder set(String key, @Nullable ImmutableSortedSet<? extends BuildRule> val)
-        throws IOException {
+    public Builder set(String key, @Nullable ImmutableSortedSet<? extends BuildRule> val) {
       setKey(key);
       if (val != null) {
         for (BuildRule buildRule : val) {
@@ -340,7 +338,7 @@ public class RuleKey {
       }
     }
 
-    public RuleKeyPair build() throws IOException {
+    public RuleKeyPair build() {
       RuleKey ruleKeyWithoutDeps = new RuleKey(hasher.hash());
 
       // Now introduce the deps into the RuleKey.

@@ -54,7 +54,7 @@ public interface Buildable {
       throws IOException;
 
   // TODO(simons): Base this on the Description constructor arg, but allow optional updates.
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException;
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder);
 
   /**
    * @return the relative path to the primary output of the build rule. If non-null, this path must

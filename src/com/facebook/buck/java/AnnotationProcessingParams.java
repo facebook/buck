@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -105,7 +104,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     if (!isEmpty()) {
       // searchPathElements is not needed here since it comes from rules, which is appended below.
       String owner = (ownerTarget == null) ? null : ownerTarget.getFullyQualifiedName();
