@@ -20,13 +20,12 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Types;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
@@ -53,18 +52,7 @@ class ParamInfo implements Comparable<ParamInfo> {
     this.pythonName = determinePythonName(this.name, hint);
 
     isOptional = Optional.class.isAssignableFrom(field.getType());
-    if (isOptional) {
-      Type type = field.getGenericType();
-
-      if (type instanceof ParameterizedType) {
-        Type innerType = ((ParameterizedType) type).getActualTypeArguments()[0];
-        this.typeCoercer = typeCoercerFactory.typeCoercerForType(innerType);
-      } else {
-        throw new RuntimeException("Unexpected type parameter for Optional: " + type);
-      }
-    } else {
-      this.typeCoercer = typeCoercerFactory.typeCoercerForType(field.getGenericType());
-    }
+    this.typeCoercer = typeCoercerFactory.typeCoercerForType(Types.getFirstNonOptionalType(field));
   }
 
   public String getName() {
