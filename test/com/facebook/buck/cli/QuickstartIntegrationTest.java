@@ -119,7 +119,6 @@ public class QuickstartIntegrationTest {
         "//apps/myapp:project_config",
         "//java/com/example/activity:activity",
         "//java/com/example/activity:activity#dex",
-        "//java/com/example/activity:activity#dummy_r_dot_java",
         "//java/com/example/activity:project_config",
         "//res/com/example/activity:project_config",
         "//res/com/example/activity:res") + "\n",

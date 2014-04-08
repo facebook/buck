@@ -92,7 +92,7 @@ public class AndroidLibrary extends DefaultJavaLibrary {
         javacOptions)
         .createBuildableForAndroidResources(
             ruleResolver,
-            /* createBuildableIfEmptyDeps */ true);
+            /* createBuildableIfEmptyDeps */ false);
 
     Optional<DummyRDotJava> uberRDotJava = result.getOptionalDummyRDotJava();
     this.additionalClasspathEntries = uberRDotJava.isPresent()
