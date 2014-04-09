@@ -29,11 +29,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildable;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.FakeBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -199,7 +197,7 @@ public class BuildRuleFactoryParamsTest {
         new FakeRuleKeyBuilderFactory());
     SourcePath first = params.asSourcePath(
         "A.java",
-        new FakeBuildRuleBuilder(new FakeBuildRuleBuilderParams()));
+        new FakeBuildRuleBuilder());
 
     assertTrue(first instanceof FileSourcePath);
     assertEquals("src/com/facebook/A.java", first.asReference());
@@ -249,7 +247,7 @@ public class BuildRuleFactoryParamsTest {
     try {
       params.asSourcePath(
           "//does/not:exist",
-          new FakeBuildRuleBuilder(new FakeBuildRuleBuilderParams()));
+          new FakeBuildRuleBuilder());
       fail("Should not have succeeded");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -272,7 +270,7 @@ public class BuildRuleFactoryParamsTest {
         new FakeRuleKeyBuilderFactory());
     SourcePath first = params.asSourcePath(
         ":works",
-        new FakeBuildRuleBuilder(new FakeBuildRuleBuilderParams()));
+        new FakeBuildRuleBuilder());
     assertTrue(first instanceof BuildTargetSourcePath);
     assertEquals("//src/com/facebook:works", first.asReference());
   }
@@ -368,8 +366,7 @@ public class BuildRuleFactoryParamsTest {
   private static class FakeBuildRuleBuilder
       extends AbstractBuildRuleBuilder<AbstractBuildable.AnonymousBuildRule> {
 
-    protected FakeBuildRuleBuilder(BuildRuleBuilderParams params) {
-      super(params);
+    protected FakeBuildRuleBuilder() {
     }
 
     @Override
