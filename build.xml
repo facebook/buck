@@ -319,6 +319,25 @@
     </checkstyle>
   </target>
 
+    <!--
+  Runs checkstyle on the file(s) specified in the property "lint.files",
+  separated by commas.
+  -->
+  <target name="checkstyle-xml">
+    <taskdef resource="checkstyletask.properties"
+           classpathref="checkstyle-classpath"/>
+    <checkstyle config="checkstyle.xml">
+      <formatter type="xml" toFile="${lint.outputpath}" />
+      <fileset dir="${src.dir}">
+        <include name="**/*.java"/>
+      </fileset>
+      <fileset dir="${test.dir}">
+        <include name="**/*.java"/>
+        <exclude name="**/testdata/**"/>
+      </fileset>
+    </checkstyle>
+  </target>
+
   <!--
   Runs checkstyle on all source and test files.
   -->
