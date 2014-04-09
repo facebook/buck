@@ -136,7 +136,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
         return false;
       }
 
-      Finished that = (Finished)o;
+      Finished that = (Finished) o;
       return Objects.equal(getStatus(), that.getStatus()) &&
           Objects.equal(getCacheResult(), that.getCacheResult()) &&
           Objects.equal(getSuccessType(), that.getSuccessType());

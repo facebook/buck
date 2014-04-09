@@ -142,7 +142,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
     PrintStream out = console.getStdOut();
 
     for (Map<String, Object> rawRule : rawRules) {
-      String type = (String)rawRule.get(TYPE_PROPERTY_NAME);
+      String type = (String) rawRule.get(TYPE_PROPERTY_NAME);
       if (!includeType.apply(type)) {
         continue;
       }
@@ -199,7 +199,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
       StringBuilder out = new StringBuilder("[\n");
 
       String indent = Strings.repeat(INDENT, 2);
-      for (Object item : (List<?>)value) {
+      for (Object item : (List<?>) value) {
         out.append(indent).append(createDisplayString(item)).append(",\n");
       }
 

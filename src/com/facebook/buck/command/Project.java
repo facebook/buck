@@ -1052,7 +1052,7 @@ public class Project {
       if (!(obj instanceof SourceFolder)) {
         return false;
       }
-      SourceFolder that = (SourceFolder)obj;
+      SourceFolder that = (SourceFolder) obj;
       return Objects.equal(this.url, that.url)
           && Objects.equal(this.isTestSource, that.isTestSource)
           && Objects.equal(this.packagePrefix, that.packagePrefix);

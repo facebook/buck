@@ -51,7 +51,7 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
       return false;
     }
 
-    InstallEvent that = (InstallEvent)event;
+    InstallEvent that = (InstallEvent) event;
 
     return Objects.equal(getBuildTarget(), that.getBuildTarget());
   }

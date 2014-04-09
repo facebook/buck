@@ -71,7 +71,7 @@ public class BuildCommandOptionsTest {
     CmdLineParserAdditionalOptions parser = new CmdLineParserAdditionalOptions(options);
     parser.parseArgument();
 
-    int expected = (int)(Runtime.getRuntime().availableProcessors() * 1.25);
+    int expected = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
 
     assertEquals(expected, options.getNumThreads());
   }

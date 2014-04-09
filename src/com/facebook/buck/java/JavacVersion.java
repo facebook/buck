@@ -36,7 +36,7 @@ public class JavacVersion {
     if (!(o instanceof JavacVersion)) {
       return false;
     }
-    JavacVersion that = (JavacVersion)o;
+    JavacVersion that = (JavacVersion) o;
     return this.version.equals(that.version);
   }
 

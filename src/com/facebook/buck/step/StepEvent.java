@@ -59,7 +59,7 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
       return false;
     }
 
-    StepEvent that = (StepEvent)event;
+    StepEvent that = (StepEvent) event;
 
     return Objects.equal(getStep(), that.getStep());
   }

@@ -73,7 +73,7 @@ public final class Sha1HashCode {
       return false;
     }
 
-    Sha1HashCode that = (Sha1HashCode)obj;
+    Sha1HashCode that = (Sha1HashCode) obj;
     return Objects.equal(this.hash, that.hash);
   }
 

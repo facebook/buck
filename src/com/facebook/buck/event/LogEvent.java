@@ -88,7 +88,7 @@ public class LogEvent extends AbstractBuckEvent {
       return false;
     }
 
-    LogEvent that = (LogEvent)event;
+    LogEvent that = (LogEvent) event;
 
     return Objects.equal(getLevel(), that.getLevel()) &&
         Objects.equal(getMessage(), that.getMessage());

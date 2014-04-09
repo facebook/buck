@@ -166,7 +166,7 @@ public enum Command {
     }
 
     if (closestCommand != null &&
-        ((double)minDist) / closestCommand.name().length() <= MAX_ERROR_RATIO) {
+        ((double) minDist) / closestCommand.name().length() <= MAX_ERROR_RATIO) {
       return Optional.of(closestCommand);
     }
 

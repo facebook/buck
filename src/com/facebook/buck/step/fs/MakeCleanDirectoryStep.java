@@ -56,7 +56,7 @@ public final class MakeCleanDirectoryStep extends CompositeStep {
     if (!(obj instanceof MakeCleanDirectoryStep)) {
       return false;
     }
-    MakeCleanDirectoryStep that = (MakeCleanDirectoryStep)obj;
+    MakeCleanDirectoryStep that = (MakeCleanDirectoryStep) obj;
     return Objects.equal(this.pathRelativeToProjectRoot, that.pathRelativeToProjectRoot);
   }
 

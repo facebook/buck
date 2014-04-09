@@ -56,7 +56,7 @@ public final class MkdirAndSymlinkFileStep extends CompositeStep {
     if (!(obj instanceof MkdirAndSymlinkFileStep)) {
       return false;
     }
-    MkdirAndSymlinkFileStep that = (MkdirAndSymlinkFileStep)obj;
+    MkdirAndSymlinkFileStep that = (MkdirAndSymlinkFileStep) obj;
     return Objects.equal(this.source, that.source)
         && Objects.equal(this.target, that.target);
   }

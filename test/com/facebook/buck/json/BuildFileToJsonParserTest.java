@@ -114,7 +114,7 @@ public class BuildFileToJsonParserTest {
 
     ruleJson.addProperty("name", "foo");
     ruleJson.addProperty("export_deps", false);
-    ruleJson.addProperty("proguard_config", (String)null);
+    ruleJson.addProperty("proguard_config", (String) null);
     ruleJson.addProperty("source", 6);
 
     JsonArray deps = new JsonArray();

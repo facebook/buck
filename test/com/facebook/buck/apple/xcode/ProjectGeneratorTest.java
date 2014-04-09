@@ -282,20 +282,20 @@ public class ProjectGeneratorTest {
 
     assertThat(sourcesGroup.getChildren(), hasSize(2));
 
-    PBXGroup group1 = (PBXGroup)Iterables.get(sourcesGroup.getChildren(), 0);
+    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
     assertEquals("Group1", group1.getName());
     assertThat(group1.getChildren(), hasSize(2));
-    PBXFileReference fileRefFoo = (PBXFileReference)Iterables.get(group1.getChildren(), 0);
+    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("foo.m", fileRefFoo.getName());
-    PBXFileReference fileRefBar = (PBXFileReference)Iterables.get(group1.getChildren(), 1);
+    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
     assertEquals("bar.m", fileRefBar.getName());
 
-    PBXGroup group2 = (PBXGroup)Iterables.get(sourcesGroup.getChildren(), 1);
+    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
     assertEquals("Group2", group2.getName());
     assertThat(group2.getChildren(), hasSize(2));
-    PBXFileReference fileRefBaz = (PBXFileReference)Iterables.get(group2.getChildren(), 0);
+    PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
     assertEquals("baz.m", fileRefBaz.getName());
-    PBXFileReference fileRefBlech = (PBXFileReference)Iterables.get(group2.getChildren(), 1);
+    PBXFileReference fileRefBlech = (PBXFileReference) Iterables.get(group2.getChildren(), 1);
     assertEquals("blech.m", fileRefBlech.getName());
   }
 
@@ -340,20 +340,20 @@ public class ProjectGeneratorTest {
 
     assertThat(sourcesGroup.getChildren(), hasSize(2));
 
-    PBXGroup group1 = (PBXGroup)Iterables.get(sourcesGroup.getChildren(), 0);
+    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
     assertEquals("HeaderGroup1", group1.getName());
     assertThat(group1.getChildren(), hasSize(2));
-    PBXFileReference fileRefFoo = (PBXFileReference)Iterables.get(group1.getChildren(), 0);
+    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("foo.h", fileRefFoo.getName());
-    PBXFileReference fileRefBar = (PBXFileReference)Iterables.get(group1.getChildren(), 1);
+    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
     assertEquals("bar.h", fileRefBar.getName());
 
-    PBXGroup group2 = (PBXGroup)Iterables.get(sourcesGroup.getChildren(), 1);
+    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
     assertEquals("HeaderGroup2", group2.getName());
     assertThat(group2.getChildren(), hasSize(2));
-    PBXFileReference fileRefBaz = (PBXFileReference)Iterables.get(group2.getChildren(), 0);
+    PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
     assertEquals("baz.h", fileRefBaz.getName());
-    PBXFileReference fileRefBlech = (PBXFileReference)Iterables.get(group2.getChildren(), 1);
+    PBXFileReference fileRefBlech = (PBXFileReference) Iterables.get(group2.getChildren(), 1);
     assertEquals("blech.h", fileRefBlech.getName());
 
 

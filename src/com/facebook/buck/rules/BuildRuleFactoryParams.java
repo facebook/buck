@@ -306,7 +306,7 @@ public final class BuildRuleFactoryParams {
     Object value = instance.get(attributeName);
     if (value != null) {
       if (value instanceof String) {
-        return Optional.of((String)value);
+        return Optional.of((String) value);
       } else {
         throw new RuntimeException(String.format("Expected a string for %s in %s but was %s",
             attributeName,
@@ -343,7 +343,7 @@ public final class BuildRuleFactoryParams {
   public long getRequiredLongAttribute(String attributeName) {
     Object value = instance.get(attributeName);
     if (value != null && value instanceof Long) {
-      return (Long)value;
+      return (Long) value;
     } else {
       throw new RuntimeException(String.format("Expected a long for %s in %s but was %s",
           attributeName,
@@ -358,7 +358,7 @@ public final class BuildRuleFactoryParams {
     if (value == null) {
       return false;
     } else if (value instanceof Boolean) {
-      return (Boolean)value;
+      return (Boolean) value;
     } else {
       throw new RuntimeException(String.format(
           "Value for %s in %s must be either True or False",
@@ -373,7 +373,7 @@ public final class BuildRuleFactoryParams {
     Object value = instance.get(attributeName);
     if (value != null) {
       if (value instanceof List) {
-        return (List<String>)value;
+        return (List<String>) value;
       } else {
         throw new RuntimeException(String.format("Expected an array for %s in %s but was %s",
             attributeName,

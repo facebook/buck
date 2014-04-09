@@ -1039,7 +1039,8 @@ public class ProjectGenerator {
       ImmutableSet.Builder<String> frameworksBuilder) {
     for (BuildRule ruleDependency :
            getRecursiveRuleDependenciesOfType(rule, IosLibraryDescription.TYPE)) {
-      IosLibrary iosLibrary = (IosLibrary)Preconditions.checkNotNull(ruleDependency.getBuildable());
+      IosLibrary iosLibrary =
+          (IosLibrary) Preconditions.checkNotNull(ruleDependency.getBuildable());
       frameworksBuilder.addAll(iosLibrary.getFrameworks());
     }
   }

@@ -60,7 +60,7 @@ public class XmlTestResultParser {
     NodeList testElements = doc.getElementsByTagName("test");
     List<TestResultSummary> testResults = Lists.newArrayListWithCapacity(testElements.getLength());
     for (int i = 0; i < testElements.getLength(); i++) {
-      Element node = (Element)testElements.item(i);
+      Element node = (Element) testElements.item(i);
       String testName = node.getAttribute("name");
       long time = Long.parseLong(node.getAttribute("time"));
       String typeString = node.getAttribute("type");

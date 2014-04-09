@@ -333,7 +333,7 @@ public class CompileStringsStep implements Step {
         continue;
       }
 
-      NodeList itemNodes = ((Element)node).getElementsByTagName("item");
+      NodeList itemNodes = ((Element) node).getElementsByTagName("item");
       for (int j = 0; j < itemNodes.getLength(); ++j) {
         arraysMap.put(resourceId, itemNodes.item(j).getTextContent());
       }

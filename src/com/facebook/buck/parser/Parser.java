@@ -578,8 +578,10 @@ public class Parser {
 
       BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
       BuildTarget target = parseBuildTargetFromRawRule(map);
-      targetsToFile.put(target,
-          normalize(Paths.get((String)map.get("buck.base_path"))).resolve("BUCK").toAbsolutePath());
+      targetsToFile.put(
+          target,
+          normalize(Paths.get((String) map.get("buck.base_path")))
+              .resolve("BUCK").toAbsolutePath());
 
       BuildRuleFactory<?> factory = buildRuleTypes.getFactory(buildRuleType);
       if (factory == null) {
@@ -695,7 +697,7 @@ public class Parser {
    * @return the type of rule defined by the map.
    */
   private BuildRuleType parseBuildRuleTypeFromRawRule(Map<String, Object> map) {
-    String type = (String)map.get("type");
+    String type = (String) map.get("type");
     return buildRuleTypes.getBuildRuleType(type);
   }
 
@@ -704,8 +706,8 @@ public class Parser {
    * @return the build target defined by the rule.
    */
   private BuildTarget parseBuildTargetFromRawRule(Map<String, Object> map) {
-    String basePath = (String)map.get("buck.base_path");
-    String name = (String)map.get("name");
+    String basePath = (String) map.get("buck.base_path");
+    String name = (String) map.get("name");
     return new BuildTarget("//" + basePath, name);
   }
 

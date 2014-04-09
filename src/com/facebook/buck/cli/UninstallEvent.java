@@ -50,7 +50,7 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
       return false;
     }
 
-    UninstallEvent that = (UninstallEvent)event;
+    UninstallEvent that = (UninstallEvent) event;
 
     return Objects.equal(getPackageName(), that.getPackageName());
   }

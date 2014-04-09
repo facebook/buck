@@ -210,9 +210,9 @@ public class DexProducedFromJavaLibrary extends AbstractBuildable
     Hasher hasher = Hashing.sha1().newHasher();
     for (Map.Entry<String, HashCode> entry : classNames.entrySet()) {
       hasher.putUnencodedChars(entry.getKey());
-      hasher.putByte((byte)0);
+      hasher.putByte((byte) 0);
       hasher.putUnencodedChars(entry.getValue().toString());
-      hasher.putByte((byte)0);
+      hasher.putByte((byte) 0);
     }
     return new Sha1HashCode(hasher.hash().toString());
   }

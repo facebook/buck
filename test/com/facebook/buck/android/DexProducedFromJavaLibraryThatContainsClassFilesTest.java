@@ -217,17 +217,17 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     String expectedSha1 = Hashing.sha1().newHasher()
         .putUnencodedChars("com/example/Bar")
-        .putByte((byte)0)
+        .putByte((byte) 0)
         .putUnencodedChars("087b7707a5f8e0a2adf5652e3cd2072d89a197dc")
-        .putByte((byte)0)
+        .putByte((byte) 0)
         .putUnencodedChars("com/example/Baz")
-        .putByte((byte)0)
+        .putByte((byte) 0)
         .putUnencodedChars("62b1c2510840c0de55c13f66065a98a719be0f19")
-        .putByte((byte)0)
+        .putByte((byte) 0)
         .putUnencodedChars("com/example/Foo")
-        .putByte((byte)0)
+        .putByte((byte) 0)
         .putUnencodedChars("e4fccb7520b7795e632651323c63217c9f59f72a")
-        .putByte((byte)0)
+        .putByte((byte) 0)
         .hash()
         .toString();
     assertEquals(expectedSha1, observedSha1);

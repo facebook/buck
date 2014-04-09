@@ -86,10 +86,10 @@ public class AppendingHasherTest {
 
     Iterable<Hasher> hashers = ImmutableList.of(ordinaryHasher, appendingHasher);
     for (Hasher hasher : hashers) {
-      assertSame(hasher, hasher.putByte((byte)42));
+      assertSame(hasher, hasher.putByte((byte) 42));
       byte[] bytes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
       assertSame(hasher, hasher.putBytes(bytes, 2, 7));
-      assertSame(hasher, hasher.putShort((short)300));
+      assertSame(hasher, hasher.putShort((short) 300));
       assertSame(hasher, hasher.putInt(65101));
       assertSame(hasher, hasher.putLong(8_000_000_000L));
       assertSame(hasher, hasher.putFloat(3.14f));

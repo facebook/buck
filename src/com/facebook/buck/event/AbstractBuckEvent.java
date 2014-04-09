@@ -103,7 +103,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
       return false;
     }
 
-    AbstractBuckEvent that = (AbstractBuckEvent)o;
+    AbstractBuckEvent that = (AbstractBuckEvent) o;
 
     return eventsArePair(that) &&
         getThreadId() == that.getThreadId() &&

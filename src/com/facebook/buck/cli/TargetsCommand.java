@@ -230,7 +230,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       // Find the build rule information that corresponds to this build buildTarget.
       Map<String, Object> targetRule = null;
       for (Map<String, Object> rule : rules) {
-        String name = (String)rule.get("name");
+        String name = (String) rule.get("name");
         if (name.equals(buildTarget.getShortName())) {
           targetRule = rule;
           break;
@@ -341,7 +341,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     // Check that the given target is a valid target.
     for (Map<String, Object> rule : ruleObjects) {
-      String name = (String)rule.get("name");
+      String name = (String) rule.get("name");
       if (name.equals(buildTarget.getShortName())) {
         return buildTarget.getFullyQualifiedName();
       }

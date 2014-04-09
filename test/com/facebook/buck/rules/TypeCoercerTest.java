@@ -164,15 +164,15 @@ public class TypeCoercerTest {
     List<Object> objects = traversal.getObjects();
 
     assertThat(objects, Matchers.<Object>contains(ImmutableList.of(
-        sameInstance((Object)input),
-        is((Object)"foo"),
-        sameInstance((Object)input.get("foo")),
-        is((Object)"//foo:bar"),
-        is((Object)"//foo:baz"),
-        is((Object)"bar"),
-        sameInstance((Object)input.get("bar")),
-        is((Object)":bar"),
-        is((Object)"//foo:foo"))));
+        sameInstance((Object) input),
+        is((Object) "foo"),
+        sameInstance((Object) input.get("foo")),
+        is((Object) "//foo:bar"),
+        is((Object) "//foo:baz"),
+        is((Object) "bar"),
+        sameInstance((Object) input.get("bar")),
+        is((Object) ":bar"),
+        is((Object) "//foo:foo"))));
   }
 
   @Test
@@ -223,8 +223,8 @@ public class TypeCoercerTest {
     assertThat(
         traversal.getObjects(),
         Matchers.<Object>contains(ImmutableList.of(
-            sameInstance((Object)input),
-            sameInstance((Object)input.get(0)))));
+            sameInstance((Object) input),
+            sameInstance((Object) input.get(0)))));
 
     traversal = new TestTraversal();
     String input2 = "foo";

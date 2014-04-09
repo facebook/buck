@@ -57,7 +57,7 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
     if (!(o instanceof SingletonBuildTargetPattern)) {
       return false;
     }
-    SingletonBuildTargetPattern that = (SingletonBuildTargetPattern)o;
+    SingletonBuildTargetPattern that = (SingletonBuildTargetPattern) o;
     return Objects.equal(this.fullyQualifiedName, that.fullyQualifiedName);
   }
 

@@ -54,7 +54,7 @@ public class ThrowableLogEvent extends LogEvent {
       return false;
     }
 
-    ThrowableLogEvent that = (ThrowableLogEvent)event;
+    ThrowableLogEvent that = (ThrowableLogEvent) event;
 
     return super.eventsArePair(that) &&
         Objects.equal(getThrowable(), that.getThrowable());

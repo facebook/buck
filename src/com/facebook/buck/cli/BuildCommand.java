@@ -152,9 +152,9 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       // This is likely a checked exception that was caught while building a build rule.
       Throwable cause = e.getCause();
       if (cause instanceof HumanReadableException) {
-        throw ((HumanReadableException)cause);
+        throw ((HumanReadableException) cause);
       } else if (cause instanceof ExceptionWithHumanReadableMessage) {
-        throw new HumanReadableException((ExceptionWithHumanReadableMessage)cause);
+        throw new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
       } else {
         if (cause instanceof RuntimeException) {
           console.printBuildFailureWithStacktrace(e);

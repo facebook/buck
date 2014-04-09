@@ -60,7 +60,7 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
       return false;
     }
 
-    StartActivityEvent that = (StartActivityEvent)event;
+    StartActivityEvent that = (StartActivityEvent) event;
 
     return Objects.equal(getBuildTarget(), that.getBuildTarget()) &&
         Objects.equal(getActivityName(), that.getActivityName());

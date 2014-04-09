@@ -36,7 +36,7 @@ public abstract class AbstractTestRuleFactory<T extends AbstractBuildRuleBuilder
         Label label = new Label(rawLabel);
         labelBuilder.add(label);
       }
-      ((LabelsAttributeBuilder)builder).setLabels(labelBuilder.build());
+      ((LabelsAttributeBuilder) builder).setLabels(labelBuilder.build());
     }
 
     return builder;

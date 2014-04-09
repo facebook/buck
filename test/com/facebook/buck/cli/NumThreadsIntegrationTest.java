@@ -61,7 +61,7 @@ public class NumThreadsIntegrationTest {
     File buckconfig = workspace.getFile(".buckconfig");
     assertTrue(buckconfig.delete());
 
-    int numThreads = (int)(Runtime.getRuntime().availableProcessors() * 1.25);
+    int numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
     ProcessResult buildResult3 = workspace.runBuckCommand(
         "build", "//:noop", "--verbose", "10");
     assertThat(
@@ -86,7 +86,7 @@ public class NumThreadsIntegrationTest {
         "[project]",
         "  initial_targets = //:noop");
     Files.write(newBuckProject, workspace.getFile(".buckconfig"), Charsets.UTF_8);
-    int numThreads = (int)(Runtime.getRuntime().availableProcessors() * 1.25);
+    int numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
     ProcessResult buildResult2 = workspace.runBuckCommand("project", "--verbose", "10");
     assertThat(
         "Once num_threads is removed from .buckconfig, the number of threads should be " +

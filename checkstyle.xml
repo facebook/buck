@@ -33,6 +33,11 @@ page at http://checkstyle.sourceforge.net/config.html -->
     <property name="message" value='All TODOs should be named.  e.g. "TODO(royw): Refactor when v2 is released."' />
   </module>
 
+  <module name="RegexpSingleline">
+    <property name="format" value="[ \t]+$"/>
+    <property name="message" value="Lines may not have a trailing whitespace."/>
+  </module>
+
   <!-- All Java AST specific tests live under TreeWalker module. -->
   <module name="TreeWalker">
 
@@ -260,7 +265,7 @@ page at http://checkstyle.sourceforge.net/config.html -->
       <!-- Checks that commas, semicolons and typecasts are followed by
            whitespace.
       -->
-      <property name="tokens" value="COMMA, SEMI"/>
+      <property name="tokens" value="COMMA, SEMI, TYPECAST"/>
     </module>
 
     <module name="NoWhitespaceAfter">
@@ -288,6 +293,5 @@ page at http://checkstyle.sourceforge.net/config.html -->
       -->
       <property name="severity" value="warning"/>
     </module>
-
   </module>
 </module>

@@ -40,9 +40,9 @@ public class DdPlistTest {
   @Test
   public void testASCIIWriting() throws Exception {
     InputStream in = getClass().getResourceAsStream("test-files/test1.plist");
-    NSDictionary x = (NSDictionary)PropertyListParser.parse(in);
+    NSDictionary x = (NSDictionary) PropertyListParser.parse(in);
     PropertyListParser.saveAsASCII(x, outputFile);
-    NSDictionary y = (NSDictionary)PropertyListParser.parse(outputFile);
+    NSDictionary y = (NSDictionary) PropertyListParser.parse(outputFile);
     assertEquals(x, y);
   }
 

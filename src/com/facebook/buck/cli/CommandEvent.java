@@ -66,7 +66,7 @@ public abstract class CommandEvent extends AbstractBuckEvent {
       return false;
     }
 
-    CommandEvent that = (CommandEvent)event;
+    CommandEvent that = (CommandEvent) event;
 
     return Objects.equal(getCommandName(), that.getCommandName()) &&
         Objects.equal(getArgs(), that.getArgs()) &&

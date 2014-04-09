@@ -146,7 +146,7 @@ class DependentModule {
     if (!(obj instanceof DependentModule)) {
       return false;
     }
-    DependentModule that = (DependentModule)obj;
+    DependentModule that = (DependentModule) obj;
     return Objects.equal(this.target, that.target)
         && Objects.equal(this.type, that.type)
         && Objects.equal(this.scope, that.scope)

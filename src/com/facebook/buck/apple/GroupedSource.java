@@ -74,7 +74,7 @@ public class GroupedSource {
   @Override
   public boolean equals(Object other) {
     if (other instanceof GroupedSource) {
-      GroupedSource that = (GroupedSource)other;
+      GroupedSource that = (GroupedSource) other;
       return Objects.equals(this.type, that.type)
           && Objects.equals(this.sourcePath, that.sourcePath)
           && Objects.equals(this.sourceGroupName, that.sourceGroupName)

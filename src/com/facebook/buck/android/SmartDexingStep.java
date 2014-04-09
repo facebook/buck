@@ -117,7 +117,7 @@ public class SmartDexingStep implements Step {
   }
 
   static int determineOptimalThreadCount() {
-    return (int)(1.25 * Runtime.getRuntime().availableProcessors());
+    return (int) (1.25 * Runtime.getRuntime().availableProcessors());
   }
 
   @Override

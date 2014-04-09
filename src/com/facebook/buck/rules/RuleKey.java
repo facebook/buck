@@ -100,7 +100,7 @@ public class RuleKey {
     if (!(obj instanceof RuleKey)) {
       return false;
     }
-    RuleKey that = (RuleKey)obj;
+    RuleKey that = (RuleKey) obj;
     return Objects.equal(this.getHashCode(), that.getHashCode());
   }
 

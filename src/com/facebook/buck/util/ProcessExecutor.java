@@ -128,7 +128,7 @@ public class ProcessExecutor {
   @Nullable
   private static String getDataIfNotPrinted(PrintStream printStream, boolean shouldPrint) {
     if (!shouldPrint) {
-      CapturingPrintStream capturingPrintStream = (CapturingPrintStream)printStream;
+      CapturingPrintStream capturingPrintStream = (CapturingPrintStream) printStream;
       return capturingPrintStream.getContentsAsString(Charsets.US_ASCII);
     } else {
       return null;

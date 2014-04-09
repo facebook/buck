@@ -62,7 +62,7 @@ public abstract class BuildEvent extends AbstractBuckEvent {
       return false;
     }
 
-    BuildEvent that = (BuildEvent)event;
+    BuildEvent that = (BuildEvent) event;
 
     return Objects.equal(getClass(), event.getClass()) &&
         Objects.equal(getBuildTargets(), that.getBuildTargets());

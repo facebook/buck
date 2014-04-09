@@ -53,12 +53,12 @@ public class ProjectParser {
     if (!(rootObject instanceof NSDictionary)) {
       throw new HumanReadableException("Malformed Xcode project");
     }
-    NSDictionary rootDictionary = (NSDictionary)rootObject;
+    NSDictionary rootDictionary = (NSDictionary) rootObject;
     NSObject objects = rootDictionary.objectForKey("objects");
     if (!(objects instanceof NSDictionary)) {
       throw new HumanReadableException("Malformed Xcode project");
     }
-    return (NSDictionary)objects;
+    return (NSDictionary) objects;
   }
 
   /**
@@ -74,7 +74,7 @@ public class ProjectParser {
       if (!(object instanceof NSDictionary)) {
         throw new HumanReadableException("Malformed Xcode project (non-dictionary object)");
       }
-      NSDictionary objectDict = (NSDictionary)object;
+      NSDictionary objectDict = (NSDictionary) object;
       NSObject isa = objectDict.objectForKey("isa");
       if (!(isa instanceof NSString)) {
         throw new HumanReadableException("Malformed Xcode project (non-string isa)");

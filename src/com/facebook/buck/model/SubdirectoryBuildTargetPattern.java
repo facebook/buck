@@ -58,7 +58,7 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
     if (!(o instanceof SubdirectoryBuildTargetPattern)) {
       return false;
     }
-    SubdirectoryBuildTargetPattern that = (SubdirectoryBuildTargetPattern)o;
+    SubdirectoryBuildTargetPattern that = (SubdirectoryBuildTargetPattern) o;
     return Objects.equal(this.basePathWithSlash, that.basePathWithSlash);
   }
 

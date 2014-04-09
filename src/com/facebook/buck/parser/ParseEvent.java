@@ -60,7 +60,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
       return false;
     }
 
-    ParseEvent that = (ParseEvent)event;
+    ParseEvent that = (ParseEvent) event;
 
     return Objects.equal(getBuildTargets(), that.getBuildTargets());
   }
@@ -115,7 +115,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
         return false;
       }
 
-      Finished that = (Finished)obj;
+      Finished that = (Finished) obj;
       return Objects.equal(this.getGraph(), that.getGraph());
     }
 

@@ -38,7 +38,7 @@ public class Parser {
     Document doc = XmlDomParser.parse(xml);
 
     // packageName, className, creatorClass
-    Element classElement = (Element)doc.getElementsByTagName("class").item(0);
+    Element classElement = (Element) doc.getElementsByTagName("class").item(0);
     String classNameAttr = getAttribute(classElement, "name");
     int splitIndex = classNameAttr.lastIndexOf('.');
     String packageName = classNameAttr.substring(0, splitIndex);
@@ -46,13 +46,13 @@ public class Parser {
     String creatorClassName = getAttribute(classElement, "creatorClass");
 
     // imports
-    Element importsElement = (Element)doc.getElementsByTagName("imports").item(0);
+    Element importsElement = (Element) doc.getElementsByTagName("imports").item(0);
     String importsText = importsElement.getTextContent();
     Iterable<String> imports =
         Splitter.on('\n').omitEmptyStrings().trimResults().split(importsText);
 
     // defaultFieldVisibility
-    Element fieldsElement = (Element)doc.getElementsByTagName("fields").item(0);
+    Element fieldsElement = (Element) doc.getElementsByTagName("fields").item(0);
     String defaultFieldVisibility = getAttribute(fieldsElement, "defaultVisibility");
     if (defaultFieldVisibility == null) {
       defaultFieldVisibility = "private";
@@ -62,7 +62,7 @@ public class Parser {
     ImmutableList.Builder<ParcelableField> fields = ImmutableList.builder();
     NodeList fieldNodes = fieldsElement.getElementsByTagName("field");
     for (int i = 0; i < fieldNodes.getLength(); i++) {
-      Element fieldElement = (Element)fieldNodes.item(i);
+      Element fieldElement = (Element) fieldNodes.item(i);
       ParcelableField field = new ParcelableField(
           escapeJavaType(getAttribute(fieldElement, "type")),
           getAttribute(fieldElement, "name"),

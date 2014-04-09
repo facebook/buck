@@ -56,7 +56,7 @@ public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern 
     if (!(o instanceof ImmediateDirectoryBuildTargetPattern)) {
       return false;
     }
-    ImmediateDirectoryBuildTargetPattern that = (ImmediateDirectoryBuildTargetPattern)o;
+    ImmediateDirectoryBuildTargetPattern that = (ImmediateDirectoryBuildTargetPattern) o;
     return Objects.equal(this.basePathWithSlash, that.basePathWithSlash);
   }
 

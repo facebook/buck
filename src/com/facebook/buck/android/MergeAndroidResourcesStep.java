@@ -305,7 +305,7 @@ public class MergeAndroidResourcesStep implements Step {
         return false;
       }
 
-      Resource that = (Resource)obj;
+      Resource that = (Resource) obj;
       return Objects.equal(this.type, that.type) && Objects.equal(this.name, that.name);
     }
 

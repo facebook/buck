@@ -198,7 +198,7 @@ public final class BuildTarget implements Comparable<BuildTarget> {
     if (!(o instanceof BuildTarget)) {
       return false;
     }
-    BuildTarget that = (BuildTarget)o;
+    BuildTarget that = (BuildTarget) o;
     return this.fullyQualifiedName.equals(that.fullyQualifiedName);
   }
 
