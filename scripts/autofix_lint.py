@@ -42,6 +42,56 @@ class Fixer(object):
     def get_translate_function(self, translate_metadata):
         return None
 
+
+class SingleLineFixer(Fixer):
+    """Fixes lint problems that are on a single line.
+    """
+    def fix_problem_line(self, problem, line):
+        return line
+
+    def modify_result(self, result, problem):
+        return {}
+
+    def fix_it(self, problem):
+        result = []
+        line_count = 1
+        line_len_delta = 0
+        with open(problem.file_name, 'r') as file:
+            for line in file.readlines():
+                new_line = line
+                if line_count == problem.line:
+                    new_line = self.fix_problem_line(problem, line)
+                    line_len_delta = len(new_line) - len(line)
+                result.append(new_line)
+                line_count += 1
+
+        additional_metadata = self.modify_result(result, problem)
+
+        with open(problem.file_name, 'w') as file:
+            file.write(''.join(result))
+            file.truncate()
+
+        additional_metadata.update({
+            'line': problem.line,
+            'column': problem.column,
+            'line_len_delta': line_len_delta
+        })
+
+        return additional_metadata
+
+    def get_translate_function(self, translate_metadata):
+        def translateFunc(problem):
+            if (problem.line != translate_metadata['line'] or
+                        problem.column < translate_metadata['column']):
+                return problem
+            else:
+                return problem.cloneWithNewOffset(
+                    problem.line,
+                    problem.column + translate_metadata['line_len_delta'])
+
+        return translateFunc
+
+
 # Map of file names to an array of functions to apply to translate original FileIndex's to the new
 # FileIndex after
 OFFSET_FUNCTIONS=defaultdict(list)
@@ -121,7 +171,7 @@ class FixTrailingOperator(Fixer):
 
 
 @fixer
-class FixFollowedByWhitespace(Fixer):
+class FixFollowedByWhitespace(SingleLineFixer):
     """Inserts missing whitespace after a token.
     """
     def matches(self, problem):
@@ -129,39 +179,77 @@ class FixFollowedByWhitespace(Fixer):
                                   "checkstyle.checks.whitespace."
                                   "WhitespaceAfterCheck")
 
-    def fix_it(self, problem):
-        result = []
-        line_count = 1
-        with open(problem.file_name, 'r') as file:
-            for line in file.readlines():
-                new_line = line
-                if line_count == problem.line:
-                    new_line = (line[0:problem.column-1] +
-                                ' ' +
-                                line[problem.column-1:])
-                result.append(new_line)
-                line_count += 1
+    def fix_problem_line(self, problem, line):
+        return (line[0:problem.column-1] +
+                ' ' +
+                line[problem.column-1:])
 
-        with open(problem.file_name, 'w') as file:
-            file.write(''.join(result))
-            file.truncate()
 
-        return {
-            'line': problem.line,
-            'column': problem.column
-        }
+@fixer
+class FixJunit3Use(SingleLineFixer):
+    """Convert JUnit3 -> JUnit4 APIs
+    """
+    JUNIT_ASSERT_RE = re.compile('junit\.framework\.TestCase\.(fail|assert\w*)')
+
+    def matches(self, problem):
+        return (problem.message == 'The package junit.framework belongs to '
+                                   'JUnit v3. Use org.junit instead.')
+
+    def fix_problem_line(self, problem, line):
+        match = FixJunit3Use.JUNIT_ASSERT_RE.search(line)
+        if match:
+            # Update the column of the problem to be where we first matched
+            # the junit regex.
+            problem.column = match.start()
+        return FixJunit3Use.JUNIT_ASSERT_RE.sub(
+                        r"org.junit.Assert.\1",
+                        line,
+                        count=1)
+
+    def modify_result(self, result, problem):
+        additional_metadata = {}
+        if problem.column and result[problem.line].startswith('import'):
+            start_index = problem.line
+            while result[start_index].startswith('import'):
+                start_index -= 1
+
+            end_index = problem.line
+            while result[end_index].startswith('import'):
+                end_index += 1
+
+            # Hack to create a oldindex -> new index lookup.
+            offset_array = sorted(
+                xrange(start_index, end_index), key=result.__getitem__)
+
+            additional_metadata = {
+                'start_index': start_index,
+                'end_index': end_index,
+                'offset_array': offset_array
+            }
+
+            result[start_index:end_index] = sorted(
+                result[start_index:end_index])
+        return additional_metadata
 
     def get_translate_function(self, translate_metadata):
-        def translateFunc(problem):
-            if (problem.line != translate_metadata['line'] or
-                problem.column < translate_metadata['column']):
+        """If applicable, correct for sorting imports.
+        """
+        if 'start_index' in translate_metadata:
+            def translateFunc(problem):
+                if (problem.line >= translate_metadata['start_index'] and
+                            problem.line < translate_metadata['end_index']):
+                    new_line = (
+                        translate_metadata['offset_array'].index(problem.line) +
+                            translate_metadata['start_index'])
+                    return problem.cloneWithNewOffset(
+                        new_line,
+                        problem.column)
                 return problem
-            else:
-                return problem.cloneWithNewOffset(
-                    problem.line,
-                    problem.column + 1)
+            return translateFunc
 
-        return translateFunc
+        return super(FixJunit3Use, self).get_translate_function(
+            translate_metadata)
+
 
 
 def main():
@@ -178,10 +266,11 @@ def main():
     for file in root.findall('file'):
         file_name = file.get('name')
         for error in file.findall('error'):
+            column = error.get('column')
             problem = LintProblem(
                 file_name,
                 int(error.get('line')),
-                int(error.get('column')),
+                int(column or 0),
                 error.get('severity'),
                 error.get('message'),
                 error.get('source'))

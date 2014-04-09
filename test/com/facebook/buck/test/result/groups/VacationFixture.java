@@ -16,7 +16,7 @@
 
 package com.facebook.buck.test.result.groups;
 
-import static junit.framework.TestCase.fail;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;

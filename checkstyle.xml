@@ -38,6 +38,14 @@ page at http://checkstyle.sourceforge.net/config.html -->
     <property name="message" value="Lines may not have a trailing whitespace."/>
   </module>
 
+  <!-- Grabbed from
+       https://github.com/Jasig/cas/blob/master/checkstyle-rules.xml -->
+  <module name="RegexpSingleline">
+    <property name="severity" value="error"/>
+    <property name="format" value="junit.framework"/>
+    <property name="message" value="The package junit.framework belongs to JUnit v3. Use org.junit instead."/>
+  </module>
+
   <!-- All Java AST specific tests live under TreeWalker module. -->
   <module name="TreeWalker">
 

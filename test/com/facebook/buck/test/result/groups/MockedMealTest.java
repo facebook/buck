@@ -22,10 +22,10 @@ import static com.facebook.buck.test.result.groups.MockingDSL.mockLibrary;
 import static com.facebook.buck.test.result.groups.MockingDSL.mockTest;
 import static com.facebook.buck.test.result.groups.MockingDSL.passTests;
 import static com.facebook.buck.test.result.groups.MockingDSL.sourceUnderTest;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
 import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.TestRule;

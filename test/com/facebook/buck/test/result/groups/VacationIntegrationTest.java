@@ -26,9 +26,9 @@ import static com.facebook.buck.test.result.groups.VacationFixture.ResultType;
 import static com.facebook.buck.test.result.groups.VacationFixture.TestName;
 import static com.facebook.buck.test.result.groups.VacationFixture.VACATION_TEST;
 import static com.facebook.buck.test.result.groups.VacationFixture.WEEPHOTO_TEST;
-import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 
