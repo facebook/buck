@@ -84,8 +84,8 @@ public class BuildTargetParser {
 
     // Make sure the directory that contains the build file exists.
     String buildFileDirectory = baseName.substring(BUILD_RULE_PREFIX.length());
-    String buildFilePath = (buildFileDirectory.isEmpty() ? "" : buildFileDirectory + "/")
-        + BUILD_RULES_FILE_NAME;
+    String buildFilePath = (buildFileDirectory.isEmpty() ? "" : buildFileDirectory + "/") +
+        BUILD_RULES_FILE_NAME;
     if (!projectFilesystem.exists(buildFileDirectory)) {
       if (parseContext.getType() == ParseContext.Type.BUILD_FILE &&
           baseName.equals(parseContext.getBaseName())) {

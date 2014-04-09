@@ -111,8 +111,8 @@ public class GenerateShellScriptStep implements Step {
     // Create an array of paths to be symlinked.
     lines.add("SYMLINK_PATHS=(");
     for (Path path : paths) {
-      Preconditions.checkArgument(basePath.toString().isEmpty()
-          || path.startsWith(basePath), "%s should start with %s", path, basePath);
+      Preconditions.checkArgument(basePath.toString().isEmpty() ||
+          path.startsWith(basePath), "%s should start with %s", path, basePath);
 
       lines.add("  " + Escaper.escapeAsBashString(path));
     }

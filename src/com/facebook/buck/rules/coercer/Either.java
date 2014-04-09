@@ -66,8 +66,8 @@ public final class Either<LEFT, RIGHT> {
   public boolean equals(Object obj) {
     if (obj instanceof Either) {
       Either<?, ?> that = (Either<?, ?>) obj;
-      return Objects.equals(this.left, that.left)
-          && Objects.equals(this.right, that.right);
+      return Objects.equals(this.left, that.left) &&
+          Objects.equals(this.right, that.right);
     }
     return false;
   }

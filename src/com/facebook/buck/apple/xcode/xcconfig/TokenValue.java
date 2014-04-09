@@ -71,9 +71,9 @@ public class TokenValue {
     }
 
     TokenValue that = (TokenValue) other;
-    return Objects.equals(this.type, that.type)
-        && Objects.equals(this.literalValue, that.literalValue)
-        && Objects.equals(this.interpolationValue, that.interpolationValue);
+    return Objects.equals(this.type, that.type) &&
+        Objects.equals(this.literalValue, that.literalValue) &&
+        Objects.equals(this.interpolationValue, that.interpolationValue);
   }
 
   @Override

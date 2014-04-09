@@ -32,8 +32,8 @@ import java.io.IOException;
 
 public class AndroidBinaryIntegrationTest {
 
-  public static DebuggableTemporaryFolder projectFolderWithPrebuiltTargets
-      = new DebuggableTemporaryFolder();
+  public static DebuggableTemporaryFolder projectFolderWithPrebuiltTargets =
+      new DebuggableTemporaryFolder();
 
   @Rule
   public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();

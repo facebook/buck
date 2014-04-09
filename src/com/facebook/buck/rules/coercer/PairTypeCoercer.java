@@ -63,8 +63,8 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
       }
 
       Iterator<?> iterator = collection.iterator();
-      return firstTypeCoercer.traverse(iterator.next(), traversal)
-          && secondTypeCoercer.traverse(iterator.next(), traversal);
+      return firstTypeCoercer.traverse(iterator.next(), traversal) &&
+          secondTypeCoercer.traverse(iterator.next(), traversal);
     }
     return false;
   }

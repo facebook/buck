@@ -42,9 +42,9 @@ public class Condition implements Comparable<Condition> {
     }
 
     Condition that = (Condition) other;
-    return Objects.equals(this.isPrefix, that.isPrefix)
-        && Objects.equals(this.key, that.key)
-        && Objects.equals(this.value, that.value);
+    return Objects.equals(this.isPrefix, that.isPrefix) &&
+        Objects.equals(this.key, that.key) &&
+        Objects.equals(this.value, that.value);
   }
 
   @Override

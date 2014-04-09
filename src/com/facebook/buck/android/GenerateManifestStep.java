@@ -140,9 +140,9 @@ public class GenerateManifestStep implements Step {
     }
 
     GenerateManifestStep that = (GenerateManifestStep) obj;
-    return Objects.equal(this.skeletonManifestPath, that.skeletonManifestPath)
-        && Objects.equal(this.libraryManifestPaths, that.libraryManifestPaths)
-        && Objects.equal(this.outManifestPath, that.outManifestPath);
+    return Objects.equal(this.skeletonManifestPath, that.skeletonManifestPath) &&
+        Objects.equal(this.libraryManifestPaths, that.libraryManifestPaths) &&
+        Objects.equal(this.outManifestPath, that.outManifestPath);
   }
 
   @Override

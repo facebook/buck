@@ -1091,8 +1091,8 @@ public class ProjectGenerator {
    * Whether a given build rule is built by the project being generated, or being build elsewhere.
    */
   private boolean isBuiltByCurrentProject(BuildRule rule) {
-    return options.contains(Option.GENERATE_TARGETS_FOR_DEPENDENCIES)
-        || initialTargets.contains(rule.getBuildTarget());
+    return options.contains(Option.GENERATE_TARGETS_FOR_DEPENDENCIES) ||
+        initialTargets.contains(rule.getBuildTarget());
   }
 
   private static String getLibraryNameFromTargetName(String string) {

@@ -28,8 +28,8 @@ public class NoAndroidSdkException extends HumanReadableException {
 
   public NoAndroidSdkException(Throwable cause) {
     super(cause,
-        "Must define a local.properties file with a property named 'sdk.dir' "
-        + "that points to the absolute path of your Android SDK directory, "
-        + "or set ANDROID_HOME or ANDROID_SDK.");
+        "Must define a local.properties file with a property named 'sdk.dir' " +
+        "that points to the absolute path of your Android SDK directory, " +
+        "or set ANDROID_HOME or ANDROID_SDK.");
   }
 }

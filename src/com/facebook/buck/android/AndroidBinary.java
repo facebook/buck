@@ -284,9 +284,9 @@ public class AndroidBinary extends AbstractBuildable implements
       }
     };
 
-    boolean shouldPreDex = !disablePreDex
-        && PackageType.DEBUG.equals(packageType)
-        && !preprocessJavaClassesBash.isPresent();
+    boolean shouldPreDex = !disablePreDex &&
+        PackageType.DEBUG.equals(packageType) &&
+        !preprocessJavaClassesBash.isPresent();
 
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalBuildRuleParams.copyWithChangedDeps(enhancedDeps),

@@ -69,9 +69,9 @@ public class JavaTestRuleTest {
         Paths.get("src/com/facebook/nav/OtherDummyTest.java"));
     Set<String> classNames =
         JavaTest.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
-    assertEquals("Ideally, if the implementation of getClassNamesForSources() were tightened up,"
-        + " the set would not include com.facebook.feed.OtherDummyTest because"
-        + " it was not specified in sources.",
+    assertEquals("Ideally, if the implementation of getClassNamesForSources() were tightened up," +
+        " the set would not include com.facebook.feed.OtherDummyTest because" +
+        " it was not specified in sources.",
         ImmutableSet.of(
             "com.facebook.feed.DummyTest",
             "com.facebook.feed.OtherDummyTest",

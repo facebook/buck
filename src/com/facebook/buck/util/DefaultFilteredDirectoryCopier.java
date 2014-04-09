@@ -36,8 +36,8 @@ import java.util.Map;
  */
 public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
 
-  private static final DefaultFilteredDirectoryCopier instance
-      = new DefaultFilteredDirectoryCopier();
+  private static final DefaultFilteredDirectoryCopier instance =
+      new DefaultFilteredDirectoryCopier();
 
   public static DefaultFilteredDirectoryCopier getInstance() {
     return instance;

@@ -45,9 +45,9 @@ public class DependencyQuery {
    */
   @VisibleForTesting
   static final Pattern ARROW_PATTERN = Pattern.compile(
-      "\\s*(\\S+)\\s+"
-    + "-(\\d*|\\*)>"
-    + "(?:\\s+|$)(\\S*)\\s*");
+      "\\s*(\\S+)\\s+" +
+      "-(\\d*|\\*)>" +
+      "(?:\\s+|$)(\\S*)\\s*");
 
   // TODO(user): Convert build rules from strings to BuildTargets
   private final String target;

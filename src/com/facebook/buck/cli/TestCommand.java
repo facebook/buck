@@ -683,11 +683,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // TODO(user) When #3090004 and #3436849 are closed we can respect the cache again.
       isTestRunRequired = true;
     } else if (((success = cachingBuildEngine.getBuildRuleResult(
-        test.getBuildTarget())) != null)
-               && success.getType() == BuildRuleSuccess.Type.MATCHING_RULE_KEY
-               && isResultsCacheEnabled
-               && test.hasTestResultFiles(executionContext)
-               && testRuleKeyFileHelper.isRuleKeyInDir(test)) {
+        test.getBuildTarget())) != null) &&
+            success.getType() == BuildRuleSuccess.Type.MATCHING_RULE_KEY &&
+            isResultsCacheEnabled &&
+            test.hasTestResultFiles(executionContext) &&
+            testRuleKeyFileHelper.isRuleKeyInDir(test)) {
       // If this build rule's artifacts (which includes the rule's output and its test result
       // files) are up to date, then no commands are necessary to run the tests. The test result
       // files will be read from the XML files in interpretTestResults().

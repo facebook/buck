@@ -337,8 +337,8 @@ public class MergeAndroidResourcesStep implements Step {
         FluentIterable.from(symbolsFileToRDotJavaPackage.keySet())
             .transform(Functions.toStringFunction())
             .toSortedList(natural());
-    return getShortName() + " " + Joiner.on(' ').join(sortedSymbolsFiles)
-        + " -o " + pathToGeneratedJavaFiles;
+    return getShortName() + " " + Joiner.on(' ').join(sortedSymbolsFiles) +
+        " -o " + pathToGeneratedJavaFiles;
   }
 
   private static class IntEnumerator {

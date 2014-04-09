@@ -44,8 +44,8 @@ public interface DexWithClasses {
    */
   public int getSizeEstimate();
 
-  public static Function<DexProducedFromJavaLibrary, DexWithClasses> TO_DEX_WITH_CLASSES
-      = new Function<DexProducedFromJavaLibrary, DexWithClasses>() {
+  public static Function<DexProducedFromJavaLibrary, DexWithClasses> TO_DEX_WITH_CLASSES =
+      new Function<DexProducedFromJavaLibrary, DexWithClasses>() {
     @Override
     @Nullable
     public DexWithClasses apply(DexProducedFromJavaLibrary preDex) {

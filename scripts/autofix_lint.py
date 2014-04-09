@@ -39,7 +39,7 @@ class Fixer(object):
     def fix_it(self, problem):
         pass
 
-    def get_translate_function(self, problem):
+    def get_translate_function(self, translate_metadata):
         return None
 
 # Map of file names to an array of functions to apply to translate original FileIndex's to the new
@@ -61,6 +61,63 @@ FIXERS = []
 def fixer(cls):
     FIXERS.append(cls())
     return cls
+
+
+@fixer
+class FixTrailingOperator(Fixer):
+    OPERATOR_REGEX = re.compile("'(?P<operator>\S+)' "
+                                "should be on the previous line.")
+
+    """Inserts missing whitespace after a token.
+    """
+    def matches(self, problem):
+        return (problem.source == "com.puppycrawl.tools."
+                                  "checkstyle.checks.whitespace."
+                                  "OperatorWrapCheck")
+
+    def fix_it(self, problem):
+        """Inserts missing whitespace after a token.
+        """
+        result = []
+        line_count = 1
+        problem = apply_offsets(problem)
+        operator = FixTrailingOperator.OPERATOR_REGEX.match(
+            problem.message).group('operator')
+
+        line_len_delta = 0
+        with open(problem.file_name, 'r') as file:
+            for line in file.readlines():
+                new_line = line
+                if line_count == problem.line - 1:
+                    new_line = line.rstrip() + ' ' + operator + '\n'
+                elif line_count == problem.line:
+                    oldlen = len(line)
+                    new_line = re.sub(re.escape(operator) + '\s*', '', line, count=1)
+                    line_len_delta = oldlen - len(new_line)
+                result.append(new_line)
+                line_count += 1
+
+        with open(problem.file_name, 'w') as file:
+            file.write(''.join(result))
+            file.truncate()
+
+        return {
+            'line': problem.line,
+            'column': problem.column,
+            'line_len_delta': line_len_delta
+        }
+
+    def get_translate_function(self, translate_metadata):
+        def translateFunc(problem):
+            if (translate_metadata['line'] != problem.line or
+                        translate_metadata['column'] < problem.column):
+                return problem
+            else:
+                return problem.cloneWithNewOffset(
+                    problem.line,
+                    problem.column - translate_metadata['line_len_delta'])
+
+        return translateFunc
 
 
 @fixer
@@ -97,7 +154,7 @@ class FixFollowedByWhitespace(Fixer):
     def get_translate_function(self, translate_metadata):
         def translateFunc(problem):
             if (problem.line != translate_metadata['line'] or
-                        problem.column < translate_metadata['column']):
+                problem.column < translate_metadata['column']):
                 return problem
             else:
                 return problem.cloneWithNewOffset(

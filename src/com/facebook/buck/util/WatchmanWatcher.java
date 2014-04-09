@@ -77,9 +77,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   }
 
   private static String createQuery(ProjectFilesystem filesystem) {
-    return "[\"query\", \""
-        + MorePaths.absolutify(filesystem.getRootPath()).toString()
-        + "\", {\"since\": \"n:buckd\", \"fields\": [\"name\", \"exists\", \"new\"]}]";
+    return "[\"query\", \"" +
+        MorePaths.absolutify(filesystem.getRootPath()).toString() +
+        "\", {\"since\": \"n:buckd\", \"fields\": [\"name\", \"exists\", \"new\"]}]";
   }
 
   private static Supplier<Process> createProcessSupplier() {

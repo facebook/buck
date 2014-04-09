@@ -145,10 +145,10 @@ public class AppleSource {
   public boolean equals(Object other) {
     if (other instanceof AppleSource) {
       AppleSource that = (AppleSource) other;
-      return Objects.equals(this.type, that.type)
-          && Objects.equals(this.sourcePath, that.sourcePath)
-          && Objects.equals(this.sourcePathWithFlags, that.sourcePathWithFlags)
-          && Objects.equals(this.sourceGroup, that.sourceGroup);
+      return Objects.equals(this.type, that.type) &&
+          Objects.equals(this.sourcePath, that.sourcePath) &&
+          Objects.equals(this.sourcePathWithFlags, that.sourcePathWithFlags) &&
+          Objects.equals(this.sourceGroup, that.sourceGroup);
     }
     return false;
   }

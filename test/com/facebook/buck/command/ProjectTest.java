@@ -369,8 +369,8 @@ public class ProjectTest {
     // Check the dependencies.
     DependentModule guavaAsCompiledDep = DependentModule.newLibrary(
         guava.getBuildTarget(), "third_party_guava_guava_10_0_1_jar");
-    assertEquals("Important that Guava is listed as a 'COMPILED' dependency here because it is "
-        + "only listed as a 'PROVIDED' dependency earlier.",
+    assertEquals("Important that Guava is listed as a 'COMPILED' dependency here because it is " +
+        "only listed as a 'PROVIDED' dependency earlier.",
         ImmutableList.of(
             DependentModule.newSourceFolder(),
             guavaAsCompiledDep,

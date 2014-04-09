@@ -63,11 +63,11 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     // This is not terribly robust, but is sufficient for most use cases.
     if (leftTypeCoercer instanceof CollectionTypeCoercer ||
         leftTypeCoercer instanceof MapTypeCoercer) {
-      return leftTypeCoercer.traverse(object, traversal)
-          || rightTypeCoercer.traverse(object, traversal);
+      return leftTypeCoercer.traverse(object, traversal) ||
+          rightTypeCoercer.traverse(object, traversal);
     } else {
-      return rightTypeCoercer.traverse(object, traversal)
-          || leftTypeCoercer.traverse(object, traversal);
+      return rightTypeCoercer.traverse(object, traversal) ||
+          leftTypeCoercer.traverse(object, traversal);
     }
   }
 

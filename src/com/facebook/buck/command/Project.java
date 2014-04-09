@@ -376,13 +376,13 @@ public class Project {
   private Module createModuleForProjectConfig(ProjectConfig projectConfig) throws IOException {
     BuildRule projectRule = projectConfig.getProjectRule();
     Buildable buildable = projectRule.getBuildable();
-    Preconditions.checkState(projectRule instanceof JavaLibrary
-        || buildable instanceof JavaLibrary
-        || buildable instanceof JavaBinary
-        || buildable instanceof AndroidLibrary
-        || buildable instanceof AndroidResource
-        || buildable instanceof AndroidBinary
-        || buildable instanceof NdkLibrary,
+    Preconditions.checkState(projectRule instanceof JavaLibrary ||
+        buildable instanceof JavaLibrary ||
+        buildable instanceof JavaBinary ||
+        buildable instanceof AndroidLibrary ||
+        buildable instanceof AndroidResource ||
+        buildable instanceof AndroidBinary ||
+        buildable instanceof NdkLibrary,
         "project_config() does not know how to process a src_target of type %s.",
         projectRule.getType().getName());
 
@@ -826,10 +826,10 @@ public class Project {
         // Note that the only source folder for this IntelliJ module is the current directory. Thus,
         // the current directory should be treated as a source folder with test sources, but it
         // should contain the union of :lib and :test's deps as dependent modules.
-        if (isForTests
-            && depsToVisit.isEmpty()
-            && dep.getBuildTarget().getBasePath().equals(basePathForRule)
-            && !dep.equals(srcTarget)) {
+        if (isForTests &&
+            depsToVisit.isEmpty() &&
+            dep.getBuildTarget().getBasePath().equals(basePathForRule) &&
+            !dep.equals(srcTarget)) {
           depsToVisit = dep.getDeps();
         }
 
@@ -1053,9 +1053,9 @@ public class Project {
         return false;
       }
       SourceFolder that = (SourceFolder) obj;
-      return Objects.equal(this.url, that.url)
-          && Objects.equal(this.isTestSource, that.isTestSource)
-          && Objects.equal(this.packagePrefix, that.packagePrefix);
+      return Objects.equal(this.url, that.url) &&
+          Objects.equal(this.isTestSource, that.isTestSource) &&
+          Objects.equal(this.packagePrefix, that.packagePrefix);
     }
 
     @Override

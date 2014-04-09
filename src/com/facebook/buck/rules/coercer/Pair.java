@@ -49,8 +49,8 @@ public class Pair<FIRST, SECOND> {
     }
 
     Pair<?, ?> that = (Pair<?, ?>) other;
-    return Objects.equals(this.first, that.first)
-        && Objects.equals(this.second, that.second);
+    return Objects.equals(this.first, that.first) &&
+        Objects.equals(this.second, that.second);
   }
 
   @Override

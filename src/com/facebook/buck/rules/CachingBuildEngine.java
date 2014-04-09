@@ -61,8 +61,8 @@ public class CachingBuildEngine implements BuildEngine {
    * These are the values returned by {@link #build(BuildContext, BuildRule)}.
    * This must always return the same value for the build of each target.
    */
-  private final ConcurrentMap<BuildTarget, SettableFuture<BuildRuleSuccess>> results
-      = Maps.newConcurrentMap();
+  private final ConcurrentMap<BuildTarget, SettableFuture<BuildRuleSuccess>> results =
+      Maps.newConcurrentMap();
 
   private final ConcurrentMap<BuildTarget, RuleKey> ruleKeys = Maps.newConcurrentMap();
 

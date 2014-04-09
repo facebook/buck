@@ -63,8 +63,8 @@ public class XcodeRuleConfiguration {
     }
 
     XcodeRuleConfiguration that = (XcodeRuleConfiguration) o;
-    return Objects.equals(name, that.name)
-        && Objects.equals(layers, that.layers);
+    return Objects.equals(name, that.name) &&
+        Objects.equals(layers, that.layers);
   }
 
   @Override
@@ -146,9 +146,9 @@ public class XcodeRuleConfiguration {
       }
 
       Layer that = (Layer) o;
-      return Objects.equals(this.layerType, that.layerType)
-          && Objects.equals(this.path, that.path)
-          && Objects.equals(this.inlineSettings, that.inlineSettings);
+      return Objects.equals(this.layerType, that.layerType) &&
+          Objects.equals(this.path, that.path) &&
+          Objects.equals(this.inlineSettings, that.inlineSettings);
     }
 
     @Override

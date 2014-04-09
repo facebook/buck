@@ -47,9 +47,9 @@ public class PredicatedConfigValue {
     }
 
     PredicatedConfigValue that = (PredicatedConfigValue) other;
-    return Objects.equals(this.key, that.key)
-        && Objects.equals(this.conditions, that.conditions)
-        && Objects.equals(this.valueTokens, that.valueTokens);
+    return Objects.equals(this.key, that.key) &&
+        Objects.equals(this.conditions, that.conditions) &&
+        Objects.equals(this.valueTokens, that.valueTokens);
   }
 
   @Override

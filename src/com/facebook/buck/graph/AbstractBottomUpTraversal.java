@@ -55,8 +55,8 @@ public abstract class AbstractBottomUpTraversal<T, V> {
       T node = nodesToExplore.remove();
       if (visitedNodes.contains(node)) {
         Preconditions.checkState(false,
-            "The queue of nodes to explore should not contain a node that has already been"
-            + " visited.");
+            "The queue of nodes to explore should not contain a node that has already been" +
+            " visited.");
       }
 
       visit(node);

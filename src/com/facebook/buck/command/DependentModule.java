@@ -147,14 +147,14 @@ class DependentModule {
       return false;
     }
     DependentModule that = (DependentModule) obj;
-    return Objects.equal(this.target, that.target)
-        && Objects.equal(this.type, that.type)
-        && Objects.equal(this.scope, that.scope)
-        && Objects.equal(this.name, that.name)
-        && Objects.equal(this.moduleName, that.moduleName)
-        && Objects.equal(this.forTests, that.forTests)
-        && Objects.equal(this.jdkName, that.jdkName)
-        && Objects.equal(this.jdkType, that.jdkType);
+    return Objects.equal(this.target, that.target) &&
+        Objects.equal(this.type, that.type) &&
+        Objects.equal(this.scope, that.scope) &&
+        Objects.equal(this.name, that.name) &&
+        Objects.equal(this.moduleName, that.moduleName) &&
+        Objects.equal(this.forTests, that.forTests) &&
+        Objects.equal(this.jdkName, that.jdkName) &&
+        Objects.equal(this.jdkType, that.jdkType);
   }
 
   @Override

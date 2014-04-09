@@ -164,12 +164,12 @@ public class HeaderMapTest {
     assertEquals(testData[5], hmap.getMaxValueLength());
 
     assertEquals(
-        "\"QuizViewController.h\" -> "
-            + "\"/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/QuizViewController.h\"\n"
-            + "\"Quiz-Prefix.pch\" -> "
-            + "\"/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/Quiz-Prefix.pch\"\n"
-            + "\"QuizAppDelegate.h\" -> "
-            + "\"/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/QuizAppDelegate.h\"\n",
+        "\"QuizViewController.h\" -> " +
+            "\"/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/QuizViewController.h\"\n" +
+            "\"Quiz-Prefix.pch\" -> " +
+            "\"/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/Quiz-Prefix.pch\"\n" +
+            "\"QuizAppDelegate.h\" -> " +
+            "\"/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/QuizAppDelegate.h\"\n",
         hmap.toString());
 
     assertEquals(hmap.lookup("QuizViewController.h").length(), hmap.getMaxValueLength());

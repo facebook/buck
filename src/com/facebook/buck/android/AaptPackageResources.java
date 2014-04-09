@@ -174,9 +174,9 @@ public class AaptPackageResources extends AbstractBuildable
     steps.add(collectAssets);
 
     Optional<Path> assetsDirectory;
-    if (androidTransitiveDependencies.assetsDirectories.isEmpty()
-        && androidTransitiveDependencies.nativeLibAssetsDirectories.isEmpty()
-        && !isStoreStringsAsAssets()) {
+    if (androidTransitiveDependencies.assetsDirectories.isEmpty() &&
+        androidTransitiveDependencies.nativeLibAssetsDirectories.isEmpty() &&
+        !isStoreStringsAsAssets()) {
       assetsDirectory = Optional.absent();
     } else {
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
