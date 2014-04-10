@@ -62,7 +62,6 @@ import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -355,19 +354,28 @@ public class AndroidBinary extends AbstractBuildable implements
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
-        .set("target", target)
-        .set("keystore", keystore.getBuildTarget().getFullyQualifiedName())
-        .setRuleNames("classpathDeps", getClasspathDeps())
-        .set("packageType", packageType.toString())
-        .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
-        .set("optimizationPasses", optimizationPasses.transform(Functions.toStringFunction()))
-        .set("resourceCompressionMode", resourceCompressionMode.toString())
-        .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
-        .set("exopackage", exopackage)
-        .set("preprocessJavaClassesBash", preprocessJavaClassesBash)
-        .set("preprocessJavaClassesDeps", preprocessJavaClassesDeps)
-        .set("proguardJarOverride",
-            proguardJarOverride.transform(Functions.toStringFunction()));
+        .setReflectively("target", target)
+        .setReflectively("keystore", keystore.getBuildTarget())
+        .setReflectively("classpathDeps", FluentIterable
+                .from(classpathDeps)
+                .transform(new Function<BuildRule, String>() {
+                             @Override
+                             public String apply(BuildRule buildRule) {
+                               return buildRule.getFullyQualifiedName();
+                             }
+                           })
+                .toList())
+        .setReflectively("packageType", packageType)
+        .setReflectively(
+            "useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
+        .setReflectively(
+            "optimizationPasses", optimizationPasses)
+        .setReflectively("resourceCompressionMode", resourceCompressionMode)
+        .setReflectively("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters))
+        .setReflectively("exopackage", exopackage)
+        .setReflectively("preprocessJavaClassesBash", preprocessJavaClassesBash)
+        .setReflectively("preprocessJavaClassesDeps", preprocessJavaClassesDeps)
+        .setReflectively("proguardJarOverride", proguardJarOverride);
 
     for (JavaLibrary buildable : rulesToExcludeFromDex) {
       buildable.appendDetailsToRuleKey(builder);

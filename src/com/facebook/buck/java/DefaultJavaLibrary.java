@@ -403,7 +403,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
   }
 
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    builder.set("postprocessClassesCommands", postprocessClassesCommands);
+    builder.setReflectively("postprocessClassesCommands", postprocessClassesCommands);
     return javacOptions.appendToRuleKey(builder);
   }
 

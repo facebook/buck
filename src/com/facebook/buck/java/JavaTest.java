@@ -145,8 +145,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     ImmutableSortedSet<? extends BuildRule> srcUnderTest = ImmutableSortedSet.copyOf(
         sourceUnderTest);
     super.appendDetailsToRuleKey(builder)
-        .set("vmArgs", vmArgs)
-        .set("sourceUnderTest", srcUnderTest);
+        .setReflectively("vmArgs", vmArgs)
+        .setReflectively("sourceUnderTest", srcUnderTest);
     return builder;
   }
 
