@@ -27,8 +27,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Path;
-
 @Beta
 public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilder<?>>
     implements BuildRuleFactory<T> {
@@ -60,28 +58,6 @@ public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilde
     // visibility
     for (BuildTargetPattern visiBuildTargetPattern : getVisibilityPatterns(params)) {
       builder.addVisibilityPattern(visiBuildTargetPattern);
-    }
-
-    // srcs
-    if (builder instanceof SrcsAttributeBuilder) {
-      for (String src : params.getOptionalListAttribute("srcs")) {
-        Path relativePath = params.resolveFilePathRelativeToBuildFileDirectory(src);
-        ((SrcsAttributeBuilder) builder).addSrc(relativePath);
-      }
-    }
-
-    // resources
-    if (builder instanceof ResourcesAttributeBuilder) {
-      ResourcesAttributeBuilder attributeBuilder = (ResourcesAttributeBuilder) builder;
-
-      for (String resource : params.getOptionalListAttribute("resources")) {
-        // Note that if resource is a build target, then this will add the resource as a dependency.
-        // On the down side, this means that the file will appear on the classpath, but there's no
-        // elegant way (yet) to avoid this.
-        // TODO(simons): A smarter, more elegant way of adding additional deps not on the classpath.
-        SourcePath path = params.asSourcePath(resource, builder);
-        attributeBuilder.addResource(path);
-      }
     }
 
     amendBuilder(builder, params);
