@@ -23,8 +23,8 @@ import com.google.common.collect.ImmutableSet;
 import java.util.EnumSet;
 
 /**
- * Token provided by the result of {@link BuildRule#build(BuildContext)}, demonstrating that the
- * associated {@link BuildRule} was built successfully.
+ * Token provided by the result of {@link BuildEngine#build(BuildContext, BuildRule)},
+ * demonstrating that the associated {@link BuildRule} was built successfully.
  */
 public class BuildRuleSuccess {
 

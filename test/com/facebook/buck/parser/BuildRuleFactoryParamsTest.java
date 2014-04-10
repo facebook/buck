@@ -23,10 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -264,17 +261,4 @@ public class BuildRuleFactoryParamsTest {
           e.getMessage());
     }
   }
-
-  private static class FakeBuildRuleBuilder
-      extends AbstractBuildRuleBuilder<AbstractBuildable.AnonymousBuildRule> {
-
-    protected FakeBuildRuleBuilder() {
-    }
-
-    @Override
-    public AbstractBuildable.AnonymousBuildRule build(BuildRuleResolver ruleResolver) {
-      return null;
-    }
-  }
-
 }

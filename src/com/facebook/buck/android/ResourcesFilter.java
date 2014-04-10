@@ -218,6 +218,7 @@ public class ResourcesFilter extends AbstractBuildable
     return filterResourcesStepBuilder.build();
   }
 
+  @Override
   public boolean isStoreStringsAsAssets() {
     return resourceCompressionMode.isStoreStringsAsAssets();
   }

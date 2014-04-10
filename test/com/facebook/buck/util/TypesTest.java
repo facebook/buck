@@ -38,6 +38,7 @@ public class TypesTest {
 
   @Test
   public void canDetermineBaseTypeOfAPlainField() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public String field;
     }
@@ -50,6 +51,7 @@ public class TypesTest {
 
   @Test
   public void canUnwrapAnOptionalToDetermineBaseType() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Optional<String> field;
     }
@@ -62,6 +64,7 @@ public class TypesTest {
 
   @Test
   public void canUnwrapACollectionToDetermineBaseType() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Set<String> field;
     }
@@ -74,6 +77,7 @@ public class TypesTest {
 
   @Test
   public void canDetermineContainedTypeOfACollection() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Set<? extends Calendar> field;
     }
@@ -86,6 +90,7 @@ public class TypesTest {
 
   @Test
   public void canUnwrapAWildcardedOptionalToDetermineBaseType() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Optional<? extends Calendar> field;
     }
@@ -98,6 +103,7 @@ public class TypesTest {
 
   @Test
   public void canDetermineContainedTypeOfAnOptionalCollection() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Optional<Set<? extends Calendar>> field;
     }
@@ -110,6 +116,7 @@ public class TypesTest {
 
   @Test
   public void lowerBoundOfGenericTypeOfBaseTypeIsIgnored() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Comparable<? super String> field;
     }
@@ -122,6 +129,7 @@ public class TypesTest {
 
   @Test
   public void baseTypeShouldWrapPrimitiveTypes() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public int field;
     }
@@ -135,6 +143,7 @@ public class TypesTest {
 
   @Test
   public void shouldReturnNullContainerTypeForNonContainedFields() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public String field;
     }
@@ -148,6 +157,7 @@ public class TypesTest {
   @Test
   public void shouldReturnNullContainerTypeForNonContainedOptionalFields()
       throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Optional<String> field;
     }
@@ -160,6 +170,7 @@ public class TypesTest {
 
   @Test
   public void shouldReturnNullContainerForNonCollectionGenericFields() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Comparable<String> field;
     }
@@ -172,6 +183,7 @@ public class TypesTest {
 
   @Test
   public void shouldReturnTheCorrectContainerTypeForASet() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Set<? extends Calendar> field;
     }
@@ -184,6 +196,7 @@ public class TypesTest {
 
   @Test
   public void shouldReturnTheCorrectContainerTypeForAnImmutableSet() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public ImmutableSet<? extends Calendar> field;
     }
@@ -196,6 +209,7 @@ public class TypesTest {
 
   @Test
   public void shouldReturnTheCorrectContainerTypeForAList() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public List<String> field;
     }
@@ -209,6 +223,7 @@ public class TypesTest {
 
   @Test
   public void shouldReturnTheCorrectContainerTypeForAnImmutableList() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public ImmutableList<Object> field;
     }
@@ -222,6 +237,7 @@ public class TypesTest {
   @Test
   public void shouldReturnTheCorrectContainerTypeForAnOptionalCollection()
       throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Optional<ImmutableSortedSet<? extends Calendar>> field;
     }
@@ -234,6 +250,7 @@ public class TypesTest {
 
   @Test
   public void shouldReturnFirstNonOptionalTypeOfAField() throws NoSuchFieldException {
+    @SuppressWarnings("unused")
     class Contained {
       public Optional<ImmutableList<? extends String>> wildCardList;
       public Optional<ImmutableList<String>> list;

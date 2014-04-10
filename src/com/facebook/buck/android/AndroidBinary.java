@@ -763,7 +763,6 @@ public class AndroidBinary extends AbstractBuildable implements
     // Execute proguard if desired (transforms input classpaths).
     if (packageType.isBuildWithObfuscation()) {
       classpathEntriesToDex = addProguardCommands(
-          context,
           classpathEntriesToDex,
           transitiveDependencies.proguardConfigs,
           steps,
@@ -896,7 +895,6 @@ public class AndroidBinary extends AbstractBuildable implements
    */
   @VisibleForTesting
   ImmutableSet<Path> addProguardCommands(
-      BuildContext context,
       Set<Path> classpathEntriesToDex,
       Set<Path> depsProguardConfigs,
       ImmutableList.Builder<Step> steps,

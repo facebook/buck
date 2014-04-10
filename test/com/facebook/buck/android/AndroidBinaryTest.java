@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_PATH;
@@ -29,12 +28,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
+import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -108,8 +107,6 @@ public class AndroidBinaryTest {
         androidBinary.findDexTransitiveDependencies();
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    BuildContext context = createMock(BuildContext.class);
-    replay(context);
     ImmutableSet<Path> classpathEntriesToDex =
         FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
             .transform(MorePaths.TO_PATH)
@@ -117,13 +114,11 @@ public class AndroidBinaryTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     androidBinary.addProguardCommands(
-        context,
         classpathEntriesToDex,
         transitiveDependencies.proguardConfigs,
         commands,
         ImmutableSet.<Path>of(),
         buildableContext);
-    verify(context);
 
     ImmutableSet<Path> expectedRecordedArtifacts = ImmutableSet.of(
         Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/configuration.txt"),

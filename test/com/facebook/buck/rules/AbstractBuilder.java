@@ -79,7 +79,7 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
       }
       // Here's a whole series of assumptions in one lump of a Bad Idea.
       ImmutableSortedSet<BuildRule> deps =
-          (ImmutableSortedSet<BuildRule>) ((Optional) optional).get();
+          (ImmutableSortedSet<BuildRule>) ((Optional<?>) optional).get();
       return new FakeBuildRuleParams(target, deps);
     } catch (ReflectiveOperationException ignored) {
       // Field doesn't exist: no deps.

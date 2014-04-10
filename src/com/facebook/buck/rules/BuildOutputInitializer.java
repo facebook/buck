@@ -45,7 +45,7 @@ public class BuildOutputInitializer<T> {
   }
 
   /**
-   * This should be invoked only by the build engine (currently, {@link AbstractCachingBuildRule})
+   * This should be invoked only by the build engine (currently, {@link CachingBuildEngine})
    * that invoked {@link #initializeFromDisk(OnDiskBuildInfo)}.
    * <p>
    * @throws IllegalStateException if this method has already been invoked.

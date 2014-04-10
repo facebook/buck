@@ -402,6 +402,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
     return hasher;
   }
 
+  @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder.setReflectively("postprocessClassesCommands", postprocessClassesCommands);
     return javacOptions.appendToRuleKey(builder);
@@ -518,7 +519,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
     addPostprocessClassesCommands(steps, postprocessClassesCommands, outputDirectory);
 
     // If there are resources, then link them to the appropriate place in the classes directory.
-    addResourceCommands(context, steps, outputDirectory, context.getJavaPackageFinder());
+    addResourceCommands(steps, outputDirectory, context.getJavaPackageFinder());
 
     if (outputJar.isPresent()) {
       steps.add(new MakeCleanDirectoryStep(getOutputJarDirPath(getBuildTarget())));
@@ -719,10 +720,10 @@ public class DefaultJavaLibrary extends AbstractBuildable
   }
 
   @VisibleForTesting
-  void addResourceCommands(BuildContext context,
-                           ImmutableList.Builder<Step> commands,
-                           Path outputDirectory,
-                           JavaPackageFinder javaPackageFinder) {
+  void addResourceCommands(
+      ImmutableList.Builder<Step> commands,
+      Path outputDirectory,
+      JavaPackageFinder javaPackageFinder) {
     if (!resources.isEmpty()) {
       String targetPackageDir = javaPackageFinder.findJavaPackageForPath(
           getBuildTarget().getBasePathWithSlash())

@@ -99,6 +99,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
     return super.appendDetailsToRuleKey(builder);
   }
 
+  @Override
   public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
     // Create the AndroidBinaryGraphEnhancer for this rule.
     final ImmutableSortedSet<BuildRule> originalDepsAndApk =

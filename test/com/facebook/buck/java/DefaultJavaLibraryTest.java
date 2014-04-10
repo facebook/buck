@@ -33,7 +33,6 @@ import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -46,8 +45,8 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -101,7 +100,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -121,25 +119,12 @@ public class DefaultJavaLibraryTest {
   @Rule
   public TemporaryFolder tmp = new TemporaryFolder();
 
-  private BuildContext stubContext;
-
   @Before
   public void stubOutBuildContext() {
-    File root = new File(".");
     StepRunner stepRunner = createNiceMock(StepRunner.class);
     JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
     replay(packageFinder, stepRunner);
-
-    stubContext = BuildContext.builder()
-        .setArtifactCache(new NoopArtifactCache())
-        .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setJavaPackageFinder(packageFinder)
-        .setProjectFilesystem(new ProjectFilesystem(root))
-        .setStepRunner(stepRunner)
-        .build();
   }
-
 
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
@@ -163,7 +148,7 @@ public class DefaultJavaLibraryTest {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
-    javaRule.addResourceCommands(stubContext,
+    javaRule.addResourceCommands(
         commands, BIN_PATH.resolve("android/java/lib__resources__classes"), javaPackageFinder);
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
@@ -197,7 +182,7 @@ public class DefaultJavaLibraryTest {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
-    javaRule.addResourceCommands(stubContext,
+    javaRule.addResourceCommands(
         commands, BIN_PATH.resolve("android/java/src/lib__resources__classes"), javaPackageFinder);
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
@@ -234,7 +219,6 @@ public class DefaultJavaLibraryTest {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     javaRule.addResourceCommands(
-        stubContext,
         commands,
         BIN_PATH.resolve("android/java/src/com/facebook/lib__resources__classes"),
         javaPackageFinder);
@@ -1381,14 +1365,12 @@ public class DefaultJavaLibraryTest {
   private class AnnotationProcessingScenario {
     private final AnnotationProcessingParams.Builder annotationProcessingParamsBuilder;
     private final Map<BuildTarget, BuildRule> buildRuleIndex;
-    private final BuildRuleResolver ruleResolver;
     private ExecutionContext executionContext;
     private BuildContext buildContext;
 
     public AnnotationProcessingScenario() throws IOException {
       annotationProcessingParamsBuilder = new AnnotationProcessingParams.Builder();
       buildRuleIndex = Maps.newHashMap();
-      ruleResolver = new BuildRuleResolver(buildRuleIndex);
     }
 
     public AnnotationProcessingParams.Builder getAnnotationProcessingParamsBuilder() {

@@ -481,10 +481,10 @@ public class CachingBuildEngine implements BuildEngine {
    @Nullable
   private InitializableFromDisk<?> deriveInitializable(BuildRule rule) {
     if (rule.getBuildable() instanceof InitializableFromDisk) {
-      return (InitializableFromDisk) rule.getBuildable();
+      return (InitializableFromDisk<?>) rule.getBuildable();
     }
     if (rule instanceof InitializableFromDisk) {
-      return (InitializableFromDisk) rule;
+      return (InitializableFromDisk<?>) rule;
     }
 
     return null;

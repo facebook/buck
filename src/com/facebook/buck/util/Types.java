@@ -75,7 +75,7 @@ public class Types {
       return null;
     }
 
-    Class<?> clazz = (Class) rawType;
+    Class<?> clazz = (Class<?>) rawType;
     if (!(Collection.class.isAssignableFrom(clazz))) {
       return null;
     }
