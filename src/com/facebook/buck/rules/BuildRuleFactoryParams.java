@@ -26,7 +26,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -55,8 +54,6 @@ public final class BuildRuleFactoryParams {
   private final ParseContext buildFileParseContext;
   private final boolean ignoreFileExistenceChecks;
   private final BuildRuleBuilderParams abstractBuildRuleFactoryParams;
-
-  private final Function<String, Path> resolveFilePathRelativeToBuildFileDirectoryTransform;
 
   public BuildRuleFactoryParams(
       Map<String, ?> instance,
@@ -92,13 +89,6 @@ public final class BuildRuleFactoryParams {
     this.buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
     this.ignoreFileExistenceChecks = ignoreFileExistenceChecks;
 
-    this.resolveFilePathRelativeToBuildFileDirectoryTransform = new Function<String, Path>() {
-      @Override
-      public Path apply(String input) {
-        return resolveFilePathRelativeToBuildFileDirectory(input);
-      }
-    };
-
     this.abstractBuildRuleFactoryParams = new BuildRuleBuilderParams(filesystem,
         ruleKeyBuilderFactory);
   }
@@ -106,16 +96,6 @@ public final class BuildRuleFactoryParams {
   /** This is package-private so that only AbstractBuildRuleFactory can access it. */
   BuildRuleBuilderParams getAbstractBuildRuleFactoryParams() {
     return abstractBuildRuleFactoryParams;
-  }
-
-  /**
-   * Convenience method that combines the result of
-   * {@link #getRequiredStringAttribute(String)} with
-   * {@link #resolveFilePathRelativeToBuildFileDirectory(String)}.
-   */
-  public Path getRequiredFileAsPathRelativeToProjectRoot(String attributeName) {
-    String localPath = getRequiredStringAttribute(attributeName);
-    return resolveFilePathRelativeToBuildFileDirectory(localPath);
   }
 
   /**
@@ -178,44 +158,12 @@ public final class BuildRuleFactoryParams {
     }
   }
 
-  public File resolveDirectoryRelativeToBuildFileDirectory(String path) {
-    return new File(resolvePathAgainstBuildTargetBase(path));
-  }
-
-  public Path resolveDirectoryPathRelativeToBuildFileDirectory(String path) {
-    Preconditions.checkNotNull(path);
-    Preconditions.checkArgument(!path.startsWith(GENFILE_PREFIX));
-
-    String fullPath = resolvePathAgainstBuildTargetBase(path);
-
-    checkFullPath(fullPath);
-
-    File file = filesystem.getFileForRelativePath(fullPath);
-
-    if (!ignoreFileExistenceChecks && !file.isDirectory()) {
-      throw new RuntimeException("Not a directory: " + fullPath);
-    }
-
-    return Paths.get(fullPath);
-  }
-
   private String resolvePathAgainstBuildTargetBase(String path) {
     if (target.getBasePath().isEmpty()) {
       return path;
     } else {
       return String.format("%s/%s", target.getBasePath(), path);
     }
-  }
-
-  /**
-   * @param identifier for the argument in this params.
-   * @param builder If the value associated with {@code identifier} corresponds to a
-   *     {@link BuildTarget}, that build target will be added to the {@code deps} of this builder.
-   * @return a source path that corresponds to the specified {@code identifier}.
-   */
-  public SourcePath getRequiredSourcePath(String identifier, AbstractBuildRuleBuilder<?> builder) {
-    String resource = getRequiredStringAttribute(identifier);
-    return asSourcePath(resource, builder);
   }
 
   /**
@@ -242,80 +190,8 @@ public final class BuildRuleFactoryParams {
     }
   }
 
-  /**
-   * If there is a string value associated with the specified {@code identifier}, this returns a
-   * {@link SourcePath} that corresponds to that value.
-   * @param identifier for the argument in this params.
-   * @param builder If {@code resource} corresponds to a {@link BuildTarget}, that build target will
-   *     be added to the {@code deps} of this builder.
-   * @return a source path that corresponds to the specified {@code identifier}.
-   */
-  public Optional<SourcePath> getOptionalSourcePath(String identifier,
-      AbstractBuildRuleBuilder<?> builder) {
-    Optional<String> option = getOptionalStringAttribute(identifier);
-    if (option.isPresent()) {
-      SourcePath sourcePath = asSourcePath(option.get(), builder);
-      return Optional.of(sourcePath);
-    } else {
-      return Optional.absent();
-    }
-  }
-
-  public BuildTarget getRequiredBuildTarget(String attributeName) {
-    String buildTarget = getRequiredStringAttribute(attributeName);
-    return resolveBuildTargetWithHumanReadableException(buildTarget, attributeName);
-  }
-
-  public Optional<BuildTarget> getOptionalBuildTarget(String attributeName) {
-    Optional<String> value = getOptionalStringAttribute(attributeName);
-    if (value.isPresent()) {
-      BuildTarget target = resolveBuildTargetWithHumanReadableException(value.get(), attributeName);
-      return Optional.of(target);
-    } else {
-      return Optional.absent();
-    }
-  }
-
   public BuildTarget resolveBuildTarget(String target) throws NoSuchBuildTargetException {
     return buildTargetParser.parse(target, buildFileParseContext);
-  }
-
-  private BuildTarget resolveBuildTargetWithHumanReadableException(String buildTarget,
-      String attributeNameForContext) {
-    try {
-      return resolveBuildTarget(buildTarget);
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException("Couldn't resolve build target for %s=%s in %s.",
-          attributeNameForContext,
-          buildTarget,
-          this.target.getFullyQualifiedName());
-    }
-  }
-
-  public String getRequiredStringAttribute(String attributeName) {
-    Optional<String> value = getOptionalStringAttribute(attributeName);
-    if (value.isPresent()) {
-      return value.get();
-    } else {
-      throw new RuntimeException(
-          String.format("%s is missing required attribute: %s", target, attributeName));
-    }
-  }
-
-  public Optional<String> getOptionalStringAttribute(String attributeName) {
-    Object value = instance.get(attributeName);
-    if (value != null) {
-      if (value instanceof String) {
-        return Optional.of((String) value);
-      } else {
-        throw new RuntimeException(String.format("Expected a string for %s in %s but was %s",
-            attributeName,
-            target.getBuildFilePath(),
-            value));
-      }
-    } else {
-      return Optional.absent();
-    }
   }
 
   public Optional<Integer> getOptionalIntegerAttribute(String attributeName) {
@@ -336,37 +212,6 @@ public final class BuildRuleFactoryParams {
     }
   }
 
-  public Function<String, Path> getResolveFilePathRelativeToBuildFileDirectoryTransform() {
-    return resolveFilePathRelativeToBuildFileDirectoryTransform;
-  }
-
-  public long getRequiredLongAttribute(String attributeName) {
-    Object value = instance.get(attributeName);
-    if (value != null && value instanceof Long) {
-      return (Long) value;
-    } else {
-      throw new RuntimeException(String.format("Expected a long for %s in %s but was %s",
-          attributeName,
-          target.getBuildFilePath(),
-          value));
-    }
-  }
-
-  /** If a boolean attribute has not been specified, then it always defaults to false. */
-  public boolean getBooleanAttribute(String attributeName) {
-    Object value = instance.get(attributeName);
-    if (value == null) {
-      return false;
-    } else if (value instanceof Boolean) {
-      return (Boolean) value;
-    } else {
-      throw new RuntimeException(String.format(
-          "Value for %s in %s must be either True or False",
-          attributeName,
-          target.getFullyQualifiedName()));
-    }
-  }
-
   /** @return non-null list that may be empty */
   @SuppressWarnings("unchecked")
   public List<String> getOptionalListAttribute(String attributeName) {
@@ -382,21 +227,6 @@ public final class BuildRuleFactoryParams {
       }
     } else {
       return ImmutableList.of();
-    }
-  }
-
-  /**
-   * This is similar to {@link #getOptionalListAttribute(String)}, except if the value associated
-   * with {@code attributeName} is {@code null}, then this method actually returns {@code null}
-   * rather than an empty list.
-   */
-  @Nullable
-  public List<String> getNullableListAttribute(String attributeName) {
-    Object value = instance.get(attributeName);
-    if (value != null) {
-      return getOptionalListAttribute(attributeName);
-    } else {
-      return null;
     }
   }
 
