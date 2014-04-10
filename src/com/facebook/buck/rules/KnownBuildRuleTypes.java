@@ -27,6 +27,7 @@ import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
+import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosResourceDescription;
@@ -165,6 +166,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
+    builder.register(new AppleAssetCatalogDescription());
     builder.register(new BuildConfigDescription());
     builder.register(new CppBinaryDescription());
     builder.register(new CppLibraryDescription());

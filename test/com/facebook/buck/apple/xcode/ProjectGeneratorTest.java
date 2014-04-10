@@ -40,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
@@ -105,6 +106,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 public class ProjectGeneratorTest {
 
   private static final Path OUTPUT_DIRECTORY = Paths.get("_gen");
@@ -126,7 +129,7 @@ public class ProjectGeneratorTest {
   private MacosxBinaryDescription macosxBinaryDescription;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException {
     projectFilesystem = new FakeProjectFilesystem();
     executionContext = TestExecutionContext.newInstance();
     xcodeNativeDescription = new XcodeNativeDescription();
@@ -136,6 +139,13 @@ public class ProjectGeneratorTest {
     iosResourceDescription = new IosResourceDescription();
     macosxFrameworkDescription = new MacosxFrameworkDescription();
     macosxBinaryDescription = new MacosxBinaryDescription();
+
+    // Add support files needed by project generation to fake filesystem.
+    projectFilesystem.writeContentsToPath(
+        "",
+        Paths.get(ProjectGenerator.PATH_TO_ASSET_CATALOG_BUILD_PHASE_SCRIPT));
+    projectFilesystem.writeContentsToPath("",
+        Paths.get(ProjectGenerator.PATH_TO_ASSET_CATALOG_COMPILER));
   }
 
   @Test
@@ -491,6 +501,9 @@ public class ProjectGeneratorTest {
           projectFilesystem.getRootPath().resolve("foo.h").toAbsolutePath().normalize().toString(),
           headerBuildFilePath);
     }
+
+    // this target should not have an asset catalog build phase
+    assertFalse(hasShellScriptPhaseToCompileAssetCatalogs(target));
   }
 
   @Test
@@ -655,6 +668,10 @@ public class ProjectGeneratorTest {
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of(
             "$DEVELOPER_DIR/XCTest.framework", "$SDKROOT/Foo.framework"));
+
+    // this test does not depend on any asset catalogs, so verify a build phase for them does not
+    // exist.
+    assertFalse(hasShellScriptPhaseToCompileAssetCatalogs(target));
   }
 
   @Test
@@ -803,6 +820,10 @@ public class ProjectGeneratorTest {
             "$SDKROOT/Foo.framework",
             // Propagated library from deps.
             "$BUILT_PRODUCTS_DIR/libdep.a"));
+
+    // this test does not have a dependency on any asset catalogs, so verify no build phase for them
+    // exists.
+    assertFalse(hasShellScriptPhaseToCompileAssetCatalogs(target));
   }
 
   @Test
@@ -990,6 +1011,114 @@ public class ProjectGeneratorTest {
         generatedProject,
         "//foo:bin");
     assertHasSingletonResourcesPhaseWithEntries(binTarget, "foo.png", "foodir");
+  }
+
+  @Test
+  public void assetCatalogsInDependenciesPropogatesToBinariesAndTests() throws IOException {
+    BuildRule assetCatalogRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "asset_catalog"),
+        ImmutableSortedSet.<BuildRule>of(),
+        new AppleAssetCatalogDescription(),
+        new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
+          @Nullable
+          @Override
+          public AppleAssetCatalogDescription.Arg apply(
+              @Nullable AppleAssetCatalogDescription.Arg input) {
+            input.dirs = ImmutableSet.of(Paths.get("AssetCatalog.xcassets"));
+            return input;
+          }
+        });
+
+    BuildRule libraryRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "lib"),
+        ImmutableSortedSet.of(assetCatalogRule),
+        iosLibraryDescription);
+
+    BuildRule testRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "test"),
+        ImmutableSortedSet.of(libraryRule),
+        iosTestDescription);
+
+    BuildRule binaryRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "bin"),
+        ImmutableSortedSet.of(libraryRule),
+        iosBinaryDescription);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(assetCatalogRule, libraryRule, testRule, binaryRule),
+        ImmutableSet.of(testRule.getBuildTarget(), binaryRule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXTarget testTarget = assertTargetExistsAndReturnTarget(
+        generatedProject,
+        "//foo:test");
+    assertTrue(hasShellScriptPhaseToCompileAssetCatalogs(testTarget));
+    PBXTarget binTarget = assertTargetExistsAndReturnTarget(
+        generatedProject,
+        "//foo:bin");
+    assertTrue(hasShellScriptPhaseToCompileAssetCatalogs(binTarget));
+  }
+
+  @Test
+  public void assetCatalogsBuildPhaseBuildsBothCommonAndBundledAssetCatalogs() throws IOException {
+    BuildRule assetCatalog1 = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "asset_catalog1"),
+        ImmutableSortedSet.<BuildRule>of(),
+        new AppleAssetCatalogDescription(),
+        new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
+          @Nullable
+          @Override
+          public AppleAssetCatalogDescription.Arg apply(
+              @Nullable AppleAssetCatalogDescription.Arg input) {
+            input.dirs = ImmutableSet.of(Paths.get("AssetCatalog1.xcassets"));
+            return input;
+          }
+        });
+    BuildRule assetCatalog2 = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "asset_catalog2"),
+        ImmutableSortedSet.<BuildRule>of(),
+        new AppleAssetCatalogDescription(),
+        new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
+          @Nullable
+          @Override
+          public AppleAssetCatalogDescription.Arg apply(
+              @Nullable AppleAssetCatalogDescription.Arg input) {
+            input.dirs = ImmutableSet.of(Paths.get("AssetCatalog2.xcassets"));
+            input.copyToBundles = Optional.of(Boolean.TRUE);
+            return input;
+          }
+        });
+
+    BuildRule libraryRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "lib"),
+        ImmutableSortedSet.of(assetCatalog1, assetCatalog2),
+        iosLibraryDescription);
+
+    BuildRule testRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "test"),
+        ImmutableSortedSet.of(libraryRule),
+        iosTestDescription);
+
+    BuildRule binaryRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "bin"),
+        ImmutableSortedSet.of(libraryRule),
+        iosBinaryDescription);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(assetCatalog1, assetCatalog2, libraryRule, testRule, binaryRule),
+        ImmutableSet.of(testRule.getBuildTarget(), binaryRule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXTarget testTarget = assertTargetExistsAndReturnTarget(
+        generatedProject,
+        "//foo:test");
+    assertTrue(hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(testTarget));
+    PBXTarget binTarget = assertTargetExistsAndReturnTarget(
+        generatedProject,
+        "//foo:bin");
+    assertTrue(hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(binTarget));
   }
 
   /**
@@ -1381,6 +1510,51 @@ public class ProjectGeneratorTest {
           "Resource should be in list of expected resources: " + source,
           expectedResourceSet.contains(source));
     }
+  }
+
+  private boolean hasShellScriptPhaseToCompileAssetCatalogs(PBXTarget target) {
+    boolean found = false;
+    for (PBXBuildPhase phase : target.getBuildPhases()) {
+      if (phase.getClass().equals(PBXShellScriptBuildPhase.class)) {
+        PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) phase;
+        if (shellScriptBuildPhase.getShellScript().contains("compile_asset_catalogs")) {
+          found = true;
+        }
+      }
+    }
+
+    return found;
+  }
+
+  private boolean hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(PBXTarget target) {
+    PBXShellScriptBuildPhase assetCatalogBuildPhase = null;
+    for (PBXBuildPhase phase : target.getBuildPhases()) {
+      if (phase.getClass().equals(PBXShellScriptBuildPhase.class)) {
+        PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) phase;
+        if (shellScriptBuildPhase.getShellScript().contains("compile_asset_catalogs")) {
+          assetCatalogBuildPhase = shellScriptBuildPhase;
+        }
+      }
+    }
+
+    assertNotNull(assetCatalogBuildPhase);
+
+    boolean foundCommonAssetCatalogCompileCommand = false;
+    boolean foundSplitAssetCatalogCompileCommand = false;
+    String[] lines = assetCatalogBuildPhase.getShellScript().split("\\n");
+    for (String line : lines) {
+      if (line.contains("compile_asset_catalogs")) {
+        if (line.contains(" -b ")) {
+          foundSplitAssetCatalogCompileCommand = true;
+        } else {
+          // There can be only one
+          assertFalse(foundCommonAssetCatalogCompileCommand);
+          foundCommonAssetCatalogCompileCommand = true;
+        }
+      }
+    }
+
+    return foundCommonAssetCatalogCompileCommand && foundSplitAssetCatalogCompileCommand;
   }
 
   private void verifyGeneratedSignedSourceTarget(PBXTarget target) {

@@ -326,6 +326,12 @@ PYTHON_INTERP_FALLBACK=${BUCK_DIRECTORY}/bin/jython
 RELATIVE_PATH_TO_BUCK_PY=src/com/facebook/buck/parser/buck.py
 PATH_TO_BUCK_PY="${BUCK_DIRECTORY}/$RELATIVE_PATH_TO_BUCK_PY"
 
+# This file will be placed into buck-out/bin/xcode-scripts/ when a project's
+# target has a dependency on asset catalogs
+PATH_TO_XCODE_SCRIPTS="${BUCK_DIRECTORY}/src/com/facebook/buck/apple"
+PATH_TO_COMPILE_ASSET_CATALOGS_PY="${PATH_TO_XCODE_SCRIPTS}/compile_asset_catalogs.py"
+PATH_TO_COMPILE_ASSET_CATALOGS_BUILD_PHASE_SH="${PATH_TO_XCODE_SCRIPTS}/compile_asset_catalogs_build_phase.sh"
+
 BUCK_PATH_TO_CUSTOM_DX=""
 
 # Run Buck "unpacked": specifying its individual classpath elements rather than from a
@@ -383,6 +389,8 @@ BUCK_JAVA_ARGS="\
 -Dbuck.test_util_no_tests_dir=true \
 -Dbuck.path_to_python_interp=${PYTHON_INTERP_FALLBACK} \
 -Dbuck.path_to_buck_py=${PATH_TO_BUCK_PY} \
+-Dbuck.path_to_compile_asset_catalogs_py=${PATH_TO_COMPILE_ASSET_CATALOGS_PY} \
+-Dbuck.path_to_compile_asset_catalogs_build_phase_sh=${PATH_TO_COMPILE_ASSET_CATALOGS_BUILD_PHASE_SH} \
 -Dbuck.path_to_intellij_py=${BUCK_DIRECTORY}/src/com/facebook/buck/command/intellij.py \
 -Dbuck.path_to_static_content=${BUCK_DIRECTORY}/webserver/static \
 -Dbuck.git_commit=${BUCK_CURRENT_VERSION} \

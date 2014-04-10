@@ -19,6 +19,8 @@ package com.facebook.buck.apple.xcode;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleAssetCatalog;
+import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBuildable;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.GroupedSource;
@@ -35,6 +37,7 @@ import com.facebook.buck.apple.MacosxBinary;
 import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFramework;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
+import com.facebook.buck.apple.OsxResourceDescription;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
@@ -72,6 +75,7 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -90,6 +94,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -104,6 +109,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -170,6 +176,13 @@ public class ProjectGenerator {
   private static final ImmutableSet<String> HEADER_FILE_EXTENSIONS =
     ImmutableSet.of("h", "hh", "hpp");
 
+  public static final String PATH_TO_ASSET_CATALOG_COMPILER = System.getProperty(
+      "buck.path_to_compile_asset_catalogs_py",
+      "src/com/facebook/buck/apple/compile_asset_catalogs.py");
+  public static final String PATH_TO_ASSET_CATALOG_BUILD_PHASE_SCRIPT = System.getProperty(
+      "buck.path_to_compile_asset_catalogs_build_phase_sh",
+      "src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh");
+
   private final PartialGraph partialGraph;
   private final ProjectFilesystem projectFilesystem;
   private final ExecutionContext executionContext;
@@ -178,6 +191,7 @@ public class ProjectGenerator {
   private final ImmutableSet<BuildTarget> initialTargets;
   private final Path projectPath;
   private final Path repoRootRelativeToOutputDirectory;
+  private final Path placedAssetCatalogBuildPhaseScript;
 
   private final ImmutableSet<Option> options;
 
@@ -186,6 +200,7 @@ public class ProjectGenerator {
   private final LoadingCache<BuildRule, Optional<PBXTarget>> buildRuleToXcodeTarget;
   private XCScheme scheme = null;
   private Document workspace = null;
+  private boolean shouldPlaceAssetCatalogCompiler = false;
 
   /**
    * Populated while generating project configurations, in order to collect the possible
@@ -212,6 +227,10 @@ public class ProjectGenerator {
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.projectName = Preconditions.checkNotNull(projectName);
     this.options = ImmutableSet.copyOf(options);
+    this.placedAssetCatalogBuildPhaseScript =
+        this.projectFilesystem.getPathForRelativePath(
+            BuckConstant.BIN_PATH.resolve(
+                "xcode-scripts/compile_asset_catalogs_build_phase.sh"));
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.repoRootRelativeToOutputDirectory =
@@ -285,6 +304,20 @@ public class ProjectGenerator {
         scheme = SchemeGenerator.createScheme(
             partialGraph, projectPath, ruleToTargetMapBuilder.build());
         SchemeGenerator.writeScheme(projectFilesystem, scheme, projectPath);
+      }
+
+      if (shouldPlaceAssetCatalogCompiler) {
+        Path placedAssetCatalogCompilerPath = projectFilesystem.getPathForRelativePath(
+            BuckConstant.BIN_PATH.resolve(
+                "xcode-scripts/compile_asset_catalogs.py"));
+        projectFilesystem.createParentDirs(placedAssetCatalogCompilerPath);
+        projectFilesystem.createParentDirs(placedAssetCatalogBuildPhaseScript);
+        projectFilesystem.copyFile(
+            Paths.get(PATH_TO_ASSET_CATALOG_COMPILER),
+            placedAssetCatalogCompilerPath);
+        projectFilesystem.copyFile(
+            Paths.get(PATH_TO_ASSET_CATALOG_BUILD_PHASE_SCRIPT),
+            placedAssetCatalogBuildPhaseScript);
       }
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
@@ -404,7 +437,14 @@ public class ProjectGenerator {
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
         frameworksBuilder.build(),
         collectRecursiveLibraryDependencies(rule));
-    addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule));
+    addResourcesBuildPhase(
+        target,
+        targetGroup,
+        collectRecursiveResources(rule, IosResourceDescription.TYPE));
+    addAssetCatalogBuildPhase(
+        target,
+        targetGroup,
+        collectRecursiveAssetCatalogs(rule));
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -426,7 +466,8 @@ public class ProjectGenerator {
       PBXProject project, BuildRule rule, IosBinary buildable)
       throws IOException {
     PBXNativeTarget target =
-        generateBinaryTarget(project, rule, buildable, PBXTarget.ProductType.MACOSX_BINARY);
+        generateBinaryTarget(project, rule, buildable, PBXTarget.ProductType.MACOSX_BINARY,
+            IosResourceDescription.TYPE);
 
     project.getTargets().add(target);
     return target;
@@ -467,7 +508,11 @@ public class ProjectGenerator {
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
         frameworksBuilder.build(),
         collectRecursiveLibraryDependencies(rule));
-    addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule));
+    addResourcesBuildPhase(
+        target,
+        targetGroup,
+        collectRecursiveResources(rule, OsxResourceDescription.TYPE));
+    addAssetCatalogBuildPhase(target, targetGroup, collectRecursiveAssetCatalogs(rule));
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -486,7 +531,8 @@ public class ProjectGenerator {
           PBXProject project,
           BuildRule rule,
           BuildableBinary buildable,
-          PBXTarget.ProductType productType)
+          PBXTarget.ProductType productType,
+          BuildRuleType resourceRuleType)
           throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
     target.setProductType(productType);
@@ -521,7 +567,9 @@ public class ProjectGenerator {
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
         frameworksBuilder.build(),
         collectRecursiveLibraryDependencies(rule));
-    addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule));
+    addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule,
+            resourceRuleType));
+    addAssetCatalogBuildPhase(target, targetGroup, collectRecursiveAssetCatalogs(rule));
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -540,7 +588,8 @@ public class ProjectGenerator {
       PBXProject project, BuildRule rule, MacosxBinary buildable)
       throws IOException {
     PBXNativeTarget target =
-        generateBinaryTarget(project, rule, buildable, PBXTarget.ProductType.MACOSX_BINARY);
+        generateBinaryTarget(project, rule, buildable, PBXTarget.ProductType.MACOSX_BINARY,
+            OsxResourceDescription.TYPE);
 
     // Unlike an ios target, macosx targets collect their frameworks and copy them in.
     ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
@@ -852,6 +901,79 @@ public class ProjectGenerator {
       PBXBuildFile buildFile = new PBXBuildFile(fileReference);
       phase.getFiles().add(buildFile);
     }
+  }
+
+  private void addAssetCatalogBuildPhase(
+      PBXNativeTarget target, PBXGroup targetGroup,
+      final Iterable<AppleAssetCatalog> assetCatalogs) {
+    // Asset catalogs go in the resources group also.
+    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+
+    // Some asset catalogs should be copied to their sibling bundles, while others use the default
+    // output format (which may be to copy individual files to the root resource output path or to
+    // be archived in Assets.car if it is supported by the target platform version).
+
+    ImmutableList.Builder<String> commonAssetCatalogsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<String> assetCatalogsToSplitIntoBundlesBuilder =
+        ImmutableList.builder();
+    for (AppleAssetCatalog assetCatalog : assetCatalogs) {
+
+      List<String> scriptArguments = Lists.newArrayList();
+      for (Path dir : assetCatalog.getDirs()) {
+        resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SOURCE_ROOT,
+                this.repoRootRelativeToOutputDirectory.resolve(dir)));
+
+        Path pathRelativeToProjectRoot = outputDirectory.relativize(dir);
+        scriptArguments.add("$PROJECT_DIR/" + pathRelativeToProjectRoot.toString());
+      }
+
+      if (assetCatalog.getCopyToBundles()) {
+        assetCatalogsToSplitIntoBundlesBuilder.addAll(scriptArguments);
+      } else {
+        commonAssetCatalogsBuilder.addAll(scriptArguments);
+      }
+    }
+
+    ImmutableList<String> commonAssetCatalogs = commonAssetCatalogsBuilder.build();
+    ImmutableList<String> assetCatalogsToSplitIntoBundles =
+        assetCatalogsToSplitIntoBundlesBuilder.build();
+
+    // If there are no asset catalogs, don't add the build phase
+    if (commonAssetCatalogs.size() == 0 &&
+        assetCatalogsToSplitIntoBundles.size() == 0) {
+      return;
+    }
+
+    // In order for the script to run, it must be accessible by Xcode and deserves to be part of the
+    // generated output.
+    shouldPlaceAssetCatalogCompiler = true;
+
+    Path assetCatalogBuildPhaseScriptRelativeToProjectRoot =
+        outputDirectory.relativize(placedAssetCatalogBuildPhaseScript);
+
+    // Map asset catalog paths to their shell script arguments relative to the project's root
+    String combinedAssetCatalogsToBeSplitIntoBundlesScriptArguments =
+        Joiner.on(' ').join(assetCatalogsToSplitIntoBundles);
+    String combinedCommonAssetCatalogsScriptArguments = Joiner.on(' ').join(commonAssetCatalogs);
+
+    PBXShellScriptBuildPhase phase = new PBXShellScriptBuildPhase();
+
+    StringBuilder scriptBuilder = new StringBuilder("set -e\n");
+    if (commonAssetCatalogs.size() != 0) {
+      scriptBuilder.append("\"$SRCROOT/\"" +
+              assetCatalogBuildPhaseScriptRelativeToProjectRoot.toString() + " " +
+              combinedCommonAssetCatalogsScriptArguments + "\n");
+    }
+
+    if (assetCatalogsToSplitIntoBundles.size() != 0) {
+      scriptBuilder.append("\"$SRCROOT/\"" +
+              assetCatalogBuildPhaseScriptRelativeToProjectRoot.toString() + " -b " +
+              combinedAssetCatalogsToBeSplitIntoBundlesScriptArguments);
+    }
+    phase.setShellScript(scriptBuilder.toString());
+    target.getBuildPhases().add(phase);
   }
 
   private void addFrameworksBuildPhase(
@@ -1172,9 +1294,8 @@ public class ProjectGenerator {
    * @param rule  Build rule at the tip of the traversal.
    * @return  Paths to resource files and folders, children of folder are not included.
    */
-  private Iterable<Path> collectRecursiveResources(BuildRule rule) {
-    Iterable<BuildRule> resourceRules = getRecursiveRuleDependenciesOfType(
-        rule, IosResourceDescription.TYPE);
+  private Iterable<Path> collectRecursiveResources(BuildRule rule, BuildRuleType resourceRuleType) {
+    Iterable<BuildRule> resourceRules = getRecursiveRuleDependenciesOfType(rule, resourceRuleType);
     ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
     for (BuildRule resourceRule : resourceRules) {
       AppleResource resource =
@@ -1183,6 +1304,21 @@ public class ProjectGenerator {
       paths.addAll(SourcePaths.toPaths(resource.getFiles()));
     }
     return paths.build();
+  }
+
+  /**
+   * Collect asset catalogs from recursive dependencies.
+   */
+  private Iterable<AppleAssetCatalog> collectRecursiveAssetCatalogs(BuildRule rule) {
+    Iterable<BuildRule> assetCatalogRules = getRecursiveRuleDependenciesOfType(rule,
+        AppleAssetCatalogDescription.TYPE);
+    ImmutableSet.Builder<AppleAssetCatalog> assetCatalogs = ImmutableSet.builder();
+    for (BuildRule assetCatalogRule : assetCatalogRules) {
+      AppleAssetCatalog assetCatalog = (AppleAssetCatalog) Preconditions.checkNotNull(
+          assetCatalogRule.getBuildable());
+      assetCatalogs.add(assetCatalog);
+    }
+    return assetCatalogs.build();
   }
 
   private Iterable<BuildRule> getRecursiveRuleDependenciesOfType(

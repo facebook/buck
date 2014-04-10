@@ -178,7 +178,6 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public void createParentDirs(Path path) {
-    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -310,7 +309,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public void copyFile(Path source, Path target) {
-    throw new UnsupportedOperationException();
+    writeContentsToPath(readFileIfItExists(source).get(), target);
   }
 
   @Override

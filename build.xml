@@ -11,6 +11,8 @@
   <property name="abi_processor.src.dir" value="${src.dir}/com/facebook/buck/java/abi/" />
   <property name="abi_processor.classes.dir" value="${build.dir}/abi_processor/classes" />
   <property name="buck.path_to_buck_py" value="${basedir}/src/com/facebook/buck/parser/buck.py" />
+  <property name="buck.path_to_compile_asset_catalogs_py" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs.py" />
+  <property name="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh" />
   <property name="buck.path_to_emma_jar"
             value="${basedir}/third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar"
             />
@@ -236,6 +238,8 @@
            forkmode="perBatch">
       <sysproperty key="buck.path_to_emma_jar" value="${buck.path_to_emma_jar}" />
       <sysproperty key="buck.path_to_buck_py" value="${buck.path_to_buck_py}" />
+      <sysproperty key="buck.path_to_compile_asset_catalogs_py" value="${buck.path_to_compile_asset_catalogs_py}" />
+      <sysproperty key="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${buck.path_to_compile_asset_catalogs_build_phase_sh}" />
 
       <!-- See DEFS for details on why this property is needed. -->
       <sysproperty key="sun.zip.disableMemoryMapping" value="true" />
