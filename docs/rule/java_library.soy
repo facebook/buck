@@ -81,11 +81,17 @@ of the compiled class files and resources.
 {/call}
 
 {call buck.arg}
-  {param name: 'export_deps' /}
-  {param default : 'False' /}
+  {param name: 'exported_deps' /}
+  {param default : '[]' /}
   {param desc}
-  Whether or not depending on this rule should also transitively pull in all of
-  its dependencies.
+  Other <code>java_library</code> rules that depend on this rule will also
+  include its <code>exported_deps</code> in their classpaths. This is useful
+  when the public API of a rule has return types or checked exceptions that are
+  defined in another rule, which would otherwise require callers to add an
+  extra dependency. It's also useful for exposing e.g. a collection of
+  {sp}<code>prebuilt_jar</code> rules as a single target for callers to depend
+  on. Targets in <code>exported_deps</code> are implicitly included in the
+  {sp}<code>deps</code> of this rule, so they don't need to be repeated there.
   {/param}
 {/call}
 
