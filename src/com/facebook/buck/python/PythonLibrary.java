@@ -112,7 +112,7 @@ public class PythonLibrary extends AbstractBuildable {
     ImmutableList.Builder<Step> symlinkSteps = ImmutableList.builder();
 
     for (SourcePath src : srcs) {
-      Path srcPath = src.resolve(context);
+      Path srcPath = src.resolve();
       Path targetPath = pythonPathDirectory.resolve(srcPath);
 
       directories.add(targetPath.getParent());

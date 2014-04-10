@@ -68,7 +68,7 @@ public class BuildContext {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath sourcePath) {
-        return sourcePath.resolve(BuildContext.this);
+        return sourcePath.resolve();
       }
     };
   }
@@ -91,11 +91,11 @@ public class BuildContext {
 
   /**
    * By design, there is no getter for {@link ProjectFilesystem}. At the point where a
-   * {@link Buildable} is using a {@link BuildContext} to generate its {@link Step}s, it should
-   * not be doing any I/O on local disk. Any reads should be mediated through
-   * {@link OnDiskBuildInfo}, and {@link BuildInfoRecorder} will take care of writes after the fact.
-   * The {@link Buildable} should be working with relative file paths so that builds can ultimately
-   * be distributed.
+   * {@link Buildable} is using a {@link BuildContext} to generate its
+   * {@link com.facebook.buck.step.Step}s, it should not be doing any I/O on local disk. Any reads
+   * should be mediated through {@link OnDiskBuildInfo}, and {@link BuildInfoRecorder} will take
+   * care of writes after the fact. The {@link Buildable} should be working with relative file paths
+   * so that builds can ultimately be distributed.
    * <p>
    * The primary reason this method exists is so that someone who blindly tries to add such a getter
    * will encounter a compilation error and will [hopefully] discover this comment.

@@ -101,7 +101,7 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
     addMkdirStepIfNeeded(createdDirectories, steps, getPathToOutputFile().getParent());
 
     for (SourcePath src : srcs) {
-      Path srcFile = src.resolve(context);
+      Path srcFile = src.resolve();
       // We expect srcFile to be relative to the buck root
       Preconditions.checkState(!srcFile.isAbsolute());
       Path parent = srcFile.getParent();
@@ -118,7 +118,7 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
       steps.add(new CompilerStep(
             /* compiler */ getCompiler(),
             /* shouldLink */ false,
-            /* srcs */ ImmutableSortedSet.of(src.resolve(context)),
+            /* srcs */ ImmutableSortedSet.of(src.resolve()),
             /* outputFile */ objectFile,
             /* shouldAddProjectRootToIncludePaths */ true,
             /* includePaths */ ImmutableSortedSet.<Path>of()

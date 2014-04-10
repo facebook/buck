@@ -123,7 +123,7 @@ public class ShTest extends AbstractBuildable implements TestRule {
 
     // Return a single command that runs an .sh file with no arguments.
     Step runTest = new RunShTestAndRecordResultStep(
-        test.resolve(buildContext),
+        test.resolve(),
         getPathToTestOutputResult());
 
     return ImmutableList.of(mkdirClean, runTest);

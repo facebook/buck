@@ -507,8 +507,7 @@ public class ProjectGenerator {
       PBXProject project,
       BuildRule rule,
       XcodeNative buildable) {
-    Path referencedProjectPath =
-        buildable.getProjectContainerPath().resolve(partialGraph.getDependencyGraph());
+    Path referencedProjectPath = buildable.getProjectContainerPath().resolve();
     PBXFileReference referencedProject = project.getMainGroup()
         .getOrCreateChildGroupByName("Project References")
         .getOrCreateFileReferenceBySourceTreePath(new SourceTreePath(
@@ -774,7 +773,7 @@ public class ProjectGenerator {
       PBXGroup sourcesGroup,
       PBXSourcesBuildPhase sourcesBuildPhase,
       ImmutableMap<SourcePath, String> sourceFlags) {
-    Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
+    Path path = sourcePath.resolve();
     PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
@@ -795,7 +794,7 @@ public class ProjectGenerator {
       PBXGroup headersGroup,
       PBXHeadersBuildPhase headersBuildPhase,
       ImmutableMap<SourcePath, String> sourceFlags) {
-    Path path = headerPath.resolve(partialGraph.getDependencyGraph());
+    Path path = headerPath.resolve();
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
@@ -1119,7 +1118,7 @@ public class ProjectGenerator {
       AppleResource resource =
           (AppleResource) Preconditions.checkNotNull(resourceRule.getBuildable());
       paths.addAll(resource.getDirs());
-      paths.addAll(SourcePaths.toPaths(resource.getFiles(), partialGraph.getDependencyGraph()));
+      paths.addAll(SourcePaths.toPaths(resource.getFiles()));
     }
     return paths.build();
   }

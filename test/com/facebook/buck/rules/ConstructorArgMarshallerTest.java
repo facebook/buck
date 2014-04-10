@@ -53,6 +53,7 @@ public class ConstructorArgMarshallerTest {
   private ConstructorArgMarshaller marshaller;
   private BuildRuleResolver ruleResolver;
   private ProjectFilesystem filesystem;
+  private BuildRuleType ruleType;
 
   @Before
   public void setUpInspector() {
@@ -60,6 +61,7 @@ public class ConstructorArgMarshallerTest {
     marshaller = new ConstructorArgMarshaller(basePath);
     ruleResolver = new BuildRuleResolver();
     filesystem = new FakeProjectFilesystem();
+    ruleType = new BuildRuleType("example");
   }
 
   @Test
@@ -170,6 +172,8 @@ public class ConstructorArgMarshallerTest {
     }
 
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
+    FakeBuildRule rule = new FakeBuildRule(ruleType, target);
+    ruleResolver.addToIndex(target, rule);
     Dto dto = new Dto();
     marshaller.populate(
         ruleResolver,
@@ -181,7 +185,7 @@ public class ConstructorArgMarshallerTest {
         dto);
 
     assertEquals(new FileSourcePath("example/path/cheese.txt"), dto.filePath);
-    assertEquals(new BuildTargetSourcePath(target), dto.targetPath);
+    assertEquals(new BuildRuleSourcePath(rule), dto.targetPath);
   }
 
   @Test
@@ -399,6 +403,7 @@ public class ConstructorArgMarshallerTest {
     }
 
     BuildTarget target = BuildTargetFactory.newInstance("//will:happen");
+    ruleResolver.addToIndex(target, new FakeBuildRule(new BuildRuleType("example"), target));
     Dto dto = new Dto();
     marshaller.populate(
         ruleResolver,
@@ -407,7 +412,7 @@ public class ConstructorArgMarshallerTest {
             "yup", ImmutableList.of(target.getFullyQualifiedName()))),
         dto);
 
-    BuildTargetSourcePath path = new BuildTargetSourcePath(target);
+    BuildRuleSourcePath path = new BuildRuleSourcePath(new FakeBuildRule(ruleType, target));
     assertEquals(ImmutableList.of(path), dto.yup);
   }
 
@@ -432,6 +437,11 @@ public class ConstructorArgMarshallerTest {
       public Optional<Path> notAPath;
     }
 
+    FakeBuildRule expectedRule = new FakeBuildRule(
+        ruleType,
+        BuildTargetFactory.newInstance("//example/path:path"));
+    ruleResolver.addToIndex(expectedRule.getBuildTarget(), expectedRule);
+
     ImmutableMap<String, Object> args = ImmutableMap.<String, Object>builder()
         .put("required", "cheese")
         .put("notRequired", "cake")
@@ -451,8 +461,7 @@ public class ConstructorArgMarshallerTest {
     assertEquals("cake", dto.notRequired.get());
     assertEquals(42, dto.num);
     assertTrue(dto.needed);
-    BuildTargetSourcePath expected = new BuildTargetSourcePath(
-        BuildTargetFactory.newInstance("//example/path:path"));
+    BuildRuleSourcePath expected = new BuildRuleSourcePath(expectedRule);
     assertEquals(expected, dto.aSrcPath);
     assertEquals(Paths.get("example/path/NotFile.java"), dto.notAPath.get());
   }

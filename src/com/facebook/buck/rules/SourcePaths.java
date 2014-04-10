@@ -54,7 +54,7 @@ public class SourcePaths {
     // returned by getInputsToCompareToOutput() is FileSourcePath, so it is safe to filter by that
     // and then use .asReference() to get its path.
     //
-    // BuildTargetSourcePath should not be included in the output because it refers to a generated
+    // BuildRuleSourcePath should not be included in the output because it refers to a generated
     // file, and generated files are not hashed as part of a RuleKey.
     return FluentIterable.from(sources)
         .filter(FileSourcePath.class)
@@ -63,23 +63,11 @@ public class SourcePaths {
         .toList();
   }
 
-  public static Iterable<Path> toPaths(Iterable<SourcePath> sourcePaths,
-      final BuildContext context) {
+  public static Iterable<Path> toPaths(Iterable<SourcePath> sourcePaths) {
     Function<SourcePath, Path> transform = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath sourcePath) {
-        return sourcePath.resolve(context);
-      }
-    };
-    return Iterables.transform(sourcePaths, transform);
-  }
-
-  public static Iterable<Path> toPaths(Iterable<SourcePath> sourcePaths,
-      final DependencyGraph context) {
-    Function<SourcePath, Path> transform = new Function<SourcePath, Path>() {
-      @Override
-      public Path apply(SourcePath sourcePath) {
-        return sourcePath.resolve(context);
+        return sourcePath.resolve();
       }
     };
     return Iterables.transform(sourcePaths, transform);

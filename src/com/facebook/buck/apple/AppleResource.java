@@ -135,7 +135,7 @@ public class AppleResource extends AbstractBuildable {
     }
 
     for (SourcePath file : files) {
-      steps.add(CopyStep.forFile(file.resolve(context), outputDirectory));
+      steps.add(CopyStep.forFile(file.resolve(), outputDirectory));
     }
 
     return steps.build();

@@ -918,7 +918,7 @@ public class AndroidBinary extends AbstractBuildable implements
     ImmutableSet.Builder<Path> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
     if (proguardConfig.isPresent()) {
-      proguardConfigsBuilder.add(proguardConfig.get().resolve(context));
+      proguardConfigsBuilder.add(proguardConfig.get().resolve());
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.

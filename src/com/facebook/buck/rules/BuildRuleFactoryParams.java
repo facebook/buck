@@ -166,30 +166,6 @@ public final class BuildRuleFactoryParams {
     }
   }
 
-  /**
-   * @param resource that identifies either a file path or a build target.
-   * @param builder If {@code resource} corresponds to a {@link BuildTarget}, that build target will
-   *     be added to the {@code deps} of this builder.
-   * @return a source path that corresponds to the specified {@code resource}.
-   */
-  public SourcePath asSourcePath(String resource, AbstractBuildRuleBuilder<?> builder) {
-    // TODO(simons): Don't hard code this check for built-target-ism
-    if (resource.startsWith(BuildTarget.BUILD_TARGET_PREFIX) || resource.charAt(0) == ':') {
-      BuildTarget buildTarget;
-      try {
-        buildTarget = resolveBuildTarget(resource);
-      } catch (NoSuchBuildTargetException e) {
-        throw new HumanReadableException(
-            "Unable to find build target '%s' while parsing definition of %s", resource, target);
-      }
-      builder.addDep(buildTarget);
-      return new BuildTargetSourcePath(buildTarget);
-    } else {
-      Path relativePath = resolveFilePathRelativeToBuildFileDirectory(resource);
-      return new FileSourcePath(relativePath.toString());
-    }
-  }
-
   public BuildTarget resolveBuildTarget(String target) throws NoSuchBuildTargetException {
     return buildTargetParser.parse(target, buildFileParseContext);
   }

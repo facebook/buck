@@ -28,8 +28,9 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FileSourcePath;
@@ -135,8 +136,11 @@ public class ExportFileTest {
 
     assertIterablesEquals(singleton(Paths.get("chips")), exportFile.getInputsToCompareToOutput());
 
+    FakeBuildRule rule = new FakeBuildRule(
+        ExportFileDescription.TYPE,
+        BuildTargetFactory.newInstance("//example:one"));
     args.src = Optional.of(
-        new BuildTargetSourcePath(BuildTargetFactory.newInstance("//example:one")));
+        new BuildRuleSourcePath(rule));
     exportFile = new ExportFile(params, args);
     assertTrue(Iterables.isEmpty(exportFile.getInputsToCompareToOutput()));
 

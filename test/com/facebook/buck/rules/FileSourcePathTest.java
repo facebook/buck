@@ -17,7 +17,6 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -32,14 +31,9 @@ public class FileSourcePathTest {
 
   @Test
   public void shouldResolveFilesUsingTheBuildContextsFileSystem() {
-    // Using this as a stub, because I'm too lazy to create all the required deps.
-    BuildContext context = EasyMock.createMock(BuildContext.class);
-
-    EasyMock.replay(context);
-
     FileSourcePath path = new FileSourcePath("cheese");
 
-    Path resolved = path.resolve(context);
+    Path resolved = path.resolve();
 
     assertEquals(Paths.get("cheese"), resolved);
   }

@@ -28,9 +28,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.SourcePath;
@@ -374,8 +374,8 @@ public class AndroidBinaryGraphEnhancer {
         .addAll(resourceRules)
         .addAll(getTargetsAsRules(
             androidResourceDepsFinder.getAndroidTransitiveDependencies().nativeTargetsWithAssets));
-    if (manifest instanceof BuildTargetSourcePath) {
-      builder.add(ruleResolver.get(((BuildTargetSourcePath) manifest).getTarget()));
+    if (manifest instanceof BuildRuleSourcePath) {
+      builder.add(((BuildRuleSourcePath) manifest).getRule());
     }
     return builder.build();
   }

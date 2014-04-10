@@ -743,7 +743,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
         //
         // Therefore, some path-wrangling is required to produce the correct string.
 
-        Path resource = MorePaths.separatorsToUnix(rawResource.resolve(context));
+        Path resource = MorePaths.separatorsToUnix(rawResource.resolve());
         String javaPackageAsPath =
             javaPackageFinder.findJavaPackageFolderForPath(resource.toString());
         Path relativeSymlinkPath;
@@ -756,7 +756,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
           // Handle the case where we depend on the output of another BuildRule. In that case, just
           // grab the output and put in the same package as this target would be in.
           relativeSymlinkPath = Paths.get(String.format(
-              "%s/%s", targetPackageDir, rawResource.resolve(context).getFileName()));
+              "%s/%s", targetPackageDir, rawResource.resolve().getFileName()));
         } else if ("".equals(javaPackageAsPath)) {
           // In this case, the project root is acting as the default package, so the resource path
           // works fine.

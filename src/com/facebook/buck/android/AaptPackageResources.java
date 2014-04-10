@@ -114,7 +114,7 @@ public class AaptPackageResources extends AbstractBuildable
 
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
     // commands to ensure that it is available at the desired path.
-    steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(context), getAndroidManifestXml()));
+    steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(), getAndroidManifestXml()));
 
     // Copy the transitive closure of files in assets to a single directory, if any.
     // TODO(mbolin): Older versions of aapt did not support multiple -A flags, so we can probably

@@ -115,7 +115,7 @@ public class ExportFile extends AbstractBuildable {
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
         .add(new MkdirStep(out.getParent()))
-        .add(CopyStep.forFile(src.resolve(context), out));
+        .add(CopyStep.forFile(src.resolve(), out));
 
     buildableContext.recordArtifact(out);
     return builder.build();

@@ -21,7 +21,7 @@ import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
@@ -126,7 +126,7 @@ public class AndroidManifest extends AbstractBuildable {
     commands.add(new MkdirStep(pathToOutputFile.getParent()));
 
     commands.add(new GenerateManifestStep(
-        skeletonFile.resolve(context),
+        skeletonFile.resolve(),
         manifestFiles,
         getPathToOutputFile()));
 
@@ -143,12 +143,11 @@ public class AndroidManifest extends AbstractBuildable {
   @Override
   public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
     SourcePath skeletonFile = getSkeletonFile();
-    if (skeletonFile instanceof BuildTargetSourcePath) {
-      BuildTarget skeletonTarget = ((BuildTargetSourcePath) skeletonFile).getTarget();
-      BuildRule skeletonRule = ruleResolver.get(skeletonTarget);
-      return ImmutableSortedSet.<BuildRule>of(skeletonRule);
+    if (skeletonFile instanceof BuildRuleSourcePath) {
+      BuildRule skeletonRule = ((BuildRuleSourcePath) skeletonFile).getRule();
+      return ImmutableSortedSet.of(skeletonRule);
     } else {
-      return ImmutableSortedSet.<BuildRule>of();
+      return ImmutableSortedSet.of();
     }
   }
 

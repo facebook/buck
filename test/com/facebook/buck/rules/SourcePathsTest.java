@@ -36,10 +36,14 @@ public class SourcePathsTest {
 
   @Test
   public void testFilterInputsToCompareToOutputExcludesBuildTargetSourcePaths() {
+    FakeBuildRule rule = new FakeBuildRule(
+        new BuildRuleType("example"),
+        BuildTargetFactory.newInstance("//java/com/facebook:facebook"));
+
     Iterable<? extends SourcePath> sourcePaths = ImmutableList.of(
         new FileSourcePath("java/com/facebook/Main.java"),
         new FileSourcePath("java/com/facebook/BuckConfig.java"),
-        new BuildTargetSourcePath(BuildTargetFactory.newInstance("//java/com/facebook:facebook")));
+        new BuildRuleSourcePath(rule));
     Iterable<Path> inputs = SourcePaths.filterInputsToCompareToOutput(sourcePaths);
     MoreAsserts.assertIterablesEquals(
         "Iteration order should be preserved: results should not be alpha-sorted.",

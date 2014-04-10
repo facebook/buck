@@ -51,7 +51,12 @@ public class FakeBuildable extends AbstractBuildable {
 
   /** @return this */
   public FakeBuildable setPathToOutputFile(@Nullable String pathToOutputFile) {
-    this.pathToOutputFile = Paths.get(pathToOutputFile);
+    return setPathToOutputFile(Paths.get(pathToOutputFile));
+
+  }
+
+  public FakeBuildable setPathToOutputFile(@Nullable Path pathToOutputFile) {
+    this.pathToOutputFile = pathToOutputFile;
     return this;
   }
 

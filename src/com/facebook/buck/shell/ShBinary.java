@@ -86,7 +86,7 @@ public class ShBinary extends AbstractBuildable
     GenerateShellScriptStep generateShellScript = new GenerateShellScriptStep(
         Paths.get(target.getBasePath()),
         main,
-        SourcePaths.toPaths(resources, context),
+        SourcePaths.toPaths(resources),
         output);
 
     buildableContext.recordArtifact(output);

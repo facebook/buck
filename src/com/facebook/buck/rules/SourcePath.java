@@ -39,9 +39,7 @@ public interface SourcePath extends Comparable<SourcePath>  {
    *
    * @return the Path which this instance represents.
    */
-  public Path resolve(BuildContext context);
-
-  public Path resolve(DependencyGraph graph);
+  public Path resolve();
 
   /**
    * @return a representation of path in a stable manner that does not involve calling {#resolve()}

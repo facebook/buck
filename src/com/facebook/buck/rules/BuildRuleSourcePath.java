@@ -16,30 +16,40 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
-public class FileSourcePath extends AbstractSourcePath {
-  private final String relativePath;
+/**
+ * A {@link SourcePath} that utilizes the output from a {@link BuildRule} as the file it
+ * represents.
+ */
+public class BuildRuleSourcePath extends AbstractSourcePath {
+  private final BuildRule rule;
 
-  public FileSourcePath(String relativePath) {
-    this.relativePath = Preconditions.checkNotNull(relativePath);
+  public BuildRuleSourcePath(BuildRule rule) {
+    this.rule = Preconditions.checkNotNull(rule);
   }
 
   @Override
   public Path resolve() {
-    return Paths.get(relativePath);
+    Buildable buildable = rule.getBuildable();
+
+    Path path = buildable == null ? null : buildable.getPathToOutputFile();
+    if (path == null) {
+      throw new HumanReadableException("No known output for: %s", rule);
+    }
+
+    return path;
   }
 
   @Override
   public String asReference() {
-    return relativePath;
+    return rule.getFullyQualifiedName();
   }
 
-  @Override
-  public String toString() {
-    return relativePath;
+  public BuildRule getRule() {
+    return rule;
   }
 }

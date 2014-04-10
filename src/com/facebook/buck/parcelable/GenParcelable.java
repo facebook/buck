@@ -77,7 +77,7 @@ public class GenParcelable extends AbstractBuildable {
       @Override
       public int execute(ExecutionContext executionContext) {
         for (SourcePath sourcePath : srcs) {
-          Path src = sourcePath.resolve(buildContext);
+          Path src = sourcePath.resolve();
           File file = executionContext.getProjectFilesystem().getFileForRelativePath(src);
           try {
             // Generate the Java code for the Parcelable class.
