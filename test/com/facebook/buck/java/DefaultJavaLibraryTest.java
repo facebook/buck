@@ -53,13 +53,13 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -137,8 +137,8 @@ public class DefaultJavaLibraryTest {
         new FakeBuildRuleParams(buildTarget),
         /* srcs */ ImmutableSet.<Path>of(),
         ImmutableSet.of(
-            new FileSourcePath("android/java/src/com/facebook/base/data.json"),
-            new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
+            new TestSourcePath("android/java/src/com/facebook/base/data.json"),
+            new TestSourcePath("android/java/src/com/facebook/common/util/data.json")
         ),
         /* proguardConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
@@ -172,8 +172,8 @@ public class DefaultJavaLibraryTest {
         new FakeBuildRuleParams(buildTarget),
         /* srcs */ ImmutableSet.<Path>of(),
         ImmutableSet.<SourcePath>of(
-            new FileSourcePath("android/java/src/com/facebook/base/data.json"),
-            new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
+            new TestSourcePath("android/java/src/com/facebook/base/data.json"),
+            new TestSourcePath("android/java/src/com/facebook/common/util/data.json")
         ),
         /* proguargConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
@@ -208,8 +208,8 @@ public class DefaultJavaLibraryTest {
         new FakeBuildRuleParams(buildTarget),
         /* srcs */ ImmutableSet.<Path>of(),
         ImmutableSet.of(
-            new FileSourcePath("android/java/src/com/facebook/base/data.json"),
-            new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
+            new TestSourcePath("android/java/src/com/facebook/base/data.json"),
+            new TestSourcePath("android/java/src/com/facebook/common/util/data.json")
         ),
         /* proguargConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
@@ -289,7 +289,7 @@ public class DefaultJavaLibraryTest {
     DefaultJavaLibrary javaRule = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//library:code"))
         .addResource(new BuildRuleSourcePath(genrule))
-        .addResource(new FileSourcePath("library/data.txt"))
+        .addResource(new TestSourcePath("library/data.txt"))
         .build(ruleResolver)
         .getBuildable();
 
@@ -1104,10 +1104,10 @@ public class DefaultJavaLibraryTest {
         .addSrc(Paths.get("bdeafhkgcji.java"))
         .addSrc(Paths.get("bdehgaifjkc.java"))
         .addSrc(Paths.get("cfiabkjehgd.java"))
-        .addResource(new FileSourcePath("becgkaifhjd.txt"))
-        .addResource(new FileSourcePath("bkhajdifcge.txt"))
-        .addResource(new FileSourcePath("cabfghjekid.txt"))
-        .addResource(new FileSourcePath("chkdbafijge.txt"))
+        .addResource(new TestSourcePath("becgkaifhjd.txt"))
+        .addResource(new TestSourcePath("bkhajdifcge.txt"))
+        .addResource(new TestSourcePath("cabfghjekid.txt"))
+        .addResource(new TestSourcePath("chkdbafijge.txt"))
         .build(new BuildRuleResolver());
 
     BuildRule rule2 = JavaLibraryBuilder
@@ -1116,10 +1116,10 @@ public class DefaultJavaLibraryTest {
         .addSrc(Paths.get("bdehgaifjkc.java"))
         .addSrc(Paths.get("bdeafhkgcji.java"))
         .addSrc(Paths.get("agifhbkjdec.java"))
-        .addResource(new FileSourcePath("chkdbafijge.txt"))
-        .addResource(new FileSourcePath("cabfghjekid.txt"))
-        .addResource(new FileSourcePath("bkhajdifcge.txt"))
-        .addResource(new FileSourcePath("becgkaifhjd.txt"))
+        .addResource(new TestSourcePath("chkdbafijge.txt"))
+        .addResource(new TestSourcePath("cabfghjekid.txt"))
+        .addResource(new TestSourcePath("bkhajdifcge.txt"))
+        .addResource(new TestSourcePath("becgkaifhjd.txt"))
         .build(new BuildRuleResolver());
 
     Collection<Path> inputs1 = rule1.getBuildable().getInputsToCompareToOutput();

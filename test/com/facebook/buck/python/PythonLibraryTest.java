@@ -27,8 +27,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -60,7 +60,7 @@ public class PythonLibraryTest {
   public void testGetters() {
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         new BuildTarget("//scripts/python", "foo"));
-    SourcePath src = new FileSourcePath("");
+    SourcePath src = new TestSourcePath("");
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of(src);
     PythonLibrary pythonLibrary = new PythonLibrary(
         buildRuleParams,
@@ -73,9 +73,9 @@ public class PythonLibraryTest {
   public void testFlattening() throws IOException {
     BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
     ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
-    srcs.add(new FileSourcePath("baz.py"));
-    srcs.add(new FileSourcePath("foo/__init__.py"));
-    srcs.add(new FileSourcePath("foo/bar.py"));
+    srcs.add(new TestSourcePath("baz.py"));
+    srcs.add(new TestSourcePath("foo/__init__.py"));
+    srcs.add(new TestSourcePath("foo/bar.py"));
     PythonLibrary rule = new PythonLibrary(new FakeBuildRuleParams(pyLibraryTarget),
         srcs.build());
 

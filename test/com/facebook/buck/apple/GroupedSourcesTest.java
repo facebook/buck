@@ -18,8 +18,9 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.collect.ImmutableList;
+
 import org.junit.Test;
 
 /**
@@ -32,19 +33,19 @@ public class GroupedSourcesTest {
         GroupedSource.ofSourceGroup(
             "Group1",
             ImmutableList.of(
-                GroupedSource.ofSourcePath(new FileSourcePath("foo.m")),
-                GroupedSource.ofSourcePath(new FileSourcePath("bar.m")))),
+                GroupedSource.ofSourcePath(new TestSourcePath("foo.m")),
+                GroupedSource.ofSourcePath(new TestSourcePath("bar.m")))),
         GroupedSource.ofSourceGroup(
             "Group2",
             ImmutableList.of(
-                GroupedSource.ofSourcePath(new FileSourcePath("baz.m")),
-                GroupedSource.ofSourcePath(new FileSourcePath("blech.m")))));
+                GroupedSource.ofSourcePath(new TestSourcePath("baz.m")),
+                GroupedSource.ofSourcePath(new TestSourcePath("blech.m")))));
     assertEquals(
         ImmutableList.of(
-            new FileSourcePath("foo.m"),
-            new FileSourcePath("bar.m"),
-            new FileSourcePath("baz.m"),
-            new FileSourcePath("blech.m")),
+            new TestSourcePath("foo.m"),
+            new TestSourcePath("bar.m"),
+            new TestSourcePath("baz.m"),
+            new TestSourcePath("blech.m")),
         GroupedSources.sourcePaths(groupedSources));
   }
 }

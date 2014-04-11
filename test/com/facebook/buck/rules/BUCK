@@ -18,6 +18,7 @@ java_library(
     'NonCheckingBuildRuleFactoryParams.java',
     'ProjectConfigBuilder.java',
     'RetainOrderComparator.java',
+    'TestSourcePath.java',
   ],
   deps = [
     '//lib:guava',

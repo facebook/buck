@@ -32,9 +32,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.FileHashCache;
@@ -233,7 +233,7 @@ public class AndroidResourceTest {
 
     BuildRule e = AndroidBinaryBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
-            .setManifest(new FileSourcePath("AndroidManfiest.xml"))
+            .setManifest(new TestSourcePath("AndroidManfiest.xml"))
             .setTarget("Google Inc.:Google APIs:16")
             .setKeystore(keystore)
             .setOriginalDeps(ImmutableSortedSet.of(a, c))

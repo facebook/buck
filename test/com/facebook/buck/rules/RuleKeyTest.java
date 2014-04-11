@@ -160,7 +160,7 @@ public class RuleKeyTest {
 
     ImmutableSortedSet<SourcePath> sourcePaths = ImmutableSortedSet.<SourcePath>of(
         new BuildRuleSourcePath(rule),
-        new FileSourcePath("alpha/beta")
+        new TestSourcePath("alpha/beta")
     );
     ImmutableSet<String> strings = ImmutableSet.of("one", "two");
 

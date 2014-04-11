@@ -26,7 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -101,7 +101,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .setOriginalDeps(ImmutableSortedSet.of(libraryRule, manifestRule))
         .setBuildTargetsToExcludeFromDex(
             ImmutableSet.of(BuildTargetFactory.newInstance("//third_party/guava:guava")))
-        .setManifest(new FileSourcePath("java/src/com/facebook/AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("java/src/com/facebook/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystore)
         .build(ruleResolver)
@@ -183,7 +183,7 @@ public class AndroidTransitiveDependencyGraphTest {
 
     AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(new BuildTarget("//apps/sample", "app"))
-        .setManifest(new FileSourcePath("apps/sample/AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("apps/sample/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystore)
         .setOriginalDeps(ImmutableSortedSet.of(androidLibrary))

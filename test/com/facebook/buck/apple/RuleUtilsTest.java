@@ -17,8 +17,8 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.collect.ImmutableList;
@@ -38,16 +38,16 @@ public class RuleUtilsTest {
             new Pair<>(
                 "Group1",
                 ImmutableList.of(
-                    AppleSource.ofSourcePath(new FileSourcePath("foo.m")),
+                    AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new FileSourcePath("bar.m"), "-Wall"))))),
+                        new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall"))))),
         AppleSource.ofSourceGroup(
             new Pair<>(
                 "Group2",
                 ImmutableList.of(
-                    AppleSource.ofSourcePath(new FileSourcePath("baz.m")),
+                    AppleSource.ofSourcePath(new TestSourcePath("baz.m")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new FileSourcePath("blech.m"), "-fobjc-arc"))))
+                        new Pair<SourcePath, String>(new TestSourcePath("blech.m"), "-fobjc-arc"))))
         ));
 
     RuleUtils.extractSourcePaths(sources, perFileCompileFlags, input);
@@ -56,19 +56,19 @@ public class RuleUtilsTest {
             GroupedSource.ofSourceGroup(
                 "Group1",
                 ImmutableList.of(
-                    GroupedSource.ofSourcePath(new FileSourcePath("foo.m")),
-                    GroupedSource.ofSourcePath(new FileSourcePath("bar.m"))
+                    GroupedSource.ofSourcePath(new TestSourcePath("foo.m")),
+                    GroupedSource.ofSourcePath(new TestSourcePath("bar.m"))
                 )),
             GroupedSource.ofSourceGroup(
                 "Group2",
                 ImmutableList.of(
-                    GroupedSource.ofSourcePath(new FileSourcePath("baz.m")),
-                    GroupedSource.ofSourcePath(new FileSourcePath("blech.m"))
+                    GroupedSource.ofSourcePath(new TestSourcePath("baz.m")),
+                    GroupedSource.ofSourcePath(new TestSourcePath("blech.m"))
                 ))
     ), sources.build());
     assertEquals(ImmutableMap.<SourcePath, String>of(
-        new FileSourcePath("bar.m"), "-Wall",
-        new FileSourcePath("blech.m"), "-fobjc-arc"
+        new TestSourcePath("bar.m"), "-Wall",
+        new TestSourcePath("blech.m"), "-fobjc-arc"
     ), perFileCompileFlags.build());
   }
 }

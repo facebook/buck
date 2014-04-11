@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,8 +39,8 @@ public class IosLibraryTest {
   public void getInputsToCompareToOutput() {
     IosLibraryDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.srcs = ImmutableList.of(
-        AppleSource.ofSourcePath(new FileSourcePath("some_source.m")),
-        AppleSource.ofSourcePath(new FileSourcePath("some_header.h")));
+        AppleSource.ofSourcePath(new TestSourcePath("some_source.m")),
+        AppleSource.ofSourcePath(new TestSourcePath("some_header.h")));
     arg.configs = ImmutableMap.of();
     arg.frameworks = ImmutableSortedSet.of();
 

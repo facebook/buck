@@ -41,9 +41,9 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildable;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.JavaPackageFinder;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -101,7 +101,7 @@ public class ApkGenruleTest {
 
     AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
-        .setManifest(new FileSourcePath("AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystore)
         .setOriginalDeps(ImmutableSortedSet.of(androidLibRule))

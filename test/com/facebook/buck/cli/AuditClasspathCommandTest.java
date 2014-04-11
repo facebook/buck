@@ -36,9 +36,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
@@ -138,7 +138,7 @@ public class AuditClasspathCommandTest {
         .getBuildable();
     AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-binary"))
-        .setManifest(new FileSourcePath("AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystore)
         .setOriginalDeps(ImmutableSortedSet.of(androidLibrary, javaLibrary))

@@ -26,7 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -91,7 +91,7 @@ public class AndroidInstrumentationApkTest {
     AndroidBinaryBuilder.Builder androidBinaryBuilder = AndroidBinaryBuilder.newBuilder();
     androidBinaryBuilder
         .setBuildTarget(new BuildTarget("//apps", "app"))
-        .setManifest(new FileSourcePath("apps/AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("apps/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:18")
         .setKeystore(keystore)
         .setOriginalDeps(ImmutableSortedSet.<BuildRule>of(
@@ -104,7 +104,7 @@ public class AndroidInstrumentationApkTest {
     // AndroidInstrumentationApk transitively depends on :lib1, :lib2, :lib3, and :lib4.
     AndroidInstrumentationApk androidInstrumentationApk = new AndroidInstrumentationApk(
         new FakeBuildRuleParams(new BuildTarget("//apps", "instrumentation")),
-        new FileSourcePath("apps/InstrumentationAndroidManifest.xml"),
+        new TestSourcePath("apps/InstrumentationAndroidManifest.xml"),
         androidBinary,
         androidBinaryRule,
         ImmutableSortedSet.<BuildRule>of(

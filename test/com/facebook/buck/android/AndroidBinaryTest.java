@@ -37,8 +37,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -94,7 +94,7 @@ public class AndroidBinaryTest {
         .setOriginalDeps(ImmutableSortedSet.of(libraryOneRule, libraryTwoRule))
         .setBuildTargetsToExcludeFromDex(ImmutableSet.of(
                 BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo")))
-        .setManifest(new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(addKeystoreRule(ruleResolver))
         .build(ruleResolver);
@@ -205,7 +205,7 @@ public class AndroidBinaryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBinaryBuilder.Builder androidBinaryRuleBuilder = AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
-        .setManifest(new FileSourcePath("java/src/com/facebook/AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("java/src/com/facebook/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(addKeystoreRule(ruleResolver));
 
@@ -214,7 +214,7 @@ public class AndroidBinaryTest {
         ImmutableList.of(Paths.get("java/src/com/facebook/AndroidManifest.xml")),
         androidBinaryRuleBuilder.build().getInputsToCompareToOutput());
 
-    SourcePath proguardConfig = new FileSourcePath("java/src/com/facebook/proguard.cfg");
+    SourcePath proguardConfig = new TestSourcePath("java/src/com/facebook/proguard.cfg");
     androidBinaryRuleBuilder.setBuildTarget(new BuildTarget("//java/src/com/facebook", "app2"));
     androidBinaryRuleBuilder.setProguardConfig(Optional.of(proguardConfig));
     MoreAsserts.assertIterablesEquals(
@@ -232,7 +232,7 @@ public class AndroidBinaryTest {
 
     AndroidBinary ruleInRootDirectory = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
-        .setManifest(new FileSourcePath("AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(keystore)
         .setTarget("Google Inc.:Google APIs:16")
         .build(ruleResolver)
@@ -241,7 +241,7 @@ public class AndroidBinaryTest {
 
     AndroidBinary ruleInNonRootDirectory = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example:fb4a"))
-        .setManifest(new FileSourcePath("AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(keystore)
         .setTarget("Google Inc.:Google APIs:16")
         .build(ruleResolver)
@@ -256,7 +256,7 @@ public class AndroidBinaryTest {
 
     AndroidBinary rule = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-        .setManifest(new FileSourcePath("AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver))
         .setTarget("Google Inc.:Google APIs:16")
         .build(ruleResolver)
@@ -287,7 +287,7 @@ public class AndroidBinaryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBinary splitDexRule = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-        .setManifest(new FileSourcePath("AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver))
         .setTarget("Google Inc.:Google APIs:16")
         .setDexSplitMode(new DexSplitMode(
@@ -368,7 +368,7 @@ public class AndroidBinaryTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     AndroidBinaryBuilder.Builder builder = AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:target"))
-        .setManifest(new FileSourcePath("AndroidManifest.xml"))
+        .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(resolver))
         .setTarget("Google Inc:Google APIs:16")
         .setResourceFilter(new ResourceFilter(ImmutableList.<String>of("mdpi")))

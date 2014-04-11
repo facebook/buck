@@ -19,27 +19,20 @@ package com.facebook.buck.rules;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
-public class FileSourcePath extends AbstractSourcePath {
-  private final String relativePath;
+public class PathSourcePath extends AbstractSourcePath {
+  private final Path relativePath;
 
-  public FileSourcePath(String relativePath) {
+  public PathSourcePath(Path relativePath) {
     this.relativePath = Preconditions.checkNotNull(relativePath);
   }
 
-  @Override
   public Path resolve() {
-    return Paths.get(relativePath);
+    return relativePath;
   }
 
   @Override
   public String asReference() {
-    return relativePath;
-  }
-
-  @Override
-  public String toString() {
-    return relativePath;
+    return relativePath.toString();
   }
 }

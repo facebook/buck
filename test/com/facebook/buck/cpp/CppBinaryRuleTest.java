@@ -31,8 +31,8 @@ import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -86,16 +86,16 @@ public class CppBinaryRuleTest {
     BuildRule library = makeCppLibraryBuildRule(
         new BuildTarget("//lib", "bla"),
         ImmutableSortedSet.<SourcePath>of(
-            new FileSourcePath("libsource1.c"),
-            new FileSourcePath("libsource2.c")),
+            new TestSourcePath("libsource1.c"),
+            new TestSourcePath("libsource2.c")),
         ImmutableSortedSet.<SourcePath>of(),
         ImmutableSortedSet.<BuildRule>of());
 
     Buildable binary = makeCppBinaryBuildRule(
         new BuildTarget("//foo", "bar"),
         ImmutableSortedSet.<SourcePath>of(
-          new FileSourcePath("source1.c"),
-          new FileSourcePath("source2.c")),
+          new TestSourcePath("source1.c"),
+          new TestSourcePath("source2.c")),
           ImmutableSortedSet.<BuildRule>of(library)).getBuildable();
 
     assertThat(binary.getInputsToCompareToOutput(), hasSize(2));
@@ -136,18 +136,18 @@ public class CppBinaryRuleTest {
     BuildRule library = makeCppLibraryBuildRule(
         new BuildTarget("//lib", "bla"),
         ImmutableSortedSet.<SourcePath>of(
-            new FileSourcePath("libsource1.c"),
-            new FileSourcePath("libsource2.c")),
+            new TestSourcePath("libsource1.c"),
+            new TestSourcePath("libsource2.c")),
         ImmutableSortedSet.<SourcePath>of(),
         ImmutableSortedSet.<BuildRule>of());
 
     Buildable targetLibrary = makeCppLibraryBuildRule(
         new BuildTarget("//foo", "bar"),
         ImmutableSortedSet.<SourcePath>of(
-            new FileSourcePath("source1.c"),
-            new FileSourcePath("source2.c")),
+            new TestSourcePath("source1.c"),
+            new TestSourcePath("source2.c")),
         ImmutableSortedSet.<SourcePath>of(
-            new FileSourcePath("source.h")),
+            new TestSourcePath("source.h")),
         ImmutableSortedSet.<BuildRule>of(library)).getBuildable();
 
     assertThat(targetLibrary.getInputsToCompareToOutput(), hasSize(3));

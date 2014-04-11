@@ -184,7 +184,7 @@ public class ConstructorArgMarshallerTest {
         )),
         dto);
 
-    assertEquals(new FileSourcePath("example/path/cheese.txt"), dto.filePath);
+    assertEquals(new PathSourcePath(Paths.get("example/path/cheese.txt")), dto.filePath);
     assertEquals(new BuildRuleSourcePath(rule), dto.targetPath);
   }
 

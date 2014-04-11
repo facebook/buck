@@ -42,9 +42,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeJavaPackageFinder;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfigBuilder;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
@@ -179,7 +179,7 @@ public class ProjectTest {
     BuildRule androidBinaryRule = AndroidBinaryBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//foo:app"))
             .setOriginalDeps(ImmutableSortedSet.of(baseRule))
-            .setManifest(new FileSourcePath("foo/AndroidManifest.xml"))
+            .setManifest(new TestSourcePath("foo/AndroidManifest.xml"))
             .setTarget("Google Inc.:Google APIs:16")
             .setKeystore(keystore)
             .setBuildTargetsToExcludeFromDex(
@@ -198,7 +198,7 @@ public class ProjectTest {
     BuildRule barAppBuildRule = AndroidBinaryBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//bar:app"))
             .setOriginalDeps(ImmutableSortedSet.of(baseRule))
-            .setManifest(new FileSourcePath("foo/AndroidManifest.xml"))
+            .setManifest(new TestSourcePath("foo/AndroidManifest.xml"))
             .setTarget("Google Inc.:Google APIs:16")
             .setKeystore(keystore)
             .build(ruleResolver);

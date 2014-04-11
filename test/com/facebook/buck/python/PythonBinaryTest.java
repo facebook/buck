@@ -26,8 +26,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -44,14 +44,14 @@ public class PythonBinaryTest {
     PythonLibrary orphanPyLibrary = new PythonLibrary(
         new FakeBuildRuleParams(orphanPyLibraryTarget),
         ImmutableSortedSet.<SourcePath>of(
-            new FileSourcePath("java/src/com/javalib/orphan/sadpanda.py")));
+            new TestSourcePath("java/src/com/javalib/orphan/sadpanda.py")));
     BuildRule orphanPyLibraryRule = createBuildRule(orphanPyLibrary, orphanPyLibraryTarget);
 
     BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
     PythonLibrary pyLibrary = new PythonLibrary(
         new FakeBuildRuleParams(pyLibraryTarget),
         ImmutableSortedSet.<SourcePath>of(
-            new FileSourcePath("python/tastypy.py")));
+            new TestSourcePath("python/tastypy.py")));
 
     Map<BuildTarget, BuildRule> rules = Maps.newHashMap();
     rules.put(orphanPyLibraryTarget, createBuildRule(orphanPyLibrary, orphanPyLibraryTarget));

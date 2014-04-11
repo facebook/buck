@@ -41,8 +41,9 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
@@ -99,7 +100,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ResourcesFilter.ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         createStrictMock(AndroidResourceDepsFinder.class),
-        createStrictMock(FileSourcePath.class),
+        createStrictMock(PathSourcePath.class),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.< AndroidBinary.TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
@@ -179,7 +180,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         depsFinder,
-        new FileSourcePath("AndroidManifest.xml"),
+        new TestSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<AndroidBinary.TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,

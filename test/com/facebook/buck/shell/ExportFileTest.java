@@ -33,8 +33,8 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -111,7 +111,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
     ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
-    args.src = Optional.of(new FileSourcePath("chips"));
+    args.src = Optional.of(new TestSourcePath("chips"));
     args.out = Optional.of("fish");
     ExportFile exportFile = new ExportFile(params, args);
 
@@ -130,7 +130,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetInputsFromSourcePaths() {
     ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
-    args.src = Optional.of(new FileSourcePath("chips"));
+    args.src = Optional.of(new TestSourcePath("chips"));
     args.out = Optional.of("cake");
     ExportFile exportFile = new ExportFile(params, args);
 

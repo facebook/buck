@@ -37,7 +37,7 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.RuleMap;
 import com.google.common.base.Function;
@@ -94,7 +94,7 @@ final class ProjectGeneratorTestUtils {
       } else if (field.getType().isAssignableFrom(Path.class)) {
         value = Paths.get("");
       } else if (field.getType().isAssignableFrom(SourcePath.class)) {
-        value = new FileSourcePath("");
+        value = new PathSourcePath(Paths.get(""));
       } else if (field.getType().isPrimitive()) {
         // do nothing, these are initialized with a zero value
         continue;

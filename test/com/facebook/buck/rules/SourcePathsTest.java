@@ -41,8 +41,8 @@ public class SourcePathsTest {
         BuildTargetFactory.newInstance("//java/com/facebook:facebook"));
 
     Iterable<? extends SourcePath> sourcePaths = ImmutableList.of(
-        new FileSourcePath("java/com/facebook/Main.java"),
-        new FileSourcePath("java/com/facebook/BuckConfig.java"),
+        new TestSourcePath("java/com/facebook/Main.java"),
+        new TestSourcePath("java/com/facebook/BuckConfig.java"),
         new BuildRuleSourcePath(rule));
     Iterable<Path> inputs = SourcePaths.filterInputsToCompareToOutput(sourcePaths);
     MoreAsserts.assertIterablesEquals(

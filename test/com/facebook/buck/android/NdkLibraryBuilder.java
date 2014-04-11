@@ -19,7 +19,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -52,7 +52,7 @@ public class NdkLibraryBuilder {
     }
 
     public Builder addSrc(Path source) {
-      this.sources.add(new FileSourcePath(source.toString()));
+      this.sources.add(new PathSourcePath(source));
       return this;
     }
 

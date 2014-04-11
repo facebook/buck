@@ -20,7 +20,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Optional;
@@ -79,8 +79,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
                 throws IOException {
               if (EXTENSIONS_REGEX.matcher(file.toString()).matches()) {
                 srcs.add(
-                    new FileSourcePath(
-                        buildRulePath.resolve(rootDirectory.relativize(file)).toString()));
+                    new PathSourcePath(
+                        buildRulePath.resolve(rootDirectory.relativize(file))));
               }
 
               return super.visitFile(file, attrs);

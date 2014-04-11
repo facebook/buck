@@ -37,7 +37,7 @@ public class SourcePaths {
       new Function<Path, SourcePath>() {
         @Override
         public SourcePath apply(Path input) {
-          return new FileSourcePath(input.toString());
+          return new PathSourcePath(input);
         }
       };
 
@@ -57,7 +57,7 @@ public class SourcePaths {
     // BuildRuleSourcePath should not be included in the output because it refers to a generated
     // file, and generated files are not hashed as part of a RuleKey.
     return FluentIterable.from(sources)
-        .filter(FileSourcePath.class)
+        .filter(PathSourcePath.class)
         .transform(SourcePath.TO_REFERENCE)
         .transform(MorePaths.TO_PATH)
         .toList();

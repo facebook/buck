@@ -22,16 +22,16 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class FileSourcePathTest {
+public class PathSourcePathTest {
 
   @Test(expected = NullPointerException.class)
   public void relativePathMustBeSet() {
-    new FileSourcePath(null);
+    new PathSourcePath(null);
   }
 
   @Test
   public void shouldResolveFilesUsingTheBuildContextsFileSystem() {
-    FileSourcePath path = new FileSourcePath("cheese");
+    PathSourcePath path = new PathSourcePath(Paths.get("cheese"));
 
     Path resolved = path.resolve();
 
@@ -40,7 +40,7 @@ public class FileSourcePathTest {
 
   @Test
   public void shouldReturnTheOriginalPathAsTheReference() {
-    FileSourcePath path = new FileSourcePath("cheese");
+    PathSourcePath path = new PathSourcePath(Paths.get("cheese"));
 
     assertEquals("cheese", path.asReference());
   }

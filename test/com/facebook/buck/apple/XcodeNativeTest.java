@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,12 +43,12 @@ public class XcodeNativeTest {
         new XcodeNativeDescription().createUnpopulatedConstructorArg();
     arg.product = "libfoo.a";
     arg.targetGid = "0";
-    arg.projectContainerPath = new FileSourcePath("foo.xcodeproj");
+    arg.projectContainerPath = new TestSourcePath("foo.xcodeproj");
     XcodeNative xcodeNative = new XcodeNative(params, arg);
 
     assertEquals("libfoo.a", xcodeNative.getProduct());
     assertEquals("0", xcodeNative.getTargetGid());
-    assertEquals(new FileSourcePath("foo.xcodeproj"), xcodeNative.getProjectContainerPath());
+    assertEquals(new TestSourcePath("foo.xcodeproj"), xcodeNative.getProjectContainerPath());
 
     assertEquals(Paths.get("buck-out/gen/libfoo.a"), xcodeNative.getPathToOutputFile());
   }

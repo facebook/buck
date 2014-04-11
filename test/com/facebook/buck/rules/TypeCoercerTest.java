@@ -293,8 +293,8 @@ public class TypeCoercerTest {
     ImmutableList<String> input = ImmutableList.of("foo.m", "bar.m");
     Object result = coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), input);
     ImmutableList<AppleSource> expectedResult = ImmutableList.of(
-        AppleSource.ofSourcePath(new FileSourcePath("foo.m")),
-        AppleSource.ofSourcePath(new FileSourcePath("bar.m")));
+        AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
+        AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
     assertEquals(expectedResult, result);
   }
 
@@ -310,9 +310,9 @@ public class TypeCoercerTest {
     Object result = coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), input);
     ImmutableList<AppleSource> expectedResult = ImmutableList.of(
         AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-Wall")),
+            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-Wall")),
         AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new FileSourcePath("bar.m"), "-fobjc-arc")));
+            new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-fobjc-arc")));
     assertEquals(expectedResult, result);
   }
 
@@ -339,9 +339,9 @@ public class TypeCoercerTest {
             new Pair<>(
                 "Group1",
                 ImmutableList.of(
-                    AppleSource.ofSourcePath(new FileSourcePath("foo.m")),
+                    AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new FileSourcePath("bar.m"), "-Wall"))
+                        new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall"))
                 )
             )
         ),
@@ -349,9 +349,9 @@ public class TypeCoercerTest {
             new Pair<>(
                 "Group2",
                 ImmutableList.of(
-                    AppleSource.ofSourcePath(new FileSourcePath("baz.m")),
+                    AppleSource.ofSourcePath(new TestSourcePath("baz.m")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new FileSourcePath("blech.m"), "-fobjc-arc"))
+                        new Pair<SourcePath, String>(new TestSourcePath("blech.m"), "-fobjc-arc"))
                 )
             )
         ));

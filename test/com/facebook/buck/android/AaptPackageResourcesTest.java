@@ -27,7 +27,7 @@ import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -60,7 +60,7 @@ public class AaptPackageResourcesTest {
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
-        /* manifest */ new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
+        /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
@@ -114,7 +114,7 @@ public class AaptPackageResourcesTest {
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
-        /* manifest */ new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
+        /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
@@ -169,7 +169,7 @@ public class AaptPackageResourcesTest {
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//facebook/base", "apk", "aapt_package"),
-        /* manifest */ new FileSourcePath("facebook/base/AndroidManifest.xml"),
+        /* manifest */ new TestSourcePath("facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,

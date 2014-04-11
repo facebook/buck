@@ -69,8 +69,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.Pair;
@@ -253,16 +253,16 @@ public class ProjectGeneratorTest {
             new Pair<>(
                 "Group1",
                 ImmutableList.of(
-                    AppleSource.ofSourcePath(new FileSourcePath("foo.m")),
+                    AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new FileSourcePath("bar.m"), "-Wall"))))),
+                        new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall"))))),
         AppleSource.ofSourceGroup(
             new Pair<>(
                 "Group2",
                 ImmutableList.of(
-                    AppleSource.ofSourcePath(new FileSourcePath("baz.m")),
+                    AppleSource.ofSourcePath(new TestSourcePath("baz.m")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new FileSourcePath("blech.m"), "-fobjc-arc"))))
+                        new Pair<SourcePath, String>(new TestSourcePath("blech.m"), "-fobjc-arc"))))
         ));
     arg.frameworks = ImmutableSortedSet.of();
     BuildRule rule = new DescribedRule(
@@ -311,16 +311,16 @@ public class ProjectGeneratorTest {
             new Pair<>(
                 "HeaderGroup1",
                 ImmutableList.of(
-                    AppleSource.ofSourcePath(new FileSourcePath("foo.h")),
+                    AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new FileSourcePath("bar.h"), "public"))))),
+                        new Pair<SourcePath, String>(new TestSourcePath("bar.h"), "public"))))),
         AppleSource.ofSourceGroup(
             new Pair<>(
                 "HeaderGroup2",
                 ImmutableList.of(
-                    AppleSource.ofSourcePath(new FileSourcePath("baz.h")),
+                    AppleSource.ofSourcePath(new TestSourcePath("baz.h")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new FileSourcePath("blech.h"), "private"))))
+                        new Pair<SourcePath, String>(new TestSourcePath("blech.h"), "private"))))
         ));
     arg.frameworks = ImmutableSortedSet.of();
     BuildRule rule = new DescribedRule(
@@ -402,7 +402,7 @@ public class ProjectGeneratorTest {
           public XcodeNativeDescription.Arg apply(XcodeNativeDescription.Arg input) {
             input.product = "libfoo.a";
             input.targetGid = "00DEADBEEF";
-            input.projectContainerPath = new FileSourcePath("foo.xcodeproj");
+            input.projectContainerPath = new TestSourcePath("foo.xcodeproj");
             return input;
           }
         });
@@ -443,9 +443,9 @@ public class ProjectGeneratorTest {
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
-        AppleSource.ofSourcePath(new FileSourcePath("foo.h")),
-        AppleSource.ofSourcePath(new FileSourcePath("bar.m")));
+            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+        AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
     arg.frameworks = ImmutableSortedSet.of();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
@@ -500,9 +500,9 @@ public class ProjectGeneratorTest {
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
-        AppleSource.ofSourcePath(new FileSourcePath("foo.h")),
-        AppleSource.ofSourcePath(new FileSourcePath("bar.m")));
+            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+        AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
     arg.frameworks = ImmutableSortedSet.of();
     BuildRule rule = new DescribedRule(
         MacosxFrameworkDescription.TYPE,
@@ -558,8 +558,8 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
-        AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
+            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of(
         "$SDKROOT/Foo.framework",
         "$DEVELOPER_DIR/XCTest.framework");
@@ -607,8 +607,8 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
-        AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
+            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of(
         "$SDKROOT/Foo.framework",
         "$DEVELOPER_DIR/XCTest.framework");
@@ -656,7 +656,7 @@ public class ProjectGeneratorTest {
       IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
       arg.configs = ImmutableMap.of(
           "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("foo.m")));
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       libraryRule = new DescribedRule(
           IosLibraryDescription.TYPE,
@@ -671,7 +671,7 @@ public class ProjectGeneratorTest {
       arg.infoPlist = Paths.get("Info.plist");
       arg.configs = ImmutableMap.of(
           "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("fooTest.m")));
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
       arg.sourceUnderTest = ImmutableSortedSet.of();
       arg.testType = Optional.absent();
@@ -712,8 +712,8 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
-        AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
+            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
 
     BuildRule rule = new DescribedRule(
@@ -762,8 +762,8 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
-        AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
+            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
@@ -892,7 +892,7 @@ public class ProjectGeneratorTest {
         new Function<AppleResourceDescriptionArg, AppleResourceDescriptionArg>() {
           @Override
           public AppleResourceDescriptionArg apply(AppleResourceDescriptionArg input) {
-            input.files = ImmutableSet.<SourcePath>of(new FileSourcePath("foo.png"));
+            input.files = ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png"));
             input.dirs = ImmutableSet.of(Paths.get("foodir"));
             return input;
           }

@@ -21,7 +21,7 @@ import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
@@ -89,8 +89,8 @@ public class ExportFile extends AbstractBuildable {
     if (args.src.isPresent()) {
       this.src = args.src.get();
     } else {
-      this.src = new FileSourcePath(
-          String.format("%s%s", target.getBasePathWithSlash(), target.getShortName()));
+      this.src = new PathSourcePath(
+          Paths.get(String.format("%s%s", target.getBasePathWithSlash(), target.getShortName())));
     }
 
     final String outName = args.out.or(target.getShortName());
