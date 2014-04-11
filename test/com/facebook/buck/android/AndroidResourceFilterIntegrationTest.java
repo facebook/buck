@@ -17,7 +17,9 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.testutil.integration.ApkInspector;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -124,6 +126,19 @@ public class AndroidResourceFilterIntegrationTest {
     ApkInspector apkInspector = new ApkInspector(apkFile);
 
     apkInspector.assertFileExists("assets/strings/fr.fbstr");
+  }
+
+  @Test
+  public void testStringArtifactsAreCached() throws IOException {
+    workspace.writeContentsToPath("[cache]\n  mode = dir", ".buckconfig");
+    workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    Sha1HashCode androidBinaryRuleKey = buildLog.getRuleKey("//apps/sample:app_comp_str");
+    File cachedFile = workspace.getFile("buck-cache/" + androidBinaryRuleKey.getHash());
+    assertTrue(cachedFile.delete());
+
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
   }
 
   @Test

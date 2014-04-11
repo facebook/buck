@@ -107,6 +107,7 @@ public class PackageStringAssets extends AbstractBuildable
             pathToDirContainingAssetsDir));
     steps.add(
         new RecordFileSha1Step(pathToStringAssetsZip, STRING_ASSETS_ZIP_HASH, buildableContext));
+    buildableContext.recordArtifact(pathToStringAssetsZip);
     return steps.build();
   }
 
