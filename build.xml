@@ -81,14 +81,14 @@
     <delete dir="${build.dir}" />
   </target>
 
-  <!-- Default target so that a command line build can 
+  <!-- Default target so that a command line build can
        do more than one thing.  'success' must be the last dependency. -->
   <target name="default" depends="compile, dx, client, javacc-tests, success" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
-    <available property="jdk7" classname="java.nio.file.Files"/> 
-    <fail message="Require JDK 7 or higher" unless="jdk7"/> 
+    <available property="jdk7" classname="java.nio.file.Files"/>
+    <fail message="Require JDK 7 or higher" unless="jdk7"/>
   </target>
 
   <target name="compile-testrunner" depends="checkversion">
@@ -261,6 +261,9 @@
     <exec executable="python" failonerror="true">
       <arg value="src/com/facebook/buck/parser/buck_test.py" />
     </exec>
+    <exec executable="python" failonerror="true">
+      <arg value="src/com/facebook/buck/apple/compile_asset_catalogs_test.py" />
+    </exec>
   </target>
 
   <path id="pmd-classpath">
@@ -390,7 +393,7 @@
     <mkdir dir="${build.dir}" />
     <exec dir="${basedir}" executable="gcc">
       <arg line="-Wall -pedantic -O3 -o ${build.dir}/ng ${client.dir}/nailgun-client/ng.c" />
-    </exec> 
+    </exec>
   </target>
 
   <target name="all" depends="jar, test, javadoc, client" />
