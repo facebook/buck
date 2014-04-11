@@ -49,7 +49,10 @@ public class DirArtifactCacheTest {
   public void testCacheCreation() throws IOException {
     File cacheDir = tmpDir.newFolder();
 
-    new DirArtifactCache(cacheDir, /* maxCacheSizeBytes */ Optional.of(0L));
+    new DirArtifactCache(
+        cacheDir,
+        /* doStore */ true,
+        /* maxCacheSizeBytes */ Optional.of(0L));
   }
 
   @Test
@@ -57,7 +60,9 @@ public class DirArtifactCacheTest {
     File cacheDir = tmpDir.newFolder();
     File fileX = tmpDir.newFile("x");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(cacheDir,
+    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+        cacheDir,
+        /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
 
     Files.write("x", fileX, Charsets.UTF_8);
@@ -73,7 +78,9 @@ public class DirArtifactCacheTest {
     File cacheDir = tmpDir.newFolder();
     File fileX = tmpDir.newFile("x");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(cacheDir,
+    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+        cacheDir,
+        /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.<Long>absent());
 
     Files.write("x", fileX, Charsets.UTF_8);
@@ -97,7 +104,9 @@ public class DirArtifactCacheTest {
     File cacheDir = tmpDir.newFolder();
     File fileX = tmpDir.newFile("x");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(cacheDir,
+    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+        cacheDir,
+        /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
 
     Files.write("x", fileX, Charsets.UTF_8);
@@ -118,8 +127,10 @@ public class DirArtifactCacheTest {
     File fileY = tmpDir.newFile("y");
     File fileZ = tmpDir.newFile("z");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(cacheDir,
-      /* maxCacheSizeBytes */ Optional.of(0L));
+    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+        cacheDir,
+        /* doStore */ true,
+        /* maxCacheSizeBytes */ Optional.of(0L));
 
     Files.write("x", fileX, Charsets.UTF_8);
     Files.write("y", fileY, Charsets.UTF_8);
@@ -164,14 +175,66 @@ public class DirArtifactCacheTest {
   }
 
   @Test
+  public void testNoStoreMisses() throws IOException {
+    File cacheDir = tmpDir.newFolder();
+    File fileX = tmpDir.newFile("x");
+    File fileY = tmpDir.newFile("y");
+    File fileZ = tmpDir.newFile("z");
+
+    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+        cacheDir,
+        /* doStore */ false,
+        /* maxCacheSizeBytes */ Optional.of(0L));
+
+    Files.write("x", fileX, Charsets.UTF_8);
+    Files.write("y", fileY, Charsets.UTF_8);
+    Files.write("z", fileZ, Charsets.UTF_8);
+
+    BuildRule inputRuleX = new BuildRuleForTest(fileX);
+    BuildRule inputRuleY = new BuildRuleForTest(fileY);
+    BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
+    assertFalse(inputRuleX.equals(inputRuleY));
+    assertFalse(inputRuleX.equals(inputRuleZ));
+    assertFalse(inputRuleY.equals(inputRuleZ));
+
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, fileHashCache).build().getTotalRuleKey();
+    RuleKey ruleKeyY = RuleKey.builder(inputRuleY, fileHashCache).build().getTotalRuleKey();
+    RuleKey ruleKeyZ = RuleKey.builder(inputRuleZ, fileHashCache).build().getTotalRuleKey();
+
+    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyY, fileY));
+    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ));
+
+    dirArtifactCache.store(ruleKeyX, fileX);
+    dirArtifactCache.store(ruleKeyY, fileY);
+    dirArtifactCache.store(ruleKeyZ, fileZ);
+
+    assertTrue(fileX.delete());
+    assertTrue(fileY.delete());
+    assertTrue(fileZ.delete());
+
+    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyY, fileY));
+    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ));
+
+    assertEquals(inputRuleX, new BuildRuleForTest(fileX));
+    assertEquals(inputRuleY, new BuildRuleForTest(fileY));
+    assertEquals(inputRuleZ, new BuildRuleForTest(fileZ));
+
+    assertEquals(0, cacheDir.listFiles().length);
+  }
+
+  @Test
   public void testDeleteNothing() throws IOException {
     File cacheDir = tmpDir.newFolder();
     File fileX = new File(cacheDir, "x");
     File fileY = new File(cacheDir, "y");
     File fileZ = new File(cacheDir, "z");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(tmpDir.getRoot(),
-      /* maxCacheSizeBytes */ Optional.of(1024L));
+    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+        tmpDir.getRoot(),
+        /* doStore */ true,
+        /* maxCacheSizeBytes */ Optional.of(1024L));
 
     Files.write("x", fileX, Charsets.UTF_8);
     Files.write("y", fileY, Charsets.UTF_8);
@@ -191,8 +254,10 @@ public class DirArtifactCacheTest {
     File fileY = new File(cacheDir, "y");
     File fileZ = new File(cacheDir, "z");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(tmpDir.getRoot(),
-      /* maxCacheSizeBytes */ Optional.<Long>absent());
+    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+        tmpDir.getRoot(),
+        /* doStore */ true,
+        /* maxCacheSizeBytes */ Optional.<Long>absent());
 
     Files.write("x", fileX, Charsets.UTF_8);
     Files.write("y", fileY, Charsets.UTF_8);
@@ -213,8 +278,10 @@ public class DirArtifactCacheTest {
     File fileY = new File(cacheDir, "y");
     File fileZ = new File(cacheDir, "z");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(cacheDir,
-      /* maxCacheSizeBytes */ Optional.of(2L));
+    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+        cacheDir,
+        /* doStore */ true,
+        /* maxCacheSizeBytes */ Optional.of(2L));
 
     Files.write("w", fileW, Charsets.UTF_8);
     Files.write("x", fileX, Charsets.UTF_8);

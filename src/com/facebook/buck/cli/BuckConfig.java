@@ -89,8 +89,9 @@ public class BuckConfig {
   static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
 
   private static final String DEFAULT_CACHE_DIR = "buck-cache";
+  private static final String DEFAULT_DIR_CACHE_MODE = CacheMode.readwrite.name();
   private static final String DEFAULT_CASSANDRA_PORT = "9160";
-  private static final String DEFAULT_CASSANDRA_MODE = CassandraMode.readwrite.name();
+  private static final String DEFAULT_CASSANDRA_MODE = CacheMode.readwrite.name();
   private static final String DEFAULT_CASSANDRA_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
 
@@ -113,14 +114,14 @@ public class BuckConfig {
     cassandra
   }
 
-  private enum CassandraMode {
+  private enum CacheMode {
     readonly(false),
     readwrite(true),
     ;
 
     private final boolean doStore;
 
-    private CassandraMode(boolean doStore) {
+    private CacheMode(boolean doStore) {
       this.doStore = doStore;
     }
   }
@@ -588,8 +589,9 @@ public class BuckConfig {
   private ArtifactCache createDirArtifactCache() {
     Path cacheDir = getCacheDir();
     File dir = cacheDir.toFile();
+    boolean doStore = readCacheMode("dir_mode", DEFAULT_DIR_CACHE_MODE);
     try {
-      return new DirArtifactCache(dir, getCacheDirMaxSizeBytes());
+      return new DirArtifactCache(dir, doStore, getCacheDirMaxSizeBytes());
     } catch (IOException e) {
       throw new HumanReadableException("Failure initializing artifact cache directory: %s", dir);
     }
@@ -617,13 +619,7 @@ public class BuckConfig {
     }
 
     // cache.cassandra_mode
-    String cacheCassandraMode = getValue("cache", "cassandra_mode").or(DEFAULT_CASSANDRA_MODE);
-    final boolean doStore;
-    try {
-      doStore = CassandraMode.valueOf(cacheCassandraMode).doStore;
-    } catch (IllegalArgumentException e) {
-      throw new HumanReadableException("Unusable cache.cassandra_mode: '%s'", cacheCassandraMode);
-    }
+    final boolean doStore = readCacheMode("cassandra_mode", DEFAULT_CASSANDRA_MODE);
     // cache.hosts
     String cacheHosts = getValue("cache", "hosts").or("");
     // cache.port
@@ -638,6 +634,17 @@ public class BuckConfig {
       buckEventBus.post(ThrowableLogEvent.create(e, "Cassandra cache connection failure."));
       return null;
     }
+  }
+
+  private boolean readCacheMode(String fieldName, String defaultValue) {
+    String cacheMode = getValue("cache", fieldName).or(defaultValue);
+    final boolean doStore;
+    try {
+      doStore = CacheMode.valueOf(cacheMode).doStore;
+    } catch (IllegalArgumentException e) {
+      throw new HumanReadableException("Unusable cache.%s: '%s'", fieldName, cacheMode);
+    }
+    return doStore;
   }
 
   public Optional<String> getNdkVersion() {

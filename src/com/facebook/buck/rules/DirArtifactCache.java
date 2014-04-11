@@ -39,10 +39,13 @@ public class DirArtifactCache implements ArtifactCache {
 
   private final File cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
+  private final boolean doStore;
 
-  public DirArtifactCache(File cacheDir, Optional<Long> maxCacheSizeBytes) throws IOException {
+  public DirArtifactCache(File cacheDir, boolean doStore, Optional<Long> maxCacheSizeBytes)
+      throws IOException {
     this.cacheDir = Preconditions.checkNotNull(cacheDir);
     this.maxCacheSizeBytes = Preconditions.checkNotNull(maxCacheSizeBytes);
+    this.doStore = doStore;
     Files.createDirectories(cacheDir.toPath());
   }
 
@@ -71,6 +74,9 @@ public class DirArtifactCache implements ArtifactCache {
 
   @Override
   public void store(RuleKey ruleKey, File output) {
+    if (!doStore) {
+      return;
+    }
     File cacheEntry = new File(cacheDir, ruleKey.toString());
     Path tmpCacheEntry = null;
     try {
@@ -101,7 +107,7 @@ public class DirArtifactCache implements ArtifactCache {
    */
   @Override
   public boolean isStoreSupported() {
-    return true;
+    return doStore;
   }
 
   @Override
