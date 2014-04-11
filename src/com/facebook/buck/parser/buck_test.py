@@ -3,6 +3,7 @@ from buck import split_path
 from buck import glob_walk_internal
 from buck import glob_match
 from buck import relpath
+from buck import path_join
 from buck import strip_none_entries
 from buck import symlink_aware_walk
 import fnmatch
@@ -19,11 +20,6 @@ class TestBuck(unittest.TestCase):
     self.assertEqual(['', 'foo', 'bar', ''], split_path('/foo/bar/'))
 
   def glob_match_using_glob_walk(self, pattern_to_test, path_to_test, include_dotfiles=False):
-    def normpath(path):
-      if path is not None:
-        self.assertTrue(isinstance(path, basestring))
-      return path
-
     chunks = split_path(path_to_test)
     # Simulate a "file system" with only one path, that is path_to_test
     # Note: for the purpose of simulating glob_match, we do not treat empty names as special.
@@ -48,7 +44,7 @@ class TestBuck(unittest.TestCase):
 
     visited = set()
     tokens = split_path(pattern_to_test)
-    return next(glob_walk_internal(normpath, iglob, isresult, visited, tokens, None), None) is not None
+    return next(glob_walk_internal(path_join, iglob, isresult, visited, tokens, None, None), None) is not None
 
   def run_test_glob_match_both_ways(self, result, pattern, path, include_dotfiles=False):
     self.assertEqual(result,

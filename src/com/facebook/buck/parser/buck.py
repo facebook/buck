@@ -144,18 +144,19 @@ def path_join(path, element):
     return element
   return path + os.path.sep + element
 
-def glob_walk_internal(normpath, iglob, isresult, visited, tokens, path):
+def glob_walk_internal(normpath_join, iglob, isresult, visited, tokens, path, normpath):
   """Recursive routine for glob_walk.
 
   'visited' is initially the empty set.
   'tokens' is the list of glob elements yet to be traversed, e.g. ['**', '*.java'].
   'path', initially None, is the path being constructed.
-  'normpath(path)' should normalize and resolve symlinks of 'path' (for symlink loop detection)
+  'normpath', initially os.path.realpath(root), is the os.path.realpath()-normalization of the path being constructed.
+  'normpath_join(normpath, element)' is the os.path.realpath()-normalization of path_join(normpath, element)
   'iglob(pattern)' should behave like glob.iglob if 'path' were relative to the current directory
   'isresult(path)' should verify that path is valid as a result (typically calls os.path.isfile)
   """
   # Force halting despite symlinks.
-  key = (tuple(tokens), normpath(path))
+  key = (tuple(tokens), normpath)
   if key in visited:
     return
   visited.add(key)
@@ -170,16 +171,16 @@ def glob_walk_internal(normpath, iglob, isresult, visited, tokens, path):
 
   # Special glob token, equivalent to zero or more consecutive '*'
   if token == '**':
-    for x in glob_walk_internal(normpath, iglob, isresult, visited, next_tokens, path):
+    for x in glob_walk_internal(normpath_join, iglob, isresult, visited, next_tokens, path, normpath):
       yield x
     for child in iglob(path_join(path, '*')):
-      for x in glob_walk_internal(normpath, iglob, isresult, visited, tokens, child):
+      for x in glob_walk_internal(normpath_join, iglob, isresult, visited, tokens, child, normpath_join(normpath, child)):
         yield x
 
   # Usual glob pattern.
   else:
     for child in iglob(path_join(path, token)):
-      for x in glob_walk_internal(normpath, iglob, isresult, visited, next_tokens, child):
+      for x in glob_walk_internal(normpath_join, iglob, isresult, visited, next_tokens, child, normpath_join(normpath, child)):
         yield x
 
 def glob_walk(pattern, root, include_dotfiles=False):
@@ -191,11 +192,13 @@ def glob_walk(pattern, root, include_dotfiles=False):
 
   Names starting with dots will not be matched by '?', '*' and '**' unless include_dotfiles=True
   """
-  # Relativized version of os.path.realpath
-  def normpath(path):
-    if path is None:
-      return None
-    return os.path.realpath(os.path.join(root, path))
+  # os.path.realpath()-normalized version of path_join
+  def normpath_join(normpath, element):
+    newpath = normpath + os.path.sep + element
+    if os.path.islink(newpath):
+      return os.path.realpath(newpath)
+    else:
+      return newpath
 
   # Relativized version of glob.iglob
   # Note that glob.iglob already optimizes paths with no special char.
@@ -223,7 +226,7 @@ def glob_walk(pattern, root, include_dotfiles=False):
   visited = set()
   tokens = split_path(pattern)
   assert well_formed_tokens(tokens), "Glob patterns cannot be empty, start or end with a slash, or contain consecutive slashes."
-  return glob_walk_internal(normpath, iglob, isresult, visited, tokens, None)
+  return glob_walk_internal(normpath_join, iglob, isresult, visited, tokens, None, os.path.realpath(root))
 
 def glob_match_internal(include_dotfiles, tokens, chunks):
   """Recursive routine for glob_match.
