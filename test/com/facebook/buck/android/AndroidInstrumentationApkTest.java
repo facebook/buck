@@ -34,6 +34,7 @@ import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
@@ -48,11 +49,11 @@ public class AndroidInstrumentationApkTest {
         new BuildTarget("//java/com/example", "lib2"),
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary1)) {
       @Override
-      public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
-        ImmutableSetMultimap.Builder<JavaLibrary, String> builder =
+      public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
+        ImmutableSetMultimap.Builder<JavaLibrary, Path> builder =
             ImmutableSetMultimap.builder();
-        builder.put(javaLibrary1, javaLibrary1.getPathToOutputFile().toString());
-        builder.put(this, this.getPathToOutputFile().toString());
+        builder.put(javaLibrary1, javaLibrary1.getPathToOutputFile());
+        builder.put(this, this.getPathToOutputFile());
         return builder.build();
       }
     };
@@ -64,11 +65,11 @@ public class AndroidInstrumentationApkTest {
         new BuildTarget("//java/com/example", "lib4"),
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary3)) {
       @Override
-      public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
-        ImmutableSetMultimap.Builder<JavaLibrary, String> builder =
+      public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
+        ImmutableSetMultimap.Builder<JavaLibrary, Path> builder =
             ImmutableSetMultimap.builder();
-        builder.put(javaLibrary3, javaLibrary3.getPathToOutputFile().toString());
-        builder.put(this, this.getPathToOutputFile().toString());
+        builder.put(javaLibrary3, javaLibrary3.getPathToOutputFile());
+        builder.put(this, this.getPathToOutputFile());
         return builder.build();
       }
     };
@@ -115,13 +116,13 @@ public class AndroidInstrumentationApkTest {
     assertEquals(
         "//apps:app should have three JAR files to dex.",
         ImmutableSet.of(
-            "buck-out/gen/java/com/example/lib1.jar",
-            "buck-out/gen/java/com/example/lib2.jar",
-            "buck-out/gen/java/com/example/lib3.jar"),
+            Paths.get("buck-out/gen/java/com/example/lib1.jar"),
+            Paths.get("buck-out/gen/java/com/example/lib2.jar"),
+            Paths.get("buck-out/gen/java/com/example/lib3.jar")),
         androidBinary.findDexTransitiveDependencies().classpathEntriesToDex);
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
-        ImmutableSet.of("buck-out/gen/java/com/example/lib4.jar"),
+        ImmutableSet.of(Paths.get("buck-out/gen/java/com/example/lib4.jar")),
         androidInstrumentationApk.findDexTransitiveDependencies().classpathEntriesToDex);
   }
 }

@@ -30,6 +30,7 @@ import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -40,8 +41,10 @@ public class JUnitStep extends ShellStep {
   // Note that the default value is used when `buck test --all` is run on Buck itself.
   // TODO(mbolin): Change this so that pathToEmmaJar is injected. This is a non-trivial refactor
   // because a number of other classes currently reference this constant.
-  public static final String PATH_TO_EMMA_JAR = System.getProperty("buck.path_to_emma_jar",
-      "third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar");
+  public static final Path PATH_TO_EMMA_JAR =
+      Paths.get(System.getProperty(
+              "buck.path_to_emma_jar",
+              "third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar"));
 
   @VisibleForTesting
   static final String JUNIT_TEST_RUNNER_CLASS_NAME =
@@ -52,7 +55,7 @@ public class JUnitStep extends ShellStep {
   @VisibleForTesting
   public static final String BUILD_ID_PROPERTY = "com.facebook.buck.buildId";
 
-  private final Set<String> classpathEntries;
+  private final ImmutableSet<Path> classpathEntries;
 
   private final Set<String> testClassNames;
 
@@ -68,7 +71,7 @@ public class JUnitStep extends ShellStep {
 
   private TestSelectorList testSelectorList;
 
-  private final String testRunnerClassesDirectory;
+  private final Path testRunnerClassesDirectory;
 
   /**
    *  If EMMA is not enabled, then JaCoco is enabled for the code-coverage analysis.
@@ -95,7 +98,7 @@ public class JUnitStep extends ShellStep {
    * @param directoryForTestResults directory where test results should be written
    */
   public JUnitStep(
-      Set<String> classpathEntries,
+      Set<Path> classpathEntries,
       Set<String> testClassNames,
       List<String> vmArgs,
       String directoryForTestResults,
@@ -113,13 +116,14 @@ public class JUnitStep extends ShellStep {
         isDebugEnabled,
         buildId,
         testSelectorList,
-        System.getProperty("buck.testrunner_classes",
-            new File("build/testrunner/classes").getAbsolutePath()));
+        Paths.get(System.getProperty(
+                "buck.testrunner_classes",
+                new File("build/testrunner/classes").getAbsolutePath())));
   }
 
   @VisibleForTesting
   JUnitStep(
-      Set<String> classpathEntries,
+      Set<Path> classpathEntries,
       Set<String> testClassNames,
       List<String> vmArgs,
       String directoryForTestResults,
@@ -128,7 +132,7 @@ public class JUnitStep extends ShellStep {
       boolean isDebugEnabled,
       BuildId buildId,
       TestSelectorList testSelectorList,
-      String testRunnerClassesDirectory) {
+      Path testRunnerClassesDirectory) {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.testClassNames = ImmutableSet.copyOf(testClassNames);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
@@ -185,7 +189,7 @@ public class JUnitStep extends ShellStep {
     }
 
     // Build up the -classpath argument, starting with the classpath entries the client specified.
-    List<String> classpath = Lists.newArrayList(classpathEntries);
+    List<Path> classpath = Lists.newArrayList(classpathEntries);
 
     // Add EMMA to the classpath.
     if (isCodeCoverageEnabled && !isJacocoEnabled) {

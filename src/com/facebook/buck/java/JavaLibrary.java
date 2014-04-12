@@ -33,20 +33,20 @@ public interface JavaLibrary extends Buildable, HasClasspathEntries, HasJavaAbi 
    *     dependencies of these rules.
    */
   @Override
-  public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries();
+  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries();
 
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
    *     compile the {@code srcs} associated with this rule.  This set only contains the classpath
    *     entries for those rules that are declared as direct dependencies of this rule.
    */
-  public ImmutableSetMultimap<JavaLibrary, String> getDeclaredClasspathEntries();
+  public ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries();
 
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
    *     compile rules that depend on this rule.
    */
-  public ImmutableSetMultimap<JavaLibrary, String> getOutputClasspathEntries();
+  public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries();
 
   public ImmutableSortedSet<Path> getJavaSrcs();
 

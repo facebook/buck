@@ -46,7 +46,7 @@ public class InstrumentStep extends ShellStep {
     args.add("java");
 
     // Add EMMA to the class path.
-    args.add("-classpath", JUnitStep.PATH_TO_EMMA_JAR);
+    args.add("-classpath", JUnitStep.PATH_TO_EMMA_JAR.toString());
 
     args.add("emma", "instr");
 

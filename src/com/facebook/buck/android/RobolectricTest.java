@@ -33,7 +33,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -119,8 +118,8 @@ public class RobolectricTest extends JavaTest {
 
     optionalDummyRDotJava = result.getOptionalDummyRDotJava();
     this.additionalClasspathEntries = optionalDummyRDotJava.isPresent()
-        ? ImmutableSet.of(optionalDummyRDotJava.get().getRDotJavaBinFolder().toString())
-        : ImmutableSet.<String>of();
+        ? ImmutableSet.of(optionalDummyRDotJava.get().getRDotJavaBinFolder())
+        : ImmutableSet.<Path>of();
 
     this.deps = result.getBuildRuleParams().getDeps();
     return deps;
@@ -128,10 +127,9 @@ public class RobolectricTest extends JavaTest {
 
 
   @Override
-  protected Set<String> getBootClasspathEntries(ExecutionContext context) {
+  protected Set<Path> getBootClasspathEntries(ExecutionContext context) {
     if (context.getAndroidPlatformTargetOptional().isPresent()) {
       return FluentIterable.from(context.getAndroidPlatformTarget().getBootclasspathEntries())
-          .transform(Functions.toStringFunction())
           .toSet();
     }
     return ImmutableSet.of();

@@ -60,13 +60,10 @@ public class GenerateCodeCoverageReportStepTest {
     replay(context);
 
     ImmutableList.Builder<String> shellCommandBuilder = ImmutableList.builder();
-
-    shellCommandBuilder = ImmutableList.builder();
-
     shellCommandBuilder.add(
         "java",
         "-Xmx1024M",
-        "-classpath", JUnitStep.PATH_TO_EMMA_JAR,
+        "-classpath", JUnitStep.PATH_TO_EMMA_JAR.toString(),
         "emma", "report",
         String.format("-D%s=%s",
             GenerateCodeCoverageReportStep.REPORT_OUTPUT_DIR, outputDirectory));
@@ -86,9 +83,6 @@ public class GenerateCodeCoverageReportStepTest {
         "parentDirectory1/src,root/parentDirectory/src");
 
     List<String> expectedShellCommand = shellCommandBuilder.build();
-
-    expectedShellCommand = shellCommandBuilder.build();
-
     MoreAsserts.assertListEquals(expectedShellCommand, step.getShellCommand(context));
     verify(context);
   }

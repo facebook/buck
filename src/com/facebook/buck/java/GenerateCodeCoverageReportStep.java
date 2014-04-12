@@ -80,7 +80,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     if (!context.isJacocoEnabled()) {
       args.add("-Xmx1024M");
 
-      args.add("-classpath", JUnitStep.PATH_TO_EMMA_JAR);
+      args.add("-classpath", JUnitStep.PATH_TO_EMMA_JAR.toString());
 
       args.add("emma", "report");
 

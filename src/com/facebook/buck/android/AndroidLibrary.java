@@ -96,8 +96,8 @@ public class AndroidLibrary extends DefaultJavaLibrary {
 
     Optional<DummyRDotJava> uberRDotJava = result.getOptionalDummyRDotJava();
     this.additionalClasspathEntries = uberRDotJava.isPresent()
-        ? ImmutableSet.of(uberRDotJava.get().getRDotJavaBinFolder().toString())
-        : ImmutableSet.<String>of();
+        ? ImmutableSet.of(uberRDotJava.get().getRDotJavaBinFolder())
+        : ImmutableSet.<Path>of();
 
     deps = result.getBuildRuleParams().getDeps();
     return deps;

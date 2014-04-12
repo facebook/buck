@@ -32,10 +32,10 @@ public class JavaLibraryClasspathProvider {
   private JavaLibraryClasspathProvider() {
   }
 
-  public static ImmutableSetMultimap<JavaLibrary, String> getOutputClasspathEntries(
+  public static ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries(
       DefaultJavaLibrary javaLibraryRule,
       Optional<Path> outputJar) {
-    ImmutableSetMultimap.Builder<JavaLibrary, String> outputClasspathBuilder =
+    ImmutableSetMultimap.Builder<JavaLibrary, Path> outputClasspathBuilder =
         ImmutableSetMultimap.builder();
     Iterable<JavaLibrary> javaExportedLibraryDeps =
         getJavaLibraryDeps(javaLibraryRule.getExportedDeps());
@@ -51,21 +51,21 @@ public class JavaLibraryClasspathProvider {
     }
 
     if (outputJar.isPresent()) {
-      outputClasspathBuilder.put(javaLibraryRule, outputJar.get().toString());
+      outputClasspathBuilder.put(javaLibraryRule, outputJar.get());
     }
 
     return outputClasspathBuilder.build();
   }
 
-  public static ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries(
+  public static ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries(
       DefaultJavaLibrary javaLibraryRule,
       Optional<Path> outputJar) {
-    final ImmutableSetMultimap.Builder<JavaLibrary, String> classpathEntries =
+    final ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
         ImmutableSetMultimap.builder();
-    ImmutableSetMultimap<JavaLibrary, String> classpathEntriesForDeps =
+    ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesForDeps =
         Classpaths.getClasspathEntries(javaLibraryRule.getDeps());
 
-    ImmutableSetMultimap<JavaLibrary, String> classpathEntriesForExportedsDeps =
+    ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesForExportedsDeps =
         Classpaths.getClasspathEntries(javaLibraryRule.getExportedDeps());
 
     classpathEntries.putAll(classpathEntriesForDeps);
@@ -81,15 +81,15 @@ public class JavaLibraryClasspathProvider {
 
     // Only add ourselves to the classpath if there's a jar to be built.
     if (outputJar.isPresent()) {
-      classpathEntries.put(javaLibraryRule, outputJar.get().toString());
+      classpathEntries.put(javaLibraryRule, outputJar.get());
     }
 
     return classpathEntries.build();
   }
 
-  public static ImmutableSetMultimap<JavaLibrary, String> getDeclaredClasspathEntries(
+  public static ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries(
       DefaultJavaLibrary javaLibraryRule) {
-    final ImmutableSetMultimap.Builder<JavaLibrary, String> classpathEntries =
+    final ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
         ImmutableSetMultimap.builder();
 
     Iterable<JavaLibrary> javaLibraryDeps = getJavaLibraryDeps(javaLibraryRule.getDeps());

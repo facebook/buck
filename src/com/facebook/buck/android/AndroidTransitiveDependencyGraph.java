@@ -58,22 +58,22 @@ public class AndroidTransitiveDependencyGraph {
       UberRDotJava uberRDotJava) {
     // These are paths that will be dex'ed. They may be either directories of compiled .class files,
     // or paths to compiled JAR files.
-    final ImmutableSet.Builder<String> pathsToDexBuilder = ImmutableSet.builder();
+    final ImmutableSet.Builder<Path> pathsToDexBuilder = ImmutableSet.builder();
 
     // Paths to the classfiles to not dex.
-    final ImmutableSet.Builder<String> noDxPathsBuilder = ImmutableSet.builder();
+    final ImmutableSet.Builder<Path> noDxPathsBuilder = ImmutableSet.builder();
 
     // These are paths to third-party jars that may contain resources that must be included in the
     // final APK.
-    final ImmutableSet.Builder<String> pathsToThirdPartyJarsBuilder = ImmutableSet.builder();
+    final ImmutableSet.Builder<Path> pathsToThirdPartyJarsBuilder = ImmutableSet.builder();
 
     AndroidResourceDetails details =
         findAndroidResourceDetails(androidResourceDeps);
 
     // Update pathsToDex.
-    ImmutableSet<Map.Entry<JavaLibrary, String>> classpath =
+    ImmutableSet<Map.Entry<JavaLibrary, Path>> classpath =
         Classpaths.getClasspathEntries(rulesToTraverseForTransitiveDeps).entries();
-    for (Map.Entry<JavaLibrary, String> entry : classpath) {
+    for (Map.Entry<JavaLibrary, Path> entry : classpath) {
       if (!buildRulesToExcludeFromDex.contains(entry.getKey())) {
         pathsToDexBuilder.add(entry.getValue());
       } else {
@@ -90,7 +90,7 @@ public class AndroidTransitiveDependencyGraph {
         // Update pathsToThirdPartyJars.
         if (rule.getBuildable() instanceof PrebuiltJar) {
           PrebuiltJar prebuiltJar = (PrebuiltJar) rule.getBuildable();
-          pathsToThirdPartyJarsBuilder.add(prebuiltJar.getBinaryJar().toString());
+          pathsToThirdPartyJarsBuilder.add(prebuiltJar.getBinaryJar());
         }
         return maybeVisitAllDeps(rule, rule.getProperties().is(LIBRARY));
       }
@@ -100,20 +100,20 @@ public class AndroidTransitiveDependencyGraph {
     ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
     if (!rDotJavaPackages.isEmpty()) {
       Path pathToCompiledRDotJavaFiles = uberRDotJava.getPathToCompiledRDotJavaFiles();
-      pathsToDexBuilder.add(pathToCompiledRDotJavaFiles.toString());
+      pathsToDexBuilder.add(pathToCompiledRDotJavaFiles);
     }
 
-    ImmutableSet<String> noDxPaths = noDxPathsBuilder.build();
+    ImmutableSet<Path> noDxPaths = noDxPathsBuilder.build();
 
     // Filter out the classpath entries to exclude from dex'ing, if appropriate
-    Set<String> classpathEntries = Sets.difference(pathsToDexBuilder.build(), noDxPaths);
+    Set<Path> classpathEntries = Sets.difference(pathsToDexBuilder.build(), noDxPaths);
     // Classpath entries that should be excluded from dexing should also be excluded from
     // pathsToThirdPartyJars because their resources should not end up in main APK. If they do,
     // the pre-dexed library may try to load a resource from the main APK rather than from within
     // the pre-dexed library (even though the resource is available in both locations). This
     // causes a significant performance regression, as the resource may take more than one second
     // longer to load.
-    Set<String> pathsToThirdPartyJars =
+    Set<Path> pathsToThirdPartyJars =
         Sets.difference(pathsToThirdPartyJarsBuilder.build(), noDxPaths);
 
     return new AndroidDexTransitiveDependencies(

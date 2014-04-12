@@ -55,7 +55,6 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.RepackZipEntriesStep;
@@ -706,12 +705,12 @@ public class AndroidBinary extends AbstractBuildable implements
       steps.add(new MakeCleanDirectoryStep(preprocessJavaClassesOutDir));
       steps.add(new SymlinkFilesIntoDirectoryStep(
           context.getProjectRoot(),
-          Iterables.transform(dexTransitiveDependencies.classpathEntriesToDex, MorePaths.TO_PATH),
+          dexTransitiveDependencies.classpathEntriesToDex,
           preprocessJavaClassesInDir));
       classpathEntriesToDex = FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
-          .transform(new Function<String, Path>() {
+          .transform(new Function<Path, Path>() {
             @Override
-            public Path apply(String classpathEntry) {
+            public Path apply(Path classpathEntry) {
               return preprocessJavaClassesOutDir.resolve(classpathEntry);
             }
           })
@@ -755,9 +754,7 @@ public class AndroidBinary extends AbstractBuildable implements
       });
 
     } else {
-      classpathEntriesToDex = FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
-          .transform(MorePaths.TO_PATH)
-          .toSet();
+      classpathEntriesToDex = dexTransitiveDependencies.classpathEntriesToDex;
     }
 
     // Execute proguard if desired (transforms input classpaths).
@@ -900,9 +897,9 @@ public class AndroidBinary extends AbstractBuildable implements
       ImmutableList.Builder<Step> steps,
       Set<Path> resDirectories,
       BuildableContext buildableContext) {
-    final ImmutableSetMultimap<JavaLibrary, String> classpathEntriesMap =
+    final ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesMap =
         getTransitiveClasspathEntries();
-    ImmutableSet.Builder<String> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
     for (JavaLibrary buildRule : rulesToExcludeFromDex) {
       additionalLibraryJarsForProguardBuilder.addAll(classpathEntriesMap.get(buildRule));
@@ -1120,7 +1117,7 @@ public class AndroidBinary extends AbstractBuildable implements
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
     return Classpaths.getClasspathEntries(getClasspathDeps());
   }

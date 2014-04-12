@@ -21,8 +21,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MorePaths;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -193,10 +191,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
             searchPathElements.add(pathToOutput);
           }
         } else if (hasClasspathEntries != null) {
-          searchPathElements.addAll(
-              FluentIterable.from(hasClasspathEntries.getTransitiveClasspathEntries().values())
-                  .transform(MorePaths.TO_PATH)
-                  .toSet());
+          searchPathElements.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
         } else {
           throw new HumanReadableException(
               "%1$s: Error adding '%2$s' to annotation_processing_deps: " +

@@ -421,9 +421,12 @@ public class DefaultJavaLibraryTest {
 
     assertEquals(
         ImmutableSetMultimap.of(
-            libraryOne.getBuildable(), "buck-out/gen/lib__libone__output/libone.jar",
-            libraryTwo.getBuildable(), "buck-out/gen/lib__libtwo__output/libtwo.jar",
-            parent.getBuildable(), "buck-out/gen/lib__parent__output/parent.jar"),
+            getJavaLibrary(libraryOne),
+            Paths.get("buck-out/gen/lib__libone__output/libone.jar"),
+            getJavaLibrary(libraryTwo),
+            Paths.get("buck-out/gen/lib__libtwo__output/libtwo.jar"),
+            getJavaLibrary(parent),
+            Paths.get("buck-out/gen/lib__parent__output/parent.jar")),
         ((HasClasspathEntries) parent.getBuildable()).getTransitiveClasspathEntries()
     );
   }
@@ -440,21 +443,21 @@ public class DefaultJavaLibraryTest {
       }
 
       @Override
-      public ImmutableSetMultimap<JavaLibrary, String> getDeclaredClasspathEntries() {
-        return ImmutableSetMultimap.<JavaLibrary, String>builder()
-            .put(this, "java/src/com/libone/bar.jar")
-            .build();
+      public ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries() {
+        return ImmutableSetMultimap.of(
+            (JavaLibrary) this,
+            Paths.get("java/src/com/libone/bar.jar"));
       }
 
       @Override
-      public ImmutableSetMultimap<JavaLibrary, String> getOutputClasspathEntries() {
-        return ImmutableSetMultimap.<JavaLibrary, String>builder()
-            .put(this, "java/src/com/libone/bar.jar")
-            .build();
+      public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries() {
+        return ImmutableSetMultimap.of(
+            (JavaLibrary) this,
+            Paths.get("java/src/com/libone/bar.jar"));
       }
 
       @Override
-      public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
+      public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
         return ImmutableSetMultimap.of();
       }
     };
@@ -492,12 +495,12 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "The classpath to use when compiling //:libtwo according to getDeclaredClasspathEntries()" +
             " should contain only bar.jar.",
-        ImmutableSet.of("java/src/com/libone/bar.jar"),
+        ImmutableSet.of(Paths.get("java/src/com/libone/bar.jar")),
         ImmutableSet.copyOf(
             ((JavaLibrary) libraryTwo.getBuildable()).getDeclaredClasspathEntries().values()));
     assertEquals(
         "The classpath for the javac step to compile //:libtwo should contain only bar.jar.",
-        ImmutableSet.of("java/src/com/libone/bar.jar"),
+        ImmutableSet.of(Paths.get("java/src/com/libone/bar.jar")),
         javacStep.getClasspathEntries());
   }
 
@@ -592,66 +595,74 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "A java_library that depends on //:libone should include only libone.jar in its " +
             "classpath when compiling itself.",
-        ImmutableSetMultimap.builder()
-            .put(
-                notIncluded.getBuildable(),
-                "buck-out/gen/lib__not_included__output/not_included.jar")
-            .build(),
-        ((JavaLibrary) notIncluded.getBuildable()).getOutputClasspathEntries());
+        ImmutableSetMultimap.of(
+            getJavaLibrary(notIncluded),
+            Paths.get("buck-out/gen/lib__not_included__output/not_included.jar")),
+        getJavaLibrary(notIncluded).getOutputClasspathEntries());
 
     assertEquals(
-        ImmutableSetMultimap.builder()
-            .put(included.getBuildable(), "buck-out/gen/lib__included__output/included.jar")
-            .build(),
-        ((JavaLibrary) included.getBuildable()).getOutputClasspathEntries());
+        ImmutableSetMultimap.of(
+            getJavaLibrary(included),
+            Paths.get("buck-out/gen/lib__included__output/included.jar")),
+        getJavaLibrary(included).getOutputClasspathEntries());
 
     assertEquals(
-        ImmutableSetMultimap.builder()
-            .put(included.getBuildable(), "buck-out/gen/lib__included__output/included.jar")
-            .put(libraryOne.getBuildable(), "buck-out/gen/lib__libone__output/libone.jar")
-            .put(libraryOne.getBuildable(), "buck-out/gen/lib__included__output/included.jar")
-            .build(),
-        ((JavaLibrary) libraryOne.getBuildable()).getOutputClasspathEntries());
+        ImmutableSetMultimap.of(
+            getJavaLibrary(included),
+            Paths.get("buck-out/gen/lib__included__output/included.jar"),
+            getJavaLibrary(libraryOne),
+            Paths.get("buck-out/gen/lib__libone__output/libone.jar"),
+            getJavaLibrary(libraryOne),
+            Paths.get("buck-out/gen/lib__included__output/included.jar")),
+        getJavaLibrary(libraryOne).getOutputClasspathEntries());
 
     assertEquals(
         "//:libtwo exports its deps, so a java_library that depends on //:libtwo should include " +
             "both libone.jar and libtwo.jar in its classpath when compiling itself.",
-        ImmutableSetMultimap.builder()
-            .put(libraryOne.getBuildable(), "buck-out/gen/lib__libone__output/libone.jar")
-            .put(libraryOne.getBuildable(), "buck-out/gen/lib__included__output/included.jar")
-            .put(libraryTwo.getBuildable(), "buck-out/gen/lib__libone__output/libone.jar")
-            .put(libraryTwo.getBuildable(), "buck-out/gen/lib__libtwo__output/libtwo.jar")
-            .put(libraryTwo.getBuildable(), "buck-out/gen/lib__included__output/included.jar")
-            .build(),
-        ((JavaLibrary) libraryTwo.getBuildable()).getOutputClasspathEntries());
+        ImmutableSetMultimap.of(
+            getJavaLibrary(libraryOne),
+            Paths.get("buck-out/gen/lib__libone__output/libone.jar"),
+            getJavaLibrary(libraryOne),
+            Paths.get("buck-out/gen/lib__included__output/included.jar"),
+            getJavaLibrary(libraryTwo),
+            Paths.get("buck-out/gen/lib__libone__output/libone.jar"),
+            getJavaLibrary(libraryTwo),
+            Paths.get("buck-out/gen/lib__libtwo__output/libtwo.jar"),
+            getJavaLibrary(libraryTwo),
+            Paths.get("buck-out/gen/lib__included__output/included.jar")),
+        getJavaLibrary(libraryTwo).getOutputClasspathEntries());
 
     assertEquals(
         "A java_binary that depends on //:parent should include libone.jar, libtwo.jar and " +
             "parent.jar.",
-        ImmutableSetMultimap.builder()
-            .put(included.getBuildable(), "buck-out/gen/lib__included__output/included.jar")
+        ImmutableSetMultimap.<JavaLibrary, Path>builder()
             .put(
-                notIncluded.getBuildable(),
-                "buck-out/gen/lib__not_included__output/not_included.jar")
-            .put(libraryOne.getBuildable(), "buck-out/gen/lib__included__output/included.jar")
-            .put(libraryOne.getBuildable(), "buck-out/gen/lib__libone__output/libone.jar")
-            .put(libraryTwo.getBuildable(), "buck-out/gen/lib__included__output/included.jar")
+                getJavaLibrary(included),
+                Paths.get("buck-out/gen/lib__included__output/included.jar"))
             .put(
-                libraryTwo.getBuildable(),
-                "buck-out/gen/lib__not_included__output/not_included.jar")
-            .put(libraryTwo.getBuildable(), "buck-out/gen/lib__libone__output/libone.jar")
-            .put(libraryTwo.getBuildable(), "buck-out/gen/lib__libtwo__output/libtwo.jar")
-            .put(parent.getBuildable(), "buck-out/gen/lib__parent__output/parent.jar")
+                getJavaLibrary(notIncluded),
+                Paths.get("buck-out/gen/lib__not_included__output/not_included.jar"))
+            .putAll(
+                getJavaLibrary(libraryOne),
+                Paths.get("buck-out/gen/lib__included__output/included.jar"),
+                Paths.get("buck-out/gen/lib__libone__output/libone.jar"))
+            .putAll(
+                getJavaLibrary(libraryTwo),
+                Paths.get("buck-out/gen/lib__included__output/included.jar"),
+                Paths.get("buck-out/gen/lib__not_included__output/not_included.jar"),
+                Paths.get("buck-out/gen/lib__libone__output/libone.jar"),
+                Paths.get("buck-out/gen/lib__libtwo__output/libtwo.jar"))
+            .put(getJavaLibrary(parent), Paths.get("buck-out/gen/lib__parent__output/parent.jar"))
             .build(),
-        ((JavaLibrary) parent.getBuildable()).getTransitiveClasspathEntries());
+        getJavaLibrary(parent).getTransitiveClasspathEntries());
 
     assertEquals(
         "A java_library that depends on //:parent should include only parent.jar in its " +
             "-classpath when compiling itself.",
-        ImmutableSetMultimap.builder()
-            .put(parent.getBuildable(), "buck-out/gen/lib__parent__output/parent.jar")
-            .build(),
-        ((JavaLibrary) parent.getBuildable()).getOutputClasspathEntries());
+        ImmutableSetMultimap.of(
+            getJavaLibrary(parent),
+            Paths.get("buck-out/gen/lib__parent__output/parent.jar")),
+        getJavaLibrary(parent).getOutputClasspathEntries());
   }
 
   /**
@@ -1016,7 +1027,7 @@ public class DefaultJavaLibraryTest {
     BuildContext context = createSuggestContext(ruleResolver,
         BuildDependencies.FIRST_ORDER_ONLY);
 
-    ImmutableSetMultimap<JavaLibrary, String> classpathEntries =
+    ImmutableSetMultimap<JavaLibrary, Path> classpathEntries =
         libraryOne.getTransitiveClasspathEntries();
 
     assertEquals(
@@ -1025,7 +1036,7 @@ public class DefaultJavaLibraryTest {
             context,
             classpathEntries,
             classpathEntries,
-            createJarResolver(/* classToSymbols */ImmutableMap.<String, String>of())));
+            createJarResolver(/* classToSymbols */ImmutableMap.<Path, String>of())));
 
     EasyMock.verify(context);
   }
@@ -1065,10 +1076,10 @@ public class DefaultJavaLibraryTest {
     BuildContext context = createSuggestContext(ruleResolver,
         BuildDependencies.WARN_ON_TRANSITIVE);
 
-    ImmutableSetMultimap<JavaLibrary, String> transitive =
+    ImmutableSetMultimap<JavaLibrary, Path> transitive =
         ((HasClasspathEntries) parent.getBuildable()).getTransitiveClasspathEntries();
 
-    ImmutableMap<String, String> classToSymbols = ImmutableMap.of(
+    ImmutableMap<Path, String> classToSymbols = ImmutableMap.of(
         Iterables.getFirst(transitive.get((JavaLibrary) parent.getBuildable()), null),
         "com.facebook.Foo",
         Iterables.getFirst(transitive.get((JavaLibrary) libraryOne.getBuildable()), null),
@@ -1080,7 +1091,7 @@ public class DefaultJavaLibraryTest {
         ((DefaultJavaLibrary) grandparent.getBuildable()).createSuggestBuildFunction(
             context,
             transitive,
-            /* declaredClasspathEntries */ ImmutableSetMultimap.<JavaLibrary, String>of(),
+            /* declaredClasspathEntries */ ImmutableSetMultimap.<JavaLibrary, Path>of(),
             createJarResolver(classToSymbols));
 
     assertTrue(suggestFn.isPresent());
@@ -1236,18 +1247,21 @@ public class DefaultJavaLibraryTest {
   }
 
   // Utilities
+  private JavaLibrary getJavaLibrary(BuildRule rule) {
+    return (JavaLibrary) rule.getBuildable();
+  }
 
   private DefaultJavaLibrary.JarResolver createJarResolver(
-      final ImmutableMap<String, String> classToSymbols) {
+      final ImmutableMap<Path, String> classToSymbols) {
 
     ImmutableSetMultimap.Builder<Path, String> resolveMapBuilder =
         ImmutableSetMultimap.builder();
 
-    for (Map.Entry<String, String> entry : classToSymbols.entrySet()) {
+    for (Map.Entry<Path, String> entry : classToSymbols.entrySet()) {
       String fullyQualified = entry.getValue();
       String packageName = fullyQualified.substring(0, fullyQualified.lastIndexOf('.'));
       String className = fullyQualified.substring(fullyQualified.lastIndexOf('.'));
-      resolveMapBuilder.putAll(Paths.get(entry.getKey()), fullyQualified, packageName, className);
+      resolveMapBuilder.putAll(entry.getKey(), fullyQualified, packageName, className);
     }
 
     final ImmutableSetMultimap<Path, String> resolveMap = resolveMapBuilder.build();
@@ -1402,7 +1416,7 @@ public class DefaultJavaLibraryTest {
           .build();
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,
-          /* buildClasspathEntries */ ImmutableSet.<String>of());
+          /* buildClasspathEntries */ ImmutableSet.<Path>of());
 
       return options;
     }

@@ -43,7 +43,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -107,14 +106,10 @@ public class AndroidBinaryTest {
         androidBinary.findDexTransitiveDependencies();
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    ImmutableSet<Path> classpathEntriesToDex =
-        FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
-            .transform(MorePaths.TO_PATH)
-            .toSet();
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     androidBinary.addProguardCommands(
-        classpathEntriesToDex,
+        dexTransitiveDependencies.classpathEntriesToDex,
         transitiveDependencies.proguardConfigs,
         commands,
         ImmutableSet.<Path>of(),
@@ -153,7 +148,8 @@ public class AndroidBinaryTest {
                   "buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/" +
                   "java/src/com/facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar")),
           ImmutableSet.of(
-              "buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar"),
+              Paths.get(
+                "buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar")),
           Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"),
           buildableContext);
 

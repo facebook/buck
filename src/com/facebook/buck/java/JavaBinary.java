@@ -33,15 +33,12 @@ import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -133,12 +130,10 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
 
       includePaths = ImmutableSet.<Path>builder()
           .add(stagingRoot)
-          .addAll(Iterables.transform(getTransitiveClasspathEntries().values(), MorePaths.TO_PATH))
+          .addAll(getTransitiveClasspathEntries().values())
           .build();
     } else {
-      includePaths = FluentIterable.from(getTransitiveClasspathEntries().values())
-          .transform(MorePaths.TO_PATH)
-          .toSet();
+      includePaths = ImmutableSet.copyOf(getTransitiveClasspathEntries().values());
     }
 
     Path outputFile = getOutputFile();
@@ -150,7 +145,7 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     return Classpaths.getClasspathEntries(deps);
   }
 

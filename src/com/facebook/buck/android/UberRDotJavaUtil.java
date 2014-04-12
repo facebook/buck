@@ -176,8 +176,8 @@ public class UberRDotJavaUtil {
     return JavacStepUtil.createJavacStep(
         outputDirectory,
         javaSourceFilePaths,
-        ImmutableSet.<String>of(),
-        /* classpathEntries */ ImmutableSet.<String>of(),
+        ImmutableSet.<Path>of(),
+        /* classpathEntries */ ImmutableSet.<Path>of(),
         JavacOptions.builder(JavacOptions.DEFAULTS)
             .setJavaCompilerEnviornment(javacOptions.getJavaCompilerEnvironment())
             .build(),

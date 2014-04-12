@@ -165,7 +165,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   /**
    * @param context That may be useful in producing the bootclasspath entries.
    */
-  protected Set<String> getBootClasspathEntries(ExecutionContext context) {
+  protected Set<Path> getBootClasspathEntries(ExecutionContext context) {
     return ImmutableSet.of();
   }
 
@@ -192,7 +192,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     MakeCleanDirectoryStep mkdirClean = new MakeCleanDirectoryStep(pathToTestOutput);
     steps.add(mkdirClean);
 
-    ImmutableSet<String> classpathEntries = ImmutableSet.<String>builder()
+    ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
         .addAll(getTransitiveClasspathEntries().values())
         .addAll(additionalClasspathEntries)
         .addAll(getBootClasspathEntries(executionContext))

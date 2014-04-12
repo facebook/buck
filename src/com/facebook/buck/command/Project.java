@@ -346,7 +346,7 @@ public class Project {
 
     // Convert the project_config() targets into modules and find the union of all jars passed to
     // no_dx.
-    ImmutableSet.Builder<String> noDxJarsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> noDxJarsBuilder = ImmutableSet.builder();
     for (BuildTarget target : partialGraph.getTargets()) {
       BuildRule buildRule = dependencyGraph.findBuildRuleByTarget(target);
       ProjectConfig projectConfig = (ProjectConfig) buildRule.getBuildable();
@@ -365,7 +365,7 @@ public class Project {
       Module module = createModuleForProjectConfig(projectConfig);
       modules.add(module);
     }
-    ImmutableSet<String> noDxJars = noDxJarsBuilder.build();
+    ImmutableSet<Path> noDxJars = noDxJarsBuilder.build();
 
     // Update module dependencies to apply scope="PROVIDED", where appropriate.
     markNoDxJarsAsProvided(modules, noDxJars);
@@ -710,9 +710,9 @@ public class Project {
    * to the android_binary that <em>does not</em> list the library in its {@code no_dx} list.
    */
   @VisibleForTesting
-  static void markNoDxJarsAsProvided(List<Module> modules, Set<String> noDxJars) {
-  Map<String, String> intelliJLibraryNameToJarPath = Maps.newHashMap();
-    for (String jarPath : noDxJars) {
+  static void markNoDxJarsAsProvided(List<Module> modules, Set<Path> noDxJars) {
+  Map<String, Path> intelliJLibraryNameToJarPath = Maps.newHashMap();
+    for (Path jarPath : noDxJars) {
       String libraryName = getIntellijNameForBinaryJar(jarPath);
       intelliJLibraryNameToJarPath.put(libraryName, jarPath);
     }
@@ -722,7 +722,7 @@ public class Project {
       // must be dex'ed. If a JAR file that is in the no_dx list for some android_binary rule, but
       // is in this set for this android_binary rule, then it should be scope="COMPILE" rather than
       // scope="PROVIDED".
-      Set<String> classpathEntriesToDex;
+      Set<Path> classpathEntriesToDex;
       if (module.srcRule.getBuildable() instanceof AndroidBinary) {
         AndroidBinary androidBinary = (AndroidBinary) module.srcRule.getBuildable();
         AndroidDexTransitiveDependencies dexTransitiveDependencies =
@@ -743,7 +743,7 @@ public class Project {
         // This is the IntelliJ name for the library that corresponds to the PrebuiltJarRule.
         String libraryName = dependentModule.getLibraryName();
 
-        String jarPath = intelliJLibraryNameToJarPath.get(libraryName);
+        Path jarPath = intelliJLibraryNameToJarPath.get(libraryName);
         if (jarPath != null) {
           if (classpathEntriesToDex.contains(jarPath)) {
             dependentModule.scope = null;
@@ -756,7 +756,7 @@ public class Project {
 
       // Make sure that every classpath entry that is also in noDxJars is added with scope="COMPILE"
       // if it has not already been added to the module.
-      for (String entry : classpathEntriesToDex) {
+      for (Path entry : classpathEntriesToDex) {
         String libraryName = getIntellijNameForBinaryJar(entry);
         DependentModule dependency = DependentModule.newLibrary(null, libraryName);
         module.dependencies.add(dependency);
@@ -915,6 +915,10 @@ public class Project {
       // Normalize name.
       return normalizeIntelliJName(name);
     }
+  }
+
+  private static String getIntellijNameForBinaryJar(Path binaryJar) {
+    return getIntellijNameForBinaryJar(binaryJar.toString());
   }
 
   private static String getIntellijNameForBinaryJar(String binaryJar) {

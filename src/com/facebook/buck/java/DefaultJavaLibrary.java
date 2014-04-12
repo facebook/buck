@@ -117,12 +117,12 @@ public class DefaultJavaLibrary extends AbstractBuildable
   private final ImmutableList<String> postprocessClassesCommands;
   private final ImmutableSortedSet<BuildRule> exportedDeps;
   // Some classes need to override this when enhancing deps (see AndroidLibrary).
-  protected ImmutableSet<String> additionalClasspathEntries;
-  private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
+  protected ImmutableSet<Path> additionalClasspathEntries;
+  private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       outputClasspathEntriesSupplier;
-  private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       transitiveClasspathEntriesSupplier;
-  private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       declaredClasspathEntriesSupplier;
   private final BuildOutputInitializer<Data> buildOutputInitializer;
 
@@ -189,9 +189,9 @@ public class DefaultJavaLibrary extends AbstractBuildable
     }
 
     this.outputClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
           @Override
-          public ImmutableSetMultimap<JavaLibrary, String> get() {
+          public ImmutableSetMultimap<JavaLibrary, Path> get() {
             return JavaLibraryClasspathProvider.getOutputClasspathEntries(
                 DefaultJavaLibrary.this,
                 outputJar);
@@ -199,9 +199,9 @@ public class DefaultJavaLibrary extends AbstractBuildable
         });
 
     this.transitiveClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
           @Override
-          public ImmutableSetMultimap<JavaLibrary, String> get() {
+          public ImmutableSetMultimap<JavaLibrary, Path> get() {
             return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
                 DefaultJavaLibrary.this,
                 outputJar);
@@ -209,9 +209,9 @@ public class DefaultJavaLibrary extends AbstractBuildable
         });
 
     this.declaredClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
           @Override
-          public ImmutableSetMultimap<JavaLibrary, String> get() {
+          public ImmutableSetMultimap<JavaLibrary, Path> get() {
             return JavaLibraryClasspathProvider.getDeclaredClasspathEntries(
                 DefaultJavaLibrary.this);
           }
@@ -242,8 +242,8 @@ public class DefaultJavaLibrary extends AbstractBuildable
   @VisibleForTesting
   Supplier<Sha1HashCode> createCommandsForJavac(
       Path outputDirectory,
-      ImmutableSet<String> transitiveClasspathEntries,
-      ImmutableSet<String> declaredClasspathEntries,
+      ImmutableSet<Path> transitiveClasspathEntries,
+      ImmutableSet<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       BuildDependencies buildDependencies,
       Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRules,
@@ -419,17 +419,17 @@ public class DefaultJavaLibrary extends AbstractBuildable
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     return transitiveClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, String> getDeclaredClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries() {
     return declaredClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, String> getOutputClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries() {
     return outputClasspathEntriesSupplier.get();
   }
 
@@ -472,14 +472,14 @@ public class DefaultJavaLibrary extends AbstractBuildable
           .build();
     }
 
-    ImmutableSetMultimap<JavaLibrary, String> transitiveClasspathEntries =
-        ImmutableSetMultimap.<JavaLibrary, String>builder()
+    ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries =
+        ImmutableSetMultimap.<JavaLibrary, Path>builder()
             .putAll(getTransitiveClasspathEntries())
             .putAll(this, additionalClasspathEntries)
             .build();
 
-    ImmutableSetMultimap<JavaLibrary, String> declaredClasspathEntries =
-        ImmutableSetMultimap.<JavaLibrary, String>builder()
+    ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries =
+        ImmutableSetMultimap.<JavaLibrary, Path>builder()
             .putAll(getDeclaredClasspathEntries())
             .putAll(this, additionalClasspathEntries)
             .build();
@@ -578,15 +578,15 @@ public class DefaultJavaLibrary extends AbstractBuildable
       return false;
     }
 
-    ImmutableSet<String> classPaths =
+    ImmutableSet<Path> classPaths =
         ImmutableSet.copyOf(
             ((JavaLibrary) transitiveNotDeclaredDep).getOutputClasspathEntries().values());
     boolean containsMissingBuildRule = false;
     // Open the output jar for every jar contained as the output of transitiveNotDeclaredDep.  With
     // the exception of rules that export their dependencies, this will result in a single
     // classpath.
-    for (String classPath : classPaths) {
-      ImmutableSet<String> topLevelSymbols = jarResolver.resolve(filesystem, Paths.get(classPath));
+    for (Path classPath : classPaths) {
+      ImmutableSet<String> topLevelSymbols = jarResolver.resolve(filesystem, classPath);
 
       for (String symbolName : topLevelSymbols) {
         if (failedImports.contains(symbolName)) {
@@ -610,8 +610,8 @@ public class DefaultJavaLibrary extends AbstractBuildable
   @VisibleForTesting
   Optional<JavacInMemoryStep.SuggestBuildRules> createSuggestBuildFunction(
       BuildContext context,
-      ImmutableSetMultimap<JavaLibrary, String> transitiveClasspathEntries,
-      ImmutableSetMultimap<JavaLibrary, String> declaredClasspathEntries,
+      ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries,
+      ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries,
       final JarResolver jarResolver) {
     if (context.getBuildDependencies() != BuildDependencies.WARN_ON_TRANSITIVE) {
       return Optional.absent();

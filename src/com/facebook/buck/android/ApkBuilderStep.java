@@ -65,7 +65,7 @@ public class ApkBuilderStep implements Step {
   private final ImmutableSet<String> assetDirectories;
   private final ImmutableSet<Path> nativeLibraryDirectories;
   private final ImmutableSet<Path> zipFiles;
-  private final ImmutableSet<String> jarFilesThatMayContainResources;
+  private final ImmutableSet<Path> jarFilesThatMayContainResources;
   private final Path pathToKeystore;
   private final Path pathToKeystorePropertiesFile;
   private final boolean debugMode;
@@ -90,7 +90,7 @@ public class ApkBuilderStep implements Step {
       ImmutableSet<String> javaResourcesDirectories,
       ImmutableSet<Path> nativeLibraryDirectories,
       ImmutableSet<Path> zipFiles,
-      ImmutableSet<String> jarFilesThatMayContainResources,
+      ImmutableSet<Path> jarFilesThatMayContainResources,
       Path pathToKeystore,
       Path pathToKeystorePropertiesFile,
       boolean debugMode) {
@@ -138,7 +138,7 @@ public class ApkBuilderStep implements Step {
           builder.addZipFile(projectFilesystem.getFileForRelativePath(zipFile));
         }
       }
-      for (String jarFileThatMayContainResources : jarFilesThatMayContainResources) {
+      for (Path jarFileThatMayContainResources : jarFilesThatMayContainResources) {
         File jarFile  = projectFilesystem.getFileForRelativePath(jarFileThatMayContainResources);
         builder.addResourcesFromJar(jarFile);
       }

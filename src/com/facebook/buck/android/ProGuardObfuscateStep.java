@@ -26,7 +26,6 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -62,7 +61,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       boolean useProguardOptimizations,
       Optional<Integer> optimizationPasses,
       Map<Path, Path> inputAndOutputEntries,
-      Set<String> additionalLibraryJarsForProguard,
+      Set<Path> additionalLibraryJarsForProguard,
       Path proguardDirectory,
       BuildableContext buildableContext) {
 
@@ -201,7 +200,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     private final Path generatedProGuardConfig;
     private final Set<Path> customProguardConfigs;
     private final Map<Path, Path> inputAndOutputEntries;
-    private final Set<String> additionalLibraryJarsForProguard;
+    private final ImmutableSet<Path> additionalLibraryJarsForProguard;
     private final boolean useAndroidProguardConfigWithOptimizations;
     private final Optional<Integer> optimizationPasses;
     private final Path proguardDirectory;
@@ -224,7 +223,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         boolean useProguardOptimizations,
         Optional<Integer> optimizationPasses,
         Map<Path, Path> inputAndOutputEntries,
-        Set<String> additionalLibraryJarsForProguard,
+        Set<Path> additionalLibraryJarsForProguard,
         Path proguardDirectory,
         Path pathToProGuardCommandLineArgsFile) {
       super("write_proguard_command_line_parameters");
@@ -288,10 +287,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
       }
 
       // -libraryjars
-      Iterable<String> bootclasspathPaths = Iterables.transform(
-          androidPlatformTarget.getBootclasspathEntries(),
-          Functions.toStringFunction());
-      Iterable<String> libraryJars = Iterables.concat(bootclasspathPaths,
+      Iterable<Path> bootclasspathPaths = androidPlatformTarget.getBootclasspathEntries();
+      Iterable<Path> libraryJars = Iterables.concat(bootclasspathPaths,
           additionalLibraryJarsForProguard);
       args.add("-libraryjars").add(pathJoiner.join(libraryJars));
 

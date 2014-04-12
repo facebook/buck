@@ -63,10 +63,10 @@ public class PrebuiltJar extends AbstractBuildable
   private final Path binaryJar;
   private final Optional<Path> sourceJar;
   private final Optional<String> javadocUrl;
-  private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       transitiveClasspathEntriesSupplier;
 
-  private final Supplier<ImmutableSetMultimap<JavaLibrary, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       declaredClasspathEntriesSupplier;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
@@ -86,24 +86,24 @@ public class PrebuiltJar extends AbstractBuildable
     this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
 
     transitiveClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
           @Override
-          public ImmutableSetMultimap<JavaLibrary, String> get() {
-            ImmutableSetMultimap.Builder<JavaLibrary, String> classpathEntries =
+          public ImmutableSetMultimap<JavaLibrary, Path> get() {
+            ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
                 ImmutableSetMultimap.builder();
-            classpathEntries.put(PrebuiltJar.this, getBinaryJar().toString());
+            classpathEntries.put(PrebuiltJar.this, getBinaryJar());
             classpathEntries.putAll(Classpaths.getClasspathEntries(deps));
             return classpathEntries.build();
           }
         });
 
     declaredClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
           @Override
-          public ImmutableSetMultimap<JavaLibrary, String> get() {
-            ImmutableSetMultimap.Builder<JavaLibrary, String> classpathEntries =
+          public ImmutableSetMultimap<JavaLibrary, Path> get() {
+            ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
                 ImmutableSetMultimap.builder();
-            classpathEntries.put(PrebuiltJar.this, getBinaryJar().toString());
+            classpathEntries.put(PrebuiltJar.this, getBinaryJar());
             return classpathEntries.build();
           }
         });
@@ -163,19 +163,18 @@ public class PrebuiltJar extends AbstractBuildable
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     return transitiveClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, String> getDeclaredClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries() {
     return declaredClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, String> getOutputClasspathEntries() {
-    return ImmutableSetMultimap.<JavaLibrary, String>builder()
-        .put(this, getBinaryJar().toString()).build();
+  public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries() {
+    return ImmutableSetMultimap.<JavaLibrary, Path>of(this, getBinaryJar());
   }
 
   @Override

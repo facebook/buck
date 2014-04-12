@@ -35,6 +35,8 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -42,7 +44,9 @@ public class JUnitStepTest {
 
   @Test
   public void testGetShellCommand() {
-    Set<String> classpathEntries = ImmutableSet.of("foo", "bar/baz");
+    Set<Path> classpathEntries = ImmutableSet.of(
+        Paths.get("foo"),
+        Paths.get("bar/baz"));
 
     String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
@@ -59,7 +63,7 @@ public class JUnitStepTest {
     boolean isCodeCoverageEnabled = false;
     boolean isJacocoEnabled = true;
     boolean isDebugEnabled = false;
-    String testRunnerClassesDirectory = "build/classes/junit";
+    Path testRunnerClassesDirectory = Paths.get("build/classes/junit");
 
     JUnitStep junit = new JUnitStep(
         classpathEntries,
@@ -101,7 +105,9 @@ public class JUnitStepTest {
 
   @Test
   public void ensureThatDebugFlagCausesJavaDebugCommandFlagToBeAdded() {
-    Set<String> classpathEntries = ImmutableSet.of("foo", "bar/baz");
+    Set<Path> classpathEntries = ImmutableSet.of(
+        Paths.get("foo"),
+        Paths.get("bar/baz"));
 
     String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
@@ -118,7 +124,7 @@ public class JUnitStepTest {
     boolean isCodeCoverageEnabled = false;
     boolean isJacocoEnabled = false;
     boolean isDebugEnabled = true;
-    String testRunnerClassesDirectory = "build/classes/junit";
+    Path testRunnerClassesDirectory = Paths.get("build/classes/junit");
 
     JUnitStep junit = new JUnitStep(
         classpathEntries,

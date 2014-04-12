@@ -64,8 +64,8 @@ public class JavacInMemoryStep extends JavacStep {
   public JavacInMemoryStep(
       Path outputDirectory,
       Set<Path> javaSourceFilePaths,
-      Set<String> transitiveClasspathEntries,
-      Set<String> declaredClasspathEntries,
+      Set<Path> transitiveClasspathEntries,
+      Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> pathToOutputAbiFile,
       Optional<String> invokingRule,
@@ -105,7 +105,7 @@ public class JavacInMemoryStep extends JavacStep {
   }
 
   @Override
-  protected int buildWithClasspath(ExecutionContext context, Set<String> buildClasspathEntries) {
+  protected int buildWithClasspath(ExecutionContext context, Set<Path> buildClasspathEntries) {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     Preconditions.checkNotNull(compiler,
         "If using JRE instead of JDK, ToolProvider.getSystemJavaCompiler() may be null.");

@@ -51,8 +51,8 @@ public class ExternalJavacStep extends JavacStep {
   public ExternalJavacStep(
       Path outputDirectory,
       Set<Path> javaSourceFilePaths,
-      Set<String> transitiveClasspathEntries,
-      Set<String> declaredClasspathEntries,
+      Set<Path> transitiveClasspathEntries,
+      Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> pathToOutputAbiFile,
       Optional<String> invokingRule,
@@ -98,7 +98,7 @@ public class ExternalJavacStep extends JavacStep {
   }
 
   @Override
-  protected int buildWithClasspath(ExecutionContext context, Set<String> buildClasspathEntries) {
+  protected int buildWithClasspath(ExecutionContext context, Set<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.add(pathToJavac.toString());
     command.addAll(getOptions(context, buildClasspathEntries));

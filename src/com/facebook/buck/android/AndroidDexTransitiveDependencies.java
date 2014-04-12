@@ -17,6 +17,7 @@ package com.facebook.buck.android;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.Set;
 
 /**
@@ -26,14 +27,14 @@ import java.util.Set;
  * .class files to exclude from the DEX.
  */
 public class AndroidDexTransitiveDependencies {
-  public final ImmutableSet<String> classpathEntriesToDex;
-  public final ImmutableSet<String> noDxClasspathEntries;
-  public final ImmutableSet<String> pathsToThirdPartyJars;
+  public final ImmutableSet<Path> classpathEntriesToDex;
+  public final ImmutableSet<Path> noDxClasspathEntries;
+  public final ImmutableSet<Path> pathsToThirdPartyJars;
 
   public AndroidDexTransitiveDependencies(
-      Set<String> pathsToDex,
-      Set<String> pathsToThirdPartyJars,
-      ImmutableSet<String> noDxClasspathEntries) {
+      Set<Path> pathsToDex,
+      Set<Path> pathsToThirdPartyJars,
+      ImmutableSet<Path> noDxClasspathEntries) {
     this.classpathEntriesToDex = ImmutableSet.copyOf(pathsToDex);
     this.pathsToThirdPartyJars = ImmutableSet.copyOf(pathsToThirdPartyJars);
     this.noDxClasspathEntries = ImmutableSet.copyOf(noDxClasspathEntries);

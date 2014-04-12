@@ -140,8 +140,8 @@ public class JavacInMemoryStepIntegrationTest {
     return new JavacInMemoryStep(
         pathToOutputDirectory,
         /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("Example.java")),
-        /* transitive classpathEntries */ ImmutableSet.<String>of(),
-        /* declated classpathEntries */ ImmutableSet.<String>of(),
+        /* transitive classpathEntries */ ImmutableSet.<Path>of(),
+        /* declated classpathEntries */ ImmutableSet.<Path>of(),
         JavacOptions.builder().build(),
         Optional.of(pathToOutputAbiFile),
         Optional.<String>absent(),

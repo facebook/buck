@@ -18,6 +18,8 @@ package com.facebook.buck.java;
 
 import com.google.common.collect.ImmutableSetMultimap;
 
+import java.nio.file.Path;
+
 /**
  * Implemented by build rules where the output has a classpath environment.
  */
@@ -27,6 +29,5 @@ public interface HasClasspathEntries {
   /**
    * @return A map of rule names to classpath entries for this rule and its dependencies.
    */
-  // TODO(simons): We only ever compile from resources on disk. Use Path instead of String?
-  public ImmutableSetMultimap<JavaLibrary, String> getTransitiveClasspathEntries();
+  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries();
 }

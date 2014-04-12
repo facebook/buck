@@ -114,7 +114,7 @@ public class AndroidTransitiveDependencyGraphTest {
         binaryRule.findDexTransitiveDependencies();
     assertEquals(
         "Because guava was passed to no_dx, it should not be in the classpathEntriesToDex list",
-        ImmutableSet.of("third_party/jsr-305/jsr305.jar"),
+        ImmutableSet.of(Paths.get("third_party/jsr-305/jsr305.jar")),
         dexTransitiveDeps.classpathEntriesToDex);
     assertEquals(
         "Because guava was passed to no_dx, it should not be treated as a third-party JAR whose " +
@@ -125,7 +125,7 @@ public class AndroidTransitiveDependencyGraphTest {
             "longer. Specifically, this was observed to take over one second longer to load " +
             "the resource in fb4a. Because the resource was loaded on startup, this introduced a " +
             "substantial regression in the startup time for the fb4a app.",
-        ImmutableSet.of("third_party/jsr-305/jsr305.jar"),
+        ImmutableSet.of(Paths.get("third_party/jsr-305/jsr305.jar")),
         dexTransitiveDeps.pathsToThirdPartyJars);
     assertEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
@@ -196,7 +196,7 @@ public class AndroidTransitiveDependencyGraphTest {
     assertEquals(
         "Classpath entries should include facebook/base but not keystore/base.",
         ImmutableSet.of(
-            BuckConstant.GEN_DIR + "/java/com/facebook/base/lib__base__output/base.jar"),
+            BuckConstant.GEN_PATH.resolve("java/com/facebook/base/lib__base__output/base.jar")),
         androidTransitiveDeps.classpathEntriesToDex);
   }
 }

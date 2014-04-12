@@ -30,12 +30,15 @@ import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -119,7 +122,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   int printClasspath(PartialGraph partialGraph) {
     List<BuildTarget> targets = partialGraph.getTargets();
     DependencyGraph graph = partialGraph.getDependencyGraph();
-    SortedSet<String> classpathEntries = Sets.newTreeSet();
+    SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
       BuildRule rule = graph.findBuildRuleByTarget(target);
@@ -132,7 +135,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
       }
     }
 
-    for (String path : classpathEntries) {
+    for (Path path : classpathEntries) {
       getStdOut().println(path);
     }
 
@@ -153,7 +156,9 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
       }
       targetClasspaths.putAll(
           target.getFullyQualifiedName(),
-          hasClasspathEntries.getTransitiveClasspathEntries().values());
+          Iterables.transform(
+              hasClasspathEntries.getTransitiveClasspathEntries().values(),
+              Functions.toStringFunction()));
     }
 
     ObjectMapper mapper = new ObjectMapper();

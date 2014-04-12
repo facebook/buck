@@ -40,7 +40,6 @@ import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -136,8 +135,8 @@ public class ComputeExopackageDepsAbi
               }
 
               // Resources get copied from third-party JARs, so hash them.
-              for (String jar : dexTransitiveDependencies.pathsToThirdPartyJars) {
-                filesToHash.put(Paths.get(jar), "third-party jar");
+              for (Path jar : dexTransitiveDependencies.pathsToThirdPartyJars) {
+                filesToHash.put(jar, "third-party jar");
               }
 
               // The last input is the keystore.

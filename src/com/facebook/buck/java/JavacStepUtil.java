@@ -32,8 +32,8 @@ public class JavacStepUtil {
   public static JavacStep createJavacStep(
       Path outputDirectory,
       Set<Path> javaSourceFilePaths,
-      Set<String> transitiveClasspathEntries,
-      Set<String> declaredClasspathEntries,
+      Set<Path> transitiveClasspathEntries,
+      Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> pathToOutputAbiFile,
       Optional<String> invokingRule,

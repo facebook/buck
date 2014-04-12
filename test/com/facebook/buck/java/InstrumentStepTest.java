@@ -45,7 +45,7 @@ public class InstrumentStepTest {
 
     List<String> expectedShellCommand = ImmutableList.of(
         "java",
-        "-classpath", JUnitStep.PATH_TO_EMMA_JAR,
+        "-classpath", JUnitStep.PATH_TO_EMMA_JAR.toString(),
         "emma", "instr",
         "-outmode", mode,
         "-outfile", String.format("%s/coverage.em", JUnitStep.EMMA_OUTPUT_DIR),

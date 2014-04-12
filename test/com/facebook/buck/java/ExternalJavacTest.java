@@ -80,8 +80,9 @@ public class ExternalJavacTest extends EasyMockSupport {
     return new ExternalJavacStep(
           /* outputDirectory */ Paths.get("."),
           /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
-          /* transitiveClasspathEntries */ ImmutableSet.of("bar.jar", "foo.jar"),
-          /* declaredClasspathEntries */ ImmutableSet.of("foo.jar"),
+          /* transitiveClasspathEntries */
+            ImmutableSet.of(Paths.get("bar.jar"), Paths.get("foo.jar")),
+          /* declaredClasspathEntries */ ImmutableSet.of(Paths.get("foo.jar")),
           JavacOptions.builder(JavacOptions.DEFAULTS)
               .setJavaCompilerEnviornment(
                   new JavaCompilerEnvironment(
