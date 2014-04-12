@@ -201,7 +201,11 @@ public class Project {
     if (pathToPostProcessScript.isPresent()) {
       String pathToScript = pathToPostProcessScript.get();
       Process process = Runtime.getRuntime().exec(new String[] {pathToScript});
-      processExecutor.execute(process);
+      ProcessExecutor.Result postProcessResult = processExecutor.execute(process);
+      int postProcessExitCode = postProcessResult.getExitCode();
+      if (postProcessExitCode != 0) {
+        return postProcessExitCode;
+      }
     }
 
     // If any files have been modified by `buck project`, then list them for the user.
