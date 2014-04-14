@@ -25,9 +25,9 @@ import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
-import com.facebook.buck.java.JavacVersion;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
@@ -77,7 +77,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
 import java.nio.file.Paths;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -416,25 +415,6 @@ public final class Main {
   }
 
   /**
-   * @param executor ProcessExecutor to run the java compiler
-   * @param javac path to the java compiler
-   * @return the version of the passed in java compiler
-   */
-  private JavacVersion getJavacVersion(ProcessExecutor executor, Path javac) {
-    try {
-      ProcessExecutor.Result versionResult = executor.execute(
-          Runtime.getRuntime().exec(javac + " -version"));
-      if (versionResult.getExitCode() == 0) {
-        return new JavacVersion(versionResult.getStderr());
-      } else {
-        throw new HumanReadableException(versionResult.getStderr());
-      }
-    } catch (IOException e) {
-      throw new HumanReadableException("Could not run " + javac + " -version");
-    }
-  }
-
-  /**
    * @param context an optional NGContext that is present if running inside a Nailgun server.
    * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
@@ -491,12 +471,8 @@ public final class Main {
             propertyFinder);
 
     // Look up the javac version.
-    Optional<Path> javac = config.getJavac();
-    Optional<JavacVersion> javacVersion = Optional.absent();
-    if (javac.isPresent()) {
-      javacVersion = Optional.of(getJavacVersion(processExecutor, javac.get()));
-    }
-    JavaCompilerEnvironment javacEnv = new JavaCompilerEnvironment(javac, javacVersion);
+    JavaBuckConfig javaConfig = new JavaBuckConfig(config);
+    JavaCompilerEnvironment javacEnv = javaConfig.getJavaCompilerEnvironment(processExecutor);
 
     // NOTE:  If any other variable is used when configuring buildRuleTypes, it MUST be passed down
     // to the Daemon and implement equals/hashCode so we can invalidate the Parser if values used

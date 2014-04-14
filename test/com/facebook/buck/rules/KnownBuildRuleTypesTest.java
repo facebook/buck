@@ -25,6 +25,7 @@ import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavacVersion;
@@ -130,12 +131,13 @@ public class KnownBuildRuleTypesTest {
     Map<String, Map<String, String>> sections = ImmutableMap.of(
         "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    JavaBuckConfig javaConfig = new JavaBuckConfig(buckConfig);
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
         new FakeAndroidDirectoryResolver(),
         new JavaCompilerEnvironment(
-            buckConfig.getJavac(),
+            javaConfig.getJavac(),
             Optional.<JavacVersion>absent())
     ).build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(JavaLibraryDescription.TYPE);
@@ -210,12 +212,13 @@ public class KnownBuildRuleTypesTest {
     Map<String, Map<String, String>> sections = ImmutableMap.of(
         "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    JavaBuckConfig javaConfig = new JavaBuckConfig(buckConfig);
 
     KnownBuildRuleTypes configuredBuildRuleTypes1 = KnownBuildRuleTypes.createBuilder(
         buckConfig,
         new FakeAndroidDirectoryResolver(),
         new JavaCompilerEnvironment(
-            buckConfig.getJavac(),
+            javaConfig.getJavac(),
             Optional.of(new JavacVersion("fakeVersion 0.1")))
     ).build();
     BuildRuleFactory<?> configuredFactory1 =
@@ -227,7 +230,7 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         new FakeAndroidDirectoryResolver(),
         new JavaCompilerEnvironment(
-            buckConfig.getJavac(),
+            javaConfig.getJavac(),
             Optional.of(new JavacVersion("fakeVersion 0.2")))
     ).build();
     BuildRuleFactory<?> configuredFactory2 =
@@ -264,12 +267,13 @@ public class KnownBuildRuleTypesTest {
     Map<String, Map<String, String>> sections = ImmutableMap.of(
         "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    JavaBuckConfig javaConfig = new JavaBuckConfig(buckConfig);
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
         new FakeAndroidDirectoryResolver(),
         new JavaCompilerEnvironment(
-            buckConfig.getJavac(),
+            javaConfig.getJavac(),
             Optional.<JavacVersion>absent())
     ).build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(AndroidLibraryDescription.TYPE);

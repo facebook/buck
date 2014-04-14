@@ -1,4 +1,19 @@
 java_library(
+  name = 'config',
+  srcs = [
+    'JavaBuckConfig.java',
+  ],
+  deps = [
+    ':support',
+    '//lib:guava',
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_library(
   name = 'support',
   srcs = [
     'AbiWritingAnnotationProcessingDataDecorator.java',

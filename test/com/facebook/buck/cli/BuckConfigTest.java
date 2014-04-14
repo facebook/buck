@@ -488,56 +488,6 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void whenJavacIsNotSetThenAbsentIsReturned() throws IOException {
-    assertEquals(Optional.absent(), new FakeBuckConfig().getJavac());
-  }
-
-  @Test
-  public void whenJavacExistsAndIsExecutableThenCorrectPathIsReturned() throws IOException {
-    File javac = temporaryFolder.newFile();
-    javac.setExecutable(true);
-
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[tools]",
-        "    javac = " + javac.toPath().toString()));
-    BuckConfig config = createWithDefaultFilesystem(reader, null);
-
-    assertEquals(Optional.of(javac.toPath()), config.getJavac());
-  }
-
-  @Test
-  public void whenJavacDoesNotExistThenHumanReadableExceptionIsThrown() throws IOException {
-    String invalidPath = temporaryFolder.getRoot().getAbsolutePath() + "DoesNotExist";
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[tools]",
-        "    javac = " + invalidPath));
-    BuckConfig config = createWithDefaultFilesystem(reader, null);
-    try {
-      config.getJavac();
-      fail("Should throw exception as javac file does not exist.");
-    } catch (HumanReadableException e) {
-      assertEquals(e.getHumanReadableErrorMessage(), "Javac does not exist: " + invalidPath);
-    }
-  }
-
-  @Test
-  public void whenJavacIsNotExecutableThenHumanReadableExeceptionIsThrown() throws IOException {
-    File javac = temporaryFolder.newFile();
-    javac.setExecutable(false);
-
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[tools]",
-        "    javac = " + javac.toPath().toString()));
-    BuckConfig config = createWithDefaultFilesystem(reader, null);
-    try {
-      config.getJavac();
-      fail("Should throw exception as javac file is not executable.");
-    } catch (HumanReadableException e) {
-      assertEquals(e.getHumanReadableErrorMessage(), "Javac is not executable: " + javac.getPath());
-    }
-  }
-
-  @Test
   public void whenToolsPythonIsExecutableFileThenItIsUsed() throws IOException {
     File configPythonFile = temporaryFolder.newFile("python");
     assertTrue("Should be able to set file executable", configPythonFile.setExecutable(true));
