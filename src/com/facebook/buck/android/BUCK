@@ -35,7 +35,6 @@ RULES_SRCS = [
   'BuildConfigDescription.java',
   'ComputeExopackageDepsAbi.java',
   'DexProducedFromJavaLibrary.java',
-  'DexRDotJavaStep.java',
   'DexWithClasses.java',
   'DummyRDotJava.java',
   'FilteredResourcesProvider.java',

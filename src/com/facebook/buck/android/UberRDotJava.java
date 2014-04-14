@@ -17,6 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.UberRDotJava.BuildOutput;
+import com.facebook.buck.dalvik.EstimateLinearAllocStep;
+import com.facebook.buck.java.AccumulateClassNamesStep;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
@@ -34,15 +36,19 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -60,6 +66,7 @@ public class UberRDotJava extends AbstractBuildable implements
     AbiRule, InitializableFromDisk<BuildOutput> {
 
   public static final String R_DOT_JAVA_LINEAR_ALLOC_SIZE = "r_dot_java_linear_alloc_size";
+  private static final String R_DOT_JAVA_CLASSES_HASH = "r_dot_java_classes_hash";
 
   private final BuildTarget buildTarget;
   private final FilteredResourcesProvider filteredResourcesProvider;
@@ -115,7 +122,7 @@ public class UberRDotJava extends AbstractBuildable implements
     return Optional.<DexWithClasses>of(new DexWithClasses() {
           @Override
           public Path getPathToDexFile() {
-            return DexRDotJavaStep.getPathToDexFile(buildTarget);
+            return getPathToRDotJavaDex();
           }
 
           @Override
@@ -152,25 +159,30 @@ public class UberRDotJava extends AbstractBuildable implements
       generateAndCompileRDotJavaFiles(resDirectories, rDotJavaPackages, steps, buildableContext);
     }
 
-    final Optional<DexRDotJavaStep> dexRDotJava = rDotJavaNeedsDexing && !resDirectories.isEmpty()
-        ? Optional.of(DexRDotJavaStep.create(buildTarget, getPathToCompiledRDotJavaFiles()))
-        : Optional.<DexRDotJavaStep>absent();
-    if (dexRDotJava.isPresent()) {
-      steps.add(dexRDotJava.get());
-      buildableContext.recordArtifact(DexRDotJavaStep.getPathToDexFile(buildTarget));
-    }
+    if (rDotJavaNeedsDexing && !resDirectories.isEmpty()) {
+      Path rDotJavaDexDir = getPathToRDotJavaDexFiles();
+      steps.add(new MakeCleanDirectoryStep(rDotJavaDexDir));
+      steps.add(new DxStep(
+              getPathToRDotJavaDex(),
+              Collections.singleton(getPathToCompiledRDotJavaFiles()),
+              EnumSet.of(DxStep.Option.NO_OPTIMIZE)));
 
-    steps.add(new AbstractExecutionStep("record_build_output") {
-      @Override
-      public int execute(ExecutionContext context) {
-        if (dexRDotJava.isPresent()) {
-          buildableContext.addMetadata(
-              R_DOT_JAVA_LINEAR_ALLOC_SIZE,
-              dexRDotJava.get().getLinearAllocSizeEstimate().toString());
-        }
-        return 0;
-      }
-    });
+      final EstimateLinearAllocStep estimateLinearAllocStep = new EstimateLinearAllocStep(
+          getPathToCompiledRDotJavaFiles());
+      steps.add(estimateLinearAllocStep);
+
+      buildableContext.recordArtifact(getPathToRDotJavaDex());
+      steps.add(
+          new AbstractExecutionStep("record_build_output") {
+            @Override
+            public int execute(ExecutionContext context) {
+              buildableContext.addMetadata(
+                  R_DOT_JAVA_LINEAR_ALLOC_SIZE,
+                  estimateLinearAllocStep.get().toString());
+              return 0;
+            }
+          });
+    }
 
     return steps.build();
   }
@@ -182,7 +194,8 @@ public class UberRDotJava extends AbstractBuildable implements
         ? Optional.of(Integer.parseInt(linearAllocSizeValue.get()))
         : Optional.<Integer>absent();
 
-    return new BuildOutput(linearAllocSize);
+    Optional<Sha1HashCode> rDotJavaClassesHash = onDiskBuildInfo.getHash(R_DOT_JAVA_CLASSES_HASH);
+    return new BuildOutput(linearAllocSize, rDotJavaClassesHash);
   }
 
   @Override
@@ -197,10 +210,16 @@ public class UberRDotJava extends AbstractBuildable implements
 
   public static class BuildOutput {
     private final Optional<Integer> rDotJavaDexLinearAllocEstimate;
+    // TODO(user): Remove the annotation once DexWithClasses uses the hash.
+    @SuppressWarnings("unused")
+    private final Optional<Sha1HashCode> rDotJavaClassesHash;
 
-    public BuildOutput(Optional<Integer> rDotJavaDexLinearAllocSizeEstimate) {
+    public BuildOutput(
+        Optional<Integer> rDotJavaDexLinearAllocSizeEstimate,
+        Optional<Sha1HashCode> rDotJavaClassesHash) {
       this.rDotJavaDexLinearAllocEstimate =
           Preconditions.checkNotNull(rDotJavaDexLinearAllocSizeEstimate);
+      this.rDotJavaClassesHash = Preconditions.checkNotNull(rDotJavaClassesHash);
     }
   }
 
@@ -212,7 +231,7 @@ public class UberRDotJava extends AbstractBuildable implements
       Set<Path> resDirectories,
       Set<String> rDotJavaPackages,
       ImmutableList.Builder<Step> commands,
-      BuildableContext buildableContext) {
+      final BuildableContext buildableContext) {
     // Create the path where the R.java files will be generated.
     Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
     commands.add(new MakeCleanDirectoryStep(rDotJavaSrc));
@@ -225,10 +244,6 @@ public class UberRDotJava extends AbstractBuildable implements
         /* isTempRDotJava */ false,
         rDotJavaPackages);
     commands.add(genRDotJava);
-
-    // Create the path where the R.java files will be compiled.
-    Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
-    commands.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
     if (shouldBuildStringSourceMap) {
       // Make sure we have an output directory
@@ -253,12 +268,41 @@ public class UberRDotJava extends AbstractBuildable implements
       Path path = rDotJavaSrc.resolve(rDotJavaPackage.replace('.', '/')).resolve("R.java");
       javaSourceFilePaths.add(path);
     }
+
+    // Create the path where the R.java files will be compiled.
+    Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
+    commands.add(new MakeCleanDirectoryStep(rDotJavaBin));
+
     JavacStep javac = UberRDotJavaUtil.createJavacStepForUberRDotJavaFiles(
         javaSourceFilePaths,
         rDotJavaBin,
         javacOptions,
         buildTarget);
     commands.add(javac);
+
+    final Path rDotJavaClassesTxt = rDotJavaBin.resolve("classes.txt");
+    commands.add(new AccumulateClassNamesStep(Optional.of(rDotJavaBin), rDotJavaClassesTxt));
+
+    commands.add(
+        new AbstractExecutionStep("record_r_dot_java_classes_hash") {
+          @Override
+          public int execute(ExecutionContext context) {
+            List<String> lines;
+            try {
+              ProjectFilesystem filesystem = context.getProjectFilesystem();
+              lines = filesystem.readLines(rDotJavaClassesTxt);
+            } catch (IOException e) {
+              context.logError(
+                  e, "There was an error reading classes.txt file: %s", rDotJavaClassesTxt);
+              return 1;
+            }
+            buildableContext.addMetadata(
+                R_DOT_JAVA_CLASSES_HASH,
+                Hashing.combineOrdered(AccumulateClassNamesStep.parseClassHashes(lines).values())
+                    .toString());
+            return 0;
+          }
+        });
 
     // Ensure the generated R.txt, R.java, and R.class files are also recorded.
     buildableContext.recordArtifactsInDirectory(rDotJavaSrc);
@@ -284,5 +328,13 @@ public class UberRDotJava extends AbstractBuildable implements
    */
   Path getPathToGeneratedRDotJavaSrcFiles() {
     return BuildTargets.getBinPath(buildTarget, "__%s_uber_rdotjava_src__");
+  }
+
+  Path getPathToRDotJavaDexFiles() {
+    return BuildTargets.getBinPath(buildTarget, "__%s_uber_rdotjava_dex__");
+  }
+
+  Path getPathToRDotJavaDex() {
+    return getPathToRDotJavaDexFiles().resolve("classes.dex.jar");
   }
 }
