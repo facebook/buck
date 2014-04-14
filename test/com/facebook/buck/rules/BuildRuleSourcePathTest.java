@@ -67,12 +67,12 @@ public class BuildRuleSourcePathTest {
   }
 
   @Test
-  public void shouldReturnFullyQualifiedBuildTargetAsAStringAsTheReference() {
+  public void shouldReturnTheBuildRuleAsTheReference() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target);
 
     BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
 
-    assertEquals(target.getFullyQualifiedName(), path.asReference());
+    assertEquals(rule, path.asReference());
   }
 }

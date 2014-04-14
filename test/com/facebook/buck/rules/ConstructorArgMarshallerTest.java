@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -535,7 +536,7 @@ public class ConstructorArgMarshallerTest {
         dto);
 
     ImmutableSet<String> observedValues = FluentIterable.from(dto.srcs)
-        .transform(SourcePath.TO_REFERENCE)
+        .transform(Functions.toStringFunction())
         .toSet();
     assertEquals(
         ImmutableSet.of(

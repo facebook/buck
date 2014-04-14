@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,6 +39,13 @@ public class SourcePaths {
           return new PathSourcePath(input);
         }
       };
+  public static final Function<PathSourcePath, Path> TO_PATH_SOURCEPATH_REFERENCES =
+      new Function<PathSourcePath, Path>() {
+        @Override
+        public Path apply(PathSourcePath input) {
+          return input.asReference();
+        }
+      };
 
   /** Utility class: do not instantiate. */
   private SourcePaths() {}
@@ -58,8 +64,7 @@ public class SourcePaths {
     // file, and generated files are not hashed as part of a RuleKey.
     return FluentIterable.from(sources)
         .filter(PathSourcePath.class)
-        .transform(SourcePath.TO_REFERENCE)
-        .transform(MorePaths.TO_PATH)
+        .transform(TO_PATH_SOURCEPATH_REFERENCES)
         .toList();
   }
 

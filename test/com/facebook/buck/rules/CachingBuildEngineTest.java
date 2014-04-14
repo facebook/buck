@@ -173,6 +173,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .putByte(RuleKey.Builder.SEPARATOR)
         .putBytes("/dev/null".getBytes())
         .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes("/dev/null".getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
         .putByte(RuleKey.Builder.SEPARATOR)
 
         .putByte(RuleKey.Builder.SEPARATOR)

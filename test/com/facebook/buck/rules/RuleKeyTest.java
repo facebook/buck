@@ -40,9 +40,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Unit test for {@link RuleKey}.
- */
 public class RuleKeyTest {
 
   @Test
@@ -157,6 +154,8 @@ public class RuleKeyTest {
   public void ensureSetsAreHandledProperly() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target);
+    rule.setRuleKey(RuleKey.TO_RULE_KEY.apply("cafebabe"));
+    rule.setOutputFile("cheese.txt");
 
     ImmutableSortedSet<SourcePath> sourcePaths = ImmutableSortedSet.<SourcePath>of(
         new BuildRuleSourcePath(rule),

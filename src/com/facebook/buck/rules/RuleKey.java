@@ -298,7 +298,13 @@ public class RuleKey {
       setKey(key);
       if (val != null) {
         for (SourcePath path : val) {
-          setVal(path.asReference());
+          setVal(path.toString());
+          Object ref = path.asReference();
+          if (ref instanceof BuildRule) {
+            setVal(((BuildRule) ref).getRuleKey());
+          } else {
+            setVal(String.valueOf(ref));
+          }
         }
       }
       return separate();

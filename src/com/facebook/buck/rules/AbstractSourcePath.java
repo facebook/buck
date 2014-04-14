@@ -16,17 +16,18 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Preconditions;
-
 /**
  * Abstract base class for implementations of {@link SourcePath}.
  */
 abstract class AbstractSourcePath implements SourcePath {
+
   @Override
   public int compareTo(SourcePath o) {
-    Preconditions.checkNotNull(o);
+    if (o == this) {
+      return 0;
+    }
 
-    return asReference().compareTo(o.asReference());
+    return toString().compareTo(o.toString());
   }
 
   @Override
@@ -45,6 +46,6 @@ abstract class AbstractSourcePath implements SourcePath {
 
   @Override
   public String toString() {
-    return asReference();
+    return String.valueOf(asReference());
   }
 }

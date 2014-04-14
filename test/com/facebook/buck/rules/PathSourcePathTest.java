@@ -40,8 +40,9 @@ public class PathSourcePathTest {
 
   @Test
   public void shouldReturnTheOriginalPathAsTheReference() {
-    PathSourcePath path = new PathSourcePath(Paths.get("cheese"));
+    Path expected = Paths.get("cheese");
+    PathSourcePath path = new PathSourcePath(expected);
 
-    assertEquals("cheese", path.asReference());
+    assertEquals(expected, path.asReference());
   }
 }

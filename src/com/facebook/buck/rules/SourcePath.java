@@ -25,10 +25,10 @@ import java.nio.file.Path;
  */
 public interface SourcePath extends Comparable<SourcePath>  {
 
-  public static final Function<SourcePath, String> TO_REFERENCE =
-      new Function<SourcePath, String>() {
+  public static final Function<SourcePath, Object> TO_REFERENCE =
+      new Function<SourcePath, Object>() {
     @Override
-    public String apply(SourcePath sourcePath) {
+    public Object apply(SourcePath sourcePath) {
       return sourcePath.asReference();
     }
   };
@@ -44,5 +44,5 @@ public interface SourcePath extends Comparable<SourcePath>  {
   /**
    * @return a representation of path in a stable manner that does not involve calling {#resolve()}
    */
-  public String asReference();
+  public Object asReference();
 }

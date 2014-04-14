@@ -32,7 +32,7 @@ public class PathSourcePath extends AbstractSourcePath {
   }
 
   @Override
-  public String asReference() {
-    return relativePath.toString();
+  public Path asReference() {
+    return relativePath;
   }
 }

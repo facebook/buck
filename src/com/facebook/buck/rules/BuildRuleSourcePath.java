@@ -45,8 +45,8 @@ public class BuildRuleSourcePath extends AbstractSourcePath {
   }
 
   @Override
-  public String asReference() {
-    return rule.getFullyQualifiedName();
+  public BuildRule asReference() {
+    return rule;
   }
 
   public BuildRule getRule() {

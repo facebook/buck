@@ -722,7 +722,7 @@ public class ProjectGenerator {
   }
 
   private static boolean isHeaderSourcePath(SourcePath sourcePath) {
-    return HEADER_FILE_EXTENSIONS.contains(Files.getFileExtension(sourcePath.asReference()));
+    return HEADER_FILE_EXTENSIONS.contains(Files.getFileExtension(sourcePath.toString()));
   }
 
   private void addGroupedSourcesToBuildPhases(
