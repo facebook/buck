@@ -86,6 +86,23 @@ class DexSplitMode {
    */
   private final boolean isPrimaryDexScenarioOverflowAllowed;
 
+  /**
+   *
+   * @param primaryDexPatterns Set of substrings that, when matched, will cause individual input
+   *     class or resource files to be placed into the primary jar (and thus the primary dex
+   *     output).  These classes are required for correctness.
+   * @param primaryDexClassesFile Path to a file containing a list of classes that must be included
+   *     in the primary dex.  These classes are required for correctness.
+   * @param primaryDexScenarioFile Path to a file containing a list of classes used in a scenario
+   *     that should be included in the primary dex along with all dependency classes required for
+   *     preverification.  These dependencies will be calculated by buck.  This list is used for
+   *     performance, not correctness.
+   * @param isPrimaryDexScenarioOverflowAllowed A boolean indicating whether to fail the build if
+   *     any classes required by primaryDexScenarioFile cannot fit (false) or to allow the build to
+   *     to proceed on a best-effort basis (true).
+   * @param useLinearAllocSplitDex If true, {@link com.facebook.buck.dalvik.DalvikAwareZipSplitter}
+   *     will be used. Also, {@code linearAllocHardLimit} must have a positive value in this case.
+   */
   public DexSplitMode(
       boolean shouldSplitDex,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,

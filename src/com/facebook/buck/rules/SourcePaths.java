@@ -46,6 +46,13 @@ public class SourcePaths {
           return input.asReference();
         }
       };
+  public static final Function<SourcePath, Path> TO_PATH =
+      new Function<SourcePath, Path>() {
+        @Override
+        public Path apply(SourcePath input) {
+          return input.resolve();
+        }
+      };
 
   /** Utility class: do not instantiate. */
   private SourcePaths() {}

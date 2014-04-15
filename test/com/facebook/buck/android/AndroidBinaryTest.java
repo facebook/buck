@@ -306,13 +306,7 @@ public class AndroidBinaryTest {
     splitDexRule.addDexingSteps(classpath,
         secondaryDexDirectories,
         commandsBuilder,
-        primaryDexPath,
-        /* sourcePathResolver */ new Function<SourcePath, Path>() {
-          @Override
-          public Path apply(SourcePath input) {
-            throw new UnsupportedOperationException("This resolver should not be used.");
-          }
-        });
+        primaryDexPath);
 
     assertEquals("Expected 2 new assets paths (one for metadata.txt and the other for the " +
         "secondary zips)", 2, secondaryDexDirectories.build().size());

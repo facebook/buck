@@ -21,6 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.dalvik.ZipSplitter;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
@@ -105,15 +107,17 @@ public class SplitZipStepTest {
         /* secondaryJarPattern */ "",
         /* proguardFullConfigFile */ Optional.<Path>absent(),
         /* proguardMappingFile */ Optional.<Path>absent(),
-        /* primaryDexPatterns */ ImmutableSet.of("List"),
-        Optional.of(primaryDexClassesFile),
-        /* primaryDexScenarioFile */ Optional.<Path>absent(),
-        /* isPrimaryDexScenarioOverflowAllowed */ false,
-        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-        DexStore.JAR,
-        /* pathToReportDir */ Paths.get(""),
-        /* useLinearAllocSplitDex */ true,
-        /* linearAllocHardLimit */ 4 * 1024 * 1024);
+        new DexSplitMode(
+            /* shouldSplitDex */ true,
+            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+            DexStore.JAR,
+            /* useLinearAllocSplitDex */ true,
+            /* linearAllocHardLimit */ 4 * 1024 * 1024,
+            /* primaryDexPatterns */ ImmutableSet.of("List"),
+            Optional.<SourcePath>of(new TestSourcePath("the/manifest.txt")),
+            /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
+            /* isPrimaryDexScenarioOverflowAllowed */ false),
+        /* pathToReportDir */ Paths.get(""));
     List<String> linesInManifestFile = ImmutableList.of(
         "com/google/common/collect/ImmutableSortedSet",
         "  com/google/common/collect/ImmutableSet",
@@ -173,15 +177,17 @@ public class SplitZipStepTest {
         /* secondaryJarPattern */ "",
         /* proguardFullConfigFile */ Optional.of(proguardConfigFile),
         /* proguardMappingFile */ Optional.of(proguardMappingFile),
-        /* primaryDexPatterns */ ImmutableSet.of("/primary/", "x/"),
-        Optional.of(primaryDexClassesFile),
-        /* primaryDexScenarioFile */ Optional.<Path>absent(),
-        /* isPrimaryDexScenarioOverflowAllowed */ false,
-        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-        DexStore.JAR,
-        /* pathToReportDir */ Paths.get(""),
-        /* useLinearAllocSplitDex */ true,
-        /* linearAllocHardLimit */ 4 * 1024 * 1024);
+        new DexSplitMode(
+            /* shouldSplitDex */ true,
+            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+            DexStore.JAR,
+            /* useLinearAllocSplitDex */ true,
+            /* linearAllocHardLimit */ 4 * 1024 * 1024,
+            /* primaryDexPatterns */ ImmutableSet.of("/primary/", "x/"),
+            Optional.<SourcePath>of(new TestSourcePath("the/manifest.txt")),
+            /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
+            /* isPrimaryDexScenarioOverflowAllowed */ false),
+        /* pathToReportDir */ Paths.get(""));
     List<String> linesInMappingFile = ImmutableList.of(
         "foo.bar.MappedPrimary -> foo.bar.a:",
         "foo.bar.MappedSecondary -> foo.bar.b:",
@@ -256,15 +262,17 @@ public class SplitZipStepTest {
         /* secondaryJarPattern */ "",
         /* proguardFullConfigFile */ Optional.of(proguardConfigFile),
         /* proguardMappingFile */ Optional.of(proguardMappingFile),
-        /* primaryDexPatterns */ ImmutableSet.<String>of("primary"),
-        /* primaryDexClassesFile */ Optional.<Path>absent(),
-        /* primaryDexScenarioFile */ Optional.<Path>absent(),
-        /* isPrimaryDexScenarioOverflowAllowed */ false,
-        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-        DexStore.JAR,
-        /* pathToReportDir */ Paths.get(""),
-        /* useLinearAllocSplitDex */ true,
-        /* linearAllocHardLimit */ 4 * 1024 * 1024);
+        new DexSplitMode(
+            /* shouldSplitDex */ true,
+            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+            DexStore.JAR,
+            /* useLinearAllocSplitDex */ true,
+            /* linearAllocHardLimit */ 4 * 1024 * 1024,
+            /* primaryDexPatterns */ ImmutableSet.of("primary"),
+            /* primaryDexClassesFile */ Optional.<SourcePath>absent(),
+            /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
+            /* isPrimaryDexScenarioOverflowAllowed */ false),
+        /* pathToReportDir */ Paths.get(""));
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))

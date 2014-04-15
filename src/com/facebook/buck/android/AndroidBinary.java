@@ -795,8 +795,7 @@ public class AndroidBinary extends AbstractBuildable implements
           classpathEntriesToDex,
           secondaryDexDirectoriesBuilder,
           steps,
-          primaryDexPath,
-          context.getSourcePathResolver());
+          primaryDexPath);
     } else if (!exopackage) {
       secondaryDexDirectoriesBuilder.addAll(preDexMerge.get().getSecondaryDexDirectories());
     }
@@ -973,8 +972,7 @@ public class AndroidBinary extends AbstractBuildable implements
       Set<Path> classpathEntriesToDex,
       ImmutableSet.Builder<Path> secondaryDexDirectories,
       ImmutableList.Builder<Step> steps,
-      Path primaryDexPath,
-      Function<SourcePath, Path> sourcePathResolver) {
+      Path primaryDexPath) {
     final Supplier<Set<Path>> primaryInputsToDex;
     final Optional<Path> secondaryDexDir;
     final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
@@ -1021,15 +1019,8 @@ public class AndroidBinary extends AbstractBuildable implements
           "secondary-%d.jar",
           proguardFullConfigFile,
           proguardMappingFile,
-          dexSplitMode.getPrimaryDexPatterns(),
-          dexSplitMode.getPrimaryDexClassesFile().transform(sourcePathResolver),
-          dexSplitMode.getPrimaryDexScenarioFile().transform(sourcePathResolver),
-          dexSplitMode.isPrimaryDexScenarioOverflowAllowed(),
-          dexSplitMode.getDexSplitStrategy(),
-          dexSplitMode.getDexStore(),
-          zipSplitReportDir,
-          dexSplitMode.useLinearAllocSplitDex(),
-          dexSplitMode.getLinearAllocHardLimit());
+          dexSplitMode,
+          zipSplitReportDir);
       steps.add(splitZipCommand);
 
       // Add the secondary dex directory that has yet to be created, but will be by the
