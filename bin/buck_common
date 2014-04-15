@@ -151,28 +151,29 @@ elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
 fi
 
 # Get current buck version.
+if [ -z "$BUCK_REPOSITORY_DIRTY" ]; then
+  # Whether or not the repo is dirty (contains untracked files or modified
+  # tracked files).
+  BUCK_REPOSITORY_DIRTY=0
 
-# Whether or not the repo is dirty (contains untracked files or modified
-# tracked files).
-BUCK_REPOSITORY_DIRTY=0
+  # Whether or not the repo contains changes to tracked files.
+  BUCK_REPOSITORY_LOCAL_CHANGES=0
+  BUCK_CURRENT_VERSION="N/A"
+  BUCK_VERSION_TIMESTAMP=-1
+  if [ -d ".git" ]; then
+    # Make sure buck gets passed the right version.
+    BUCK_CURRENT_VERSION=`git rev-parse HEAD`
+    BUCK_VERSION_TIMESTAMP=`git log --pretty=format:%ct -1 HEAD`
 
-# Whether or not the repo contains changes to tracked files.
-BUCK_REPOSITORY_LOCAL_CHANGES=0
-BUCK_CURRENT_VERSION="N/A"
-BUCK_VERSION_TIMESTAMP=-1
-if [ -d ".git" ]; then
-  # Make sure buck gets passed the right version.
-  BUCK_CURRENT_VERSION=`git rev-parse HEAD`
-  BUCK_VERSION_TIMESTAMP=`git log --pretty=format:%ct -1 HEAD`
-
-  # if the output of "git status -s" is non-empty.
-  if [ -n "`git status -s`" ]; then
-    BUCK_REPOSITORY_DIRTY=1
-  fi
-  # If the output of "git ls-files -m" is non-empty, buck has local changes to
-  # tracked files that can't be cleaned automatically with `git clean -fd`.
-  if [ -n "`git ls-files -m`" ]; then
-    BUCK_REPOSITORY_LOCAL_CHANGES=1
+    # if the output of "git status -s" is non-empty.
+    if [ -n "`git status -s`" ]; then
+      BUCK_REPOSITORY_DIRTY=1
+    fi
+    # If the output of "git ls-files -m" is non-empty, buck has local changes to
+    # tracked files that can't be cleaned automatically with `git clean -fd`.
+    if [ -n "`git ls-files -m`" ]; then
+      BUCK_REPOSITORY_LOCAL_CHANGES=1
+    fi
   fi
 fi
 
