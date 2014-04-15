@@ -80,6 +80,17 @@ public class AndroidTransitiveDependencyGraph {
         noDxPathsBuilder.add(entry.getValue());
       }
     }
+    // Include the directory of compiled R.java files on the classpath.
+    ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
+    if (!rDotJavaPackages.isEmpty()) {
+      Path pathToCompiledRDotJavaFiles = uberRDotJava.getPathToCompiledRDotJavaFiles();
+      pathsToDexBuilder.add(pathToCompiledRDotJavaFiles);
+    }
+
+    ImmutableSet<Path> noDxPaths = noDxPathsBuilder.build();
+
+    // Filter out the classpath entries to exclude from dex'ing, if appropriate
+    Set<Path> classpathEntries = Sets.difference(pathsToDexBuilder.build(), noDxPaths);
 
     // Visit all of the transitive dependencies to populate the above collections.
     new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps) {
@@ -96,17 +107,6 @@ public class AndroidTransitiveDependencyGraph {
       }
     }.start();
 
-    // Include the directory of compiled R.java files on the classpath.
-    ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
-    if (!rDotJavaPackages.isEmpty()) {
-      Path pathToCompiledRDotJavaFiles = uberRDotJava.getPathToCompiledRDotJavaFiles();
-      pathsToDexBuilder.add(pathToCompiledRDotJavaFiles);
-    }
-
-    ImmutableSet<Path> noDxPaths = noDxPathsBuilder.build();
-
-    // Filter out the classpath entries to exclude from dex'ing, if appropriate
-    Set<Path> classpathEntries = Sets.difference(pathsToDexBuilder.build(), noDxPaths);
     // Classpath entries that should be excluded from dexing should also be excluded from
     // pathsToThirdPartyJars because their resources should not end up in main APK. If they do,
     // the pre-dexed library may try to load a resource from the main APK rather than from within
