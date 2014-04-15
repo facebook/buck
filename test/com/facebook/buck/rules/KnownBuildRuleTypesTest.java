@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.java.JavaCompilerEnvironment.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -101,8 +102,7 @@ public class KnownBuildRuleTypesTest {
         new BuildTargetParser(filesystem),
         BuildTargetFactory.newInstance("//:foo"),
         new FakeRuleKeyBuilderFactory(),
-        true
-    );
+        true);
   }
 
   @Test
@@ -138,8 +138,10 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver(),
         new JavaCompilerEnvironment(
             javaConfig.getJavac(),
-            Optional.<JavacVersion>absent())
-    ).build();
+            Optional.<JavacVersion>absent(),
+            TARGETED_JAVA_VERSION,
+            TARGETED_JAVA_VERSION))
+        .build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(JavaLibraryDescription.TYPE);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 
@@ -165,8 +167,10 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver(),
         new JavaCompilerEnvironment(
             Optional.<Path>absent(),
-            Optional.of(javacVersion))
-    ).build();
+            Optional.of(javacVersion),
+            TARGETED_JAVA_VERSION,
+            TARGETED_JAVA_VERSION))
+        .build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(JavaLibraryDescription.TYPE);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 
@@ -194,8 +198,10 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver(),
         new JavaCompilerEnvironment(
             Optional.<Path>absent(),
-            Optional.of(new JavacVersion("fakeVersion 0.1")))
-    ).build();
+            Optional.of(new JavacVersion("fakeVersion 0.1")),
+            TARGETED_JAVA_VERSION,
+            TARGETED_JAVA_VERSION))
+        .build();
     BuildRuleFactory<?> configuredFactory =
         configuredBuildRuleTypes.getFactory(JavaLibraryDescription.TYPE);
     BuildRule configuredRule = configuredFactory.newInstance(params).build(new BuildRuleResolver());
@@ -219,8 +225,10 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver(),
         new JavaCompilerEnvironment(
             javaConfig.getJavac(),
-            Optional.of(new JavacVersion("fakeVersion 0.1")))
-    ).build();
+            Optional.of(new JavacVersion("fakeVersion 0.1")),
+            TARGETED_JAVA_VERSION,
+            TARGETED_JAVA_VERSION))
+        .build();
     BuildRuleFactory<?> configuredFactory1 =
         configuredBuildRuleTypes1.getFactory(JavaLibraryDescription.TYPE);
     BuildRule configuredRule1 = configuredFactory1.newInstance(params)
@@ -231,8 +239,10 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver(),
         new JavaCompilerEnvironment(
             javaConfig.getJavac(),
-            Optional.of(new JavacVersion("fakeVersion 0.2")))
-    ).build();
+            Optional.of(new JavacVersion("fakeVersion 0.2")),
+            TARGETED_JAVA_VERSION,
+            TARGETED_JAVA_VERSION))
+        .build();
     BuildRuleFactory<?> configuredFactory2 =
         configuredBuildRuleTypes2.getFactory(JavaLibraryDescription.TYPE);
     BuildRule configuredRule2 = configuredFactory2.newInstance(params)
@@ -274,8 +284,10 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver(),
         new JavaCompilerEnvironment(
             javaConfig.getJavac(),
-            Optional.<JavacVersion>absent())
-    ).build();
+            Optional.<JavacVersion>absent(),
+            TARGETED_JAVA_VERSION,
+            TARGETED_JAVA_VERSION))
+        .build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(AndroidLibraryDescription.TYPE);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 

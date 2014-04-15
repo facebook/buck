@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilerEnvironment.TARGETED_JAVA_VERSION;
 import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
@@ -143,8 +144,7 @@ public class DefaultJavaLibraryTest {
         /* proguardConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        JavacOptions.DEFAULTS
-        );
+        JavacOptions.DEFAULTS);
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -1198,8 +1198,9 @@ public class DefaultJavaLibraryTest {
         .setJavaCompilerEnviornment(
             new JavaCompilerEnvironment(
                 Optional.of(Paths.get("javac")),
-                Optional.<JavacVersion>absent())
-        )
+                Optional.<JavacVersion>absent(),
+                TARGETED_JAVA_VERSION,
+                TARGETED_JAVA_VERSION))
         .build();
     ((DefaultJavaLibrary) rule.getBuildable()).createCommandsForJavac(
         rule.getBuildable().getPathToOutputFile(),

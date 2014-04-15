@@ -469,7 +469,6 @@ public final class Main {
             projectFilesystem,
             config.getNdkVersion(),
             propertyFinder);
-
     // Look up the javac version.
     JavaBuckConfig javaConfig = new JavaBuckConfig(config);
     JavaCompilerEnvironment javacEnv = javaConfig.getJavaCompilerEnvironment(processExecutor);

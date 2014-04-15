@@ -17,13 +17,16 @@
 package com.facebook.buck.java;
 
 
+import static com.facebook.buck.java.JavaCompilerEnvironment.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -92,6 +95,36 @@ public class JavaBuckConfigTest {
     } catch (HumanReadableException e) {
       assertEquals(e.getHumanReadableErrorMessage(), "Javac is not executable: " + javac.getPath());
     }
+  }
+
+  @Test
+  public void shouldSetJavaTargetAndSourceVersionFromConfig() throws IOException {
+    String sourceLevel = "source-level";
+    String targetLevel = "target-level";
+
+    String localConfig = String.format(
+        "[java]\nsource_level = %s\ntarget_level = %s",
+        sourceLevel,
+        targetLevel);
+
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
+
+    JavaCompilerEnvironment compilerEnvironment = config.getJavaCompilerEnvironment(
+        new ProcessExecutor(new TestConsole()));
+
+    assertEquals(sourceLevel, compilerEnvironment.getSourceLevel());
+    assertEquals(targetLevel, compilerEnvironment.getTargetLevel());
+  }
+
+  @Test
+  public void shouldSetJavaTargetAndSourceVersionDefaultToSaneValues() throws IOException {
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
+
+    JavaCompilerEnvironment compilerEnvironment = config.getJavaCompilerEnvironment(
+        new ProcessExecutor(new TestConsole()));
+
+    assertEquals(TARGETED_JAVA_VERSION, compilerEnvironment.getSourceLevel());
+    assertEquals(TARGETED_JAVA_VERSION, compilerEnvironment.getTargetLevel());
   }
 
   private JavaBuckConfig createWithDefaultFilesystem(Reader reader)

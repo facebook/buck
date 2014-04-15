@@ -87,7 +87,9 @@ public class ExternalJavacTest extends EasyMockSupport {
               .setJavaCompilerEnviornment(
                   new JavaCompilerEnvironment(
                       Optional.of(Paths.get("fakeJavac")),
-                      Optional.<JavacVersion> absent()))
+                      Optional.<JavacVersion> absent(),
+                      /* sourceLevel */ "6",
+                      /* targetLevel */ "6"))
               .build(),
           /* pathToOutputAbiFile */ Optional.<Path>absent(),
           /* invokingRule */ Optional.<String>absent(),

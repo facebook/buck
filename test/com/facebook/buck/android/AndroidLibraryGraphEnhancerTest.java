@@ -25,6 +25,7 @@ import com.facebook.buck.java.HasJavaAbi;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacVersion;
+import com.facebook.buck.java.PopularAndroidJavaCompilerEnvironment;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -124,8 +125,7 @@ public class AndroidLibraryGraphEnhancerTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res2"))
-            .build()
-    );
+            .build());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         buildTarget,
@@ -138,8 +138,9 @@ public class AndroidLibraryGraphEnhancerTest {
             .setJavaCompilerEnviornment(
                 new JavaCompilerEnvironment(
                     Optional.of(Paths.get("javac")),
-                    Optional.of(new JavacVersion("1.7")))
-            )
+                    Optional.of(new JavacVersion("1.7")),
+                    PopularAndroidJavaCompilerEnvironment.TARGETED_JAVA_VERSION,
+                    PopularAndroidJavaCompilerEnvironment.TARGETED_JAVA_VERSION))
             .build());
     Result result = graphEnhancer.createBuildableForAndroidResources(ruleResolver,
         /* createBuildableIfEmptyDeps */ false);

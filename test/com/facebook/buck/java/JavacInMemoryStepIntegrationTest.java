@@ -60,13 +60,15 @@ public class JavacInMemoryStepIntegrationTest {
     String pathToOutputDir = new File(tmp.getRoot(), "out").getAbsolutePath();
     String pathToAbiFile = new File(tmp.getRoot(), "abi").getAbsolutePath();
     assertEquals(
-        String.format("javac -target 6 -source 6 -g " +
+        String.format("javac -target %s -source %s -g " +
             "-processorpath %s " +
             "-processor %s " +
             "-A%s=%s " +
             "-d %s " +
             "-classpath '' " +
             "@" + pathToSrcsList.toString(),
+            JavaCompilerEnvironment.TARGETED_JAVA_VERSION,
+            JavaCompilerEnvironment.TARGETED_JAVA_VERSION,
             AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH,
             AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME,
             AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE,

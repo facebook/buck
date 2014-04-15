@@ -35,7 +35,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   public static final BuildRuleType TYPE = new BuildRuleType("java_library");
   public static final String ANNOTATION_PROCESSORS = "annotation_processors";
-  public static final String DEFAULT_JAVA_VERSION = "6";
   private final JavaCompilerEnvironment javacEnv;
 
   public JavaLibraryDescription(JavaCompilerEnvironment javacEnv) {
@@ -72,9 +71,18 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   public static JavacOptions.Builder getJavacOptions(Arg args, JavaCompilerEnvironment javacEnv) {
     JavacOptions.Builder javacOptions = JavacOptions.builder();
-    javacOptions.setJavaCompilerEnviornment(javacEnv);
-    javacOptions.setSourceLevel(args.source.or(DEFAULT_JAVA_VERSION));
-    javacOptions.setTargetLevel(args.target.or(DEFAULT_JAVA_VERSION));
+
+    String sourceLevel = args.source.or(javacEnv.getSourceLevel());
+    String targetLevel = args.target.or(javacEnv.getTargetLevel());
+
+    JavaCompilerEnvironment javacEnvToUse = new JavaCompilerEnvironment(
+        javacEnv.getJavacPath(),
+        javacEnv.getJavacVersion(),
+        sourceLevel,
+        targetLevel);
+
+    javacOptions.setJavaCompilerEnviornment(javacEnvToUse);
+
     return javacOptions;
   }
 

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilerEnvironment.TARGETED_JAVA_VERSION;
+
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -43,7 +45,13 @@ public class JavaBuckConfig {
     if (javac.isPresent()) {
       javacVersion = Optional.of(getJavacVersion(processExecutor, javac.get()));
     }
-    return new JavaCompilerEnvironment(javac, javacVersion);
+    Optional<String> sourceLevel = delegate.getValue("java", "source_level");
+    Optional<String> targetLevel = delegate.getValue("java", "target_level");
+    return new JavaCompilerEnvironment(
+        javac,
+        javacVersion,
+        sourceLevel.or(TARGETED_JAVA_VERSION),
+        targetLevel.or(TARGETED_JAVA_VERSION));
   }
 
   @VisibleForTesting

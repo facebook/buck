@@ -36,16 +36,12 @@ import javax.annotation.Nullable;
  */
 public class JavacOptions {
 
-  private static final String DEFAULT_JAVA_TARGET = "6";
-
   // Fields are initialized in order. We need the default java target level to have been set.
   public static final JavacOptions DEFAULTS = JavacOptions.builder().build();
 
   private final JavaCompilerEnvironment javacEnv;
   private final boolean debug;
   private final boolean verbose;
-  private final String sourceLevel;
-  private final String targetLevel;
   private final AnnotationProcessingData annotationProcessingData;
   private final Optional<String> bootclasspath;
 
@@ -53,15 +49,11 @@ public class JavacOptions {
       JavaCompilerEnvironment javacEnv,
       boolean debug,
       boolean verbose,
-      String sourceLevel,
-      String targetLevel,
       Optional<String> bootclasspath,
       AnnotationProcessingData annotationProcessingData) {
     this.javacEnv = Preconditions.checkNotNull(javacEnv);
     this.debug = debug;
     this.verbose = verbose;
-    this.sourceLevel = Preconditions.checkNotNull(sourceLevel);
-    this.targetLevel = Preconditions.checkNotNull(targetLevel);
     this.bootclasspath = Preconditions.checkNotNull(bootclasspath);
     this.annotationProcessingData = Preconditions.checkNotNull(annotationProcessingData);
   }
@@ -83,8 +75,8 @@ public class JavacOptions {
     Preconditions.checkNotNull(optionsBuilder);
 
     // Add some standard options.
-    optionsBuilder.add("-target", sourceLevel);
-    optionsBuilder.add("-source", targetLevel);
+    optionsBuilder.add("-target", javacEnv.getSourceLevel());
+    optionsBuilder.add("-source", javacEnv.getTargetLevel());
 
     if (debug) {
       optionsBuilder.add("-g");
@@ -151,8 +143,8 @@ public class JavacOptions {
 
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(simons): Include bootclasspath params.
-    builder.set("sourceLevel", sourceLevel)
-        .set("targetLevel", targetLevel)
+    builder.set("sourceLevel", javacEnv.getSourceLevel())
+        .set("targetLevel", javacEnv.getTargetLevel())
         .set("debug", debug)
         .set("javacVersion", javacEnv.getJavacVersion().transform(
             Functions.toStringFunction()).orNull());
@@ -176,9 +168,6 @@ public class JavacOptions {
       builder.setProductionBuild();
     }
 
-    builder.setSourceLevel(options.sourceLevel);
-    builder.setTargetLevel(options.targetLevel);
-
     builder.setAnnotationProcessingData(options.annotationProcessingData);
     builder.setBootclasspath(options.bootclasspath.orNull());
 
@@ -190,8 +179,6 @@ public class JavacOptions {
   public static class Builder {
     private boolean debug = true;
     private boolean verbose = false;
-    private String sourceLevel = DEFAULT_JAVA_TARGET;
-    private String targetLevel = DEFAULT_JAVA_TARGET;
     private Optional<String> bootclasspath = Optional.absent();
     private AnnotationProcessingData annotationProcessingData = AnnotationProcessingData.EMPTY;
     private JavaCompilerEnvironment javacEnv = JavaCompilerEnvironment.DEFAULT;
@@ -206,16 +193,6 @@ public class JavacOptions {
 
     public Builder setVerboseOutput(boolean verbose) {
       this.verbose = verbose;
-      return this;
-    }
-
-    public Builder setSourceLevel(String sourceLevel) {
-      this.sourceLevel = Preconditions.checkNotNull(sourceLevel);
-      return this;
-    }
-
-    public Builder setTargetLevel(String targetLevel) {
-      this.targetLevel = Preconditions.checkNotNull(targetLevel);
       return this;
     }
 
@@ -239,8 +216,6 @@ public class JavacOptions {
           javacEnv,
           debug,
           verbose,
-          sourceLevel,
-          targetLevel,
           bootclasspath,
           annotationProcessingData
       );
