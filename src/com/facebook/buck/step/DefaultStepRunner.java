@@ -37,9 +37,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public final class DefaultStepRunner implements StepRunner, Closeable {
 
+  private final long SHUTDOWN_TIMEOUT_SECONDS = 15;
   private final ExecutionContext context;
   private final ListeningExecutorService listeningExecutorService;
 
@@ -160,7 +162,14 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
   }
 
   @Override
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   public void close() throws IOException {
-    listeningExecutorService.shutdown(); // Allow tasks to complete.
+    listeningExecutorService.shutdown();
+    try {
+      // Allow tasks to complete.
+      listeningExecutorService.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      // Ignore InterruptedException since we're in the process of being shutdown.
+    }
   }
 }
