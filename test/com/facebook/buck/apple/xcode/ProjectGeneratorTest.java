@@ -566,8 +566,8 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
-        AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
+            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of(
         "$SDKROOT/SystemFramework.framework",
         "$BUILT_PRODUCTS_DIR/LocalFramework.framework");
