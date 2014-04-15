@@ -139,6 +139,10 @@ public class UberRDotJava extends AbstractBuildable implements
         });
   }
 
+  public Map<String, HashCode> getClassNamesToHashes() {
+    return buildOutputInitializer.getBuildOutput().rDotJavaClassesHash;
+  }
+
   BuildTarget getBuildTarget() {
     return buildTarget;
   }
@@ -220,8 +224,6 @@ public class UberRDotJava extends AbstractBuildable implements
 
   public static class BuildOutput {
     private final Optional<Integer> rDotJavaDexLinearAllocEstimate;
-    // TODO(user): Remove the annotation once DexWithClasses uses the hash.
-    @SuppressWarnings("unused")
     private final Map<String, HashCode> rDotJavaClassesHash;
 
     public BuildOutput(

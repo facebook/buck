@@ -27,10 +27,15 @@ import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -55,7 +60,7 @@ public class AndroidTransitiveDependencyGraph {
   public AndroidDexTransitiveDependencies findDexDependencies(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
       ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex,
-      UberRDotJava uberRDotJava) {
+      final UberRDotJava uberRDotJava) {
     // These are paths that will be dex'ed. They may be either directories of compiled .class files,
     // or paths to compiled JAR files.
     final ImmutableSet.Builder<Path> pathsToDexBuilder = ImmutableSet.builder();
@@ -71,9 +76,9 @@ public class AndroidTransitiveDependencyGraph {
         findAndroidResourceDetails(androidResourceDeps);
 
     // Update pathsToDex.
-    ImmutableSet<Map.Entry<JavaLibrary, Path>> classpath =
-        Classpaths.getClasspathEntries(rulesToTraverseForTransitiveDeps).entries();
-    for (Map.Entry<JavaLibrary, Path> entry : classpath) {
+    final ImmutableSetMultimap<JavaLibrary, Path> classpath =
+        Classpaths.getClasspathEntries(rulesToTraverseForTransitiveDeps);
+    for (Map.Entry<JavaLibrary, Path> entry : classpath.entries()) {
       if (!buildRulesToExcludeFromDex.contains(entry.getKey())) {
         pathsToDexBuilder.add(entry.getValue());
       } else {
@@ -81,7 +86,7 @@ public class AndroidTransitiveDependencyGraph {
       }
     }
     // Include the directory of compiled R.java files on the classpath.
-    ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
+    final ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
     if (!rDotJavaPackages.isEmpty()) {
       Path pathToCompiledRDotJavaFiles = uberRDotJava.getPathToCompiledRDotJavaFiles();
       pathsToDexBuilder.add(pathToCompiledRDotJavaFiles);
@@ -91,6 +96,21 @@ public class AndroidTransitiveDependencyGraph {
 
     // Filter out the classpath entries to exclude from dex'ing, if appropriate
     Set<Path> classpathEntries = Sets.difference(pathsToDexBuilder.build(), noDxPaths);
+
+    Supplier<Map<String, HashCode>> classNamesToHashesSupplier = Suppliers.memoize(
+        new Supplier<Map<String, HashCode>>() {
+          @Override
+          public Map<String, HashCode> get() {
+            ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
+            for (JavaLibrary javaLibrary : classpath.keySet()) {
+              builder.putAll(javaLibrary.getClassNamesToHashes());
+            }
+            if (!rDotJavaPackages.isEmpty()) {
+              builder.putAll(uberRDotJava.getClassNamesToHashes());
+            }
+            return builder.build();
+          }
+        });
 
     // Visit all of the transitive dependencies to populate the above collections.
     new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps) {
@@ -119,7 +139,8 @@ public class AndroidTransitiveDependencyGraph {
     return new AndroidDexTransitiveDependencies(
         classpathEntries,
         pathsToThirdPartyJars,
-        noDxPaths);
+        noDxPaths,
+        classNamesToHashesSupplier);
   }
 
   public AndroidResourceDetails findAndroidResourceDetails(

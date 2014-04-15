@@ -15,9 +15,13 @@
  */
 package com.facebook.buck.android;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -30,13 +34,16 @@ public class AndroidDexTransitiveDependencies {
   public final ImmutableSet<Path> classpathEntriesToDex;
   public final ImmutableSet<Path> noDxClasspathEntries;
   public final ImmutableSet<Path> pathsToThirdPartyJars;
+  public final Supplier<Map<String, HashCode>> classNamesToHashesSupplier;
 
   public AndroidDexTransitiveDependencies(
       Set<Path> pathsToDex,
       Set<Path> pathsToThirdPartyJars,
-      ImmutableSet<Path> noDxClasspathEntries) {
+      ImmutableSet<Path> noDxClasspathEntries,
+      Supplier<Map<String, HashCode>> classNamesToHashesSupplier) {
     this.classpathEntriesToDex = ImmutableSet.copyOf(pathsToDex);
     this.pathsToThirdPartyJars = ImmutableSet.copyOf(pathsToThirdPartyJars);
     this.noDxClasspathEntries = ImmutableSet.copyOf(noDxClasspathEntries);
+    this.classNamesToHashesSupplier = Preconditions.checkNotNull(classNamesToHashesSupplier);
   }
 }
