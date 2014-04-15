@@ -38,6 +38,12 @@ function cleanup() {
   fi
 }
 
+function killBuckd() {
+  if [ -n "$BUCKD_PID_FILE" ]; then
+    kill `cat "$BUCKD_PID_FILE"` || true
+    rm -rf ${BUCKD_DIR}
+  fi
+}
 # Record the directory from which this script was run in case
 # we need to re-run it as part of the autoupdate.
 ORIGINAL_WORKING_DIRECTORY="$PWD"
@@ -73,8 +79,8 @@ BUCKD_RUNNING=0
 kill -0 `cat "$BUCKD_PID_FILE" 2> /dev/null` &> /dev/null || BUCKD_RUNNING=1
 
 # Navigate to the root of the Buck project.
-pushd "$BUCK_BIN_DIRECTORY" > /dev/null
-pushd .. > /dev/null
+BUILD_DIRECTORY="$PWD"
+pushd "$BUCK_BIN_DIRECTORY/.." > /dev/null
 BUCK_DIRECTORY="$PWD"
 BUCK_SUCCESS_FILE="build/successful-build"
 
@@ -233,7 +239,7 @@ if [ ! -e "$BUCK_SUCCESS_FILE" ]; then
 
   if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCKD_PID_FILE" ]; then
     echo >&2 "Killing buckd before building buck"
-    kill `cat "$BUCKD_PID_FILE"` || true
+    killBuckd
   fi
 
   echo >&2 "Buck does not appear to have been built -- building Buck!"
@@ -248,12 +254,13 @@ if [ ! -e "$BUCK_SUCCESS_FILE" ]; then
 
   if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCK_BIN_DIRECTORY}/buckd" ]; then
     echo >&2 "Restarting buckd after building buck"
+    pushd $BUILD_DIRECTORY > /dev/null
     "${BUCK_BIN_DIRECTORY}/buckd"
+    popd > /dev/null
   fi
 fi
 
 # Pop back to the original directory.
-popd > /dev/null
 popd > /dev/null
 
 # Path to Python interpreter will be tried to find. If not found, Jython will be used.
