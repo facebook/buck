@@ -38,12 +38,27 @@ function cleanup() {
   fi
 }
 
+function setBuckdRunning() {
+  BUCKD_RUNNING=0
+  kill -0 `cat "$BUCKD_PID_FILE" 2> /dev/null` &> /dev/null || BUCKD_RUNNING=1
+}
+
 function killBuckd() {
   if [ -n "$BUCKD_PID_FILE" ]; then
     kill `cat "$BUCKD_PID_FILE"` || true
     rm -rf ${BUCKD_DIR}
   fi
 }
+
+function startBuckd() {
+  if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCK_BIN_DIRECTORY}/buckd" ]; then
+    pushd $PROJECT_ROOT > /dev/null
+    "${BUCK_BIN_DIRECTORY}/buckd"
+    setBuckdRunning
+    popd > /dev/null
+  fi
+}
+
 # Record the directory from which this script was run in case
 # we need to re-run it as part of the autoupdate.
 ORIGINAL_WORKING_DIRECTORY="$PWD"
@@ -65,16 +80,17 @@ if ! [ -f "$PROJECT_ROOT/.buckconfig" ] ; then
   exit 1
 fi
 
-# Create a local temp directory to be deleted at the end of this invocation of buck.
-BUCK_TMPDIR="${PROJECT_ROOT}/buck-out/tmp"
-mkdir -p $BUCK_TMPDIR
-trap cleanup EXIT
+
+if [ -z "${MAX_BUCKD_RUNS}" ]; then
+  MAX_BUCKD_RUNS=20
+fi
 
 # Test for running buck daemon.
 BUCKD_DIR="${PROJECT_ROOT}/.buckd"
 BUCKD_LOG_FILE="${BUCKD_DIR}/buckd.log"
 BUCKD_PID_FILE="${BUCKD_DIR}/buckd.pid"
 BUCKD_PORT_FILE="${BUCKD_DIR}/buckd.port"
+BUCKD_RUN_COUNT_FILE="${BUCKD_DIR}/buckd.runcount"
 
 for ARG in $@; do
   if [ "${ARG}" = "clean" ]; then
@@ -83,11 +99,28 @@ for ARG in $@; do
   fi
 done
 
-BUCKD_RUNNING=0
-kill -0 `cat "$BUCKD_PID_FILE" 2> /dev/null` &> /dev/null || BUCKD_RUNNING=1
+setBuckdRunning
+
+CURRENT_BUCKD_RUN_COUNT=0
+if [ -e "${BUCKD_RUN_COUNT_FILE}" ]; then
+  CURRENT_BUCKD_RUN_COUNT=$(cat ${BUCKD_RUN_COUNT_FILE})
+  if [ $CURRENT_BUCKD_RUN_COUNT -ge $MAX_BUCKD_RUNS ]; then
+    killBuckd
+    startBuckd
+    CURRENT_BUCKD_RUN_COUNT=0
+  fi
+fi
+
+if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCKD_RUN_COUNT_FILE}" ]; then
+ echo $((CURRENT_BUCKD_RUN_COUNT + 1)) > $BUCKD_RUN_COUNT_FILE
+fi
+
+# Create a local temp directory to be deleted at the end of this invocation of buck.
+BUCK_TMPDIR="${PROJECT_ROOT}/buck-out/tmp"
+mkdir -p $BUCK_TMPDIR
+trap cleanup EXIT
 
 # Navigate to the root of the Buck project.
-BUILD_DIRECTORY="$PWD"
 pushd "$BUCK_BIN_DIRECTORY/.." > /dev/null
 BUCK_DIRECTORY="$PWD"
 BUCK_SUCCESS_FILE="build/successful-build"
@@ -260,13 +293,7 @@ if [ ! -e "$BUCK_SUCCESS_FILE" ]; then
   if [ $? -ne 0 ]; then
     printAntFailedMessage
   fi
-
-  if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCK_BIN_DIRECTORY}/buckd" ]; then
-    echo >&2 "Restarting buckd after building buck"
-    pushd $BUILD_DIRECTORY > /dev/null
-    "${BUCK_BIN_DIRECTORY}/buckd"
-    popd > /dev/null
-  fi
+  startBuckd
 fi
 
 # Pop back to the original directory.

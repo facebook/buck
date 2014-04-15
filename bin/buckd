@@ -96,3 +96,5 @@ echo $! > "$BUCKD_PID_FILE"
 # Block until we read the port number from the buckd log file.
 sed -n '1 s/.*port \([0-9]*\)\.$/\1/;p;q' > $BUCKD_PORT_FILE \
 <(tail -n +1 -f $BUCKD_LOG_FILE)
+
+echo 0 > $BUCKD_RUN_COUNT_FILE
