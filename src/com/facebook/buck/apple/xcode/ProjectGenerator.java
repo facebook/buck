@@ -953,7 +953,7 @@ public class ProjectGenerator {
       String firstElement =
         Preconditions.checkNotNull(Iterables.getFirst(path, Paths.get(""))).toString();
 
-      if (firstElement.startsWith("$")) {
+      if (firstElement.charAt(0) == '$') {
         Optional<PBXReference.SourceTree> sourceTree =
             PBXReference.SourceTree.fromBuildSetting(firstElement);
         if (sourceTree.isPresent() &&
