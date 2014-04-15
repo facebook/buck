@@ -75,6 +75,14 @@ BUCKD_DIR="${PROJECT_ROOT}/.buckd"
 BUCKD_LOG_FILE="${BUCKD_DIR}/buckd.log"
 BUCKD_PID_FILE="${BUCKD_DIR}/buckd.pid"
 BUCKD_PORT_FILE="${BUCKD_DIR}/buckd.port"
+
+for ARG in $@; do
+  if [ "${ARG}" = "clean" ]; then
+    killBuckd
+    break
+  fi
+done
+
 BUCKD_RUNNING=0
 kill -0 `cat "$BUCKD_PID_FILE" 2> /dev/null` &> /dev/null || BUCKD_RUNNING=1
 
