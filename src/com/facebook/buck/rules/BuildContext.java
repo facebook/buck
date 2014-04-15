@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -46,7 +45,6 @@ public class BuildContext {
   private final BuckEventBus events;
   private final Supplier<String> androidBootclasspathSupplier;
   private final BuildDependencies buildDependencies;
-  private final Function<SourcePath, Path> sourcePathResolver;
 
   private BuildContext(
       DependencyGraph dependencyGraph,
@@ -65,12 +63,6 @@ public class BuildContext {
     this.events = Preconditions.checkNotNull(events);
     this.androidBootclasspathSupplier = Preconditions.checkNotNull(androidBootclasspathSupplier);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
-    this.sourcePathResolver = new Function<SourcePath, Path>() {
-      @Override
-      public Path apply(SourcePath sourcePath) {
-        return sourcePath.resolve();
-      }
-    };
   }
 
   public Path getProjectRoot() {
@@ -118,10 +110,6 @@ public class BuildContext {
 
   public BuildDependencies getBuildDependencies() {
     return buildDependencies;
-  }
-
-  public Function<SourcePath, Path> getSourcePathResolver() {
-    return sourcePathResolver;
   }
 
   /**
