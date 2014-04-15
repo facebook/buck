@@ -240,11 +240,11 @@ public class UberRDotJava extends AbstractBuildable implements
   private void generateAndCompileRDotJavaFiles(
       Set<Path> resDirectories,
       Set<String> rDotJavaPackages,
-      ImmutableList.Builder<Step> commands,
+      ImmutableList.Builder<Step> steps,
       final BuildableContext buildableContext) {
     // Create the path where the R.java files will be generated.
     Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
-    commands.add(new MakeCleanDirectoryStep(rDotJavaSrc));
+    steps.add(new MakeCleanDirectoryStep(rDotJavaSrc));
 
     // Generate the R.java files.
     GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
@@ -253,12 +253,12 @@ public class UberRDotJava extends AbstractBuildable implements
         rDotJavaPackages.iterator().next(),
         /* isTempRDotJava */ false,
         rDotJavaPackages);
-    commands.add(genRDotJava);
+    steps.add(genRDotJava);
 
     if (shouldBuildStringSourceMap) {
       // Make sure we have an output directory
       Path outputDirPath = getPathForNativeStringInfoDirectory();
-      commands.add(new MakeCleanDirectoryStep(outputDirPath));
+      steps.add(new MakeCleanDirectoryStep(outputDirPath));
 
       // Add the step that parses R.txt and all the strings.xml files, and
       // produces a JSON with android resource id's and xml paths for each string resource.
@@ -266,7 +266,7 @@ public class UberRDotJava extends AbstractBuildable implements
           rDotJavaSrc,
           resDirectories,
           outputDirPath);
-      commands.add(genNativeStringInfo);
+      steps.add(genNativeStringInfo);
 
       // Cache the generated strings.json file, it will be stored inside outputDirPath
       buildableContext.recordArtifactsInDirectory(outputDirPath);
@@ -281,18 +281,18 @@ public class UberRDotJava extends AbstractBuildable implements
 
     // Create the path where the R.java files will be compiled.
     Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
-    commands.add(new MakeCleanDirectoryStep(rDotJavaBin));
+    steps.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
     JavacStep javac = UberRDotJavaUtil.createJavacStepForUberRDotJavaFiles(
         javaSourceFilePaths,
         rDotJavaBin,
         javacOptions,
         buildTarget);
-    commands.add(javac);
+    steps.add(javac);
 
     Path rDotJavaClassesTxt = getPathToRDotJavaClassesTxt();
-    commands.add(new MakeCleanDirectoryStep(rDotJavaClassesTxt.getParent()));
-    commands.add(new AccumulateClassNamesStep(Optional.of(rDotJavaBin), rDotJavaClassesTxt));
+    steps.add(new MakeCleanDirectoryStep(rDotJavaClassesTxt.getParent()));
+    steps.add(new AccumulateClassNamesStep(Optional.of(rDotJavaBin), rDotJavaClassesTxt));
 
     // Ensure the generated R.txt, R.java, and R.class files are also recorded.
     buildableContext.recordArtifactsInDirectory(rDotJavaSrc);
