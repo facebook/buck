@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class DefaultStepRunner implements StepRunner, Closeable {
 
-  private final long SHUTDOWN_TIMEOUT_SECONDS = 15;
+  private static final long SHUTDOWN_TIMEOUT_SECONDS = 15;
   private final ExecutionContext context;
   private final ListeningExecutorService listeningExecutorService;
 
