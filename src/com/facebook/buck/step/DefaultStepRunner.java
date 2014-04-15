@@ -45,13 +45,6 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
   private final ExecutionContext context;
   private final ListeningExecutorService listeningExecutorService;
 
-  /**
-   * This StepRunner will run all steps on the same thread.
-   */
-  public DefaultStepRunner(ExecutionContext context) {
-    this(context, 1);
-  }
-
   public DefaultStepRunner(ExecutionContext context,
                            int numThreads) {
     this(context, listeningDecorator(newMultiThreadExecutor("DefaultStepRunner", numThreads)));
