@@ -26,8 +26,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
-
 public class ShBinaryDescription implements Description<ShBinaryDescription.Arg> {
 
   private static final BuildRuleType TYPE = new BuildRuleType("sh_binary");
@@ -50,7 +48,7 @@ public class ShBinaryDescription implements Description<ShBinaryDescription.Arg>
   }
 
   public static class Arg implements ConstructorArg {
-    public Path main;
+    public SourcePath main;
 
     public Optional<ImmutableSortedSet<BuildRule>> deps;
 

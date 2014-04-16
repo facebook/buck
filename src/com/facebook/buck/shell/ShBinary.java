@@ -16,12 +16,12 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
@@ -34,6 +34,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -44,7 +45,7 @@ import java.util.List;
 public class ShBinary extends AbstractBuildable
     implements BinaryBuildRule, InitializableFromDisk<Object> {
 
-  private final Path main;
+  private final SourcePath main;
   private final ImmutableSet<SourcePath> resources;
   private final BuildTarget target;
 
@@ -54,7 +55,7 @@ public class ShBinary extends AbstractBuildable
   private final BuildOutputInitializer<Object> buildOutputInitializer;
 
   protected ShBinary(BuildTarget buildTarget,
-      Path main,
+      SourcePath main,
       ImmutableSet<SourcePath> resources) {
     this.main = Preconditions.checkNotNull(main);
     this.resources = Preconditions.checkNotNull(resources);
@@ -70,10 +71,12 @@ public class ShBinary extends AbstractBuildable
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.<Path>builder()
+    ImmutableSortedSet<SourcePath> allPaths = ImmutableSortedSet.<SourcePath>naturalOrder()
         .add(main)
-        .addAll(SourcePaths.filterInputsToCompareToOutput(resources))
+        .addAll(resources)
         .build();
+
+    return SourcePaths.filterInputsToCompareToOutput(allPaths);
   }
 
   @Override
@@ -85,7 +88,7 @@ public class ShBinary extends AbstractBuildable
     // This generated .sh file will be returned by getExecutableCommand().
     GenerateShellScriptStep generateShellScript = new GenerateShellScriptStep(
         Paths.get(target.getBasePath()),
-        main,
+        main.resolve(),
         SourcePaths.toPaths(resources),
         output);
 
