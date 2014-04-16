@@ -35,6 +35,9 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -461,12 +464,14 @@ public class ProjectFilesystem {
 
   public OutputStream newFileOutputStream(Path pathRelativeToProjectRoot)
     throws IOException {
-    return java.nio.file.Files.newOutputStream(getPathForRelativePath(pathRelativeToProjectRoot));
+    return new BufferedOutputStream(
+        java.nio.file.Files.newOutputStream(getPathForRelativePath(pathRelativeToProjectRoot)));
   }
 
   public InputStream newFileInputStream(Path pathRelativeToProjectRoot)
     throws IOException {
-    return java.nio.file.Files.newInputStream(getPathForRelativePath(pathRelativeToProjectRoot));
+    return new BufferedInputStream(
+        java.nio.file.Files.newInputStream(getPathForRelativePath(pathRelativeToProjectRoot)));
   }
 
   /**
@@ -507,7 +512,8 @@ public class ProjectFilesystem {
     if (java.nio.file.Files.isRegularFile(fileToRead)) {
       try {
         return Optional.of(
-            (Reader) new InputStreamReader(java.nio.file.Files.newInputStream(fileToRead)));
+            (Reader) new BufferedReader(
+                new InputStreamReader(newFileInputStream(pathRelativeToProjectRoot))));
       } catch (Exception e) {
         throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
       }
