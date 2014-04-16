@@ -44,9 +44,10 @@ function setBuckdRunning() {
 }
 
 function killBuckd() {
-  if [ -n "$BUCKD_PID_FILE" ]; then
+  if [ $BUCKD_RUNNING -eq 0 ] && [ -n "$BUCKD_PID_FILE" ]; then
     kill `cat "$BUCKD_PID_FILE"` || true
     rm -rf ${BUCKD_DIR}
+    setBuckdRunning
   fi
 }
 
@@ -92,14 +93,14 @@ BUCKD_PID_FILE="${BUCKD_DIR}/buckd.pid"
 BUCKD_PORT_FILE="${BUCKD_DIR}/buckd.port"
 BUCKD_RUN_COUNT_FILE="${BUCKD_DIR}/buckd.runcount"
 
+setBuckdRunning
+
 for ARG in $@; do
   if [ "${ARG}" = "clean" ]; then
     killBuckd
     break
   fi
 done
-
-setBuckdRunning
 
 CURRENT_BUCKD_RUN_COUNT=0
 if [ -e "${BUCKD_RUN_COUNT_FILE}" ]; then
