@@ -44,8 +44,21 @@ function setBuckdRunning() {
 }
 
 function killBuckd() {
+  # Kill any existing buckd process.
   if [ $BUCKD_RUNNING -eq 0 ] && [ -n "$BUCKD_PID_FILE" ]; then
-    kill `cat "$BUCKD_PID_FILE"` || true
+    echo >&2 "Killing existing buckd process"
+    BUCK_PID=$(cat $BUCKD_PID_FILE)
+    kill $BUCK_PID &> /dev/null || true
+    WAIT_COUNT=1
+    echo >&2 "Waiting for existing buckd process to exit"
+    while [ $(ps -p $BUCK_PID &> /dev/null; echo $? || true) -eq 0 ];
+      do sleep 0.1
+      WAIT_COUNT=$((WAIT_COUNT + 1))
+      if [ $WAIT_COUNT -gt 100 ]; then
+        echo >&2 "Could not kill existing buckd process after 10 seconds!"
+        exit 1
+      fi
+    done
     rm -rf ${BUCKD_DIR}
     setBuckdRunning
   fi
@@ -117,8 +130,9 @@ if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCKD_RUN_COUNT_FILE}" ]; then
 fi
 
 # Create a local temp directory to be deleted at the end of this invocation of buck.
-BUCK_TMPDIR="${PROJECT_ROOT}/buck-out/tmp"
-mkdir -p $BUCK_TMPDIR
+BUCK_TMPDIR_ROOT="${PROJECT_ROOT}/buck-out/tmp"
+mkdir -p $BUCK_TMPDIR_ROOT
+BUCK_TMPDIR=$(mktemp -d ${BUCK_TMPDIR_ROOT}/buck_run.XXXXXXXXXX)
 trap cleanup EXIT
 
 # Navigate to the root of the Buck project.
@@ -377,7 +391,6 @@ BUCK_JAVA_ARGS="\
 -Dbuck.buckd_dir=${BUCKD_DIR} \
 -Dbuck.android_agent_path=${BUCK_DIRECTORY}/assets/android/agent.apk \
 -Dlog4j.configuration=file:${BUCK_DIRECTORY}/config/log4j.properties \
--Djava.io.tmpdir=$BUCK_TMPDIR \
 ${BUCK_PROJECT_JAVA_ARGS} \
 ${BUCK_EXTRA_JAVA_ARGS}"
 

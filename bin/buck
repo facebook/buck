@@ -53,6 +53,7 @@ fi
 # Daemon is not running, or is busy so start buck process.
 java \
 $BUCK_JAVA_ARGS \
+-Djava.io.tmpdir=$BUCK_TMPDIR \
 -classpath \
 $BUCK_JAVA_CLASSPATH \
 com.facebook.buck.cli.Main "$@"

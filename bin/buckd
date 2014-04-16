@@ -20,26 +20,6 @@ BUCK_BIN_DIRECTORY=$DIR
 # TODO(user): refactor buck_common in to functions that can be called
 source "${BUCK_BIN_DIRECTORY}/buck_common"
 
-function killBuckdIfRunning()
-{
-  # Kill any existing buckd process.
-  if [ $BUCKD_RUNNING -eq 0 ]; then
-    echo "Killing existing buckd process"
-    BUCK_PID=$(cat $BUCKD_PID_FILE)
-    kill $BUCK_PID &> /dev/null || true
-    WAIT_COUNT=1
-    echo "Waiting for existing buckd process to exit"
-    while [ $(ps -p $BUCK_PID &> /dev/null; echo $? || true) -eq 0 ];
-      do sleep 0.1
-      WAIT_COUNT=$((WAIT_COUNT + 1))
-      if [ $WAIT_COUNT -gt 100 ]; then
-        echo "Could not kill existing buckd process after 10 seconds!"
-        exit 1
-      fi
-    done
-  fi
-}
-
 # Parse flags.
 for arg in "$@"
 do
@@ -70,10 +50,13 @@ else
     exit 0
 fi
 
-killBuckdIfRunning
+killBuckd
 
-# Create .buckd directory if required.
-mkdir -p "$BUCKD_DIR" &> /dev/null || true
+# Create .buckd and .buckd/tmp directory if required.
+mkdir -p "$BUCKD_DIR/tmp" &> /dev/null || true
+
+# Override $BUCK_TMPDIR to point to a long lived directory
+BUCKD_TMPDIR=$(mktemp -d $BUCKD_DIR/tmp/buck_run.XXXXXXXXXX)
 
 # Run buckd. Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
 # Set timeout to 30s (longer than the biggest GC pause seen for a 2GB heap)
@@ -87,6 +70,7 @@ java \
 $BUCK_JAVA_ARGS \
 -XX:MaxGCPauseMillis=${GC_MAX_PAUSE_TARGET} \
 -XX:SoftRefLRUPolicyMSPerMB=0 \
+-Djava.io.tmpdir=$BUCKD_TMPDIR \
 -classpath \
 ${BUCK_JAVA_CLASSPATH} \
 com.martiansoftware.nailgun.NGServer \
