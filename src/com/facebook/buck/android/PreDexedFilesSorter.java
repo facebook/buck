@@ -19,21 +19,27 @@ package com.facebook.buck.android;
 import com.facebook.buck.dalvik.CanaryFactory;
 import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -168,6 +174,21 @@ public class PreDexedFilesSorter {
     return new Result(primaryDexInputs, secondaryOutputToInputs.build(), metadataTxtEntries);
   }
 
+  // TODO(user): remove this once we start passing this map to SmartDexingStep.
+  @SuppressWarnings("unused")
+  private static ImmutableMap<Path, Sha1HashCode> getDexInputsHashes(
+      List<DexWithClasses> primaryDexContents,
+      List<List<DexWithClasses>> secondaryDexesContents) {
+    Iterable<DexWithClasses> allInputs = Iterables.concat(
+        primaryDexContents,
+        Iterables.concat(secondaryDexesContents));
+
+    ImmutableMap.Builder<Path, Sha1HashCode> dexInputsHashes = ImmutableMap.builder();
+    for (DexWithClasses dexWithClasses : allInputs) {
+      dexInputsHashes.put(dexWithClasses.getPathToDexFile(), dexWithClasses.getClassesHash());
+    }
+    return dexInputsHashes.build();
+  }
 
   private boolean mustBeInPrimaryDex(DexWithClasses dexWithClasses) {
     for (String className : dexWithClasses.getClassNames()) {
@@ -181,9 +202,9 @@ public class PreDexedFilesSorter {
   /**
    * @see com.facebook.buck.dalvik.CanaryFactory#create(int)
    */
-  private DexWithClasses createCanary(int index, ImmutableList.Builder<Step> steps) {
+  private DexWithClasses createCanary(final int index, ImmutableList.Builder<Step> steps) {
     final FileLike fileLike = CanaryFactory.create(index);
-    String canaryDirName = "canary_" + String.valueOf(index);
+    final String canaryDirName = "canary_" + String.valueOf(index);
     final Path scratchDirectoryForCanaryClass = scratchDirectory.resolve(canaryDirName);
 
     // Strip the .class suffix to get the class name for the DexWithClasses object.
@@ -225,6 +246,14 @@ public class PreDexedFilesSorter {
       @Override
       public ImmutableSet<String> getClassNames() {
         return ImmutableSet.of(className);
+      }
+
+      @Override
+      public Sha1HashCode getClassesHash() {
+        // The only thing unique to canary classes is the index, which is captured by canaryDirName.
+        Hasher hasher = Hashing.sha1().newHasher();
+        hasher.putString(canaryDirName, Charsets.UTF_8);
+        return new Sha1HashCode(hasher.hash().toString());
       }
     };
   }

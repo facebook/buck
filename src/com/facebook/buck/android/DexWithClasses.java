@@ -16,8 +16,10 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -35,6 +37,9 @@ public interface DexWithClasses {
 
   /** @return the names of the {@code .class} files that went into the DEX file. */
   public ImmutableSet<String> getClassNames();
+
+  /** @return a hash of the {@code .class} files that went into the DEX file.*/
+  public Sha1HashCode getClassesHash();
 
   /**
    * @return A value that estimates how much space the Dalvik code represented by this object will
@@ -55,6 +60,8 @@ public interface DexWithClasses {
 
       final Path pathToDex = preDex.getPathToDex();
       final ImmutableSet<String> classNames = preDex.getClassNames().keySet();
+      final Sha1HashCode classesHash = Sha1HashCode.fromHashCode(
+          Hashing.combineOrdered(preDex.getClassNames().values()));
       final int linearAllocEstimate = preDex.getLinearAllocEstimate();
       return new DexWithClasses() {
         @Override
@@ -65,6 +72,11 @@ public interface DexWithClasses {
         @Override
         public ImmutableSet<String> getClassNames() {
           return classNames;
+        }
+
+        @Override
+        public Sha1HashCode getClassesHash() {
+          return classesHash;
         }
 
         @Override

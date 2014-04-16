@@ -60,6 +60,12 @@ public final class Sha1HashCode {
     this.hash = hash;
   }
 
+  public static Sha1HashCode fromHashCode(HashCode hashCode) {
+    Preconditions.checkNotNull(hashCode);
+    return new Sha1HashCode(
+        Hashing.sha1().newHasher().putBytes(hashCode.asBytes()).hash().toString());
+  }
+
   /**
    * @return the hash as a 40-character string from the alphabet [a-f0-9].
    */

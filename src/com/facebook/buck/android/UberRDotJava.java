@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -130,6 +131,12 @@ public class UberRDotJava extends AbstractBuildable implements
             throw new RuntimeException(
                 "Since R.java is unconditionally packed in the primary dex, no" +
                     "one should call this method.");
+          }
+
+          @Override
+          public Sha1HashCode getClassesHash() {
+            return Sha1HashCode.fromHashCode(
+                Hashing.combineOrdered(getClassNamesToHashes().values()));
           }
 
           @Override
