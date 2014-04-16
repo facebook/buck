@@ -16,22 +16,12 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Function;
-
 import java.nio.file.Path;
 
 /**
  * Represents a source that is required to build a rule (typically a file).
  */
 public interface SourcePath extends Comparable<SourcePath>  {
-
-  public static final Function<SourcePath, Object> TO_REFERENCE =
-      new Function<SourcePath, Object>() {
-    @Override
-    public Object apply(SourcePath sourcePath) {
-      return sourcePath.asReference();
-    }
-  };
 
   /**
    * Converts this SourcePath to the {@link Path} it represents. Note, this method should only be
