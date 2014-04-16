@@ -103,7 +103,7 @@ import javax.annotation.Nullable;
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
 public class DefaultJavaLibrary extends AbstractBuildable
-    implements JavaLibrary, AbiRule, HasJavaSrcs, HasClasspathEntries, ExportDependencies,
+    implements JavaLibrary, AbiRule, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibrary.Data> {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);

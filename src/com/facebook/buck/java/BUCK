@@ -47,7 +47,6 @@ java_library(
   srcs = [
     'Classpaths.java',
     'DefaultJavaLibrary.java',
-    'HasJavaSrcs.java',
     'JavaBinary.java',
     'JavaBinaryDescription.java',
     'JavaLibraryDescription.java',
