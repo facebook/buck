@@ -59,7 +59,7 @@ public class AndroidTransitiveDependencyGraph {
    */
   public AndroidDexTransitiveDependencies findDexDependencies(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
-      ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex,
+      final ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex,
       final UberRDotJava uberRDotJava) {
     // These are paths that will be dex'ed. They may be either directories of compiled .class files,
     // or paths to compiled JAR files.
@@ -103,7 +103,9 @@ public class AndroidTransitiveDependencyGraph {
           public Map<String, HashCode> get() {
             ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
             for (JavaLibrary javaLibrary : classpath.keySet()) {
-              builder.putAll(javaLibrary.getClassNamesToHashes());
+              if (!buildRulesToExcludeFromDex.contains(javaLibrary)) {
+                builder.putAll(javaLibrary.getClassNamesToHashes());
+              }
             }
             if (!rDotJavaPackages.isEmpty()) {
               builder.putAll(uberRDotJava.getClassNamesToHashes());

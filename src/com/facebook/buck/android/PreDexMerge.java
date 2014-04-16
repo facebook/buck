@@ -198,6 +198,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
         Suppliers.ofInstance(sortResult.primaryDexInputs),
         Optional.of(paths.jarfilesSubdir),
         Optional.of(Suppliers.ofInstance(sortResult.secondaryOutputToInputs)),
+        sortResult.dexInputHashesProvider,
         paths.successDir,
         /* numThreads */ Optional.<Integer>absent(),
         AndroidBinary.DX_MERGE_OPTIONS));

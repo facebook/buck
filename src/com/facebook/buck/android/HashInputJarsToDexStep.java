@@ -43,15 +43,17 @@ import java.util.Set;
  * each dex input, looks at the classes that went into that jar, and uses the class hashes collected
  * in {@link AndroidDexTransitiveDependencies} to calculate the final hash of the input.
  */
-public class HashInputsJarsToDexStep extends AbstractExecutionStep {
+public class HashInputJarsToDexStep extends AbstractExecutionStep
+    implements SmartDexingStep.DexInputHashesProvider {
 
   private final Supplier<Set<Path>> primaryInputsToDex;
   private final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
   private final Supplier<Map<String, HashCode>> classNamesToHashesSupplier;
 
   private final ImmutableMap.Builder<Path, Sha1HashCode> dexInputsToHashes;
+  private boolean stepFinished;
 
-  public HashInputsJarsToDexStep(
+  public HashInputJarsToDexStep(
       Supplier<Set<Path>> primaryInputsToDex,
       Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs,
       Supplier<Map<String, HashCode>> classNamesToHashesSupplier) {
@@ -61,6 +63,7 @@ public class HashInputsJarsToDexStep extends AbstractExecutionStep {
     this.classNamesToHashesSupplier = Preconditions.checkNotNull(classNamesToHashesSupplier);
 
     this.dexInputsToHashes = ImmutableMap.builder();
+    this.stepFinished = false;
   }
 
   @Override
@@ -93,6 +96,15 @@ public class HashInputsJarsToDexStep extends AbstractExecutionStep {
         return 1;
       }
     }
+    stepFinished = true;
     return 0;
+  }
+
+  @Override
+  public ImmutableMap<Path, Sha1HashCode> getDexInputHashes() {
+    Preconditions.checkState(stepFinished,
+        "Either the step did not complete successfully or getDexInputHashes() was called before " +
+            "it could finish its execution.");
+    return dexInputsToHashes.build();
   }
 }

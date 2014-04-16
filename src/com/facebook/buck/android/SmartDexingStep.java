@@ -16,10 +16,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.DxStep.Option;
-import com.facebook.buck.java.classes.ClasspathTraversal;
-import com.facebook.buck.java.classes.ClasspathTraverser;
-import com.facebook.buck.java.classes.DefaultClasspathTraverser;
-import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -32,15 +29,16 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -55,6 +53,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -69,8 +68,14 @@ import javax.annotation.Nullable;
  * even the right course of action given that it would require dynamically modifying the DAG.
  */
 public class SmartDexingStep implements Step {
+
+  public static interface DexInputHashesProvider {
+    ImmutableMap<Path, Sha1HashCode> getDexInputHashes();
+  }
+
   private final Supplier<Multimap<Path, Path>> outputToInputsSupplier;
   private final Optional<Path> secondaryOutputDir;
+  private final DexInputHashesProvider dexInputHashesProvider;
   private final Path successDir;
   private final Optional<Integer> numThreads;
   private final EnumSet<DxStep.Option> dxOptions;
@@ -94,6 +99,7 @@ public class SmartDexingStep implements Step {
       final Supplier<Set<Path>> primaryInputsToDex,
       Optional<Path> secondaryOutputDir,
       final Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
+      DexInputHashesProvider dexInputHashesProvider,
       Path successDir,
       Optional<Integer> numThreads,
       EnumSet<Option> dxOptions) {
@@ -111,6 +117,7 @@ public class SmartDexingStep implements Step {
         }
     );
     this.secondaryOutputDir = Preconditions.checkNotNull(secondaryOutputDir);
+    this.dexInputHashesProvider = Preconditions.checkNotNull(dexInputHashesProvider);
     this.successDir = Preconditions.checkNotNull(successDir);
     this.numThreads = Preconditions.checkNotNull(numThreads);
     this.dxOptions = Preconditions.checkNotNull(dxOptions);
@@ -204,10 +211,13 @@ public class SmartDexingStep implements Step {
       Multimap<Path, Path> outputToInputs) throws IOException {
     ImmutableList.Builder<DxPseudoRule> pseudoRules = ImmutableList.builder();
 
+    ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesProvider.getDexInputHashes();
+
     for (Path outputFile : outputToInputs.keySet()) {
       pseudoRules.add(
           new DxPseudoRule(
               filesystem,
+              dexInputHashes,
               FluentIterable.from(outputToInputs.get(outputFile)).toSet(),
               outputFile,
               successDir.resolve(outputFile.getFileName()),
@@ -236,18 +246,22 @@ public class SmartDexingStep implements Step {
   @VisibleForTesting
   static class DxPseudoRule {
     private final ProjectFilesystem filesystem;
+    private final Map<Path, Sha1HashCode> dexInputHashes;
     private final Set<Path> srcs;
     private final Path outputPath;
     private final Path outputHashPath;
     private final EnumSet<Option> dxOptions;
     private String newInputsHash;
 
-    public DxPseudoRule(ProjectFilesystem filesystem,
+    public DxPseudoRule(
+        ProjectFilesystem filesystem,
+        Map<Path, Sha1HashCode> dexInputHashes,
         Set<Path> srcs,
         Path outputPath,
         Path outputHashPath,
         EnumSet<Option> dxOptions) {
       this.filesystem = Preconditions.checkNotNull(filesystem);
+      this.dexInputHashes = ImmutableMap.copyOf(dexInputHashes);
       this.srcs = ImmutableSet.copyOf(srcs);
       this.outputPath = Preconditions.checkNotNull(outputPath);
       this.outputHashPath = Preconditions.checkNotNull(outputHashPath);
@@ -267,31 +281,11 @@ public class SmartDexingStep implements Step {
 
     @VisibleForTesting
     String hashInputs() throws IOException {
-      final Hasher hasher = Hashing.sha1().newHasher();
-
-      // Hash all inputs in both srcs and entry order (which is very crudely expected to be stable
-      // across invocations).  If it's not stable, all that means is that we'll run more dx commands
-      // than was necessary.  Note that it is not possible to simply hash the inputs themselves
-      // for two reasons: 1) they may one day be directories, 2) zip files may contain the same
-      // entry contents but change on disk due to entry metadata.
-      ClasspathTraverser traverser = new DefaultClasspathTraverser();
-      try {
-        traverser.traverse(new ClasspathTraversal(srcs, filesystem) {
-              @Override
-              public void visit(FileLike fileLike) {
-                try {
-                  hasher.putBytes(fileLike.fastHash().asBytes());
-                } catch (IOException e) {
-                  // Pass it along...
-                  throw new RuntimeException(e);
-                }
-              }
-            });
-      } catch (RuntimeException e) {
-        Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-        throw Throwables.propagate(e);
+      Hasher hasher = Hashing.sha1().newHasher();
+      for (Path src : srcs) {
+        Preconditions.checkState(dexInputHashes.containsKey(src));
+        hasher.putBytes(dexInputHashes.get(src).getHash().getBytes(Charsets.UTF_8));
       }
-
       return hasher.hash().toString();
     }
 
@@ -300,13 +294,6 @@ public class SmartDexingStep implements Step {
 
       if (!filesystem.exists(outputHashPath) ||
           !filesystem.exists(outputPath)) {
-        return false;
-      }
-
-      // Make sure the output dex file isn't newer than the output hash file.
-      long outputHashFileModTime = filesystem.getLastModifiedTime(outputHashPath);
-      long outputFileModTime = filesystem.getLastModifiedTime(outputPath);
-      if (outputFileModTime > outputHashFileModTime) {
         return false;
       }
 

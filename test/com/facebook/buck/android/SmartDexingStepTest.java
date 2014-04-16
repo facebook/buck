@@ -25,6 +25,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -34,7 +35,9 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
@@ -83,8 +86,10 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
+    Sha1HashCode actualHashCode = new Sha1HashCode(Strings.repeat("a", 40));
     DxPseudoRule rule = new DxPseudoRule(
         filesystem,
+        ImmutableMap.of(testIn.toPath(), actualHashCode),
         ImmutableSet.of(testIn.toPath()),
         outputFile.toPath(),
         outputHashFile,

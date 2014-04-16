@@ -75,6 +75,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 
 import java.io.IOException;
@@ -86,6 +87,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -793,6 +795,7 @@ public class AndroidBinary extends AbstractBuildable implements
 
       addDexingSteps(
           classpathEntriesToDex,
+          dexTransitiveDependencies.classNamesToHashesSupplier,
           secondaryDexDirectoriesBuilder,
           steps,
           primaryDexPath);
@@ -958,10 +961,10 @@ public class AndroidBinary extends AbstractBuildable implements
    * Create dex artifacts for all of the individual directories of compiled .class files (or
    * the obfuscated jar files if proguard is used).  If split dex is used, multiple dex artifacts
    * will be produced.
-   *
-   * @param classpathEntriesToDex Full set of classpath entries that must make
+   *  @param classpathEntriesToDex Full set of classpath entries that must make
    *     their way into the final APK structure (but not necessarily into the
    *     primary dex).
+   * @param classNamesToHashesSupplier
    * @param secondaryDexDirectories The contract for updating this builder must match that
    *     of {@link PreDexMerge#getSecondaryDexDirectories()}.
    * @param steps List of steps to add to.
@@ -970,6 +973,7 @@ public class AndroidBinary extends AbstractBuildable implements
   @VisibleForTesting
   void addDexingSteps(
       Set<Path> classpathEntriesToDex,
+      Supplier<Map<String, HashCode>> classNamesToHashesSupplier,
       ImmutableSet.Builder<Path> secondaryDexDirectories,
       ImmutableList.Builder<Step> steps,
       Path primaryDexPath) {
@@ -1045,6 +1049,12 @@ public class AndroidBinary extends AbstractBuildable implements
       secondaryOutputToInputs = Optional.absent();
     }
 
+    HashInputJarsToDexStep hashInputJarsToDexStep = new HashInputJarsToDexStep(
+        primaryInputsToDex,
+        secondaryOutputToInputs,
+        classNamesToHashesSupplier);
+    steps.add(hashInputJarsToDexStep);
+
     // Stores checksum information from each invocation to intelligently decide when dx needs
     // to be re-run.
     Path successDir = getBinPath("__%s_smart_dex__/.success");
@@ -1068,6 +1078,7 @@ public class AndroidBinary extends AbstractBuildable implements
         primaryInputsToDex,
         secondaryDexDir,
         secondaryOutputToInputs,
+        hashInputJarsToDexStep,
         successDir,
         Optional.<Integer>absent(),
         dxOptions);

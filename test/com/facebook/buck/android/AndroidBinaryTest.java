@@ -48,12 +48,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import com.google.common.hash.HashCode;
 
 import org.junit.Test;
 
@@ -61,6 +63,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class AndroidBinaryTest {
@@ -303,7 +306,9 @@ public class AndroidBinaryTest {
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
     Path primaryDexPath = BIN_PATH.resolve(".dex/classes.dex");
-    splitDexRule.addDexingSteps(classpath,
+    splitDexRule.addDexingSteps(
+        classpath,
+        Suppliers.<Map<String, HashCode>>ofInstance(ImmutableMap.<String, HashCode>of()),
         secondaryDexDirectories,
         commandsBuilder,
         primaryDexPath);

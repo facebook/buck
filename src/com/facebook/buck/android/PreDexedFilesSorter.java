@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.SmartDexingStep.DexInputHashesProvider;
+
 import com.facebook.buck.dalvik.CanaryFactory;
 import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.rules.BuildContext;
@@ -171,11 +173,13 @@ public class PreDexedFilesSorter {
       secondaryOutputToInputs.putAll(pathToSecondaryDex, dexContentPaths);
     }
 
-    return new Result(primaryDexInputs, secondaryOutputToInputs.build(), metadataTxtEntries);
+    return new Result(
+        primaryDexInputs,
+        secondaryOutputToInputs.build(),
+        metadataTxtEntries,
+        getDexInputsHashes(primaryDexContents, secondaryDexesContents));
   }
 
-  // TODO(user): remove this once we start passing this map to SmartDexingStep.
-  @SuppressWarnings("unused")
   private static ImmutableMap<Path, Sha1HashCode> getDexInputsHashes(
       List<DexWithClasses> primaryDexContents,
       List<List<DexWithClasses>> secondaryDexesContents) {
@@ -262,14 +266,23 @@ public class PreDexedFilesSorter {
     public final Set<Path> primaryDexInputs;
     public final Multimap<Path, Path> secondaryOutputToInputs;
     public final Map<Path, DexWithClasses> metadataTxtDexEntries;
+    public final DexInputHashesProvider dexInputHashesProvider;
 
     public Result(
         Set<Path> primaryDexInputs,
         Multimap<Path, Path> secondaryOutputToInputs,
-        Map<Path, DexWithClasses> metadataTxtDexEntries) {
+        Map<Path, DexWithClasses> metadataTxtDexEntries,
+        final ImmutableMap<Path, Sha1HashCode> dexInputHashes) {
       this.primaryDexInputs = Preconditions.checkNotNull(primaryDexInputs);
       this.secondaryOutputToInputs = Preconditions.checkNotNull(secondaryOutputToInputs);
       this.metadataTxtDexEntries = Preconditions.checkNotNull(metadataTxtDexEntries);
+      Preconditions.checkNotNull(dexInputHashes);
+      this.dexInputHashesProvider = new DexInputHashesProvider() {
+        @Override
+        public ImmutableMap<Path, Sha1HashCode> getDexInputHashes() {
+          return dexInputHashes;
+        }
+      };
     }
   }
 }
