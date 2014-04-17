@@ -86,9 +86,14 @@ public class AndroidLibrary extends DefaultJavaLibrary {
   @Nullable
   @Override
   public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
+    // The enhanced deps should be based on the combined deps and exported deps. When we stored the
+    // reference to the buildruleparams, we hadn't added the exported deps. This was done in our
+    // superclass's constructor.
+    BuildRuleParams params = buildRuleParams.copyWithChangedDeps(getDeps());
+
     AndroidLibraryGraphEnhancer.Result result = new AndroidLibraryGraphEnhancer(
-        buildRuleParams.getBuildTarget(),
-        buildRuleParams,
+        params.getBuildTarget(),
+        params,
         javacOptions)
         .createBuildableForAndroidResources(
             ruleResolver,

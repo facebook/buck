@@ -173,7 +173,10 @@ public class DefaultJavaLibrary extends AbstractBuildable
       Set<BuildRule> exportedDeps,
       JavacOptions javacOptions) {
     this.target = buildRuleParams.getBuildTarget();
-    this.deps = buildRuleParams.getDeps();
+    this.deps = ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(buildRuleParams.getDeps())
+        .addAll(exportedDeps)
+        .build();
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
@@ -404,7 +407,9 @@ public class DefaultJavaLibrary extends AbstractBuildable
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    builder.setReflectively("postprocessClassesCommands", postprocessClassesCommands);
+    builder
+        .setReflectively("postprocessClassesCommands", postprocessClassesCommands)
+        .setReflectively("resources", resources);
     return javacOptions.appendToRuleKey(builder);
   }
 
@@ -749,15 +754,18 @@ public class DefaultJavaLibrary extends AbstractBuildable
             javaPackageFinder.findJavaPackageFolderForPath(resource.toString());
         Path relativeSymlinkPath;
 
-
         if (resource.startsWith(BuckConstant.BUCK_OUTPUT_PATH) ||
             resource.startsWith(BuckConstant.GEN_PATH) ||
             resource.startsWith(BuckConstant.BIN_PATH) ||
             resource.startsWith(BuckConstant.ANNOTATION_PATH)) {
           // Handle the case where we depend on the output of another BuildRule. In that case, just
           // grab the output and put in the same package as this target would be in.
-          relativeSymlinkPath = Paths.get(String.format(
-              "%s/%s", targetPackageDir, rawResource.resolve().getFileName()));
+          relativeSymlinkPath = Paths.get(
+              String.format(
+                  "%s%s%s",
+                  targetPackageDir,
+                  targetPackageDir.isEmpty() ? "" : "/",
+                  rawResource.resolve().getFileName()));
         } else if ("".equals(javaPackageAsPath)) {
           // In this case, the project root is acting as the default package, so the resource path
           // works fine.

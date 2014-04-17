@@ -25,6 +25,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.lang.reflect.Field;
 import java.nio.file.Paths;
@@ -37,7 +38,8 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
   private final Description<T> description;
   private final BuildTarget target;
   private final BuildRuleFactoryParams ruleFactoryParams;
-  private final ImmutableSortedSet<BuildTarget> deps;
+  private final ImmutableSortedSet<BuildTarget> extraDeps;
+  private final ImmutableSortedSet<BuildTarget> declaredDeps;
   private final ImmutableSet<BuildTargetPattern> visibilities;
 
   public DescribedRuleBuilder(Description<T> description, final BuildRuleFactoryParams params)
@@ -46,10 +48,20 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
     this.ruleFactoryParams = Preconditions.checkNotNull(params);
     this.target = params.target;
 
-    final ImmutableSortedSet.Builder<BuildTarget> allDeps = ImmutableSortedSet.naturalOrder();
+    /*
+     * We're about to gather everything that looks like a dependency so that we can add them to the
+     * BuildRule. We'll keep the actual dependencies declared in the "deps" parameter separate since
+     * they'll be needed when constructing the Buildable.
+     */
+
+    final ImmutableSortedSet.Builder<BuildTarget> extraDeps = ImmutableSortedSet.naturalOrder();
+    final ImmutableSortedSet.Builder<BuildTarget> declaredDeps = ImmutableSortedSet.naturalOrder();
     for (String rawDep : params.getOptionalListAttribute("deps")) {
-      allDeps.add(params.resolveBuildTarget(rawDep));
+      BuildTarget target = params.resolveBuildTarget(rawDep);
+      declaredDeps.add(target);
+      extraDeps.add(target);
     }
+    this.declaredDeps = declaredDeps.build();
 
     // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
     TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
@@ -57,11 +69,11 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
     for (Field field : arg.getClass().getFields()) {
       ParamInfo info = new ParamInfo(typeCoercerFactory, Paths.get(target.getBasePath()), field);
       if (info.hasElementTypes(BuildRule.class, SourcePath.class)) {
-        detectBuildTargetsForParameter(allDeps, info, params);
+        detectBuildTargetsForParameter(extraDeps, info, params);
       }
     }
-
-    this.deps = allDeps.build();
+    this.extraDeps = ImmutableSortedSet.copyOf(
+        Sets.difference(extraDeps.build(), this.declaredDeps));
 
     ImmutableSet.Builder<BuildTargetPattern> allVisibilities = ImmutableSet.builder();
     for (String rawVis : params.getOptionalListAttribute("visibility")) {
@@ -78,7 +90,7 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
 
   @Override
   public Set<BuildTarget> getDeps() {
-    return deps;
+    return Sets.union(extraDeps, declaredDeps);
   }
 
   @Override
@@ -88,17 +100,16 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
 
   @Override
   public DescribedRule build(BuildRuleResolver ruleResolver) {
-    ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
-    for (BuildTarget dep : deps) {
-      rules.add(ruleResolver.get(dep));
+    ImmutableSortedSet.Builder<BuildRule> declaredRules = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget dep : declaredDeps) {
+      BuildRule rule = ruleResolver.get(dep);
+      Preconditions.checkNotNull(rule, dep.toString());
+      declaredRules.add(rule);
     }
-
-    BuildRuleParams params = new BuildRuleParams(
-        target,
-        rules.build(),
-        getVisibilityPatterns(),
-        ruleFactoryParams.getProjectFilesystem(),
-        ruleFactoryParams.getRuleKeyBuilderFactory());
+    ImmutableSortedSet.Builder<BuildRule> paramRules = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget dep : extraDeps) {
+      paramRules.add(ruleResolver.get(dep));
+    }
 
     ConstructorArgMarshaller inspector =
         new ConstructorArgMarshaller(Paths.get(target.getBasePath()));
@@ -109,19 +120,33 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
         ruleFactoryParams,
         arg);
 
+    // The params used for the Buildable only contain the declared parameters. However, the deps of
+    // the rule include not only those, but also any that were picked up through the deps declared
+    // via a SourcePath.
+    BuildRuleParams params = new BuildRuleParams(
+        target,
+        declaredRules.build(),
+        getVisibilityPatterns(),
+        ruleFactoryParams.getProjectFilesystem(),
+        ruleFactoryParams.getRuleKeyBuilderFactory());
     Buildable buildable = description.createBuildable(params, arg);
 
     // Check for graph enhancement.
     ImmutableSortedSet<BuildRule> enhancedDeps = buildable.getEnhancedDeps(ruleResolver);
     if (enhancedDeps != null) {
-      params = new BuildRuleParams(
-          params.getBuildTarget(),
-          enhancedDeps,
-          params.getVisibilityPatterns(),
-          params.getProjectFilesystem(),
-          params.getRuleKeyBuilderFactory());
+      paramRules.addAll(enhancedDeps);
+    } else {
+      paramRules.addAll(declaredRules.build());
     }
 
+    // These are the params used by the rule, but not the buildable. Confusion will be lessened once
+    // we move to a dependency graph that's not the action graph.
+    params = new BuildRuleParams(
+        params.getBuildTarget(),
+        paramRules.build(),
+        params.getVisibilityPatterns(),
+        params.getProjectFilesystem(),
+        params.getRuleKeyBuilderFactory());
     return new DescribedRule(description.getBuildRuleType(), buildable, params);
   }
 

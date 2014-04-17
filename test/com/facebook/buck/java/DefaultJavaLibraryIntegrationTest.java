@@ -316,6 +316,29 @@ public class DefaultJavaLibraryIntegrationTest {
     buildResult3.assertSuccess("Successful build should exit with 0.");
   }
 
+  @Test
+  public void updatingAResourceWhichIsJavaLibraryCausesAJavaLibraryToBeRepacked()
+      throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "resource_change_causes_repack", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:lib");
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    workspace.copyFile("ResClass.java.new", "ResClass.java");
+    workspace.resetBuildLogFile();
+
+    // The copied file changed the contents but not the ABI of :lib. Because :lib is included as a
+    // resource of :res, it's expected that both :lib and :res are rebuilt (:lib because of a code
+    // change, :res in order to repack the resource)
+    buildResult = workspace.runBuckCommand("build", "//:lib");
+    buildResult.assertSuccess("Successful build should exit with 0.");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:res");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
+  }
+
   /**
    * Asserts that the specified file exists and returns its contents.
    */
