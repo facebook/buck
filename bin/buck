@@ -20,11 +20,15 @@ BUCK_BIN_DIRECTORY=$DIR
 # TODO(user): refactor buck_common in to functions rather than sourcing
 source "${BUCK_BIN_DIRECTORY}/buck_common"
 
+if [ -n "$USE_BUCKD" ]; then
+  startBuckdIfStopped
+fi
+
 # If a buck daemon is running, use it.
 BUCK_CLIENT="${BUCK_DIRECTORY}/build/ng"
 if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCK_CLIENT" ]; then
 
-  echo "Using buckd." 1>&2
+  echo >&2 "Using buckd."
 
   BUCKD_PORT=`cat ${BUCKD_DIR}/buckd.port`
 
@@ -46,7 +50,7 @@ if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCK_CLIENT" ]; then
       exit $BUCKD_STATUS
   fi
 
-  echo "Daemon is busy, starting new buck process." 1>&2
+  echo >&2 "Daemon is busy, starting new buck process."
 
 fi
 

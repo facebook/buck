@@ -64,8 +64,8 @@ function killBuckd() {
   fi
 }
 
-function startBuckd() {
-  if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCK_BIN_DIRECTORY}/buckd" ]; then
+function startBuckdIfStopped() {
+  if [ $BUCKD_RUNNING -eq 1 ] && [ -e "${BUCK_BIN_DIRECTORY}/buckd" ]; then
     pushd $PROJECT_ROOT > /dev/null
     "${BUCK_BIN_DIRECTORY}/buckd"
     setBuckdRunning
@@ -120,7 +120,7 @@ if [ -e "${BUCKD_RUN_COUNT_FILE}" ]; then
   CURRENT_BUCKD_RUN_COUNT=$(cat ${BUCKD_RUN_COUNT_FILE})
   if [ $CURRENT_BUCKD_RUN_COUNT -ge $MAX_BUCKD_RUNS ]; then
     killBuckd
-    startBuckd
+    startBuckdIfStopped
     CURRENT_BUCKD_RUN_COUNT=0
   fi
 fi
@@ -294,6 +294,7 @@ fi
 # Make sure that Buck has been built.
 if [ ! -e "$BUCK_SUCCESS_FILE" ]; then
 
+  BUCKD_WAS_RUNNING=$BUCKD_RUNNING
   if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCKD_PID_FILE" ]; then
     echo >&2 "Killing buckd before building buck"
     killBuckd
@@ -308,7 +309,9 @@ if [ ! -e "$BUCK_SUCCESS_FILE" ]; then
   if [ $? -ne 0 ]; then
     printAntFailedMessage
   fi
-  startBuckd
+  if [ $BUCKD_WAS_RUNNING -eq 0 ]; then
+    startBuckdIfStopped
+  fi
 fi
 
 # Pop back to the original directory.
