@@ -23,8 +23,6 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,19 +50,13 @@ public class BuildThenTestIntegrationTest {
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:example");
     assertEquals("", testResult.getStdout());
-    ImmutableList<String> resultList = ImmutableList.copyOf(
-        Splitter.on("\n").split(testResult.getStderr()));
-    assertEquals(6, resultList.size());
-
-    assertTrue(resultList.get(0).startsWith("[-] PARSING BUILD FILES...FINISHED"));
-    assertTrue(resultList.get(1).startsWith("[-] BUILDING...FINISHED"));
-    assertEquals(ImmutableList.of(
-        "TESTING //:example",
-        "PASS <100ms  1 Passed   0 Failed   com.example.MyTest",
-        "TESTS PASSED"),
-        resultList.subList(2, 5));
+    assertTrue(
+      "Test output is incorrect:\n=====\n" + testResult.getStderr() + "=====\n",
+      testResult.getStderr().contains(
+        "TESTING //:example\n" +
+        "PASS <100ms  1 Passed   0 Failed   com.example.MyTest\n" +
+        "TESTS PASSED\n"));
     testResult.assertSuccess("Passing tests should exit with 0.");
-
     workspace.verify();
   }
 
