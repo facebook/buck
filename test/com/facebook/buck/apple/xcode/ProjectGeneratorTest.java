@@ -601,6 +601,8 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXCopyFilesBuildPhase.class);
     PBXBuildFile frameworkFile = Iterables.getOnlyElement(copyFrameworksBuildPhase.getFiles());
     assertEquals("LocalFramework.framework", frameworkFile.getFileRef().getName());
+    assertEquals(copyFrameworksBuildPhase.getDstSubfolderSpec(),
+        PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
   }
 
   @Test

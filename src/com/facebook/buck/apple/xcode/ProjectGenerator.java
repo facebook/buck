@@ -944,7 +944,7 @@ public class ProjectGenerator {
       PBXGroup sharedFrameworksGroup,
       Iterable<String> frameworks) {
     PBXCopyFilesBuildPhase copyFrameworksBuildPhase =
-        new PBXCopyFilesBuildPhase(PBXCopyFilesBuildPhase.Destination.PRODUCTS, "Frameworks");
+        new PBXCopyFilesBuildPhase(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS, "");
     target.getBuildPhases().add(copyFrameworksBuildPhase);
 
     for (String framework : frameworks) {

@@ -28,6 +28,7 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
     ABSOLUTE(0),
     RESOURCES(7),
     PRODUCTS(16),
+    FRAMEWORKS(10),
     ;
 
     private int value;
