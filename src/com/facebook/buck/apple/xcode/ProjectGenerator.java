@@ -390,7 +390,7 @@ public class ProjectGenerator {
     // TODO(Task #3772930): Go through all dependencies of the rule
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
-    addSourcesBuildPhase(
+    addSourcesAndHeadersBuildPhases(
         target,
         targetGroup,
         buildable.getSrcs(),
