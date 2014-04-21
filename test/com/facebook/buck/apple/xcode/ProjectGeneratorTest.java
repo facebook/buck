@@ -644,7 +644,7 @@ public class ProjectGeneratorTest {
     assertEquals(Optional.of("wrapper.cfbundle"), productReference.getExplicitFileType());
 
     assertHasConfigurations(target, "Debug");
-    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases", 4, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
         "foo.m", Optional.of("-foo")));
@@ -692,7 +692,7 @@ public class ProjectGeneratorTest {
     assertEquals(Optional.of("wrapper.cfbundle"), productReference.getExplicitFileType());
 
     assertHasConfigurations(target, "Debug");
-    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases", 4, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
         "foo.m", Optional.of("-foo")));
