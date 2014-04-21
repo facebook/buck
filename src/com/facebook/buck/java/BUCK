@@ -23,6 +23,7 @@ java_library(
     'DefaultJavaPackageFinder.java',
     'HasClasspathEntries.java',
     'HasJavaAbi.java',
+    'JavaFileParser.java',
     'JavaLibrary.java',
     'JavacVersion.java',
     'JavacOptions.java',
@@ -38,6 +39,7 @@ java_library(
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
+    '//third-party/java/eclipse:eclipse_jdt',
   ],
   visibility = ['PUBLIC'],
 )

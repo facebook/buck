@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="eclipse">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/third-party/java/eclipse" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/eclipse" recursive="false" />
+  </library>
+</component>

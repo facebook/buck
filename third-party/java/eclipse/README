@@ -1,0 +1,35 @@
+These jars are extracted from the Eclipse project. Here's how you get them.
+
+---
+
+file="eclipse-standard-kepler-SR2-linux-gtk-x86_64.tar.gz"
+
+wget "http://mirrors.ibiblio.org/eclipse/technology/epp/downloads/release/kepler/SR2/$file"
+
+sha1sum $file
+# ef3be20a7c9abb05c9208c7796a4a2b79ffacdbb
+
+tar xf $file
+
+cd eclipse/plugins
+
+jars=(
+    org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar
+    org.eclipse.core.jobs_3.5.300.v20130429-1813.jar
+    org.eclipse.core.resources_3.8.101.v20130717-0806.jar
+    org.eclipse.core.runtime_3.9.100.v20131218-1515.jar
+    org.eclipse.equinox.common_3.6.200.v20130402-1505.jar
+    org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar
+    org.eclipse.jdt.core_3.9.2.v20140114-1555.jar
+    org.eclipse.osgi_3.9.1.v20140110-1610.jar
+)
+
+sha1sum "${jars[@]}"
+# 0335ae99862a28b05778fbd10fbf65e000ae3cfe
+# 69a54a3766004fc09222e2be6da544dde50ba50f
+# 5fc550dca872450b3929ff0d5903cc1b1950d03d
+# 1dfb8e5e844373ab86487f254242228771764065
+# f930417b1602dafb370d7b9ed7871c87e0b355b1
+# 75b77bdb8eb93ed5c6d36267c46bf4ff50476747
+# a37fce6ebabea1ad21399c2f74ce955d10349e3b
+# 4499d6104182d349f0ec59d6d166123aa5f09174

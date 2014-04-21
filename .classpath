@@ -35,5 +35,13 @@
 	<classpathentry kind="lib" path="third-party/java/xz-java-1.3/xz-1.3.jar" sourcepath="third-party/java/xz-java-1.3/xz-1.3-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/gson/gson-2.2.4.jar" sourcepath="third-party/java/gson/gson-2.2.4-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/closure-templates/soy-2012-12-21-no-guava.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.jobs_3.5.300.v20130429-1813.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.resources_3.8.101.v20130717-0806.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.runtime_3.9.100.v20131218-1515.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.jdt.core_3.9.2.v20140114-1555.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.osgi_3.9.1.v20140110-1610.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
