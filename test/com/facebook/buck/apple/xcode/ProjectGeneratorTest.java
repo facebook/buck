@@ -597,6 +597,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
         "//foo:binary");
+    assertEquals(target.getProductType(), PBXTarget.ProductType.MACOSX_BINARY);
     assertHasConfigurations(target, "Debug");
     assertEquals("Should have exact number of build phases", 5, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
@@ -809,6 +810,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:binary");
     assertHasConfigurations(target, "Debug");
+    assertEquals(target.getProductType(), PBXTarget.ProductType.IOS_BINARY);
     assertEquals("Should have exact number of build phases", 4, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,

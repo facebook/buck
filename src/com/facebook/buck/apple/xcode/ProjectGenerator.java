@@ -466,7 +466,7 @@ public class ProjectGenerator {
       PBXProject project, BuildRule rule, IosBinary buildable)
       throws IOException {
     PBXNativeTarget target =
-        generateBinaryTarget(project, rule, buildable, PBXTarget.ProductType.MACOSX_BINARY,
+        generateBinaryTarget(project, rule, buildable, PBXTarget.ProductType.IOS_BINARY,
             IosResourceDescription.TYPE);
 
     project.getTargets().add(target);
