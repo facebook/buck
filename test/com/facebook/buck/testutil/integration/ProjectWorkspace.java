@@ -196,6 +196,10 @@ public class ProjectWorkspace {
     return Files.toString(getFile(pathRelativeToProjectRoot), Charsets.UTF_8);
   }
 
+  public void enableDirCache() throws IOException {
+    writeContentsToPath("[cache]\n  mode = dir", ".buckconfig.local");
+  }
+
   public void copyFile(String source, String dest) throws IOException {
     Files.copy(getFile(source), getFile(dest));
   }
