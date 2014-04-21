@@ -89,7 +89,7 @@ public class TestResultFormatterTest {
   public void shouldSaySelectedTestsWillBeRun() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    TestSelectorList testSelectorList = new TestSelectorList.Builder()
+    TestSelectorList testSelectorList = TestSelectorList.builder()
         .addRawSelectors("com.example.clown.Car")
         .build();
 
@@ -104,7 +104,7 @@ public class TestResultFormatterTest {
   public void shouldExplainWhichTestsWillBeSelected() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    TestSelectorList testSelectorList = new TestSelectorList.Builder()
+    TestSelectorList testSelectorList = TestSelectorList.builder()
         .addRawSelectors("com.example.clown.Car")
         .build();
 

@@ -33,9 +33,9 @@ import java.util.regex.PatternSyntaxException;
  */
 public class TestSelector {
 
-  private boolean inclusive;
-  /* @Nullable */ private Pattern classPattern;
-  /* @Nullable */ private Pattern methodPattern;
+  private final boolean inclusive;
+  /* @Nullable */ private final Pattern classPattern;
+  /* @Nullable */ private final Pattern methodPattern;
 
   TestSelector(
       boolean inclusive,
@@ -58,21 +58,9 @@ public class TestSelector {
    *
    * @param rawSelectorString An unparsed selector string.
    */
-  public static TestSelector buildFrom(String rawSelectorString) {
+  public static TestSelector buildFromSelectorString(String rawSelectorString) {
     if (rawSelectorString == null || rawSelectorString.isEmpty()) {
       throw new RuntimeException("Cannot build from a null or empty string!");
-    }
-
-    int hashCount = 0;
-    for (int position = 0; position < rawSelectorString.length(); position++) {
-      if (rawSelectorString.charAt(position) == '#') {
-        hashCount++;
-      }
-    }
-    if (hashCount > 1) {
-      throw new TestSelectorParseException(String.format(
-          "Test selector '%s' contains more than one '#'!",
-          rawSelectorString));
     }
 
     boolean isInclusive = true;
@@ -86,24 +74,26 @@ public class TestSelector {
 
     Pattern classPattern = null;
     Pattern methodPattern = null;
-    String[] parts = remainder.split("#");
+    String[] parts = remainder.split("#", -1);
 
     try {
       switch (parts.length) {
-        // "#"
-        case 0:
-          break;
-
         // "com.example.Test", "com.example.Test#"
         case 1:
           classPattern = Pattern.compile(parts[0]);
           break;
 
-        // "com.example.Test#testX", "#testX"
+        // "com.example.Test#testX", "#testX", "#"
         case 2:
-          classPattern = parts[0].isEmpty() ? null : Pattern.compile(parts[0]);
-          methodPattern = Pattern.compile(parts[1]);
+          classPattern = getPatternOrNull(parts[0]);
+          methodPattern = getPatternOrNull(parts[1]);
           break;
+
+        // Invalid string, like "##"
+        default:
+          throw new TestSelectorParseException(String.format(
+              "Test selector '%s' contains more than one '#'!",
+              rawSelectorString));
       }
     } catch (PatternSyntaxException e) {
       throw new TestSelectorParseException(String.format(
@@ -113,6 +103,10 @@ public class TestSelector {
     }
 
     return new TestSelector(isInclusive, classPattern, methodPattern);
+  }
+
+  private static Pattern getPatternOrNull(String string) {
+    return string.isEmpty() ? null : Pattern.compile(string);
   }
 
   String getExplanation() {

@@ -359,7 +359,7 @@ public final class JUnitRunner {
     TestSelectorList testSelectorList = null;
     if (!args[2].isEmpty()) {
       List<String> rawSelectors = Arrays.asList(args[2].split("\n"));
-      testSelectorList = new TestSelectorList.Builder()
+      testSelectorList = TestSelectorList.builder()
           .addRawSelectors(rawSelectors)
           .build();
     }

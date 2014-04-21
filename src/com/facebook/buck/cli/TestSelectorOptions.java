@@ -70,7 +70,7 @@ public class TestSelectorOptions {
 
   public static class TestSelectorsOptionHandler extends OptionHandler<Supplier<TestSelectorList>> {
 
-    private final TestSelectorList.Builder builder = new TestSelectorList.Builder();
+    private final TestSelectorList.Builder builder = TestSelectorList.builder();
 
     public TestSelectorsOptionHandler(
         CmdLineParser parser,

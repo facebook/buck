@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -29,6 +30,8 @@ import java.util.List;
  * include a given {@link TestDescription}.
  */
 public class TestSelectorList {
+
+  private static final TestSelectorList EMPTY = TestSelectorList.builder().build();
 
   /**
    * Test selector strings are parsed in two places: (i) by "buck test" when it is first run, to
@@ -96,7 +99,11 @@ public class TestSelectorList {
   }
 
   public static TestSelectorList empty() {
-    return new TestSelectorList.Builder().build();
+    return EMPTY;
+  }
+
+  public static Builder builder() {
+    return new Builder();
   }
 
   /**
@@ -110,8 +117,13 @@ public class TestSelectorList {
    */
   public static class Builder {
 
-    private final List<String> rawSelectors = new ArrayList<>();
-    private final List<TestSelector> testSelectors = new ArrayList<>();
+    private final List<String> rawSelectors;
+    private final List<TestSelector> testSelectors;
+
+    protected Builder() {
+      rawSelectors = new ArrayList<>();
+      testSelectors = new ArrayList<>();
+    }
 
     private Builder addRawSelector(String rawSelector) {
       this.rawSelectors.add(rawSelector);
@@ -130,17 +142,14 @@ public class TestSelectorList {
         }
         return this;
       } else {
-        TestSelector testSelector = TestSelector.buildFrom(rawSelector);
+        TestSelector testSelector = TestSelector.buildFromSelectorString(rawSelector);
         this.testSelectors.add(testSelector);
       }
       return this;
     }
 
     public Builder addRawSelectors(String... rawSelectors) {
-      for (String rawSelector : rawSelectors) {
-        addRawSelector(rawSelector);
-      }
-      return this;
+      return addRawSelectors(Arrays.asList(rawSelectors));
     }
 
     public Builder addRawSelectors(Collection<String> rawTestSelectors) {
