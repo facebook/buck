@@ -16,9 +16,20 @@
 
 package com.facebook.buck.model;
 
+import com.google.common.base.Function;
+
 import java.util.Comparator;
 
 public interface HasBuildTarget {
+
+  Function<HasBuildTarget, BuildTarget> TO_TARGET =
+      new Function<HasBuildTarget, BuildTarget>() {
+        @Override
+        public BuildTarget apply(HasBuildTarget input) {
+          return input.getBuildTarget();
+        }
+      };
+
   Comparator<HasBuildTarget> BUILD_TARGET_COMPARATOR =
       new Comparator<HasBuildTarget>() {
         @Override

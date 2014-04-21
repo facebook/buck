@@ -155,4 +155,29 @@ public class AndroidResourceFilterIntegrationTest {
     apkInspector.assertFileDoesNotExist("res/drawable-hdpi/app_icon.png");
     apkInspector.assertFileDoesNotExist("res/drawable-mdpi/app_icon.png");
   }
+
+  @Test
+  public void testAsset() throws IOException {
+    workspace.enableDirCache();
+    workspace.runBuckBuild("//apps/sample:app").assertSuccess();
+    String apkFilePath = String.format(APK_PATH_FORMAT, "app");
+
+    File apkFile = workspace.getFile(apkFilePath);
+    ApkInspector apkInspector = new ApkInspector(apkFile);
+
+    long firstCrc = apkInspector.getCrc("assets/asset_file.txt");
+
+    workspace.replaceFileContents(
+        "res/com/sample/asset_only/assets/asset_file.txt",
+        "Hello",
+        "Bye");
+    workspace.runBuckBuild("//apps/sample:app").assertSuccess();
+
+    apkFile = workspace.getFile(apkFilePath);
+    apkInspector = new ApkInspector(apkFile);
+
+    long secondCrc = apkInspector.getCrc("assets/asset_file.txt");
+
+    assertNotEquals("Rebuilt APK file must include the new asset file.", firstCrc, secondCrc);
+  }
 }

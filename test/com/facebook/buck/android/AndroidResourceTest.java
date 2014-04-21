@@ -240,7 +240,7 @@ public class AndroidResourceTest {
             .build(ruleResolver);
     e.getBuildable().getEnhancedDeps(ruleResolver);
 
-    ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(e);
+    ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(a);
     assertTrue(
         String.format(
             "Topological sort %s should be either %s or %s", deps, validResult1, validResult2),

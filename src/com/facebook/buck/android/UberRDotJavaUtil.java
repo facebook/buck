@@ -74,7 +74,12 @@ public class UberRDotJavaUtil {
    * Rules will be ordered from least dependent to most dependent.
    */
   public static ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(BuildRule rule) {
-    return getAndroidResourceDeps(Collections.singleton(rule));
+    return getAndroidResourceDeps(Collections.singleton(rule), /*includeAssetOnlyRules */ false);
+  }
+
+  public static ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(
+      Collection<BuildRule> rules) {
+    return getAndroidResourceDeps(rules, /* includeAssetOnlyRules */ false);
   }
 
   /**
@@ -84,7 +89,8 @@ public class UberRDotJavaUtil {
    * Rules will be ordered from least dependent to most dependent.
    */
   public static ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(
-      Collection<BuildRule> rules) {
+      Collection<BuildRule> rules,
+      final boolean includeAssetOnlyRules) {
     // This visitor finds all AndroidResourceRules that are reachable from the specified rules via
     // rules with types in the TRAVERSABLE_TYPES collection. It also builds up the dependency graph
     // that was traversed to find the AndroidResourceRules.
@@ -101,7 +107,9 @@ public class UberRDotJavaUtil {
         } else if (rule.getBuildable() instanceof HasAndroidResourceDeps) {
           androidResourceRule = (HasAndroidResourceDeps) rule.getBuildable();
         }
-        if (androidResourceRule != null && androidResourceRule.getRes() != null) {
+        if (androidResourceRule != null &&
+            (androidResourceRule.getRes() != null ||
+                (includeAssetOnlyRules && androidResourceRule.getAssets() != null))) {
           androidResources.add(androidResourceRule);
         }
 

@@ -1,0 +1,9 @@
+android_resource(
+  name = 'asset_only',
+  assets = 'assets',
+  visibility = [
+    'PUBLIC',
+  ],
+  deps = [
+  ],
+)

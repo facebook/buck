@@ -18,10 +18,12 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavaLibrary;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import javax.annotation.Nullable;
 
 /**
  * This is something that an {@link AndroidBinary} must create to find the transitive closure
@@ -34,32 +36,69 @@ abstract class AndroidResourceDepsFinder {
   private final AndroidTransitiveDependencies androidTransitiveDependencies;
 
   /*
-   * Currently, androidResources are expensive to compute, so we calculate them lazily.
+   * Currently, allAndroidResources are expensive to compute, so we calculate them lazily.
    */
 
-  @Nullable
-  private volatile ImmutableList<HasAndroidResourceDeps> androidResources;
+  private final Supplier<ImmutableList<HasAndroidResourceDeps>> allAndroidResourcesSupplier;
+  private final Supplier<ImmutableList<HasAndroidResourceDeps>> androidResourceDepsSupplier;
 
   public AndroidResourceDepsFinder(AndroidTransitiveDependencyGraph transitiveDependencyGraph,
       ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex) {
     this.transitiveDependencyGraph = Preconditions.checkNotNull(transitiveDependencyGraph);
     this.buildRulesToExcludeFromDex = Preconditions.checkNotNull(buildRulesToExcludeFromDex);
     this.androidTransitiveDependencies = transitiveDependencyGraph.findDependencies();
+
+    this.allAndroidResourcesSupplier = Suppliers.memoize(
+        new Supplier<ImmutableList<HasAndroidResourceDeps>>() {
+          @Override
+          public ImmutableList<HasAndroidResourceDeps> get() {
+            return findMyAndroidResourceDeps();
+          }
+        });
+
+    // This defined as a Supplier since getAndroidResources() is expected to be called multiple
+    // times.
+    this.androidResourceDepsSupplier = Suppliers.memoize(
+        new Supplier<ImmutableList<HasAndroidResourceDeps>>() {
+          @Override
+          public ImmutableList<HasAndroidResourceDeps> get() {
+            return FluentIterable.from(allAndroidResourcesSupplier.get())
+                .filter(new Predicate<HasAndroidResourceDeps>() {
+                          @Override
+                          public boolean apply(HasAndroidResourceDeps input) {
+                            return input.getRes() != null;
+                          }
+                        })
+                .toList();
+          }
+        });
   }
 
   public AndroidTransitiveDependencies getAndroidTransitiveDependencies() {
     return androidTransitiveDependencies;
   }
 
+  /**
+   * @return List of android resources that should be considered while generating the uber
+   *     {@code R.java} file, essentially excluding any resource rules that only contain assets.
+   */
   public ImmutableList<HasAndroidResourceDeps> getAndroidResources() {
-    if (androidResources == null) {
-      synchronized (this) {
-        if (androidResources == null) {
-          androidResources = findMyAndroidResourceDeps();
-        }
-      }
-    }
-    return androidResources;
+    return androidResourceDepsSupplier.get();
+  }
+
+  /**
+   * @return List of android resources that only contain assets, and as a result only need to be
+   *     passed to the {@code aapt} step which packages assets into the APK.
+   */
+  public ImmutableList<HasAndroidResourceDeps> getAssetOnlyAndroidResources() {
+    return FluentIterable.from(allAndroidResourcesSupplier.get())
+        .filter(new Predicate<HasAndroidResourceDeps>() {
+                  @Override
+                  public boolean apply(HasAndroidResourceDeps input) {
+                    return input.getRes() == null && input.getAssets() != null;
+                  }
+                })
+        .toList();
   }
 
   public AndroidResourceDetails getAndroidResourceDetails() {

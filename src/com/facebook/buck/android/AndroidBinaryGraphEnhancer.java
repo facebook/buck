@@ -25,6 +25,7 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -373,7 +374,12 @@ public class AndroidBinaryGraphEnhancer {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(resourceRules)
         .addAll(getTargetsAsRules(
-            androidResourceDepsFinder.getAndroidTransitiveDependencies().nativeTargetsWithAssets));
+                FluentIterable.from(androidResourceDepsFinder.getAssetOnlyAndroidResources())
+                    .transform(HasBuildTarget.TO_TARGET)
+                    .toList()))
+        .addAll(getTargetsAsRules(
+                androidResourceDepsFinder.getAndroidTransitiveDependencies()
+                    .nativeTargetsWithAssets));
     if (manifest instanceof BuildRuleSourcePath) {
       builder.add(((BuildRuleSourcePath) manifest).getRule());
     }

@@ -169,6 +169,8 @@ public class AndroidBinaryGraphEnhancerTest {
     AndroidResourceDepsFinder depsFinder = createStrictMock(AndroidResourceDepsFinder.class);
     expect(depsFinder.getAndroidResources()).andStubReturn(
         ImmutableList.<HasAndroidResourceDeps>of());
+    expect(depsFinder.getAssetOnlyAndroidResources()).andStubReturn(
+        ImmutableList.<HasAndroidResourceDeps>of());
     expect(depsFinder.getAndroidTransitiveDependencies()).andStubReturn(
         AndroidTransitiveDependencies.EMPTY);
 

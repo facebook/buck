@@ -194,6 +194,7 @@ public class AndroidResource extends AbstractBuildable
     return buildTarget;
   }
 
+  @Override
   @Nullable
   public Path getAssets() {
     return assets;

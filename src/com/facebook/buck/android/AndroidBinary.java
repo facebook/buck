@@ -282,7 +282,9 @@ public class AndroidBinary extends AbstractBuildable implements
         rulesToExcludeFromDex) {
       @Override
       protected ImmutableList<HasAndroidResourceDeps> findMyAndroidResourceDeps() {
-        return UberRDotJavaUtil.getAndroidResourceDeps(enhancedDeps);
+        return UberRDotJavaUtil.getAndroidResourceDeps(
+            enhancedDeps,
+            /* includeAssetOnlyRules */ true);
       }
     };
 

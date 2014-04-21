@@ -3,6 +3,7 @@ android_library(
   srcs = glob(['*.java']),
   deps = [
     '//res/com/sample/top:top',
+    '//res/com/sample/asset_only:asset_only',
   ],
   visibility = [
     'PUBLIC',

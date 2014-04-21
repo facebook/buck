@@ -63,6 +63,11 @@ public class RobolectricTestRuleTest {
     }
 
     @Override
+    public Path getAssets() {
+      return null;
+    }
+
+    @Override
     public Collection<Path> getInputsToCompareToOutput() {
       return null;
     }
