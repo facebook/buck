@@ -710,37 +710,6 @@ public class ProjectGenerator {
   }
 
   /**
-   * Add sources build phases to a target, and add references to the target's group.
-   *
-   * @param target      Target to add the build phase to.
-   * @param targetGroup Group to link the source files to.
-   * @param groupedSources Grouped sources to include in the build
-   *        phase, path relative to project root.
-   * @param sourceFlags    Source path to flag mapping.
-   */
-  private void addSourcesBuildPhase(
-      PBXNativeTarget target,
-      PBXGroup targetGroup,
-      Iterable<GroupedSource> groupedSources,
-      ImmutableMap<SourcePath, String> sourceFlags) {
-    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
-    // Sources groups stay in the order in which they're declared in the BUCK file.
-    sourcesGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
-    PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
-
-    addGroupedSourcesToBuildPhases(
-        sourcesGroup,
-        sourcesBuildPhase,
-        Optional.<PBXHeadersBuildPhase>absent(),
-        groupedSources,
-        sourceFlags);
-
-    if (!sourcesBuildPhase.getFiles().isEmpty()) {
-      target.getBuildPhases().add(sourcesBuildPhase);
-    }
-  }
-
-  /**
    * Add sources and headers build phases to a target, and add references to the target's group.
    *
    * @param target      Target to add the build phases to.

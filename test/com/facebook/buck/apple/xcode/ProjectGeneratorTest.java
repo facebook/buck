@@ -648,6 +648,9 @@ public class ProjectGeneratorTest {
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
         "foo.m", Optional.of("-foo")));
+    assertHasSingletonHeadersPhaseWithHeaders(
+        target,
+        "foo.h");
 
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of(
@@ -696,6 +699,9 @@ public class ProjectGeneratorTest {
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
         "foo.m", Optional.of("-foo")));
+    assertHasSingletonHeadersPhaseWithHeaders(
+        target,
+        "foo.h");
 
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of(
@@ -1324,6 +1330,34 @@ public class ProjectGeneratorTest {
         assertFalse(
             "Build file should not have settings dictionary", file.getSettings().isPresent());
       }
+    }
+  }
+
+  private void assertHasSingletonHeadersPhaseWithHeaders(
+      PBXTarget target,
+      String... headers) {
+
+    PBXHeadersBuildPhase headersBuildPhase =
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXHeadersBuildPhase.class);
+
+    assertEquals(
+        "Headers build phase should have correct number of headers",
+        headers.length, headersBuildPhase.getFiles().size());
+
+    // map keys to absolute paths
+    ImmutableSet.Builder<String> expectedHeadersSetBuilder = ImmutableSet.builder();
+    for (String header : headers) {
+      expectedHeadersSetBuilder.add(
+          projectFilesystem.getRootPath().resolve(header).toAbsolutePath()
+              .normalize().toString());
+    }
+    ImmutableSet<String> expectedHeadersSet = expectedHeadersSetBuilder.build();
+
+    for (PBXBuildFile file : headersBuildPhase.getFiles()) {
+      String header = assertFileRefIsRelativeAndResolvePath(file.getFileRef());
+      assertTrue(
+          "Header should be in list of expected headers: " + header,
+          expectedHeadersSet.contains(header));
     }
   }
 
