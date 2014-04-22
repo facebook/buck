@@ -31,8 +31,6 @@ RULES_SRCS = [
   'AndroidTransitiveDependencyGraph.java',
   'ApkGenrule.java',
   'ApkGenruleDescription.java',
-  'BuildConfig.java',
-  'BuildConfigDescription.java',
   'ComputeExopackageDepsAbi.java',
   'DexProducedFromJavaLibrary.java',
   'DexWithClasses.java',
