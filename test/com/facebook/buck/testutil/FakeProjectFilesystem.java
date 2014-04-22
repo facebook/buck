@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-// TODO(user): Implement methods that throw UnsupportedOperationException.
+// TODO(natthu): Implement methods that throw UnsupportedOperationException.
 public class FakeProjectFilesystem extends ProjectFilesystem {
 
   private static final BasicFileAttributes DEFAULT_FILE_ATTRIBUTES =
@@ -272,7 +272,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   /**
-   * TODO(user): (1) Also traverse the directories. (2) Do not ignore return value of
+   * TODO(natthu): (1) Also traverse the directories. (2) Do not ignore return value of
    * {@code fileVisitor}.
    */
   @Override

@@ -612,7 +612,7 @@ public class AndroidBinary extends AbstractBuildable implements
     if (packageStringAssets.isPresent()) {
       final Path pathToStringAssetsZip = packageStringAssets.get().getPathToStringAssetsZip();
       zipFiles.add(pathToStringAssetsZip);
-      // TODO(user): Remove this check once we figure out what's exactly causing APKs missing
+      // TODO(natthu): Remove this check once we figure out what's exactly causing APKs missing
       // string assets zip sometimes.
       steps.add(
           new AbstractExecutionStep("check_string_assets_zip_exists") {
@@ -678,7 +678,7 @@ public class AndroidBinary extends AbstractBuildable implements
     // Returning our RuleKey has this effect because we will never get an ABI match after a
     // RuleKey miss.
     if (!exopackage) {
-      // TODO(user): This is a hack which avoids having to return rule key from the buildable.
+      // TODO(natthu): This is a hack which avoids having to return rule key from the buildable.
       // Once we figure out a way to expose the build engine to a buildable, this should return the
       // rule key as before.
       return Sha1HashCode.newRandomHashCode();

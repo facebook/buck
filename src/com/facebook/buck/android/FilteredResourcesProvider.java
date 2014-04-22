@@ -35,7 +35,7 @@ public interface FilteredResourcesProvider {
 
   /**
    * @return Whether non-english strings need to be stored as assets.
-   * TODO(user): Remove this method from the interface once string assets are created in a new
+   * TODO(natthu): Remove this method from the interface once string assets are created in a new
    *     buildable.
    */
   public boolean isStoreStringsAsAssets();

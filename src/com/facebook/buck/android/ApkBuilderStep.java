@@ -133,7 +133,7 @@ public class ApkBuilderStep implements Step {
         builder.addSourceFolder(projectFilesystem.getFileForRelativePath(assetDirectory));
       }
       for (Path zipFile : zipFiles) {
-        // TODO(user): Skipping silently is bad. These should really be assertions.
+        // TODO(natthu): Skipping silently is bad. These should really be assertions.
         if (projectFilesystem.exists(zipFile) && projectFilesystem.isFile(zipFile)) {
           builder.addZipFile(projectFilesystem.getFileForRelativePath(zipFile));
         }
