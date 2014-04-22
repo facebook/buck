@@ -366,6 +366,14 @@ ${BUCK_DIRECTORY}/third-party/java/astyanax/slf4j-api-1.7.2.jar:\
 ${BUCK_DIRECTORY}/third-party/java/astyanax/slf4j-log4j12-1.7.2.jar:\
 ${BUCK_DIRECTORY}/third-party/java/closure-templates/soy-2012-12-21-no-guava.jar:\
 ${BUCK_DIRECTORY}/third-party/java/gson/gson-2.2.4.jar:\
+${BUCK_DIRECTORY}/third-party/java/eclipse/org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar:\
+${BUCK_DIRECTORY}/third-party/java/eclipse/org.eclipse.core.jobs_3.5.300.v20130429-1813.jar:\
+${BUCK_DIRECTORY}/third-party/java/eclipse/org.eclipse.core.resources_3.8.101.v20130717-0806.jar:\
+${BUCK_DIRECTORY}/third-party/java/eclipse/org.eclipse.core.runtime_3.9.100.v20131218-1515.jar:\
+${BUCK_DIRECTORY}/third-party/java/eclipse/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar:\
+${BUCK_DIRECTORY}/third-party/java/eclipse/org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar:\
+${BUCK_DIRECTORY}/third-party/java/eclipse/org.eclipse.jdt.core_3.9.2.v20140114-1555.jar:\
+${BUCK_DIRECTORY}/third-party/java/eclipse/org.eclipse.osgi_3.9.1.v20140110-1610.jar:\
 ${BUCK_DIRECTORY}/third-party/java/dd-plist/dd-plist.jar:\
 ${BUCK_DIRECTORY}/third-party/java/jetty/jetty-all-9.0.4.v20130625.jar:\
 ${BUCK_DIRECTORY}/third-party/java/jetty/servlet-api.jar:\
