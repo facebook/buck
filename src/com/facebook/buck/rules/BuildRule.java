@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 // This should be Comparable<BuildRule>, but we need to also compare with PrebuiltJar (and, later,
@@ -90,7 +89,7 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
    * changes to its [transitive] deps.
    * @return a non-null {@link RuleKey}.
    */
-  public RuleKey getRuleKeyWithoutDeps() throws IOException;
+  public RuleKey getRuleKeyWithoutDeps();
 
   /** @return the same value as {@link #getFullyQualifiedName()} */
   @Override

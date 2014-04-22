@@ -158,7 +158,7 @@ public class UberRDotJava extends AbstractBuildable implements
   public List<Step> getBuildSteps(
       BuildContext context,
       final BuildableContext buildableContext
-  ) throws IOException {
+  ) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     AndroidResourceDetails androidResourceDetails =
@@ -225,7 +225,7 @@ public class UberRDotJava extends AbstractBuildable implements
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps() throws IOException {
+  public Sha1HashCode getAbiKeyForDeps() {
     return HasAndroidResourceDeps.ABI_HASHER.apply(androidResourceDepsFinder.getAndroidResources());
   }
 

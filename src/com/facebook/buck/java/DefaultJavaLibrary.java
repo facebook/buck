@@ -346,7 +346,8 @@ public class DefaultJavaLibrary extends AbstractBuildable
         String.format(
             "%s/%s.jar",
             getOutputJarDirPath(target),
-            target.getShortName()));
+            target.getShortName())
+    );
   }
 
   /**
@@ -466,8 +467,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
    * attribute. They are compiled into a directory under {@link BuckConstant#BIN_DIR}.
    */
   @Override
-  public final List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
-      throws IOException {
+  public final List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Only override the bootclasspath if this rule is supposed to compile Android code.
@@ -553,7 +553,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
    */
   private void addStepsToRecordAbiToDisk(ImmutableList.Builder<Step> commands,
       final Supplier<Sha1HashCode> abiKeySupplier,
-      final BuildableContext buildableContext) throws IOException {
+      final BuildableContext buildableContext) {
     // Note that the parent directories for all of the files written by these steps should already
     // have been created by a previous step. Therefore, there is no reason to add a MkdirStep here.
     commands.add(new AbstractExecutionStep("recording ABI metadata") {

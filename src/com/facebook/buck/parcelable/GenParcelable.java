@@ -70,8 +70,7 @@ public class GenParcelable extends AbstractBuildable {
   @Override
   public List<Step> getBuildSteps(
       final BuildContext buildContext,
-      BuildableContext buildableContext)
-      throws IOException {
+      BuildableContext buildableContext) {
     Step step = new Step() {
 
       @Override

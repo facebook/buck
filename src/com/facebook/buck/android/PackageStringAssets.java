@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -76,7 +75,7 @@ public class PackageStringAssets extends AbstractBuildable
   @Override
   public List<Step> getBuildSteps(
       BuildContext context,
-      BuildableContext buildableContext) throws IOException {
+      BuildableContext buildableContext) {
     if (filteredResourcesProvider.getResDirectories().isEmpty()) {
       // There is no zip file, but we still need to provide a consistent hash to
       // ComputeExopackageDepsAbi in this case.

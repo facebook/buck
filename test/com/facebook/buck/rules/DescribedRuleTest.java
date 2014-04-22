@@ -286,8 +286,7 @@ public class DescribedRuleTest {
     }
 
     @Override
-    public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
-        throws IOException {
+    public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
       return ImmutableList.<Step>of(new EchoStep(message));
     }
 

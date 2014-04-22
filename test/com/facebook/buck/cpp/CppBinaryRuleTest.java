@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
@@ -43,7 +42,6 @@ import com.google.common.collect.Lists;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -106,11 +104,7 @@ public class CppBinaryRuleTest {
           Paths.get("source2.c")));
 
     List<Step> buildSteps = null;
-    try {
-      buildSteps = binary.getBuildSteps(context, buildableContext);
-    } catch (IOException e) {
-      fail();
-    }
+    buildSteps = binary.getBuildSteps(context, buildableContext);
     assertNotNull(buildSteps);
 
     List<String> descriptions = Lists.transform(
@@ -158,11 +152,7 @@ public class CppBinaryRuleTest {
             Paths.get("source.h")));
 
     List<Step> buildSteps = null;
-    try {
-      buildSteps = targetLibrary.getBuildSteps(context, buildableContext);
-    } catch (IOException e) {
-      fail();
-    }
+    buildSteps = targetLibrary.getBuildSteps(context, buildableContext);
     assertNotNull(buildSteps);
 
     List<String> descriptions = Lists.transform(

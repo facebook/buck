@@ -47,7 +47,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -206,8 +205,7 @@ public class AndroidResource extends AbstractBuildable
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext)
-      throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext) {
     // If there is no res directory, then there is no R.java to generate.
     // TODO(mbolin): Change android_resources() so that 'res' is required.
     if (getRes() == null) {
@@ -280,7 +278,7 @@ public class AndroidResource extends AbstractBuildable
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps() throws IOException {
+  public Sha1HashCode getAbiKeyForDeps() {
     // We hash the transitive dependencies and not just the first order deps because we pass these
     // to aapt to generate R.java/R.txt.
     // Transitive dependencies includes this rule itself; filter it out.

@@ -673,7 +673,7 @@ public class AndroidBinary extends AbstractBuildable implements
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps() throws IOException {
+  public Sha1HashCode getAbiKeyForDeps() {
     // For non-exopackages, there is no benefit to the ABI optimization, so we want to disable it.
     // Returning our RuleKey has this effect because we will never get an ABI match after a
     // RuleKey miss.

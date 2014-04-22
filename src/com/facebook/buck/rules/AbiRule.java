@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import java.io.IOException;
-
 /**
  * {@link BuildRule} that can avoid rebuilding itself when the ABI of its deps has not changed and
  * all properties of the rule other than its deps have not changed.
@@ -32,5 +30,5 @@ public interface AbiRule {
   /**
    * Returns a {@link Sha1HashCode} that represents the ABI of this rule's deps.
    */
-  public Sha1HashCode getAbiKeyForDeps() throws IOException;
+  public Sha1HashCode getAbiKeyForDeps();
 }

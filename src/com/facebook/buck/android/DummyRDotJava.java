@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -85,8 +84,7 @@ public class DummyRDotJava extends AbstractBuildable
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext)
-      throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(buildTarget);
     steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder));
@@ -154,7 +152,7 @@ public class DummyRDotJava extends AbstractBuildable
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps() throws IOException {
+  public Sha1HashCode getAbiKeyForDeps() {
     return HasAndroidResourceDeps.ABI_HASHER.apply(androidResourceDeps);
   }
 

@@ -108,8 +108,7 @@ public class AaptPackageResources extends AbstractBuildable
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
-      throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other

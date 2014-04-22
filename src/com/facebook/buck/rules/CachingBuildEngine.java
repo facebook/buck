@@ -155,12 +155,8 @@ public class CachingBuildEngine implements BuildEngine {
                   public BuildInfoRecorder get() {
                     RuleKey ruleKey;
                     RuleKey ruleKeyWithoutDeps;
-                    try {
-                      ruleKey = rule.getRuleKey();
-                      ruleKeyWithoutDeps = rule.getRuleKeyWithoutDeps();
-                    } catch (IOException e) {
-                      throw new RuntimeException(e);
-                    }
+                    ruleKey = rule.getRuleKey();
+                    ruleKeyWithoutDeps = rule.getRuleKeyWithoutDeps();
 
                     return context.createBuildInfoRecorder(
                         rule.getBuildTarget(), ruleKey, ruleKeyWithoutDeps);
@@ -175,20 +171,17 @@ public class CachingBuildEngine implements BuildEngine {
               eventBus.post(BuildRuleEvent.started(rule));
               startOfBuildWasRecordedOnTheEventBus = true;
 
-              try {
-                ruleKeys.putIfAbsent(rule.getBuildTarget(), rule.getRuleKey());
-                BuildResult result = buildOnceDepsAreBuilt(rule,
-                    context,
-                    onDiskBuildInfo,
-                    buildInfoRecorder.get(),
-                    shouldTryToFetchFromCache(deps));
-                if (result.getStatus() == BuildRuleStatus.SUCCESS) {
-                  recordBuildRuleSuccess(result);
-                } else {
-                  recordBuildRuleFailure(result);
-                }
-              } catch (IOException e) {
-                onFailure(e);
+              ruleKeys.putIfAbsent(rule.getBuildTarget(), rule.getRuleKey());
+              BuildResult result = buildOnceDepsAreBuilt(
+                  rule,
+                  context,
+                  onDiskBuildInfo,
+                  buildInfoRecorder.get(),
+                  shouldTryToFetchFromCache(deps));
+              if (result.getStatus() == BuildRuleStatus.SUCCESS) {
+                recordBuildRuleSuccess(result);
+              } else {
+                recordBuildRuleFailure(result);
               }
             }
 
@@ -278,7 +271,7 @@ public class CachingBuildEngine implements BuildEngine {
         final BuildContext context,
         OnDiskBuildInfo onDiskBuildInfo,
         BuildInfoRecorder buildInfoRecorder,
-        boolean shouldTryToFetchFromCache) throws IOException {
+        boolean shouldTryToFetchFromCache) {
     // Compute the current RuleKey and compare it to the one stored on disk.
     RuleKey ruleKey = rule.getRuleKey();
     Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey();

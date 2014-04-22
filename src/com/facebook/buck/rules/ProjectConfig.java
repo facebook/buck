@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -143,7 +142,7 @@ public class ProjectConfig extends AbstractBuildable {
 
   @Override
   public List<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) throws IOException {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 

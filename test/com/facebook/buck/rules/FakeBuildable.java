@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -38,8 +37,7 @@ public class FakeBuildable extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
-      throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 

@@ -28,7 +28,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -92,8 +91,7 @@ public class XcodeNative extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
-      throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     // TODO(user): The buck native implementation will likely call product to xcodebuild with
     // some set of xcode build settings, collect the build products (a bundle or archive) and copy
     // them to the generated files directory.

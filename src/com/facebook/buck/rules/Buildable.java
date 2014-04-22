@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -50,8 +49,7 @@ public interface Buildable {
   /**
    * When this method is invoked, all of its dependencies will have been built.
    */
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
-      throws IOException;
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext);
 
   // TODO(simons): Base this on the Description constructor arg, but allow optional updates.
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder);

@@ -703,7 +703,7 @@ public class DefaultJavaLibraryTest {
   }
 
   /**
-   * @see DefaultJavaLibrary#getAbiKeyForDeps()
+   * @see com.facebook.buck.rules.AbiRule#getAbiKeyForDeps()
    */
   @Test
   public void testGetAbiKeyForDepsInThePresenceOfExportedDeps() throws IOException {

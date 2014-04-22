@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -90,7 +89,7 @@ public class AppleAssetCatalog extends AbstractBuildable {
   @Override
   public List<Step> getBuildSteps(
       BuildContext context,
-      BuildableContext buildableContext) throws IOException {
+      BuildableContext buildableContext) {
     // This rule does not perform any build steps. Rather, the top-level binary target will
     // coalesce all asset catalog rules and build them together.
     return ImmutableList.of();

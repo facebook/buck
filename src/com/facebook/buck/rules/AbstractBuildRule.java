@@ -25,7 +25,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
@@ -144,12 +143,11 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   /**
-   * {@link BuildRule#getRuleKey()} and {@link #getRuleKeyWithoutDeps()} uses this when constructing
-   * {@link RuleKey}s for this class. Every subclass that extends the rule state in a way that
-   * matters to idempotency must override
-   * {@link #appendToRuleKey(com.facebook.buck.rules.RuleKey.Builder)} and append its state to the
-   * {@link RuleKey.Builder} returned by its superclass's
-   * {@link #appendToRuleKey(com.facebook.buck.rules.RuleKey.Builder)} implementation. Example:
+   * {@link BuildRule#getRuleKey()} and {@link BuildRule#getRuleKeyWithoutDeps()} uses this when
+   * constructing {@link RuleKey}s for this class. Every subclass that extends the rule state in a
+   * way that matters to idempotency must override {@link #appendToRuleKey(RuleKey.Builder)} and
+   * append its state to the {@link RuleKey.Builder} returned by its superclass's
+   * {@link #appendToRuleKey(RuleKey.Builder)} implementation. Example:
    * <pre>
    * &#x40;Override
    * protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
@@ -187,7 +185,7 @@ public abstract class AbstractBuildRule implements BuildRule {
    * into account.
    */
   @Override
-  public RuleKey getRuleKeyWithoutDeps() throws IOException {
+  public RuleKey getRuleKeyWithoutDeps() {
     return getRuleKeyPair().getRuleKeyWithoutDeps();
   }
 

@@ -87,7 +87,7 @@ public class ComputeExopackageDepsAbi
 
   @Override
   public List<Step> getBuildSteps(
-      BuildContext context, final BuildableContext buildableContext) throws IOException {
+      BuildContext context, final BuildableContext buildableContext) {
     return ImmutableList.<Step>of(
         new AbstractExecutionStep("compute_android_binary_deps_abi") {
           @Override

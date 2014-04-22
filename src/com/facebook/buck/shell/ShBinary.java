@@ -80,8 +80,7 @@ public class ShBinary extends AbstractBuildable
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
-      throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(output.getParent());
 
     // Generate an .sh file that builds up an environment and invokes the user's script.

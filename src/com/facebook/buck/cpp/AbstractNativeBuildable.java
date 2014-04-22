@@ -35,7 +35,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -93,7 +92,7 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
   @Override
   public List<Step> getBuildSteps(
       BuildContext context,
-      BuildableContext buildableContext) throws IOException {
+      BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ImmutableSortedSet.Builder<Path> objectFiles = ImmutableSortedSet.naturalOrder();
     Set<Path> createdDirectories = Sets.newHashSet();
