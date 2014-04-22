@@ -27,7 +27,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.HashCode;
 import com.google.common.io.ByteStreams;
 
 import java.io.ByteArrayInputStream;
@@ -215,13 +214,11 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private static class BufferedFileLike extends AbstractFileLike {
     private final File container;
     private final String relativePath;
-    private final HashCode hashCode;
     private final byte[] contents;
 
     public BufferedFileLike(FileLike original) throws IOException {
       this.container = original.getContainer();
       this.relativePath = original.getRelativePath();
-      this.hashCode = original.fastHash();
 
       try (InputStream stream = original.getInput()) {
         contents = ByteStreams.toByteArray(stream);
@@ -246,11 +243,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     @Override
     public InputStream getInput() throws IOException {
       return new ByteArrayInputStream(contents);
-    }
-
-    @Override
-    public HashCode fastHash() throws IOException {
-      return hashCode;
     }
   }
 }

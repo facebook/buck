@@ -25,9 +25,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.hash.HashCode;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 
@@ -39,14 +37,10 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -124,33 +118,5 @@ public class ClasspathTraversalTest {
       zipOut.close();
     }
     verifyFileLike(3, file);
-  }
-
-  private static long getChecksum(Checksum algorithm, String data, Charset charset) {
-    byte[] dataBytes = data.getBytes(charset);
-    algorithm.update(dataBytes, 0, dataBytes.length);
-    return algorithm.getValue();
-  }
-
-  @Test
-  public void testZipHashing() throws IOException {
-    String contents = "test crc32";
-    final long contentsCrc32 = getChecksum(new CRC32(), contents, Charsets.UTF_8);
-    File file = tempDir.newFile("test.zip");
-    ZipOutputStream zipOut = new ZipOutputStream(
-        new BufferedOutputStream(new FileOutputStream(file)));
-    try {
-      ZipEntry entry = new ZipEntry("foo.txt");
-      zipOut.putNextEntry(entry);
-      zipOut.write(contents.getBytes(Charsets.UTF_8));
-    } finally {
-      zipOut.close();
-    }
-
-    Collection<FileLike> entries = traverse(Collections.singleton(file)).keySet();
-    assertEquals(1, entries.size());
-    FileLike entry = Iterables.getFirst(entries, null);
-    assertEquals("CRC of input text should equal FileLike#fastHash",
-        HashCode.fromLong(contentsCrc32), entry.fastHash());
   }
 }

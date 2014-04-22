@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Preconditions;
-import com.google.common.hash.HashCode;
 
 import org.junit.Test;
 
@@ -75,11 +74,6 @@ public class FileLikesTest {
 
     @Override
     public InputStream getInput() throws IOException {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public HashCode fastHash() throws IOException {
       throw new UnsupportedOperationException();
     }
   }

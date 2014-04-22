@@ -20,7 +20,6 @@ import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.base.Preconditions;
-import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -128,11 +127,6 @@ public abstract class ClasspathTraversal {
       @Override
       public InputStream getInput() throws IOException {
         return zipFile.getInputStream(entry);
-      }
-
-      @Override
-      public HashCode fastHash() throws IOException {
-        return HashCode.fromLong(entry.getCrc());
       }
     }
   }

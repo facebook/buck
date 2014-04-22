@@ -16,18 +16,7 @@
 
 package com.facebook.buck.java.classes;
 
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
-
-import java.io.IOException;
-
 public abstract class AbstractFileLike implements FileLike {
-  @Override
-  public HashCode fastHash() throws IOException {
-    // Default non-fast implementation.
-    return ByteStreams.hash(new FileLikeInputSupplier(this), Hashing.sha1());
-  }
 
   @Override
   public String toString() {

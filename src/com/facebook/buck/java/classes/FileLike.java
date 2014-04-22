@@ -16,8 +16,6 @@
 
 package com.facebook.buck.java.classes;
 
-import com.google.common.hash.HashCode;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,14 +49,4 @@ public interface FileLike {
    * @throws java.io.IOException An error occurred opening the stream.
    */
   public InputStream getInput() throws IOException;
-
-  /**
-   * Hash the input stream.  Note that for some FileLike implementations this may be substantially
-   * faster than hashing the input stream that is returned by {@link #getInput()}, but you
-   * cannot control which hashing algorithm is used.
-   *
-   * @return Hash code.
-   * @throws IOException An error occurred reading input.
-   */
-  public HashCode fastHash() throws IOException;
 }
