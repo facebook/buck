@@ -6,7 +6,7 @@
     {param title: 'What Makes Buck so Fast?' /}
     {param content}
 
-Buck exploits a number of strategies to reduce build times.
+<p>Buck exploits a number of strategies to reduce build times:</p>
 
 <h2>A build rule knows all of the inputs that can affect its output</h2>
 
@@ -98,7 +98,7 @@ In Buck, the ABI defines an equivalence relationship, whereas in the JLS, it doe
 because the ABI is represented as a SHA-1 hash, which is cheap to compare. However, this does mean that adding a
 new method to a class results in a new ABI for a {call buck.java_library /} in Buck, which triggers a rebuild in dependent rules.
 By comparison, the JLS would consider the old and new versions of the library binary compatible, thereby determining
-recompilation of dependent rules unnecessary. 
+recompilation of dependent rules unnecessary.
     {/param}
   {/call}
 {/template}
