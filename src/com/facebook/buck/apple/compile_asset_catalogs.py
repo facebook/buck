@@ -182,7 +182,7 @@ def transform_actool_output(stdout):
 
 
 def compile_asset_catalogs(target, platform, devices, output, catalogs, split_into_bundles):
-  cmd_pairs = actool_cmds(target, platform, device, output, catalogs, split_into_bundles)
+  cmd_pairs = actool_cmds(target, platform, devices, output, catalogs, split_into_bundles)
   actool_env_path = get_actool_env_path(platform)
 
   env = os.environ.copy()
