@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
+import com.facebook.buck.rules.PathSourcePath;
 
 import java.nio.file.Path;
 
@@ -34,7 +35,7 @@ public class RobolectricTestBuilder
   }
 
   public RobolectricTestBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, path);
+    arg.srcs = amend(arg.srcs, new PathSourcePath(path));
     return this;
   }
 }

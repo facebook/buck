@@ -20,6 +20,7 @@ import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -61,7 +62,7 @@ public class AndroidLibraryBuilder
   }
 
   public AndroidLibraryBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, path);
+    arg.srcs = amend(arg.srcs, new PathSourcePath(path));
     return this;
   }
 }

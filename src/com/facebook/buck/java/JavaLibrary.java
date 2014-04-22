@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,7 +49,7 @@ public interface JavaLibrary extends Buildable, HasClasspathEntries, HasJavaAbi 
    */
   public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries();
 
-  public ImmutableSortedSet<Path> getJavaSrcs();
+  public ImmutableSortedSet<SourcePath> getJavaSrcs();
 
   public AnnotationProcessingData getAnnotationProcessingData();
 

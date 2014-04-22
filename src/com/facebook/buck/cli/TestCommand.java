@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.IndividualTestEvent;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -192,7 +193,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   private Step getReportCommand(
       ImmutableSet<JavaLibrary> rulesUnderTest,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
-      ProjectFilesystem projectFilesystem,
+      ProjectFilesystem filesystem,
       Path outputDirectory) {
     ImmutableSet.Builder<String> srcDirectories = ImmutableSet.builder();
     ImmutableSet.Builder<Path> pathsToClasses = ImmutableSet.builder();
@@ -200,7 +201,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Add all source directories of java libraries that we are testing to -sourcepath.
     for (JavaLibrary rule : rulesUnderTest) {
       ImmutableSet<String> sourceFolderPath =
-          getPathToSourceFolders(rule, defaultJavaPackageFinderOptional, projectFilesystem);
+          getPathToSourceFolders(rule, defaultJavaPackageFinderOptional, filesystem);
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
@@ -223,8 +224,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   static ImmutableSet<String> getPathToSourceFolders(
       JavaLibrary rule,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
-      ProjectFilesystem projectFilesystem) {
-    ImmutableSet<Path> javaSrcPaths = rule.getJavaSrcs();
+      ProjectFilesystem filesystem) {
+    ImmutableSet<SourcePath> javaSrcPaths = rule.getJavaSrcs();
 
     // A Java library rule with just resource files has an empty javaSrcPaths.
     if (javaSrcPaths.isEmpty()) {
@@ -244,12 +245,12 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // folders for the source paths.
     Set<String> srcFolders = Sets.newHashSet();
     loopThroughSourcePath:
-    for (Path javaSrcPath : javaSrcPaths) {
-      if (!MorePaths.isGeneratedFile(javaSrcPath)) {
+    for (SourcePath javaSrcPath : javaSrcPaths) {
+      if (!MorePaths.isGeneratedFile(javaSrcPath.resolve())) {
         // If the source path is already under a known source folder, then we can skip this
         // source path.
         for (String srcFolder : srcFolders) {
-          if (javaSrcPath.startsWith(srcFolder)) {
+          if (javaSrcPath.resolve().startsWith(srcFolder)) {
             continue loopThroughSourcePath;
           }
         }
@@ -258,7 +259,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         // root.
         ImmutableSortedSet<String> pathsFromRoot = defaultJavaPackageFinder.getPathsFromRoot();
         for (String root : pathsFromRoot) {
-          if (javaSrcPath.startsWith(root)) {
+          if (javaSrcPath.resolve().startsWith(root)) {
             srcFolders.add(root);
             continue loopThroughSourcePath;
           }
@@ -267,7 +268,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         // Traverse the file system from the parent directory of the java file until we hit the
         // parent of the src root directory.
         ImmutableSet<String> pathElements = defaultJavaPackageFinder.getPathElements();
-        File directory = projectFilesystem.getFileForRelativePath(javaSrcPath).getParentFile();
+        File directory = filesystem.getFileForRelativePath(javaSrcPath.resolve().getParent());
         while (directory != null && !pathElements.contains(directory.getName())) {
           directory = directory.getParentFile();
         }
@@ -588,7 +589,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         }
         stepRunner.runStep(
             getReportCommand(rulesUnderTest,
-                defaultJavaPackageFinderOptional, getProjectFilesystem(), outputDirectory));
+                defaultJavaPackageFinderOptional,
+                getProjectFilesystem(),
+                outputDirectory));
       } catch (StepFailedException e) {
         console.printBuildFailureWithoutStacktrace(e);
         return 1;

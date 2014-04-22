@@ -110,7 +110,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
 
   private final BuildTarget target;
   protected ImmutableSortedSet<BuildRule> deps;
-  private final ImmutableSortedSet<Path> srcs;
+  private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> resources;
   private final Optional<Path> outputJar;
   private final Optional<Path> proguardConfig;
@@ -166,7 +166,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
 
   protected DefaultJavaLibrary(
       BuildRuleParams buildRuleParams,
-      Set<Path> srcs,
+      Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
       Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
@@ -420,7 +420,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
   }
 
   @Override
-  public ImmutableSortedSet<Path> getJavaSrcs() {
+  public ImmutableSortedSet<SourcePath> getJavaSrcs() {
     return srcs;
   }
 
@@ -451,7 +451,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
     ImmutableList.Builder<Path> builder = ImmutableList.builder();
-    builder.addAll(this.srcs);
+    builder.addAll(SourcePaths.filterInputsToCompareToOutput(this.srcs));
     builder.addAll(SourcePaths.filterInputsToCompareToOutput(this.resources));
     Optionals.addIfPresent(this.proguardConfig, builder);
     return builder.build();

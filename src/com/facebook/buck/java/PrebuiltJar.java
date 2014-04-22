@@ -33,6 +33,7 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Optionals;
@@ -178,7 +179,7 @@ public class PrebuiltJar extends AbstractBuildable
   }
 
   @Override
-  public ImmutableSortedSet<Path> getJavaSrcs() {
+  public ImmutableSortedSet<SourcePath> getJavaSrcs() {
     return ImmutableSortedSet.of();
   }
 

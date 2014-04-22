@@ -50,8 +50,8 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MorePaths;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -70,7 +70,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
@@ -109,13 +108,11 @@ public class TestCommandTest {
     DefaultJavaPackageFinder defaultJavaPackageFinder =
         createMock(DefaultJavaPackageFinder.class);
 
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-
-    Object[] mocks = new Object[] {projectFilesystem, defaultJavaPackageFinder};
+    Object[] mocks = new Object[] {defaultJavaPackageFinder};
     replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
-        javaLibrary, Optional.of(defaultJavaPackageFinder), projectFilesystem);
+        javaLibrary, Optional.of(defaultJavaPackageFinder), new FakeProjectFilesystem());
 
     assertTrue("No path should be returned if the library contains only generated files.",
         result.isEmpty());
@@ -136,36 +133,20 @@ public class TestCommandTest {
     JavaLibrary javaLibrary = new FakeJavaLibrary(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
-    File parentFile = createMock(File.class);
-    expect(parentFile.getName()).andReturn("src");
-    expect(parentFile.getPath()).andReturn("package/src");
-
-    File sourceFile = createMock(File.class);
-    expect(sourceFile.getParentFile()).andReturn(parentFile);
-
     DefaultJavaPackageFinder defaultJavaPackageFinder =
         createMock(DefaultJavaPackageFinder.class);
     expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot);
     expect(defaultJavaPackageFinder.getPathElements()).andReturn(pathElements);
 
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile))
-        .andReturn(sourceFile);
-
-    Object[] mocks = new Object[] {
-        parentFile,
-        sourceFile,
-        defaultJavaPackageFinder,
-        projectFilesystem};
-    replay(mocks);
+    replay(defaultJavaPackageFinder);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
-        javaLibrary, Optional.of(defaultJavaPackageFinder), projectFilesystem);
+        javaLibrary, Optional.of(defaultJavaPackageFinder), new FakeProjectFilesystem());
 
     assertEquals("All non-generated source files are under one source tmp.",
-        ImmutableSet.of("package/src/"), result);
+        ImmutableSet.of("./package/src/"), result);
 
-    verify(mocks);
+    verify(defaultJavaPackageFinder);
   }
 
   /**
@@ -185,13 +166,11 @@ public class TestCommandTest {
         createMock(DefaultJavaPackageFinder.class);
     expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot);
 
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-
-    Object[] mocks = new Object[] {defaultJavaPackageFinder, projectFilesystem};
+    Object[] mocks = new Object[] {defaultJavaPackageFinder};
     replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
-        javaLibrary, Optional.of(defaultJavaPackageFinder), projectFilesystem);
+        javaLibrary, Optional.of(defaultJavaPackageFinder), new FakeProjectFilesystem());
 
     assertEquals("All non-generated source files are under one source tmp.",
         ImmutableSet.of("java/"), result);
@@ -213,50 +192,23 @@ public class TestCommandTest {
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(
         pathToGenFile, pathToNonGenFile1, pathToNonGenFile2);
 
-    File parentFile1 = createMock(File.class);
-    expect(parentFile1.getName()).andReturn("src");
-    expect(parentFile1.getPath()).andReturn("package/src");
-
-    File sourceFile1 = createMock(File.class);
-    expect(sourceFile1.getParentFile()).andReturn(parentFile1);
-
-    File parentFile2 = createMock(File.class);
-    expect(parentFile2.getName()).andReturn("src");
-    expect(parentFile2.getPath()).andReturn("package/src-gen");
-
-    File sourceFile2 = createMock(File.class);
-    expect(sourceFile2.getParentFile()).andReturn(parentFile2);
-
     DefaultJavaPackageFinder defaultJavaPackageFinder =
         createMock(DefaultJavaPackageFinder.class);
     expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot).times(2);
     expect(defaultJavaPackageFinder.getPathElements()).andReturn(pathElements).times(2);
 
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile1))
-        .andReturn(sourceFile1);
-    expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile2))
-        .andReturn(sourceFile2);
-
     JavaLibrary javaLibrary = new FakeJavaLibrary(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
-    Object[] mocks = new Object[] {
-        parentFile1,
-        sourceFile1,
-        parentFile2,
-        sourceFile2,
-        defaultJavaPackageFinder,
-        projectFilesystem};
-    replay(mocks);
+    replay(defaultJavaPackageFinder);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
-        javaLibrary, Optional.of(defaultJavaPackageFinder), projectFilesystem);
+        javaLibrary, Optional.of(defaultJavaPackageFinder), new FakeProjectFilesystem());
 
     assertEquals("The non-generated source files are under two different source folders.",
-        ImmutableSet.of("package/src-gen/", "package/src/"), result);
+        ImmutableSet.of("./package/src-gen/", "./package/src/"), result);
 
-    verify(mocks);
+    verify(defaultJavaPackageFinder);
   }
 
   private TestCommandOptions getOptions(String...args) throws CmdLineException {
@@ -266,7 +218,7 @@ public class TestCommandTest {
   }
 
   private DependencyGraph createDependencyGraphFromBuildRules(Iterable<? extends BuildRule> rules) {
-    MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<BuildRule>();
+    MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
     for (BuildRule rule : rules) {
       for (BuildRule dep : rule.getDeps()) {
         graph.addEdge(rule, dep);

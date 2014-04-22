@@ -33,7 +33,7 @@ public class FakeDefaultJavaLibrary extends DefaultJavaLibrary {
 
   protected FakeDefaultJavaLibrary(
       BuildRuleParams buildRuleParams,
-      Set<Path> srcs,
+      Set<? extends SourcePath> srcs,
       Set<SourcePath> resources,
       Optional<Path> proguardConfig,
       AnnotationProcessingParams annotationProcessingParams,

@@ -27,11 +27,15 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
@@ -40,7 +44,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  private ImmutableSortedSet<Path> srcs = ImmutableSortedSet.of();
+  private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
 
   public FakeJavaLibrary(
       BuildTarget target,
@@ -89,13 +93,15 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary {
   }
 
   @Override
-  public ImmutableSortedSet<Path> getJavaSrcs() {
+  public ImmutableSortedSet<SourcePath> getJavaSrcs() {
     return srcs;
   }
 
   public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<Path> srcs) {
     Preconditions.checkNotNull(srcs);
-    this.srcs = ImmutableSortedSet.copyOf(srcs);
+    this.srcs = FluentIterable.from(srcs)
+        .transform(SourcePaths.TO_SOURCE_PATH)
+        .toSortedSet(Ordering.natural());
     return this;
   }
 

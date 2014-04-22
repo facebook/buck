@@ -74,7 +74,7 @@ public class RobolectricTest extends JavaTest {
 
   protected RobolectricTest(
       BuildRuleParams buildRuleParams,
-      Set<Path> srcs,
+      Set<SourcePath> srcs,
       Set<SourcePath> resources,
       Set<Label> labels,
       Set<String> contacts,

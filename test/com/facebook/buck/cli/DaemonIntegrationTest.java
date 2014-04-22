@@ -264,7 +264,7 @@ public class DaemonIntegrationTest {
       fail("Should have thrown HumanReadableException.");
     } catch (java.lang.RuntimeException e) {
       assertThat("Failure should have been due to file removal.", e.getMessage(),
-          containsString(fileName));
+          containsString("MyFirstActivity.java"));
     }
   }
 

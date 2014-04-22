@@ -30,8 +30,10 @@ import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -282,10 +284,10 @@ public class UberRDotJava extends AbstractBuildable implements
     }
 
     // Compile the R.java files.
-    Set<Path> javaSourceFilePaths = Sets.newHashSet();
+    Set<SourcePath> javaSourceFilePaths = Sets.newHashSet();
     for (String rDotJavaPackage : rDotJavaPackages) {
       Path path = rDotJavaSrc.resolve(rDotJavaPackage.replace('.', '/')).resolve("R.java");
-      javaSourceFilePaths.add(path);
+      javaSourceFilePaths.add(new PathSourcePath(path));
     }
 
     // Create the path where the R.java files will be compiled.

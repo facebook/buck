@@ -20,6 +20,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -50,7 +51,7 @@ public class ExternalJavacStep extends JavacStep {
 
   public ExternalJavacStep(
       Path outputDirectory,
-      Set<Path> javaSourceFilePaths,
+      Set<? extends SourcePath> javaSourceFilePaths,
       Set<Path> transitiveClasspathEntries,
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
@@ -176,7 +177,9 @@ public class ExternalJavacStep extends JavacStep {
 
     // Add sources file or sources list to command
     ImmutableList.Builder<Path> sources = ImmutableList.builder();
-    for (Path path : javaSourceFilePaths) {
+    for (SourcePath sourcePath : javaSourceFilePaths) {
+      Path path = sourcePath.resolve();
+
       if (path.toString().endsWith(".java")) {
         sources.add(path);
       } else if (path.toString().endsWith(".src.zip")) {

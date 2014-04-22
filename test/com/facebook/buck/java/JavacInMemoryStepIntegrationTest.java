@@ -23,6 +23,8 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -141,7 +143,7 @@ public class JavacInMemoryStepIntegrationTest {
     Path pathToOutputAbiFile = Paths.get("abi");
     return new JavacInMemoryStep(
         pathToOutputDirectory,
-        /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("Example.java")),
+        /* javaSourceFilePaths */ ImmutableSet.<SourcePath>of(new TestSourcePath("Example.java")),
         /* transitive classpathEntries */ ImmutableSet.<Path>of(),
         /* declated classpathEntries */ ImmutableSet.<Path>of(),
         JavacOptions.builder().build(),

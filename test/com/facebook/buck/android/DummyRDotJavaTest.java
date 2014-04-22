@@ -27,6 +27,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -150,8 +152,8 @@ public class DummyRDotJavaTest {
 
   private static String javacInMemoryDescription(String rDotJavaClassesFolder,
                                                  String pathToAbiOutputFile) {
-    Set<Path> javaSourceFiles = ImmutableSet.of(
-        Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__/com.facebook/R.java"));
+    Set<SourcePath> javaSourceFiles = ImmutableSet.<SourcePath>of(
+        new TestSourcePath("buck-out/bin/java/base/__rule_rdotjava_src__/com.facebook/R.java"));
     return UberRDotJavaUtil.createJavacStepForDummyRDotJavaFiles(
         javaSourceFiles,
         Paths.get(rDotJavaClassesFolder),

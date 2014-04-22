@@ -28,8 +28,10 @@ import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -90,7 +92,7 @@ public class DummyRDotJava extends AbstractBuildable
     steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
-    Set<Path> javaSourceFilePaths = Sets.newHashSet();
+    Set<SourcePath> javaSourceFilePaths = Sets.newHashSet();
     if (androidResourceDeps.isEmpty()) {
       // In this case, the user is likely running a Robolectric test that does not happen to
       // depend on any resources. However, if Robolectric doesn't find an R.java file, it flips
@@ -104,7 +106,7 @@ public class DummyRDotJava extends AbstractBuildable
       steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder.resolve("com/facebook")));
       Path rDotJavaFile = rDotJavaSrcFolder.resolve("com/facebook/R.java");
       steps.add(new WriteFileStep(javaCode, rDotJavaFile));
-      javaSourceFilePaths.add(rDotJavaFile);
+      javaSourceFilePaths.add(new PathSourcePath(rDotJavaFile));
     } else {
       Map<Path, String> symbolsFileToRDotJavaPackage = Maps.newHashMap();
       for (HasAndroidResourceDeps res : androidResourceDeps) {
@@ -112,7 +114,7 @@ public class DummyRDotJava extends AbstractBuildable
         symbolsFileToRDotJavaPackage.put(res.getPathToTextSymbolsFile(), rDotJavaPackage);
         Path rDotJavaFilePath = MergeAndroidResourcesStep.getOutputFilePath(
             rDotJavaSrcFolder, rDotJavaPackage);
-        javaSourceFilePaths.add(rDotJavaFilePath);
+        javaSourceFilePaths.add(new PathSourcePath(rDotJavaFilePath));
       }
       steps.add(new MergeAndroidResourcesStep(symbolsFileToRDotJavaPackage,
           rDotJavaSrcFolder));

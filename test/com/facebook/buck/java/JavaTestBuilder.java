@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +45,7 @@ public class JavaTestBuilder {
 
     private final BuildTarget target;
     private final ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-    private final ImmutableSortedSet.Builder<Path> srcs = ImmutableSortedSet.naturalOrder();
+    private final ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
     private final ImmutableSortedSet.Builder<SourcePath> resources =
         ImmutableSortedSet.naturalOrder();
     private final ImmutableSet.Builder<Label> labels = ImmutableSet.builder();
@@ -63,7 +64,7 @@ public class JavaTestBuilder {
     }
 
     public Builder addSrc(Path path) {
-      srcs.add(path);
+      srcs.add(new PathSourcePath(path));
       return this;
     }
 

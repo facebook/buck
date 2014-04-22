@@ -56,10 +56,12 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShellStep;
@@ -136,7 +138,7 @@ public class DefaultJavaLibraryTest {
     BuildTarget buildTarget = new BuildTarget("//android/java", "resources");
     DefaultJavaLibrary javaRule = new DefaultJavaLibrary(
         new FakeBuildRuleParams(buildTarget),
-        /* srcs */ ImmutableSet.<Path>of(),
+        /* srcs */ ImmutableSet.<SourcePath>of(),
         ImmutableSet.of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),
             new TestSourcePath("android/java/src/com/facebook/common/util/data.json")
@@ -170,7 +172,7 @@ public class DefaultJavaLibraryTest {
     BuildTarget buildTarget = new BuildTarget("//android/java/src", "resources");
     DefaultJavaLibrary javaRule = new DefaultJavaLibrary(
         new FakeBuildRuleParams(buildTarget),
-        /* srcs */ ImmutableSet.<Path>of(),
+        /* srcs */ ImmutableSet.<SourcePath>of(),
         ImmutableSet.<SourcePath>of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),
             new TestSourcePath("android/java/src/com/facebook/common/util/data.json")
@@ -206,7 +208,7 @@ public class DefaultJavaLibraryTest {
     BuildTarget buildTarget = new BuildTarget("//android/java/src/com/facebook", "resources");
     DefaultJavaLibrary javaRule = new DefaultJavaLibrary(
         new FakeBuildRuleParams(buildTarget),
-        /* srcs */ ImmutableSet.<Path>of(),
+        /* srcs */ ImmutableSet.<SourcePath>of(),
         ImmutableSet.of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),
             new TestSourcePath("android/java/src/com/facebook/common/util/data.json")
@@ -271,7 +273,7 @@ public class DefaultJavaLibraryTest {
     assertNotNull("Expected a JavacInMemoryCommand in the command list.", step);
     JavacInMemoryStep javac = (JavacInMemoryStep) step;
     assertEquals("Should compile Main.java rather than generated R.java.",
-        ImmutableSet.of(src),
+        ImmutableSet.of(new PathSourcePath(src)),
         javac.getSrcs());
   }
 
@@ -983,8 +985,9 @@ public class DefaultJavaLibraryTest {
       ImmutableSet<String> srcs,
       ImmutableSet<BuildRule> deps,
       ImmutableSet<BuildRule> exportedDeps) {
-    ImmutableSortedSet<Path> srcsAsPaths = FluentIterable.from(srcs)
+    ImmutableSortedSet<SourcePath> srcsAsPaths = FluentIterable.from(srcs)
         .transform(MorePaths.TO_PATH)
+        .transform(SourcePaths.TO_SOURCE_PATH)
         .toSortedSet(Ordering.natural());
 
     FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(
@@ -1350,7 +1353,7 @@ public class DefaultJavaLibraryTest {
         FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(target);
         Buildable buildable = new DefaultJavaLibrary(
             buildRuleParams,
-            ImmutableSet.of(Paths.get("MyClass.java")),
+            ImmutableSet.of(new TestSourcePath("MyClass.java")),
             ImmutableSet.<SourcePath>of(),
             Optional.of(Paths.get("MyProguardConfig")),
             /* postprocessClassesCommands */ ImmutableList.<String>of(),
@@ -1444,7 +1447,7 @@ public class DefaultJavaLibraryTest {
 
       Buildable buildable = new AndroidLibrary(
           buildRuleParams,
-          ImmutableSet.of(Paths.get(src)),
+          ImmutableSet.of(new TestSourcePath(src)),
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<Path>absent(),
           /* postprocessClassesCommands */ ImmutableList.<String>of(),

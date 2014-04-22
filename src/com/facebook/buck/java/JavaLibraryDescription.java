@@ -87,7 +87,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   public static class Arg implements ConstructorArg {
-    public Optional<ImmutableSortedSet<Path>> srcs;
+    public Optional<ImmutableSortedSet<SourcePath>> srcs;
     public Optional<ImmutableSortedSet<SourcePath>> resources;
     public Optional<String> source;
     public Optional<String> target;

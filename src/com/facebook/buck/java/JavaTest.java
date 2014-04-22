@@ -79,7 +79,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
   protected JavaTest(
       BuildRuleParams buildRuleParams,
-      Set<Path> srcs,
+      Set<SourcePath> srcs,
       Set<SourcePath> resources,
       Set<Label> labels,
       Set<String> contacts,
@@ -361,13 +361,14 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
      * @param jarFile jar where the generated .class files were written
      */
     @VisibleForTesting
-    static Set<String> getClassNamesForSources(Set<Path> sources, @Nullable Path jarFile) {
+    static Set<String> getClassNamesForSources(Set<SourcePath> sources, @Nullable Path jarFile) {
       if (jarFile == null) {
         return ImmutableSet.of();
       }
 
       final Set<String> sourceClassNames = Sets.newHashSetWithExpectedSize(sources.size());
-      for (Path path : sources) {
+      for (SourcePath sourcePath : sources) {
+        Path path = sourcePath.resolve();
         String source = path.toString();
         int lastSlashIndex = source.lastIndexOf('/');
         if (lastSlashIndex >= 0) {

@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -58,7 +59,7 @@ public class JavaLibraryBuilder
   }
 
   public JavaLibraryBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, path);
+    arg.srcs = amend(arg.srcs, new PathSourcePath(path));
     return this;
   }
 }

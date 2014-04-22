@@ -55,8 +55,8 @@ public class AndroidLibrary extends DefaultJavaLibrary {
   @VisibleForTesting
   public AndroidLibrary(
       BuildRuleParams buildRuleParams,
-      Set<Path> srcs,
-      Set<SourcePath> resources,
+      Set<? extends SourcePath> srcs,
+      Set<? extends SourcePath> resources,
       Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
       Set<BuildRule> exportedDeps,

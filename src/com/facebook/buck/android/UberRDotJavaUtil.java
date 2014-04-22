@@ -29,6 +29,7 @@ import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -162,7 +163,7 @@ public class UberRDotJavaUtil {
       };
 
   static JavacStep createJavacStepForUberRDotJavaFiles(
-      Set<Path> javaSourceFilePaths,
+      Set<SourcePath> javaSourceFilePaths,
       Path outputDirectory,
       JavacOptions javacOptions,
       BuildTarget buildTarget) {
@@ -175,7 +176,7 @@ public class UberRDotJavaUtil {
   }
 
   static JavacStep createJavacStepForDummyRDotJavaFiles(
-      Set<Path> javaSourceFilePaths,
+      Set<? extends SourcePath> javaSourceFilePaths,
       Path outputDirectory,
       Optional<Path> pathToOutputAbiFile,
       JavacOptions javacOptions,
