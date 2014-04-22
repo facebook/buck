@@ -30,7 +30,7 @@ case $arg in
   ;;
 
   --kill)
-  killBuckdIfRunning
+  killBuckd
   exit 0
   ;;
 esac
