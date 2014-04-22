@@ -1,120 +1,247 @@
+/* mobile first */
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
 html {
-  /* Always show scrollbar to prevent the horizontal bouncing when navigating */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizelegibility;
+  background-color: #fafafa;
   overflow-y: scroll;
 }
 
 body {
-  font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
-  font-size: 12px;
-  background: #eee;
-  line-height: 1.5em;
+  font-family: 'Helvetica Neue', Helvetica, Arial, 'lucida grande', tahoma, verdana, arial, sans-serif;
+  color: #4e5665;
   margin: 0;
-  padding; 0;
+  line-height: 1.5em;
+}
+
+h1, h2, h3, h4 {
+  color: #374665;
+  font-weight: normal;
+  margin: 1.5em 0 0.5em;
+}
+
+h1:first-child, h2:first-child, h3:first-child, h4:first-child {
+  margin-top: 0;
 }
 
 h1 {
-  color: #FFF;
-  font-size: 18px;
-  background: #4C66A4;
-  border-bottom: 1px solid #133783;
-  margin: 0;
-  padding: 0.6em 10px;
+  font-size: 1.6em;
 }
 
 h2 {
-  font-size: 18px;
-  line-height: 27px;
-  margin-top: 1.5em;
+  font-size: 1.4em;
 }
 
-.titlebar {
-  display: block;
-  width: 900px;
-  margin: 0 auto;
+h3 {
+  font-size: 1.3em;
 }
 
-a {
-  color: #3B5998;
+h4 {
+  font-size: 1.2em;
 }
 
-pre, pre.prettyprint {
-  padding: 0.4em;
-  border: 1px solid black;
-  background-color: white;
-  color: black;
+p, pre, ul, ol {
+    margin:  0 0 1em 0;
+}
+
+pre {
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    overflow-x: scroll;
+    background: #fff;
+    border-radius: 2px;
+    line-height: 1.5em;
 }
 
 code {
-  color: #3B5998;
+    background: #fff;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+}
+
+ul, ol {
+ list-style-position: outside;
+ margin-left: 1em;
+ padding-left: 1em;
+}
+
+a {
+  text-decoration: none;
+  color: #3b5998;
+}
+
+.width {
+  margin: 0 auto !important;
+  padding: 0 20px !important;
+}
+
+header:after, section.content:after, footer:after {
+  clear: both;
+  content: ".";
+  display: block;
+  font-size: 0;
+  height: 0;
+  line-height: 0;
+  visibility: hidden;
+}
+
+header.topbar {
+  background: #000;
+  padding: 10px 0;
+  border-bottom: solid 4px #fff;
+}
+
+header.topbar h1 {
+  background-image: url(logo.png);
+  background-size: 150px 75px;
+  background-position: -15px 50%;
+  background-repeat: no-repeat;
+  float: left;
+  line-height: 60px;
+  margin: 0 10px 0 0;
+  overflow: hidden;
+  text-indent: 100%;
+  white-space: nowrap;
+  width: 240px;
+}
+
+header.topbar nav ul {
+  float: right;
+  text-align: right;
+  margin: 0 0 0 10px;
+  padding: 0;
+  white-space: nowrap;
+}
+
+header.topbar nav ul li {
+  display: inline;
+  text-transform: uppercase;
+}
+
+header.topbar nav ul li a {
+  color: #fff;
+  font-size: 12px;
+  margin: 0 0 0 10px;
+  text-decoration: none;
+  font-weight: bold;
+  line-height: 60px;
+}
+
+header.topbar nav ul li a.active {
+  color: #3b5998;
+}
+
+header.hero {
+  background-color: #4566a4;
+  padding: 20px 0;
+  border-bottom: solid 4px #fff;
+  text-align: center;
+}
+
+header.hero hgroup h1 {
+  font-size: 1.4em;
+  font-weight: normal;
+  color: #fff;
+  margin: 0;
+  line-height: 2em;
+}
+
+button, a.button {
+  background: #102747;
+  color: #fff;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  display: inline-block;
+  margin-top: 1em;
+  border: 0;
+  cursor: pointer;
+}
+
+header.hero aside {
+  display: none;
+}
+
+header.hero aside > * {
+  max-width: 100%;
+}
+
+section.content {
+  padding: 30px 0;
+}
+
+section.content article img {
+  max-width: 100%;
+}
+
+section.content article h1 {
+  font-weight: bold;
+}
+
+section.content article h2 {
+  color: #888888;
+  font-weight: bold;
+}
+
+section.content article ul li,
+section.content article ol li {
+  margin: 1em 0;
+}
+
+section.content article blockquote {
+  padding: 0px 20px;
+  margin: 0 0 20px;
+  border-left: 5px solid #eee;
+}
+
+section.content article blockquote p {
+  font-style: italic;
+}
+
+section.content article blockquote small:before {
+  content: '\2014 \00A0';
+}
+
+section.content nav {
+    font-size: 12px;
+    line-height: 18px;
+    margin-bottom: 20px;
+}
+
+section.content nav h3 {
+    margin: 0.5em 0;
+    padding-top: 0.5em;
+    border-top: 1px solid #ccc;
+}
+
+section.content nav h3:first-child {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+section.content nav ul {
+   list-style: none;
+   margin: 0;
+   padding-left: 1em;
+
+}
+
+footer {
+  background: #000;
+  padding: 10px 0;
+  color: #fff;
+  border-top: 4px solid #fff;
 }
 
 .success {
   color: black;
   background-color: green;
-}
-
-.content_frame {
-  width: 900px; /* sum of .toc#width and .content#width */
-  margin: 10px auto;
-}
-
-.buck_like {
-  float: right;
-  background-color: white;
-}
-
-.toc, .content {
-  display: inline-block;
-  vertical-align: top;
-}
-
-.toc {
-  width: 270px;
-}
-
-.toc a, .toc a:link {
-  text-decoration: none;
-}
-
-.toc a:hover {
-  text-decoration: underline; 
-}
-
-.content {
-  padding-top: 9px;
-  width: 630px;
-}
-
-.toc_root {
-  margin-top: 0;
-  padding-left: 0;
-}
-
-.toc_header {
-  display: inline-block;
-  font-weight: bold;
-  margin: 12px 0 5px;
-}
-
-.toc ul {
-  list-style: none;
-}
-
-.toc ul ul {
-  padding-left: 5px;
-}
-
-.toc ul li {
-  padding-left: 5px;
-}
-
-ul ul {
-  -webkit-padding-start: 20px;
-}
-
-.overview {
-  font-size: 15px;
-  line-height: 22px;
 }
 
 .arglist, .top-level-list {
@@ -131,17 +258,70 @@ ul ul {
   font-family: monospace;
 }
 
-#fork {
-  position: absolute;
-  top: 0;
-  right: 0;
-  border: 0;
-}
-
 .faq {
   margin-bottom: 1em;
 }
 
 .faq_q {
-  font-weight: bold; 
+  font-weight: bold;
+}
+
+
+/* tabletish */
+
+@media (min-width: 480px) {
+
+  header.topbar nav ul li a {
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    margin-left: 20px;
+  }
+
+}
+
+/* desktopish */
+
+@media (min-width: 1000px) {
+
+  header.topbar nav ul li a {
+    font-size: 15px;
+    margin-left: 30px;
+  }
+
+  .width {
+    width: 960px;
+    /* make columns add to <880 for 60 gutter */
+  }
+
+
+  header.hero hgroup {
+    float: left;
+    width: 438px;
+    text-align: left;
+  }
+
+  header.hero hgroup h1 {
+    font-size: 2em;
+  }
+
+  header.hero aside {
+    display: block;
+    float: right;
+    width: 442px;
+  }
+
+  header.hero aside img {
+    border: 1px solid #fff;
+  }
+
+  section.content article {
+    float: right;
+    width: 660px;
+  }
+
+  section.content nav {
+    float: left;
+    width: 220px;
+  }
+
 }

@@ -3,11 +3,13 @@
 /**
  * @param title
  * @param content
+ * @param? ishome
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
  */
 {template .page}
   {call .header}
+    {param ishome: $ishome /}
     {param title: $title /}
     {param prettify: $prettify /}
   {/call}
@@ -23,6 +25,7 @@
 
 /**
  * @param title
+ * @param? ishome
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
  */
@@ -31,10 +34,11 @@
   Buck: {$title}
 {/let}
 <!doctype html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns#">
   <title>{$fullTitle}</title>
-  <link type="image/png" rel="icon" href="{ROOT}static/favicon.png" />
+  <link type="image/png" rel="shortcut icon" href="{ROOT}static/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
   <meta http-equiv="content-type" content="text/html;charset=utf-8">
   {if $prettify}
     <link type="text/css"
@@ -58,7 +62,7 @@ ga('send', 'pageview');
 
   // TODO(mbolin): Pass $og_type in as a parameter.
   {let $og_type}
-    {if $title == 'An Android build tool'}
+    {if $ishome}
       website
     {else}
       article
@@ -68,20 +72,12 @@ ga('send', 'pageview');
   <meta property="og:locale" content="en_US">
   <meta property="og:title" content="{$title}">
   <meta property="og:site_name" content="Buck: an Android build tool">
-  <meta property="og:image" content="http://newsroom.fb.com/display-media/265/4">
-  <meta property="og:image:type" content="image/png">
-  <meta property="og:image:width" content="690">
-  <meta property="og:image:height" content="690">
+  <meta property="og:image" content="http://facebook.github.io/buck/static/og.png">
   <meta property="og:type" content="{$og_type}">
   <meta property="fb:admins" content="{FB_APP_ID}">
 
 </head>
 <body>
-
-// Image copied from https://github.com/blog/273-github-ribbons
-<a href="https://github.com/facebook/buck">
-  <img id="fork" src="{ROOT}static/fork_me.png" alt="Fork me on GitHub">
-</a>
 
 <div id="fb-root"></div>
 <script>(function(d, s, id) {lb}
@@ -92,24 +88,41 @@ ga('send', 'pageview');
   fjs.parentNode.insertBefore(js, fjs);
 {rb}(document, 'script', 'facebook-jssdk'));</script>
 
-<h1>
-  <div class="{css titlebar}">
-    <div class="fb-like {css buck_like}"
-         data-send="false"
-         data-layout="standard"
-         data-width="350"
-         data-show-faces="false"
-         data-colorscheme="light"
-         data-action="like">
-    </div>
+	<header class='topbar'><nav class='width'>
+			<a href='http://facebook.github.io/buck/'><h1>Buck</h1></a>
+      <ul class='menu'>
+        <li><a href='/buck/setup/quick_start.html'>Get Started</a>
+        <li><a href='https://groups.google.com/forum/#!forum/buck-build'>Group</a>
+        <li><a href='/buck/javadoc/'>API</a>
+        <li><a href='https://github.com/facebook/buck'>GitHub</a>
+      </ul>
+	</nav></header>
 
-    <div>{$fullTitle}</div>
-  </div>
-</h1>
-<div class="{css content_frame}">
+{if $ishome}
+  <header class='hero'><div class='width'>
+    <hgroup>
+      <h1>
+        A high-performance<br />Android &amp; Java build tool
+      </h1>
+      <a class='button' href='setup/quick_start.html'>Quick Start</a>&nbsp;
+      <a class='button' href='https://github.com/facebook/buck'>GitHub</a>
+    </hgroup>
+    <aside>
+      <img id="super_console_sample"
+     src="{ROOT}static/buck-build-15fps.gif"
+     alt="Chrome Tracing Sample">
+    </aside>
+  </div></header>
+{/if}
 
-  {call buck.tableOfContents data="all" /}
-  <div class="{css content}">
+
+	<section class='content'><div class='width'>
+
+  <article>
+
+  {if not $ishome}
+    <h1>{$title}</h1>
+  {/if}
 
 {/template}
 
@@ -118,22 +131,20 @@ ga('send', 'pageview');
  * is currently on and not hyperlinking that item in the table of contents.
  */
 {template .tableOfContents}
-<div class="{css toc}">
-<ul class="{css toc_root}">
-  <li><span class="{css toc_header}">Getting Started</span>
+  <h3>Getting Started</h3>
   <ul>
     <li><a href="{ROOT}">Overview</a>
     <li><a href="{ROOT}setup/quick_start.html">Quick Start</a>
     <li><a href="{ROOT}setup/install.html">Downloading and Installing Buck</a>
   </ul>
-  <li><span class="{css toc_header}">About</span>
+  <h3>About</h3>
   <ul>
     <li><a href="{ROOT}concept/what_makes_buck_so_fast.html">What Makes Buck so Fast?</a>
     <li><a href="{ROOT}concept/troubleshooting.html">Troubleshooting</a>
     <li><a href="{ROOT}about/performance_tuning.html">Performance Tuning</a>
     <li><a href="{ROOT}concept/faq.html">FAQ</a>
   </ul>
-  <li><span class="{css toc_header}">Concepts</span>
+  <h3>Concepts</h3>
   <ul>
     <li><a href="{ROOT}concept/build_rule.html">Build Rule</a>
     <li><a href="{ROOT}concept/build_target.html">Build Target</a>
@@ -144,7 +155,7 @@ ga('send', 'pageview');
     <li><a href="{ROOT}concept/build_target_pattern.html">Build Target Pattern</a>
     <li><a href="{ROOT}concept/visibility.html">Visibility</a>
   </ul>
-  <li><span class="{css toc_header}">Build Rules</span>
+  <h3>Build Rules</h3>
   <ul>
     // TODO(mbolin): document android_instrumentation_apk
     // TODO(mbolin): document robolectric_test
@@ -167,7 +178,7 @@ ga('send', 'pageview');
       <li><a href="{ROOT}rule/{$rule}.html">{$rule}()</a>
     {/foreach}
   </ul>
-  <li><span class="{css toc_header}">Functions</span>
+  <h3>Functions</h3>
   <ul>
     {foreach $function in [
         'genfile',
@@ -177,7 +188,7 @@ ga('send', 'pageview');
       <li><a href="{ROOT}function/{$function}.html">{$function}()</a>
     {/foreach}
   </ul>
-  <li><span class="{css toc_header}">Commands</span>
+  <h3>Commands</h3>
   <ul>
     {foreach $command in [
         'audit',
@@ -194,12 +205,12 @@ ga('send', 'pageview');
     {/foreach}
     <li><a href="{ROOT}command/buckd.html">buckd</a>
   </ul>
-  <li><span class="{css toc_header}">Extending Buck</span>
+  <h3>Extending Buck</h3>
   <ul>
     <li><a href="{ROOT}extending/macros.html">Custom Macros</a>
     <li><a href="{ROOT}extending/rules.html">Custom Rules</a>
   </ul>
-  <li><span class="{css toc_header}">Contributing to Buck</span>
+  <h3>Contributing to Buck</h3>
   <ul>
     <li><a href="https://groups.google.com/group/buck-build">Discussion Group</a>
     <li><a href="https://github.com/facebook/buck/issues/new">Report a Bug</a>
@@ -209,7 +220,6 @@ ga('send', 'pageview');
     <li><a href="https://github.com/facebook/buck">Browse the Source Code</a>
   </ul>
 </ul>
-</div>
 {/template}
 
 /**
@@ -217,9 +227,19 @@ ga('send', 'pageview');
  *     should be used.
  */
 {template .footer}
-  </div> // closes .content
-</div>   // closes .contentFrame
 
+</article>
+
+  <nav>
+    {call buck.tableOfContents data="all" /}
+  </nav>
+
+
+</div></section>
+
+<footer><div class='width'>
+  &copy; Copyright Facebook, 2013 -
+</div></footer>
 
 {if hasData() and $prettify}
   <script src="{ROOT}google-code-prettify/prettify.js"></script>
@@ -228,6 +248,7 @@ ga('send', 'pageview');
 
 </body>
 </html>
+
 {/template}
 
 
@@ -454,7 +475,7 @@ ga('send', 'pageview');
   {param desc}
   List of <a href="{ROOT}concept/build_target_pattern.html">build
   target patterns</a> that identify the build rules that can include
-  this rule in its <code>deps</code>. 
+  this rule in its <code>deps</code>.
   {/param}
 {/call}
 {/template}
@@ -463,10 +484,9 @@ ga('send', 'pageview');
  *
  */
 {template .platformWarning}
-<strong>
+<p><strong>
 Note: Buck works only on Mac OS X and Linux. Windows is not supported.
-</strong>
-<p>
+</strong></p>
 {/template}
 
 
