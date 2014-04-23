@@ -94,4 +94,19 @@ public class JavaFileParserTest {
         ImmutableSortedSet.of("com.example.NonlocalClass"),
         symbols);
   }
+
+  static String javaCodeWithNoPackage = "public class NoPackageExample { }";
+
+  @Test
+  public void testJavaFileParsingWithNoPackage() throws IOException {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(java7Env);
+
+    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
+        javaCodeWithNoPackage);
+
+    assertEquals(
+        "JavaFileParser didn't find the symbols we expected.",
+        ImmutableSortedSet.of("NoPackageExample"),
+        symbols);
+  }
 }

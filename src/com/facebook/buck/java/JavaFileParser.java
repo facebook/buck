@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 
@@ -111,7 +112,13 @@ public class JavaFileParser {
       nameParts.addFirst(((AbstractTypeDeclaration) parent).getName().toString());
       parent = parent.getParent();
     }
-    nameParts.addFirst(((CompilationUnit) parent).getPackage().getName().toString());
+
+    // A Java file might not have a package. Hopefully all of ours do though...
+    PackageDeclaration packageDecl = ((CompilationUnit) parent).getPackage();
+    if (packageDecl != null) {
+      nameParts.addFirst(packageDecl.getName().toString());
+    }
+
     return Joiner.on(".").join(nameParts);
   }
 }
