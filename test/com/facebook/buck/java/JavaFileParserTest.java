@@ -72,4 +72,26 @@ public class JavaFileParserTest {
             "com.example.Example.InnerEnum.InnerClass"),
         symbols);
   }
+
+  static String javaCodeWithLocalClass =
+      "package com.example;\n" +
+      "public class NonlocalClass {\n" +
+      "  public static void exampleMethod() {\n" +
+      "    class LocalClass {\n" +
+      "    }\n" +
+      "  }\n" +
+      "}\n";
+
+  @Test
+  public void testJavaFileParsingWithLocalClass() throws IOException {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(java7Env);
+
+    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
+        javaCodeWithLocalClass);
+
+    assertEquals(
+        "JavaFileParser didn't find the symbols we expected.",
+        ImmutableSortedSet.of("com.example.NonlocalClass"),
+        symbols);
+  }
 }

@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -83,6 +84,11 @@ public class JavaFileParser {
     compilationUnit.accept(new ASTVisitor() {
       @Override
       public boolean visit(TypeDeclaration node) {
+        // Local classes can be declared inside of methods. Skip over these.
+        if (node.getParent() instanceof TypeDeclarationStatement) {
+          return true;
+        }
+
         symbolsBuilder.add(getFullyQualifiedTypeName(node));
         return true;
       }
