@@ -126,6 +126,8 @@ public class DefaultJavaLibrary extends AbstractBuildable
       declaredClasspathEntriesSupplier;
   private final BuildOutputInitializer<Data> buildOutputInitializer;
 
+  // TODO(jacko): This really should be final, but we need to refactor how we get the
+  // AndroidPlatformTarget first before it can be.
   private JavacOptions javacOptions;
 
   /**
@@ -460,6 +462,10 @@ public class DefaultJavaLibrary extends AbstractBuildable
   @Override
   public ImmutableSortedSet<BuildRule> getExportedDeps() {
     return exportedDeps;
+  }
+
+  public JavacOptions getJavacOptions() {
+    return javacOptions;
   }
 
   /**
