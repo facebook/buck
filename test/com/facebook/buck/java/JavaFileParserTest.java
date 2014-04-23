@@ -28,7 +28,13 @@ import java.nio.file.Path;
 
 public class JavaFileParserTest {
 
-  static String exampleJavaCode =
+  static JavaCompilerEnvironment java7Env = new JavaCompilerEnvironment(
+      /* javacPath */ Optional.<Path>absent(),
+      /* javacVersion */ Optional.<JavacVersion>absent(),
+      "7",
+      "7");
+
+  static String javaCodeWithManyClasses =
       "package com.example;\n" +
       "\n" +
       "public class Example {\n" +
@@ -52,19 +58,13 @@ public class JavaFileParserTest {
 
   @Test
   public void testJavaFileParsing() throws IOException {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(java7Env);
 
-    JavaCompilerEnvironment env = new JavaCompilerEnvironment(
-        Optional.<Path>absent(),
-        Optional.<JavacVersion>absent(),
-        "7",
-        "7"
-    );
+    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
+        javaCodeWithManyClasses);
 
-    JavaFileParser parser = JavaFileParser.createJavaFileParser(env);
-
-    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(exampleJavaCode);
-
-    assertEquals("JavaFileParser didn't find the symbols we expected.",
+    assertEquals(
+        "JavaFileParser didn't find the symbols we expected.",
         ImmutableSortedSet.of(
             "com.example.AnotherOuterClass",
             "com.example.Example",
