@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * A type coercer to handle source entries in an iOS or OS X rule.
@@ -85,35 +86,48 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       Object object) throws CoerceFailedException {
     if (object instanceof AppleSource) {
       return (AppleSource) object;
-    } else {
-      try {
-        return AppleSource.ofSourcePath(sourcePathTypeCoercer.coerce(
-            buildRuleResolver,
-            filesystem,
-            pathRelativeToProjectRoot,
-            object));
-      } catch (CoerceFailedException e) {
-        // Ignore and try next
-      }
+    }
 
-      try {
-        return AppleSource.ofSourcePathWithFlags(sourcePathWithFlagsTypeCoercer.coerce(
-            buildRuleResolver,
-            filesystem,
-            pathRelativeToProjectRoot,
-            object));
-      } catch (CoerceFailedException e) {
-        // Ignore and try next
-      }
+    // We're expecting one of three types here. They can be differentiated pretty easily.
+    if (object instanceof String) {
+      return AppleSource.ofSourcePath(sourcePathTypeCoercer.coerce(
+              buildRuleResolver,
+              filesystem,
+              pathRelativeToProjectRoot,
+              object));
+    }
 
-      try {
-        return AppleSource.ofSourceGroup(sourceGroupTypeCoercer.coerce(
-            buildRuleResolver,
-            filesystem,
-            pathRelativeToProjectRoot,
-            object));
-      } catch (CoerceFailedException e) {
-        // Ignore and fall out
+    // If we get this far, we're dealing with a Pair. We can differentiate the kinds by looking at
+    // the second item.
+
+    if (object instanceof List) {
+      List<?> list = (List) object;
+      Object second = list.size() == 2 ? list.get(1) : null;
+
+      if (second instanceof String) {
+        try {
+          return AppleSource.ofSourcePathWithFlags(
+              sourcePathWithFlagsTypeCoercer.coerce(
+                  buildRuleResolver,
+                  filesystem,
+                  pathRelativeToProjectRoot,
+                  object)
+          );
+        } catch (CoerceFailedException e) {
+          // Ignore, because we return a better exception at the end of the method.
+        }
+      } else if (second instanceof List) {
+        try {
+          return AppleSource.ofSourceGroup(
+              sourceGroupTypeCoercer.coerce(
+                  buildRuleResolver,
+                  filesystem,
+                  pathRelativeToProjectRoot,
+                  object)
+          );
+        } catch (CoerceFailedException e) {
+          // Ignore, because we return a better exception at the end of the method.
+        }
       }
     }
 
