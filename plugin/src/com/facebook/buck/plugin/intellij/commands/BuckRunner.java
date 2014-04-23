@@ -25,17 +25,10 @@ import com.google.common.collect.ImmutableMap;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class BuckRunner {
 
@@ -46,7 +39,6 @@ public class BuckRunner {
   private static final String BUCKD_HTTPSERVER_PORT = "-Dbuck.httpserver.port";
 
   private final File workingDirectory;
-  private final ExecutorService executorService;
   private String buckPath;
   private Optional<String> buckdPath;
   private Optional<SocketClient> socket;
@@ -98,32 +90,6 @@ public class BuckRunner {
 
   public String getStderr() {
     return stderr;
-  }
-
-  private int execute(ImmutableList<String> command, ImmutableMap<String, String> environment) {
-    Preconditions.checkNotNull(command);
-    ProcessBuilder processBuilder = new ProcessBuilder(command);
-    processBuilder.directory(workingDirectory);
-    for (ImmutableMap.Entry<String, String> entry : environment.entrySet()) {
-      processBuilder.environment().put(entry.getKey(), entry.getValue());
-    }
-    try {
-      Process process = processBuilder.start();
-      int exitCode;
-      Future<String> stdoutFuture = readStream(process.getInputStream());
-      Future<String> stderrFuture = readStream(process.getErrorStream());
-      exitCode = process.waitFor();
-      stdout = stdoutFuture.get();
-      stderr = stderrFuture.get();
-      return exitCode;
-    } catch (IOException e) {
-      LOG.error(e);
-    } catch (ExecutionException e) {
-      LOG.error(e);
-    } catch (InterruptedException e) {
-      LOG.error(e);
-    }
-    return -1;
   }
 
   private boolean detectBuck(Optional<String> buckDirectory) {
@@ -181,28 +147,6 @@ public class BuckRunner {
     int port = server.getLocalPort();
     server.close();
     return port;
-  }
-
-  private Future<String> readStream(final InputStream stream) {
-    return executorService.submit(new Callable<String>() {
-      @Override
-      public String call() throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        try {
-          StringBuilder output = new StringBuilder();
-          char[] buffer = new char[64];
-          int bytesRead;
-          while ((bytesRead = reader.read(buffer)) != -1) {
-            output.append(buffer, 0, bytesRead);
-          }
-          String outputString = output.toString();
-          // Unify line separators
-          return outputString.replace("\r\n", "\n");
-        } finally {
-          reader.close();
-        }
-      }
-    });
   }
 
   public class BuckNotFound extends Exception {
