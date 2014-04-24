@@ -115,6 +115,7 @@ public abstract class CustomZipOutputStream extends OutputStream {
     }
 
     try {
+      closeEntry();
       actuallyClose();
     } finally {
       state = State.CLOSED;
