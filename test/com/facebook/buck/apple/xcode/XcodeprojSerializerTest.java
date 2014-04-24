@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.xcode;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
@@ -38,6 +39,17 @@ public class XcodeprojSerializerTest {
 
     NSDictionary objects = ((NSDictionary) rootObject.get("objects"));
     NSDictionary projectObject = (NSDictionary) objects.get(project.getGlobalID());
-    assertEquals("TestProject", ((NSString) projectObject.get("name")).getContent());
+
+    String[] requiredKeys = {
+        "mainGroup",
+        "targets",
+        "buildConfigurationList",
+        "compatibilityVersion",
+        "attributes",
+    };
+
+    for (String key : requiredKeys) {
+        assertTrue(projectObject.containsKey(key));
+    }
   }
 }

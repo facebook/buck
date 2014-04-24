@@ -82,7 +82,6 @@ public class PBXProject extends PBXContainer {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
-    s.addField("name", name);
     s.addField("mainGroup", mainGroup);
 
     Collections.sort(targets, Ordering.natural().onResultOf(new Function<PBXTarget, String>() {
