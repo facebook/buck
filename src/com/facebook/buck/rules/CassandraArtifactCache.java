@@ -201,11 +201,13 @@ public class CassandraArtifactCache implements ArtifactCache {
       keyspaceAndTtlFuture.cancel(true);
       isKilled.set(true);
     } catch (ExecutionException | InterruptedException e) {
-      buckEventBus.post(
-          ThrowableLogEvent.create(
-              e,
-              "Unexpected error when fetching keyspace and ttl: %s.",
-              e.getMessage()));
+      if (!(e instanceof ExecutionException) || !(e.getCause() instanceof ConnectionException)) {
+        buckEventBus.post(
+            ThrowableLogEvent.create(
+                e,
+                "Unexpected error when fetching keyspace and ttl: %s.",
+                e.getMessage()));
+      }
     } catch (CancellationException e) {
       return Optional.absent();
     }
