@@ -95,40 +95,6 @@ if ! [ -f "$PROJECT_ROOT/.buckconfig" ] ; then
 fi
 
 
-if [ -z "${MAX_BUCKD_RUNS}" ]; then
-  MAX_BUCKD_RUNS=20
-fi
-
-# Test for running buck daemon.
-BUCKD_DIR="${PROJECT_ROOT}/.buckd"
-BUCKD_LOG_FILE="${BUCKD_DIR}/buckd.log"
-BUCKD_PID_FILE="${BUCKD_DIR}/buckd.pid"
-BUCKD_PORT_FILE="${BUCKD_DIR}/buckd.port"
-BUCKD_RUN_COUNT_FILE="${BUCKD_DIR}/buckd.runcount"
-
-setBuckdRunning
-
-for ARG in $@; do
-  if [ "${ARG}" = "clean" ]; then
-    killBuckd
-    break
-  fi
-done
-
-CURRENT_BUCKD_RUN_COUNT=0
-if [ -e "${BUCKD_RUN_COUNT_FILE}" ]; then
-  CURRENT_BUCKD_RUN_COUNT=$(cat ${BUCKD_RUN_COUNT_FILE})
-  if [ $CURRENT_BUCKD_RUN_COUNT -ge $MAX_BUCKD_RUNS ]; then
-    killBuckd
-    startBuckdIfStopped
-    CURRENT_BUCKD_RUN_COUNT=0
-  fi
-fi
-
-if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCKD_RUN_COUNT_FILE}" ]; then
- echo $((CURRENT_BUCKD_RUN_COUNT + 1)) > $BUCKD_RUN_COUNT_FILE
-fi
-
 # Create a local temp directory to be deleted at the end of this invocation of buck.
 BUCK_TMPDIR_ROOT="${PROJECT_ROOT}/buck-out/tmp"
 mkdir -p $BUCK_TMPDIR_ROOT
@@ -291,6 +257,51 @@ else
   fi
 fi
 
+if [ -z "${MAX_BUCKD_RUNS}" ]; then
+  MAX_BUCKD_RUNS=20
+fi
+
+# Test for running buck daemon.
+BUCKD_DIR="${PROJECT_ROOT}/.buckd"
+BUCKD_LOG_FILE="${BUCKD_DIR}/buckd.log"
+BUCKD_PID_FILE="${BUCKD_DIR}/buckd.pid"
+BUCKD_PORT_FILE="${BUCKD_DIR}/buckd.port"
+BUCKD_RUN_COUNT_FILE="${BUCKD_DIR}/buckd.runcount"
+BUCKD_VERSION_FILE="${BUCKD_DIR}/buckd.version"
+
+setBuckdRunning
+
+for ARG in $@; do
+  if [ "${ARG}" = "clean" ]; then
+    killBuckd
+    break
+  fi
+done
+
+BUCKD_NEEDS_STARTING=1
+CURRENT_BUCKD_RUN_COUNT=0
+if [ -e "${BUCKD_RUN_COUNT_FILE}" ]; then
+  CURRENT_BUCKD_RUN_COUNT=$(cat ${BUCKD_RUN_COUNT_FILE})
+  if [ $CURRENT_BUCKD_RUN_COUNT -ge $MAX_BUCKD_RUNS ]; then
+    killBuckd
+    BUCKD_NEEDS_STARTING=0
+    CURRENT_BUCKD_RUN_COUNT=0
+  fi
+fi
+
+if [ -e "${BUCKD_VERSION_FILE}" ]; then
+  RUNNING_BUCKD_VERSION=$(cat ${BUCKD_VERSION_FILE})
+  if [ $RUNNING_BUCKD_VERSION != $BUCK_VERSION_UID ]; then
+    killBuckd
+    BUCKD_NEEDS_STARTING=0
+    CURRENT_BUCKD_RUN_COUNT=0
+  fi
+fi
+
+if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCKD_RUN_COUNT_FILE}" ]; then
+ echo $((CURRENT_BUCKD_RUN_COUNT + 1)) > $BUCKD_RUN_COUNT_FILE
+fi
+
 # Make sure that Buck has been built.
 if [ ! -e "$BUCK_SUCCESS_FILE" ]; then
 
@@ -310,9 +321,14 @@ if [ ! -e "$BUCK_SUCCESS_FILE" ]; then
     printAntFailedMessage
   fi
   if [ $BUCKD_WAS_RUNNING -eq 0 ]; then
-    startBuckdIfStopped
+    BUCKD_NEEDS_STARTING=0
   fi
 fi
+
+if [ $BUCKD_NEEDS_STARTING -eq 0 ]; then
+  startBuckdIfStopped
+fi
+
 
 # Pop back to the original directory.
 popd > /dev/null

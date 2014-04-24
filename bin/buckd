@@ -82,3 +82,4 @@ sed -n '1 s/.*port \([0-9]*\)\.$/\1/;p;q' > $BUCKD_PORT_FILE \
 <(tail -n +1 -f $BUCKD_LOG_FILE)
 
 echo 0 > $BUCKD_RUN_COUNT_FILE
+echo $BUCK_VERSION_UID > $BUCKD_VERSION_FILE
