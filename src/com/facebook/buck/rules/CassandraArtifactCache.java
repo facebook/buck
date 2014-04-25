@@ -352,10 +352,19 @@ public class CassandraArtifactCache implements ArtifactCache {
 
   private void reportConnectionFailure(String context, ConnectionException exception) {
     if (numConnectionExceptionReports.incrementAndGet() < MAX_CONNECTION_FAILURE_REPORTS) {
-      buckEventBus.post(ThrowableLogEvent.create(exception,
-          "%s Connecting to cassandra failed: %s.",
-          context,
-          exception.getMessage()));
+      buckEventBus.post(new CassandraConnectionExceptionEvent(
+              exception,
+              String.format(
+                  "%s Connecting to cassandra failed: %s.",
+                  context,
+                  exception.getMessage())));
+    }
+  }
+
+  public static class CassandraConnectionExceptionEvent extends ThrowableLogEvent {
+
+    public CassandraConnectionExceptionEvent(Throwable throwable, String message) {
+      super(throwable, message);
     }
   }
 }
