@@ -31,12 +31,10 @@ public class ProguardMappingTest {
     Map<String, String> mapping = ProguardMapping.readClassMapping(ImmutableList.of(
         "foo.bar.Baz -> foo.bar.a:",
         "  member -> x",
-        "foo.bar.Baz$Qux -> foo.bar.Baz$Qux:"
-    ));
+        "foo.bar.Baz$Qux -> foo.bar.Baz$Qux:"));
     assertEquals(mapping, ImmutableMap.of(
         "foo.bar.Baz", "foo.bar.a",
-        "foo.bar.Baz$Qux", "foo.bar.Baz$Qux"
-    ));
+        "foo.bar.Baz$Qux", "foo.bar.Baz$Qux"));
   }
 
   @Test(expected = IllegalArgumentException.class)

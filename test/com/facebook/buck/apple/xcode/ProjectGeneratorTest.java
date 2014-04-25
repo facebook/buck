@@ -1198,8 +1198,7 @@ public class ProjectGeneratorTest {
         ImmutableList.of(
             "$BUILT_PRODUCTS_DIR/libfoo.a",
             "$SDKROOT/libfoo.a",
-            "$SOURCE_ROOT/libfoo.a")
-    );
+            "$SOURCE_ROOT/libfoo.a"));
   }
 
   @Test(expected = HumanReadableException.class)
@@ -1378,8 +1377,7 @@ public class ProjectGeneratorTest {
     assertEquals(
         "file path should be relative to project directory",
         PBXReference.SourceTree.SOURCE_ROOT,
-        fileRef.getSourceTree()
-    );
+        fileRef.getSourceTree());
     return projectFilesystem.resolve(OUTPUT_DIRECTORY).resolve(fileRef.getPath())
         .normalize().toString();
   }

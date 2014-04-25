@@ -121,8 +121,7 @@ public class SplitZipStepTest {
     List<String> linesInManifestFile = ImmutableList.of(
         "com/google/common/collect/ImmutableSortedSet",
         "  com/google/common/collect/ImmutableSet",
-        "# com/google/common/collect/ImmutableMap"
-        );
+        "# com/google/common/collect/ImmutableMap");
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
@@ -195,16 +194,14 @@ public class SplitZipStepTest {
         "foo.bar.UnmappedSecondary -> foo.bar.UnmappedSecondary:",
         "foo.primary.MappedPackage -> x.a:",
         "foo.secondary.MappedPackage -> x.b:",
-        "foo.primary.UnmappedPackage -> foo.primary.UnmappedPackage:"
-    );
+        "foo.primary.UnmappedPackage -> foo.primary.UnmappedPackage:");
     List<String> linesInManifestFile = ImmutableList.of(
         // Actual primary dex classes.
         "foo/bar/MappedPrimary",
         "foo/bar/UnmappedPrimary",
         // Red herrings!
         "foo/bar/b",
-        "x/b"
-    );
+        "x/b");
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))

@@ -543,8 +543,7 @@ public class AndroidBinary extends AbstractBuildable implements
             }
             return 0;
           }
-        }
-    );
+        });
   }
 
   /** The APK at this path is the final one that points to an APK that a user should install. */

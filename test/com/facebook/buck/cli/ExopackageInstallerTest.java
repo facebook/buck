@@ -92,8 +92,7 @@ public class ExopackageInstallerTest {
   public void testChunkArgs() {
     assertEquals(
         ImmutableList.of(),
-        ExopackageInstaller.chunkArgs(ImmutableList.<String>of(), 8)
-    );
+        ExopackageInstaller.chunkArgs(ImmutableList.<String>of(), 8));
 
     assertEquals(
         ImmutableList.of(

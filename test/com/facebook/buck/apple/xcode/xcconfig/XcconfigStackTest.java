@@ -119,8 +119,7 @@ public class XcconfigStackTest {
             "__0_FOO = foo",
             "__0_FOO[arch=i386] = a",
             "__0_FOO[arch=x86_64] = b",
-            "FOO = $(__0_FOO)"
-        );
+            "FOO = $(__0_FOO)");
   }
 
   @Test

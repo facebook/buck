@@ -67,8 +67,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   static final Pattern BUILD_TARGET_PATTERN = Pattern.compile(
       // We want a negative lookbehind to ensure we don't have a '\$', which is why this starts off
       // in such an interesting way.
-      "(?<!\\\\)(\\$\\((exe|location)\\s+((\\/\\/[^:]*)?(:[^\\)]+))\\))"
-  );
+      "(?<!\\\\)(\\$\\((exe|location)\\s+((\\/\\/[^:]*)?(:[^\\)]+))\\))");
 
   private final CommandString commandString;
   private final ImmutableSortedSet<BuildRule> depsToSubstituteInCommandString;

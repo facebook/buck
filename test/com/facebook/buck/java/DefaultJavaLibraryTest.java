@@ -175,8 +175,7 @@ public class DefaultJavaLibraryTest {
         /* srcs */ ImmutableSet.<SourcePath>of(),
         ImmutableSet.<SourcePath>of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),
-            new TestSourcePath("android/java/src/com/facebook/common/util/data.json")
-        ),
+            new TestSourcePath("android/java/src/com/facebook/common/util/data.json")),
         /* proguargConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
@@ -211,8 +210,7 @@ public class DefaultJavaLibraryTest {
         /* srcs */ ImmutableSet.<SourcePath>of(),
         ImmutableSet.of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),
-            new TestSourcePath("android/java/src/com/facebook/common/util/data.json")
-        ),
+            new TestSourcePath("android/java/src/com/facebook/common/util/data.json")),
         /* proguargConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
@@ -429,8 +427,7 @@ public class DefaultJavaLibraryTest {
             Paths.get("buck-out/gen/lib__libtwo__output/libtwo.jar"),
             getJavaLibrary(parent),
             Paths.get("buck-out/gen/lib__parent__output/parent.jar")),
-        ((HasClasspathEntries) parent.getBuildable()).getTransitiveClasspathEntries()
-    );
+        ((HasClasspathEntries) parent.getBuildable()).getTransitiveClasspathEntries());
   }
 
   @Test

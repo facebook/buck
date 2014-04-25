@@ -89,8 +89,7 @@ public class GenericBuckOptions {
         stdOut,
         stdErr,
         System.getProperty(BUCK_GIT_COMMIT_KEY, "N/A"),
-        "1".equals(System.getProperty(BUCK_GIT_DIRTY_KEY, "1")) ? true : false
-        );
+        "1".equals(System.getProperty(BUCK_GIT_DIRTY_KEY, "1")) ? true : false);
   }
 
   public GenericBuckOptions() {

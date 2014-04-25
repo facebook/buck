@@ -53,8 +53,7 @@ public class ShellStepTest extends EasyMockSupport {
 
   private static final ImmutableMap<String, String> ENV = ImmutableMap.of(
       "V1", "two words",
-      "V2", "$foo'bar'"
-  );
+      "V2", "$foo'bar'");
 
   private static final File PATH = new File("/tmp/a b");
   private static final String ERROR_MSG = "some syntax error\ncompilation failed\n";

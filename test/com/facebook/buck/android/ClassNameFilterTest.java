@@ -31,8 +31,7 @@ public class ClassNameFilterTest {
         "^org/tukaani/",
         "/FbInjector^",
         "^com/facebook/build/Config^",
-        "/nodex/"
-    ));
+        "/nodex/"));
 
     assertTrue(filter.matches("org/acra/Reporter"));
     assertTrue(filter.matches("org/tukaani/Decoder$State"));

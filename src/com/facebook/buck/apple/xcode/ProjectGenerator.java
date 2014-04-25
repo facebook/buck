@@ -847,8 +847,7 @@ public class ProjectGenerator {
     PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
-            this.repoRootRelativeToOutputDirectory.resolve(path)
-        ));
+            this.repoRootRelativeToOutputDirectory.resolve(path)));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     sourcesBuildPhase.getFiles().add(buildFile);
     String customFlags = sourceFlags.get(sourcePath);
@@ -1079,8 +1078,7 @@ public class ProjectGenerator {
     generatedSignedSourceScriptPhase.setShellScript(
         "# Do not change or remove this. This is a generated script phase\n" +
             "# used solely to include a signature in the generated Xcode project.\n" +
-            "# " + SourceSigner.SIGNED_SOURCE_PLACEHOLDER
-    );
+            "# " + SourceSigner.SIGNED_SOURCE_PLACEHOLDER);
     target.getBuildPhases().add(generatedSignedSourceScriptPhase);
     project.getTargets().add(target);
   }

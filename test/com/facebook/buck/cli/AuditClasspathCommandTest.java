@@ -167,8 +167,7 @@ public class AuditClasspathCommandTest {
     SortedSet<String> expectedPaths = Sets.newTreeSet(
         Arrays.asList(
             GEN_DIR + "/lib__test-android-library__output/test-android-library.jar",
-            GEN_DIR + "/lib__test-java-library__output/test-java-library.jar"
-        ));
+            GEN_DIR + "/lib__test-java-library__output/test-java-library.jar"));
     String expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
 
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());

@@ -63,8 +63,7 @@ public class AndroidLibraryDescription implements Description<AndroidLibraryDesc
         args.postprocessClassesCommands.get(),
         args.exportedDeps.get(),
         javacOptions.build(),
-        args.manifest
-    );
+        args.manifest);
 
   }
 

@@ -155,8 +155,7 @@ public class DefaultStepRunnerTest {
       return String.format("%s %d, then %s",
           getShortName(),
           sleepMillis,
-          exitCode == 0 ? "success" : "fail"
-      );
+          exitCode == 0 ? "success" : "fail");
     }
   }
 }

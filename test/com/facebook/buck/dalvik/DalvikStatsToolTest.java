@@ -115,8 +115,7 @@ public class DalvikStatsToolTest {
         "test/TestClass.get:()Ljava/lang/String;",
         "java/lang/StringBuilder.<init>:()V",
         "java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;",
-        "java/lang/Object.<init>:()V"
-    );
+        "java/lang/Object.<init>:()V");
     assertEquals(156, stats.estimatedLinearAllocSize);
   }
 
@@ -145,9 +144,7 @@ public class DalvikStatsToolTest {
         "test/TestClassWithInner$1.get:()Ljava/lang/Object;",
         "java/lang/Object.<init>:()V",
         "java/lang/Long.toString:(J)Ljava/lang/String;",
-        "test/TestClassWithInner.access$000:(Ltest/TestClassWithInner;)J" // visitOuterClass
-
-    );
+        "test/TestClassWithInner.access$000:(Ltest/TestClassWithInner;)J" /* visitOuterClass */);
     assertEquals(172, statsInner.estimatedLinearAllocSize);
   }
 

@@ -67,8 +67,7 @@ public class MorePathsTest {
       ".buckd",
       "foo/bar",
       root.getAbsolutePath() + "/buck-cache",
-      "/root/not/in/test"
-    ));
+      "/root/not/in/test"));
 
     assertEquals(
         "Set should have been filtered down to paths contained under root.",

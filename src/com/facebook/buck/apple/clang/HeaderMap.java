@@ -321,8 +321,7 @@ public class HeaderMap {
         // and (optimization) the same size of string bytes
         final HeaderMap newHeaderMap = new HeaderMap(
             headerMap.numBuckets * 2,
-            headerMap.stringBytes.length
-        );
+            headerMap.stringBytes.length);
         headerMap.visit(
             new HeaderMapVisitor() {
               @Override
@@ -393,8 +392,7 @@ public class HeaderMap {
         bucket = new Bucket(
             addString(str),
             addString(prefix),
-            addString(suffix)
-        );
+            addString(suffix));
         buckets[hash] = bucket;
         numEntries++;
         maxValueLength = max(maxValueLength, prefix.length() + suffix.length());

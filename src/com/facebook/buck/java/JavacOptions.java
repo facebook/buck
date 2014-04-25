@@ -217,8 +217,7 @@ public class JavacOptions {
           debug,
           verbose,
           bootclasspath,
-          annotationProcessingData
-      );
+          annotationProcessingData);
     }
   }
 }

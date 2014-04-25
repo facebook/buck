@@ -65,8 +65,7 @@ public final class AgentUtil {
           sigContents =
               new BufferedReader(
                   new InputStreamReader(
-                      packageZip.getInputStream(entry))
-              );
+                      packageZip.getInputStream(entry)));
           // For each line in the signature file.
           while (true) {
             String line = sigContents.readLine();

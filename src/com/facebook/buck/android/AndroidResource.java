@@ -155,8 +155,7 @@ public class AndroidResource extends AbstractBuildable
             resDeps.addAll(UberRDotJavaUtil.getAndroidResourceDeps(deps));
             return resDeps.build();
           }
-        }
-    );
+        });
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }

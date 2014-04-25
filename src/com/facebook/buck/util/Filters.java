@@ -161,8 +161,7 @@ public class Filters {
               public Density apply(Density input) {
                 return (input == Density.MDPI) ? Density.NO_QUALIFIER : input;
               }
-            }
-        ));
+            }));
       }
 
       // We intend to keep all available targeted densities.

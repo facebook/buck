@@ -111,8 +111,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
                   buildRuleResolver,
                   filesystem,
                   pathRelativeToProjectRoot,
-                  object)
-          );
+                  object));
         } catch (CoerceFailedException e) {
           // Ignore, because we return a better exception at the end of the method.
         }
@@ -123,8 +122,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
                   buildRuleResolver,
                   filesystem,
                   pathRelativeToProjectRoot,
-                  object)
-          );
+                  object));
         } catch (CoerceFailedException e) {
           // Ignore, because we return a better exception at the end of the method.
         }

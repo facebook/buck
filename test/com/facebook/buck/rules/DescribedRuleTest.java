@@ -193,8 +193,7 @@ public class DescribedRuleTest {
         new BuildTargetParser(filesystem),
         BuildTargetFactory.newInstance("//one/two:example"),
         new FakeRuleKeyBuilderFactory(),
-        /* ignore file existence checks */ true
-    );
+        /* ignore file existence checks */ true);
 
     DescribedRuleFactory<Dto> factory = new DescribedRuleFactory<>(description);
     DescribedRuleBuilder<Dto> builder = factory.newInstance(factoryParams);
@@ -245,8 +244,7 @@ public class DescribedRuleTest {
         new BuildTargetParser(filesystem),
         BuildTargetFactory.newInstance("//one/two:example"),
         new FakeRuleKeyBuilderFactory(),
-        /* ignore file existence checks */ true
-    );
+        /* ignore file existence checks */ true);
 
     DescribedRuleFactory<Dto> factory = new DescribedRuleFactory<>(description);
     DescribedRuleBuilder<Dto> builder = factory.newInstance(factoryParams);

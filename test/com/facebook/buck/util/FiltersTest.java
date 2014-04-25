@@ -243,8 +243,7 @@ public class FiltersTest {
         paths("mth11_flth.png", TVDPI, HDPI_11, HDPI_FR),
         paths("fm3x.png", XXXHDPI_FR),
         paths("lx.png", XHDPI),
-        paths("nine.9.png", XHDPI)
-    );
+        paths("nine.9.png", XHDPI));
     MoreAsserts.assertSetEquals(pathsToRemove(candidates, Lists.newArrayList(keepPaths)), hdpi);
   }
 
@@ -300,8 +299,7 @@ public class FiltersTest {
         paths("mth11_flth.png", TVDPI, HDPI_11, HDPI_FR),
         paths("fm3x.png", XXXHDPI_FR),
         paths("lx.png", XHDPI),
-        paths("nine.9.png", XXHDPI)
-    );
+        paths("nine.9.png", XXHDPI));
     MoreAsserts.assertSetEquals(pathsToRemove(candidates, Lists.newArrayList(keepPaths)), xxhdpi);
   }
 

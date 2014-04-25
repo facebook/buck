@@ -87,16 +87,14 @@ public class QuickstartIntegrationTest {
     assertEquals(
         "`buck quickstart` should output the contents of the README file to standard output.",
         Files.toString(readme, StandardCharsets.UTF_8),
-        result.getStdout()
-    );
+        result.getStdout());
 
     File localProp = new File(destDir.getRoot(), "local.properties");
     assertTrue("`buck quickstart` should create a local.properties file.", localProp.isFile());
     assertEquals(
       "`buck quickstart` should put the Android SDK in the local.properties file.",
       "sdk.dir=" + androidSdk + "\n",
-      Files.toString(localProp, StandardCharsets.UTF_8)
-    );
+      Files.toString(localProp, StandardCharsets.UTF_8));
 
     ProjectWorkspace targetsWorkspace = new ProjectWorkspace(destDir.getRoot(), destDir);
     targetsWorkspace.setUp();

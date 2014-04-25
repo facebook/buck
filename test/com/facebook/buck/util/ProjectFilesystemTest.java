@@ -322,8 +322,7 @@ public class ProjectFilesystemTest {
             fileNames.add(file.getFileName().toString());
             return FileVisitResult.CONTINUE;
           }
-        }
-    );
+        });
 
     assertThat(fileNames.build(), containsInAnyOrder(
             "file",

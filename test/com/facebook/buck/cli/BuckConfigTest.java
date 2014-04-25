@@ -383,8 +383,7 @@ public class BuckConfigTest {
           "foo",
           "bar",
           "baz",
-          "a/b/c")
-    ));
+          "a/b/c")));
 
     EasyMock.verify(filesystem, parser);
   }

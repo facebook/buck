@@ -281,8 +281,7 @@ public class TypeCoercerTest {
         Matchers.<Object>contains(
             ImmutableList.of(
                 sameInstance(input.get(0)),
-                sameInstance(input.get(1))))
-    );
+                sameInstance(input.get(1)))));
   }
 
   @Test

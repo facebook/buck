@@ -160,8 +160,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
           context.logError(
               ex,
               "Failed to parse strings file: '%s'",
-              stringsPath
-          );
+              stringsPath);
         }
       }
     }

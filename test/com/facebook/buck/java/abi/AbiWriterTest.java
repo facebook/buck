@@ -347,8 +347,7 @@ public class AbiWriterTest {
         "package com.facebook.buck.example;",
         "public class B {",
         "  public final static int KEY = A.NUMBER + 3;",
-        "}"
-        ));
+        "}"));
 
     assertTrue(summary, summary.contains("KEY = 45"));
   }

@@ -61,8 +61,7 @@ public class UberRDotJavaUtil {
       ApkGenruleDescription.TYPE,
       JavaLibraryDescription.TYPE,
       JavaTestDescription.TYPE,
-      RobolectricTestDescription.TYPE
-  );
+      RobolectricTestDescription.TYPE);
 
 
   /** Utility class: do not instantiate. */

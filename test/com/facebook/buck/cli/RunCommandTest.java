@@ -65,8 +65,7 @@ public class RunCommandTest extends EasyMockSupport {
     assertEquals(
         stderrText,
         "BUILD FAILED: No directory does/not/exist when resolving target " +
-        "//does/not/exist:exist in context FULLY_QUALIFIED\n"
-    );
+        "//does/not/exist:exist in context FULLY_QUALIFIED\n");
     assertEquals(1, exitCode);
   }
 

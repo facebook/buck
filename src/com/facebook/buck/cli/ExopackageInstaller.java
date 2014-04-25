@@ -487,8 +487,7 @@ public class ExopackageInstaller {
                 device,
                 AGENT_PORT,
                 "metadata.txt",
-                temp.get()
-            );
+                temp.get());
           }
         }
       } finally {

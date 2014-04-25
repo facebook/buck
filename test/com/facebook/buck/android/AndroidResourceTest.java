@@ -255,16 +255,14 @@ public class AndroidResourceTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res1"))
-            .build()
-    );
+            .build());
     setAndroidResourceBuildOutput(resourceRule1, "a");
     BuildRule resourceRule2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res2"))
-            .build()
-    );
+            .build());
     setAndroidResourceBuildOutput(resourceRule2, "b");
     BuildRule resourceRule3 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()

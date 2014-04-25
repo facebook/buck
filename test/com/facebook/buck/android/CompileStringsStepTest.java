@@ -208,8 +208,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
             2, ImmutableMap.of(
                 "zero", "%d people ate this",
                 "many", "%d people ate this"),
-            3, ImmutableMap.of()
-        ),
+            3, ImmutableMap.of()),
         pluralsMap
     );
   }
@@ -295,8 +294,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   private byte[] createBinaryStream(File expectedFile) throws IOException {
     try (
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      DataOutputStream stream = new DataOutputStream(bos)
-    ) {
+      DataOutputStream stream = new DataOutputStream(bos)) {
       for (String line : Files.readLines(expectedFile, Charset.defaultCharset())) {
         for (String token : Splitter.on('|').split(line)) {
           char dataType = token.charAt(0);

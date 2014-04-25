@@ -35,8 +35,7 @@ public class AbstractBuildRuleFactoryTest {
   @Test
   public void testGetVisibilityTargets() throws NoSuchBuildTargetException {
     Map<String, ?> config = ImmutableMap.of(
-        "visibility" , ImmutableList.of(VISIBILITY_PUBLIC, "//...", "//com/facebook/...")
-    );
+        "visibility" , ImmutableList.of(VISIBILITY_PUBLIC, "//...", "//com/facebook/..."));
     BuildRuleFactoryParams params = NonCheckingBuildRuleFactoryParams.
         createNonCheckingBuildRuleFactoryParams(
             config,

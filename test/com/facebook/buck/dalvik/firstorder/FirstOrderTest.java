@@ -63,8 +63,7 @@ public class FirstOrderTest {
       DependencyBase.class,
       Dependency.class,
       DerivedInterface.class,
-      Derived.class
-  );
+      Derived.class);
 
   private static final ImmutableList<ClassNode> KNOWN_CLASS_NODES =
       FluentIterable.from(KNOWN_TYPES)

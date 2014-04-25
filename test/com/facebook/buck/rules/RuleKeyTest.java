@@ -159,8 +159,7 @@ public class RuleKeyTest {
 
     ImmutableSortedSet<SourcePath> sourcePaths = ImmutableSortedSet.<SourcePath>of(
         new BuildRuleSourcePath(rule),
-        new TestSourcePath("alpha/beta")
-    );
+        new TestSourcePath("alpha/beta"));
     ImmutableSet<String> strings = ImmutableSet.of("one", "two");
 
     RuleKey.Builder.RuleKeyPair reflective = createEmptyRuleKey()

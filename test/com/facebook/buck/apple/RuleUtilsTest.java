@@ -47,8 +47,8 @@ public class RuleUtilsTest {
                 ImmutableList.of(
                     AppleSource.ofSourcePath(new TestSourcePath("baz.m")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new TestSourcePath("blech.m"), "-fobjc-arc"))))
-        ));
+                        new Pair<SourcePath, String>(
+                            new TestSourcePath("blech.m"), "-fobjc-arc"))))));
 
     RuleUtils.extractSourcePaths(sources, perFileCompileFlags, input);
     assertEquals(

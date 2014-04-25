@@ -173,8 +173,7 @@ public class FilterResourcesStep implements Step {
               nonEnglishStringFilesBuilder.add(pathRelativeToProjectRoot);
               return false;
             }
-          }
-      );
+          });
     }
 
     // Create filtered copies of all resource directories. These will be passed to aapt instead.
@@ -337,8 +336,7 @@ public class FilterResourcesStep implements Step {
           "convert",
           "-adaptive-resize", (int) (factor * 100) + "%",
           Escaper.escapeAsBashString(source),
-          Escaper.escapeAsBashString(destination)
-      );
+          Escaper.escapeAsBashString(destination));
 
       if (0 != convertStep.execute(getContextWithSilentConsole(context))) {
         throw new HumanReadableException("Cannot scale " + source + " to " + destination);
