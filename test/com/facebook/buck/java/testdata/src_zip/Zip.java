@@ -82,6 +82,5 @@ public class Zip {
     "  public Yin getYin() {",
     "    return yin;",
     "  }",
-    "}"
-  );
+    "}");
 }

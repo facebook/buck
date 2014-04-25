@@ -177,9 +177,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
               public String apply(BuildTarget target) {
                 return target.getFullyQualifiedName();
               }
-            }
-        )
-    );
+            }));
   }
 
   /**

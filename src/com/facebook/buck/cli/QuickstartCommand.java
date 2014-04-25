@@ -40,9 +40,7 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
   private static final Path PATH_TO_QUICKSTART_DIR = Paths.get(
       System.getProperty(
           "buck.quickstart_origin_dir",
-          new File("src/com/facebook/buck/cli/quickstart/android").getAbsolutePath()
-      )
-  );
+          new File("src/com/facebook/buck/cli/quickstart/android").getAbsolutePath()));
 
   public QuickstartCommand(CommandRunnerParams params) {
     super(params);
@@ -104,8 +102,7 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
     Files.write("sdk.dir=" + sdkLocation + "\n", out, StandardCharsets.UTF_8);
 
     getStdOut().print(
-      Files.toString(origin.resolve("README.md").toFile(), StandardCharsets.UTF_8)
-    );
+      Files.toString(origin.resolve("README.md").toFile(), StandardCharsets.UTF_8));
     getStdOut().flush();
 
     return 0;

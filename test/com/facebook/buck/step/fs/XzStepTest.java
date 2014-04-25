@@ -90,8 +90,7 @@ public class XzStepTest {
 
     assertTrue(
         "Decompressed file must be identical to original.",
-        ByteStreams.equal(decompressed, original)
-    );
+        ByteStreams.equal(decompressed, original));
 
     EasyMock.verify(fs);
   }

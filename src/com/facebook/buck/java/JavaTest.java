@@ -272,8 +272,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     return Paths.get(
         BuckConstant.GEN_DIR,
         getBuildTarget().getBaseNameWithSlash(),
-        String.format("__java_test_%s_output__", getBuildTarget().getShortName())
-    );
+        String.format("__java_test_%s_output__", getBuildTarget().getShortName()));
   }
 
   @Override

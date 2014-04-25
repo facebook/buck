@@ -64,16 +64,14 @@ public class DummyRDotJavaTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res1"))
-            .build()
-    );
+            .build());
     setAndroidResourceBuildOutput(resourceRule1, RESOURCE_RULE1_KEY);
     BuildRule resourceRule2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res2"))
-            .build()
-    );
+            .build());
     setAndroidResourceBuildOutput(resourceRule2, RESOURCE_RULE2_KEY);
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(

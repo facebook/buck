@@ -222,7 +222,6 @@ public class AaptPackageResourcesTest {
                 Paths.get("facebook/base/assets2/fonts/Theinhardt-Regular.otf"),
                 BIN_PATH.resolve(
                     "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Regular.otf"))),
-        remainingCommands
-    );
+        remainingCommands);
   }
 }

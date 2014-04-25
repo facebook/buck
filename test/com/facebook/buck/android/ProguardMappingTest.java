@@ -42,7 +42,6 @@ public class ProguardMappingTest {
   @Test(expected = IllegalArgumentException.class)
   public void testInternalNameError() {
     ProguardMapping.readClassMapping(ImmutableList.of(
-        "foo/bar/Baz -> foo/bar/a:"
-    ));
+        "foo/bar/Baz -> foo/bar/a:"));
   }
 }

@@ -64,8 +64,7 @@ public class DescribedRuleTest {
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of(),
         new FakeProjectFilesystem(),
-        new FakeRuleKeyBuilderFactory()
-    );
+        new FakeRuleKeyBuilderFactory());
 
     ExampleBuildable expected = new ExampleBuildable("nada");
     DescribedRule rule = new DescribedRule(new BuildRuleType("example"),
@@ -110,8 +109,7 @@ public class DescribedRuleTest {
         new BuildTargetParser(filesystem),
         BuildTargetFactory.newInstance("//one/two:example"),
         new FakeRuleKeyBuilderFactory(),
-        /* ignore file existence checks */ true
-    );
+        /* ignore file existence checks */ true);
 
     BuildContext fakeBuildContext = EasyMock.createNiceMock(BuildContext.class);
     ExecutionContext fakeExecutionContext = EasyMock.createNiceMock(ExecutionContext.class);

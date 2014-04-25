@@ -214,8 +214,7 @@ public final class XcconfigStack {
       PredicatedConfigValue privateSetting = new PredicatedConfigValue(
           alias,
           setting.conditions,
-          valueTokens
-      );
+          valueTokens);
       currentLayer.add(privateSetting);
     }
 
@@ -237,8 +236,7 @@ public final class XcconfigStack {
         builder.put(aliased, new PredicatedConfigValue(
             aliased,
             empty,
-            ImmutableList.<TokenValue>of(TokenValue.interpolation(keyAliases.get(aliased)))
-        ));
+            ImmutableList.<TokenValue>of(TokenValue.interpolation(keyAliases.get(aliased)))));
       }
       return new XcconfigStack(builder.build());
     }

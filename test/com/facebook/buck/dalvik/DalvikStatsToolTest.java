@@ -132,8 +132,7 @@ public class DalvikStatsToolTest {
         "test/TestClassWithInner.get:()Ljava/lang/Object;",
         "test/TestClassWithInner$1.<init>:(Ltest/TestClassWithInner;)V",
         "test/TestClassWithInner.access$000:(Ltest/TestClassWithInner;)J",
-        "java/lang/System.currentTimeMillis:()J"
-    );
+        "java/lang/System.currentTimeMillis:()J");
     assertEquals(224, statsOuter.estimatedLinearAllocSize);
 
     File classFileInner = new File(outputDir, "test/TestClassWithInner$1.class");

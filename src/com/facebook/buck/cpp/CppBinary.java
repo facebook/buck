@@ -52,8 +52,7 @@ public class CppBinary extends AbstractNativeBuildable {
             /* srcs */ files,
             /* outputFile */ outputFile,
             /* shouldAddProjectRootToIncludePaths */ true,
-            /* includePaths */ ImmutableSortedSet.<Path>of()
-        ));
+            /* includePaths */ ImmutableSortedSet.<Path>of()));
   }
 
   @Override

@@ -114,8 +114,7 @@ public class HeaderMap {
         visitor.apply(
             getString(bucket.key),
             getString(bucket.prefix),
-            getString(bucket.suffix)
-        );
+            getString(bucket.suffix));
       }
     }
   }
@@ -246,8 +245,7 @@ public class HeaderMap {
         buckets[i] = new Bucket(
             keyRawOffset - actualOffset,
             prefixRawOffset - actualOffset,
-            suffixRawOffset - actualOffset
-        );
+            suffixRawOffset - actualOffset);
       }
     }
     // anything else is string

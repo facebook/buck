@@ -112,8 +112,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     } catch (FileNotFoundException ex) {
       context.logError(ex,
         "The '%s' file is not present.",
-        rDotTxtPath
-      );
+        rDotTxtPath);
       return 1;
     } catch (IOException ex) {
       context.logError(ex, "Failure parsing R.txt file.");

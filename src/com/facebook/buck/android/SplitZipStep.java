@@ -387,8 +387,7 @@ public class SplitZipStep implements Step {
         primaryJarPath,
         secondaryJarDir,
         secondaryJarPattern,
-        ZIP_SIZE_HARD_LIMIT
-    );
+        ZIP_SIZE_HARD_LIMIT);
   }
 
   public Supplier<Multimap<Path, Path>> getOutputToInputsMapSupplier(

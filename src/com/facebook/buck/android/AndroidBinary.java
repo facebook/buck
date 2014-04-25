@@ -1108,8 +1108,7 @@ public class AndroidBinary extends AbstractBuildable implements
     return Optional.of(
         new ExopackageInfo(
             preDexMerge.get().getMetadataTxtPath(),
-            preDexMerge.get().getDexDirectory())
-    );
+            preDexMerge.get().getDexDirectory()));
   }
 
   boolean isUseAndroidProguardConfigWithOptimizations() {

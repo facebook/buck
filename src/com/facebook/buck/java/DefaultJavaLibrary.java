@@ -348,8 +348,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
         String.format(
             "%s/%s.jar",
             getOutputJarDirPath(target),
-            target.getShortName())
-    );
+            target.getShortName()));
   }
 
   /**

@@ -154,8 +154,8 @@ public class AdbHelper {
 
     if (devices.isEmpty()) {
       console.printBuildFailure(String.format(
-          "Found %d connected device(s), but none of them matches specified filter.", onlineDevices
-      ));
+          "Found %d connected device(s), but none of them matches specified filter.",
+          onlineDevices));
       return null;
     }
 

@@ -341,20 +341,15 @@ public class TypeCoercerTest {
                 ImmutableList.of(
                     AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall"))
-                )
-            )
-        ),
+                        new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall"))))),
         AppleSource.ofSourceGroup(
             new Pair<>(
                 "Group2",
                 ImmutableList.of(
                     AppleSource.ofSourcePath(new TestSourcePath("baz.m")),
                     AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new TestSourcePath("blech.m"), "-fobjc-arc"))
-                )
-            )
-        ));
+                        new Pair<SourcePath, String>(
+                            new TestSourcePath("blech.m"), "-fobjc-arc"))))));
     assertEquals(expectedResult, result);
   }
 

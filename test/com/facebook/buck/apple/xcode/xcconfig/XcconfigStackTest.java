@@ -40,8 +40,7 @@ public class XcconfigStackTest {
         .addLayer("FOO", "bar")
         .assertEquals(
             "__0_FOO = bar",
-            "FOO = $(__0_FOO)"
-        );
+            "FOO = $(__0_FOO)");
   }
 
   @Test
@@ -52,8 +51,7 @@ public class XcconfigStackTest {
         .assertEquals(
             "__0_FOO = top",
             "__1_FOO = bottom",
-            "FOO = $(__1_FOO)"
-        );
+            "FOO = $(__1_FOO)");
   }
 
   @Test
@@ -70,8 +68,7 @@ public class XcconfigStackTest {
             "__0_FOO = a $(BAR) b $(BAR) c $(BAR)",
             "BAR = $(__0_BAR)",
             "BAZ = $(__0_BAZ)",
-            "FOO = $(__0_FOO)"
-        );
+            "FOO = $(__0_FOO)");
   }
 
   @Test
@@ -92,8 +89,7 @@ public class XcconfigStackTest {
             "__1_FOO = $(__0_FOO) top_foo",
             "BAR = $(__1_BAR)",
             "BAZ = $(__0_BAZ)",
-            "FOO = $(__1_FOO)"
-        );
+            "FOO = $(__1_FOO)");
   }
 
   @Test
@@ -142,8 +138,7 @@ public class XcconfigStackTest {
             "__0_C = $(A) $(B)",
             "A = $(__0_A)",
             "B = $(__0_B)",
-            "C = $(__0_C)"
-        );
+            "C = $(__0_C)");
   }
 
   @Test
@@ -151,8 +146,7 @@ public class XcconfigStackTest {
     ProjectFilesystem projectFilesystem = new FakeReadonlyProjectFilesystem(ImmutableMap.of(
         "foo.xcconfig", "#include \"bar.xcconfig\"",
         "bar.xcconfig", "#include \"baz.xcconfig\"",
-        "baz.xcconfig", "ABC ***"
-    ));
+        "baz.xcconfig", "ABC ***"));
     XcconfigStack.Builder builder = XcconfigStack.builder();
     try {
       builder.addSettingsFromFile(projectFilesystem,

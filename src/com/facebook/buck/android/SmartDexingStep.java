@@ -114,8 +114,7 @@ public class SmartDexingStep implements Step {
             }
             return map.build();
           }
-        }
-    );
+        });
     this.secondaryOutputDir = Preconditions.checkNotNull(secondaryOutputDir);
     this.dexInputHashesProvider = Preconditions.checkNotNull(dexInputHashesProvider);
     this.successDir = Preconditions.checkNotNull(successDir);
@@ -339,8 +338,7 @@ public class SmartDexingStep implements Step {
           tempDexJarOutput,
           repackedJar,
           ImmutableSet.of("classes.dex"),
-          ZipStep.MIN_COMPRESSION_LEVEL
-      ));
+          ZipStep.MIN_COMPRESSION_LEVEL));
       steps.add(new RmStep(tempDexJarOutput, true));
       steps.add(new XzStep(repackedJar));
       return new CompositeStep(steps);

@@ -518,8 +518,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ArtifactCache artifactCache = createMock(ArtifactCache.class);
     Map<String, String> desiredZipEntries = ImmutableMap.of(
         "buck-out/gen/src/com/facebook/orca/orca.jar",
-        "Imagine this is the contents of a valid JAR file."
-        );
+        "Imagine this is the contents of a valid JAR file.");
     expect(
         artifactCache.fetch(
             eq(buildRule.getRuleKey()),
@@ -546,8 +545,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertTrue(
         "We expect build() to be synchronous in this case, " +
             "so the future should already be resolved.",
-        MoreFutures.isSuccess(result)
-    );
+        MoreFutures.isSuccess(result));
     BuildRuleSuccess success = result.get();
     assertEquals(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, success.getType());
     assertTrue(

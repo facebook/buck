@@ -52,7 +52,7 @@ public class RuleUtilsTest {
 
     RuleUtils.extractSourcePaths(sources, perFileCompileFlags, input);
     assertEquals(
-        ImmutableList.<GroupedSource>of(
+        ImmutableList.of(
             GroupedSource.ofSourceGroup(
                 "Group1",
                 ImmutableList.of(
@@ -64,11 +64,11 @@ public class RuleUtilsTest {
                 ImmutableList.of(
                     GroupedSource.ofSourcePath(new TestSourcePath("baz.m")),
                     GroupedSource.ofSourcePath(new TestSourcePath("blech.m"))
-                ))
-    ), sources.build());
+                ))),
+        sources.build());
     assertEquals(ImmutableMap.<SourcePath, String>of(
-        new TestSourcePath("bar.m"), "-Wall",
-        new TestSourcePath("blech.m"), "-fobjc-arc"
-    ), perFileCompileFlags.build());
+            new TestSourcePath("bar.m"), "-Wall",
+            new TestSourcePath("blech.m"), "-fobjc-arc"),
+        perFileCompileFlags.build());
   }
 }

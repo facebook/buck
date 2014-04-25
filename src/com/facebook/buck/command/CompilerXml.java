@@ -54,8 +54,7 @@ class CompilerXml {
   private static final ImmutableSet<String> TOP_LEVEL_EXCLUDE_DIRS = ImmutableSet.of(
       Project.ANDROID_GEN_DIR,
       BuckConstant.BIN_DIR,
-      BuckConstant.GEN_DIR
-  );
+      BuckConstant.GEN_DIR);
 
   private final List<Module> modules;
 

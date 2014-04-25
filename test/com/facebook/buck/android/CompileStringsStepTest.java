@@ -170,8 +170,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
             3, "Value with \"quotes\"",
             4, "",
             5, "Value with %1$s"),
-        stringsMap
-    );
+        stringsMap);
   }
 
   @Test
@@ -248,8 +247,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
             .put(1, "Value12")
             .put(2, "Value21")
             .build(),
-        arraysMap
-    );
+        arraysMap);
   }
 
   private CompileStringsStep createNonExecutingStep() {

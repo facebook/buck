@@ -252,8 +252,7 @@ public class AndroidPlatformTarget {
             "%s was empty, but should have contained a subdirectory with build tools.",
             "Install them using the Android SDK Manager (%s)."),
           buildToolsDir.getAbsolutePath(),
-          new File(androidSdkDir, Joiner.on(File.separator).join("tools", "android"))
-        );
+          new File(androidSdkDir, Joiner.on(File.separator).join("tools", "android")));
       } else {
         File newestBuildToolsDir = pickNewestBuildToolsDir(ImmutableSet.copyOf(directories));
         buildToolsPath = "build-tools/" + newestBuildToolsDir.getName();

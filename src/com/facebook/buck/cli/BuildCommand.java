@@ -86,8 +86,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       if (!aliases.isEmpty()) {
         console.getStdErr().println(String.format(
             "Try building one of the following targets:\n%s",
-            Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10))
-        ));
+            Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10))));
       }
       return 1;
     }

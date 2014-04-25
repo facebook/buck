@@ -70,8 +70,7 @@ public class GenerateCodeCoverageReportStepTest {
 
     for (String reportFormat : GenerateCodeCoverageReportStep.CODE_COVERAGE_OUTPUT_FORMAT) {
       shellCommandBuilder.add(
-          "-report", reportFormat
-      );
+          "-report", reportFormat);
     }
 
     shellCommandBuilder.add(

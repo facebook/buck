@@ -74,8 +74,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
     }
     if (binaryBuildRule == null) {
       console.printBuildFailure(
-          "target " + targetName + " is not a binary rule (only binary rules can be `run`)"
-      );
+          "target " + targetName + " is not a binary rule (only binary rules can be `run`)");
       return 1;
     }
 

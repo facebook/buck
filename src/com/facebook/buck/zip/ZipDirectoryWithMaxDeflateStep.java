@@ -50,8 +50,7 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
       "jar",
       "jpg",
       "png",
-      "xz"
-  );
+      "xz");
 
   private final Path inputDirectoryPath;
   private final Path outputZipPath;

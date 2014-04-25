@@ -38,8 +38,7 @@ public class TargetDeviceOptions {
   @Option(
       name = EMULATOR_MODE_LONG_ARG,
       aliases = {EMULATOR_MODE_SHORT_ARG},
-      usage = "Use this option to use emulators only."
-  )
+      usage = "Use this option to use emulators only.")
   private boolean useEmulatorsOnlyMode;
 
   @VisibleForTesting static final String DEVICE_MODE_SHORT_ARG = "-d";
@@ -108,8 +107,7 @@ public class TargetDeviceOptions {
 
     TargetDevice device = new TargetDevice(
         isEmulatorsOnlyModeEnabled() ? TargetDevice.Type.EMULATOR : TargetDevice.Type.REAL_DEVICE,
-        getSerialNumber()
-    );
+        getSerialNumber());
     return Optional.of(device);
   }
 }

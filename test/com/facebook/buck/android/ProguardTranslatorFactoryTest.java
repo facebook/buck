@@ -40,8 +40,7 @@ public class ProguardTranslatorFactoryTest {
     List<String> linesInMappingFile = ImmutableList.of(
         "foo.bar.MappedPrimary -> foo.bar.a:",
         "foo.bar.UnmappedPrimary -> foo.bar.UnmappedPrimary:",
-        "foo.primary.MappedPackage -> x.a:"
-    );
+        "foo.primary.MappedPackage -> x.a:");
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))

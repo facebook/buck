@@ -91,38 +91,33 @@ public class XcconfigParserTest {
   PredicatedConfigValue value1 = new PredicatedConfigValue(
       "X",
       ImmutableSortedSet.<Condition>of(),
-      ImmutableList.<TokenValue>of(
+      ImmutableList.of(
           TokenValue.literal("/my"),
           TokenValue.literal("/path"),
           TokenValue.literal("/to"),
-          TokenValue.literal("/file")
-      )
-  );
+          TokenValue.literal("/file")));
 
   String s2 = "X = \"ACSV\" 1";
   PredicatedConfigValue value2 = new PredicatedConfigValue(
       "X",
       ImmutableSortedSet.<Condition>of(),
       ImmutableList.<TokenValue>of(
-          TokenValue.literal("\"ACSV\" 1")
-      ));
+          TokenValue.literal("\"ACSV\" 1")));
 
   String s3 = "X [a=1*] [x=3,y=4] = 1 /$(Y $(Z)) 2 SDF ///comment $(X)";
   PredicatedConfigValue value3 = new PredicatedConfigValue(
       "X",
-      ImmutableSortedSet.<Condition>of(
+      ImmutableSortedSet.of(
           new Condition("a", "1", true),
           new Condition("x", "3", false),
           new Condition("y", "4", false)),
-      ImmutableList.<TokenValue>of(
+      ImmutableList.of(
           TokenValue.literal("1 "),
           TokenValue.literal("/"),
           TokenValue.interpolation(ImmutableList.<TokenValue>of(
               TokenValue.literal("Y "),
-              TokenValue.interpolation(ImmutableList.<TokenValue>of(TokenValue.literal("Z")))
-          )),
-          TokenValue.literal(" 2 SDF ")
-      ));
+              TokenValue.interpolation(ImmutableList.<TokenValue>of(TokenValue.literal("Z"))))),
+          TokenValue.literal(" 2 SDF ")));
 
   ImmutableList<PredicatedConfigValue> values = ImmutableList
       .<PredicatedConfigValue>builder()
@@ -151,8 +146,7 @@ public class XcconfigParserTest {
 
     ImmutableMap<String, String> files = ImmutableMap.of(
         "file1.xcconfig", s2 + "\n" + s3,
-        "folder/file2.xcconfig", s1 + "\n" + "#include \"../file1.xcconfig\""
-    );
+        "folder/file2.xcconfig", s1 + "\n" + "#include \"../file1.xcconfig\"");
 
     ProjectFilesystem fileSystem = new FakeReadonlyProjectFilesystem(files);
     assertFileHasValue(fileSystem, "folder/file2.xcconfig", values);
@@ -162,8 +156,7 @@ public class XcconfigParserTest {
   public void testAdditionalSearchPaths() throws ParseException, IOException {
     ImmutableMap<String, String> files = ImmutableMap.of(
         "some_other_search_path/file1.xcconfig", s2 + "\n" + s3,
-        "folder/file2.xcconfig", s1 + "\n" + "#include \"file1.xcconfig\""
-    );
+        "folder/file2.xcconfig", s1 + "\n" + "#include \"file1.xcconfig\"");
 
     ProjectFilesystem filesystem = new FakeReadonlyProjectFilesystem(files);
     assertFileHasValue(

@@ -106,8 +106,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
       currentMethodReferences.addAll(stats.methodReferences);
       String report = String.format(
           "%d %d %s\n",
-          stats.estimatedLinearAllocSize, stats.methodReferences.size(), name
-      );
+          stats.estimatedLinearAllocSize, stats.methodReferences.size(), name);
       Files.append(report, reportFile, Charsets.UTF_8);
     }
   }

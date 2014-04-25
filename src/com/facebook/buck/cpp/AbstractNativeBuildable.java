@@ -120,8 +120,7 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
             /* srcs */ ImmutableSortedSet.of(src.resolve()),
             /* outputFile */ objectFile,
             /* shouldAddProjectRootToIncludePaths */ true,
-            /* includePaths */ ImmutableSortedSet.<Path>of()
-      ));
+            /* includePaths */ ImmutableSortedSet.<Path>of()));
       objectFiles.add(objectFile);
     }
 

@@ -66,8 +66,7 @@ public class Zip {
     "    yin.setYang(yang);",
     "    yang.setYin(yin);",
     "  }",
-    "}"
-  );
+    "}");
 
   private static final String YANG_JAVA = join(
     "package com.example;",

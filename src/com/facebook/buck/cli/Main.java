@@ -166,8 +166,7 @@ public final class Main {
       if (System.getProperty("buck.buckd_watcher", "WatchService").equals("Watchman")) {
         return new WatchmanWatcher(
             projectFilesystem,
-            fileEventBus
-        );
+            fileEventBus);
       }
       return new WatchServiceWatcher(
           projectFilesystem,
