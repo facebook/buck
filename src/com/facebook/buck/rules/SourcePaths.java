@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
@@ -75,14 +74,15 @@ public class SourcePaths {
         .toList();
   }
 
-  public static Iterable<Path> toPaths(Iterable<SourcePath> sourcePaths) {
+  public static Collection<Path> toPaths(Iterable<? extends SourcePath> sourcePaths) {
     Function<SourcePath, Path> transform = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath sourcePath) {
         return sourcePath.resolve();
       }
     };
-    return Iterables.transform(sourcePaths, transform);
+    // Maintain ordering and duplication if necessary.
+    return FluentIterable.from(sourcePaths).transform(transform).toList();
   }
 
   public static ImmutableSortedSet<SourcePath> toSourcePathsSortedByNaturalOrder(

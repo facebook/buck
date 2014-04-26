@@ -1,0 +1,17 @@
+java_test(
+  name = 'extension',
+  srcs = glob(['*Test.java']),
+  deps = [
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/extension:extension',
+    '//src/com/facebook/buck/java:steps',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/step:step',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/testutil/integration:integration',
+  ],
+)

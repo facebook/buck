@@ -39,6 +39,7 @@ import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cpp.CppBinaryDescription;
 import com.facebook.buck.cpp.CppLibraryDescription;
+import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryDescription;
@@ -167,6 +168,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
+    builder.register(new BuckExtensionDescription());
     builder.register(new BuildConfigDescription());
     builder.register(new CppBinaryDescription());
     builder.register(new CppLibraryDescription());
