@@ -37,7 +37,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -48,10 +47,8 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -71,7 +68,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.reflect.ClassPath;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -529,7 +525,12 @@ public class DefaultJavaLibrary extends AbstractBuildable
     addPostprocessClassesCommands(steps, postprocessClassesCommands, outputDirectory);
 
     // If there are resources, then link them to the appropriate place in the classes directory.
-    addResourceCommands(steps, outputDirectory, context.getJavaPackageFinder());
+    steps.add(
+        new CopyResourcesStep(
+            getBuildTarget(),
+            resources,
+            outputDirectory,
+            context.getJavaPackageFinder()));
 
     if (outputJar.isPresent()) {
       steps.add(new MakeCleanDirectoryStep(getOutputJarDirPath(getBuildTarget())));
@@ -727,68 +728,6 @@ public class DefaultJavaLibrary extends AbstractBuildable
   @VisibleForTesting
   public Optional<JavacVersion> getJavacVersion() {
     return javacOptions.getJavaCompilerEnvironment().getJavacVersion();
-  }
-
-  @VisibleForTesting
-  void addResourceCommands(
-      ImmutableList.Builder<Step> commands,
-      Path outputDirectory,
-      JavaPackageFinder javaPackageFinder) {
-    if (!resources.isEmpty()) {
-      String targetPackageDir = javaPackageFinder.findJavaPackageForPath(
-          getBuildTarget().getBasePathWithSlash())
-          .replace('.', File.separatorChar);
-
-      for (SourcePath rawResource : resources) {
-        // If the path to the file defining this rule were:
-        // "first-party/orca/lib-http/tests/com/facebook/orca/BUILD"
-        //
-        // And the value of resource were:
-        // "first-party/orca/lib-http/tests/com/facebook/orca/protocol/base/batch_exception1.txt"
-        //
-        // Then javaPackageAsPath would be:
-        // "com/facebook/orca/protocol/base/"
-        //
-        // And the path that we would want to copy to the classes directory would be:
-        // "com/facebook/orca/protocol/base/batch_exception1.txt"
-        //
-        // Therefore, some path-wrangling is required to produce the correct string.
-
-        Path resource = MorePaths.separatorsToUnix(rawResource.resolve());
-        String javaPackageAsPath =
-            javaPackageFinder.findJavaPackageFolderForPath(resource.toString());
-        Path relativeSymlinkPath;
-
-        if (resource.startsWith(BuckConstant.BUCK_OUTPUT_PATH) ||
-            resource.startsWith(BuckConstant.GEN_PATH) ||
-            resource.startsWith(BuckConstant.BIN_PATH) ||
-            resource.startsWith(BuckConstant.ANNOTATION_PATH)) {
-          // Handle the case where we depend on the output of another BuildRule. In that case, just
-          // grab the output and put in the same package as this target would be in.
-          relativeSymlinkPath = Paths.get(
-              String.format(
-                  "%s%s%s",
-                  targetPackageDir,
-                  targetPackageDir.isEmpty() ? "" : "/",
-                  rawResource.resolve().getFileName()));
-        } else if ("".equals(javaPackageAsPath)) {
-          // In this case, the project root is acting as the default package, so the resource path
-          // works fine.
-          relativeSymlinkPath = resource.getFileName();
-        } else {
-          int lastIndex = resource.toString().lastIndexOf(javaPackageAsPath);
-          Preconditions.checkState(lastIndex >= 0,
-              "Resource path %s must contain %s",
-              resource,
-              javaPackageAsPath);
-
-          relativeSymlinkPath = Paths.get(resource.toString().substring(lastIndex));
-        }
-        Path target = outputDirectory.resolve(relativeSymlinkPath);
-        MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(resource, target);
-        commands.add(link);
-      }
-    }
   }
 
   @Override

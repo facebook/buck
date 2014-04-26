@@ -91,6 +91,7 @@ java_library(
   name = 'steps',
   srcs = [
     'AccumulateClassNamesStep.java',
+    'CopyResourcesStep.java',
     'ExternalJavacStep.java',
     'GenerateCodeCoverageReportStep.java',
     'InstrumentStep.java',
