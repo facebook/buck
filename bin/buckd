@@ -78,6 +78,20 @@ localhost:0 $BUCKD_CLIENT_TIMEOUT_MILLIS &> \
 $BUCKD_LOG_FILE &
 echo $! > "$BUCKD_PID_FILE"
 # Block until we read the port number from the buckd log file.
+
+LOG_WAIT_COUNT=1
+while [ ! -f "$BUCKD_LOG_FILE" ]; do
+  sleep 0.1
+  LOG_WAIT_COUNT=$((LOG_WAIT_COUNT + 1))
+  if [ $LOG_WAIT_COUNT -gt 100 ]; then
+    echo >&2 "buckd log didn't get created after 10s.  Aborting buckd."
+    kill -9 $(cat $BUCKD_PID_FILE) || true
+    rm -rf $BUCKD_DIR
+    # Since buckd is considered to be an optimization, don't fail builds.
+    exit 0
+  fi
+done
+
 sed -n '1 s/.*port \([0-9]*\)\.$/\1/;p;q' > $BUCKD_PORT_FILE \
 <(tail -n +1 -f $BUCKD_LOG_FILE)
 
