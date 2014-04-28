@@ -446,6 +446,10 @@ public class BuckConfig {
     return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").or("true"));
   }
 
+  public boolean getFlushEventsBeforeExit() {
+    return getBooleanValue("daemon", "flush_events_before_exit", false);
+  }
+
   public ImmutableSet<String> getListenerJars() {
     String jarPathsString = getValue("extensions", "listeners").or("");
     Splitter splitter = Splitter.on(',').omitEmptyStrings().trimResults();

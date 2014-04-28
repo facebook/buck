@@ -565,7 +565,7 @@ public final class Main {
     } finally {
       commandSemaphore.release(); // Allow another command to execute while outputting traces.
     }
-    if (isDaemon) {
+    if (isDaemon && !config.getFlushEventsBeforeExit()) {
       context.get().in.close(); // Avoid client exit triggering client disconnection handling.
       context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
     }
