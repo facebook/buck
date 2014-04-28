@@ -128,6 +128,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
     int eventCount = 0;
     while (token != null) {
       if (eventCount > overflow) {
+        watchmanProcess.destroy();
         eventBus.post(createOverflowEvent());
         return;
       }

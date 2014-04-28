@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
@@ -192,6 +193,8 @@ public class WatchmanWatcherTest {
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     Process process = createProcessMock(watchmanOutput);
+    process.destroy();
+    expectLastCall();
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
