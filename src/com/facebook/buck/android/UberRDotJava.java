@@ -40,9 +40,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -261,9 +263,9 @@ public class UberRDotJava extends AbstractBuildable implements
     GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
         resDirectories,
         rDotJavaSrc,
-        rDotJavaPackages.iterator().next(),
+        Iterables.get(rDotJavaPackages, 0),
         /* isTempRDotJava */ false,
-        rDotJavaPackages);
+        FluentIterable.from(rDotJavaPackages).skip(1).toSet());
     steps.add(genRDotJava);
 
     if (shouldBuildStringSourceMap) {
