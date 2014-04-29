@@ -53,6 +53,8 @@ public class GenfileAsSrcIntegrationTest {
     File testFile = workspace.getFile("resource.base.txt");
     Files.write("Different text", testFile, charsetForTest);
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:library");
     result2.assertTestFailure();
     assertThat("`buck test` should fail because testStringFromGenfile() failed.",
         result2.getStderr(),

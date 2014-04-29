@@ -15,10 +15,7 @@ genrule(
 java_library(
   name = 'library',
   srcs = [
-    genfile('LameGenfile.java'),
-  ],
-  deps = [
-    ':resource',
+    ':resource',   
   ],
 )
 

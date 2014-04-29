@@ -52,6 +52,13 @@ public class SourcePaths {
           return input.resolve();
         }
       };
+  public static final Function<BuildRuleSourcePath, BuildRule> TO_BUILD_RULE_REFERENCES =
+      new Function<BuildRuleSourcePath, BuildRule>() {
+        @Override
+        public BuildRule apply(BuildRuleSourcePath input) {
+          return input.asReference();
+        }
+      };
 
   /** Utility class: do not instantiate. */
   private SourcePaths() {}
@@ -71,6 +78,14 @@ public class SourcePaths {
     return FluentIterable.from(sources)
         .filter(PathSourcePath.class)
         .transform(TO_PATH_SOURCEPATH_REFERENCES)
+        .toList();
+  }
+
+  public static Collection<BuildRule> filterBuildRuleInputs(
+      Iterable<? extends SourcePath> sources) {
+    return FluentIterable.from(sources)
+        .filter(BuildRuleSourcePath.class)
+        .transform(TO_BUILD_RULE_REFERENCES)
         .toList();
   }
 

@@ -24,6 +24,7 @@ import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.AnnotationProcessingData;
@@ -62,6 +63,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -319,7 +321,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
       return abiKey;
     }
 
-    SortedSet<HasJavaAbi> depsForAbiKey = getDepsForAbiKey();
+    SortedSet<HasBuildTarget> depsForAbiKey = getDepsForAbiKey();
 
     // Hash the ABI keys of all dependencies together with ABI key for the current rule.
     Hasher hasher = createHasherWithAbiKeyForDeps(depsForAbiKey);
@@ -367,8 +369,8 @@ public class DefaultJavaLibrary extends AbstractBuildable
    * Returns a sorted set containing the dependencies which will be hashed in the final ABI key.
    * @return the dependencies to be hashed in the final ABI key.
    */
-  private SortedSet<HasJavaAbi> getDepsForAbiKey() {
-    SortedSet<HasJavaAbi> rulesWithAbiToConsider = Sets.newTreeSet(BUILD_TARGET_COMPARATOR);
+  private SortedSet<HasBuildTarget> getDepsForAbiKey() {
+    SortedSet<HasBuildTarget> rulesWithAbiToConsider = Sets.newTreeSet(BUILD_TARGET_COMPARATOR);
     for (BuildRule dep : deps) {
       // This looks odd. DummyJavaAbiRule contains a Buildable that isn't a JavaAbiRule.
       if (dep.getBuildable() instanceof HasJavaAbi) {
@@ -380,6 +382,13 @@ public class DefaultJavaLibrary extends AbstractBuildable
         }
       }
     }
+
+    // We also need to iterate over inputs that are SourcePaths, since they're only listed as
+    // compile-time deps and not in the "deps" field. If any of these change, we should recompile
+    // the library, since we will (at least) need to repack it.
+    rulesWithAbiToConsider.addAll(
+        SourcePaths.filterBuildRuleInputs(Iterables.concat(srcs, resources)));
+
     return rulesWithAbiToConsider;
   }
 
@@ -389,15 +398,21 @@ public class DefaultJavaLibrary extends AbstractBuildable
    *     added to the hasher.
    * @return a Hasher containing the ABI keys of the dependencies.
    */
-  private Hasher createHasherWithAbiKeyForDeps(SortedSet<HasJavaAbi> rulesWithAbiToConsider) {
+  private Hasher createHasherWithAbiKeyForDeps(SortedSet<HasBuildTarget> rulesWithAbiToConsider) {
     Hasher hasher = Hashing.sha1().newHasher();
-    for (HasJavaAbi ruleWithAbiToConsider : rulesWithAbiToConsider) {
-      if (ruleWithAbiToConsider == this) {
+
+    for (HasBuildTarget candidate : rulesWithAbiToConsider) {
+      if (candidate == this) {
         continue;
       }
 
-      Sha1HashCode abiKey = ruleWithAbiToConsider.getAbiKey();
-      hasher.putUnencodedChars(abiKey.getHash());
+      if (candidate instanceof HasJavaAbi) {
+        Sha1HashCode abiKey = ((HasJavaAbi) candidate).getAbiKey();
+        hasher.putUnencodedChars(abiKey.getHash());
+      } else if (candidate instanceof BuildRule) {
+        HashCode hashCode = ((BuildRule) candidate).getRuleKey().getHashCode();
+        hasher.putBytes(hashCode.asBytes());
+      }
     }
 
     return hasher;
