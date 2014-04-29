@@ -27,6 +27,7 @@ public class PathSourcePath extends AbstractSourcePath {
     this.relativePath = Preconditions.checkNotNull(relativePath);
   }
 
+  @Override
   public Path resolve() {
     return relativePath;
   }
