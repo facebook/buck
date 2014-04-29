@@ -43,6 +43,39 @@ class Fixer(object):
         return None
 
 
+class DeleteLineFixer(Fixer):
+  """Fixes lint problems that are on a single line.
+  """
+  def fix_it(self, problem):
+    result = []
+    line_count = 1
+    with open(problem.file_name, 'r') as file:
+      for line in file.readlines():
+        new_line = line
+        if line_count != problem.line:
+          result.append(new_line)
+        line_count += 1
+
+    with open(problem.file_name, 'w') as file:
+      file.write(''.join(result))
+      file.truncate()
+
+    return {
+      'line': problem.line
+    }
+
+  def get_translate_function(self, translate_metadata):
+    def translateFunc(problem):
+      if problem.line < translate_metadata['line']:
+        return problem
+      else:
+        return problem.cloneWithNewOffset(
+          problem.line - 1,
+          problem.column)
+
+    return translateFunc
+
+
 class SingleLineFixer(Fixer):
     """Fixes lint problems that are on a single line.
     """
@@ -130,7 +163,6 @@ class FixTrailingOperator(Fixer):
         """
         result = []
         line_count = 1
-        problem = apply_offsets(problem)
         operator = FixTrailingOperator.OPERATOR_REGEX.match(
             problem.message).group('operator')
 
@@ -250,6 +282,15 @@ class FixJunit3Use(SingleLineFixer):
         return super(FixJunit3Use, self).get_translate_function(
             translate_metadata)
 
+
+@fixer
+class FixUnusedImport(DeleteLineFixer):
+  """Fixes unused imports.
+  """
+  def matches(self, problem):
+    return (problem.source == "com.puppycrawl.tools."
+                              "checkstyle.checks.imports."
+                              "UnusedImportsCheck")
 
 
 def main():
