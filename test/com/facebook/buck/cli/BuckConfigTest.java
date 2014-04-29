@@ -183,7 +183,7 @@ public class BuckConfigTest {
         "[alias]",
         "katana = //java/com/example:fb4a"));
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.exists("java/com/example")).andReturn(false);
+    EasyMock.expect(projectFilesystem.exists(Paths.get("java/com/example"))).andReturn(false);
     EasyMock.replay(projectFilesystem);
 
     try {

@@ -24,6 +24,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class BuildTargetParser {
@@ -83,9 +85,8 @@ public class BuildTargetParser {
     }
 
     // Make sure the directory that contains the build file exists.
-    String buildFileDirectory = baseName.substring(BUILD_RULE_PREFIX.length());
-    String buildFilePath = (buildFileDirectory.isEmpty() ? "" : buildFileDirectory + "/") +
-        BUILD_RULES_FILE_NAME;
+    Path buildFileDirectory = Paths.get(baseName.substring(BUILD_RULE_PREFIX.length()));
+    Path buildFilePath = buildFileDirectory.resolve(BUILD_RULES_FILE_NAME);
     if (!projectFilesystem.exists(buildFileDirectory)) {
       if (parseContext.getType() == ParseContext.Type.BUILD_FILE &&
           baseName.equals(parseContext.getBaseName())) {

@@ -575,7 +575,7 @@ public class ConstructorArgMarshallerTest {
   public BuildRuleFactoryParams buildRuleFactoryParams(Map<String, Object> args) {
     ProjectFilesystem filesystem = new ProjectFilesystem(new File(".")) {
       @Override
-      public boolean exists(String pathRelativeToProjectRoot) {
+      public boolean exists(Path pathRelativeToProjectRoot) {
         return true;
       }
     };

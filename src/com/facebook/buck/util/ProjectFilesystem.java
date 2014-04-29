@@ -218,14 +218,6 @@ public class ProjectFilesystem {
     return file;
   }
 
-  /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by
-   *    {@link #exists(java.nio.file.Path)}.
-   */
-  public boolean exists(String pathRelativeToProjectRoot) {
-    return exists(Paths.get(pathRelativeToProjectRoot));
-  }
-
   public boolean exists(Path pathRelativeToProjectRoot) {
     return java.nio.file.Files.exists(getPathForRelativePath(pathRelativeToProjectRoot));
   }

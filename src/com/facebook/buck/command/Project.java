@@ -492,7 +492,7 @@ public class Project {
       // If there is a default AndroidManifest.xml specified in .buckconfig, use it if
       // AndroidManifest.xml is not present in the root of the [Android] IntelliJ module.
       if (pathToDefaultAndroidManifest.isPresent()) {
-        String androidManifest = basePathWithSlash + "AndroidManifest.xml";
+        Path androidManifest = Paths.get(basePathWithSlash, "AndroidManifest.xml");
         if (!projectFilesystem.exists(androidManifest)) {
           String manifestPath = this.pathToDefaultAndroidManifest.get();
           String rootPrefix = "//";

@@ -102,8 +102,8 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
 
     // Build up the params to construct a FileCollector via a DescribedRuleBuilder.
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.exists("my")).andStubReturn(true);
-    EasyMock.expect(projectFilesystem.exists("my/BUCK")).andStubReturn(true);
+    EasyMock.expect(projectFilesystem.exists(Paths.get("my"))).andStubReturn(true);
+    EasyMock.expect(projectFilesystem.exists(Paths.get("my/BUCK"))).andStubReturn(true);
     EasyMock.expect(projectFilesystem.getAbsolutifier()).andStubReturn(getIdentityAbsolutifier());
 
     replayAll();

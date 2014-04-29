@@ -29,13 +29,15 @@ import com.facebook.buck.util.ProjectFilesystem;
 
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 public class BuildTargetParserTest {
 
   @Test
   public void testParseRootRule() throws NoSuchBuildTargetException {
     ProjectFilesystem mockProjectFilesystem = createMock(ProjectFilesystem.class);
-    expect(mockProjectFilesystem.exists("")).andReturn(true);
-    expect(mockProjectFilesystem.exists(BUILD_RULES_FILE_NAME)).andReturn(true);
+    expect(mockProjectFilesystem.exists(Paths.get(""))).andReturn(true);
+    expect(mockProjectFilesystem.exists(Paths.get(BUILD_RULES_FILE_NAME))).andReturn(true);
     replay(mockProjectFilesystem);
 
     // Parse "//:fb4a" with the BuildTargetParser and test all of its observers.
@@ -112,8 +114,9 @@ public class BuildTargetParserTest {
   @Test
   public void testParseFullyQualified() throws NoSuchBuildTargetException {
     ProjectFilesystem mockProjectFilesystem = createMock(ProjectFilesystem.class);
-    expect(mockProjectFilesystem.exists("facebook/orca")).andReturn(true);
-    expect(mockProjectFilesystem.exists("facebook/orca/" + BUILD_RULES_FILE_NAME)).andReturn(true);
+    expect(mockProjectFilesystem.exists(Paths.get("facebook/orca"))).andReturn(true);
+    expect(mockProjectFilesystem.exists(Paths.get("facebook/orca/" + BUILD_RULES_FILE_NAME)))
+        .andReturn(true);
     replay(mockProjectFilesystem);
 
     BuildTargetParser parser = new BuildTargetParser(mockProjectFilesystem);
@@ -127,8 +130,9 @@ public class BuildTargetParserTest {
   @Test
   public void testParseBuildFile() throws NoSuchBuildTargetException {
     ProjectFilesystem mockProjectFilesystem = createMock(ProjectFilesystem.class);
-    expect(mockProjectFilesystem.exists("facebook/orca")).andReturn(true);
-    expect(mockProjectFilesystem.exists("facebook/orca/" + BUILD_RULES_FILE_NAME)).andReturn(true);
+    expect(mockProjectFilesystem.exists(Paths.get("facebook/orca"))).andReturn(true);
+    expect(mockProjectFilesystem.exists(Paths.get("facebook/orca/" + BUILD_RULES_FILE_NAME)))
+        .andReturn(true);
     replay(mockProjectFilesystem);
 
     BuildTargetParser parser = new BuildTargetParser(mockProjectFilesystem);
@@ -142,7 +146,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseBuildFileMissingBuildDirectoryFullyQualified() {
     ProjectFilesystem mockProjectFilesystem = createMock(ProjectFilesystem.class);
-    expect(mockProjectFilesystem.exists("facebook/missing")).andReturn(false);
+    expect(mockProjectFilesystem.exists(Paths.get("facebook/missing"))).andReturn(false);
     replay(mockProjectFilesystem);
 
     BuildTargetParser parser = new BuildTargetParser(mockProjectFilesystem);
@@ -160,7 +164,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseBuildFileMissingBuildDirectory() {
     ProjectFilesystem mockProjectFilesystem = createMock(ProjectFilesystem.class);
-    expect(mockProjectFilesystem.exists("facebook/missing")).andReturn(false);
+    expect(mockProjectFilesystem.exists(Paths.get("facebook/missing"))).andReturn(false);
     replay(mockProjectFilesystem);
 
     BuildTargetParser parser = new BuildTargetParser(mockProjectFilesystem);
@@ -179,8 +183,8 @@ public class BuildTargetParserTest {
   @Test
   public void testParseBuildFileMissingBuildFile() throws NoSuchBuildTargetException {
     ProjectFilesystem mockProjectFilesystem = createMock(ProjectFilesystem.class);
-    expect(mockProjectFilesystem.exists("facebook/missing")).andReturn(true);
-    expect(mockProjectFilesystem.exists("facebook/missing/" + BUILD_RULES_FILE_NAME))
+    expect(mockProjectFilesystem.exists(Paths.get("facebook/missing"))).andReturn(true);
+    expect(mockProjectFilesystem.exists(Paths.get("facebook/missing/" + BUILD_RULES_FILE_NAME)))
         .andReturn(false);
     replay(mockProjectFilesystem);
 
@@ -204,8 +208,8 @@ public class BuildTargetParserTest {
   public void testParseWithVisibilityContext() throws NoSuchBuildTargetException {
     // Mock out all of the calls to the filesystem.
     ProjectFilesystem mockProjectFilesystem = createMock(ProjectFilesystem.class);
-    expect(mockProjectFilesystem.exists("java/com/example")).andReturn(true);
-    expect(mockProjectFilesystem.exists("java/com/example/" + BUILD_RULES_FILE_NAME))
+    expect(mockProjectFilesystem.exists(Paths.get("java/com/example"))).andReturn(true);
+    expect(mockProjectFilesystem.exists(Paths.get("java/com/example/" + BUILD_RULES_FILE_NAME)))
         .andReturn(true);
     replay(mockProjectFilesystem);
 

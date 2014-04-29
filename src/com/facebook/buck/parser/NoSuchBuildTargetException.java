@@ -21,6 +21,8 @@ import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 
+import java.nio.file.Path;
+
 @SuppressWarnings("serial")
 public class NoSuchBuildTargetException extends BuildTargetException {
 
@@ -33,7 +35,7 @@ public class NoSuchBuildTargetException extends BuildTargetException {
    * @param buildTargetName missing build target name
    * @param parseContext the context used when attempting to resolve the build target
    */
-  static NoSuchBuildTargetException createForMissingDirectory(String directoryPath,
+  static NoSuchBuildTargetException createForMissingDirectory(Path directoryPath,
       String buildTargetName,
       ParseContext parseContext) {
     String message = String.format("No directory %s when resolving target %s",
@@ -47,7 +49,7 @@ public class NoSuchBuildTargetException extends BuildTargetException {
    * @param buildTargetName missing build target name
    * @param parseContext the context used when attempting to resolve the build target
    */
-  static NoSuchBuildTargetException createForMissingBuildFile(String buildFilePath,
+  static NoSuchBuildTargetException createForMissingBuildFile(Path buildFilePath,
       String buildTargetName,
       ParseContext parseContext) {
     String message = String.format("No %s file %s when resolving target %s",
