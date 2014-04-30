@@ -186,7 +186,7 @@ public final class Main {
         serverPort = config.getValue("httpserver", "port");
       }
       Optional<WebServer> webServer;
-      if (serverPort.isPresent()) {
+      if (serverPort.isPresent() && !serverPort.get().isEmpty()) {
         String rawPort = serverPort.get();
         try {
           int port = Integer.parseInt(rawPort, 10);
