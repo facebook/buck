@@ -59,9 +59,9 @@ function killBuckd() {
         exit 1
       fi
     done
-    rm -rf ${BUCKD_DIR}
-    setBuckdRunning
   fi
+  rm -rf ${BUCKD_DIR}
+  setBuckdRunning
 }
 
 function startBuckdIfStopped() {
