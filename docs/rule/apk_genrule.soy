@@ -8,6 +8,7 @@
     {param content}
 
 {call buck.rule}
+{param status: 'FROZEN' /}
 {param overview}
 An <code>apk_genrule()</code> rule is used to post-process an APK.  What
 separates an apk_genrule from a genrule is apk_genrules are known by BUCK to

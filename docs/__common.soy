@@ -278,6 +278,8 @@ ga('send', 'pageview');
 
 /**
  * @param overview HTML description of the rule.
+ * @param status one of FROZEN, UNFROZEN, or DEPRECATED to indicate the
+       current level of support for the rule.
  * @param args HTML documentation for each arg for the rule.
  *     Should be created using multiple applications of the {buck.arg}
  *     template.
@@ -287,6 +289,14 @@ ga('send', 'pageview');
         examples.
  */
 {template .rule}
+{switch $status}
+  {case 'FROZEN'}
+    // Nothing to show here.
+  {case 'UNFROZEN'}
+    <p><small>This is liable to change in the future.</small></p>
+  {case 'DEPRECATED'}
+    <p><small>This will be removed in the future.</small></p>
+{/switch}
 {$overview|noAutoescape}
 
 <h2>Arguments</h2>
