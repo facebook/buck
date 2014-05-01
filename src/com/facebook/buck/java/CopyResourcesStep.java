@@ -48,8 +48,7 @@ public class CopyResourcesStep implements Step {
               BuckConstant.ANNOTATION_DIR,
               BuckConstant.BIN_DIR,
               BuckConstant.GEN_DIR
-          ) +
-      ")/(.*)");
+          ) + ")/(.*)");
 
   private final BuildTarget target;
   private final Collection<? extends SourcePath> resources;
@@ -92,12 +91,13 @@ public class CopyResourcesStep implements Step {
 
     for (SourcePath rawResource : resources) {
       // If the path to the file defining this rule were:
-      // "first-party/orca/lib-http/tests/com/facebook/orca/BUILD"
+      // "first-party/orca/lib-http/tests/com/facebook/orca/BUCK"
       //
       // And the value of resource were:
       // "first-party/orca/lib-http/tests/com/facebook/orca/protocol/base/batch_exception1.txt"
       //
-      // Then javaPackageAsPath would be:
+      // Assuming that `src_roots = tests` were in the [java] section of the .buckconfig file,
+      // then javaPackageAsPath would be:
       // "com/facebook/orca/protocol/base/"
       //
       // And the path that we would want to copy to the classes directory would be:
