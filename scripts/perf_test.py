@@ -202,6 +202,10 @@ def set_perftest_side(
   %s
   dir = buck-cache-%s
   dir_mode = %s
+[httpserver]
+  port =
+[daemon]
+  flush_events_before_exit = true
 ''' % ('mode = dir' if dir_cache_only else '', perftest_side, cache_mode))
     buckconfig.truncate()
   buckversion_path = os.path.join(cwd, '.buckversion')
