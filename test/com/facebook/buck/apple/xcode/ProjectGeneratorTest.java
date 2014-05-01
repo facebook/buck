@@ -833,6 +833,7 @@ public class ProjectGeneratorTest {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
 
     BuildRule genrule = GenruleBuilder.createGenrule(new BuildTarget("//foo", "script"))
+        .addSrc(new TestSourcePath("script/input.png").resolve())
         .setBash("echo \"hello world!\"")
         .setOut("helloworld.txt")
         .build();
@@ -871,6 +872,10 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getSingletonPhaseByType(
             target,
             PBXShellScriptBuildPhase.class);
+
+    assertThat(
+        Iterables.getOnlyElement(shellScriptBuildPhase.getInputPaths()),
+        equalTo(".././script/input.png"));
 
     assertThat(
         shellScriptBuildPhase.getShellScript(),

@@ -734,7 +734,8 @@ public class ProjectGenerator {
     PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
     target.getBuildPhases().add(shellScriptBuildPhase);
     for (Path path : rule.getSrcs()) {
-      shellScriptBuildPhase.getInputPaths().add(path.toString());
+      shellScriptBuildPhase.getInputPaths().add(
+          repoRootRelativeToOutputDirectory.resolve(path).toString());
     }
 
     StringBuilder bashCommandBuilder = new StringBuilder();
