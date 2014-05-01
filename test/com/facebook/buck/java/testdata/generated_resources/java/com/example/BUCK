@@ -1,0 +1,12 @@
+java_library(
+  name = 'example',
+  srcs = ['HelloWorld.java'],
+  resources = ['//java/com/example/res:create_resources'],
+  deps = ['//java/com/example/res:create_resources'],
+)
+
+java_binary(
+  name = 'HelloWorld',
+  main_class = 'com.example.HelloWorld',
+  deps = [':example'],
+)

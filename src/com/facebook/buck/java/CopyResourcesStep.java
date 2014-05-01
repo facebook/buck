@@ -16,6 +16,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
@@ -24,6 +25,7 @@ import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -31,8 +33,23 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CopyResourcesStep implements Step {
+
+  /**
+   * This matches the Path for a BuildRuleSourcePath and returns the path without the
+   * "buck-out/XXX/" component as the first capturing group.
+   */
+  private static final Pattern GENERATED_FILE_PATTERN = Pattern.compile(
+      "^(?:" +
+          Joiner.on('|').join(
+              BuckConstant.ANNOTATION_DIR,
+              BuckConstant.BIN_DIR,
+              BuckConstant.GEN_DIR
+          ) +
+      ")/(.*)");
 
   private final BuildTarget target;
   private final Collection<? extends SourcePath> resources;
@@ -88,39 +105,41 @@ public class CopyResourcesStep implements Step {
       //
       // Therefore, some path-wrangling is required to produce the correct string.
 
-      Path resource = MorePaths.separatorsToUnix(rawResource.resolve());
-      String javaPackageAsPath =
-          javaPackageFinder.findJavaPackageFolderForPath(resource.toString());
-      Path relativeSymlinkPath;
+      final Path pathToResource = rawResource.resolve();
+      String resource = MorePaths.pathWithUnixSeparators(pathToResource);
+      Matcher matcher;
+      if ((matcher = GENERATED_FILE_PATTERN.matcher(resource)).matches()) {
+        resource = matcher.group(1);
+      }
+      String javaPackageAsPath = javaPackageFinder.findJavaPackageFolderForPath(resource);
 
-      if (resource.startsWith(BuckConstant.BUCK_OUTPUT_PATH) ||
-          resource.startsWith(BuckConstant.GEN_PATH) ||
-          resource.startsWith(BuckConstant.BIN_PATH) ||
-          resource.startsWith(BuckConstant.ANNOTATION_PATH)) {
-        // Handle the case where we depend on the output of another BuildRule. In that case, just
-        // grab the output and put in the same package as this target would be in.
-        relativeSymlinkPath = Paths.get(
-            String.format(
-                "%s%s%s",
-                targetPackageDir,
-                targetPackageDir.isEmpty() ? "" : "/",
-                rawResource.resolve().getFileName()));
-      } else if ("".equals(javaPackageAsPath)) {
+      Path relativeSymlinkPath;
+      if ("".equals(javaPackageAsPath)) {
         // In this case, the project root is acting as the default package, so the resource path
         // works fine.
-        relativeSymlinkPath = resource.getFileName();
+        relativeSymlinkPath = pathToResource.getFileName();
       } else {
-        int lastIndex = resource.toString().lastIndexOf(javaPackageAsPath);
-        Preconditions.checkState(
-            lastIndex >= 0,
-            "Resource path %s must contain %s",
-            resource,
-            javaPackageAsPath);
-
-        relativeSymlinkPath = Paths.get(resource.toString().substring(lastIndex));
+        int lastIndex = resource.lastIndexOf(javaPackageAsPath);
+        if (lastIndex < 0) {
+          Preconditions.checkState(
+              rawResource instanceof BuildRuleSourcePath,
+              "If resource path %s does not contain %s, then it must be a BuildRuleSourcePath.",
+              pathToResource,
+              javaPackageAsPath);
+          // Handle the case where we depend on the output of another BuildRule. In that case, just
+          // grab the output and put in the same package as this target would be in.
+          relativeSymlinkPath = Paths.get(
+              String.format(
+                  "%s%s%s",
+                  targetPackageDir,
+                  targetPackageDir.isEmpty() ? "" : "/",
+                  rawResource.resolve().getFileName()));
+        } else {
+          relativeSymlinkPath = Paths.get(resource.substring(lastIndex));
+        }
       }
       Path target = outputDirectory.resolve(relativeSymlinkPath);
-      MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(resource, target);
+      MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(pathToResource, target);
       allSteps.add(link);
     }
     return allSteps.build();

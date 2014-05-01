@@ -1,0 +1,8 @@
+genrule(
+  name = 'create_resources',
+  bash = 'echo "hello world" > $OUT',
+  out = 'helloworld.txt',
+  visibility = [
+    'PUBLIC',
+  ],
+)

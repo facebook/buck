@@ -68,6 +68,14 @@ public class MorePaths {
     return separatorsToUnix(path.toString());
   }
 
+  public static String pathWithUnixSeparators(Path path) {
+    if (File.separator.equals("/")) {
+      return path.toString();
+    } else {
+      return path.toString().replace(File.separator, "/");
+    }
+  }
+
   /**
    * @param toMakeAbsolute The {@link Path} to act upon.
    * @return The Path, made absolute and normalized.
