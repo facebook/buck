@@ -62,6 +62,7 @@ public abstract class DirectoryTraversal {
         if (ignorePaths.contains(rootPath.relativize(dir))) {
           return FileVisitResult.SKIP_SUBTREE;
         } else {
+          visitDirectory(dir.toFile(), rootPath.relativize(dir).toString());
           return FileVisitResult.CONTINUE;
         }
       }
@@ -93,6 +94,14 @@ public abstract class DirectoryTraversal {
    * @param relativePath a path such as "foo.txt" or "foo/bar.txt"
    */
   public abstract void visit(File file, String relativePath) throws IOException;
+
+  /**
+   * @param directory a directory.
+   * @param relativePath a path such as "foo" or "foo" with no trailing slash.
+   */
+  public void visitDirectory(File directory, String relativePath) throws IOException {
+    // Do nothing by default.
+  }
 
   public static void main(String[] args) throws IOException {
     File directory = new File(args[0]);

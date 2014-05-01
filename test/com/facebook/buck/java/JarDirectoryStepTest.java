@@ -28,6 +28,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,12 +36,15 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class JarDirectoryStepTest {
 
@@ -144,6 +148,40 @@ public class JarDirectoryStepTest {
 
       assertEquals(expected, version);
     }
+  }
+
+  @Test
+  public void jarsShouldContainDirectoryEntries() throws IOException {
+    File zipup = folder.newFolder("dir-zip");
+
+    File subdir = new File(zipup, "dir/subdir");
+    assertTrue(subdir.mkdirs());
+    new File(subdir, "a.txt");
+    Files.write(subdir.toPath().resolve("a.txt"), "cake".getBytes());
+
+    JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
+        ImmutableSet.of(zipup.toPath()),
+        /* main class */ null,
+        /* manifest file */ null);
+    ExecutionContext context = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(new ProjectFilesystem(zipup.toPath()))
+        .build();
+
+    int returnCode = step.execute(context);
+
+    assertEquals(0, returnCode);
+
+    File zip = new File(zipup, "output.jar");
+    assertTrue(zip.exists());
+
+    // Iterate over each of the entries, expecting to see the directory names as entries.
+    Set<String> expected = Sets.newHashSet("dir/", "dir/subdir/");
+    try (ZipInputStream is = new ZipInputStream(new FileInputStream(zip))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        expected.remove(entry.getName());
+      }
+    }
+    assertTrue("Didn't see entries for: " + expected, expected.isEmpty());
   }
 
   private File createZip(File zipFile, String... fileNames) throws IOException {

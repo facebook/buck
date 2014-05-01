@@ -282,6 +282,21 @@ public class JarDirectoryStep implements Step {
         }
       }
 
+      @Override
+      public void visitDirectory(File directory, String relativePath) throws IOException {
+        if (relativePath.isEmpty()) {
+          // root of the tree. Skip.
+          return;
+        }
+        String entryName = relativePath + "/";
+        if (alreadyAddedEntries.contains(entryName)) {
+          return;
+        }
+        JarEntry entry = new JarEntry(entryName);
+        entry.setTime(directory.lastModified());
+        jar.putNextEntry(entry);
+        jar.closeEntry();
+      }
     }.traverse();
   }
 
