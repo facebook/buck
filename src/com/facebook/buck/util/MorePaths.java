@@ -46,29 +46,8 @@ public class MorePaths {
     }
   };
 
-  public static Path newPathInstance(String path) {
-    return separatorsToUnix(path);
-  }
-
-  public static Path newPathInstance(File file) {
-    return separatorsToUnix(file.getPath());
-  }
-
-  /**
-   * @return The path using UNIX path separators.
-   */
-  public static Path separatorsToUnix(String path) {
-    if (!File.separator.equals("/")) {
-      path = path.replace(File.separator, "/");
-    }
-    return Paths.get(path).normalize();
-  }
-
-  /**
-   * @return The path using UNIX path separators.
-   */
-  public static Path separatorsToUnix(Path path) {
-    return separatorsToUnix(path.toString());
+  public static String pathWithUnixSeparators(String path) {
+    return pathWithUnixSeparators(Paths.get(path));
   }
 
   public static String pathWithUnixSeparators(Path path) {

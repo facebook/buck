@@ -24,6 +24,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.Map;
 
 /**
@@ -62,7 +63,7 @@ public final class NonCheckingBuildRuleFactoryParams {
     @Override
     public String getBasePathOfAncestorTarget(String filePath) {
       // Always assume the file is local to the target.
-      return MorePaths.newPathInstance(filePath).getParent().toString();
+      return MorePaths.pathWithUnixSeparators(Paths.get(filePath).getParent());
     }
   }
 

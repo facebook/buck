@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.event.BuckEventBusFactory.CapturingLogEventListener;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -25,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusFactory.CapturingLogEventListener;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;
@@ -68,8 +68,8 @@ public class BuildContextTest {
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
 
-    String androidBootclasspath =
-        MorePaths.newPathInstance(androidBootclasspathSupplier.get()).toString();
+    String androidBootclasspath = MorePaths.pathWithUnixSeparators(
+        androidBootclasspathSupplier.get());
     assertEquals(
         "add-ons/addon-google_apis-google-15/libs/effects.jar:" +
         "add-ons/addon-google_apis-google-15/libs/maps.jar:" +

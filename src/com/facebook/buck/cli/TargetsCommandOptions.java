@@ -82,9 +82,9 @@ public class TargetsCommandOptions extends BuildCommandOptions {
 
       // Ignore files that aren't under project root.
       if (canonicalFullPath.startsWith(projectRootCanonicalFullPathWithEndSlash)) {
-        builder.add(
-            MorePaths.newPathInstance(canonicalFullPath.substring(
-                projectRootCanonicalFullPathWithEndSlash.length())).toString());
+        String relativePath = canonicalFullPath.substring(
+            projectRootCanonicalFullPathWithEndSlash.length());
+        builder.add(MorePaths.pathWithUnixSeparators(relativePath));
       }
     }
     return builder.build();

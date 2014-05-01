@@ -16,16 +16,15 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.FilterResourcesStep.ImageScaler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.FilterResourcesStep.ImageScaler;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.Filters;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
@@ -66,8 +65,7 @@ public class FilterResourcesStepTest {
   private final Path scaleDest = getDrawableFile(first, "mdpi", "other.png");
 
   private Path getDrawableFile(String dir, String qualifier, String filename) {
-    return MorePaths.newPathInstance(
-        new File(dir, String.format("drawable-%s/%s", qualifier, filename)));
+    return Paths.get(dir, String.format("drawable-%s", qualifier), filename);
   }
 
   @Test

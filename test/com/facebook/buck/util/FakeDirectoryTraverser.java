@@ -64,7 +64,7 @@ public class FakeDirectoryTraverser implements DirectoryTraverser {
 
   @Override
   public void traverse(DirectoryTraversal traversal) throws IOException {
-    String traversalRootPath = MorePaths.newPathInstance(traversal.getRoot()).toString();
+    String traversalRootPath = MorePaths.pathWithUnixSeparators(traversal.getRoot().toPath());
     Collection<Entry> entries = pathsToEntries.get(traversalRootPath);
     if (entries == null) {
       throw new RuntimeException("Unexpected: no traversal for root path: " + traversalRootPath);
