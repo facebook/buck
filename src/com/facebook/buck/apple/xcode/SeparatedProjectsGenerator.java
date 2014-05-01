@@ -63,6 +63,10 @@ public class SeparatedProjectsGenerator {
 
     for (BuildTarget target : projectConfigTargets) {
       BuildRule rule = partialGraph.getDependencyGraph().findBuildRuleByTarget(target);
+      if (rule == null) {
+        throw new HumanReadableException(
+            "target not found: " + target.toString());
+      }
       if (!rule.getType().equals(XcodeProjectConfigDescription.TYPE)) {
         throw new HumanReadableException(
             "expected only xcode_project_config rules, got: " + target.toString());

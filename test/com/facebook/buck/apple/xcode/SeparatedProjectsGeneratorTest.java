@@ -54,7 +54,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -69,6 +71,9 @@ public class SeparatedProjectsGeneratorTest {
   private final XcodeProjectConfigDescription xcodeProjectConfigDescription =
       new XcodeProjectConfigDescription();
 
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
+
   @Test(expected = HumanReadableException.class)
   public void errorsIfNotPassingInXcodeConfigRules() throws IOException {
     BuildRule rule = createBuildRuleWithDefaults(
@@ -77,6 +82,25 @@ public class SeparatedProjectsGeneratorTest {
         iosLibraryDescription);
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(rule));
+
+    SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        projectFilesystem,
+        partialGraph,
+        executionContext,
+        ImmutableSet.of(rule.getBuildTarget()));
+    generator.generateProjects();
+  }
+
+  @Test
+  public void errorsIfPassingInNonexistentRule() throws IOException {
+    BuildRule rule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "thing"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("target not found");
+
+    PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.<BuildRule>of());
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
