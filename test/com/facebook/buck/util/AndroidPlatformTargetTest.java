@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -206,6 +207,42 @@ public class AndroidPlatformTargetTest {
         "android-4.2.2 should be used as the build directory",
         new File(androidSdkDir, "build-tools/android-4.2.2/aapt"),
         androidPlatformTargetOption.get().getAaptExecutable());
+  }
+
+  @Test
+  public void testLooksForAdditionalAddonsDirectories() throws IOException {
+    File androidSdkDir = tempDir.newFolder();
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new FakeAndroidDirectoryResolver(
+            Optional.of(androidSdkDir.toPath()),
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
+    File buildToolsDir = new File(androidSdkDir, "build-tools");
+    buildToolsDir.mkdir();
+    new File(buildToolsDir, "android-4.2.2").mkdir();
+
+    File addOnsLibsDir1 = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
+    addOnsLibsDir1.mkdirs();
+    File addOnsLibsDir2 = new File(androidSdkDir, "add-ons/addon-google_apis-google-17-2/libs");
+    addOnsLibsDir2.mkdirs();
+    Files.touch(new File(addOnsLibsDir2, "effects.jar"));
+
+    // '-11' to test that the sorting works correctly.
+    File addOnsLibsDir3 = new File(androidSdkDir, "add-ons/addon-google_apis-google-17-11/libs");
+    addOnsLibsDir3.mkdirs();
+    Files.touch(new File(addOnsLibsDir3, "ignored.jar"));
+
+    Optional<AndroidPlatformTarget> androidPlatformTargetOption =
+        AndroidPlatformTarget.getTargetForId(
+            "Google Inc.:Google APIs:17",
+            androidDirectoryResolver);
+    assertTrue(androidPlatformTargetOption.isPresent());
+
+    // Verify that addOnsLibsDir2 was picked up since addOnsLibsDir1 is empty.
+    assertTrue(androidPlatformTargetOption.get().getBootclasspathEntries().contains(
+            addOnsLibsDir2.toPath().resolve("effects.jar").toAbsolutePath()));
+    assertFalse(androidPlatformTargetOption.get().getBootclasspathEntries().contains(
+            addOnsLibsDir3.toPath().resolve("ignored.jar").toAbsolutePath()));
   }
 
   @Test

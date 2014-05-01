@@ -332,40 +332,73 @@ public class AndroidPlatformTarget {
    */
   private static class AndroidWithGoogleApisFactory implements Factory {
 
+    private static final String API_DIR_SUFFIX = "(?:-([0-9]+))*";
+
     @Override
     public AndroidPlatformTarget newInstance(
-        AndroidDirectoryResolver androidDirectoryResolver,
-        int apiLevel) {
-      String addonPath = String.format("/add-ons/addon-google_apis-google-%d/libs/", apiLevel);
-      File androidSdkDir = androidDirectoryResolver.findAndroidSdkDir().toFile();
-      File addonDirectory = new File(androidSdkDir.getPath() + addonPath);
-      String[] addonFiles;
+        final AndroidDirectoryResolver androidDirectoryResolver,
+        final int apiLevel) {
+      // TODO(natthu): Use Paths instead of Strings everywhere in this file.
+      Path androidSdkDir = androidDirectoryResolver.findAndroidSdkDir();
+      File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
+      String apiDirPrefix = String.format("addon-google_apis-google-%d", apiLevel);
+      final Pattern apiDirPattern = Pattern.compile(apiDirPrefix + API_DIR_SUFFIX);
 
-      if (!addonDirectory.isDirectory() ||
-          (addonFiles = addonDirectory.list(new AddonFilter())) == null ||
-          addonFiles.length == 0) {
-        throw new HumanReadableException(
-            "Google APIs not found in %s.\n" +
-            "Please run '%s/tools/android sdk' and select both 'SDK Platform' and " +
-            "'Google APIs' under Android (API %d)",
-            addonDirectory.getAbsolutePath(),
-            androidSdkDir.getPath(),
-            apiLevel);
+      if (addonsParentDir.isDirectory()) {
+        String[] addonsApiDirs = addonsParentDir.list(
+            new FilenameFilter() {
+              @Override
+              public boolean accept(File dir, String name) {
+                return apiDirPattern.matcher(name).matches();
+              }
+            });
+        Arrays.sort(addonsApiDirs, new Comparator<String>() {
+              @Override
+              public int compare(String o1, String o2) {
+                return getVersion(o1) - getVersion(o2);
+              }
+
+              private int getVersion(String dirName) {
+                Matcher matcher = apiDirPattern.matcher(dirName);
+                Preconditions.checkState(matcher.matches());
+                if (matcher.group(1) != null) {
+                  return Integer.parseInt(matcher.group(1));
+                }
+                return 0;
+              }
+            });
+
+        ImmutableSet.Builder<String> additionalJarPaths = ImmutableSet.builder();
+        for (String dir : addonsApiDirs) {
+          File libsDir = new File(addonsParentDir, dir + "/libs");
+
+          String[] addonFiles;
+          if (libsDir.isDirectory() &&
+              (addonFiles = libsDir.list(new AddonFilter())) != null &&
+              addonFiles.length != 0) {
+            Path addonPath = androidSdkDir.relativize(libsDir.toPath());
+
+            Arrays.sort(addonFiles);
+            for (String addonJar : addonFiles) {
+              additionalJarPaths.add(addonPath.resolve(addonJar).toString());
+            }
+
+            return createFromDefaultDirectoryStructure(
+                String.format("Google Inc.:Google APIs:%d", apiLevel),
+                androidDirectoryResolver,
+                String.format("platforms/android-%d", apiLevel),
+                additionalJarPaths.build());
+          }
+        }
       }
 
-      ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-
-      Arrays.sort(addonFiles);
-      for (String filename : addonFiles) {
-        builder.add(addonPath + filename);
-      }
-      Set<String> additionalJarPaths = builder.build();
-
-      return createFromDefaultDirectoryStructure(
-          String.format("Google Inc.:Google APIs:%d", apiLevel),
-          androidDirectoryResolver,
-          String.format("platforms/android-%d", apiLevel),
-          additionalJarPaths);
+      throw new HumanReadableException(
+          "Google APIs not found in %s.\n" +
+          "Please run '%s/tools/android sdk' and select both 'SDK Platform' and " +
+          "'Google APIs' under Android (API %d)",
+          new File(addonsParentDir, apiDirPrefix + "/libs").getAbsolutePath(),
+          androidSdkDir,
+          apiLevel);
     }
   }
 
