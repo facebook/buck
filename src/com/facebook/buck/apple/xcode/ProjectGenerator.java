@@ -201,6 +201,8 @@ public class ProjectGenerator {
   private XCScheme scheme = null;
   private Document workspace = null;
   private boolean shouldPlaceAssetCatalogCompiler = false;
+  private final ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToGeneratedTargetBuilder;
+  private boolean projectGenerated;
 
   /**
    * Populated while generating project configurations, in order to collect the possible
@@ -238,6 +240,7 @@ public class ProjectGenerator {
             projectFilesystem.getRootPath().toAbsolutePath());
     this.project = new PBXProject(projectName);
 
+    this.buildRuleToGeneratedTargetBuilder = ImmutableMap.builder();
     this.buildRuleToXcodeTarget = CacheBuilder.newBuilder().build(
         new CacheLoader<BuildRule, Optional<PBXTarget>>() {
           @Override
@@ -270,17 +273,22 @@ public class ProjectGenerator {
     return projectPath;
   }
 
+  public Map<BuildRule, PBXTarget> getBuildRuleToGeneratedTargetMap() {
+    Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
+    return buildRuleToGeneratedTargetBuilder.build();
+  }
+
   public void createXcodeProjects() throws IOException {
     try {
       targetNameToGIDMap = buildTargetNameToGIDMap();
       Iterable<BuildRule> allRules = RuleDependencyFinder.getAllRules(partialGraph, initialTargets);
-      ImmutableMap.Builder<BuildRule, PBXTarget> ruleToTargetMapBuilder = ImmutableMap.builder();
+
       for (BuildRule rule : allRules) {
         if (isBuiltByCurrentProject(rule)) {
           // Trigger the loading cache to call the generateTargetForBuildRule function.
           Optional<PBXTarget> target = buildRuleToXcodeTarget.getUnchecked(rule);
           if (target.isPresent()) {
-            ruleToTargetMapBuilder.put(rule, target.get());
+            buildRuleToGeneratedTargetBuilder.put(rule, target.get());
           }
         }
       }
@@ -302,7 +310,7 @@ public class ProjectGenerator {
 
       if (options.contains(Option.GENERATE_SCHEME)) {
         scheme = SchemeGenerator.createScheme(
-            partialGraph, projectPath, ruleToTargetMapBuilder.build());
+            partialGraph, projectPath, buildRuleToGeneratedTargetBuilder.build());
         SchemeGenerator.writeScheme(projectFilesystem, scheme, projectPath);
       }
 
@@ -319,6 +327,7 @@ public class ProjectGenerator {
             Paths.get(PATH_TO_ASSET_CATALOG_BUILD_PHASE_SCRIPT),
             placedAssetCatalogBuildPhaseScript);
       }
+      projectGenerated = true;
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
       // UncheckedExecutionException. Unwrap it if its cause is HumanReadable.

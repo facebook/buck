@@ -883,6 +883,40 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void ruleToTargetMapContainsPBXTarget() throws IOException {
+    BuildRuleParams params = new FakeBuildRuleParams(
+        new BuildTarget("//foo", "lib"), ImmutableSortedSet.<BuildRule>of());
+    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.srcs = ImmutableList.of(
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+        AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
+    arg.frameworks = ImmutableSortedSet.of();
+    BuildRule rule = new DescribedRule(
+        IosLibraryDescription.TYPE,
+        iosLibraryDescription.createBuildable(params, arg), params);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    assertEquals(rule, Iterables.getOnlyElement(
+            projectGenerator.getBuildRuleToGeneratedTargetMap().keySet()));
+
+    PBXTarget target = Iterables.getOnlyElement(
+        projectGenerator.getBuildRuleToGeneratedTargetMap().values());
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target, ImmutableMap.of(
+        "foo.m", Optional.of("-foo"),
+        "bar.m", Optional.<String>absent()));
+  }
+
+  @Test
   public void shouldDiscoverDependenciesAndTests() throws IOException {
     // Create the following dep tree:
     // FooBin -has-test-> FooBinTest
