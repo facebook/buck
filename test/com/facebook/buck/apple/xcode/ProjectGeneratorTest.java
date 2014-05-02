@@ -21,7 +21,6 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTarg
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRuleResolver;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
-import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -85,15 +84,12 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -102,7 +98,6 @@ import org.w3c.dom.Document;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -157,10 +152,6 @@ public class ProjectGeneratorTest {
     Path outputWorkspaceBundlePath = OUTPUT_DIRECTORY.resolve(PROJECT_NAME + ".xcworkspace");
     Path outputWorkspaceFilePath = outputWorkspaceBundlePath.resolve("contents.xcworkspacedata");
 
-    Path outputSchemeFolderPath = OUTPUT_PROJECT_BUNDLE_PATH.resolve(
-        Paths.get("xcshareddata", "xcschemes"));
-    Path outputSchemePath = outputSchemeFolderPath.resolve("Scheme.xcscheme");
-
     projectGenerator.createXcodeProjects();
 
     Optional<String> pbxproj = projectFilesystem.readFileIfItExists(OUTPUT_PROJECT_FILE_PATH);
@@ -169,62 +160,6 @@ public class ProjectGeneratorTest {
     Optional<String> xcworkspacedata =
         projectFilesystem.readFileIfItExists(outputWorkspaceFilePath);
     assertTrue(xcworkspacedata.isPresent());
-
-    Optional<String> xcscheme = projectFilesystem.readFileIfItExists(outputSchemePath);
-    assertTrue(xcscheme.isPresent());
-  }
-
-  @Test
-  public void testSchemeGeneration() throws IOException {
-    BuildRule rootRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "root"),
-        ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
-    BuildRule leftRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "left"),
-        ImmutableSortedSet.of(rootRule),
-        iosLibraryDescription);
-    BuildRule rightRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "right"),
-        ImmutableSortedSet.of(rootRule),
-        iosLibraryDescription);
-    BuildRule childRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "child"),
-        ImmutableSortedSet.of(leftRule, rightRule),
-        iosLibraryDescription);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rootRule, leftRule, rightRule, childRule),
-        ImmutableSet.of(childRule.getBuildTarget()));
-
-    // Generate the project.
-    projectGenerator.createXcodeProjects();
-
-    // Verify the scheme.
-    PBXProject project = projectGenerator.getGeneratedProject();
-    Map<String, String> targetNameToGid = Maps.newHashMap();
-    for (PBXTarget target : project.getTargets()) {
-      targetNameToGid.put(target.getName(), target.getGlobalID());
-    }
-
-    XCScheme scheme = Preconditions.checkNotNull(projectGenerator.getGeneratedScheme());
-    List<String> actualOrdering = Lists.newArrayList();
-    for (XCScheme.BuildActionEntry entry : scheme.getBuildAction()) {
-      actualOrdering.add(entry.getBlueprintIdentifier());
-      assertEquals(PROJECT_CONTAINER, entry.getContainerRelativePath());
-    }
-
-    List<String> expectedOrdering1 = ImmutableList.of(
-        targetNameToGid.get("//foo:root"),
-        targetNameToGid.get("//foo:left"),
-        targetNameToGid.get("//foo:right"),
-        targetNameToGid.get("//foo:child"));
-    List<String> expectedOrdering2 = ImmutableList.of(
-        targetNameToGid.get("//foo:root"),
-        targetNameToGid.get("//foo:right"),
-        targetNameToGid.get("//foo:left"),
-        targetNameToGid.get("//foo:child"));
-    assertThat(actualOrdering, either(equalTo(expectedOrdering1)).or(equalTo(expectedOrdering2)));
   }
 
   @Test

@@ -130,11 +130,6 @@ import javax.xml.transform.stream.StreamResult;
 public class ProjectGenerator {
   public enum Option {
     /**
-     * Generate a build scheme
-     */
-    GENERATE_SCHEME,
-
-    /**
      * generate native xcode targets for dependent build targets.
      */
     GENERATE_TARGETS_FOR_DEPENDENCIES,
@@ -165,7 +160,6 @@ public class ProjectGenerator {
    * Standard options for generating a combined project
    */
   public static final ImmutableSet<Option> COMBINED_PROJECT_OPTIONS = ImmutableSet.of(
-      Option.GENERATE_SCHEME,
       Option.GENERATE_TARGETS_FOR_DEPENDENCIES,
       Option.GENERATE_WORKSPACE);
 
@@ -198,7 +192,6 @@ public class ProjectGenerator {
   // These fields are created/filled when creating the projects.
   private final PBXProject project;
   private final LoadingCache<BuildRule, Optional<PBXTarget>> buildRuleToXcodeTarget;
-  private XCScheme scheme = null;
   private Document workspace = null;
   private boolean shouldPlaceAssetCatalogCompiler = false;
   private final ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToGeneratedTargetBuilder;
@@ -252,12 +245,6 @@ public class ProjectGenerator {
     xcodeConfigurationLayersMultimapBuilder = ImmutableMultimap.builder();
   }
 
-  @Nullable
-  @VisibleForTesting
-  XCScheme getGeneratedScheme() {
-    return scheme;
-  }
-
   @VisibleForTesting
   PBXProject getGeneratedProject() {
     return project;
@@ -306,12 +293,6 @@ public class ProjectGenerator {
 
       if (options.contains(Option.GENERATE_WORKSPACE)) {
         writeWorkspace(projectPath);
-      }
-
-      if (options.contains(Option.GENERATE_SCHEME)) {
-        scheme = SchemeGenerator.createScheme(
-            partialGraph, projectPath, buildRuleToGeneratedTargetBuilder.build());
-        SchemeGenerator.writeScheme(projectFilesystem, scheme, projectPath);
       }
 
       if (shouldPlaceAssetCatalogCompiler) {
