@@ -100,7 +100,7 @@ public class AaptStep extends ShellStep {
     }
 
     builder.add("-M").add(androidManifest.toString());
-    builder.add("-I", androidPlatformTarget.getAndroidJar().getAbsolutePath());
+    builder.add("-I", androidPlatformTarget.getAndroidJar().toString());
     builder.add("-F", pathToOutputApkFile.toString());
 
     return builder.build();

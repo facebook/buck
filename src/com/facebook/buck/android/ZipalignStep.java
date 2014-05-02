@@ -39,7 +39,7 @@ public class ZipalignStep extends ShellStep {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-    args.add(androidPlatformTarget.getZipalignExecutable().getAbsolutePath());
+    args.add(androidPlatformTarget.getZipalignExecutable().toString());
     args.add("-f").add("4");
     args.add(inputFile.toString());
     args.add(outputFile.toString());

@@ -72,12 +72,9 @@ public class GenAidlTest {
     final String pathToAidlExecutable = "/usr/local/bin/aidl";
     final String pathToFrameworkAidl = "/home/root/android/platforms/android-16/framework.aidl";
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    File aidlExecutable = createMock(File.class);
-    expect(aidlExecutable.getAbsolutePath()).andReturn(pathToAidlExecutable);
-    expect(androidPlatformTarget.getAidlExecutable()).andReturn(aidlExecutable);
-    File frameworkIdlFile = createMock(File.class);
-    expect(frameworkIdlFile.getAbsolutePath()).andReturn(pathToFrameworkAidl);
-    expect(androidPlatformTarget.getAndroidFrameworkIdlFile()).andReturn(frameworkIdlFile);
+    expect(androidPlatformTarget.getAidlExecutable()).andReturn(Paths.get(pathToAidlExecutable));
+    expect(androidPlatformTarget.getAndroidFrameworkIdlFile())
+        .andReturn(Paths.get(pathToFrameworkAidl));
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.getAndroidPlatformTarget()).andReturn(androidPlatformTarget);
@@ -89,10 +86,7 @@ public class GenAidlTest {
           }
         })
         .times(2);
-    replay(androidPlatformTarget,
-        aidlExecutable,
-        frameworkIdlFile,
-        executionContext);
+    replay(androidPlatformTarget, executionContext);
 
     Path outputDirectory = Paths.get(
         BuckConstant.BIN_DIR,
@@ -115,9 +109,6 @@ public class GenAidlTest {
 
     assertEquals(4, steps.size());
 
-    verify(androidPlatformTarget,
-        aidlExecutable,
-        frameworkIdlFile,
-        executionContext);
+    verify(androidPlatformTarget, executionContext);
   }
 }

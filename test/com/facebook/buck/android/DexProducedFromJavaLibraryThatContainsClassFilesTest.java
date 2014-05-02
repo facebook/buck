@@ -47,7 +47,6 @@ import com.google.common.hash.Hashing;
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
@@ -83,7 +82,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     resetAll();
 
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    expect(androidPlatformTarget.getDxExecutable()).andReturn(new File("/usr/bin/dx"));
+    expect(androidPlatformTarget.getDxExecutable()).andReturn(Paths.get("/usr/bin/dx"));
 
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo")))

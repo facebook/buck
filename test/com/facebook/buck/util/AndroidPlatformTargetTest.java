@@ -45,7 +45,7 @@ public class AndroidPlatformTargetTest {
     String name = "Example Inc.:Google APIs:16";
     Path androidSdkDir = Paths.get("/home/android");
     String platformDirectoryPath = "platforms/android-16";
-    Set<String> additionalJarPaths = ImmutableSet.of();
+    Set<Path> additionalJarPaths = ImmutableSet.of();
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir),
@@ -58,27 +58,28 @@ public class AndroidPlatformTargetTest {
     assertEquals(name, androidPlatformTarget.getName());
     assertEquals(ImmutableList.of(Paths.get("/home/android/platforms/android-16/android.jar")),
         androidPlatformTarget.getBootclasspathEntries());
-    assertEquals(new File("/home/android/platforms/android-16/android.jar"),
+    assertEquals(Paths.get("/home/android/platforms/android-16/android.jar"),
         androidPlatformTarget.getAndroidJar());
-    assertEquals(new File("/home/android/platforms/android-16/framework.aidl"),
+    assertEquals(Paths.get("/home/android/platforms/android-16/framework.aidl"),
         androidPlatformTarget.getAndroidFrameworkIdlFile());
-    assertEquals(new File("/home/android/tools/proguard/lib/proguard.jar"),
+    assertEquals(Paths.get("/home/android/tools/proguard/lib/proguard.jar"),
         androidPlatformTarget.getProguardJar());
-    assertEquals(new File("/home/android/tools/proguard/proguard-android.txt"),
+    assertEquals(Paths.get("/home/android/tools/proguard/proguard-android.txt"),
         androidPlatformTarget.getProguardConfig());
-    assertEquals(new File("/home/android/tools/proguard/proguard-android-optimize.txt"),
+    assertEquals(Paths.get("/home/android/tools/proguard/proguard-android-optimize.txt"),
         androidPlatformTarget.getOptimizedProguardConfig());
     assertEquals(androidSdkDir.resolve("platform-tools/aapt").toAbsolutePath(),
         androidPlatformTarget.getAaptExecutable());
-    assertEquals(androidSdkDir.resolve("platform-tools/aidl").toFile(),
+    assertEquals(androidSdkDir.resolve("platform-tools/aidl"),
         androidPlatformTarget.getAidlExecutable());
-    assertEquals(androidSdkDir.resolve("platform-tools/dx").toFile(),
+    assertEquals(androidSdkDir.resolve("platform-tools/dx"),
         androidPlatformTarget.getDxExecutable());
   }
 
   @Test
   public void testInstalledNewerBuildToolsViaOldUpgradePath() throws IOException {
     File androidSdkDir = tempDir.newFolder();
+    Path pathToAndroidSdkDir = androidSdkDir.toPath();
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
@@ -103,31 +104,29 @@ public class AndroidPlatformTargetTest {
     assertEquals(platformId, androidPlatformTarget.getName());
     assertEquals(
         ImmutableList.of(
-            MorePaths.newPathInstance(new File(androidSdkDir, "platforms/android-17/android.jar")),
-            MorePaths.newPathInstance(
-                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/effects.jar")),
-            MorePaths.newPathInstance(
-                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/maps.jar")),
-            MorePaths.newPathInstance(
-                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/usb.jar"))),
+            pathToAndroidSdkDir.resolve("platforms/android-17/android.jar"),
+            pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/effects.jar"),
+            pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/maps.jar"),
+            pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/usb.jar")),
         androidPlatformTarget.getBootclasspathEntries());
-    assertEquals(new File(androidSdkDir, "platforms/android-17/android.jar"),
+    assertEquals(pathToAndroidSdkDir.resolve("platforms/android-17/android.jar"),
         androidPlatformTarget.getAndroidJar());
-    assertEquals(new File(androidSdkDir, "build-tools/17.0.0/aapt").toPath().toAbsolutePath(),
+    assertEquals(pathToAndroidSdkDir.resolve("build-tools/17.0.0/aapt"),
         androidPlatformTarget.getAaptExecutable());
-    assertEquals(new File(androidSdkDir, "platform-tools/adb"),
+    assertEquals(pathToAndroidSdkDir.resolve("platform-tools/adb"),
         androidPlatformTarget.getAdbExecutable());
-    assertEquals(new File(androidSdkDir, "build-tools/17.0.0/aidl"),
+    assertEquals(pathToAndroidSdkDir.resolve("build-tools/17.0.0/aidl"),
         androidPlatformTarget.getAidlExecutable());
-    assertEquals(new File(androidSdkDir, "build-tools/17.0.0/dx"),
+    assertEquals(pathToAndroidSdkDir.resolve("build-tools/17.0.0/dx"),
         androidPlatformTarget.getDxExecutable());
-    assertEquals(new File(androidSdkDir, "tools/zipalign"),
+    assertEquals(pathToAndroidSdkDir.resolve("tools/zipalign"),
         androidPlatformTarget.getZipalignExecutable());
   }
 
   @Test
   public void testInstalledNewerBuildToolsViaFreshDownload() throws IOException {
     File androidSdkDir = tempDir.newFolder();
+    Path pathToAndroidSdkDir = androidSdkDir.toPath();
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
@@ -152,26 +151,22 @@ public class AndroidPlatformTargetTest {
     assertEquals(platformId, androidPlatformTarget.getName());
     assertEquals(
         ImmutableList.of(
-            MorePaths.newPathInstance(new File(androidSdkDir, "platforms/android-17/android.jar")),
-            MorePaths.newPathInstance(
-                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/effects.jar")),
-            MorePaths.newPathInstance(
-                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/maps.jar")),
-            MorePaths.newPathInstance(
-                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/usb.jar"))),
+            pathToAndroidSdkDir.resolve("platforms/android-17/android.jar"),
+            pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/effects.jar"),
+            pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/maps.jar"),
+            pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/usb.jar")),
         androidPlatformTarget.getBootclasspathEntries());
-    assertEquals(new File(androidSdkDir, "platforms/android-17/android.jar"),
+    assertEquals(pathToAndroidSdkDir.resolve("platforms/android-17/android.jar"),
         androidPlatformTarget.getAndroidJar());
-    assertEquals(
-        new File(androidSdkDir, "build-tools/android-4.2.2/aapt").toPath().toAbsolutePath(),
+    assertEquals(pathToAndroidSdkDir.resolve("build-tools/android-4.2.2/aapt"),
         androidPlatformTarget.getAaptExecutable());
-    assertEquals(new File(androidSdkDir, "platform-tools/adb"),
+    assertEquals(pathToAndroidSdkDir.resolve("platform-tools/adb"),
         androidPlatformTarget.getAdbExecutable());
-    assertEquals(new File(androidSdkDir, "build-tools/android-4.2.2/aidl"),
+    assertEquals(pathToAndroidSdkDir.resolve("build-tools/android-4.2.2/aidl"),
         androidPlatformTarget.getAidlExecutable());
-    assertEquals(new File(androidSdkDir, "build-tools/android-4.2.2/dx"),
+    assertEquals(pathToAndroidSdkDir.resolve("build-tools/android-4.2.2/dx"),
         androidPlatformTarget.getDxExecutable());
-    assertEquals(new File(androidSdkDir, "tools/zipalign"),
+    assertEquals(pathToAndroidSdkDir.resolve("tools/zipalign"),
         androidPlatformTarget.getZipalignExecutable());
   }
 

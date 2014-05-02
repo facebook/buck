@@ -104,7 +104,7 @@ public class DxStep extends ShellStep {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-    String dx = androidPlatformTarget.getDxExecutable().getAbsolutePath();
+    String dx = androidPlatformTarget.getDxExecutable().toString();
 
     if (options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE)) {
       String customDx = getPathToCustomDx.get();

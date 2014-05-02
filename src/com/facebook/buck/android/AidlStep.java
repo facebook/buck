@@ -51,7 +51,7 @@ public class AidlStep extends ShellStep {
     // mode.
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    args.add(androidPlatformTarget.getAidlExecutable().getAbsolutePath());
+    args.add(androidPlatformTarget.getAidlExecutable().toString());
 
     // For some reason, all of the flags to aidl do not permit a space between the flag name and
     // the flag value.
@@ -60,7 +60,7 @@ public class AidlStep extends ShellStep {
     args.add("-b");
 
     // file created by --preprocess to import
-    args.add("-p" + androidPlatformTarget.getAndroidFrameworkIdlFile().getAbsolutePath());
+    args.add("-p" + androidPlatformTarget.getAndroidFrameworkIdlFile().toString());
 
     // search path for import statements
     for (String importDirectoryPath : importDirectoryPaths) {

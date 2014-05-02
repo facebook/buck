@@ -216,7 +216,7 @@ public class Genrule extends AbstractBuildable {
     if (optionalAndroid.isPresent()) {
       AndroidPlatformTarget android = optionalAndroid.get();
 
-      environmentVariablesBuilder.put("DX", android.getDxExecutable().getAbsolutePath());
+      environmentVariablesBuilder.put("DX", android.getDxExecutable().toString());
     }
   }
 

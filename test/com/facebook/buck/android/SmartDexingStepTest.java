@@ -170,7 +170,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
   private ExecutionContext createMockedExecutionContext() {
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    expect(androidPlatformTarget.getDxExecutable()).andStubReturn(new File("/usr/bin/dx"));
+    expect(androidPlatformTarget.getDxExecutable()).andStubReturn(Paths.get("/usr/bin/dx"));
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     expect(projectFilesystem.resolve(anyObject(Path.class))).andAnswer(
         new IAnswer<Path>() {

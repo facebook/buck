@@ -183,7 +183,7 @@ public class ExecutionContext {
   }
 
   public String getPathToAdbExecutable() throws NoAndroidSdkException {
-    return getAndroidPlatformTarget().getAdbExecutable().getAbsolutePath();
+    return getAndroidPlatformTarget().getAdbExecutable().toString();
   }
 
   public ProcessExecutor getProcessExecutor() {

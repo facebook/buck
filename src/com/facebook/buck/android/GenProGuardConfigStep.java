@@ -65,7 +65,7 @@ public class GenProGuardConfigStep extends ShellStep {
     // Add the remaining flags.
     args.add("-M").add(androidManifestPath.toString());
     args.add("--auto-add-overlay");
-    args.add("-I").add(androidPlatformTarget.getAndroidJar().getAbsolutePath());
+    args.add("-I").add(androidPlatformTarget.getAndroidJar().toString());
 
     return args.build();
   }

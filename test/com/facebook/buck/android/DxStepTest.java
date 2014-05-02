@@ -40,7 +40,6 @@ import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
@@ -63,7 +62,7 @@ public class DxStepTest extends EasyMockSupport {
   @Before
   public void setUp() {
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    EasyMock.expect(androidPlatformTarget.getDxExecutable()).andReturn(new File("/usr/bin/dx"));
+    EasyMock.expect(androidPlatformTarget.getDxExecutable()).andReturn(Paths.get("/usr/bin/dx"));
     androidPlatformTargetOptional = Optional.of(androidPlatformTarget);
     replayAll();
   }

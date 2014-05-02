@@ -482,9 +482,8 @@ public class GenruleTest {
 
   @Test
   public void testShouldIncludeDxInEnvironmentIfPresent() {
-    File fakeDx = new File(".");  // We do no checks on whether dx is executable, but it must exist
     AndroidPlatformTarget android = EasyMock.createNiceMock(AndroidPlatformTarget.class);
-    EasyMock.expect(android.getDxExecutable()).andStubReturn(fakeDx);
+    EasyMock.expect(android.getDxExecutable()).andStubReturn(Paths.get("."));
     EasyMock.replay(android);
 
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
@@ -506,7 +505,7 @@ public class GenruleTest {
     genrule.addEnvironmentVariables(context, builder);
     ImmutableMap<String, String> env = builder.build();
 
-    assertEquals(fakeDx.getAbsolutePath(), env.get("DX"));
+    assertEquals(Paths.get(".").toString(), env.get("DX"));
 
     EasyMock.verify(android);
   }

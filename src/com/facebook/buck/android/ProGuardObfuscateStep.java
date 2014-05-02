@@ -111,10 +111,10 @@ public final class ProGuardObfuscateStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     // Run ProGuard as a standalone executable JAR file.
-    File proguardJar;
+    Path proguardJar;
     if (proguardJarOverride.isPresent()) {
       proguardJar =
-          context.getProjectFilesystem().getFileForRelativePath(proguardJarOverride.get());
+          context.getProjectFilesystem().getPathForRelativePath(proguardJarOverride.get());
     } else {
       AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
       proguardJar = androidPlatformTarget.getProguardJar();
@@ -123,7 +123,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("java")
         .add("-Xmx1024M")
-        .add("-jar").add(proguardJar.getAbsolutePath())
+        .add("-jar").add(proguardJar.toString())
         .add("@" + pathToProGuardCommandLineArgsFile);
     return args.build();
   }
@@ -268,12 +268,12 @@ public final class ProGuardObfuscateStep extends ShellStep {
       // -include
       if (useAndroidProguardConfigWithOptimizations) {
         args.add("-include")
-            .add(androidPlatformTarget.getOptimizedProguardConfig().getAbsolutePath());
+            .add(androidPlatformTarget.getOptimizedProguardConfig().toString());
         if (optimizationPasses.isPresent()) {
           args.add("-optimizationpasses").add(optimizationPasses.get().toString());
         }
       } else {
-        args.add("-include").add(androidPlatformTarget.getProguardConfig().getAbsolutePath());
+        args.add("-include").add(androidPlatformTarget.getProguardConfig().toString());
       }
       for (Path proguardConfig : customProguardConfigs) {
         args.add("-include").add(proguardConfig.toString());

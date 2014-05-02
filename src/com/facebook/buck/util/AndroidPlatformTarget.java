@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -48,33 +47,33 @@ public class AndroidPlatformTarget {
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:19";
 
   private final String name;
-  private final File androidJar;
+  private final Path androidJar;
   private final List<Path> bootclasspathEntries;
   private final Path aaptExecutable;
-  private final File adbExecutable;
-  private final File aidlExecutable;
-  private final File zipalignExecutable;
-  private final File dxExecutable;
-  private final File androidFrameworkIdlFile;
-  private final File proguardJar;
-  private final File proguardConfig;
-  private final File optimizedProguardConfig;
+  private final Path adbExecutable;
+  private final Path aidlExecutable;
+  private final Path zipalignExecutable;
+  private final Path dxExecutable;
+  private final Path androidFrameworkIdlFile;
+  private final Path proguardJar;
+  private final Path proguardConfig;
+  private final Path optimizedProguardConfig;
   private final AndroidDirectoryResolver androidDirectoryResolver;
 
 
   private AndroidPlatformTarget(
       String name,
-      File androidJar,
+      Path androidJar,
       List<Path> bootclasspathEntries,
       Path aaptExecutable,
-      File adbExecutable,
-      File aidlExecutable,
-      File zipalignExecutable,
-      File dxExecutable,
-      File androidFrameworkIdlFile,
-      File proguardJar,
-      File proguardConfig,
-      File optimizedProguardConfig,
+      Path adbExecutable,
+      Path aidlExecutable,
+      Path zipalignExecutable,
+      Path dxExecutable,
+      Path androidFrameworkIdlFile,
+      Path proguardJar,
+      Path proguardConfig,
+      Path optimizedProguardConfig,
       AndroidDirectoryResolver androidDirectoryResolver) {
     this.name = Preconditions.checkNotNull(name);
     this.androidJar = Preconditions.checkNotNull(androidJar);
@@ -100,7 +99,7 @@ public class AndroidPlatformTarget {
     return getName();
   }
 
-  public File getAndroidJar() {
+  public Path getAndroidJar() {
     return androidJar;
   }
 
@@ -115,35 +114,35 @@ public class AndroidPlatformTarget {
     return aaptExecutable;
   }
 
-  public File getAdbExecutable() {
+  public Path getAdbExecutable() {
     return adbExecutable;
   }
 
-  public File getAidlExecutable() {
+  public Path getAidlExecutable() {
     return aidlExecutable;
   }
 
-  public File getZipalignExecutable() {
+  public Path getZipalignExecutable() {
     return zipalignExecutable;
   }
 
-  public File getDxExecutable() {
+  public Path getDxExecutable() {
     return dxExecutable;
   }
 
-  public File getAndroidFrameworkIdlFile() {
+  public Path getAndroidFrameworkIdlFile() {
     return androidFrameworkIdlFile;
   }
 
-  public File getProguardJar() {
+  public Path getProguardJar() {
     return proguardJar;
   }
 
-  public File getProguardConfig() {
+  public Path getProguardConfig() {
     return proguardConfig;
   }
 
-  public File getOptimizedProguardConfig() {
+  public Path getOptimizedProguardConfig() {
     return optimizedProguardConfig;
   }
 
@@ -187,23 +186,6 @@ public class AndroidPlatformTarget {
   }
 
   /**
-   * Resolves all of the jarPaths against the androidSdkDir path.
-   * @return a mutable list
-   */
-  private static LinkedList<Path> resolvePaths(final File androidSdkDir, Set<String> jarPaths) {
-    return Lists.newLinkedList(Iterables.transform(jarPaths, new Function<String, Path>() {
-      @Override
-      public Path apply(String jarPath) {
-        File jar = new File(androidSdkDir, jarPath);
-        if (!jar.isFile()) {
-          throw new RuntimeException("File not found: " + jar.getAbsolutePath());
-        }
-        return jar.toPath();
-      }
-    }));
-  }
-
-  /**
    * Given the path to the Android SDK as well as the platform path within the Android SDK,
    * find all the files needed to create the {@link AndroidPlatformTarget}, assuming that the
    * organization of the Android SDK conforms to the ordinary directory structure.
@@ -213,33 +195,33 @@ public class AndroidPlatformTarget {
       String name,
       AndroidDirectoryResolver androidDirectoryResolver,
       String platformDirectoryPath,
-      Set<String> additionalJarPaths) {
-    File androidSdkDir = androidDirectoryResolver.findAndroidSdkDir().toFile();
+      Set<Path> additionalJarPaths) {
+    Path androidSdkDir = androidDirectoryResolver.findAndroidSdkDir();
     if (!androidSdkDir.isAbsolute()) {
       throw new HumanReadableException(
           "Path to Android SDK must be absolute but was: %s.",
           androidSdkDir);
     }
 
-    File platformDirectory = new File(androidSdkDir, platformDirectoryPath);
-    File androidJar = new File(platformDirectory, "android.jar");
-    LinkedList<Path> bootclasspathEntries = resolvePaths(androidSdkDir, additionalJarPaths);
+    Path platformDirectory = androidSdkDir.resolve(platformDirectoryPath);
+    Path androidJar = platformDirectory.resolve("android.jar");
+    LinkedList<Path> bootclasspathEntries = Lists.newLinkedList(additionalJarPaths);
 
     // Make sure android.jar is at the front of the bootclasspath.
-    bootclasspathEntries.addFirst(androidJar.toPath());
+    bootclasspathEntries.addFirst(androidJar);
 
-    File buildToolsDir = new File(androidSdkDir, "build-tools");
+    Path buildToolsDir = androidSdkDir.resolve("build-tools");
 
     // This is the relative path under the Android SDK directory to the directory that contains the
     // aapt, aidl, and dx executables.
     String buildToolsPath;
 
-    if (buildToolsDir.isDirectory()) {
+    if (buildToolsDir.toFile().isDirectory()) {
       // In older versions of the ADT that have been upgraded via the SDK manager, the build-tools
       // directory appears to contain subfolders of the form "17.0.0". However, newer versions of
       // the ADT that are downloaded directly from http://developer.android.com/ appear to have
       // subfolders of the form android-4.2.2. We need to support both of these scenarios.
-      File[] directories = buildToolsDir.listFiles(new FileFilter() {
+      File[] directories = buildToolsDir.toFile().listFiles(new FileFilter() {
         @Override
         public boolean accept(File pathname) {
           return pathname.isDirectory();
@@ -248,11 +230,11 @@ public class AndroidPlatformTarget {
 
       if (directories.length == 0) {
         throw new HumanReadableException(
-          Joiner.on(System.getProperty("line.separator")).join(
-            "%s was empty, but should have contained a subdirectory with build tools.",
-            "Install them using the Android SDK Manager (%s)."),
-          buildToolsDir.getAbsolutePath(),
-          new File(androidSdkDir, Joiner.on(File.separator).join("tools", "android")));
+            Joiner.on(System.getProperty("line.separator")).join(
+                "%s was empty, but should have contained a subdirectory with build tools.",
+                "Install them using the Android SDK Manager (%s)."),
+            buildToolsDir,
+            androidSdkDir.resolve("tools").resolve("android"));
       } else {
         File newestBuildToolsDir = pickNewestBuildToolsDir(ImmutableSet.copyOf(directories));
         buildToolsPath = "build-tools/" + newestBuildToolsDir.getName();
@@ -261,21 +243,21 @@ public class AndroidPlatformTarget {
       buildToolsPath = "platform-tools";
     }
 
-    File androidFrameworkIdlFile = new File(platformDirectory, "framework.aidl");
-    File proguardJar = new File(androidSdkDir, "tools/proguard/lib/proguard.jar");
-    File proguardConfig = new File(androidSdkDir, "tools/proguard/proguard-android.txt");
-    File optimizedProguardConfig =
-        new File(androidSdkDir, "tools/proguard/proguard-android-optimize.txt");
+    Path androidFrameworkIdlFile = platformDirectory.resolve("framework.aidl");
+    Path proguardJar = androidSdkDir.resolve("tools/proguard/lib/proguard.jar");
+    Path proguardConfig = androidSdkDir.resolve("tools/proguard/proguard-android.txt");
+    Path optimizedProguardConfig =
+       androidSdkDir.resolve("tools/proguard/proguard-android-optimize.txt");
 
     return new AndroidPlatformTarget(
         name,
-        androidJar,
+        androidJar.toAbsolutePath(),
         bootclasspathEntries,
-        new File(androidSdkDir, buildToolsPath + "/aapt").toPath().toAbsolutePath(),
-        new File(androidSdkDir, "platform-tools/adb"),
-        new File(androidSdkDir, buildToolsPath + "/aidl"),
-        new File(androidSdkDir, "tools/zipalign"),
-        new File(androidSdkDir, buildToolsPath + "/dx"),
+        androidSdkDir.resolve(buildToolsPath).resolve("aapt").toAbsolutePath(),
+        androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
+        androidSdkDir.resolve(buildToolsPath).resolve("aidl").toAbsolutePath(),
+        androidSdkDir.resolve("tools/zipalign").toAbsolutePath(),
+        androidSdkDir.resolve(buildToolsPath).resolve("dx").toAbsolutePath(),
         androidFrameworkIdlFile,
         proguardJar,
         proguardConfig,
@@ -368,7 +350,7 @@ public class AndroidPlatformTarget {
               }
             });
 
-        ImmutableSet.Builder<String> additionalJarPaths = ImmutableSet.builder();
+        ImmutableSet.Builder<Path> additionalJarPaths = ImmutableSet.builder();
         for (String dir : addonsApiDirs) {
           File libsDir = new File(addonsParentDir, dir + "/libs");
 
@@ -376,11 +358,9 @@ public class AndroidPlatformTarget {
           if (libsDir.isDirectory() &&
               (addonFiles = libsDir.list(new AddonFilter())) != null &&
               addonFiles.length != 0) {
-            Path addonPath = androidSdkDir.relativize(libsDir.toPath());
-
             Arrays.sort(addonFiles);
             for (String addonJar : addonFiles) {
-              additionalJarPaths.add(addonPath.resolve(addonJar).toString());
+              additionalJarPaths.add(libsDir.toPath().resolve(addonJar));
             }
 
             return createFromDefaultDirectoryStructure(
