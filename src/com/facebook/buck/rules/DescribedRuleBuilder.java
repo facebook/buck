@@ -139,11 +139,22 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
       paramRules.addAll(declaredRules.build());
     }
 
+    ImmutableSortedSet<BuildRule> totalDeps = paramRules.build();
+    // See whether the Buildable wants to define its own deps.
+    if (buildable instanceof HasDepsOverride) {
+      HasDepsOverride hasDepsOverride = (HasDepsOverride) buildable;
+      ImmutableSortedSet<BuildRule> redefinedDeps = hasDepsOverride.
+          iKnowWhatIAmDoingAndIWillSpecifyAllTheDepsMyself(ruleResolver);
+      if (redefinedDeps != null) {
+        totalDeps = redefinedDeps;
+      }
+    }
+
     // These are the params used by the rule, but not the buildable. Confusion will be lessened once
     // we move to a dependency graph that's not the action graph.
     params = new BuildRuleParams(
         params.getBuildTarget(),
-        paramRules.build(),
+        totalDeps,
         params.getVisibilityPatterns(),
         params.getProjectFilesystem(),
         params.getRuleKeyBuilderFactory());

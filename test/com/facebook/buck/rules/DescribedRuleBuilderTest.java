@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import static com.facebook.buck.testutil.IdentityPathAbsolutifier.getIdentityAbsolutifier;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -48,13 +47,9 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
   @Test
   public void testBuildRuleForBuildableWithNoEnhancedDepsHasOriginalDeps()
       throws NoSuchBuildTargetException {
-    // Create a rule with some satellite data and seed a BuildRuleResolver with it.
-    BuildRuleWithInterestingFile dep = new BuildRuleWithInterestingFile(
-        new FakeBuildRuleParams(new BuildTarget("//my", "library")),
-        Paths.get("my/fileofinterest.txt"));
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(ImmutableSet.of(dep));
+    BuildRuleResolver ruleResolver = createBuildRuleResolver();
 
-    // Create the build rule for the NominalDescription and verify its data.
+    // Create the Buildable for the NominalDescription and verify its data.
     Description<Arg> description = new NominalDescription();
     ImmutableList<String> deps = ImmutableList.of("//my:library");
     BuildRuleFactoryParams params = createParamsWithDeps(deps);
@@ -63,7 +58,27 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
     BuildRule buildRule = describedRuleBuilder.build(ruleResolver);
     assertEquals(
         "If getEnhancedDeps() returns null, then the original deps should be used for the rule.",
-        ImmutableSet.of("//my:library"),
+        ImmutableSet.of("//my:sourcepath", "//my:library"),
+        FluentIterable.from(buildRule.getDeps()).transform(Functions.toStringFunction()).toSet());
+    verifyAll();
+  }
+
+  @Test
+  public void testIKnowWhatIAmDoingAndIWillSpecifyAllTheDepsMyselfRedefinesTheDeps()
+      throws NoSuchBuildTargetException {
+    BuildRuleResolver ruleResolver = createBuildRuleResolver();
+
+    // Create the Buildable for the DemandingNominalDescription and verify its data.
+    Description<Arg> description = new DemandingNominalDescription();
+    ImmutableList<String> deps = ImmutableList.of("//my:library");
+    BuildRuleFactoryParams params = createParamsWithDeps(deps);
+    DescribedRuleBuilder<Arg> describedRuleBuilder = new DescribedRuleBuilder<>(description,
+        params);
+    BuildRule buildRule = describedRuleBuilder.build(ruleResolver);
+    assertEquals(
+        "If iKnowWhatIAmDoingAndIWillSpecifyAllTheDepsMyself() returns non-null, then its " +
+            "return value should be used as the deps.",
+        ImmutableSet.of("//my:unrelated"),
         FluentIterable.from(buildRule.getDeps()).transform(Functions.toStringFunction()).toSet());
     verifyAll();
   }
@@ -71,11 +86,7 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
   @Test
   public void testBuildRuleForBuildableWithEnhancedDepsHasCorrectDeps()
       throws NoSuchBuildTargetException {
-    // Create a rule with some satellite data and seed a BuildRuleResolver with it.
-    BuildRuleWithInterestingFile dep = new BuildRuleWithInterestingFile(
-        new FakeBuildRuleParams(new BuildTarget("//my", "library")),
-        Paths.get("my/fileofinterest.txt"));
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(ImmutableSet.of(dep));
+    BuildRuleResolver ruleResolver = createBuildRuleResolver();
 
     // Create the FileCollector and verify its data.
     Description<Arg> description = new FileCollectorDescription();
@@ -84,7 +95,10 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
     DescribedRuleBuilder<Arg> describedRuleBuilder = new DescribedRuleBuilder<>(description,
         params);
     BuildRule buildRule = describedRuleBuilder.build(ruleResolver);
-    assertTrue("The build rule should not have any deps.", buildRule.getDeps().isEmpty());
+    assertEquals(
+        "The build rule should have only the implicit deps.",
+        ImmutableSet.of("//my:sourcepath"),
+        FluentIterable.from(buildRule.getDeps()).transform(Functions.toStringFunction()).toSet());
     assertEquals(
         "The Buildable should collect files of interest from the original deps.",
         ImmutableSet.of(Paths.get("my/fileofinterest.txt")),
@@ -92,11 +106,30 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
     verifyAll();
   }
 
+  private static BuildRuleResolver createBuildRuleResolver() {
+    // Create a rule with some satellite data and seed a BuildRuleResolver with it.
+    BuildRuleWithInterestingFile dep = new BuildRuleWithInterestingFile(
+        new FakeBuildRuleParams(new BuildTarget("//my", "library")),
+        Paths.get("my/fileofinterest.txt"));
+
+    FakeBuildRule fakeGenrule = new FakeBuildRule(
+        new BuildRuleType("fake_genrule"),
+        new BuildTarget("//my", "sourcepath"));
+    fakeGenrule.setOutputFile("some_file.txt");
+
+    FakeBuildRule fakeRule = new FakeBuildRule(
+        new BuildRuleType("fake_rule"),
+        new BuildTarget("//my", "unrelated"));
+
+    return new BuildRuleResolver(ImmutableSet.of(dep, fakeGenrule, fakeRule));
+  }
+
   private BuildRuleFactoryParams createParamsWithDeps(ImmutableList<String> deps) {
     // Create the raw data for a FileCollector.
     String shortName = "data";
     Map<String, Object> instance = Maps.newHashMap();
     instance.put("name", shortName);
+    instance.put("srcs", ImmutableSortedSet.of("//my:sourcepath"));
     instance.put("deps", deps);
     instance.put("visibility", ImmutableList.of());
 
@@ -119,6 +152,7 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
 
   private static class Arg implements ConstructorArg {
     @SuppressWarnings("unused")
+    public Optional<ImmutableSortedSet<SourcePath>> srcs;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }
 
@@ -144,6 +178,27 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
         @Override
         public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
           return null;
+        }
+      };
+    }
+  }
+
+  private abstract static class FakeBuildableWithHasDepsOverride extends FakeBuildable
+      implements HasDepsOverride {}
+
+  /**
+   * {@link Description} that produces a {@link Buildable} whose
+   * {@link Buildable#iKnowWhatIAmDoingAndIWillSpecifyAllTheDepsMyself(BuildRuleResolver)} returns
+   * a specific {@link BuildRule}.
+   */
+  private static class DemandingNominalDescription extends NominalDescription {
+    @Override
+    public Buildable createBuildable(BuildRuleParams params, Arg args) {
+      return new FakeBuildableWithHasDepsOverride() {
+        @Override
+        public ImmutableSortedSet<BuildRule> iKnowWhatIAmDoingAndIWillSpecifyAllTheDepsMyself(
+            BuildRuleResolver ruleResolver) {
+          return ImmutableSortedSet.of(ruleResolver.get(new BuildTarget("//my", "unrelated")));
         }
       };
     }

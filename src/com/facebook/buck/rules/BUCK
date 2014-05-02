@@ -134,6 +134,7 @@ java_library(
     'DescribedRuleBuilder.java',
     'DescribedRuleFactory.java',
     'DirArtifactCache.java',
+    'HasDepsOverride.java',
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',
     'InstallableApk.java',
