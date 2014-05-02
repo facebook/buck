@@ -100,7 +100,7 @@ public class JavaLibraryClasspathProvider {
     return classpathEntries.build();
   }
 
-  private static FluentIterable<JavaLibrary> getJavaLibraryDeps(Iterable<BuildRule> deps) {
+  static FluentIterable<JavaLibrary> getJavaLibraryDeps(Iterable<BuildRule> deps) {
     return FluentIterable
         .from(deps)
         .transform(

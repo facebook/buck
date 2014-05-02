@@ -53,9 +53,11 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -114,6 +116,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
   private final Optional<Path> proguardConfig;
   private final ImmutableList<String> postprocessClassesCommands;
   private final ImmutableSortedSet<BuildRule> exportedDeps;
+  private final ImmutableSortedSet<BuildRule> providedDeps;
   // Some classes need to override this when enhancing deps (see AndroidLibrary).
   protected ImmutableSet<Path> additionalClasspathEntries;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
@@ -171,6 +174,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
       Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
       Set<BuildRule> exportedDeps,
+      Set<BuildRule> providedDeps,
       JavacOptions javacOptions) {
     this.target = buildRuleParams.getBuildTarget();
     this.deps = ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -182,6 +186,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.postprocessClassesCommands = Preconditions.checkNotNull(postprocessClassesCommands);
     this.exportedDeps = ImmutableSortedSet.copyOf(exportedDeps);
+    this.providedDeps = ImmutableSortedSet.copyOf(providedDeps);
     this.additionalClasspathEntries = ImmutableSet.of();
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
 
@@ -371,7 +376,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
    */
   private SortedSet<HasBuildTarget> getDepsForAbiKey() {
     SortedSet<HasBuildTarget> rulesWithAbiToConsider = Sets.newTreeSet(BUILD_TARGET_COMPARATOR);
-    for (BuildRule dep : deps) {
+    for (BuildRule dep : Iterables.concat(deps, providedDeps)) {
       // This looks odd. DummyJavaAbiRule contains a Buildable that isn't a JavaAbiRule.
       if (dep.getBuildable() instanceof HasJavaAbi) {
         if (dep.getBuildable() instanceof JavaLibrary) {
@@ -526,11 +531,34 @@ public class DefaultJavaLibrary extends AbstractBuildable
             declaredClasspathEntries,
             JAR_RESOLVER);
 
+    // We don't want to add these to the declared or transitive deps, since they're only used at
+    // compile time.
+    Collection<Path> provided = JavaLibraryClasspathProvider.getJavaLibraryDeps(providedDeps)
+        .transformAndConcat(
+            new Function<JavaLibrary, Collection<Path>>() {
+              @Override
+              public Collection<Path> apply(JavaLibrary input) {
+                return input.getOutputClasspathEntries().values();
+              }
+            })
+        .filter(Predicates.notNull())
+        .toSet();
+
+    ImmutableSet<Path> transitive = ImmutableSet.<Path>builder()
+        .addAll(transitiveClasspathEntries.values())
+        .addAll(provided)
+        .build();
+
+    ImmutableSet<Path> declared = ImmutableSet.<Path>builder()
+        .addAll(declaredClasspathEntries.values())
+        .addAll(provided)
+        .build();
+
     // This adds the javac command, along with any supporting commands.
     Supplier<Sha1HashCode> abiKeySupplier = createCommandsForJavac(
         outputDirectory,
-        ImmutableSet.copyOf(transitiveClasspathEntries.values()),
-        ImmutableSet.copyOf(declaredClasspathEntries.values()),
+        transitive,
+        declared,
         javacOptions,
         context.getBuildDependencies(),
         suggestBuildRule,

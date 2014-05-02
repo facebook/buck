@@ -27,6 +27,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.abi.AbiWriterProtocol;
+import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -46,6 +47,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -337,6 +339,30 @@ public class DefaultJavaLibraryIntegrationTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
     workspace.getBuildLog().assertTargetBuiltLocally("//:res");
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
+  }
+
+  @Test
+  public void ensureProvidedDepsAreIncludedWhenCompilingButNotWhenPackaging() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "provided_deps", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:binary");
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    File file = workspace.getFile("buck-out/gen/binary.jar");
+    try (Zip zip = new Zip(file, /* for writing? */ false)) {
+      Set<String> allNames = zip.getFileNames();
+      // Representative file from provided_deps we don't expect to be there.
+      assertFalse(allNames.contains("org/junit/Test.class"));
+
+      // Representative file from the deps that we do expect to be there.
+      assertTrue(allNames.contains("com/google/common/collect/Sets.class"));
+
+      // The file we built.
+      assertTrue(allNames.contains("com/facebook/buck/example/Example.class"));
+    }
   }
 
   /**

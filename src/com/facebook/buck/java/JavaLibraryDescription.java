@@ -66,6 +66,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         args.proguardConfig,
         args.postprocessClassesCommands.get(),
         args.exportedDeps.get(),
+        args.providedDeps.get(),
         javacOptions.build());
   }
 
@@ -98,6 +99,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<Boolean> annotationProcessorOnly;
     public Optional<ImmutableList<String>> postprocessClassesCommands;
 
+    public Optional<ImmutableSortedSet<BuildRule>> providedDeps;
     public Optional<ImmutableSortedSet<BuildRule>> exportedDeps;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
 

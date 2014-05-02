@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Set;
@@ -45,6 +46,7 @@ public class FakeDefaultJavaLibrary extends DefaultJavaLibrary {
         proguardConfig,
         ImmutableList.<String>of(),
         exportedDeps,
+        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         JavacOptions.builder()
             .setAnnotationProcessingData(annotationProcessingParams)
             .build());

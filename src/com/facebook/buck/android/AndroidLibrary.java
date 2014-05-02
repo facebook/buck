@@ -60,6 +60,7 @@ public class AndroidLibrary extends DefaultJavaLibrary {
       Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
       Set<BuildRule> exportedDeps,
+      Set<BuildRule> providedDeps,
       JavacOptions javacOptions,
       Optional<Path> manifestFile) {
     super(buildRuleParams,
@@ -68,6 +69,7 @@ public class AndroidLibrary extends DefaultJavaLibrary {
         proguardConfig,
         postprocessClassesCommands,
         exportedDeps,
+        providedDeps,
         javacOptions);
     this.buildRuleParams = Preconditions.checkNotNull(buildRuleParams);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);

@@ -889,6 +889,7 @@ public class DefaultJavaLibraryTest {
         /* proguardConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         exportedDeps,
+        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         JavacOptions.DEFAULTS) {
       @Override
       public Sha1HashCode getAbiKey() {
@@ -1242,6 +1243,7 @@ public class DefaultJavaLibraryTest {
             Optional.of(Paths.get("MyProguardConfig")),
             /* postprocessClassesCommands */ ImmutableList.<String>of(),
             /* exportedDeps */ ImmutableSet.<BuildRule>of(),
+            /* providedDeps */ ImmutableSet.<BuildRule>of(),
             JavacOptions.DEFAULTS);
         return new AbstractBuildable.AnonymousBuildRule(
             JavaLibraryDescription.TYPE,
@@ -1335,7 +1337,8 @@ public class DefaultJavaLibraryTest {
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<Path>absent(),
           /* postprocessClassesCommands */ ImmutableList.<String>of(),
-          /* exortDeps */ ImmutableSet.<BuildRule>of(),
+          /* exportedDeps */ ImmutableSet.<BuildRule>of(),
+          /* providedDeps */ ImmutableSet.<BuildRule>of(),
           options.build(),
           /* manifestFile */ Optional.<Path>absent());
       return new AbstractBuildable.AnonymousBuildRule(

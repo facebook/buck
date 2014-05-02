@@ -1,0 +1,24 @@
+
+java_binary(
+  name = 'binary',
+  deps = [
+    ':library',
+  ],
+)
+
+java_library(
+  name = 'library',
+  srcs = [ 'Example.java' ],
+  deps = [ ':guava' ],
+  provided_deps = [ ':junit', ],
+)
+
+prebuilt_jar(
+  name = 'guava',
+  binary_jar = 'guava.jar',
+)
+
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit.jar',
+)

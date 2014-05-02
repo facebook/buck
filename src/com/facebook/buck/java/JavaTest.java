@@ -93,6 +93,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         proguardConfig,
         ImmutableList.<String>of(),
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         javacOptions);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.sourceTargetsUnderTest = Preconditions.checkNotNull(sourceUnderTest);

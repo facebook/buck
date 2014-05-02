@@ -12,6 +12,7 @@
   "name" : "test-library",
   "postprocessClassesCommands" : [ ],
   "proguardConfig" : null,
+  "providedDeps": [],
   "resources" : [ ],
   "source" : "6",
   "srcs" : [ ],
