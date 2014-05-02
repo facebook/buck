@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class BuildTarget implements Comparable<BuildTarget> {
+public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarget {
 
   public static final String BUILD_TARGET_PREFIX = "//";
 
@@ -217,5 +217,10 @@ public final class BuildTarget implements Comparable<BuildTarget> {
   public int compareTo(BuildTarget target) {
     Preconditions.checkNotNull(target);
     return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
+  }
+
+  @Override
+  public BuildTarget getBuildTarget() {
+    return this;
   }
 }

@@ -20,6 +20,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
@@ -31,9 +32,11 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
@@ -125,7 +128,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         getCommandRunnerParams().getPlatform());
     int exitCode = 0;
     try {
-      exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
+      exitCode = executeBuildAndPrintAnyFailuresToConsole(buildTargets, build, console);
     } finally {
       build.close(); // Can't use try-with-resources as build is returned by getBuild.
     }
@@ -133,8 +136,23 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     return exitCode;
   }
 
-  static int executeBuildAndPrintAnyFailuresToConsole(Build build, Console console) {
-    Set<BuildRule> rulesToBuild = build.getDependencyGraph().getNodesWithNoIncomingEdges();
+  static int executeBuildAndPrintAnyFailuresToConsole(
+      Iterable<? extends HasBuildTarget> buildTargetsToBuild,
+      Build build,
+      Console console) {
+    final DependencyGraph dependencyGraph = build.getDependencyGraph();
+    // It is important to use this logic to determine the set of rules to build rather than
+    // build.getDependencyGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
+    // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
+    Set<BuildRule> rulesToBuild = FluentIterable
+        .from(buildTargetsToBuild)
+        .transform(new Function<HasBuildTarget, BuildRule>() {
+          @Override
+          public BuildRule apply(HasBuildTarget hasBuildTarget) {
+            return dependencyGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget());
+          }
+        })
+        .toSet();
 
     int exitCode;
     try {

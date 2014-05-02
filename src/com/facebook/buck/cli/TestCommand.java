@@ -336,7 +336,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getCommandRunnerParams().getPlatform())) {
 
       // Build all of the test rules.
-      int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
+      int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(
+          testRules, build, console);
       if (exitCode != 0) {
         return exitCode;
       }
