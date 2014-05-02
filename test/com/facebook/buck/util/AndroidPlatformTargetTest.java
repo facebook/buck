@@ -200,8 +200,8 @@ public class AndroidPlatformTargetTest {
     assertTrue(androidPlatformTargetOption.isPresent());
 
     assertEquals(
-        "android-4.2.2 should be used as the build directory",
-        new File(androidSdkDir, "build-tools/android-4.2.2/aapt").toPath().toAbsolutePath(),
+        "17.0.0 should be used as the build directory",
+        new File(androidSdkDir, "build-tools/17.0.0/aapt").toPath().toAbsolutePath(),
         androidPlatformTargetOption.get().getAaptExecutable());
   }
 

@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 public class AndroidPlatformTarget {
 
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:19";
+  public static final String ANDROID_VERSION_PREFIX = "android-";
 
   private final String name;
   private final Path androidJar;
@@ -270,10 +271,10 @@ public class AndroidPlatformTarget {
       return Iterables.getOnlyElement(directories);
     }
 
-    List<File> androidVersionDirectories = Lists.newArrayList();
     List<File> apiVersionDirectories = Lists.newArrayList();
+    List<File> androidVersionDirectories = Lists.newArrayList();
     for (File dir : directories) {
-      if (dir.getName().startsWith("android-")) {
+      if (dir.getName().startsWith(ANDROID_VERSION_PREFIX)) {
         androidVersionDirectories.add(dir);
       } else {
         apiVersionDirectories.add(dir);
@@ -282,30 +283,31 @@ public class AndroidPlatformTarget {
 
     final VersionStringComparator comparator = new VersionStringComparator();
 
-    // This is the directory from newer downloads from http://developer.android.com/, so prefer
-    // these.
-    if (!androidVersionDirectories.isEmpty()) {
-      Collections.sort(androidVersionDirectories, new Comparator<File>() {
-        @Override
-        public int compare(File a, File b) {
-          String versionA = a.getName().substring("android-".length());
-          String versionB = b.getName().substring("android-".length());
-          return comparator.compare(versionA, versionB);
-        }
-      });
-      // Return the last element in the list.
-      return androidVersionDirectories.get(androidVersionDirectories.size() - 1);
-    } else {
+    // API version directories are downloaded by the package manager, whereas Android version
+    // directories are bundled with the SDK when it's unpacked. So API version directories will
+    // presumably be newer.
+    if (!apiVersionDirectories.isEmpty()) {
       Collections.sort(apiVersionDirectories, new Comparator<File>() {
-        @Override
-        public int compare(File a, File b) {
-          String versionA = a.getName();
-          String versionB = b.getName();
-          return comparator.compare(versionA, versionB);
+            @Override
+            public int compare(File a, File b) {
+              String versionA = a.getName();
+              String versionB = b.getName();
+              return comparator.compare(versionA, versionB);
         }
       });
       // Return the last element in the list.
       return apiVersionDirectories.get(apiVersionDirectories.size() - 1);
+    } else {
+      Collections.sort(androidVersionDirectories, new Comparator<File>() {
+            @Override
+            public int compare(File a, File b) {
+              String versionA = a.getName().substring(ANDROID_VERSION_PREFIX.length());
+              String versionB = b.getName().substring(ANDROID_VERSION_PREFIX.length());
+              return comparator.compare(versionA, versionB);
+        }
+      });
+      // Return the last element in the list.
+      return androidVersionDirectories.get(androidVersionDirectories.size() - 1);
     }
   }
 
