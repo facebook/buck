@@ -68,7 +68,7 @@ public class AndroidPlatformTargetTest {
         androidPlatformTarget.getProguardConfig());
     assertEquals(new File("/home/android/tools/proguard/proguard-android-optimize.txt"),
         androidPlatformTarget.getOptimizedProguardConfig());
-    assertEquals(androidSdkDir.resolve("platform-tools/aapt").toFile(),
+    assertEquals(androidSdkDir.resolve("platform-tools/aapt").toAbsolutePath(),
         androidPlatformTarget.getAaptExecutable());
     assertEquals(androidSdkDir.resolve("platform-tools/aidl").toFile(),
         androidPlatformTarget.getAidlExecutable());
@@ -113,7 +113,7 @@ public class AndroidPlatformTargetTest {
         androidPlatformTarget.getBootclasspathEntries());
     assertEquals(new File(androidSdkDir, "platforms/android-17/android.jar"),
         androidPlatformTarget.getAndroidJar());
-    assertEquals(new File(androidSdkDir, "build-tools/17.0.0/aapt"),
+    assertEquals(new File(androidSdkDir, "build-tools/17.0.0/aapt").toPath().toAbsolutePath(),
         androidPlatformTarget.getAaptExecutable());
     assertEquals(new File(androidSdkDir, "platform-tools/adb"),
         androidPlatformTarget.getAdbExecutable());
@@ -162,7 +162,8 @@ public class AndroidPlatformTargetTest {
         androidPlatformTarget.getBootclasspathEntries());
     assertEquals(new File(androidSdkDir, "platforms/android-17/android.jar"),
         androidPlatformTarget.getAndroidJar());
-    assertEquals(new File(androidSdkDir, "build-tools/android-4.2.2/aapt"),
+    assertEquals(
+        new File(androidSdkDir, "build-tools/android-4.2.2/aapt").toPath().toAbsolutePath(),
         androidPlatformTarget.getAaptExecutable());
     assertEquals(new File(androidSdkDir, "platform-tools/adb"),
         androidPlatformTarget.getAdbExecutable());
@@ -205,7 +206,7 @@ public class AndroidPlatformTargetTest {
 
     assertEquals(
         "android-4.2.2 should be used as the build directory",
-        new File(androidSdkDir, "build-tools/android-4.2.2/aapt"),
+        new File(androidSdkDir, "build-tools/android-4.2.2/aapt").toPath().toAbsolutePath(),
         androidPlatformTargetOption.get().getAaptExecutable());
   }
 

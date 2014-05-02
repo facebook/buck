@@ -52,7 +52,7 @@ public class GenProGuardConfigStep extends ShellStep {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
 
-    args.add(androidPlatformTarget.getAaptExecutable().getAbsolutePath()).add("package");
+    args.add(androidPlatformTarget.getAaptExecutable().toString()).add("package");
 
     // Specify where the ProGuard config should be written.
     args.add("-G").add(proguardConfigurationPath.toString());

@@ -61,7 +61,7 @@ public class AaptStep extends ShellStep {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-    builder.add(androidPlatformTarget.getAaptExecutable().getAbsolutePath(), "package");
+    builder.add(androidPlatformTarget.getAaptExecutable().toString(), "package");
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {

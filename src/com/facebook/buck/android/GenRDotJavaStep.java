@@ -102,7 +102,7 @@ public class GenRDotJavaStep extends ShellStep {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
 
-    builder.add(androidPlatformTarget.getAaptExecutable().getAbsolutePath()).add("package");
+    builder.add(androidPlatformTarget.getAaptExecutable().toString()).add("package");
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {

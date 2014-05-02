@@ -50,7 +50,7 @@ public class AndroidPlatformTarget {
   private final String name;
   private final File androidJar;
   private final List<Path> bootclasspathEntries;
-  private final File aaptExecutable;
+  private final Path aaptExecutable;
   private final File adbExecutable;
   private final File aidlExecutable;
   private final File zipalignExecutable;
@@ -66,7 +66,7 @@ public class AndroidPlatformTarget {
       String name,
       File androidJar,
       List<Path> bootclasspathEntries,
-      File aaptExecutable,
+      Path aaptExecutable,
       File adbExecutable,
       File aidlExecutable,
       File zipalignExecutable,
@@ -111,7 +111,7 @@ public class AndroidPlatformTarget {
     return bootclasspathEntries;
   }
 
-  public File getAaptExecutable() {
+  public Path getAaptExecutable() {
     return aaptExecutable;
   }
 
@@ -271,7 +271,7 @@ public class AndroidPlatformTarget {
         name,
         androidJar,
         bootclasspathEntries,
-        new File(androidSdkDir, buildToolsPath + "/aapt"),
+        new File(androidSdkDir, buildToolsPath + "/aapt").toPath().toAbsolutePath(),
         new File(androidSdkDir, "platform-tools/adb"),
         new File(androidSdkDir, buildToolsPath + "/aidl"),
         new File(androidSdkDir, "tools/zipalign"),
