@@ -18,7 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimap;
 
 public class BuildRules {
 
@@ -44,5 +46,13 @@ public class BuildRules {
     }
 
     return buildRules.build();
+  }
+
+  public static Multimap<String, BuildRule> buildRulesByTargetBasePath(Iterable<BuildRule> rules) {
+    ImmutableMultimap.Builder<String, BuildRule> result = ImmutableMultimap.builder();
+    for (BuildRule rule : rules) {
+      result.put(rule.getBuildTarget().getBasePath(), rule);
+    }
+    return result.build();
   }
 }
