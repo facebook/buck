@@ -36,6 +36,7 @@ import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
+import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cpp.CppBinaryDescription;
 import com.facebook.buck.cpp.CppLibraryDescription;
@@ -199,6 +200,7 @@ public class KnownBuildRuleTypes {
     builder.register(new ShTestDescription());
     builder.register(new XcodeNativeDescription());
     builder.register(new XcodeProjectConfigDescription());
+    builder.register(new XcodeWorkspaceConfigDescription());
 
     return builder;
   }
