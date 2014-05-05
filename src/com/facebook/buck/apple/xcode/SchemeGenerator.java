@@ -16,12 +16,17 @@
 
 package com.facebook.buck.apple.xcode;
 
+import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -33,6 +38,7 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
@@ -46,34 +52,99 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 /**
- * Functions for creating and writing XCSchemes.
+ * Collects target references and generates an xcscheme.
+ *
+ * To register entries in the scheme, clients must add:
+ * <ul>
+ * <li>associations between buck rules and Xcode targets</li>
+ * <li>associations between Xcode targets and the projects that contain them</li>
+ * </ul>
+ * <p>
+ * Both of these values can be pulled out of {@class ProjectGenerator}.
  */
-final class SchemeGenerator {
+class SchemeGenerator {
+  private final ProjectFilesystem projectFilesystem;
+  private final PartialGraph partialGraph;
+  private final String schemeName;
+  private final Path outputDirectory;
+  private final ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder;
+  private final ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder;
 
-  /**
-   * Utility class should not be instantiated.
-   */
-  private SchemeGenerator() {}
-
-  /**
-   * Serialize and write a scheme into a project bundle.
-   *
-   * @param projectFilesystem Filesystem abstraction that will handle the writes.
-   * @param scheme            Scheme to write.
-   * @param projectPath       Path to the {@code .xcodeproj} bundle to write the scheme.
-   * @throws IOException
-   */
-  public static void writeScheme(
+  public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
-      XCScheme scheme,
-      Path projectPath) throws IOException {
-    Path schemeDirectory = projectPath.resolve("xcshareddata/xcschemes");
+      PartialGraph partialGraph,
+      String schemeName,
+      Path outputDirectory) {
+    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.partialGraph = Preconditions.checkNotNull(partialGraph);
+    this.schemeName = Preconditions.checkNotNull(schemeName);
+    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
+    buildRuleToTargetMapBuilder = ImmutableMap.builder();
+    targetToProjectPathMapBuilder = ImmutableMap.builder();
+  }
+
+  public void addRuleToTargetMap(Map<BuildRule, PBXTarget> ruleToTargetMap) {
+    buildRuleToTargetMapBuilder.putAll(ruleToTargetMap);
+  }
+
+  public void addRuleToTargetMap(BuildRule rule, PBXTarget target) {
+    buildRuleToTargetMapBuilder.put(rule, target);
+  }
+
+  public void addTargetToProjectPathMap(Map<PBXTarget, Path> targetToProjectPathMap) {
+    targetToProjectPathMapBuilder.putAll(targetToProjectPathMap);
+  }
+
+  public void addTargetToProjectPathMap(PBXTarget target, Path projectPath) {
+    targetToProjectPathMapBuilder.put(target, projectPath);
+  }
+
+  public Path writeScheme() throws IOException {
+    XCScheme scheme = new XCScheme(schemeName);
+
+    final ImmutableMap<BuildRule, PBXTarget> buildRuleToTargetMap =
+        buildRuleToTargetMapBuilder.build();
+    ImmutableMap<PBXTarget, Path> targetToProjectPathMap =
+        targetToProjectPathMapBuilder.build();
+
+    List<BuildRule> orderedBuildRules = TopologicalSort.sort(
+        partialGraph.getDependencyGraph(),
+        new Predicate<BuildRule>() {
+          @Override
+          public boolean apply(BuildRule input) {
+            return buildRuleToTargetMap.containsKey(input);
+          }
+        });
+
+    Set<BuildRule> nonTestRules = Sets.newLinkedHashSet();
+    Set<BuildRule> testRules = Sets.newLinkedHashSet();
+
+    for (BuildRule rule : orderedBuildRules) {
+      if (AppleBuildRules.isXcodeTargetTestBuildRuleType(rule.getType())) {
+        testRules.add(rule);
+      } else {
+        nonTestRules.add(rule);
+      }
+    }
+
+    // For aesthetic reasons put all non-test build actions before all test build actions.
+    for (BuildRule rule : Iterables.concat(nonTestRules, testRules)) {
+      scheme.addBuildAction(
+          outputDirectory.getParent().relativize(
+              targetToProjectPathMap.get(
+                  buildRuleToTargetMap.get(rule))
+          ).toString(),
+          buildRuleToTargetMap.get(rule).getGlobalID());
+    }
+
+    Path schemeDirectory = outputDirectory.resolve("xcshareddata/xcschemes");
     projectFilesystem.mkdirs(schemeDirectory);
-    Path schemePath = schemeDirectory.resolve(scheme.getName() + ".xcscheme");
+    Path schemePath = schemeDirectory.resolve(schemeName + ".xcscheme");
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
       serializeScheme(scheme, outputStream);
       projectFilesystem.writeContentsToPath(outputStream.toString(), schemePath);
     }
+    return schemePath;
   }
 
   /**
