@@ -21,11 +21,7 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTarg
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRuleResolver;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
-import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.xml.HasXPath.hasXPath;
@@ -47,10 +43,8 @@ import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
-import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
@@ -61,7 +55,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.model.BuildTarget;
@@ -115,7 +108,6 @@ public class ProjectGeneratorTest {
 
   private ProjectFilesystem projectFilesystem;
   private ExecutionContext executionContext;
-  private XcodeNativeDescription xcodeNativeDescription;
   private IosLibraryDescription iosLibraryDescription;
   private IosTestDescription iosTestDescription;
   private IosBinaryDescription iosBinaryDescription;
@@ -127,7 +119,6 @@ public class ProjectGeneratorTest {
   public void setUp() throws IOException {
     projectFilesystem = new FakeProjectFilesystem();
     executionContext = TestExecutionContext.newInstance();
-    xcodeNativeDescription = new XcodeNativeDescription();
     iosLibraryDescription = new IosLibraryDescription();
     iosTestDescription = new IosTestDescription();
     iosBinaryDescription = new IosBinaryDescription();
@@ -337,48 +328,6 @@ public class ProjectGeneratorTest {
     NSDictionary blechBuildFileSettings = blechHeaderBuildFile.getSettings().get();
     NSArray blechAttributes = (NSArray) blechBuildFileSettings.get("ATTRIBUTES");
     assertArrayEquals(new NSString[]{new NSString("Private")}, blechAttributes.getArray());
-  }
-
-  @Test
-  public void testXcodeNativeRule() throws IOException {
-    BuildRule rule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "rule"),
-        ImmutableSortedSet.<BuildRule>of(),
-        xcodeNativeDescription,
-        new Function<XcodeNativeDescription.Arg, XcodeNativeDescription.Arg>() {
-          @Override
-          public XcodeNativeDescription.Arg apply(XcodeNativeDescription.Arg input) {
-            input.product = "libfoo.a";
-            input.targetGid = "00DEADBEEF";
-            input.projectContainerPath = new TestSourcePath("foo.xcodeproj");
-            return input;
-          }
-        });
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    assertThat(project.getTargets(), hasSize(2));
-    PBXTarget target = project.getTargets().get(0);
-    assertThat(target.getName(), equalTo("//foo:rule"));
-    assertThat(target.isa(), equalTo("PBXAggregateTarget"));
-    assertThat(target.getDependencies(), hasSize(1));
-    PBXTargetDependency dependency = target.getDependencies().get(0);
-    PBXContainerItemProxy proxy = dependency.getTargetProxy();
-    String containerPath = assertFileRefIsRelativeAndResolvePath(proxy.getContainerPortal());
-    assertThat(containerPath, endsWith("foo.xcodeproj"));
-    assertThat(proxy.getRemoteGlobalIDString(), equalTo("00DEADBEEF"));
-
-    verifyGeneratedSignedSourceTarget(project.getTargets().get(1));
-
-    PBXGroup projectReferenceGroup =
-        project.getMainGroup().getOrCreateChildGroupByName("Project References");
-    assertThat(projectReferenceGroup.getChildren(), hasSize(1));
-    assertThat(
-        projectReferenceGroup.getChildren(), hasItem(sameInstance(proxy.getContainerPortal())));
   }
 
   @Test
@@ -924,7 +873,7 @@ public class ProjectGeneratorTest {
     BuildRule fooLib = createBuildRuleWithDefaults(
         new BuildTarget("//foo", "foo"),
         ImmutableSortedSet.<BuildRule>of(),
-        xcodeNativeDescription);
+        iosLibraryDescription);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(fooLib),
@@ -938,7 +887,7 @@ public class ProjectGeneratorTest {
         "%08X%08X%08X", target.isa().hashCode(), target.getName().hashCode(), 0);
     assertEquals(
         "expected GID has correct value (value from which it's derived have not changed)",
-        "93C1B2AA2245423200000000", expectedGID);
+        "E66DC04E2245423200000000", expectedGID);
     assertEquals("generated GID is same as expected", expectedGID, target.getGlobalID());
   }
 
@@ -1528,15 +1477,5 @@ public class ProjectGeneratorTest {
     }
 
     return foundCommonAssetCatalogCompileCommand && foundSplitAssetCatalogCompileCommand;
-  }
-
-  private void verifyGeneratedSignedSourceTarget(PBXTarget target) {
-    Iterable<PBXShellScriptBuildPhase> shellSteps = Iterables.filter(
-        target.getBuildPhases(), PBXShellScriptBuildPhase.class);
-    assertEquals(1, Iterables.size(shellSteps));
-    PBXShellScriptBuildPhase generatedScriptPhase = Iterables.get(shellSteps, 0);
-    assertThat(
-        generatedScriptPhase.getShellScript(),
-        containsString(SourceSigner.SIGNED_SOURCE_PLACEHOLDER));
   }
 }

@@ -18,38 +18,19 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.TestSourcePath;
 
-import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.file.Paths;
-
 public class XcodeNativeTest {
-
-  private BuildRuleParams params;
-
-  @Before
-  public void createFixtures() {
-    params = new FakeBuildRuleParams(BuildTargetFactory.newInstance("//:xcode_native_test"));
-  }
 
   @Test
   public void shouldPopulateFieldsFromArg() {
     XcodeNativeDescription.Arg arg =
         new XcodeNativeDescription().createUnpopulatedConstructorArg();
-    arg.product = "libfoo.a";
-    arg.targetGid = "0";
     arg.projectContainerPath = new TestSourcePath("foo.xcodeproj");
-    XcodeNative xcodeNative = new XcodeNative(params, arg);
+    XcodeNative xcodeNative = new XcodeNative(arg);
 
-    assertEquals("libfoo.a", xcodeNative.getProduct());
-    assertEquals("0", xcodeNative.getTargetGid());
     assertEquals(new TestSourcePath("foo.xcodeproj"), xcodeNative.getProjectContainerPath());
-
-    assertEquals(Paths.get("buck-out/gen/libfoo.a"), xcodeNative.getPathToOutputFile());
   }
 }

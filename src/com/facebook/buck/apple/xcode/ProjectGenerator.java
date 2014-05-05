@@ -38,14 +38,11 @@ import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFramework;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.OsxResourceDescription;
-import com.facebook.buck.apple.XcodeNative;
-import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
@@ -58,7 +55,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
@@ -329,9 +325,6 @@ public class ProjectGenerator {
     if (rule.getType().equals(IosLibraryDescription.TYPE)) {
       result = Optional.of((PBXTarget) generateIosLibraryTarget(
           project, rule, (IosLibrary) rule.getBuildable()));
-    } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
-      result = Optional.of((PBXTarget) generateXcodeNativeTarget(
-          project, rule, (XcodeNative) rule.getBuildable()));
     } else if (rule.getType().equals(IosTestDescription.TYPE)) {
       result = Optional.of((PBXTarget) generateIosTestTarget(
           project, rule, (IosTest) rule.getBuildable()));
@@ -592,27 +585,6 @@ public class ProjectGenerator {
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
         frameworksBuilder.build());
 
-    project.getTargets().add(target);
-    return target;
-  }
-
-  private PBXAggregateTarget generateXcodeNativeTarget(
-      PBXProject project,
-      BuildRule rule,
-      XcodeNative buildable) {
-    Path referencedProjectPath = buildable.getProjectContainerPath().resolve();
-    PBXFileReference referencedProject = project.getMainGroup()
-        .getOrCreateChildGroupByName("Project References")
-        .getOrCreateFileReferenceBySourceTreePath(new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            this.outputDirectory.normalize().toAbsolutePath()
-                .relativize(referencedProjectPath.toAbsolutePath())));
-    PBXContainerItemProxy proxy = new PBXContainerItemProxy(
-        referencedProject,
-        buildable.getTargetGid(),
-        PBXContainerItemProxy.ProxyType.TARGET_REFERENCE);
-    PBXAggregateTarget target = new PBXAggregateTarget(getXcodeTargetName(rule));
-    target.getDependencies().add(new PBXTargetDependency(proxy));
     project.getTargets().add(target);
     return target;
   }
@@ -1217,8 +1189,7 @@ public class ProjectGenerator {
     return FluentIterable
         .from(getRecursiveRuleDependenciesOfType(
             rule,
-            IosLibraryDescription.TYPE,
-            XcodeNativeDescription.TYPE))
+            IosLibraryDescription.TYPE))
         .transform(
             new Function<BuildRule, PBXFileReference>() {
               @Override
@@ -1241,14 +1212,6 @@ public class ProjectGenerator {
                     PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
                     Paths.get(getLibraryNameFromTargetName(rule.getBuildTarget().getShortName()))));
       }
-    } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
-      XcodeNative xcodeNative = (XcodeNative) Preconditions.checkNotNull(rule.getBuildable());
-      return project.getMainGroup()
-          .getOrCreateChildGroupByName("Frameworks")
-          .getOrCreateFileReferenceBySourceTreePath(
-              new SourceTreePath(
-                  PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                  Paths.get(xcodeNative.getProduct())));
     } else {
       throw new RuntimeException("Unexpected type: " + rule.getType());
     }

@@ -43,15 +43,12 @@ public class XcodeNativeDescription implements Description<XcodeNativeDescriptio
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new XcodeNative(params, args);
+    return new XcodeNative(args);
   }
 
   public static class Arg implements ConstructorArg {
     @Hint(name = "xcodeproj")
     public SourcePath projectContainerPath;
-    @Hint(name = "gid")
-    public String targetGid;
-    public String product;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }
 }

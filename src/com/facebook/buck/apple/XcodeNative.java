@@ -18,18 +18,15 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -51,37 +48,20 @@ import javax.annotation.Nullable;
  */
 public class XcodeNative extends AbstractBuildable {
   private final SourcePath projectContainerPath;
-  private final String targetGid;
-  private final String product;
 
-  private final Path pathToOutputFile;
-
-  public XcodeNative(final BuildRuleParams params, XcodeNativeDescription.Arg arg) {
+  public XcodeNative(XcodeNativeDescription.Arg arg) {
     this.projectContainerPath = Preconditions.checkNotNull(arg.projectContainerPath);
-    this.targetGid = Preconditions.checkNotNull(arg.targetGid);
-    this.product = Preconditions.checkNotNull(arg.product);
-
-    this.pathToOutputFile = Paths.get(
-        BuckConstant.GEN_DIR, params.getBuildTarget().getBasePath(), product);
   }
 
   public SourcePath getProjectContainerPath() {
     return projectContainerPath;
   }
 
-  public String getTargetGid() {
-    return targetGid;
-  }
-
-  public String getProduct() {
-    return product;
-  }
-
   @Nullable
   @Override
   public Path getPathToOutputFile() {
     // This returns where the build product ends up residing, rather than where it comes from.
-    return pathToOutputFile;
+    return null;
   }
 
   @Override
@@ -100,8 +80,6 @@ public class XcodeNative extends AbstractBuildable {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .set("targetGid", targetGid)
-        .set("product", product);
+    return builder;
   }
 }
