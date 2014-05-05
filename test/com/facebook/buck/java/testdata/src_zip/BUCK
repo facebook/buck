@@ -25,7 +25,7 @@ genrule(
 
 java_library(
   name = 'lib',
-  srcs = ['Yin.java', genfile('output.src.zip')],
+  srcs = ['Yin.java', ':generate_java_sources'],
   deps = [
     '//:generate_java_sources',
   ],

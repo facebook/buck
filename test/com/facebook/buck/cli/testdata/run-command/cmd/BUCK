@@ -10,7 +10,7 @@ genrule(
 
 sh_binary(
   name = 'command',
-  main = genfile('command.sh'),
+  main = ':real_command',
   deps = [
     ':real_command',
   ],

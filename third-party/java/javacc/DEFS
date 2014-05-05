@@ -25,7 +25,7 @@ def javacc_parser_library(
 
   java_library(
     name = name,
-    srcs = other_srcs + [ genfile(src_zip_name) ],
+    srcs = other_srcs + [ ':%s' % genrule_name ],
     deps = deps + [
       ':' + genrule_name,
     ],
