@@ -29,6 +29,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * Factory to create a {@link BuckEventBus} for tests.
@@ -74,10 +75,16 @@ public class BuckEventBusFactory {
     return buckEventBus.getThreadIdSupplier();
   }
 
+  /**
+   * Error listener that prints events at level {@link Level#WARNING} or higher.
+   */
   private static class ErrorListener {
     @Subscribe
     public void logEvent(LogEvent event) {
-      System.err.println(event.getMessage());
+      Level level = event.getLevel();
+      if (level.intValue() >= Level.WARNING.intValue()) {
+        System.err.println(event.getMessage());
+      }
     }
   }
 
