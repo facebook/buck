@@ -32,6 +32,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
@@ -42,7 +43,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.File;
@@ -111,19 +111,7 @@ public class DescribedRuleTest {
         new FakeRuleKeyBuilderFactory(),
         /* ignore file existence checks */ true);
 
-    BuildContext fakeBuildContext = EasyMock.createNiceMock(BuildContext.class);
-    ExecutionContext fakeExecutionContext = EasyMock.createNiceMock(ExecutionContext.class);
-    BuckEventBus bus = BuckEventBusFactory.newInstance();
-    final AtomicBoolean ok = new AtomicBoolean(false);
-    bus.register(new Object() {
-      @Subscribe
-      public void echo(LogEvent event) {
-        ok.set("cheese".equals(event.getMessage()));
-      }
-    });
-    EasyMock.expect(fakeExecutionContext.getBuckEventBus()).andStubReturn(bus);
-
-    EasyMock.replay(fakeBuildContext, fakeExecutionContext);
+    BuildContext fakeBuildContext = FakeBuildContext.NOOP_CONTEXT;
 
     DescribedRuleFactory<Dto> factory = new DescribedRuleFactory<>(description);
     DescribedRuleBuilder<Dto> builder = factory.newInstance(factoryParams);
@@ -134,10 +122,19 @@ public class DescribedRuleTest {
     assertEquals(1, steps.size());
     EchoStep step = (EchoStep) Iterables.getOnlyElement(steps);
 
-    step.execute(fakeExecutionContext);
+    ExecutionContext.Builder executionContextBuilder = TestExecutionContext.newBuilder();
+    BuckEventBus bus = BuckEventBusFactory.newInstance();
+    final AtomicBoolean ok = new AtomicBoolean(false);
+    bus.register(new Object() {
+      @Subscribe
+      public void echo(LogEvent event) {
+        ok.set("cheese".equals(event.getMessage()));
+      }
+    });
+    executionContextBuilder.setEventBus(bus);
+    step.execute(executionContextBuilder.build());
 
     assertTrue(ok.get());
-    // No need to verify the mocks as they're not being used as mocks
   }
 
   @Test
