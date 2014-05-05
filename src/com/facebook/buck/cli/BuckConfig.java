@@ -765,16 +765,29 @@ public class BuckConfig {
   public Optional<Path> getProguardJarOverride() {
     Optional<String> pathString = getValue("tools", "proguard");
     if (pathString.isPresent()) {
-      Path path = Paths.get(pathString.get());
-      File file = projectFilesystem.getAbsolutifier().apply(path).toFile();
-      if (!file.exists()) {
-        throw new HumanReadableException("Overridden proguard path not found: " +
-            file.getAbsolutePath());
-      }
-      return Optional.of(path);
-    } else {
-      return Optional.absent();
+      return checkPathExists(pathString.get(), "Overridden proguard path not found: ");
     }
+    return Optional.absent();
+  }
+
+  /**
+   * Returns the path to the aapt executable that is overridden by the current project. If not
+   * specified, the Android platform aapt will be used.
+   */
+  public Optional<Path> getAaptOverride() {
+    Optional<String> pathString = getValue("tools", "aapt");
+    if (pathString.isPresent()) {
+      return checkPathExists(pathString.get(), "Overridden aapt path not found: ");
+    }
+    return Optional.absent();
+  }
+
+  public Optional<Path> checkPathExists(String pathString, String errorMsg) {
+    Path path = Paths.get(pathString);
+    if (projectFilesystem.exists(path)) {
+      return Optional.of(projectFilesystem.resolve(path));
+    }
+    throw new HumanReadableException(errorMsg + path);
   }
 
   @VisibleForTesting

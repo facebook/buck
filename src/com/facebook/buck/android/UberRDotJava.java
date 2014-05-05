@@ -80,16 +80,20 @@ public class UberRDotJava extends AbstractBuildable implements
   private final boolean rDotJavaNeedsDexing;
   private final boolean shouldBuildStringSourceMap;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+  private final Optional<Path> aaptOverride;
 
-  UberRDotJava(BuildTarget buildTarget,
+  UberRDotJava(
+      BuildTarget buildTarget,
       FilteredResourcesProvider filteredResourcesProvider,
       JavacOptions javacOptions,
+      Optional<Path> aaptOverride,
       AndroidResourceDepsFinder androidResourceDepsFinder,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
@@ -265,7 +269,8 @@ public class UberRDotJava extends AbstractBuildable implements
         rDotJavaSrc,
         Iterables.get(rDotJavaPackages, 0),
         /* isTempRDotJava */ false,
-        FluentIterable.from(rDotJavaPackages).skip(1).toSet());
+        FluentIterable.from(rDotJavaPackages).skip(1).toSet(),
+        aaptOverride);
     steps.add(genRDotJava);
 
     if (shouldBuildStringSourceMap) {

@@ -22,6 +22,7 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -40,6 +41,7 @@ public class GenRDotJavaStep extends ShellStep {
   private final Path genDirectoryPath;
   private final boolean isTempRDotJava;
   private final ImmutableSet<String> extraLibraryPackages;
+  private final Optional<Path> aaptOverride;
 
   /**
    * Creates a command that will run {@code aapt} for the purpose of generating {@code R.java}.
@@ -49,23 +51,25 @@ public class GenRDotJavaStep extends ShellStep {
    * @param genDirectoryPath Directory where {@code R.java} and potentially {@code R.txt} will be
    *     generated
    * @param libraryPackage Normally, {@code aapt} expects an {@code AndroidManifest.xml} so that it
-   *     can extract the {@code package} attribute to determine the Java package of the generated
-   *     {@code R.java} file. For this class, the client must specify the {@code package} directly
-   *     rather than the path to {@code AndroidManifest.xml}. This precludes the need to keep a
-   *     number of dummy {@code AndroidManifest.xml} files in the codebase.
+ *     can extract the {@code package} attribute to determine the Java package of the generated
+ *     {@code R.java} file. For this class, the client must specify the {@code package} directly
+ *     rather than the path to {@code AndroidManifest.xml}. This precludes the need to keep a
+ *     number of dummy {@code AndroidManifest.xml} files in the codebase.
    * @param isTempRDotJava If true, the values of the resource values in the generated
-   *     {@code R.java} will be meaningless.
-   *     <p>
-   *     If false, this command will produce an {@code R.java} file with resource values designed to
-   *     match those in an .apk that includes the resources.
+*     {@code R.java} will be meaningless.
+*     <p>
+*     If false, this command will produce an {@code R.java} file with resource values designed to
+*     match those in an .apk that includes the resources.
    * @param extraLibraryPackages
+   * @param aaptOverride
    */
   public GenRDotJavaStep(
       Set<Path> resDirectories,
       Path genDirectoryPath,
       String libraryPackage,
       boolean isTempRDotJava,
-      Set<String> extraLibraryPackages) {
+      Set<String> extraLibraryPackages,
+      Optional<Path> aaptOverride) {
     this.resDirectories = ImmutableSet.copyOf(resDirectories);
 
     File tmpDir = Files.createTempDir();
@@ -95,6 +99,7 @@ public class GenRDotJavaStep extends ShellStep {
     this.genDirectoryPath = Preconditions.checkNotNull(genDirectoryPath);
     this.isTempRDotJava = isTempRDotJava;
     this.extraLibraryPackages = ImmutableSet.copyOf(extraLibraryPackages);
+    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
   }
 
   @Override
@@ -102,7 +107,12 @@ public class GenRDotJavaStep extends ShellStep {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
 
-    builder.add(androidPlatformTarget.getAaptExecutable().toString()).add("package");
+    if (aaptOverride.isPresent()) {
+      builder.add(aaptOverride.get().toString());
+    } else {
+      builder.add(androidPlatformTarget.getAaptExecutable().toString());
+    }
+    builder.add("package");
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {

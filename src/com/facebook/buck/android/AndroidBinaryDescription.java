@@ -51,12 +51,17 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
    */
   private static final long DEFAULT_LINEAR_ALLOC_HARD_LIMIT = 4 * 1024 * 1024;
 
-  public final JavacOptions javacOptions;
-  public final Optional<Path> proguardJarOverride;
+  private final JavacOptions javacOptions;
+  private final Optional<Path> proguardJarOverride;
+  private final Optional<Path> aaptOverride;
 
-  public AndroidBinaryDescription(JavacOptions javacOptions, Optional<Path> proguardJarOverride) {
+  public AndroidBinaryDescription(
+      JavacOptions javacOptions,
+      Optional<Path> proguardJarOverride,
+      Optional<Path> aaptOverride) {
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
+    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
   }
 
   @Override
@@ -84,6 +89,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         params,
         javacOptions,
         proguardJarOverride,
+        aaptOverride,
         args.manifest,
         args.target,
         args.deps.get(),

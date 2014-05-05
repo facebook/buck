@@ -161,11 +161,12 @@ public class KnownBuildRuleTypes {
         .build();
     builder.register(new AndroidBinaryDescription(
             androidBinaryOptions,
-            config.getProguardJarOverride()));
+            config.getProguardJarOverride(),
+            config.getAaptOverride()));
     builder.register(new AndroidInstrumentationApkDescription());
     builder.register(new AndroidLibraryDescription(javacEnv));
     builder.register(new AndroidManifestDescription());
-    builder.register(new AndroidResourceDescription());
+    builder.register(new AndroidResourceDescription(config.getAaptOverride()));
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
     builder.register(new BuckExtensionDescription());

@@ -68,6 +68,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
     super(buildRuleParams,
         JavacOptions.DEFAULTS,
         /* proguardJarOverride */ Optional.<Path>absent(),
+        /* aaptOverride */ Optional.<Path>absent(),
         manifest,
         apkUnderTest.getTarget(),
         originalDeps,
@@ -158,7 +159,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         /* rulesToExcludeFromDex */ ImmutableSortedSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
         /* exopackage */ false,
-        apkUnderTest.getKeystore());
+        apkUnderTest.getKeystore(),
+        /* aaptOverride */ Optional.<Path>absent());
 
     AndroidBinaryGraphEnhancer.EnhancementResult result =
         graphEnhancer.createAdditionalBuildables();

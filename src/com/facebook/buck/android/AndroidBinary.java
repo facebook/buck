@@ -123,6 +123,7 @@ public class AndroidBinary extends AbstractBuildable implements
       DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
       DxStep.Option.NO_OPTIMIZE);
   private final Optional<Path> proguardJarOverride;
+  private final Optional<Path> aaptOverride;
 
   /**
    * This list of package types is taken from the set of targets that the default build.xml provides
@@ -190,6 +191,7 @@ public class AndroidBinary extends AbstractBuildable implements
   private Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
 
   /**
+   * @param aaptOverride
    * @param target the Android platform version to target, e.g., "Google Inc.:Google APIs:16". You
    *     can find the list of valid values on your system by running
    *     {@code android list targets --compact}.
@@ -198,6 +200,7 @@ public class AndroidBinary extends AbstractBuildable implements
       BuildRuleParams params,
       JavacOptions javacOptions,
       Optional<Path> proguardJarOverride,
+      Optional<Path> aaptOverride,
       SourcePath manifest,
       String target,
       ImmutableSortedSet<BuildRule> originalDeps,
@@ -219,6 +222,7 @@ public class AndroidBinary extends AbstractBuildable implements
     this.originalBuildRuleParams = Preconditions.checkNotNull(params);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
+    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
     this.originalDeps = Preconditions.checkNotNull(originalDeps);
@@ -308,7 +312,8 @@ public class AndroidBinary extends AbstractBuildable implements
         buildTargetsToExcludeFromDex,
         javacOptions,
         exopackage,
-        keystore);
+        keystore,
+        aaptOverride);
     AndroidBinaryGraphEnhancer.EnhancementResult result =
         graphEnhancer.createAdditionalBuildables();
     setGraphEnhancementResult(result);
@@ -917,7 +922,8 @@ public class AndroidBinary extends AbstractBuildable implements
     GenProGuardConfigStep genProGuardConfig = new GenProGuardConfigStep(
         aaptPackageResources.getAndroidManifestXml(),
         resDirectories,
-        generatedProGuardConfig);
+        generatedProGuardConfig,
+        aaptOverride);
     steps.add(genProGuardConfig);
 
     // Create list of proguard Configs for the app project and its dependencies

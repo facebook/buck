@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -56,7 +57,8 @@ public class AndroidResourceRuleBuilder {
           assets,
           assetsSrcs,
           manifest,
-          hasWhitelistedStrings);
+          hasWhitelistedStrings,
+          /* aaptOverride */ Optional.<Path>absent());
     }
 
     public BuildRule build() {

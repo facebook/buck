@@ -26,6 +26,7 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
@@ -34,6 +35,11 @@ import java.nio.file.Path;
 public class AndroidResourceDescription implements Description<AndroidResourceDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("android_resource");
+  private final Optional<Path> aaptOverride;
+
+  public AndroidResourceDescription(Optional<Path> aaptOverride) {
+    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
+  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -59,7 +65,8 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         args.assets.orNull(),
         collectInputFiles(filesystem, args.assets),
         args.manifest.orNull(),
-        args.hasWhitelistedStrings.or(false));
+        args.hasWhitelistedStrings.or(false),
+        aaptOverride);
   }
 
   private ImmutableSortedSet<Path> collectInputFiles(

@@ -599,7 +599,7 @@ public class BuckConfigTest {
     BuckConfig config = createWithDefaultFilesystem(reader, null);
     assertEquals(
         "Should resolve to the fully qualified path",
-        proguardJarName,
+        temporaryFolder.getRoot().toPath().resolve(proguardJarName).toString(),
         config.getProguardJarOverride().transform(Functions.toStringFunction()).orNull());
   }
 

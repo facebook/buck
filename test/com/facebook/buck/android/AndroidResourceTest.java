@@ -39,6 +39,7 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.FileHashCache;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +51,7 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
@@ -75,7 +77,8 @@ public class AndroidResourceTest {
             Paths.get("java/src/com/facebook/base/assets/drawable/B.xml"),
             Paths.get("java/src/com/facebook/base/assets/drawable/D.xml")),
         Paths.get("java/src/com/facebook/base/AndroidManifest.xml"),
-        /* hasWhitelisted */ false);
+        /* hasWhitelisted */ false,
+        /* aaptOverride */ Optional.<Path>absent());
 
     // Test getInputsToCompareToOutput().
     MoreAsserts.assertIterablesEquals(

@@ -20,6 +20,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -32,14 +33,17 @@ public class GenProGuardConfigStep extends ShellStep {
   private final Path androidManifestPath;
   private final Set<Path> resDirectories;
   private final Path proguardConfigurationPath;
+  private final Optional<Path> aaptOverride;
 
   public GenProGuardConfigStep(
       Path androidManifestPath,
       Set<Path> resDirectories,
-      Path proguardConfigurationPath) {
+      Path proguardConfigurationPath,
+      Optional<Path> aaptOverride) {
     this.androidManifestPath = Preconditions.checkNotNull(androidManifestPath);
     this.resDirectories = ImmutableSet.copyOf(resDirectories);
     this.proguardConfigurationPath = Preconditions.checkNotNull(proguardConfigurationPath);
+    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
   }
 
   @Override
@@ -52,7 +56,12 @@ public class GenProGuardConfigStep extends ShellStep {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
 
-    args.add(androidPlatformTarget.getAaptExecutable().toString()).add("package");
+    if (aaptOverride.isPresent()) {
+      args.add(aaptOverride.get().toString());
+    } else {
+      args.add(androidPlatformTarget.getAaptExecutable().toString());
+    }
+    args.add("package");
 
     // Specify where the ProGuard config should be written.
     args.add("-G").add(proguardConfigurationPath.toString());

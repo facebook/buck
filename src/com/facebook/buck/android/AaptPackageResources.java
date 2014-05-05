@@ -73,19 +73,23 @@ public class AaptPackageResources extends AbstractBuildable
   private final PackageType packageType;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+  private final Optional<Path> aaptOverride;
 
-  AaptPackageResources(BuildTarget buildTarget,
+  AaptPackageResources(
+      BuildTarget buildTarget,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       AndroidTransitiveDependencies androidTransitiveDependencies,
       PackageType packageType,
-      ImmutableSet<TargetCpuType> cpuFilters) {
+      ImmutableSet<TargetCpuType> cpuFilters,
+      Optional<Path> aaptOverride) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
     this.androidTransitiveDependencies = Preconditions.checkNotNull(androidTransitiveDependencies);
     this.packageType = Preconditions.checkNotNull(packageType);
     this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
+    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
@@ -179,7 +183,8 @@ public class AaptPackageResources extends AbstractBuildable
         filteredResourcesProvider.getResDirectories(),
         assetsDirectory,
         getResourceApkPath(),
-        packageType.isCrunchPngFiles()));
+        packageType.isCrunchPngFiles(),
+        aaptOverride));
 
     buildableContext.recordArtifact(getAndroidManifestXml());
     buildableContext.recordArtifact(getResourceApkPath());

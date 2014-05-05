@@ -135,7 +135,8 @@ public class AndroidBinaryTest {
             Paths.get("buck-out/bin/java/src/com/facebook/base/" +
                 "__manifest_apk#aapt_package__/AndroidManifest.xml"),
             ImmutableSet.<Path>of(),
-            Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"));
+            Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"),
+            /* aaptOverride */ Optional.<Path>absent());
 
     Step expectedObfuscation =
         ProGuardObfuscateStep.create(
