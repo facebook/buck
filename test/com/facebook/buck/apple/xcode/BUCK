@@ -22,8 +22,10 @@ java_test(
     'Matchers.java',
     'ProjectGeneratorTest.java',
     'ProjectGeneratorTestUtils.java',
-    'SeparatedProjectsGeneratorTest.java',
     'ProjectParserTest.java',
+    'SchemeGeneratorTest.java',
+    'SeparatedProjectsGeneratorTest.java',
+    'WorkspaceGeneratorTest.java',
   ],
   source_under_test = ['//src/com/facebook/buck/apple/xcode:project_generator'],
   deps = [

@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.ProjectGenerator;
 import com.facebook.buck.apple.xcode.SeparatedProjectsGenerator;
+import com.facebook.buck.apple.xcode.WorkspaceAndProjectGenerator;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
@@ -241,7 +242,14 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           "GeneratedProject",
           ProjectGenerator.COMBINED_PROJECT_OPTIONS);
       projectGenerator.createXcodeProjects();
-      console.getStdOut().println(projectGenerator.getProjectPath());
+    } else if (options.getWorkspaceAndProjects()) {
+      WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+          getProjectFilesystem(),
+          getProjectFilesystem().getPathForRelativePath(Paths.get("_gen")),
+          partialGraph,
+          executionContext,
+          Iterables.getOnlyElement(passedInTargetsSet));
+      generator.generateWorkspaceAndDependentProjects();
     } else {
       // Generate projects based on xcode_project_config rules, and place them in the same directory
       // as the Buck file.

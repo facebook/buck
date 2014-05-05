@@ -6,6 +6,8 @@ java_library(
     'SeparatedProjectsGenerator.java',
     'RuleDependencyFinder.java',
     'SchemeGenerator.java',
+    'WorkspaceAndProjectGenerator.java',
+    'WorkspaceGenerator.java',
   ],
   deps = [
     ':xcode',
