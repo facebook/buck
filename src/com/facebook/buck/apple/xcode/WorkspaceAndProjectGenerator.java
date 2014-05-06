@@ -49,6 +49,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class WorkspaceAndProjectGenerator {
+  static final String DEPENDENCIES_GROUP = "Dependencies";
+
   private final ProjectFilesystem projectFilesystem;
   private final Path outputDirectory;
   private final PartialGraph partialGraph;
@@ -79,6 +81,7 @@ public class WorkspaceAndProjectGenerator {
 
     XcodeWorkspaceConfig workspaceBuildable =
         (XcodeWorkspaceConfig) workspaceTargetRule.getBuildable();
+    BuildRule actualTargetRule = workspaceBuildable.getSrcTarget();
 
     String workspaceName = workspaceBuildable.getSrcTarget().getBuildTarget().getShortName();
 
@@ -139,7 +142,8 @@ public class WorkspaceAndProjectGenerator {
             ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
         generator.createXcodeProjects();
 
-        workspaceGenerator.addFilePath("", generator.getProjectPath());
+        String workspaceGroup = nativeTargets.contains(actualTargetRule) ? "" : DEPENDENCIES_GROUP;
+        workspaceGenerator.addFilePath(workspaceGroup, generator.getProjectPath());
 
         schemeGenerator.addRuleToTargetMap(generator.getBuildRuleToGeneratedTargetMap());
         for (PBXTarget target : generator.getBuildRuleToGeneratedTargetMap().values()) {
@@ -153,7 +157,8 @@ public class WorkspaceAndProjectGenerator {
         Path pbxprojectPath = projectPath.resolve("project.pbxproj");
         String targetName = rule.getBuildTarget().getShortName();
 
-        workspaceGenerator.addFilePath("", outputDirectory.resolveSibling(projectPath));
+        workspaceGenerator.addFilePath(DEPENDENCIES_GROUP,
+            outputDirectory.resolveSibling(projectPath));
 
         ImmutableMap.Builder<String, String> targetNameToGIDMapBuilder = ImmutableMap.builder();
         try (InputStream projectInputStream =
