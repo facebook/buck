@@ -66,6 +66,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -456,18 +457,21 @@ public class BuckConfig {
     return ImmutableSet.copyOf(splitter.split(jarPathsString));
   }
 
-  @VisibleForTesting
-  DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
+  public ImmutableSet<String> getSrcRoots() {
     Optional<String> srcRootsOptional = getValue("java", "src_roots");
-    ImmutableSet<String> paths;
     if (srcRootsOptional.isPresent()) {
       String srcRoots = srcRootsOptional.get();
       Splitter splitter = Splitter.on(',').omitEmptyStrings().trimResults();
-      paths = ImmutableSet.copyOf(splitter.split(srcRoots));
+      return ImmutableSet.copyOf(splitter.split(srcRoots));
     } else {
-      paths = ImmutableSet.of();
+      return ImmutableSet.of();
     }
-    return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(paths);
+  }
+
+  @VisibleForTesting
+  DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
+    Set<String> srcRoots = getSrcRoots();
+    return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(srcRoots);
   }
 
   /**
