@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -37,9 +38,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
+import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
 import java.util.Set;
@@ -114,6 +119,16 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
+    final SetMultimap<String, String> missingSymbols = Multimaps.synchronizedSetMultimap(
+        HashMultimap.<String, String>create());
+    Object missingSymbolsListener = new Object() {
+      @Subscribe
+      public void collectMissingSymbol(MissingSymbolEvent event) {
+        missingSymbols.put(event.getTarget(), event.getSymbol());
+      }
+    };
+    getBuckEventBus().register(missingSymbolsListener);
+
     // Create and execute the build.
     build = options.createBuild(
         options.getBuckConfig(),
@@ -131,8 +146,10 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       exitCode = executeBuildAndPrintAnyFailuresToConsole(buildTargets, build, console);
     } finally {
       build.close(); // Can't use try-with-resources as build is returned by getBuild.
+      getBuckEventBus().unregister(missingSymbolsListener);
     }
     getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
+
     return exitCode;
   }
 

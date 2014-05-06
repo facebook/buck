@@ -88,6 +88,10 @@ public class BuckEventBus implements Closeable {
     eventBus.register(object);
   }
 
+  public void unregister(Object object) {
+    eventBus.unregister(object);
+  }
+
   @VisibleForTesting
   AsyncEventBus getEventBus() {
     return eventBus;
