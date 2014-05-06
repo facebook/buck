@@ -137,7 +137,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
    * interpreter to when parsing actually begins.  This makes it easier to attribute this time
    * to the actual parse phase.
    */
-  private void initIfNeeded() throws IOException {
+  @VisibleForTesting
+  public void initIfNeeded() throws IOException {
     ensureNotClosed();
     if (!isInitialized) {
       init();
@@ -299,7 +300,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
         try {
           int exitCode = buckPyProcess.waitFor();
           if (exitCode != 0) {
-            BuildFileParseException.createForUnknownParseError(
+            throw BuildFileParseException.createForUnknownParseError(
                 String.format("Parser did not exit cleanly (exit code: %d)", exitCode));
           }
         } catch (InterruptedException e) {
