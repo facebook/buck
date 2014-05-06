@@ -480,12 +480,17 @@ public class ConstructorArgMarshallerTest {
 
       public Optional<SourcePath> noSourcePath;
       public Optional<SourcePath> defaultSourcePath;
+
+      public int primitiveNum;
+      public Integer wrapperObjectNum;
+      public boolean primitiveBoolean;
+      public Boolean wrapperObjectBoolean;
     }
 
-    ImmutableMap<String, Object> args = ImmutableMap.<String, Object>builder()
-        .put("defaultString", "")
-        .put("defaultSourcePath", "")
-        .build();
+    // This is not an ImmutableMap so we can test null values.
+    Map<String, Object> args = Maps.newHashMap();
+    args.put("defaultString", null);
+    args.put("defaultSourcePath", null);
     Dto dto = new Dto();
     marshaller.populate(ruleResolver, filesystem, buildRuleFactoryParams(args), dto);
 
@@ -493,6 +498,8 @@ public class ConstructorArgMarshallerTest {
     assertEquals(Optional.absent(), dto.defaultString);
     assertEquals(Optional.absent(), dto.noSourcePath);
     assertEquals(Optional.absent(), dto.defaultSourcePath);
+    assertEquals(0, dto.primitiveNum);
+    assertEquals(Integer.valueOf(0), dto.wrapperObjectNum);
   }
 
   @Test

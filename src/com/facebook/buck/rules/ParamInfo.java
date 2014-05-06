@@ -111,13 +111,18 @@ class ParamInfo implements Comparable<ParamInfo> {
     if (value == null) {
       if (isOptional) {
         result = typeCoercer.getOptionalValue();
+      } else if (Number.class.isAssignableFrom(typeCoercer.getOutputClass())) {
+        result = 0;
+      } else if (Boolean.class.isAssignableFrom(typeCoercer.getOutputClass())) {
+        result = false;
       } else {
         throw new IllegalArgumentException(String.format(
-            "Field '%s' of object '%s' cannot be null. Build file can be found in %s.",
-            name, dto, pathRelativeToProjectRoot));
+            "Field '%s %s' of object '%s' cannot be null. Build file can be found in %s.",
+            typeCoercer.getOutputClass(),
+            name,
+            dto,
+            pathRelativeToProjectRoot));
       }
-    } else if (isOptional && isDefaultPrimitiveValue(value)) {
-      result = Optional.absent();
     } else {
       try {
         result = typeCoercer.coerce(ruleResolver, filesystem, pathRelativeToProjectRoot, value);
@@ -160,17 +165,6 @@ class ParamInfo implements Comparable<ParamInfo> {
     ParamInfo that = (ParamInfo) obj;
     return name.equals(that.getName());
   }
-
-  private boolean isDefaultPrimitiveValue(Object value) {
-       if (value instanceof String && "".equals(value)) {
-         return true;
-       } else if (value instanceof Number && ((Number) value).intValue() == 0) {
-         return true;
-       } else if (Boolean.FALSE.equals(value)) {
-         return true;
-       }
-       return false;
-     }
 
   private String determinePythonName(String javaName, @Nullable Hint hint) {
     if (hint != null) {

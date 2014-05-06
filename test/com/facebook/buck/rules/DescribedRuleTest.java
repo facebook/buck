@@ -251,6 +251,58 @@ public class DescribedRuleTest {
     assertSetEquals(ImmutableSet.of(depRule1), deps);
   }
 
+  /**
+   * This models a real-world use-case where the GWT compiler has an {@code -optimize} flag whose
+   * default value is 9, but 0 is a valid input. See http://bit.ly/1nZtmMv.
+   */
+  @Test
+  public void ensureThatSpecifyingZeroIsNotConsideredAbsent() throws NoSuchBuildTargetException {
+    class Dto implements ConstructorArg {
+      static final int DEFAULT_OPTIMIZE = 9;
+      public Optional<Integer> optimize;
+    }
+
+    Description<Dto> description = new Description<Dto>() {
+      @Override
+      public BuildRuleType getBuildRuleType() {
+        return new BuildRuleType("example");
+      }
+
+      @Override
+      public Dto createUnpopulatedConstructorArg() {
+        return new Dto();
+      }
+
+      @Override
+      public Buildable createBuildable(BuildRuleParams params, Dto args) {
+        // Here is the key line of code being verified by this test!
+        int optimizationLevel = args.optimize.or(Integer.valueOf(Dto.DEFAULT_OPTIMIZE));
+        return new ExampleBuildable(String.valueOf(optimizationLevel));
+      }
+    };
+
+    ProjectFilesystem filesystem = createForgivingProjectFilesystem();
+    BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
+        ImmutableMap.of("optimize", 0),
+        filesystem,
+        new BuildFileTree(ImmutableSet.<String>of()),
+        new BuildTargetParser(filesystem),
+        BuildTargetFactory.newInstance("//one/two:example"),
+        new FakeRuleKeyBuilderFactory(),
+        /* ignore file existence checks */ true);
+
+    DescribedRuleFactory<Dto> factory = new DescribedRuleFactory<>(description);
+    DescribedRuleBuilder<Dto> builder = factory.newInstance(factoryParams);
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    DescribedRule rule = builder.build(ruleResolver);
+    ExampleBuildable buildable = (ExampleBuildable) rule.getBuildable();
+    assertEquals(
+        "If the user explicitly specifies a value of 0 for the optimize argument, " +
+            "then args.optimize should be Optional.of(0).",
+        "0",
+        buildable.message);
+  }
+
   private ProjectFilesystem createForgivingProjectFilesystem() {
     return new ProjectFilesystem(new File(".")) {
       @Override

@@ -120,7 +120,7 @@ public class BuckPyFunctionTest {
     String definition = buckPyFunction.toPythonFunction(
         new BuildRuleType("optional"), new LotsOfOptions());
 
-    assertTrue(definition, definition.contains("targets=[], thing='', version=0"));
+    assertTrue(definition, definition.contains("targets=[], thing=None, version=None"));
   }
 
   @Test
@@ -137,7 +137,7 @@ public class BuckPyFunctionTest {
 
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
-        "def either(name, dog, fake, cat='', egg='', visibility=[], build_env=None):",
+        "def either(name, dog, fake, cat=None, egg=None, visibility=[], build_env=None):",
         "  add_rule({",
         "    'type' : 'either',",
         "    'name' : name,",

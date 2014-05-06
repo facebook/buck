@@ -117,10 +117,6 @@ public class BuckPyFunction {
       return "[]";
     } else if (Boolean.class.equals(resultClass)) {
       return "False";
-    } else if (Number.class.isAssignableFrom(resultClass)) {
-      return "0";
-    } else if (String.class.equals(resultClass)) {
-      return "''";
     } else {
       return "None";
     }

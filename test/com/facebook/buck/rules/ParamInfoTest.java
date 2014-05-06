@@ -120,7 +120,7 @@ public class ParamInfoTest {
     assertEquals(Optional.<String>absent(), example.field);
 
     info.set(resolver, filesystem, example, "");
-    assertEquals(Optional.<String>absent(), example.field);
+    assertEquals(Optional.of(""), example.field);
 
     info.set(resolver, filesystem, example, "foo");
     assertEquals(Optional.of("foo"), example.field);
