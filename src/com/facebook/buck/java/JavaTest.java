@@ -205,8 +205,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         classpathEntries,
         testClassNames,
         amendVmArgs(vmArgs, executionContext.getTargetDeviceOptional()),
-        pathToTestOutput.toString(),
-        tmpDirectory.toString(),
+        pathToTestOutput,
+        tmpDirectory,
         executionContext.isCodeCoverageEnabled(),
         executionContext.isJacocoEnabled(),
         executionContext.isDebugEnabled(),
@@ -235,16 +235,14 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       return;
     }
 
-    if (targetDevice.isPresent()) {
-      TargetDevice device = targetDevice.get();
-      if (device.isEmulator()) {
-        vmArgsBuilder.add("-Dbuck.device=emulator");
-      } else {
-        vmArgsBuilder.add("-Dbuck.device=device");
-      }
-      if (device.hasIdentifier()) {
-        vmArgsBuilder.add("-Dbuck.device.id=" + device.getIdentifier());
-      }
+    TargetDevice device = targetDevice.get();
+    if (device.isEmulator()) {
+      vmArgsBuilder.add("-Dbuck.device=emulator");
+    } else {
+      vmArgsBuilder.add("-Dbuck.device=device");
+    }
+    if (device.hasIdentifier()) {
+      vmArgsBuilder.add("-Dbuck.device.id=" + device.getIdentifier());
     }
   }
 

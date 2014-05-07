@@ -59,8 +59,8 @@ public class JUnitStepTest {
     BuildId pretendBuildId = new BuildId("pretend-build-id");
     String buildIdArg = String.format("-D%s=%s", JUnitStep.BUILD_ID_PROPERTY, pretendBuildId);
 
-    String directoryForTestResults = "buck-out/gen/theresults/";
-    String directoryForTemp = "buck-out/gen/thetmp/";
+    Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
+    Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
     boolean isCodeCoverageEnabled = false;
     boolean isJacocoEnabled = true;
     boolean isDebugEnabled = false;
@@ -96,7 +96,7 @@ public class JUnitStepTest {
             "-classpath",
             Joiner.on(File.pathSeparator).join("foo", "bar/baz", "build/classes/junit"),
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
-            directoryForTestResults,
+            directoryForTestResults.toString(),
             "5000",
             "",
             testClass1,
@@ -123,8 +123,8 @@ public class JUnitStepTest {
     BuildId pretendBuildId = new BuildId("pretend-build-id");
     String buildIdArg = String.format("-D%s=%s", JUnitStep.BUILD_ID_PROPERTY, pretendBuildId);
 
-    String directoryForTestResults = "buck-out/gen/theresults/";
-    String directoryForTemp = "buck-out/gen/thetmp/";
+    Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
+    Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
     boolean isCodeCoverageEnabled = false;
     boolean isJacocoEnabled = false;
     boolean isDebugEnabled = true;
@@ -167,7 +167,7 @@ public class JUnitStepTest {
             "-classpath",
             Joiner.on(File.pathSeparator).join("foo", "bar/baz", "build/classes/junit"),
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
-            directoryForTestResults,
+            directoryForTestResults.toString(),
             "0",
             "",
             testClass1,

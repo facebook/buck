@@ -57,24 +57,15 @@ public class JUnitStep extends ShellStep {
   public static final String BUILD_ID_PROPERTY = "com.facebook.buck.buildId";
 
   private final ImmutableSet<Path> classpathEntries;
-
   private final Set<String> testClassNames;
-
   private final List<String> vmArgs;
-
-  private final String directoryForTestResults;
-
-  private final boolean isCodeCoverageEnabled;
-
-  private final boolean isDebugEnabled;
-
-  private final String tmpDirectory;
-
-  private final BuildId buildId;
-
-  private TestSelectorList testSelectorList;
-
+  private final Path directoryForTestResults;
+  private final Path tmpDirectory;
   private final Path testRunnerClassesDirectory;
+  private final boolean isCodeCoverageEnabled;
+  private final boolean isDebugEnabled;
+  private final BuildId buildId;
+  private TestSelectorList testSelectorList;
 
   /**
    *  If EMMA is not enabled, then JaCoco is enabled for the code-coverage analysis.
@@ -106,8 +97,8 @@ public class JUnitStep extends ShellStep {
       Set<Path> classpathEntries,
       Set<String> testClassNames,
       List<String> vmArgs,
-      String directoryForTestResults,
-      String tmpDirectory,
+      Path directoryForTestResults,
+      Path tmpDirectory,
       boolean isCodeCoverageEnabled,
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
@@ -133,8 +124,8 @@ public class JUnitStep extends ShellStep {
       Set<Path> classpathEntries,
       Set<String> testClassNames,
       List<String> vmArgs,
-      String directoryForTestResults,
-      String tmpDirectory,
+      Path directoryForTestResults,
+      Path tmpDirectory,
       boolean isCodeCoverageEnabled,
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
@@ -219,7 +210,7 @@ public class JUnitStep extends ShellStep {
     // The first argument to the test runner is where the test results should be written. It is not
     // reliable to write test results to stdout or stderr because there may be output from the unit
     // tests written to those file descriptors, as well.
-    args.add(directoryForTestResults);
+    args.add(directoryForTestResults.toString());
 
     // Add the default test timeout if --debug flag is not set
     long timeout = isDebugEnabled ? 0 : context.getDefaultTestTimeoutMillis();
@@ -244,7 +235,7 @@ public class JUnitStep extends ShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    return ImmutableMap.of("TMP", tmpDirectory);
+    return ImmutableMap.of("TMP", tmpDirectory.toString());
   }
 
   private void warnUser(ExecutionContext context, String message) {
