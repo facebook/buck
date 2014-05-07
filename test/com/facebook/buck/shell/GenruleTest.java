@@ -178,7 +178,7 @@ public class GenruleTest {
     Step mkTmpDir = steps.get(2);
     assertTrue(mkTmpDir instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) mkTmpDir;
-    String pathToTmpDir = GEN_DIR + "/src/com/facebook/katana/katana_manifest__tmp";
+    Path pathToTmpDir = GEN_PATH.resolve("src/com/facebook/katana/katana_manifest__tmp");
     assertEquals(
         "Third command should create the temp directory to be written by the genrule.",
         pathToTmpDir,
@@ -187,7 +187,7 @@ public class GenruleTest {
     Step mkSrcDir = steps.get(3);
     assertTrue(mkSrcDir instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) mkTmpDir;
-    String pathToSrcDir = GEN_DIR + "/src/com/facebook/katana/katana_manifest__srcs";
+    Path pathToSrcDir = GEN_PATH.resolve("src/com/facebook/katana/katana_manifest__srcs");
     assertEquals(
         "Fourth command should create the temp source directory to be written by the genrule.",
         pathToTmpDir,

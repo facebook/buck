@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Hint;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -57,7 +56,6 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
 
   public static class Arg implements ConstructorArg {
     public Path aidl;
-    @Hint(name = "import_path")
     public String importPath;
 
     public Optional<ImmutableSortedSet<BuildRule>> deps;
