@@ -51,6 +51,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -337,6 +338,28 @@ public class DaemonIntegrationTest {
     assertThat("Changing .buckconfing should have forced a reparse.",
         rebuild.getStderr(),
         containsString("Parsing"));
+  }
+
+  @Test
+  public void whenBuckBuiltTwiceLogIsPresent()
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "file_watching", tmp);
+    workspace.setUp();
+
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
+
+    File buildLogFile = workspace.getFile("buck-out/bin/build.log");
+
+    assertTrue(buildLogFile.isFile());
+    assertTrue(buildLogFile.delete());
+
+    ProjectWorkspace.ProcessResult rebuild =
+        workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
+    rebuild.assertSuccess();
+
+    buildLogFile = workspace.getFile("buck-out/bin/build.log");
+    assertTrue(buildLogFile.isFile());
   }
 
   private void waitForChange(final Path path) throws IOException {

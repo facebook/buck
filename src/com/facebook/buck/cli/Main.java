@@ -468,7 +468,7 @@ public final class Main {
             projectFilesystem,
             config.getNdkVersion(),
             propertyFinder);
-    // Look up the javac version.
+    // Look up the javac version.                                                             UtilLog
     JavaBuckConfig javaConfig = new JavaBuckConfig(config);
     JavaCompilerEnvironment javacEnv = javaConfig.getJavaCompilerEnvironment(processExecutor);
 
@@ -527,8 +527,6 @@ public final class Main {
             commandEvent,
             buildEventBus);
       } else {
-        // Initialize logging and create new Parser for new process.
-        JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(projectFilesystem);
         parser = new Parser(projectFilesystem,
             buildRuleTypes,
             console,
@@ -536,6 +534,7 @@ public final class Main {
             config.getTempFilePatterns(),
             createRuleKeyBuilderFactory(new DefaultFileHashCache(projectFilesystem, console)));
       }
+      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(projectFilesystem);
 
       CachingBuildEngine buildEngine = new CachingBuildEngine();
       exitCode = executingCommand.execute(remainingArgs,
