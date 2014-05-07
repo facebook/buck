@@ -25,8 +25,8 @@ import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -75,12 +75,12 @@ public class PrebuiltJar extends AbstractBuildable
   private final ImmutableSortedSet<BuildRule> deps;
 
   PrebuiltJar(
-      BuildRuleParams buildRuleParams,
+      BuildableParams buildableParams,
       Path classesJar,
       Optional<Path> sourceJar,
       Optional<String> javadocUrl) {
-    this.target = buildRuleParams.getBuildTarget();
-    this.deps = buildRuleParams.getDeps();
+    this.target = buildableParams.getBuildTarget();
+    this.deps = buildableParams.getDeps();
 
     this.binaryJar = Preconditions.checkNotNull(classesJar);
     this.sourceJar = Preconditions.checkNotNull(sourceJar);
@@ -110,7 +110,7 @@ public class PrebuiltJar extends AbstractBuildable
         });
 
     buildOutputInitializer =
-        new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
+        new BuildOutputInitializer<>(buildableParams.getBuildTarget(), this);
   }
 
   @Override

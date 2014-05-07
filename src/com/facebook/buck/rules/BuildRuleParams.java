@@ -31,7 +31,7 @@ import java.nio.file.Path;
  * Standard set of parameters that is passed to all build rules.
  */
 @Beta
-public class BuildRuleParams {
+public class BuildRuleParams implements BuildableParams {
 
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> deps;
@@ -60,10 +60,12 @@ public class BuildRuleParams {
         ruleKeyBuilderFactory);
   }
 
+  @Override
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }
 
+  @Override
   public ImmutableSortedSet<BuildRule> getDeps() {
     return deps;
   }
