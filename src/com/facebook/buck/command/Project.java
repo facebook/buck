@@ -30,6 +30,7 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.AnnotationProcessingData;
@@ -151,7 +152,7 @@ public class Project {
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter) {
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
-    this.buildFileTree = new BuildFileTree(partialGraph.getTargets());
+    this.buildFileTree = new InMemoryBuildFileTree(partialGraph.getTargets());
     this.basePathToAliasMap = ImmutableMap.copyOf(basePathToAliasMap);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.executionContext = Preconditions.checkNotNull(executionContext);
@@ -659,7 +660,7 @@ public class Project {
     }
 
     // Include <excludeFolder> elements, as appropriate.
-    for (String relativePath : this.buildFileTree.getChildPaths(buildRule.getBuildTarget())) {
+    for (Path relativePath : this.buildFileTree.getChildPaths(buildRule.getBuildTarget())) {
       String excludeFolderUrl = "file://$MODULE_DIR$/" + relativePath;
       SourceFolder excludeFolder = new SourceFolder(excludeFolderUrl, /* isTestSource */ false);
       module.excludeFolders.add(excludeFolder);

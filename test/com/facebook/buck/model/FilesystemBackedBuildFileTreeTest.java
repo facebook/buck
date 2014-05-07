@@ -19,15 +19,10 @@ package com.facebook.buck.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
-import org.easymock.EasyMock;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,35 +30,14 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Set;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
 
-public class BuildFileTreeTest {
+public class FilesystemBackedBuildFileTreeTest {
 
   @Rule
   public TemporaryFolder tmp = new TemporaryFolder();
-
-  private BuildFileTree buildFileTree;
-
-  @Test
-  public void testGetChildPaths() {
-    PartialGraph graph = createGraphForRules(
-        "//:fb4a",
-        "//java/com/facebook/common:base",
-        "//java/com/facebook/common/rpc:rpc",
-        "//java/com/facebook/common/ui:ui",
-        "//javatests/com/facebook/common:base",
-        "//javatests/com/facebook/common/rpc:rpc",
-        "//javatests/com/facebook/common/ui:ui");
-    buildFileTree = new BuildFileTree(graph.getTargets());
-
-    assertGetChildPaths("",
-        ImmutableSet.of("java/com/facebook/common", "javatests/com/facebook/common"));
-    assertGetChildPaths("java/com/facebook/common",
-        ImmutableSet.of("rpc", "ui"));
-    assertGetChildPaths("java/com/facebook/common/rpc",
-        ImmutableSet.<String>of());
-  }
 
   @Test @Ignore("Remove when test passes on OS X (the case preserving file system hurts us)")
   public void testCanConstructBuildFileTreeFromFilesystemOnOsX() throws IOException {
@@ -82,13 +56,14 @@ public class BuildFileTreeTest {
     Files.touch(new File(tempDir, "src/com/facebook/buck/command/BUCK"));
     Files.touch(new File(tempDir, "src/com/facebook/buck/notbuck/BUCK"));
 
-    BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(filesystem);
-    Iterable<String> allChildren = buildFiles.getChildPaths("src/com/facebook");
-    assertEquals(ImmutableSet.of("buck"),
+    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem);
+    Iterable<Path> allChildren = buildFiles.getChildPaths(new BuildTarget("src", "com/facebook"));
+    assertEquals(ImmutableSet.of(Paths.get("buck")),
         ImmutableSet.copyOf(allChildren));
 
-    Iterable<String> subChildren = buildFiles.getChildPaths("src/com/facebook/buck");
-    assertEquals(ImmutableSet.of("command", "notbuck"),
+    Iterable<Path> subChildren = buildFiles.getChildPaths(
+        new BuildTarget("//src", "/com/facebook/buck"));
+    assertEquals(ImmutableSet.of(Paths.get("command"), Paths.get("notbuck")),
         ImmutableSet.copyOf(subChildren));
   }
 
@@ -101,40 +76,53 @@ public class BuildFileTreeTest {
     assertTrue(command.mkdirs());
     File notbuck = new File(tempDir, "src/com/example/build/notbuck");
     assertTrue(notbuck.mkdirs());
+    assertTrue((new File(tempDir, "src/com/example/some/directory")).mkdirs());
 
     Files.touch(new File(tempDir, "src/com/example/BUCK"));
     Files.touch(new File(tempDir, "src/com/example/build/BUCK"));
     Files.touch(new File(tempDir, "src/com/example/build/command/BUCK"));
     Files.touch(new File(tempDir, "src/com/example/build/notbuck/BUCK"));
+    Files.touch(new File(tempDir, "src/com/example/some/directory/BUCK"));
 
-    BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(filesystem);
-    Iterable<String> allChildren = buildFiles.getChildPaths("src/com/example");
-    assertEquals(ImmutableSet.of("build"),
+    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem);
+    Collection<Path> allChildren = buildFiles.getChildPaths(
+        BuildTargetFactory.newInstance("//src/com/example:example"));
+    assertEquals(ImmutableSet.of(Paths.get("build"), Paths.get("some/directory")),
         ImmutableSet.copyOf(allChildren));
 
-    Iterable<String> subChildren = buildFiles.getChildPaths("src/com/example/build");
-    assertEquals(ImmutableSet.of("command", "notbuck"),
+    Iterable<Path> subChildren = buildFiles.getChildPaths(
+        BuildTargetFactory.newInstance("//src/com/example/build:build"));
+    assertEquals(ImmutableSet.of(Paths.get("command"), Paths.get("notbuck")),
         ImmutableSet.copyOf(subChildren));
 
+    assertEquals(Paths.get("src/com/example"),
+        buildFiles.getBasePathOfAncestorTarget(Paths.get("src/com/example/foo")));
+    assertEquals(Paths.get("src/com/example"),
+        buildFiles.getBasePathOfAncestorTarget(Paths.get("src/com/example/some/bar")));
+    assertEquals(Paths.get("src/com/example/some/directory"),
+        buildFiles.getBasePathOfAncestorTarget(Paths.get("src/com/example/some/directory/baz")));
   }
 
-  private void assertGetChildPaths(String parent, Set<String> expectedChildren) {
-    Set<String> children = ImmutableSet.copyOf(buildFileTree.getChildPaths(parent));
-    assertEquals(expectedChildren, children);
-  }
+  @Test
+  public void respectsIgnorePaths() throws IOException {
+    File tempDir = tmp.getRoot();
+    File fooBuck = new File(tempDir, "foo/BUCK");
+    File fooBarBuck = new File(tempDir, "foo/bar/BUCK");
+    File fooBazBuck = new File(tempDir, "foo/baz/BUCK");
+    Files.createParentDirs(fooBarBuck);
+    Files.createParentDirs(fooBazBuck);
+    Files.touch(fooBuck);
+    Files.touch(fooBarBuck);
+    Files.touch(fooBazBuck);
 
-  private static PartialGraph createGraphForRules(String... ruleNames) {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    List<BuildTarget> targets = Lists.newArrayList();
-    for (String ruleName : ruleNames) {
-      BuildTarget buildTarget = BuildTargetFactory.newInstance(ruleName);
-      JavaLibraryBuilder.createBuilder(buildTarget).build(ruleResolver);
-      targets.add(buildTarget);
-    }
+    ImmutableSet<Path> ignoredPaths = ImmutableSet.of(Paths.get("foo/bar"));
+    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir.toPath(), ignoredPaths);
+    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem);
 
-    PartialGraph partialGraph = EasyMock.createMock(PartialGraph.class);
-    EasyMock.expect(partialGraph.getTargets()).andReturn(targets);
-    EasyMock.replay(partialGraph);
-    return partialGraph;
+    Collection<Path> children = buildFiles.getChildPaths(new BuildTarget("//foo", "foo"));
+    assertEquals(ImmutableSet.of(Paths.get("baz")), children);
+
+    Path ancestor = buildFiles.getBasePathOfAncestorTarget(Paths.get("foo/bar/xyzzy"));
+    assertEquals(Paths.get("foo"), ancestor);
   }
 }

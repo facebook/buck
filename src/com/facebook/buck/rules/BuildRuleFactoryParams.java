@@ -133,22 +133,23 @@ public final class BuildRuleFactoryParams {
         throw new RuntimeException(file + " is not a descendant of " + target.getBasePath());
       }
 
-      checkFullPath(fullPath.toString());
+      checkFullPath(fullPath);
 
       return fullPath;
     }
   }
 
-  private void checkFullPath(String fullPath) {
-    if (fullPath.contains("..")) {
+  private void checkFullPath(Path fullPath) {
+    if (fullPath.toString().contains("..")) {
       throw new HumanReadableException(
           "\"%s\" in target \"%s\" refers to a parent directory.",
           fullPath,
           target.getFullyQualifiedName());
     }
 
-    String ancestor = buildFiles.getBasePathOfAncestorTarget(fullPath);
-    if (!target.getBasePath().equals(ancestor)) {
+    Path ancestor = buildFiles.getBasePathOfAncestorTarget(fullPath);
+    Path targetBasePath = Paths.get(target.getBasePath());
+    if (!targetBasePath.equals(ancestor)) {
       throw new HumanReadableException(
           "\"%s\" in target \"%s\" crosses a buck package boundary. Find the nearest BUCK file " +
           "in the directory containing this file and refer to the rule referencing the " +

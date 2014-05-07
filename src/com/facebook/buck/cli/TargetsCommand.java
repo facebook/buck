@@ -22,6 +22,7 @@ import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
@@ -47,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -354,7 +356,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     private DependencyGraph graph;
     private ImmutableSet<BuildRuleType> buildRuleTypes;
     private ImmutableSet<Path> referencedInputs;
-    private Set<String> basePathOfTargets;
+    private Set<Path> basePathOfTargets;
     private Set<BuildRule> dependentTargets;
     private Set<BuildTarget> matchingBuildRules;
 
@@ -373,11 +375,11 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       Preconditions.checkNotNull(referencedPaths);
       if (!referencedPaths.isEmpty()) {
         this.referencedInputs = MorePaths.asPaths(referencedPaths);
-        BuildFileTree tree = new BuildFileTree(partialGraph.getTargets());
+        BuildFileTree tree = new InMemoryBuildFileTree(partialGraph.getTargets());
         basePathOfTargets = Sets.newHashSet();
         dependentTargets = Sets.newHashSet();
         for (Path input : referencedInputs) {
-          basePathOfTargets.add(tree.getBasePathOfAncestorTarget(input.toString()));
+          basePathOfTargets.add(tree.getBasePathOfAncestorTarget(input));
         }
       } else {
         basePathOfTargets = ImmutableSet.of();
@@ -394,7 +396,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
         // Any referenced file, only those with the nearest BuildTarget can
         // directly depend on that file.
-        if (!isDependent && basePathOfTargets.contains(rule.getBuildTarget().getBasePath())) {
+        if (!isDependent &&
+            basePathOfTargets.contains(Paths.get(rule.getBuildTarget().getBasePath()))) {
           for (Path input : rule.getInputs()) {
             if (referencedInputs.contains(input)) {
               isDependent = true;

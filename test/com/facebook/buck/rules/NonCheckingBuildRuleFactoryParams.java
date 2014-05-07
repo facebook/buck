@@ -16,15 +16,15 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
-import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -49,21 +49,15 @@ public final class NonCheckingBuildRuleFactoryParams {
         /* ignoreFileExistenceChecks */ true);
   }
 
-  private static class NonCheckingBuildFileTree extends BuildFileTree {
+  private static class NonCheckingBuildFileTree extends InMemoryBuildFileTree {
 
     public NonCheckingBuildFileTree() {
       super(ImmutableSet.<BuildTarget>of());
     }
 
     @Override
-    public Iterable<String> getChildPaths(BuildTarget buildTarget) {
+    public Collection<Path> getChildPaths(BuildTarget buildTarget) {
       return ImmutableSet.of();
-    }
-
-    @Override
-    public String getBasePathOfAncestorTarget(String filePath) {
-      // Always assume the file is local to the target.
-      return MorePaths.pathWithUnixSeparators(Paths.get(filePath).getParent());
     }
   }
 

@@ -44,6 +44,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -174,7 +175,7 @@ public class ParserTest extends EasyMockSupport {
   private Parser createParser(Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets)
       throws IOException {
     return createParser(
-        ofInstance(BuildFileTree.constructBuildFileTree(filesystem)),
+        ofInstance(new FilesystemBackedBuildFileTree(filesystem)),
         knownBuildTargets,
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes),
         new BuildTargetParser(filesystem));
@@ -184,7 +185,7 @@ public class ParserTest extends EasyMockSupport {
       BuildRuleBuilder<?>> knownBuildTargets,
       ProjectBuildFileParserFactory buildFileParserFactory) throws IOException {
     return createParser(
-        ofInstance(BuildFileTree.constructBuildFileTree(filesystem)),
+        ofInstance(new FilesystemBackedBuildFileTree(filesystem)),
         knownBuildTargets,
         buildFileParserFactory,
         new BuildTargetParser(filesystem));

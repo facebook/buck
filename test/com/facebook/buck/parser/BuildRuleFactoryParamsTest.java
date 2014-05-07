@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.util.HumanReadableException;
@@ -78,7 +79,7 @@ public class BuildRuleFactoryParamsTest {
   @Before
   public void prepareParser() throws IOException {
     parser = new BuildTargetParser(filesystem);
-    tree = BuildFileTree.constructBuildFileTree(filesystem);
+    tree = new FilesystemBackedBuildFileTree(filesystem);
   }
 
   @Test

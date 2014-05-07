@@ -24,9 +24,9 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.LogEvent;
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.shell.EchoStep;
@@ -105,7 +105,7 @@ public class DescribedRuleTest {
         // "name" maps to the DTO, which is returned in the EchoStep
         ImmutableMap.of("name", "cheese"),
         filesystem,
-        new BuildFileTree(ImmutableSet.<String>of()),
+        new InMemoryBuildFileTree(ImmutableSet.<Path>of()),
         new BuildTargetParser(filesystem),
         BuildTargetFactory.newInstance("//one/two:example"),
         new FakeRuleKeyBuilderFactory(),
@@ -186,7 +186,7 @@ public class DescribedRuleTest {
             "paths", ImmutableList.of("//example:dep3"),
             "optionalPaths", ImmutableList.of("//example:dep4")),
         filesystem,
-        new BuildFileTree(ImmutableSet.<String>of()),
+        new InMemoryBuildFileTree(ImmutableSet.<Path>of()),
         new BuildTargetParser(filesystem),
         BuildTargetFactory.newInstance("//one/two:example"),
         new FakeRuleKeyBuilderFactory(),
@@ -237,7 +237,7 @@ public class DescribedRuleTest {
     BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
         ImmutableMap.of("paths", ImmutableList.of("//example:dep1")),
         filesystem,
-        new BuildFileTree(ImmutableSet.<String>of()),
+        new InMemoryBuildFileTree(ImmutableSet.<Path>of()),
         new BuildTargetParser(filesystem),
         BuildTargetFactory.newInstance("//one/two:example"),
         new FakeRuleKeyBuilderFactory(),
@@ -285,7 +285,7 @@ public class DescribedRuleTest {
     BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
         ImmutableMap.of("optimize", 0),
         filesystem,
-        new BuildFileTree(ImmutableSet.<String>of()),
+        new InMemoryBuildFileTree(ImmutableSet.<Path>of()),
         new BuildTargetParser(filesystem),
         BuildTargetFactory.newInstance("//one/two:example"),
         new FakeRuleKeyBuilderFactory(),
