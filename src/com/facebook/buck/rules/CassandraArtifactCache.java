@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
@@ -90,6 +91,7 @@ public class CassandraArtifactCache implements ArtifactCache {
       ARTIFACT_COLUMN_FAMILY_NAME,
       StringSerializer.get(),
       StringSerializer.get());
+  private final AstyanaxContext<Keyspace> context;
 
   private static final class KeyspaceAndTtl {
     private final Keyspace keyspace;
@@ -126,26 +128,34 @@ public class CassandraArtifactCache implements ArtifactCache {
       boolean doStore,
       BuckEventBus buckEventBus)
       throws ConnectionException {
+    this(timeoutSeconds, doStore, buckEventBus, new AstyanaxContext.Builder()
+            .forCluster(CLUSTER_NAME)
+            .forKeyspace(KEYSPACE_NAME)
+            .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
+                    .setCqlVersion("3.0.0")
+                    .setTargetCassandraVersion("1.2")
+                    .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
+            )
+            .withConnectionPoolConfiguration(new ConnectionPoolConfigurationImpl(POOL_NAME)
+                    .setSeeds(hosts)
+                    .setPort(port)
+                    .setMaxConnsPerHost(1)
+            )
+            .withConnectionPoolMonitor(new CountingConnectionPoolMonitor())
+            .buildKeyspace(ThriftFamilyFactory.getInstance()));
+  }
+
+  @VisibleForTesting
+  CassandraArtifactCache(
+      int timeoutSeconds,
+      boolean doStore,
+      BuckEventBus buckEventBus,
+      final AstyanaxContext<Keyspace> context) {
     this.doStore = doStore;
     this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
     this.numConnectionExceptionReports = new AtomicInteger(0);
     this.timeoutSeconds = timeoutSeconds;
-
-    final AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
-        .forCluster(CLUSTER_NAME)
-        .forKeyspace(KEYSPACE_NAME)
-        .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
-            .setCqlVersion("3.0.0")
-            .setTargetCassandraVersion("1.2")
-            .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
-        )
-        .withConnectionPoolConfiguration(new ConnectionPoolConfigurationImpl(POOL_NAME)
-            .setSeeds(hosts)
-            .setPort(port)
-            .setMaxConnsPerHost(1)
-        )
-        .withConnectionPoolMonitor(new CountingConnectionPoolMonitor())
-        .buildKeyspace(ThriftFamilyFactory.getInstance());
+    this.context = Preconditions.checkNotNull(context);
 
     ExecutorService connectionService = MoreExecutors.getExitingExecutorService(
         (ThreadPoolExecutor) Executors.newFixedThreadPool(1), 0, TimeUnit.SECONDS);
@@ -342,6 +352,8 @@ public class CassandraArtifactCache implements ArtifactCache {
       future.get();
     } catch (InterruptedException | ExecutionException e) {
       // Swallow exception and move on.
+    } finally {
+      context.shutdown();
     }
   }
 

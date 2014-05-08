@@ -484,9 +484,15 @@ public final class Main {
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
     // be the last resource, so that it is closed first and can deliver its queued events to the
     // other resources before they are closed.
+    @Nullable ArtifactCacheFactory artifactCacheFactory = null;
     try (AbstractConsoleEventBusListener consoleListener =
              createConsoleEventListener(clock, console, verbosity, executionEnvironment);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
+
+      // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
+      // running commands such as `buck clean`.
+      artifactCacheFactory = new LoggingArtifactCacheFactory(executionEnvironment, buildEventBus);
+
       Optional<WebServer> webServer = getWebServerIfDaemon(context,
           projectFilesystem,
           config,
@@ -507,11 +513,6 @@ public final class Main {
 
       CommandEvent commandEvent = CommandEvent.started(commandName, remainingArgs, isDaemon);
       buildEventBus.post(commandEvent);
-
-      // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
-      // running commands such as `buck clean`.
-      ArtifactCacheFactory artifactCacheFactory =
-          new LoggingArtifactCacheFactory(executionEnvironment, buildEventBus);
 
       // Create or get Parser and invalidate cached command parameters.
       Parser parser;
@@ -550,9 +551,6 @@ public final class Main {
               parser,
               platform));
 
-      // TODO(user): allocate artifactCacheFactory in the try-with-resources block to avoid leaks.
-      artifactCacheFactory.closeCreatedArtifactCaches(ARTIFACT_CACHE_TIMEOUT_IN_SECONDS);
-
       // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
       if (webServer.isPresent()) {
         int port = webServer.get().getPort();
@@ -561,6 +559,9 @@ public final class Main {
       }
 
       buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
+    } catch (Exception e) {
+      closeCreatedArtifactCaches(artifactCacheFactory); // Close cache before exit on exception.
+      throw e;
     } finally {
       commandSemaphore.release(); // Allow another command to execute while outputting traces.
     }
@@ -568,6 +569,7 @@ public final class Main {
       context.get().in.close(); // Avoid client exit triggering client disconnection handling.
       context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
     }
+    closeCreatedArtifactCaches(artifactCacheFactory); // Wait for cache close after client exit.
     for (BuckEventListener eventListener : eventListeners) {
       try {
         eventListener.outputTrace(buildId);
@@ -577,6 +579,12 @@ public final class Main {
       }
     }
     return exitCode;
+  }
+
+  private static void closeCreatedArtifactCaches(ArtifactCacheFactory artifactCacheFactory) {
+    if (null != artifactCacheFactory) {
+      artifactCacheFactory.closeCreatedArtifactCaches(ARTIFACT_CACHE_TIMEOUT_IN_SECONDS);
+    }
   }
 
   private Parser getParserFromDaemon(
