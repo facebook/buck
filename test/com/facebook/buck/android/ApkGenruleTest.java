@@ -71,6 +71,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+/**
+ * Unit test for {@link com.facebook.buck.android.ApkGenrule}.
+ */
 public class ApkGenruleTest {
 
   private static final Function<Path, Path> relativeToAbsolutePathFunction =
@@ -217,7 +220,7 @@ public class ApkGenruleTest {
     Step thirdStep = steps.get(2);
     assertTrue(thirdStep instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) thirdStep;
-    Path relativePathToTmpDir = GEN_PATH.resolve("src/com/facebook/sign_fb4a__tmp");
+    String relativePathToTmpDir = GEN_DIR + "/src/com/facebook/sign_fb4a__tmp";
     assertEquals(
         "Third command should make sure the temp directory exists.",
         relativePathToTmpDir,
@@ -226,7 +229,7 @@ public class ApkGenruleTest {
     Step fourthStep = steps.get(3);
     assertTrue(fourthStep instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) fourthStep;
-    Path relativePathToSrcDir = GEN_PATH.resolve("src/com/facebook/sign_fb4a__srcs");
+    String relativePathToSrcDir = GEN_DIR + "/src/com/facebook/sign_fb4a__srcs";
     assertEquals(
         "Fourth command should make sure the temp directory exists.",
         relativePathToSrcDir,

@@ -35,7 +35,7 @@ import java.nio.file.Path;
  */
 public final class MakeCleanDirectoryStep extends CompositeStep {
 
-  private final Path pathRelativeToProjectRoot;
+  private final String pathRelativeToProjectRoot;
 
   public MakeCleanDirectoryStep(Path pathRelativeToProjectRoot) {
     super(ImmutableList.of(
@@ -43,11 +43,11 @@ public final class MakeCleanDirectoryStep extends CompositeStep {
             /* shouldForceDeletion */ true,
             /* shouldRecurse */ true),
         new MkdirStep(pathRelativeToProjectRoot)));
-    this.pathRelativeToProjectRoot = pathRelativeToProjectRoot;
+    this.pathRelativeToProjectRoot = pathRelativeToProjectRoot.toString();
   }
 
   @VisibleForTesting
-  public Path getPath() {
+  public String getPath() {
     return pathRelativeToProjectRoot;
   }
 
