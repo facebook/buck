@@ -22,6 +22,7 @@ import re
 import subprocess
 import os
 import tempfile
+import sys
 
 from collections import defaultdict
 from datetime import datetime
@@ -76,6 +77,7 @@ DEVNULL = open('/dev/null', 'w')
 
 def log(message):
   print '%s\t%s' % (str(datetime.now()), message)
+  sys.stdout.flush()
 
 class BuildResult():
   def __init__(self, time_delta, cache_results, rule_key_map):
