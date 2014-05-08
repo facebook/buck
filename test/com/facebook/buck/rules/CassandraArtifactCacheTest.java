@@ -29,6 +29,7 @@ import org.junit.Test;
 public class CassandraArtifactCacheTest {
 
   @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic class.
   public void whenCacheClosedThenContextShutdown() {
     AstyanaxContext<Keyspace> mockContext = createMock(AstyanaxContext.class);
     BuckEventBus mockEventBus = createMock(BuckEventBus.class);
