@@ -232,7 +232,7 @@ public final class DexMerger {
     }
 
     /**
-     * Reads an IDs section of two dex files and writes an IDs section of a
+     * Reads an IDs section of a list of dex files and writes an IDs section of a
      * merged dex file. Populates maps from old to new indices in the process.
      */
     abstract class IdMerger<T extends Comparable<T>> {
