@@ -473,3 +473,11 @@ def main():
     # offer an iterator.
     for build_file in iter(sys.stdin.readline, ''):
       buildFileProcessor.process(build_file.rstrip())
+
+  # Python tries to flush/close stdout when it quits, and if there's a dead
+  # pipe on the other end, it will spit some warnings to stderr. This breaks
+  # tests sometimes. Prevent that by explicitly catching the error.
+  try:
+    sys.stdout.close()
+  except IOError:
+    pass
