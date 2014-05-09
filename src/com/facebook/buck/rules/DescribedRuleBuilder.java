@@ -158,7 +158,23 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
         params.getVisibilityPatterns(),
         params.getProjectFilesystem(),
         params.getRuleKeyBuilderFactory());
-    return new DescribedRule(description.getBuildRuleType(), buildable, params);
+    DescribedRule describedRule = new DescribedRule(
+        description.getBuildRuleType(),
+        buildable,
+        params);
+
+    // Note that describedRule has not been added to the BuildRuleResolver yet.
+    if (description instanceof FlavorableDescription) {
+      FlavorableDescription<T> flavorable = (FlavorableDescription<T>) description;
+      flavorable.registerFlavors(
+          arg,
+          describedRule,
+          ruleFactoryParams.getProjectFilesystem(),
+          ruleFactoryParams.getRuleKeyBuilderFactory(),
+          ruleResolver);
+    }
+
+    return describedRule;
   }
 
   /**

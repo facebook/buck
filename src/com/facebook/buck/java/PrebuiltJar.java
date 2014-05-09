@@ -34,6 +34,7 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Optionals;
@@ -53,6 +54,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class PrebuiltJar extends AbstractBuildable
@@ -63,6 +65,7 @@ public class PrebuiltJar extends AbstractBuildable
 
   private final Path binaryJar;
   private final Optional<Path> sourceJar;
+  private final Optional<SourcePath> gwtJar;
   private final Optional<String> javadocUrl;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       transitiveClasspathEntriesSupplier;
@@ -78,12 +81,13 @@ public class PrebuiltJar extends AbstractBuildable
       BuildableParams buildableParams,
       Path classesJar,
       Optional<Path> sourceJar,
+      Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl) {
     this.target = buildableParams.getBuildTarget();
     this.deps = buildableParams.getDeps();
-
     this.binaryJar = Preconditions.checkNotNull(classesJar);
     this.sourceJar = Preconditions.checkNotNull(sourceJar);
+    this.gwtJar = Preconditions.checkNotNull(gwtJar);
     this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
 
     transitiveClasspathEntriesSupplier =
@@ -140,6 +144,12 @@ public class PrebuiltJar extends AbstractBuildable
     ImmutableList.Builder<Path> builder = ImmutableList.builder();
     builder.add(binaryJar);
     Optionals.addIfPresent(sourceJar, builder);
+    if (gwtJar.isPresent()) {
+      SourcePath gwtJarSourcePath = gwtJar.get();
+      Collection<Path> safePaths = SourcePaths.filterInputsToCompareToOutput(
+          Collections.singleton(gwtJarSourcePath));
+      builder.addAll(safePaths);
+    }
     return builder.build();
   }
 
@@ -250,6 +260,9 @@ public class PrebuiltJar extends AbstractBuildable
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.set("javadocUrl", javadocUrl);
+    return builder
+        .setReflectively("sourceJar", sourceJar)
+        .setReflectively("gwtJar", gwtJar)
+        .set("javadocUrl", javadocUrl);
   }
 }

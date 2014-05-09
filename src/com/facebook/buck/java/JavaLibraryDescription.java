@@ -17,12 +17,24 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
+import com.facebook.buck.rules.DefaultBuildableParams;
+import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.FlavorableDescription;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -31,7 +43,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg> {
+public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>,
+    FlavorableDescription<JavaLibraryDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("java_library");
   public static final String ANNOTATION_PROCESSORS = "annotation_processors";
@@ -126,5 +139,64 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
       return builder.build();
     }
+  }
+
+  /**
+   * A {@JavaLibrary} registers a {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
+   */
+  @Override
+  public void registerFlavors(
+      Arg arg,
+      DescribedRule describedRule,
+      ProjectFilesystem projectFilesystem,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      BuildRuleResolver ruleResolver) {
+    BuildTarget originalBuildTarget = describedRule.getBuildTarget();
+    Optional<GwtModule> gwtModuleOptional = tryCreateGwtModule(originalBuildTarget, arg);
+    if (!gwtModuleOptional.isPresent()) {
+      return;
+    }
+
+    GwtModule gwtModule = gwtModuleOptional.get();
+    BuildRule rule = new AbstractBuildable.AnonymousBuildRule(
+        BuildRuleType.GWT_MODULE,
+        gwtModule,
+        new BuildRuleParams(
+            gwtModule.getBuildTarget(),
+            gwtModule.getDeps(),
+            BuildTargetPattern.PUBLIC,
+            projectFilesystem,
+            ruleKeyBuilderFactory));
+    ruleResolver.addToIndex(rule.getBuildTarget(), rule);
+  }
+
+  /**
+   * Creates a {@link Buildable} with the {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
+   * <p>
+   * If {@code arg.srcs} or {@code arg.resources} is non-empty, then the return value will not be
+   * absent.
+   */
+  @VisibleForTesting
+  static Optional<GwtModule> tryCreateGwtModule(BuildTarget originalBuildTarget, Arg arg) {
+    if (arg.srcs.get().isEmpty() && arg.resources.get().isEmpty()) {
+      return Optional.absent();
+    }
+
+    BuildTarget gwtModuleBuildTarget = BuildTargets.createFlavoredBuildTarget(originalBuildTarget,
+        JavaLibrary.GWT_MODULE_FLAVOR);
+    ImmutableSortedSet<SourcePath> filesForGwtModule = ImmutableSortedSet
+        .<SourcePath>naturalOrder()
+        .addAll(arg.srcs.get())
+        .addAll(arg.resources.get())
+        .build();
+
+    // If any of the srcs or resources are BuildRuleSourcePaths, then their respective BuildRules
+    // must be included as deps.
+    ImmutableSortedSet<BuildRule> deps =
+        ImmutableSortedSet.copyOf(SourcePaths.filterBuildRuleInputs(filesForGwtModule));
+    GwtModule gwtModule = new GwtModule(
+        new DefaultBuildableParams(gwtModuleBuildTarget, deps),
+        filesForGwtModule);
+    return Optional.of(gwtModule);
   }
 }

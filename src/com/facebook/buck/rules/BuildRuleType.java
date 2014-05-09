@@ -23,6 +23,7 @@ public final class BuildRuleType {
   public static final BuildRuleType AAPT_PACKAGE = new BuildRuleType("_aapt_package");
   public static final BuildRuleType EXOPACKAGE_DEPS_ABI = new BuildRuleType("_exopackage_deps_abi");
   public static final BuildRuleType DUMMY_R_DOT_JAVA = new BuildRuleType("_dummy_r_dot_java");
+  public static final BuildRuleType GWT_MODULE = new BuildRuleType("_gwt_module");
   public static final BuildRuleType RESOURCES_FILTER = new BuildRuleType("_resources_filter");
   public static final BuildRuleType PRE_DEX = new BuildRuleType("_pre_dex");
   public static final BuildRuleType DEX_MERGE = new BuildRuleType("_dex_merge");

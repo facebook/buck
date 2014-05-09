@@ -32,6 +32,7 @@ import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -66,6 +67,7 @@ public class PrebuiltJarTest {
     junitJarRule = new PrebuiltJar(buildRuleParams,
         PATH_TO_JUNIT_JAR,
         Optional.of(Paths.get("lib/junit-4.11-sources.jar")),
+        /* gwtJar */ Optional.<SourcePath>absent(),
         Optional.of("http://junit-team.github.io/junit/javadoc/latest/"));
   }
 

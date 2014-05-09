@@ -72,7 +72,6 @@ public class BuildRuleResolver {
   /**
    * Adds to the index a mapping from {@code target} to {@code buildRule}.
    */
-  @VisibleForTesting
   public void addToIndex(BuildTarget target, BuildRule buildRule) {
     BuildRule oldValue = buildRuleIndex.put(target, buildRule);
     if (oldValue != null) {

@@ -52,7 +52,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary {
     this(JavaLibraryDescription.TYPE,
         target,
         deps,
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+        BuildTargetPattern.PUBLIC);
   }
 
   public FakeJavaLibrary(

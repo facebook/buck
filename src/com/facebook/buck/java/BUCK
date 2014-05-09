@@ -49,6 +49,7 @@ java_library(
   srcs = [
     'Classpaths.java',
     'DefaultJavaLibrary.java',
+    'GwtModule.java',
     'JavaBinary.java',
     'JavaBinaryDescription.java',
     'JavaLibraryDescription.java',

@@ -16,6 +16,7 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
 
 import javax.annotation.Nullable;
 
@@ -31,4 +32,11 @@ public interface BuildTargetPattern extends Predicate<BuildTarget> {
       return true;
     }
   };
+
+  /**
+   * Value that can be used for the {@code visibility} argument for a
+   * {@link com.facebook.buck.rules.ConstructorArg} for a rule that should be public.
+   */
+  public static final ImmutableSet<BuildTargetPattern> PUBLIC =
+      ImmutableSet.of(BuildTargetPattern.MATCH_ALL);
 }

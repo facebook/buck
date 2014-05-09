@@ -17,6 +17,7 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,8 +26,9 @@ import java.nio.file.Paths;
  * Static helpers for working with build targets.
  */
 public class BuildTargets {
-  private BuildTargets() {}
 
+  /** Utility class: do not instantiate. */
+  private BuildTargets() {}
 
   /**
    * Return a path to a file in the buck-out/bin/ directory. {@code format} will be prepended with
@@ -63,5 +65,23 @@ public class BuildTargets {
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
         target.getShortName()));
+  }
+
+  /**
+   * Takes the {@link BuildTarget} for {@code hasBuildTarget} and derives a new {@link BuildTarget}
+   * from it with the specified flavor.
+   * @throws IllegalArgumentException if the original {@link BuildTarget} already has a flavor.
+   */
+  public static BuildTarget createFlavoredBuildTarget(
+      HasBuildTarget hasBuildTarget,
+      String flavor) {
+    Preconditions.checkNotNull(hasBuildTarget);
+    Preconditions.checkNotNull(flavor);
+    BuildTarget buildTarget = hasBuildTarget.getBuildTarget();
+    Preconditions.checkArgument(!buildTarget.isFlavored(),
+        "Cannot add flavor %s to %s.",
+        flavor,
+        buildTarget);
+    return new BuildTarget(buildTarget.getBaseName(), buildTarget.getShortName(), flavor);
   }
 }

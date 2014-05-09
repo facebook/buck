@@ -1,0 +1,21 @@
+java_library(
+  name = 'gwt',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/java:rules',
+    '//src/com/facebook/buck/java:steps',
+    '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:steps',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:io',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

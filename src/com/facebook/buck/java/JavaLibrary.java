@@ -20,6 +20,7 @@ import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -28,6 +29,26 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 
 public interface JavaLibrary extends Buildable, HasClasspathEntries, HasJavaAbi {
+
+  /**
+   * This Buildable is expected to support the GWT flavor, which is a {@link Buildable} whose output
+   * file is a JAR containing the files necessary to use
+   * this {@link JavaLibrary} as a GWT module. Normally, this includes Java source code, a .gwt.xml
+   * file, and static resources, such as stylesheets and image files.
+   * <p>
+   * In the event that this {@link JavaLibrary} cannot be represented as a GWT module (for example,
+   * if it has no {@code srcs} or {@code resources} of its own, but only exists to export deps),
+   * then the flavor will be {@link Optional#absent()}.
+   * <p>
+   * Note that the output of the {@link Buildable} for this flavor may contain
+   * {@code .class} files. For example, if a third-party releases its {@code .class} and
+   * {@code .java} files in the same JAR, it is common for a {@code prebuilt_jar()} to declare that
+   * file as both its {@code binary_jar} and its {@code source_jar}. In that case, the output of
+   * the {@link Buildable} will be the original JAR file, which is why it would contain
+   * {@code .class} files.
+   */
+  public static final String GWT_MODULE_FLAVOR = "gwt_module";
+
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
    *     build a jar associated with this rule.  Contains the classpath entries for the transitive
