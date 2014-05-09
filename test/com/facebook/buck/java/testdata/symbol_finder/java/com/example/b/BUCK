@@ -1,0 +1,6 @@
+java_library(
+  name = 'b',
+  srcs = ['B.java'],
+  # This rule is missing the following dependency:
+  # deps = ['//java/com/example/a:a'],
+)

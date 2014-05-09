@@ -10,7 +10,7 @@ java_library(
         ':equinox-preferences',
         ':osgi',
     ],
-    visibility = ['//src/com/facebook/buck/java:support']
+    visibility = ['//src/com/facebook/buck/java:autodeps']
 )
 
 prebuilt_jar(
