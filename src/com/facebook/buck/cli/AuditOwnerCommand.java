@@ -19,8 +19,8 @@ package com.facebook.buck.cli;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
@@ -92,13 +92,13 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       return 1;
     }
 
-    OwnersReport report = generateOwnersReport(graph.getDependencyGraph(), options);
+    OwnersReport report = generateOwnersReport(graph.getActionGraph(), options);
     printReport(options, report);
     return 0;
   }
 
   @VisibleForTesting
-  OwnersReport generateOwnersReport(DependencyGraph graph, AuditOwnerOptions options) {
+  OwnersReport generateOwnersReport(ActionGraph graph, AuditOwnerOptions options) {
 
     // Process arguments assuming they are all relative file paths.
     Set<Path> inputs = Sets.newHashSet();
@@ -142,7 +142,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
    * BUCK file and assuming that all targets in this file used
    * missing file as input.
    */
-  private void guessOwnersForNonExistentFiles(DependencyGraph graph,
+  private void guessOwnersForNonExistentFiles(ActionGraph graph,
       SetMultimap<BuildRule, Path> owners, Set<String> nonExistentFiles) {
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();

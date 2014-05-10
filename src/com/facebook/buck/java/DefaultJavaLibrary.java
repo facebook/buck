@@ -667,7 +667,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
         transitiveClasspathEntries.keySet(),
         Sets.union(ImmutableSet.of(this), declaredClasspathEntries.keySet()));
 
-    TraversableGraph<BuildRule> graph = context.getDependencyGraph();
+    TraversableGraph<BuildRule> graph = context.getActionGraph();
     final ImmutableList<BuildRule> sortedTransitiveNotDeclaredDeps = ImmutableList.copyOf(
         TopologicalSort.sort(graph,
             new Predicate<BuildRule>() {

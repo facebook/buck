@@ -33,10 +33,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfig;
@@ -346,14 +346,14 @@ public class Project {
 
   @VisibleForTesting
   List<Module> createModulesForProjectConfigs() throws IOException {
-    DependencyGraph dependencyGraph = partialGraph.getDependencyGraph();
+    ActionGraph actionGraph = partialGraph.getActionGraph();
     List<Module> modules = Lists.newArrayList();
 
     // Convert the project_config() targets into modules and find the union of all jars passed to
     // no_dx.
     ImmutableSet.Builder<Path> noDxJarsBuilder = ImmutableSet.builder();
     for (BuildTarget target : partialGraph.getTargets()) {
-      BuildRule buildRule = dependencyGraph.findBuildRuleByTarget(target);
+      BuildRule buildRule = actionGraph.findBuildRuleByTarget(target);
       ProjectConfig projectConfig = (ProjectConfig) buildRule.getBuildable();
 
       BuildRule srcRule = projectConfig.getSrcRule();

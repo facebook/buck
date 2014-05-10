@@ -24,9 +24,9 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEngine;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidDirectoryResolver;
@@ -234,13 +234,13 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
   protected ExecutionContext createExecutionContext(
       T options,
-      DependencyGraph dependencyGraph) {
+      ActionGraph actionGraph) {
     return ExecutionContext.builder()
         .setProjectFilesystem(getProjectFilesystem())
         .setConsole(console)
         .setAndroidPlatformTarget(
             options.findAndroidPlatformTarget(androidDirectoryResolver,
-                dependencyGraph,
+                actionGraph,
                 getBuckEventBus()))
         .setEventBus(eventBus)
         .setPlatform(platform)

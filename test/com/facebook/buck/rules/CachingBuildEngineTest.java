@@ -303,7 +303,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
     BuildContext buildContext = FakeBuildContext.newBuilder(new FakeProjectFilesystem())
-        .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
+        .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
         .setJavaPackageFinder(new JavaPackageFinder() {
           @Override
           public String findJavaPackageFolderForPath(String pathRelativeToProjectRoot) {
@@ -527,7 +527,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     BuildContext buildContext = BuildContext.builder()
-        .setDependencyGraph(RuleMap.createGraphFromSingleRule(buildRule))
+        .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
         .setStepRunner(stepRunner)
         .setProjectFilesystem(projectFilesystem)
         .setArtifactCache(artifactCache)

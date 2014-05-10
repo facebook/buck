@@ -56,7 +56,7 @@ final class RuleDependencyFinder {
 
     ImmutableList.Builder<BuildRule> initialRulesBuilder = ImmutableList.builder();
     for (BuildTarget target : initialTargets) {
-      initialRulesBuilder.add(graph.getDependencyGraph().findBuildRuleByTarget(target));
+      initialRulesBuilder.add(graph.getActionGraph().findBuildRuleByTarget(target));
     }
 
     ImmutableSet<BuildRule> buildRules = gatherTransitiveDependencies(initialRulesBuilder.build());
@@ -114,7 +114,7 @@ final class RuleDependencyFinder {
     ImmutableMultimap.Builder<BuildRule, BuildRule> ruleToTestRulesBuilder =
         ImmutableMultimap.builder();
     for (BuildTarget target : graph.getTargets()) {
-      BuildRule rule = graph.getDependencyGraph().findBuildRuleByTarget(target);
+      BuildRule rule = graph.getActionGraph().findBuildRuleByTarget(target);
       if (rule.getType().equals(IosTestDescription.TYPE)) {
         IosTest testBuildable = (IosTest) Preconditions.checkNotNull(rule.getBuildable());
         for (BuildRule sourceRule : testBuildable.getSourceUnderTest()) {

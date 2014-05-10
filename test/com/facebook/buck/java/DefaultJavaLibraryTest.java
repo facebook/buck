@@ -41,6 +41,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
@@ -49,7 +50,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -1176,10 +1176,10 @@ public class DefaultJavaLibraryTest {
 
   private BuildContext createSuggestContext(BuildRuleResolver ruleResolver,
                                             BuildDependencies buildDependencies) {
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
+    ActionGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
 
     BuildContext context = EasyMock.createMock(BuildContext.class);
-    expect(context.getDependencyGraph()).andReturn(graph).anyTimes();
+    expect(context.getActionGraph()).andReturn(graph).anyTimes();
 
     expect(context.getBuildDependencies()).andReturn(buildDependencies).anyTimes();
 
@@ -1206,7 +1206,7 @@ public class DefaultJavaLibraryTest {
 
     // TODO(mbolin): Create a utility that populates a BuildContext.Builder with fakes.
     return BuildContext.builder()
-        .setDependencyGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
+        .setActionGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
         .setStepRunner(EasyMock.createMock(StepRunner.class))
         .setProjectFilesystem(projectFilesystem)
         .setArtifactCache(new NoopArtifactCache())

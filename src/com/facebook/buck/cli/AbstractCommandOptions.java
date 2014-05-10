@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.annotations.VisibleForTesting;
@@ -107,10 +107,10 @@ public abstract class AbstractCommandOptions {
 
   protected Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
       AndroidDirectoryResolver androidDirectoryResolver,
-      DependencyGraph dependencyGraph,
+      ActionGraph actionGraph,
       BuckEventBus eventBus) {
     return Build.findAndroidPlatformTarget(
-        dependencyGraph,
+        actionGraph,
         androidDirectoryResolver,
         eventBus);
   }

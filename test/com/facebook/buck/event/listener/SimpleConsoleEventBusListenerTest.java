@@ -26,13 +26,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CacheResult;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.TestConsole;
@@ -79,7 +79,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     rawEventBus.post(configureTestEventAtTime(
         ParseEvent.finished(buildTargets,
-            Optional.<DependencyGraph>absent()),
+            Optional.<ActionGraph>absent()),
             400L,
             TimeUnit.MILLISECONDS,
             threadId));

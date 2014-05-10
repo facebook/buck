@@ -62,7 +62,7 @@ public class SeparatedProjectsGenerator {
     this.projectGenerators = null;
 
     for (BuildTarget target : projectConfigTargets) {
-      BuildRule rule = partialGraph.getDependencyGraph().findBuildRuleByTarget(target);
+      BuildRule rule = partialGraph.getActionGraph().findBuildRuleByTarget(target);
       if (rule == null) {
         throw new HumanReadableException(
             "target not found: " + target.toString());
@@ -79,7 +79,7 @@ public class SeparatedProjectsGenerator {
     ImmutableMap.Builder<BuildTarget, ProjectGenerator> projectGeneratorsBuilder =
         ImmutableMap.builder();
     for (BuildTarget target : projectConfigTargets) {
-      BuildRule rule = partialGraph.getDependencyGraph().findBuildRuleByTarget(target);
+      BuildRule rule = partialGraph.getActionGraph().findBuildRuleByTarget(target);
       XcodeProjectConfig buildable =
           (XcodeProjectConfig) Preconditions.checkNotNull(rule.getBuildable());
 

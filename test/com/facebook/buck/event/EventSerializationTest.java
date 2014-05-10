@@ -24,13 +24,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CacheResult;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.RuleKey;
@@ -84,7 +84,7 @@ public class EventSerializationTest {
   @Test
   public void testParseEventFinished() throws IOException {
     ParseEvent.Finished event = ParseEvent.finished(ImmutableList.<BuildTarget>of(
-        new BuildTarget("//base", "short", "flv")), Optional.<DependencyGraph>absent());
+        new BuildTarget("//base", "short", "flv")), Optional.<ActionGraph>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +

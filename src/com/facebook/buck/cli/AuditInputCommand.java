@@ -90,7 +90,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
   int printJsonInputs(PartialGraph partialGraph) throws IOException {
     final Multimap<String, String> targetInputs = TreeMultimap.create();
 
-    new AbstractBottomUpTraversal<BuildRule, Void>(partialGraph.getDependencyGraph()) {
+    new AbstractBottomUpTraversal<BuildRule, Void>(partialGraph.getActionGraph()) {
 
       @Override
       public void visit(BuildRule rule) {
@@ -120,7 +120,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     // Traverse the PartialGraph and print out all of the inputs used to produce each BuildRule.
     // Keep track of the inputs that have been displayed to ensure that they are not displayed more
     // than once.
-    new AbstractBottomUpTraversal<BuildRule, Void>(partialGraph.getDependencyGraph()) {
+    new AbstractBottomUpTraversal<BuildRule, Void>(partialGraph.getActionGraph()) {
 
       final Set<Path> inputs = Sets.newHashSet();
 

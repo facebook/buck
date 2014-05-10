@@ -26,10 +26,10 @@ import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
@@ -99,7 +99,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       return 1;
     }
 
-    // Parse the entire dependency graph, or (if targets are specified),
+    // Parse the entire action graph, or (if targets are specified),
     // only the specified targets and their dependencies..
     PartialGraph graph;
     try {
@@ -121,7 +121,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     }
 
     SortedMap<String, BuildRule> matchingBuildRules = getMatchingBuildRules(
-        graph.getDependencyGraph(),
+        graph.getActionGraph(),
         new TargetsCommandPredicate(
             graph,
             buildRuleTypesBuilder.build(),
@@ -168,7 +168,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
   @VisibleForTesting
   SortedMap<String, BuildRule> getMatchingBuildRules(
-      final DependencyGraph graph,
+      final ActionGraph graph,
       final TargetsCommandPredicate predicate) {
     // Traverse the DependencyGraph and select all of the rules that accepted by Predicate.
     AbstractBottomUpTraversal<BuildRule, SortedMap<String, BuildRule>> traversal =
@@ -357,7 +357,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
   static class TargetsCommandPredicate implements Predicate<BuildRule> {
 
-    private DependencyGraph graph;
+    private ActionGraph graph;
     private ImmutableSet<BuildRuleType> buildRuleTypes;
     private ImmutableSet<Path> referencedInputs;
     private Set<Path> basePathOfTargets;
@@ -372,7 +372,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         ImmutableSet<BuildRuleType> buildRuleTypes,
         ImmutableSet<String> referencedPaths,
         ImmutableSet<BuildTarget> matchingBuildRules) {
-      this.graph = partialGraph.getDependencyGraph();
+      this.graph = partialGraph.getActionGraph();
       this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
       this.matchingBuildRules = Preconditions.checkNotNull(matchingBuildRules);
 

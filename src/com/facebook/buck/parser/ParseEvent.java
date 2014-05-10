@@ -20,7 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.ActionGraph;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -75,7 +75,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
   }
 
   public static Finished finished(Iterable<BuildTarget> buildTargets,
-      Optional<DependencyGraph> graph) {
+      Optional<ActionGraph> graph) {
     return new Finished(buildTargets, graph);
   }
 
@@ -92,9 +92,9 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
 
   public static class Finished extends ParseEvent {
     /** If this is {@link Optional#absent()}, then the parse did not complete successfully. */
-    private final Optional<DependencyGraph> graph;
+    private final Optional<ActionGraph> graph;
 
-    protected Finished(Iterable<BuildTarget> buildTargets, Optional<DependencyGraph> graph) {
+    protected Finished(Iterable<BuildTarget> buildTargets, Optional<ActionGraph> graph) {
       super(buildTargets);
       this.graph = Preconditions.checkNotNull(graph);
     }
@@ -105,7 +105,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
     }
 
     @JsonIgnore
-    public Optional<DependencyGraph> getGraph() {
+    public Optional<ActionGraph> getGraph() {
       return graph;
     }
 

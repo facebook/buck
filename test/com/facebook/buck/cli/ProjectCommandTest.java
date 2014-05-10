@@ -35,10 +35,10 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
@@ -209,8 +209,8 @@ public class ProjectCommandTest {
       }
     });
 
-    DependencyGraph dependencyGraph = new DependencyGraph(graph);
-    return PartialGraphFactory.newInstance(dependencyGraph, buildTargets);
+    ActionGraph actionGraph = new ActionGraph(graph);
+    return PartialGraphFactory.newInstance(actionGraph, buildTargets);
   }
 
   /**

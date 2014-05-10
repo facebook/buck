@@ -38,9 +38,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeJavaPackageFinder;
 import com.facebook.buck.rules.JavaPackageFinder;
@@ -708,7 +708,7 @@ public class ProjectTest {
       javaPackageFinder = new FakeJavaPackageFinder();
     }
 
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
+    ActionGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
     List<BuildTarget> targets = ImmutableList.copyOf(Iterables.transform(projectConfigs,
         new Function<BuildRule, BuildTarget>() {
 
@@ -752,7 +752,7 @@ public class ProjectTest {
 
   private static BuildRule getRuleById(String id, PartialGraph graph) {
     String[] parts = id.split(":");
-    BuildRule rule = graph.getDependencyGraph().findBuildRuleByTarget(
+    BuildRule rule = graph.getActionGraph().findBuildRuleByTarget(
         new BuildTarget(parts[0], parts[1]));
     Preconditions.checkNotNull(rule, "No rule for %s", id);
     return rule;

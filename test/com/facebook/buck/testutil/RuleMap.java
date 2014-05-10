@@ -17,9 +17,9 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DependencyGraph;
 import com.google.common.collect.ImmutableList;
 
 public class RuleMap {
@@ -27,16 +27,16 @@ public class RuleMap {
   /** Utility class: do not instantiate. */
   private RuleMap() {}
 
-  public static DependencyGraph createGraphFromBuildRules(BuildRuleResolver params) {
+  public static ActionGraph createGraphFromBuildRules(BuildRuleResolver params) {
     Iterable<BuildRule> rules = params.getBuildRules();
     return createGraphFromBuildRules(rules);
   }
 
-  public static DependencyGraph createGraphFromSingleRule(BuildRule buildRule) {
+  public static ActionGraph createGraphFromSingleRule(BuildRule buildRule) {
     return createGraphFromBuildRules(ImmutableList.of(buildRule));
   }
 
-  private static DependencyGraph createGraphFromBuildRules(Iterable<BuildRule> rules) {
+  private static ActionGraph createGraphFromBuildRules(Iterable<BuildRule> rules) {
     MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<BuildRule>();
     for (BuildRule rule : rules) {
       graph.addNode(rule);
@@ -44,7 +44,7 @@ public class RuleMap {
         graph.addEdge(rule, dep);
       }
     }
-    return new DependencyGraph(graph);
+    return new ActionGraph(graph);
   }
 
 }

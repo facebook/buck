@@ -109,7 +109,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     }
 
     ExecutionContext executionContext = createExecutionContext(options,
-        partialGraph.getDependencyGraph());
+        partialGraph.getActionGraph());
 
     Project project = new Project(partialGraph,
         options.getBasePathToAliasMap(),
@@ -229,7 +229,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     }
 
     ExecutionContext executionContext = createExecutionContext(options,
-        partialGraph.getDependencyGraph());
+        partialGraph.getActionGraph());
 
     if (options.getCombinedProject() != null) {
       // Generate a single project containing a target and all its dependencies and tests.
@@ -257,7 +257,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableSet<BuildTarget> targets;
       if (passedInTargetsSet.isEmpty()) {
         ImmutableSet.Builder<BuildTarget> targetsBuilder = ImmutableSet.builder();
-        for (BuildRule node : partialGraph.getDependencyGraph().getNodes()) {
+        for (BuildRule node : partialGraph.getActionGraph().getNodes()) {
           if (node.getType() == XcodeProjectConfigDescription.TYPE) {
             targetsBuilder.add(node.getBuildTarget());
           }

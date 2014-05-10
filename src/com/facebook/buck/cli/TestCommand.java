@@ -30,13 +30,13 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.parser.RawRulePredicates;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestRule;
@@ -116,7 +116,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   @Override
   int runCommandWithOptionsInternal(final TestCommandOptions options) throws IOException {
     // If the user asked to run all of the tests, use a special method for that that is optimized to
-    // parse all of the build files and traverse the dependency graph to find all of the tests to
+    // parse all of the build files and traverse the action graph to find all of the tests to
     // run.
     if (options.isRunAllTests()) {
       try {
@@ -136,7 +136,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     Build build = buildCommand.getBuild();
 
-    Iterable<TestRule> results = getCandidateRules(build.getDependencyGraph());
+    Iterable<TestRule> results = getCandidateRules(build.getActionGraph());
 
     results = filterTestRules(options, results);
     if (options.isPrintMatchingTestRules()) {
@@ -299,9 +299,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getParser(),
         getBuckEventBus());
 
-    final DependencyGraph graph = partialGraph.getDependencyGraph();
+    final ActionGraph graph = partialGraph.getActionGraph();
 
-    // Look up all of the test rules in the dependency graph.
+    // Look up all of the test rules in the action graph.
     Iterable<TestRule> testRules = Iterables.transform(partialGraph.getTargets(),
         new Function<BuildTarget, TestRule>() {
           @Override
@@ -368,7 +368,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
   @VisibleForTesting
   static Iterable<TestRule> getCandidateRules(
-      DependencyGraph graph) {
+      ActionGraph graph) {
     AbstractBottomUpTraversal<BuildRule, List<TestRule>> traversal =
         new AbstractBottomUpTraversal<BuildRule, List<TestRule>>(graph) {
 

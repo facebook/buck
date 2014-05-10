@@ -37,11 +37,11 @@ import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.TestRule;
@@ -217,7 +217,7 @@ public class TestCommandTest {
     return options;
   }
 
-  private DependencyGraph createDependencyGraphFromBuildRules(Iterable<? extends BuildRule> rules) {
+  private ActionGraph createDependencyGraphFromBuildRules(Iterable<? extends BuildRule> rules) {
     MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
     for (BuildRule rule : rules) {
       for (BuildRule dep : rule.getDeps()) {
@@ -225,7 +225,7 @@ public class TestCommandTest {
       }
     }
 
-    return new DependencyGraph(graph);
+    return new ActionGraph(graph);
   }
 
   /**
@@ -367,7 +367,7 @@ public class TestCommandTest {
         ImmutableSet.<BuildTargetPattern>of());
 
     Iterable<FakeTestRule> rules = Lists.newArrayList(rule1, rule2, rule3);
-    DependencyGraph graph = createDependencyGraphFromBuildRules(rules);
+    ActionGraph graph = createDependencyGraphFromBuildRules(rules);
     TestCommandOptions options = getOptions("--include", "linux", "windows");
 
     Iterable<TestRule> result = TestCommand.filterTestRules(options,

@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
 
 public class BuildContext {
 
-  private final DependencyGraph dependencyGraph;
+  private final ActionGraph actionGraph;
   private final StepRunner stepRunner;
   private final ProjectFilesystem projectFilesystem;
   private final ArtifactCache artifactCache;
@@ -47,7 +47,7 @@ public class BuildContext {
   private final BuildDependencies buildDependencies;
 
   private BuildContext(
-      DependencyGraph dependencyGraph,
+      ActionGraph actionGraph,
       StepRunner stepRunner,
       ProjectFilesystem projectFilesystem,
       ArtifactCache artifactCache,
@@ -55,7 +55,7 @@ public class BuildContext {
       BuckEventBus events,
       Supplier<String> androidBootclasspathSupplier,
       BuildDependencies buildDependencies) {
-    this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
+    this.actionGraph = Preconditions.checkNotNull(actionGraph);
     this.stepRunner = Preconditions.checkNotNull(stepRunner);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
@@ -73,8 +73,8 @@ public class BuildContext {
     return stepRunner;
   }
 
-  public DependencyGraph getDependencyGraph() {
-    return dependencyGraph;
+  public ActionGraph getActionGraph() {
+    return actionGraph;
   }
 
   public JavaPackageFinder getJavaPackageFinder() {
@@ -152,7 +152,7 @@ public class BuildContext {
 
   public static class Builder {
 
-    private DependencyGraph dependencyGraph = null;
+    private ActionGraph actionGraph = null;
     private StepRunner stepRunner = null;
     private ProjectFilesystem projectFilesystem = null;
     private ArtifactCache artifactCache = null;
@@ -168,7 +168,7 @@ public class BuildContext {
         setDefaultAndroidBootclasspathSupplier();
       }
       return new BuildContext(
-          dependencyGraph,
+          actionGraph,
           stepRunner,
           projectFilesystem,
           artifactCache,
@@ -178,8 +178,8 @@ public class BuildContext {
           buildDependencies);
     }
 
-    public Builder setDependencyGraph(DependencyGraph dependencyGraph) {
-      this.dependencyGraph = dependencyGraph;
+    public Builder setActionGraph(ActionGraph actionGraph) {
+      this.actionGraph = Preconditions.checkNotNull(actionGraph);
       return this;
     }
 

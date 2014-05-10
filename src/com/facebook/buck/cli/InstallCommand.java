@@ -17,9 +17,9 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableApk;
 import com.google.common.base.Optional;
 
@@ -56,7 +56,7 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
 
     // Get the build rule that was built. Verify that it is an android_binary() rule.
     Build build = buildCommand.getBuild();
-    DependencyGraph graph = build.getDependencyGraph();
+    ActionGraph graph = build.getActionGraph();
     BuildRule buildRule = graph.findBuildRuleByTarget(buildCommand.getBuildTargets().get(0));
     Buildable buildable = buildRule.getBuildable();
     if (buildable == null || !(buildable instanceof InstallableApk)) {

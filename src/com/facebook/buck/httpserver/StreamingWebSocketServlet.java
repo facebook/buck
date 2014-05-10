@@ -17,8 +17,8 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DependencyGraph;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -114,7 +114,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     }
   }
 
-  static ObjectNode createJsonForGraph(DependencyGraph graph) {
+  static ObjectNode createJsonForGraph(ActionGraph graph) {
     ObjectNode nodesToDeps = jsonNodeFactory.objectNode();
     for (BuildRule source : graph.getNodes()) {
       ArrayNode deps = jsonNodeFactory.arrayNode();

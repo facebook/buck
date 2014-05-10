@@ -20,8 +20,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -32,20 +32,20 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * A subgraph of the full dependency graph, which is also a valid dependency graph.
+ * A subgraph of the full action graph, which is also a valid action graph.
  */
 public class PartialGraph {
 
-  private final DependencyGraph graph;
+  private final ActionGraph graph;
   private final List<BuildTarget> targets;
 
   @VisibleForTesting
-  PartialGraph(DependencyGraph graph, List<BuildTarget> targets) {
+  PartialGraph(ActionGraph graph, List<BuildTarget> targets) {
     this.graph = graph;
     this.targets = ImmutableList.copyOf(targets);
   }
 
-  public DependencyGraph getDependencyGraph() {
+  public ActionGraph getActionGraph() {
     return graph;
   }
 
@@ -97,9 +97,9 @@ public class PartialGraph {
 
     Iterable<BuildTarget> buildTargets = parser.filterTargetsInProjectFromRoots(
         roots, includes, eventBus, RawRulePredicates.alwaysTrue());
-    DependencyGraph buildGraph =
+    ActionGraph buildGraph =
         parseAndCreateGraphFromTargets(buildTargets, includes, parser, eventBus)
-            .getDependencyGraph();
+            .getActionGraph();
 
     // We have to enumerate all test targets, and see which ones refer to a rule in our build graph
     // with it's src_under_test field.
@@ -114,13 +114,13 @@ public class PartialGraph {
         parser,
         eventBus);
 
-    DependencyGraph testDependencyGraph = testGraph.getDependencyGraph();
+    ActionGraph testActionGraph = testGraph.getActionGraph();
 
     // Iterate through all possible test targets, looking for ones who's src_under_test intersects
     // with our build graph.
     for (BuildTarget buildTarget : testGraph.getTargets()) {
       TestRule testRule =
-          (TestRule) testDependencyGraph.findBuildRuleByTarget(buildTarget).getBuildable();
+          (TestRule) testActionGraph.findBuildRuleByTarget(buildTarget).getBuildable();
       for (BuildRule buildRuleUnderTest : testRule.getSourceUnderTest()) {
         if (buildGraph.findBuildRuleByTarget(buildRuleUnderTest.getBuildTarget()) != null) {
           buildAndTestTargetsBuilder.add(testRule.getBuildTarget());
@@ -181,7 +181,7 @@ public class PartialGraph {
 
     // Now that the Parser is loaded up with the set of all build rules, use it to create a
     // DependencyGraph of only the targets we want to build.
-    DependencyGraph graph = parser.parseBuildFilesForTargets(targets, includes, eventBus);
+    ActionGraph graph = parser.parseBuildFilesForTargets(targets, includes, eventBus);
 
     return new PartialGraph(graph, ImmutableList.copyOf(targets));
   }

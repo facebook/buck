@@ -37,13 +37,13 @@ public class FakeBuildContext {
 
   /** A BuildContext which doesn't touch the host filesystem or actually execute steps. */
   public static final BuildContext NOOP_CONTEXT = newBuilder(new FakeProjectFilesystem())
-      .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
+      .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
       .setJavaPackageFinder(new FakeJavaPackageFinder())
       .setArtifactCache(new NoopArtifactCache())
       .build();
 
   /**
-   * User still needs to invoke {@link BuildContext.Builder#setDependencyGraph(DependencyGraph)} and
+   * User still needs to invoke {@link BuildContext.Builder#setActionGraph(ActionGraph)} and
    * {@link BuildContext.Builder#setJavaPackageFinder(JavaPackageFinder)} before the
    * {@link BuildContext.Builder#build()} method of the builder can be invoked.
    * @param projectFilesystem for the {@link BuildContext} and for the {@link ExecutionContext} that

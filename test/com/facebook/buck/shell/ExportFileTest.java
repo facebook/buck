@@ -24,11 +24,11 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSourcePath;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.JavaPackageFinder;
@@ -165,7 +165,7 @@ public class ExportFileTest {
             return null;
           }
         })
-        .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
+        .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
         .setStepRunner(new StepRunner() {
           @Override
           public void runStep(Step step) throws StepFailedException {

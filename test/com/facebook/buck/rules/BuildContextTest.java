@@ -47,7 +47,7 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setDependencyGraph(createMock(DependencyGraph.class));
+    builder.setActionGraph(createMock(ActionGraph.class));
     builder.setStepRunner(createMock(StepRunner.class));
     builder.setProjectFilesystem(createMock(ProjectFilesystem.class));
     builder.setArtifactCache(createMock(ArtifactCache.class));
@@ -88,7 +88,7 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setDependencyGraph(createMock(DependencyGraph.class));
+    builder.setActionGraph(createMock(ActionGraph.class));
     builder.setStepRunner(createMock(StepRunner.class));
     builder.setProjectFilesystem(createMock(ProjectFilesystem.class));
     builder.setArtifactCache(createMock(ArtifactCache.class));
@@ -108,7 +108,7 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setDependencyGraph(createMock(DependencyGraph.class));
+    builder.setActionGraph(createMock(ActionGraph.class));
     builder.setStepRunner(createMock(StepRunner.class));
     builder.setProjectFilesystem(createMock(ProjectFilesystem.class));
     builder.setArtifactCache(createMock(ArtifactCache.class));
@@ -133,7 +133,7 @@ public class BuildContextTest {
     CapturingLogEventListener listener = new CapturingLogEventListener();
     eventBus.register(listener);
     BuildContext buildContext = BuildContext.builder()
-        .setDependencyGraph(createMock(DependencyGraph.class))
+        .setActionGraph(createMock(ActionGraph.class))
         .setStepRunner(createMock(StepRunner.class))
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setArtifactCache(createMock(ArtifactCache.class))
@@ -152,7 +152,7 @@ public class BuildContextTest {
     CapturingLogEventListener listener = new CapturingLogEventListener();
     eventBus.register(listener);
     BuildContext buildContext = BuildContext.builder()
-        .setDependencyGraph(createMock(DependencyGraph.class))
+        .setActionGraph(createMock(ActionGraph.class))
         .setStepRunner(createMock(StepRunner.class))
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setArtifactCache(createMock(ArtifactCache.class))

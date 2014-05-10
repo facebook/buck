@@ -29,11 +29,11 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstructorArg;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParams;
@@ -116,7 +116,7 @@ final class ProjectGeneratorTestUtils {
   }
 
   public static PartialGraph createPartialGraphFromBuildRuleResolver(BuildRuleResolver resolver) {
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(resolver);
+    ActionGraph graph = RuleMap.createGraphFromBuildRules(resolver);
     ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
     for (BuildRule rule : graph.getNodes()) {
       targets.add(rule.getBuildTarget());

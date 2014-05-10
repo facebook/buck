@@ -114,7 +114,7 @@ class SchemeGenerator {
         targetToProjectPathMapBuilder.build();
 
     List<BuildRule> orderedBuildRules = TopologicalSort.sort(
-        partialGraph.getDependencyGraph(),
+        partialGraph.getActionGraph(),
         new Predicate<BuildRule>() {
           @Override
           public boolean apply(BuildRule input) {

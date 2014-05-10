@@ -65,7 +65,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
     }
 
     Build build = buildCommand.getBuild();
-    BuildRule targetRule = build.getDependencyGraph().findBuildRuleByTarget(target);
+    BuildRule targetRule = build.getActionGraph().findBuildRuleByTarget(target);
     BinaryBuildRule binaryBuildRule = null;
     if (targetRule instanceof BinaryBuildRule) {
       binaryBuildRule = (BinaryBuildRule) targetRule;

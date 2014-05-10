@@ -31,12 +31,12 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildable;
@@ -179,7 +179,7 @@ public class ApkGenruleTest {
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
     BuildContext buildContext = BuildContext.builder()
-        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
+        .setActionGraph(EasyMock.createMock(ActionGraph.class))
         .setStepRunner(EasyMock.createNiceMock(StepRunner.class))
         .setProjectFilesystem(EasyMock.createNiceMock(ProjectFilesystem.class))
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))

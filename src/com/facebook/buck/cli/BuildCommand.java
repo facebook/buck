@@ -23,10 +23,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.Console;
@@ -108,10 +108,10 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       getBuckEventBus().post(BuildEvent.started(buildTargets));
     }
 
-    // Parse the build files to create a DependencyGraph.
-    DependencyGraph dependencyGraph;
+    // Parse the build files to create a ActionGraph.
+    ActionGraph actionGraph;
     try {
-      dependencyGraph = getParser().parseBuildFilesForTargets(buildTargets,
+      actionGraph = getParser().parseBuildFilesForTargets(buildTargets,
           options.getDefaultIncludes(),
           getBuckEventBus());
     } catch (BuildTargetException | BuildFileParseException e) {
@@ -132,7 +132,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     // Create and execute the build.
     build = options.createBuild(
         options.getBuckConfig(),
-        dependencyGraph,
+        actionGraph,
         getProjectFilesystem(),
         getAndroidDirectoryResolver(),
         getBuildEngine(),
@@ -158,16 +158,16 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       Iterable<? extends HasBuildTarget> buildTargetsToBuild,
       Build build,
       Console console) {
-    final DependencyGraph dependencyGraph = build.getDependencyGraph();
+    final ActionGraph actionGraph = build.getActionGraph();
     // It is important to use this logic to determine the set of rules to build rather than
-    // build.getDependencyGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
+    // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
     // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
     Set<BuildRule> rulesToBuild = FluentIterable
         .from(buildTargetsToBuild)
         .transform(new Function<HasBuildTarget, BuildRule>() {
           @Override
           public BuildRule apply(HasBuildTarget hasBuildTarget) {
-            return dependencyGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget());
+            return actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget());
           }
         })
         .toSet();

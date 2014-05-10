@@ -25,11 +25,11 @@ import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
 
-public class DependencyGraph extends DefaultImmutableDirectedAcyclicGraph<BuildRule> {
+public class ActionGraph extends DefaultImmutableDirectedAcyclicGraph<BuildRule> {
 
   private Map<BuildTarget, BuildRule> index;
 
-  public DependencyGraph(MutableDirectedGraph<BuildRule> graph) {
+  public ActionGraph(MutableDirectedGraph<BuildRule> graph) {
     super(graph);
   }
 

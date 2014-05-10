@@ -23,9 +23,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -90,7 +90,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     }
 
     if (options.shouldGenerateDotOutput()) {
-      return printDotOutput(partialGraph.getDependencyGraph());
+      return printDotOutput(partialGraph.getActionGraph());
     } else if (options.shouldGenerateJsonOutput()) {
       return printJsonClasspath(partialGraph);
     } else {
@@ -99,10 +99,10 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   }
 
   @VisibleForTesting
-  int printDotOutput(DependencyGraph dependencyGraph) {
+  int printDotOutput(ActionGraph actionGraph) {
     Dot<BuildRule> dot = new Dot<BuildRule>(
-        dependencyGraph,
-        "dependency_graph",
+        actionGraph,
+        "action_graph",
         new Function<BuildRule, String>() {
           @Override
           public String apply(BuildRule buildRule) {
@@ -121,7 +121,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   @VisibleForTesting
   int printClasspath(PartialGraph partialGraph) {
     List<BuildTarget> targets = partialGraph.getTargets();
-    DependencyGraph graph = partialGraph.getDependencyGraph();
+    ActionGraph graph = partialGraph.getActionGraph();
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
@@ -144,7 +144,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
   @VisibleForTesting
   int printJsonClasspath(PartialGraph partialGraph) throws IOException {
-    DependencyGraph graph = partialGraph.getDependencyGraph();
+    ActionGraph graph = partialGraph.getActionGraph();
     List<BuildTarget> targets = partialGraph.getTargets();
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 

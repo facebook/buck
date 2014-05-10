@@ -22,9 +22,9 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Verbosity;
@@ -61,11 +61,11 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     // Parse all of the build targets specified by the user.
     BuildTargetParser buildTargetParser = parser.getBuildTargetParser();
     String buildTargetName = options.getArgumentsFormattedAsBuildTargets().get(0);
-    DependencyGraph dependencyGraph;
+    ActionGraph actionGraph;
     BuildTarget buildTarget;
     try {
       buildTarget = buildTargetParser.parse(buildTargetName, ParseContext.fullyQualified());
-      dependencyGraph = parser.parseBuildFilesForTargets(ImmutableList.of(buildTarget),
+      actionGraph = parser.parseBuildFilesForTargets(ImmutableList.of(buildTarget),
           options.getDefaultIncludes(),
           getBuckEventBus());
     } catch (BuildTargetException | BuildFileParseException e) {
@@ -74,7 +74,7 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     }
 
     // Find the android_binary() rule from the parse.
-    BuildRule buildRule = dependencyGraph.findBuildRuleByTarget(buildTarget);
+    BuildRule buildRule = actionGraph.findBuildRuleByTarget(buildTarget);
     Buildable buildable = buildRule.getBuildable();
     if (buildable == null || !(buildable instanceof InstallableApk)) {
       console.printBuildFailure(String.format(
@@ -86,7 +86,7 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     InstallableApk installableApk = (InstallableApk) buildable;
 
     // We need this in case adb isn't already running.
-    ExecutionContext context = createExecutionContext(options, dependencyGraph);
+    ExecutionContext context = createExecutionContext(options, actionGraph);
 
     final AdbHelper adbHelper = new AdbHelper(
         options.adbOptions(),
