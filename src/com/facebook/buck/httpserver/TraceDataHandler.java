@@ -41,7 +41,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 class TraceDataHandler extends AbstractHandler {
 
-  static final Pattern ID_PATTERN = Pattern.compile("/([0-9a-zA-Z]+)");
+  static final Pattern ID_PATTERN = Pattern.compile("/([0-9a-zA-Z-]+)");
 
   @VisibleForTesting
   static final Pattern CALLBACK_PATTERN = Pattern.compile("[\\w\\.]+");
