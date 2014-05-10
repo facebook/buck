@@ -450,11 +450,16 @@ public class ParserTest extends EasyMockSupport {
   private void parseBuildFile(File buildFile, Parser parser,
                               ProjectBuildFileParserFactory buildFileParserFactory)
       throws BuildFileParseException, BuildTargetException, IOException {
-    parser.parseBuildFile(buildFile,
-        /* defaultIncludes */ ImmutableList.<String>of(),
-        buildFileParserFactory.createParser(/* commonIncludes */ Lists.<String>newArrayList(),
-            EnumSet.noneOf(ProjectBuildFileParser.Option.class),
-            new TestConsole()));
+    try (ProjectBuildFileParser projectBuildFileParser = buildFileParserFactory.createParser(
+        /* commonIncludes */ Lists.<String>newArrayList(),
+        EnumSet.noneOf(ProjectBuildFileParser.Option.class),
+        new TestConsole())) {
+      parser.parseBuildFile(
+          buildFile,
+          /* defaultIncludes */ ImmutableList.<String>of(),
+          projectBuildFileParser
+      );
+    }
   }
 
   @Test
@@ -1048,10 +1053,11 @@ public class ParserTest extends EasyMockSupport {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
-    ProjectBuildFileParser buildFileParser =
-        buildFileParserFactory.createNoopParserThatAlwaysReturnsError();
-    buildFileParser.initIfNeeded();
-    buildFileParser.close(); // This must throw.
+    try (ProjectBuildFileParser buildFileParser =
+        buildFileParserFactory.createNoopParserThatAlwaysReturnsError()) {
+      buildFileParser.initIfNeeded();
+      // close() is called implicitly at the end of this block. It must throw.
+    }
   }
 
   @Test
@@ -1062,10 +1068,11 @@ public class ParserTest extends EasyMockSupport {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
-    ProjectBuildFileParser buildFileParser =
-        buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccess();
-    buildFileParser.initIfNeeded();
-    buildFileParser.close(); // This must not throw.
+    try (ProjectBuildFileParser buildFileParser =
+        buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccess()) {
+      buildFileParser.initIfNeeded();
+      // close() is called implicitly at the end of this block. It must not throw.
+    }
   }
 
   private Map<BuildTarget, BuildRuleBuilder<?>> emptyBuildTargets() {

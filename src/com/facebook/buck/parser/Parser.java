@@ -357,12 +357,13 @@ public class Parser {
   @VisibleForTesting
   DependencyGraph onlyUseThisWhenTestingToFindAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
-      final Iterable<String> defaultIncludes) throws IOException {
-    ProjectBuildFileParser parser = buildFileParserFactory.createParser(
+      Iterable<String> defaultIncludes) throws IOException, BuildFileParseException {
+    try (ProjectBuildFileParser parser = buildFileParserFactory.createParser(
         defaultIncludes,
         EnumSet.noneOf(ProjectBuildFileParser.Option.class),
-        console);
-    return findAllTransitiveDependencies(toExplore, defaultIncludes, parser);
+        console)) {
+      return findAllTransitiveDependencies(toExplore, defaultIncludes, parser);
+    }
   }
 
 
