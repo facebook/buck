@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.expect;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
 import com.google.common.base.Optional;
@@ -29,6 +30,7 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -84,6 +86,22 @@ public class TraceHandlerDelegateTest extends EasyMockSupport {
 
     TraceHandlerDelegate traceHandler = new TraceHandlerDelegate(tracesHelper);
     assertNull(traceHandler.getDataForRequest(baseRequest));
+
+    verifyAll();
+  }
+
+  @Test
+  public void testSortByLastModified() {
+    File file1 = createMock(File.class);
+    expect(file1.lastModified()).andReturn(1399675921000L); // Fri May 09 15:52:01 PDT 2014
+
+    File file2 = createMock(File.class);
+    expect(file2.lastModified()).andReturn(1387411626000L); // Wed Dec 18 16:07:06 PST 2013
+
+    replayAll();
+
+    int comparison = TracesHandlerDelegate.SORT_BY_LAST_MODIFIED.compare(file1, file2);
+    assertTrue("Newer files should be ordered before older files.", comparison < 0);
 
     verifyAll();
   }
