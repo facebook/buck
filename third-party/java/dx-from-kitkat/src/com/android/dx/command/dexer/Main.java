@@ -33,6 +33,7 @@ import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.cf.CfOptions;
 import com.android.dx.dex.cf.CfTranslator;
 import com.android.dx.dex.cf.CodeStatistics;
+import com.android.dx.dex.cf.OptimizerOptions;
 import com.android.dx.dex.code.PositionList;
 import com.android.dx.dex.file.AnnotationUtils;
 import com.android.dx.dex.file.ClassDefItem;
@@ -677,7 +678,7 @@ public class Main {
 
         try {
             ClassDefItem clazz =
-                CfTranslator.translate(cf, bytes, args.cfOptions, args.dexOptions, outputDex);
+                CfTranslator.translate(cf, bytes, args.cfOptions, args.dexOptions, args.optimizerOptions, outputDex);
             synchronized (outputDex) {
                 outputDex.add(clazz);
             }
@@ -1213,6 +1214,8 @@ public class Main {
 
         /** Filename containing list of methods to NOT optimize */
         public String dontOptimizeListFile = null;
+
+        public OptimizerOptions optimizerOptions = new OptimizerOptions();
 
         /** Whether to print statistics to stdout at end of compile cycle */
         public boolean statistics;
