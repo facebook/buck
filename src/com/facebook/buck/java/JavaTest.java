@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -191,9 +190,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path pathToTestOutput = getPathToTestOutputDirectory();
-    Path tmpDirectory = getPathToTmpDirectory();
-    steps.add(new MakeCleanDirectoryStep(pathToTestOutput));
-    steps.add(new MakeCleanDirectoryStep(tmpDirectory));
+    MakeCleanDirectoryStep mkdirClean = new MakeCleanDirectoryStep(pathToTestOutput);
+    steps.add(mkdirClean);
 
     ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
         .addAll(getTransitiveClasspathEntries().values())
@@ -205,8 +203,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         classpathEntries,
         testClassNames,
         amendVmArgs(vmArgs, executionContext.getTargetDeviceOptional()),
-        pathToTestOutput,
-        tmpDirectory,
+        pathToTestOutput.toString(),
         executionContext.isCodeCoverageEnabled(),
         executionContext.isJacocoEnabled(),
         executionContext.isDebugEnabled(),
@@ -235,14 +232,16 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       return;
     }
 
-    TargetDevice device = targetDevice.get();
-    if (device.isEmulator()) {
-      vmArgsBuilder.add("-Dbuck.device=emulator");
-    } else {
-      vmArgsBuilder.add("-Dbuck.device=device");
-    }
-    if (device.hasIdentifier()) {
-      vmArgsBuilder.add("-Dbuck.device.id=" + device.getIdentifier());
+    if (targetDevice.isPresent()) {
+      TargetDevice device = targetDevice.get();
+      if (device.isEmulator()) {
+        vmArgsBuilder.add("-Dbuck.device=emulator");
+      } else {
+        vmArgsBuilder.add("-Dbuck.device=device");
+      }
+      if (device.hasIdentifier()) {
+        vmArgsBuilder.add("-Dbuck.device.id=" + device.getIdentifier());
+      }
     }
   }
 
@@ -275,10 +274,6 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         BuckConstant.GEN_DIR,
         getBuildTarget().getBaseNameWithSlash(),
         String.format("__java_test_%s_output__", getBuildTarget().getShortName()));
-  }
-
-  private Path getPathToTmpDirectory() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__java_test_%s_tmp__").toAbsolutePath();
   }
 
   @Override
