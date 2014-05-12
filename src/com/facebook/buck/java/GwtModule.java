@@ -98,6 +98,8 @@ public class GwtModule extends AbstractBuildable {
         /* mainClass */ null,
         /* manifestFile */ null));
 
+    buildableContext.recordArtifact(outputFile);
+
     return steps.build();
   }
 
