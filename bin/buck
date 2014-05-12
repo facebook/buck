@@ -20,7 +20,7 @@ BUCK_BIN_DIRECTORY=$DIR
 # TODO(user): refactor buck_common in to functions rather than sourcing
 source "${BUCK_BIN_DIRECTORY}/buck_common"
 
-if [ -n "$USE_BUCKD" ]; then
+if [ -z "$NO_BUCKD" ]; then
   startBuckdIfStopped
 fi
 
