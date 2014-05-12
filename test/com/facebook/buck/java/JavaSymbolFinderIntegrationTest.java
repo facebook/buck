@@ -46,11 +46,6 @@ public class JavaSymbolFinderIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
-  /**
-   * It is possible to build a test without running it. It is important to make sure that even
-   * though a test built successfully, it knows that it needs to run itself if its results are not
-   * available.
-   */
   @Test
   public void shouldFindTargetDefiningSymbol() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
