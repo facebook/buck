@@ -150,57 +150,54 @@ public class Main {
     };
 
     /** number of errors during processing */
-    private static int errors = 0;
+    private int errors = 0;
 
     /** {@code non-null;} parsed command-line arguments */
-    private static Arguments args;
+    private Arguments args;
 
     /** {@code non-null;} output file in-progress */
-    private static DexFile outputDex;
+    private DexFile outputDex;
 
     /**
      * {@code null-ok;} map of resources to include in the output, or
      * {@code null} if resources are being ignored
      */
-    private static TreeMap<String, byte[]> outputResources;
+    private TreeMap<String, byte[]> outputResources;
 
     /** Library .dex files to merge into the output .dex. */
-    private static final List<byte[]> libraryDexBuffers = new ArrayList<byte[]>();
+    private final List<byte[]> libraryDexBuffers = new ArrayList<byte[]>();
 
     /** thread pool object used for multi-threaded file processing */
-    private static ExecutorService threadPool;
+    private ExecutorService threadPool;
 
     /** true if any files are successfully processed */
-    private static boolean anyFilesProcessed;
+    private boolean anyFilesProcessed;
 
     /** class files older than this must be defined in the target dex file. */
-    private static long minimumFileAge = 0;
+    private long minimumFileAge = 0;
 
-    private static Set<String> classesInMainDex = null;
+    private Set<String> classesInMainDex = null;
 
-    private static List<byte[]> dexOutputArrays = new ArrayList<byte[]>();
+    private List<byte[]> dexOutputArrays = new ArrayList<byte[]>();
 
-    private static OutputStreamWriter humanOutWriter = null;
-
-    /**
-     * This class is uninstantiable.
-     */
-    private Main() {
-        // This space intentionally left blank.
-    }
+    private OutputStreamWriter humanOutWriter = null;
 
     /**
      * Run and exit if something unexpected happened.
      * @param argArray the command line arguments
      */
     public static void main(String[] argArray) throws IOException {
-        Arguments arguments = new Arguments();
-        arguments.parse(argArray);
-
-        int result = run(arguments);
+        int result = new Main().run(argArray);
         if (result != 0) {
             System.exit(result);
         }
+    }
+
+    public int run(String[] args) throws IOException {
+        Arguments arguments = new Arguments();
+        arguments.parse(args);
+
+        return run(arguments);
     }
 
     /**
@@ -208,7 +205,7 @@ public class Main {
      * @param arguments the data + parameters for the conversion
      * @return 0 if success > 0 otherwise.
      */
-    public static int run(Arguments arguments) throws IOException {
+    public int run(Arguments arguments) throws IOException {
         // Reset the error count to start fresh.
         errors = 0;
         // empty the list, so that  tools that load dx and keep it around
@@ -238,7 +235,7 @@ public class Main {
     /**
      * {@code non-null;} Error message for too many method/field/type ids.
      */
-    public static String getTooManyIdsErrorMessage() {
+    public String getTooManyIdsErrorMessage() {
         if (args.multiDex) {
             return "The list of classes given in " + Arguments.MAIN_DEX_LIST_OPTION +
                    " is too big and does not fit in the main dex.";
@@ -247,7 +244,7 @@ public class Main {
         }
     }
 
-    private static int runMonoDex() throws IOException {
+    private int runMonoDex() throws IOException {
 
         File incrementalOutFile = null;
         if (args.incremental) {
@@ -306,7 +303,7 @@ public class Main {
         return 0;
     }
 
-    private static int runMultiDex() throws IOException {
+    private int runMultiDex() throws IOException {
 
         assert !args.incremental;
         assert args.numThreads == 1;
@@ -428,7 +425,7 @@ public class Main {
      * Merges the dex files in library jars. If multiple dex files define the
      * same type, this fails with an exception.
      */
-    private static byte[] mergeLibraryDexBuffers(byte[] outArray) throws IOException {
+    private byte[] mergeLibraryDexBuffers(byte[] outArray) throws IOException {
         if (libraryDexBuffers.isEmpty()) {
             return outArray;
         }
@@ -449,7 +446,7 @@ public class Main {
      *
      * @return whether processing was successful
      */
-    private static boolean processAllFiles() {
+    private boolean processAllFiles() {
         createDexFile();
 
         if (args.jarOutput) {
@@ -538,7 +535,7 @@ public class Main {
         return true;
     }
 
-    private static void createDexFile() {
+    private void createDexFile() {
         if (outputDex != null) {
             dexOutputArrays.add(writeDex());
         }
@@ -559,7 +556,7 @@ public class Main {
      * @param filter {@code non-null;} A filter for excluding files.
      * @return whether any processing actually happened
      */
-    private static boolean processOne(String pathname, FileNameFilter filter) {
+    private boolean processOne(String pathname, FileNameFilter filter) {
         ClassPathOpener opener;
 
         opener = new ClassPathOpener(pathname, false, filter,
@@ -569,7 +566,7 @@ public class Main {
                     threadPool.execute(new ParallelProcessor(name, lastModified, bytes));
                     return false;
                 } else {
-                    return Main.processFileBytes(name, lastModified, bytes);
+                    return Main.this.processFileBytes(name, lastModified, bytes);
                 }
             }
             public void onException(Exception ex) {
@@ -603,7 +600,7 @@ public class Main {
      * @param bytes {@code non-null;} contents of the file
      * @return whether processing was successful
      */
-    private static boolean processFileBytes(String name, long lastModified, byte[] bytes) {
+    private boolean processFileBytes(String name, long lastModified, byte[] bytes) {
         boolean isClass = name.endsWith(".class");
         boolean isClassesDex = name.equals(DexFormat.DEX_IN_JAR_NAME);
         boolean keepResources = (outputResources != null);
@@ -653,7 +650,7 @@ public class Main {
      * @param bytes {@code non-null;} contents of the file
      * @return whether processing was successful
      */
-    private static boolean processClass(String name, byte[] bytes) {
+    private boolean processClass(String name, byte[] bytes) {
         if (! args.coreLibrary) {
             checkClassName(name);
         }
@@ -706,7 +703,7 @@ public class Main {
      * @param name {@code non-null;} the fully-qualified internal-form
      * class name
      */
-    private static void checkClassName(String name) {
+    private void checkClassName(String name) {
         boolean bogus = false;
 
         if (name.startsWith("java/")) {
@@ -745,7 +742,7 @@ public class Main {
      * @return {@code null-ok;} the converted {@code byte[]} or {@code null}
      * if there was a problem
      */
-    private static byte[] writeDex() {
+    private byte[] writeDex() {
         byte[] outArray = null;
 
         try {
@@ -794,7 +791,7 @@ public class Main {
      * @param fileName {@code non-null;} name of the file
      * @return whether the creation was successful
      */
-    private static boolean createJar(String fileName) {
+    private boolean createJar(String fileName) {
         /*
          * Make or modify the manifest (as appropriate), put the dex
          * array into the resources map, and then process the entire
@@ -848,7 +845,7 @@ public class Main {
      *
      * @return {@code non-null;} the manifest
      */
-    private static Manifest makeManifest() throws IOException {
+    private Manifest makeManifest() throws IOException {
         byte[] manifestBytes = outputResources.get(MANIFEST_NAME);
         Manifest manifest;
         Attributes attribs;
@@ -958,7 +955,7 @@ public class Main {
      * method(s)
      * @param out {@code non-null;} where to dump to
      */
-    private static void dumpMethod(DexFile dex, String fqName,
+    private void dumpMethod(DexFile dex, String fqName,
             OutputStreamWriter out) {
         boolean wildcard = fqName.endsWith("*");
         int lastDot = fqName.lastIndexOf('.');
@@ -1047,7 +1044,7 @@ public class Main {
         pw.flush();
     }
 
-    private static class NotFilter implements FileNameFilter {
+    private class NotFilter implements FileNameFilter {
         private final FileNameFilter filter;
 
         private NotFilter(FileNameFilter filter) {
@@ -1063,7 +1060,7 @@ public class Main {
     /**
      * A quick and accurate filter for when file path can be trusted.
      */
-    private static class MainDexListFilter implements FileNameFilter {
+    private class MainDexListFilter implements FileNameFilter {
 
         @Override
         public boolean accept(String fullPath) {
@@ -1079,7 +1076,7 @@ public class Main {
     /**
      * A best effort conservative filter for when file path can <b>not</b> be trusted.
      */
-    private static class BestEffortMainDexListFilter implements FileNameFilter {
+    private class BestEffortMainDexListFilter implements FileNameFilter {
 
        Map<String, List<String>> map = new HashMap<String, List<String>>();
 
@@ -1115,7 +1112,7 @@ public class Main {
             }
         }
 
-        private static String getSimpleName(String path) {
+        private String getSimpleName(String path) {
             int index = path.lastIndexOf('/');
             if (index >= 0) {
                 return path.substring(index + 1);
@@ -1519,7 +1516,7 @@ public class Main {
     }
 
     /** Runnable helper class to process files in multiple threads */
-    private static class ParallelProcessor implements Runnable {
+    private class ParallelProcessor implements Runnable {
 
         String path;
         long lastModified;
@@ -1543,7 +1540,7 @@ public class Main {
          * with the given path and bytes.
          */
         public void run() {
-            if (Main.processFileBytes(path, lastModified, bytes)) {
+            if (Main.this.processFileBytes(path, lastModified, bytes)) {
                 anyFilesProcessed = true;
             }
         }

@@ -18,7 +18,6 @@ package com.android.dx.dex.file;
 
 import com.android.dex.DexException;
 import com.android.dex.DexFormat;
-import com.android.dx.command.dexer.Main;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Type;
@@ -86,8 +85,7 @@ public final class TypeIdsSection extends UniformItemSection {
 
         if (sz > DexFormat.MAX_TYPE_IDX + 1) {
             throw new DexException("Too many type references: " + sz +
-                    "; max is " + (DexFormat.MAX_TYPE_IDX + 1) + ".\n" +
-                    Main.getTooManyIdsErrorMessage());
+                    "; max is " + (DexFormat.MAX_TYPE_IDX + 1) + ".\n");
         }
 
         if (out.annotates()) {
