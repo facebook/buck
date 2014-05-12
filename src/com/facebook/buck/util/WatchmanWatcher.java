@@ -176,7 +176,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
     if (watchmanExitCode != 0) {
       ByteArrayOutputStream buffer = new ByteArrayOutputStream();
       ByteStreams.copy(watchmanProcess.getErrorStream(), buffer);
-      throw new RuntimeException(
+      throw new WatchmanWatcherException(
           "Watchman failed with exit code " + watchmanExitCode + ": " + buffer.toString());
     }
   }

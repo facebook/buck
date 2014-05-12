@@ -12,6 +12,7 @@ EXCEPTION_SRCS = [
   'ExceptionWithHumanReadableMessage.java',
   'HumanReadableException.java',
   'ShutdownException.java',
+  'WatchmanWatcherException.java',
 ]
 java_library(
   name = 'exceptions',

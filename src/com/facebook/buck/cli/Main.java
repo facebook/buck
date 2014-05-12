@@ -53,6 +53,7 @@ import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchServiceWatcher;
 import com.facebook.buck.util.WatchmanWatcher;
+import com.facebook.buck.util.WatchmanWatcherException;
 import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
@@ -332,7 +333,15 @@ public final class Main {
   }
 
   @VisibleForTesting
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   static void resetDaemon() {
+    if (daemon != null) {
+      try {
+        daemon.close();
+      } catch (IOException e) {
+        // Swallow exceptions while closing daemon.
+      }
+    }
     daemon = null;
   }
 
@@ -515,19 +524,28 @@ public final class Main {
       buildEventBus.post(commandEvent);
 
       // Create or get Parser and invalidate cached command parameters.
-      Parser parser;
+      Parser parser = null;
 
       if (isDaemon) {
-        parser = getParserFromDaemon(
-            context,
-            projectFilesystem,
-            config,
-            buildRuleTypes,
-            androidDirectoryResolver,
-            console,
-            commandEvent,
-            buildEventBus);
-      } else {
+        try {
+          parser = getParserFromDaemon(
+              context,
+              projectFilesystem,
+              config,
+              buildRuleTypes,
+              androidDirectoryResolver,
+              console,
+              commandEvent,
+              buildEventBus);
+        } catch (WatchmanWatcherException e) {
+          buildEventBus.post(LogEvent.warning(
+                  "Watchman threw an exception while parsing file changes, resetting daemon.\n%s",
+                  e.getMessage()));
+          resetDaemon();
+        }
+      }
+
+      if (parser == null) {
         parser = new Parser(projectFilesystem,
             buildRuleTypes,
             console,
