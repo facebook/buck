@@ -40,7 +40,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -52,8 +51,8 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     FlavorableDescription<PrebuiltJarDescription.Arg>{
 
   public static class Arg implements ConstructorArg {
-    public Path binaryJar;
-    public Optional<Path> sourceJar;
+    public SourcePath binaryJar;
+    public Optional<SourcePath> sourceJar;
     public Optional<SourcePath> gwtJar;
     public Optional<String> javadocUrl;
 
@@ -106,23 +105,22 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     // is a BuildRuleSourcePath), we make the PrebuiltJar a dependency of the GWT module. If this
     // becomes a performance issue in practice, then we will explore reducing the dependencies of
     // the GWT module.
-    final Path pathToExistingJarFile;
-    final Iterable<SourcePath> inputsToCompareToOutput;
+    final SourcePath inputToCompareToOutput;
     if (arg.gwtJar.isPresent()) {
-      inputsToCompareToOutput = Collections.singleton(arg.gwtJar.get());
-      pathToExistingJarFile = arg.gwtJar.get().resolve();
+      inputToCompareToOutput = arg.gwtJar.get();
     } else if (arg.sourceJar.isPresent()) {
-      inputsToCompareToOutput = ImmutableSet.of();
-      pathToExistingJarFile = arg.sourceJar.get();
+      inputToCompareToOutput = arg.sourceJar.get();
     } else {
-      inputsToCompareToOutput = ImmutableSet.of();
-      pathToExistingJarFile = arg.binaryJar;
+      inputToCompareToOutput = arg.binaryJar;
     }
+    final Collection<Path> inputsToCompareToOutput = SourcePaths.filterInputsToCompareToOutput(
+        Collections.singleton(inputToCompareToOutput));
+    final Path pathToExistingJarFile = inputToCompareToOutput.resolve();
 
     Buildable buildable = new AbstractBuildable() {
       @Override
       public Collection<Path> getInputsToCompareToOutput() {
-        return SourcePaths.filterInputsToCompareToOutput(inputsToCompareToOutput);
+        return inputsToCompareToOutput;
       }
 
       @Override

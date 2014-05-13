@@ -123,7 +123,7 @@ public class AndroidTransitiveDependencyGraph {
         // Update pathsToThirdPartyJars.
         if (rule.getBuildable() instanceof PrebuiltJar) {
           PrebuiltJar prebuiltJar = (PrebuiltJar) rule.getBuildable();
-          pathsToThirdPartyJarsBuilder.add(prebuiltJar.getBinaryJar());
+          pathsToThirdPartyJarsBuilder.add(prebuiltJar.getBinaryJar().resolve());
         }
         return maybeVisitAllDeps(rule, rule.getProperties().is(LIBRARY));
       }

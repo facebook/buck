@@ -47,14 +47,10 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 public class PrebuiltJar extends AbstractBuildable
@@ -63,8 +59,8 @@ public class PrebuiltJar extends AbstractBuildable
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  private final Path binaryJar;
-  private final Optional<Path> sourceJar;
+  private final SourcePath binaryJar;
+  private final Optional<SourcePath> sourceJar;
   private final Optional<SourcePath> gwtJar;
   private final Optional<String> javadocUrl;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
@@ -79,13 +75,13 @@ public class PrebuiltJar extends AbstractBuildable
 
   PrebuiltJar(
       BuildableParams buildableParams,
-      Path classesJar,
-      Optional<Path> sourceJar,
+      SourcePath binaryJar,
+      Optional<SourcePath> sourceJar,
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl) {
     this.target = buildableParams.getBuildTarget();
     this.deps = buildableParams.getDeps();
-    this.binaryJar = Preconditions.checkNotNull(classesJar);
+    this.binaryJar = Preconditions.checkNotNull(binaryJar);
     this.sourceJar = Preconditions.checkNotNull(sourceJar);
     this.gwtJar = Preconditions.checkNotNull(gwtJar);
     this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
@@ -96,7 +92,7 @@ public class PrebuiltJar extends AbstractBuildable
           public ImmutableSetMultimap<JavaLibrary, Path> get() {
             ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
                 ImmutableSetMultimap.builder();
-            classpathEntries.put(PrebuiltJar.this, getBinaryJar());
+            classpathEntries.put(PrebuiltJar.this, getBinaryJar().resolve());
             classpathEntries.putAll(Classpaths.getClasspathEntries(deps));
             return classpathEntries.build();
           }
@@ -108,7 +104,7 @@ public class PrebuiltJar extends AbstractBuildable
           public ImmutableSetMultimap<JavaLibrary, Path> get() {
             ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
                 ImmutableSetMultimap.builder();
-            classpathEntries.put(PrebuiltJar.this, getBinaryJar());
+            classpathEntries.put(PrebuiltJar.this, getBinaryJar().resolve());
             return classpathEntries.build();
           }
         });
@@ -122,12 +118,16 @@ public class PrebuiltJar extends AbstractBuildable
     return OUTPUT_TYPE;
   }
 
-  public Path getBinaryJar() {
+  public SourcePath getBinaryJar() {
     return binaryJar;
   }
 
-  public Optional<Path> getSourceJar() {
+  public Optional<SourcePath> getSourceJar() {
     return sourceJar;
+  }
+
+  public Optional<SourcePath> getGwtJar() {
+    return gwtJar;
   }
 
   public Optional<String> getJavadocUrl() {
@@ -141,16 +141,11 @@ public class PrebuiltJar extends AbstractBuildable
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    ImmutableList.Builder<Path> builder = ImmutableList.builder();
-    builder.add(binaryJar);
-    Optionals.addIfPresent(sourceJar, builder);
-    if (gwtJar.isPresent()) {
-      SourcePath gwtJarSourcePath = gwtJar.get();
-      Collection<Path> safePaths = SourcePaths.filterInputsToCompareToOutput(
-          Collections.singleton(gwtJarSourcePath));
-      builder.addAll(safePaths);
-    }
-    return builder.build();
+    ImmutableList.Builder<SourcePath> inputsToCompareToOutput = ImmutableList.builder();
+    inputsToCompareToOutput.add(binaryJar);
+    Optionals.addIfPresent(sourceJar, inputsToCompareToOutput);
+    Optionals.addIfPresent(gwtJar, inputsToCompareToOutput);
+    return SourcePaths.filterInputsToCompareToOutput(inputsToCompareToOutput.build());
   }
 
   @Override
@@ -185,7 +180,7 @@ public class PrebuiltJar extends AbstractBuildable
 
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries() {
-    return ImmutableSetMultimap.<JavaLibrary, Path>of(this, getBinaryJar());
+    return ImmutableSetMultimap.<JavaLibrary, Path>of(this, getBinaryJar().resolve());
   }
 
   @Override
@@ -212,7 +207,6 @@ public class PrebuiltJar extends AbstractBuildable
 
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
 
-    buildableContext.recordArtifact(getBinaryJar());
     return steps.build();
   }
 
@@ -226,16 +220,18 @@ public class PrebuiltJar extends AbstractBuildable
 
     @Override
     public int execute(ExecutionContext context) {
-      File jarFile = context.getProjectFilesystem().getFileForRelativePath(binaryJar);
-      HashCode fileSha1;
+      // TODO(simons): Because binaryJar could be a generated file, it may not be bit-for-bit
+      // identical when generated across machines. Therefore, we should calculate its ABI based on
+      // the contents of its .class files rather than just hashing its contents.
+      String fileSha1;
       try {
-        fileSha1 = Files.hash(jarFile, Hashing.sha1());
+        fileSha1 = context.getProjectFilesystem().computeSha1(binaryJar.resolve());
       } catch (IOException e) {
         context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
         return 1;
       }
 
-      Sha1HashCode abiKey = new Sha1HashCode(fileSha1.toString());
+      Sha1HashCode abiKey = new Sha1HashCode(fileSha1);
       buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
 
       return 0;
@@ -255,12 +251,13 @@ public class PrebuiltJar extends AbstractBuildable
 
   @Override
   public Path getPathToOutputFile() {
-    return getBinaryJar();
+    return getBinaryJar().resolve();
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
+        .setReflectively("binaryJar", binaryJar)
         .setReflectively("sourceJar", sourceJar)
         .setReflectively("gwtJar", gwtJar)
         .set("javadocUrl", javadocUrl);

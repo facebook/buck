@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 
 import java.nio.file.Path;
 
@@ -33,7 +34,7 @@ public class PrebuiltJarBuilder extends AbstractBuilder<PrebuiltJar, PrebuiltJar
   }
 
   public PrebuiltJarBuilder setBinaryJar(Path binaryJar) {
-    arg.binaryJar = binaryJar;
+    arg.binaryJar = new PathSourcePath(binaryJar);
     return this;
   }
 
