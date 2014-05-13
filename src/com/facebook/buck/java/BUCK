@@ -131,6 +131,7 @@ java_library(
   srcs = [
     'JavaFileParser.java',
     'JavaSymbolFinder.java',
+    'JavacErrorParser.java',
   ],
   deps = [
     ':rules',
