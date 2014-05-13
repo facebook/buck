@@ -136,7 +136,7 @@ public class WorkspaceAndProjectGenerator {
             projectFilesystem,
             executionContext,
             projectFilesystem.getPathForRelativePath(Paths.get(basePath)),
-            Paths.get(basePath).getFileName().toString(),
+            xcodeProjectConfig.getProjectName(),
             ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
         generator.createXcodeProjects();
 
