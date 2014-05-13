@@ -38,9 +38,9 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.EnumSet;
 import java.util.Set;
 
-import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -129,12 +129,21 @@ class SchemeGenerator {
 
     // For aesthetic reasons put all non-test build actions before all test build actions.
     for (BuildRule rule : Iterables.concat(nonTestRules, testRules)) {
-      scheme.addBuildAction(
+      EnumSet<XCScheme.BuildActionEntry.BuildFor> buildFor;
+      if (AppleBuildRules.isXcodeTargetTestBuildRuleType(rule.getType())) {
+        buildFor = XCScheme.BuildActionEntry.BuildFor.TEST_ONLY;
+      } else {
+        buildFor = XCScheme.BuildActionEntry.BuildFor.DEFAULT;
+      }
+
+      XCScheme.BuildActionEntry entry = new XCScheme.BuildActionEntry(
           outputDirectory.getParent().relativize(
               targetToProjectPathMap.get(
                   buildRuleToTargetMap.get(rule))
           ).toString(),
-          buildRuleToTargetMap.get(rule).getGlobalID());
+          buildRuleToTargetMap.get(rule).getGlobalID(),
+          buildFor);
+      scheme.addBuildAction(entry);
     }
 
     Path schemeDirectory = outputDirectory.resolve("xcshareddata/xcschemes");
@@ -145,35 +154,6 @@ class SchemeGenerator {
       projectFilesystem.writeContentsToPath(outputStream.toString(), schemePath);
     }
     return schemePath;
-  }
-
-  /**
-   * Generate a scheme from the given rules.
-   *
-   * The rules are topologically sorted based on the dependencies in the BuildRule keys.
-   */
-  public static XCScheme createScheme(
-      PartialGraph partialGraph,
-      Path projectPath,
-      final Map<BuildRule, PBXTarget> ruleToTargetMap) {
-
-    List<BuildRule> orderedBuildRules = TopologicalSort.sort(
-        partialGraph.getDependencyGraph(),
-        new Predicate<BuildRule>() {
-          @Override
-          public boolean apply(@Nullable BuildRule input) {
-            return ruleToTargetMap.containsKey(input);
-          }
-        });
-
-    XCScheme scheme = new XCScheme("Scheme");
-    for (BuildRule rule : orderedBuildRules) {
-      scheme.addBuildAction(
-          projectPath.getFileName().toString(),
-          ruleToTargetMap.get(rule).getGlobalID());
-    }
-
-    return scheme;
   }
 
   private static void serializeScheme(XCScheme scheme, OutputStream stream) {
@@ -206,11 +186,18 @@ class SchemeGenerator {
     for (XCScheme.BuildActionEntry entry : scheme.getBuildAction()) {
       Element entryElem = doc.createElement("BuildActionEntry");
       buildActionEntriesElem.appendChild(entryElem);
-      entryElem.setAttribute("buildForRunning", "YES");
-      entryElem.setAttribute("buildForTesting", "YES");
-      entryElem.setAttribute("buildForProfiling", "YES");
-      entryElem.setAttribute("buildForArchiving", "YES");
-      entryElem.setAttribute("buildForAnalyzing", "YES");
+
+      EnumSet<XCScheme.BuildActionEntry.BuildFor> buildFor = entry.getBuildFor();
+      boolean buildForRunning = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.RUNNING);
+      entryElem.setAttribute("buildForRunning", buildForRunning ? "YES" : "NO");
+      boolean buildForTesting = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.TESTING);
+      entryElem.setAttribute("buildForTesting", buildForTesting ? "YES" : "NO");
+      boolean buildForProfiling = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.PROFILING);
+      entryElem.setAttribute("buildForProfiling", buildForProfiling ? "YES" : "NO");
+      boolean buildForArchiving = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.ARCHIVING);
+      entryElem.setAttribute("buildForArchiving", buildForArchiving ? "YES" : "NO");
+      boolean buildForAnalyzing = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.ANALYZING);
+      entryElem.setAttribute("buildForAnalyzing", buildForAnalyzing ? "YES" : "NO");
       Element refElem = doc.createElement("BuildableReference");
       entryElem.appendChild(refElem);
       refElem.setAttribute("BuildableIdentifier", "primary");

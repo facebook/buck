@@ -16,8 +16,10 @@
 
 package com.facebook.buck.apple.xcode;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import java.util.EnumSet;
 import java.util.List;
 
 public class XCScheme {
@@ -29,8 +31,8 @@ public class XCScheme {
     this.buildAction = Lists.newArrayList();
   }
 
-  public void addBuildAction(String containerRelativePath, String blueprintIdentifier) {
-    this.buildAction.add(new BuildActionEntry(containerRelativePath, blueprintIdentifier));
+  public void addBuildAction(BuildActionEntry entry) {
+    this.buildAction.add(entry);
   }
 
   public String getName() {
@@ -42,12 +44,28 @@ public class XCScheme {
   }
 
   public static class BuildActionEntry {
+    enum BuildFor {
+      RUNNING,
+      TESTING,
+      PROFILING,
+      ARCHIVING,
+      ANALYZING;
+
+      public static final EnumSet<BuildFor> DEFAULT = EnumSet.allOf(BuildFor.class);
+      public static final EnumSet<BuildFor> TEST_ONLY = EnumSet.of(TESTING, ANALYZING);
+    }
+
     private String containerRelativePath;
     private String blueprintIdentifier;
+    private final EnumSet<BuildFor> buildFor;
 
-    public BuildActionEntry(String containerRelativePath, String blueprintIdentifier) {
+    public BuildActionEntry(
+        String containerRelativePath,
+        String blueprintIdentifier,
+        EnumSet<BuildFor> buildFor) {
       this.containerRelativePath = containerRelativePath;
       this.blueprintIdentifier = blueprintIdentifier;
+      this.buildFor = Preconditions.checkNotNull(buildFor);
     }
 
     public String getContainerRelativePath() {
@@ -56,6 +74,10 @@ public class XCScheme {
 
     public String getBlueprintIdentifier() {
       return blueprintIdentifier;
+    }
+
+    public EnumSet<BuildFor> getBuildFor() {
+      return buildFor;
     }
   }
 }
