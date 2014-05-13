@@ -95,6 +95,7 @@ java_library(
     'GenerateCodeCoverageReportStep.java',
     'InstrumentStep.java',
     'JarDirectoryStep.java',
+    'JavacErrorParser.java',
     'JavacInMemoryStep.java',
     'JavacStep.java',
     'JavacStepUtil.java',
@@ -131,7 +132,6 @@ java_library(
   srcs = [
     'JavaFileParser.java',
     'JavaSymbolFinder.java',
-    'JavacErrorParser.java',
   ],
   deps = [
     ':rules',
