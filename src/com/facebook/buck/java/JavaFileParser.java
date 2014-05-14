@@ -28,6 +28,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
@@ -96,6 +97,12 @@ public class JavaFileParser {
 
       @Override
       public boolean visit(EnumDeclaration node) {
+        symbolsBuilder.add(getFullyQualifiedTypeName(node));
+        return true;
+      }
+
+      @Override
+      public boolean visit(AnnotationTypeDeclaration node) {
         symbolsBuilder.add(getFullyQualifiedTypeName(node));
         return true;
       }

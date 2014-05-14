@@ -51,6 +51,9 @@ public class JavaFileParserTest {
       "    public class InnerClass {\n" +
       "    }\n" +
       "  }\n" +
+      "\n" +
+      "  interface InnerInterface {\n" +
+      "  }" +
       "}\n" +
       "\n" +
       "class AnotherOuterClass {\n" +
@@ -69,7 +72,8 @@ public class JavaFileParserTest {
             "com.example.AnotherOuterClass",
             "com.example.Example",
             "com.example.Example.InnerEnum",
-            "com.example.Example.InnerEnum.InnerClass"),
+            "com.example.Example.InnerEnum.InnerClass",
+            "com.example.Example.InnerInterface"),
         symbols);
   }
 
@@ -109,4 +113,21 @@ public class JavaFileParserTest {
         ImmutableSortedSet.of("NoPackageExample"),
         symbols);
   }
+
+  static String javaCodeWithAnnotationType = "public @interface ExampleAnnotationType { }";
+
+  @Test
+  public void testJavaFileParsingWithAnnotationType() throws IOException {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(java7Env);
+
+    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
+        javaCodeWithAnnotationType);
+
+    assertEquals(
+        "JavaFileParser didn't find the symbols we expected.",
+        ImmutableSortedSet.of("ExampleAnnotationType"),
+        symbols);
+  }
+
+
 }
