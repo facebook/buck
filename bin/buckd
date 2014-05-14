@@ -8,7 +8,7 @@ set -e
 SOURCE="${BASH_SOURCE[0]}"
 DIR="$( dirname "$SOURCE" )"
 while [ -h "$SOURCE" ]
-do 
+do
   SOURCE="$(readlink "$SOURCE")"
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
   DIR="$( cd -P "$( dirname "$SOURCE"  )" && pwd )"
@@ -92,7 +92,7 @@ while [ ! -f "$BUCKD_LOG_FILE" ]; do
   fi
 done
 
-sed -n '1 s/.*port \([0-9]*\)\.$/\1/;p;q' > $BUCKD_PORT_FILE \
+sed -n '1 s/.*port \([0-9]*\)\.$/\1/p;q' > $BUCKD_PORT_FILE \
 <(tail -n +1 -f $BUCKD_LOG_FILE)
 
 echo 0 > $BUCKD_RUN_COUNT_FILE
