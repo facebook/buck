@@ -32,6 +32,8 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.Multimap;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -180,12 +182,15 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     throw new RuntimeException("Failed to find BUCK file for " + file.getPath());
   }
 
-  private void printReport(AuditOwnerOptions options, OwnersReport report) {
-
+  private void printReport(AuditOwnerOptions options, OwnersReport report) throws IOException {
     if (options.isFullReportEnabled()) {
       printFullReport(report);
     } else {
-      printOwnersOnlyReport(report);
+      if (options.shouldGenerateJsonOutput()) {
+        printOwnersOnlyJsonReport(report);
+      } else {
+        printOwnersOnlyReport(report);
+      }
     }
   }
 
@@ -197,6 +202,25 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     for (BuildRule rule : sortedRules) {
       console.getStdOut().println(rule.getFullyQualifiedName());
     }
+  }
+
+  /**
+  * Print only targets which were identified as owners in JSON.
+  */
+  @VisibleForTesting
+  void printOwnersOnlyJsonReport(OwnersReport report) throws IOException {
+    final Multimap<String, String> output = TreeMultimap.create();
+
+    Set<BuildRule> sortedRules = report.owners.keySet();
+    for (BuildRule rule : sortedRules) {
+      Set<Path> files = report.owners.get(rule);
+      for (Path input : files) {
+        output.put(input.toString(), rule.getFullyQualifiedName());
+      }
+    }
+
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.writeValue(console.getStdOut(), output.asMap());
   }
 
   /**

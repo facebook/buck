@@ -38,13 +38,13 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidDirectoryResolver;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.base.Joiner;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,11 +56,13 @@ import java.nio.file.Path;
 import java.util.Arrays;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 
 /**
  * Outputs targets that own a specified list of files.
  */
 public class AuditOwnerCommandTest {
+  private TestConsole console;
 
   private static class StubBuildRule implements BuildRule {
 
@@ -210,6 +212,7 @@ public class AuditOwnerCommandTest {
 
   @Before
   public void setUp() {
+    console = new TestConsole();
     buckConfig = new FakeBuckConfig();
   }
 
@@ -220,7 +223,6 @@ public class AuditOwnerCommandTest {
   }
 
   private AuditOwnerCommand createAuditOwnerCommand(ProjectFilesystem filesystem) {
-    Console console = new TestConsole();
     KnownBuildRuleTypes buildRuleTypes =
         DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);
     ArtifactCache artifactCache = new NoopArtifactCache();
@@ -392,6 +394,61 @@ public class AuditOwnerCommandTest {
     assertEquals(inputs.size(), report.owners.size());
     assertTrue(report.owners.containsKey(ownerRule));
     assertEquals(ownerRule.getInputs(), report.owners.get(ownerRule));
+  }
+
+  /**
+   * Verify that owners are correctly detected:
+   *  - one owner, multiple inputs, json output
+   */
+  @Test
+  public void verifyInputsWithOneOwnerAreCorrectlyReportedInJson()
+    throws CmdLineException, IOException {
+    // All files will be directories now
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
+      @Override
+      public File getFileForRelativePath(String pathRelativeToProjectRoot) {
+        return new ExistingFile(getProjectRoot(), pathRelativeToProjectRoot);
+      }
+    };
+
+    // Create inputs
+    String[] args = new String[] {
+        "java/somefolder/badfolder/somefile.java",
+        "java/somefolder/perfect.java",
+        "com/test/subtest/random.java"
+    };
+    ImmutableSortedSet<Path> inputs = MorePaths.asPaths(ImmutableSortedSet.copyOf(args));
+
+    // Build rule that owns all inputs
+    BuildTarget target = new BuildTarget("//base/name", "name");
+    BuildRule ownerRule = new StubBuildRule(target, inputs);
+
+    // Create graph
+    MutableDirectedGraph<BuildRule> mutableGraph = new MutableDirectedGraph<BuildRule>();
+    mutableGraph.addNode(ownerRule);
+
+    DependencyGraph graph = new DependencyGraph(mutableGraph);
+
+    // Create options
+    AuditOwnerOptions options = getOptions(args);
+
+    // Create command under test
+    AuditOwnerCommand command = createAuditOwnerCommand(filesystem);
+
+    // Generate report and verify nonFileInputs are filled in as expected.
+    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(graph, options);
+    command.printOwnersOnlyJsonReport(report);
+
+    String EXPECTED_JSON = Joiner.on("").join(
+      "{",
+      "\"com/test/subtest/random.java\":[\"//base/name:name\"],",
+      "\"java/somefolder/badfolder/somefile.java\":[\"//base/name:name\"],",
+      "\"java/somefolder/perfect.java\":[\"//base/name:name\"]",
+      "}"
+    );
+
+    assertEquals(EXPECTED_JSON, console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
   }
 
   /**
