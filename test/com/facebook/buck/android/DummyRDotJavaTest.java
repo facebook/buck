@@ -75,7 +75,7 @@ public class DummyRDotJavaTest {
     setAndroidResourceBuildOutput(resourceRule2, RESOURCE_RULE2_KEY);
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        ImmutableList.of(
+        ImmutableSet.of(
             (HasAndroidResourceDeps) resourceRule1.getBuildable(),
             (HasAndroidResourceDeps) resourceRule2.getBuildable()),
         BuildTargetFactory.newInstance("//java/base:rule"),
@@ -121,7 +121,7 @@ public class DummyRDotJavaTest {
   @Test
   public void testRDotJavaBinFolder() {
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        ImmutableList.<HasAndroidResourceDeps>of(),
+        ImmutableSet.<HasAndroidResourceDeps>of(),
         BuildTargetFactory.newInstance("//java/com/example:library"),
         JavacOptions.DEFAULTS);
     assertEquals(Paths.get("buck-out/bin/java/com/example/__library_rdotjava_bin__"),
@@ -131,7 +131,7 @@ public class DummyRDotJavaTest {
   @Test
   public void testInitializeFromDisk() {
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        ImmutableList.<HasAndroidResourceDeps>of(),
+        ImmutableSet.<HasAndroidResourceDeps>of(),
         BuildTargetFactory.newInstance("//java/base:rule"),
         JavacOptions.DEFAULTS);
 

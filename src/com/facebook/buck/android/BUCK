@@ -58,6 +58,7 @@ RULES_SRCS = [
   'RobolectricTest.java',
   'UberRDotJava.java',
   'UberRDotJavaUtil.java',
+  'UnsortedAndroidResourceDeps.java',
 ]
 java_library(
   name = 'rules',

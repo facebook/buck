@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.UnsortedAndroidResourceDeps.Callback;
+
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
@@ -36,7 +38,6 @@ import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -119,7 +120,11 @@ public class AndroidBinaryGraphEnhancer {
     ImmutableSortedSet.Builder<BuildRule> enhancedDeps = ImmutableSortedSet.naturalOrder();
     enhancedDeps.addAll(originalDeps);
 
-    ImmutableSortedSet<BuildRule> resourceRules = getAndroidResourcesAsRules();
+    UnsortedAndroidResourceDeps androidResourceDepsForEnhancement =
+        UnsortedAndroidResourceDeps.createFrom(originalDeps,  Optional.<Callback>absent());
+
+    ImmutableSortedSet<BuildRule> resourceRules =
+        getAndroidResourcesAsRules(androidResourceDepsForEnhancement);
 
     BuildTarget buildTargetForFilterResources =
         createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR);
@@ -193,7 +198,7 @@ public class AndroidBinaryGraphEnhancer {
         aaptPackageResources,
         BuildRuleType.AAPT_PACKAGE,
         buildTargetForAapt,
-        getAdditionalAaptDeps(resourceRules));
+        getAdditionalAaptDeps(resourceRules, androidResourceDepsForEnhancement));
     enhancedDeps.add(aaptPackageResourcesBuildRule);
 
     Optional<PreDexMerge> preDexMerge = Optional.absent();
@@ -360,26 +365,21 @@ public class AndroidBinaryGraphEnhancer {
         flavor);
   }
 
-  private ImmutableSortedSet<BuildRule> getAndroidResourcesAsRules() {
+  private ImmutableSortedSet<BuildRule> getAndroidResourcesAsRules(
+      UnsortedAndroidResourceDeps unsortedAndroidResourceDeps) {
     return getTargetsAsRules(
-        FluentIterable.from(androidResourceDepsFinder.getAndroidResources())
-            .transform(
-                new Function<HasAndroidResourceDeps, BuildTarget>() {
-                  @Override
-                  public BuildTarget apply(HasAndroidResourceDeps input) {
-                    return input.getBuildTarget();
-                  }
-                }
-            )
+        FluentIterable.from(unsortedAndroidResourceDeps.getResourceDeps())
+            .transform(HasBuildTarget.TO_TARGET)
             .toList());
   }
 
   private ImmutableSortedSet<BuildRule> getAdditionalAaptDeps(
-      ImmutableSortedSet<BuildRule> resourceRules) {
+      ImmutableSortedSet<BuildRule> resourceRules,
+      UnsortedAndroidResourceDeps unsortedAndroidResourceDeps) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(resourceRules)
         .addAll(getTargetsAsRules(
-                FluentIterable.from(androidResourceDepsFinder.getAssetOnlyAndroidResources())
+                FluentIterable.from(unsortedAndroidResourceDeps.getAssetOnlyDeps())
                     .transform(HasBuildTarget.TO_TARGET)
                     .toList()))
         .addAll(getTargetsAsRules(

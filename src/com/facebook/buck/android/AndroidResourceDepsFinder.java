@@ -18,10 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavaLibrary;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -39,7 +37,6 @@ abstract class AndroidResourceDepsFinder {
    * Currently, allAndroidResources are expensive to compute, so we calculate them lazily.
    */
 
-  private final Supplier<ImmutableList<HasAndroidResourceDeps>> allAndroidResourcesSupplier;
   private final Supplier<ImmutableList<HasAndroidResourceDeps>> androidResourceDepsSupplier;
 
   public AndroidResourceDepsFinder(AndroidTransitiveDependencyGraph transitiveDependencyGraph,
@@ -48,28 +45,11 @@ abstract class AndroidResourceDepsFinder {
     this.buildRulesToExcludeFromDex = Preconditions.checkNotNull(buildRulesToExcludeFromDex);
     this.androidTransitiveDependencies = transitiveDependencyGraph.findDependencies();
 
-    this.allAndroidResourcesSupplier = Suppliers.memoize(
-        new Supplier<ImmutableList<HasAndroidResourceDeps>>() {
-          @Override
-          public ImmutableList<HasAndroidResourceDeps> get() {
-            return findMyAndroidResourceDeps();
-          }
-        });
-
-    // This defined as a Supplier since getAndroidResources() is expected to be called multiple
-    // times.
     this.androidResourceDepsSupplier = Suppliers.memoize(
         new Supplier<ImmutableList<HasAndroidResourceDeps>>() {
           @Override
           public ImmutableList<HasAndroidResourceDeps> get() {
-            return FluentIterable.from(allAndroidResourcesSupplier.get())
-                .filter(new Predicate<HasAndroidResourceDeps>() {
-                          @Override
-                          public boolean apply(HasAndroidResourceDeps input) {
-                            return input.getRes() != null;
-                          }
-                        })
-                .toList();
+            return findMyAndroidResourceDeps();
           }
         });
   }
@@ -84,21 +64,6 @@ abstract class AndroidResourceDepsFinder {
    */
   public ImmutableList<HasAndroidResourceDeps> getAndroidResources() {
     return androidResourceDepsSupplier.get();
-  }
-
-  /**
-   * @return List of android resources that only contain assets, and as a result only need to be
-   *     passed to the {@code aapt} step which packages assets into the APK.
-   */
-  public ImmutableList<HasAndroidResourceDeps> getAssetOnlyAndroidResources() {
-    return FluentIterable.from(allAndroidResourcesSupplier.get())
-        .filter(new Predicate<HasAndroidResourceDeps>() {
-                  @Override
-                  public boolean apply(HasAndroidResourceDeps input) {
-                    return input.getRes() == null && input.getAssets() != null;
-                  }
-                })
-        .toList();
   }
 
   public AndroidResourceDetails getAndroidResourceDetails() {

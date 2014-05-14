@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.UnsortedAndroidResourceDeps.Callback;
+
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -25,7 +27,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildables;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidLibraryGraphEnhancer {
@@ -59,8 +61,9 @@ public class AndroidLibraryGraphEnhancer {
       BuildRuleResolver ruleResolver,
       boolean createBuildableIfEmptyDeps) {
     ImmutableSortedSet<BuildRule> originalDeps = originalBuildRuleParams.getDeps();
-    ImmutableList<HasAndroidResourceDeps> androidResourceDeps =
-        UberRDotJavaUtil.getAndroidResourceDeps(originalDeps);
+    ImmutableSet<HasAndroidResourceDeps> androidResourceDeps =
+        UnsortedAndroidResourceDeps.createFrom(originalDeps, Optional.<Callback>absent())
+            .getResourceDeps();
 
     if (androidResourceDeps.isEmpty() && !createBuildableIfEmptyDeps) {
       return new Result(originalBuildRuleParams, Optional.<DummyRDotJava>absent());

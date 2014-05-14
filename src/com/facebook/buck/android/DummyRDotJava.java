@@ -21,6 +21,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
@@ -40,6 +41,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -71,10 +73,12 @@ public class DummyRDotJava extends AbstractBuildable
   static final String METADATA_KEY_FOR_ABI_KEY = "DUMMY_R_DOT_JAVA_ABI_KEY";
 
   public DummyRDotJava(
-      ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
+      Set<HasAndroidResourceDeps> androidResourceDeps,
       BuildTarget buildTarget,
       JavacOptions javacOptions) {
-    this.androidResourceDeps = Preconditions.checkNotNull(androidResourceDeps);
+    // Sort the input so that we get a stable ABI for the same set of resources.
+    this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
+        .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
