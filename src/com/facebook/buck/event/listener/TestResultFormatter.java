@@ -23,6 +23,7 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
@@ -72,14 +73,20 @@ public class TestResultFormatter {
     }
   }
 
-  public static void reportResultSummary(ImmutableList.Builder<String> addTo,
-                                         TestResultSummary testResult) {
+  public void reportResultSummary(ImmutableList.Builder<String> addTo,
+                                  TestResultSummary testResult) {
     addTo.add(String.format("FAILURE %s: %s",
         testResult.getTestName(),
         testResult.getMessage()));
 
     if (testResult.getStacktrace() != null) {
-      addTo.add(testResult.getStacktrace());
+      for (String line : Splitter.on("\n").split(testResult.getStacktrace())) {
+        if (line.contains(testResult.getTestCaseName())) {
+          addTo.add(ansi.asErrorText(line));
+        } else {
+          addTo.add(line);
+        }
+      }
     }
 
     if (testResult.getStdOut() != null) {

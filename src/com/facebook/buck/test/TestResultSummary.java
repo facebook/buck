@@ -93,6 +93,11 @@ public class TestResultSummary {
     return testName;
   }
 
+  @JsonIgnore
+  public String getTestCaseName() {
+    return testCaseName;
+  }
+
   /**
    * For now "success" means "not failure", which introduces the least surprise for tests that have
    * an assumption violation / failure.  Tests that fall into this category are still considered
