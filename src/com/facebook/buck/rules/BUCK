@@ -36,7 +36,6 @@ java_library(
 java_library(
   name = 'build_rule',
   srcs = [
-    'AbstractBuildRuleBuilder.java',
     'BuildRuleBuilderParams.java',
     'AbstractSourcePath.java',
     'AnnotationProcessingData.java',
@@ -115,8 +114,6 @@ java_library(
     'AbiRule.java',
     'AbstractBuildable.java',
     'AbstractBuildRule.java',
-    'AbstractBuildRuleFactory.java',
-    'AbstractTestRuleFactory.java',
     'AbstractDependencyVisitor.java',
     'ArtifactCacheConnectEvent.java',
     'ArtifactCacheEvent.java',
@@ -142,7 +139,6 @@ java_library(
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',
     'InstallableApk.java',
-    'LabelsAttributeBuilder.java',
     'LoggingArtifactCacheDecorator.java',
     'MultiArtifactCache.java',
     'NoopArtifactCache.java',
