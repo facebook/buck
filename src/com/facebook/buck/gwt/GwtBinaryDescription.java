@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class GwtBinaryDescription implements Description<GwtBinaryDescription.Arg> {
@@ -37,6 +38,9 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
   /** Default value for {@link Arg#draftCompile}. */
   private static final Boolean DEFAULT_DRAFT_COMPILE = Boolean.FALSE;
 
+  /** Default value for {@link Arg#strict}. */
+  private static final Boolean DEFAULT_STRICT = Boolean.FALSE;
+
   /**
    * This value is taken from GWT's source code: http://bit.ly/1nZtmMv
    */
@@ -46,6 +50,12 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     public Optional<ImmutableSortedSet<String>> modules;
     public Optional<ImmutableSortedSet<BuildRule>> moduleDeps;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
+
+    /**
+     * In practice, these may be values such as {@code -Dgwt.normalizeTimestamps=true} or
+     * {@code -Xmx512m}.
+     */
+    public Optional<ImmutableList<String>> vmArgs;
 
     /** This will be passed to the GWT Compiler's {@code -style} flag. */
     // TODO(simons): t4058780 Introduce an EnumTypeCoercer so we can make this Optional<Style>.
@@ -59,6 +69,15 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
 
     /** This will be passed to the GWT Compiler's {@code -localWorkers} flag. */
     public Optional<Integer> localWorkers;
+
+    /** If {@code true}, the GWT Compiler's {@code -strict} flag will be set. */
+    public Optional<Boolean> strict;
+
+    /**
+     * In practice, these may be values such as {@code -XenableClosureCompiler},
+     * {@code -XdisableClassMetadata}, {@code -XdisableCastChecking}, or {@code -XfragmentMerge}.
+     */
+    public Optional<ImmutableList<String>> experimentalArgs;
   }
 
   @Override
@@ -76,10 +95,13 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     return new GwtBinary(
         params.getBuildTarget(),
         args.modules.get(),
+        args.vmArgs.get(),
         GwtBinary.Style.valueOf(args.style.or(DEFAULT_STYLE)),
         args.draftCompile.or(DEFAULT_DRAFT_COMPILE),
         args.optimize.or(DEFAULT_OPTIMIZE),
         args.localWorkers.or(DEFAULT_NUM_LOCAL_WORKERS),
+        args.strict.or(DEFAULT_STRICT),
+        args.experimentalArgs.get(),
         /* originalDeps */ args.deps.get(),
         args.moduleDeps.get());
   }

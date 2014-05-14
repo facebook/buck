@@ -16,7 +16,6 @@
 
 package com.facebook.buck.gwt;
 
-import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -32,13 +31,17 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -65,10 +68,13 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
 
   private final Path outputFile;
   private final ImmutableSortedSet<String> modules;
+  private final ImmutableList<String> vmArgs;
   private final Style style;
   private final boolean draftCompile;
   private final int optimize;
   private final int localWorkers;
+  private final boolean strict;
+  private final ImmutableList<String> experimentalArgs;
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final ImmutableSortedSet<BuildRule> moduleDeps;
 
@@ -91,10 +97,13 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
   GwtBinary(
       BuildTarget buildTarget,
       ImmutableSortedSet<String> modules,
+      List<String> vmArgs,
       Style style,
       boolean draftCompile,
       int optimize,
       int localWorkers,
+      boolean strict,
+      List<String> experimentalArgs,
       ImmutableSortedSet<BuildRule> originalDeps,
       ImmutableSortedSet<BuildRule> moduleDeps) {
     this.outputFile = BuildTargets.getGenPath(
@@ -105,6 +114,7 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
         !modules.isEmpty(),
         "Must specify at least one module for %s.",
         buildTarget);
+    this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.style = Preconditions.checkNotNull(style);
     this.draftCompile = draftCompile;
 
@@ -116,6 +126,8 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
         localWorkers);
     this.localWorkers = localWorkers;
 
+    this.strict = strict;
+    this.experimentalArgs = ImmutableList.copyOf(experimentalArgs);
     this.originalDeps = Preconditions.checkNotNull(originalDeps);
     this.moduleDeps = Preconditions.checkNotNull(moduleDeps);
   }
@@ -182,24 +194,14 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
+    // Create a clean directory where the .war file will be written.
     Path workingDirectory = getPathToOutputFile().getParent();
     steps.add(new MakeCleanDirectoryStep(workingDirectory));
 
-    Path tempWarFolder = workingDirectory.resolve("tmp");
-    ImmutableList.Builder<String> javaArgsBuilder = ImmutableList.builder();
-    javaArgsBuilder.add(
-        "java",
-        "-classpath", Joiner.on(":").join(getClasspathEntries()),
-        GWT_COMPILER_CLASS,
-        "-war", tempWarFolder.toString(),
-        "-style", style.name(),
-        "-optimize", String.valueOf(optimize),
-        "-localWorkers", String.valueOf(localWorkers));
-    if (draftCompile) {
-      javaArgsBuilder.add("-draftCompile");
-    }
-    javaArgsBuilder.addAll(modules);
-    final ImmutableList<String> javaArgs = javaArgsBuilder.build();
+    // Write the deploy files into a separate directory so that the generated .war is smaller.
+    final Path deployDirectory = workingDirectory.resolve("deploy");
+    steps.add(new MkdirStep(deployDirectory));
+
     Step javaStep = new ShellStep() {
       @Override
       public String getShortName() {
@@ -208,19 +210,35 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
 
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+        ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
+        ImmutableList.Builder<String> javaArgsBuilder = ImmutableList.builder();
+        javaArgsBuilder.add("java");
+        javaArgsBuilder.addAll(vmArgs);
+        javaArgsBuilder.add(
+            "-classpath", Joiner.on(File.pathSeparator).join(
+                Iterables.transform(getClasspathEntries(), projectFilesystem.getAbsolutifier())),
+            GWT_COMPILER_CLASS,
+            "-war", projectFilesystem.resolve(getPathToOutputFile()).toString(),
+            "-style", style.name(),
+            "-optimize", String.valueOf(optimize),
+            "-localWorkers", String.valueOf(localWorkers),
+            "-deploy", projectFilesystem.resolve(deployDirectory).toString());
+        if (draftCompile) {
+          javaArgsBuilder.add("-draftCompile");
+        }
+        if (strict) {
+          javaArgsBuilder.add("-strict");
+        }
+        javaArgsBuilder.addAll(experimentalArgs);
+        javaArgsBuilder.addAll(modules);
+        final ImmutableList<String> javaArgs = javaArgsBuilder.build();
+
         return javaArgs;
       }
     };
     steps.add(javaStep);
 
-    // TODO(mbolin): When a Buildable can support multiple outputs, consider skipping the step of
-    // zipping this up and just do buildableContext.recordArtifact(tempWarFolder). I think it is
-    // common to develop using an unpacked WAR, in which case this step is wasteful.
-    steps.add(new JarDirectoryStep(
-        getPathToOutputFile(),
-        ImmutableSet.of(tempWarFolder),
-        /* mainClass */ null,
-        /* manifestFile */ null));
     buildableContext.recordArtifact(getPathToOutputFile());
 
     return steps.build();
@@ -231,10 +249,13 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
     return builder
         .set("moduleDeps", moduleDeps)
         .set("modules", modules)
+        .set("vmArgs", vmArgs)
         .set("style", style.name())
         .set("draftCompile", draftCompile)
         .set("optimize", optimize)
-        .set("localWorkers", localWorkers);
+        .set("localWorkers", localWorkers)
+        .set("strict", strict)
+        .set("experimentalArgs", experimentalArgs);
   }
 
   /**
