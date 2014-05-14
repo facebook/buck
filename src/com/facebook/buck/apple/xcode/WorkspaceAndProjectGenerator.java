@@ -93,6 +93,7 @@ public class WorkspaceAndProjectGenerator {
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
         partialGraph,
+        actualTargetRule,
         workspaceName,
         outputDirectory.resolve(workspaceName + ".xcworkspace"));
 

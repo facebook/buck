@@ -27,6 +27,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -65,6 +66,7 @@ import javax.xml.transform.stream.StreamResult;
 class SchemeGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final PartialGraph partialGraph;
+  private final BuildRule primaryRule;
   private final String schemeName;
   private final Path outputDirectory;
   private final ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder;
@@ -73,10 +75,12 @@ class SchemeGenerator {
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
       PartialGraph partialGraph,
+      BuildRule primaryRule,
       String schemeName,
       Path outputDirectory) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
+    this.primaryRule = Preconditions.checkNotNull(primaryRule);
     this.schemeName = Preconditions.checkNotNull(schemeName);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     buildRuleToTargetMapBuilder = ImmutableMap.builder();
@@ -100,8 +104,6 @@ class SchemeGenerator {
   }
 
   public Path writeScheme() throws IOException {
-    XCScheme scheme = new XCScheme(schemeName);
-
     final ImmutableMap<BuildRule, PBXTarget> buildRuleToTargetMap =
         buildRuleToTargetMapBuilder.build();
     ImmutableMap<PBXTarget, Path> targetToProjectPathMap =
@@ -118,6 +120,8 @@ class SchemeGenerator {
 
     Set<BuildRule> nonTestRules = Sets.newLinkedHashSet();
     Set<BuildRule> testRules = Sets.newLinkedHashSet();
+    Map<BuildRule, XCScheme.BuildableReference>
+        buildRuleToBuildableReferenceMap = Maps.newHashMap();
 
     for (BuildRule rule : orderedBuildRules) {
       if (AppleBuildRules.isXcodeTargetTestBuildRuleType(rule.getType())) {
@@ -125,7 +129,17 @@ class SchemeGenerator {
       } else {
         nonTestRules.add(rule);
       }
+
+      XCScheme.BuildableReference buildableReference = new XCScheme.BuildableReference(
+          outputDirectory.getParent().relativize(
+              targetToProjectPathMap.get(
+                  buildRuleToTargetMap.get(rule))
+          ).toString(),
+          buildRuleToTargetMap.get(rule).getGlobalID());
+      buildRuleToBuildableReferenceMap.put(rule, buildableReference);
     }
+
+    XCScheme.BuildAction buildAction = new XCScheme.BuildAction();
 
     // For aesthetic reasons put all non-test build actions before all test build actions.
     for (BuildRule rule : Iterables.concat(nonTestRules, testRules)) {
@@ -136,15 +150,32 @@ class SchemeGenerator {
         buildFor = XCScheme.BuildActionEntry.BuildFor.DEFAULT;
       }
 
+      XCScheme.BuildableReference buildableReference = buildRuleToBuildableReferenceMap.get(rule);
       XCScheme.BuildActionEntry entry = new XCScheme.BuildActionEntry(
-          outputDirectory.getParent().relativize(
-              targetToProjectPathMap.get(
-                  buildRuleToTargetMap.get(rule))
-          ).toString(),
-          buildRuleToTargetMap.get(rule).getGlobalID(),
+          buildableReference,
           buildFor);
-      scheme.addBuildAction(entry);
+      buildAction.addBuildAction(entry);
     }
+
+    XCScheme.TestAction testAction = new XCScheme.TestAction();
+    for (BuildRule rule : testRules) {
+      XCScheme.BuildableReference buildableReference = buildRuleToBuildableReferenceMap.get(rule);
+      XCScheme.TestableReference testableReference =
+          new XCScheme.TestableReference(buildableReference);
+      testAction.addTestableReference(testableReference);
+    }
+
+    XCScheme.BuildableReference primaryBuildableReference =
+        buildRuleToBuildableReferenceMap.get(primaryRule);
+    XCScheme.LaunchAction launchAction = new XCScheme.LaunchAction(primaryBuildableReference);
+    XCScheme.ProfileAction profileAction = new XCScheme.ProfileAction(primaryBuildableReference);
+
+    XCScheme scheme = new XCScheme(
+        schemeName,
+        buildAction,
+        testAction,
+        launchAction,
+        profileAction);
 
     Path schemeDirectory = outputDirectory.resolve("xcshareddata/xcschemes");
     projectFilesystem.mkdirs(schemeDirectory);
@@ -154,6 +185,91 @@ class SchemeGenerator {
       projectFilesystem.writeContentsToPath(outputStream.toString(), schemePath);
     }
     return schemePath;
+  }
+
+  public static Element serializeBuildableReference(
+      Document doc,
+      XCScheme.BuildableReference buildableReference) {
+    Element refElem = doc.createElement("BuildableReference");
+    refElem.setAttribute("BuildableIdentifier", "primary");
+    refElem.setAttribute("BlueprintIdentifier", buildableReference.getBlueprintIdentifier());
+    String referencedContainer = "container:" + buildableReference.getContainerRelativePath();
+    refElem.setAttribute("referencedContainer", referencedContainer);
+    return refElem;
+  }
+
+  public static Element serializeBuildAction(Document doc, XCScheme.BuildAction buildAction) {
+    Element buildActionElem = doc.createElement("BuildAction");
+    buildActionElem.setAttribute("parallelizeBuildables", "NO");
+    buildActionElem.setAttribute("buildImplicitDependencies", "NO");
+
+    Element buildActionEntriesElem = doc.createElement("BuildActionEntries");
+    buildActionElem.appendChild(buildActionEntriesElem);
+
+    for (XCScheme.BuildActionEntry entry : buildAction.getBuildActionEntries()) {
+      Element entryElem = doc.createElement("BuildActionEntry");
+      buildActionEntriesElem.appendChild(entryElem);
+
+      EnumSet<XCScheme.BuildActionEntry.BuildFor> buildFor = entry.getBuildFor();
+      boolean buildForRunning = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.RUNNING);
+      entryElem.setAttribute("buildForRunning", buildForRunning ? "YES" : "NO");
+      boolean buildForTesting = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.TESTING);
+      entryElem.setAttribute("buildForTesting", buildForTesting ? "YES" : "NO");
+      boolean buildForProfiling = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.PROFILING);
+      entryElem.setAttribute("buildForProfiling", buildForProfiling ? "YES" : "NO");
+      boolean buildForArchiving = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.ARCHIVING);
+      entryElem.setAttribute("buildForArchiving", buildForArchiving ? "YES" : "NO");
+      boolean buildForAnalyzing = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.ANALYZING);
+      entryElem.setAttribute("buildForAnalyzing", buildForAnalyzing ? "YES" : "NO");
+
+      Element refElem = serializeBuildableReference(doc, entry.getBuildableReference());
+      entryElem.appendChild(refElem);
+    }
+
+    return buildActionElem;
+  }
+
+  public static Element serializeTestAction(Document doc, XCScheme.TestAction testAction) {
+    Element testActionElem = doc.createElement("TestAction");
+    testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "YES");
+
+    Element testablesElem = doc.createElement("Testables");
+    testActionElem.appendChild(testablesElem);
+
+    for (XCScheme.TestableReference testable : testAction.getTestables()) {
+      Element testableElem = doc.createElement("TestableReference");
+      testablesElem.appendChild(testableElem);
+      testableElem.setAttribute("skipped", "NO");
+
+      Element refElem = serializeBuildableReference(doc, testable.getBuildableReference());
+      testableElem.appendChild(refElem);
+    }
+
+    return testActionElem;
+  }
+
+  public static Element serializeLaunchAction(Document doc, XCScheme.LaunchAction launchAction) {
+    Element launchActionElem = doc.createElement("LaunchAction");
+
+    Element productRunnableElem = doc.createElement("BuildableProductRunnable");
+    launchActionElem.appendChild(productRunnableElem);
+
+    Element refElem = serializeBuildableReference(doc, launchAction.getBuildableReference());
+    productRunnableElem.appendChild(refElem);
+
+    return launchActionElem;
+  }
+
+  public static Element serializeProfileAction(Document doc, XCScheme.ProfileAction profileAction) {
+    Element profileActionElem = doc.createElement("ProfileAction");
+
+    Element productRunnableElem = doc.createElement("BuildableProductRunnable");
+    profileActionElem.appendChild(productRunnableElem);
+
+    Element refElem = serializeBuildableReference(doc, profileAction.getBuildableReference());
+    productRunnableElem.appendChild(refElem);
+
+    return profileActionElem;
   }
 
   private static void serializeScheme(XCScheme scheme, OutputStream stream) {
@@ -174,36 +290,17 @@ class SchemeGenerator {
     rootElem.setAttribute("LastUpgradeVersion", "0500");
     rootElem.setAttribute("version", "1.7");
 
-    // serialize the scheme
-    Element buildActionElem = doc.createElement("BuildAction");
+    Element buildActionElem = serializeBuildAction(doc, scheme.getBuildAction());
     rootElem.appendChild(buildActionElem);
-    buildActionElem.setAttribute("parallelizeBuildables", "NO");
-    buildActionElem.setAttribute("buildImplicitDependencies", "NO");
 
-    Element buildActionEntriesElem = doc.createElement("BuildActionEntries");
-    buildActionElem.appendChild(buildActionEntriesElem);
+    Element testActionElem = serializeTestAction(doc, scheme.getTestAction());
+    rootElem.appendChild(testActionElem);
 
-    for (XCScheme.BuildActionEntry entry : scheme.getBuildAction()) {
-      Element entryElem = doc.createElement("BuildActionEntry");
-      buildActionEntriesElem.appendChild(entryElem);
+    Element launchActionElem = serializeLaunchAction(doc, scheme.getLaunchAction());
+    rootElem.appendChild(launchActionElem);
 
-      EnumSet<XCScheme.BuildActionEntry.BuildFor> buildFor = entry.getBuildFor();
-      boolean buildForRunning = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.RUNNING);
-      entryElem.setAttribute("buildForRunning", buildForRunning ? "YES" : "NO");
-      boolean buildForTesting = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.TESTING);
-      entryElem.setAttribute("buildForTesting", buildForTesting ? "YES" : "NO");
-      boolean buildForProfiling = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.PROFILING);
-      entryElem.setAttribute("buildForProfiling", buildForProfiling ? "YES" : "NO");
-      boolean buildForArchiving = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.ARCHIVING);
-      entryElem.setAttribute("buildForArchiving", buildForArchiving ? "YES" : "NO");
-      boolean buildForAnalyzing = buildFor.contains(XCScheme.BuildActionEntry.BuildFor.ANALYZING);
-      entryElem.setAttribute("buildForAnalyzing", buildForAnalyzing ? "YES" : "NO");
-      Element refElem = doc.createElement("BuildableReference");
-      entryElem.appendChild(refElem);
-      refElem.setAttribute("BuildableIdentifier", "primary");
-      refElem.setAttribute("BlueprintIdentifier", entry.getBlueprintIdentifier());
-      refElem.setAttribute("referencedContainer", "container:" + entry.getContainerRelativePath());
-    }
+    Element profileActionElem = serializeProfileAction(doc, scheme.getProfileAction());
+    rootElem.appendChild(profileActionElem);
 
     // write out
 

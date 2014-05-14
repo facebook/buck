@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.model.BuildTarget;
@@ -56,11 +57,13 @@ public class SchemeGeneratorTest {
 
   private ProjectFilesystem projectFilesystem;
   private IosLibraryDescription iosLibraryDescription;
+  private IosTestDescription iosTestDescription;
 
   @Before
   public void setUp() throws IOException {
     projectFilesystem = new FakeProjectFilesystem();
     iosLibraryDescription = new IosLibraryDescription();
+    iosTestDescription = new IosTestDescription();
   }
 
   @Test
@@ -92,6 +95,7 @@ public class SchemeGeneratorTest {
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
         partialGraph,
+        rootRule,
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"));
 
@@ -125,7 +129,7 @@ public class SchemeGeneratorTest {
     XPathFactory xpathFactory = XPathFactory.newInstance();
     XPath xpath = xpathFactory.newXPath();
     XPathExpression expr =
-        xpath.compile("//BuildableReference/@BlueprintIdentifier");
+        xpath.compile("//BuildAction//BuildableReference/@BlueprintIdentifier");
     NodeList nodes = (NodeList) expr.evaluate(scheme, XPathConstants.NODESET);
 
     List<String> expectedOrdering1 = ImmutableList.of(
@@ -144,5 +148,86 @@ public class SchemeGeneratorTest {
       actualOrdering.add(nodes.item(i).getNodeValue());
     }
     assertThat(actualOrdering, either(equalTo(expectedOrdering1)).or(equalTo(expectedOrdering2)));
+  }
+
+  @Test
+  public void schemeIncludesAllExpectedActions() throws Exception {
+    BuildRule rootRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "root"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+    BuildRule testRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "test"),
+        ImmutableSortedSet.of(rootRule),
+        iosTestDescription);
+
+    PartialGraph partialGraph = createPartialGraphFromBuildRules(
+        ImmutableSet.<BuildRule>of(
+            rootRule,
+            testRule));
+
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        partialGraph,
+        rootRule,
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"));
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    rootTarget.setGlobalID("rootGID");
+    schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
+    PBXTarget testTarget = new PBXNativeTarget("testRule");
+    testTarget.setGlobalID("testGID");
+    schemeGenerator.addRuleToTargetMap(testRule, testTarget);
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    schemeGenerator.addTargetToProjectPathMap(rootTarget, pbxprojectPath);
+    schemeGenerator.addTargetToProjectPathMap(testTarget, pbxprojectPath);
+
+    Path schemePath = schemeGenerator.writeScheme();
+    String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
+    System.out.println(schemeXml);
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+
+    XPath buildActionXpath = xpathFactory.newXPath();
+    XPathExpression buildActionExpr =
+        buildActionXpath.compile("//BuildAction//BuildableReference/@BlueprintIdentifier");
+    NodeList buildActionNodes = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
+
+    List<String> expectedOrdering = ImmutableList.of(
+        "rootGID",
+        "testGID");
+
+    List<String> actualOrdering = Lists.newArrayList();
+    for (int i = 0; i < buildActionNodes.getLength(); i++) {
+      actualOrdering.add(buildActionNodes.item(i).getNodeValue());
+    }
+    assertThat(actualOrdering, equalTo(expectedOrdering));
+
+    XPath testActionXpath = xpathFactory.newXPath();
+    XPathExpression testActionExpr =
+        testActionXpath.compile("//TestAction//BuildableReference/@BlueprintIdentifier");
+    String testActionBlueprintIdentifier =
+        (String) testActionExpr.evaluate(scheme, XPathConstants.STRING);
+    assertThat(testActionBlueprintIdentifier, equalTo("testGID"));
+
+    XPath launchActionXpath = xpathFactory.newXPath();
+    XPathExpression launchActionExpr =
+        launchActionXpath.compile("//LaunchAction//BuildableReference/@BlueprintIdentifier");
+    String launchActionBlueprintIdentifier =
+        (String) launchActionExpr.evaluate(scheme, XPathConstants.STRING);
+    assertThat(launchActionBlueprintIdentifier, equalTo("rootGID"));
+
+    XPath profileActionXpath = xpathFactory.newXPath();
+    XPathExpression profileActionExpr =
+        profileActionXpath.compile("//ProfileAction//BuildableReference/@BlueprintIdentifier");
+    String profileActionBlueprintIdentifier =
+        (String) profileActionExpr.evaluate(scheme, XPathConstants.STRING);
+    assertThat(profileActionBlueprintIdentifier, equalTo("rootGID"));
   }
 }
