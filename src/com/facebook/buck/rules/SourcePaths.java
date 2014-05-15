@@ -90,14 +90,8 @@ public class SourcePaths {
   }
 
   public static Collection<Path> toPaths(Iterable<? extends SourcePath> sourcePaths) {
-    Function<SourcePath, Path> transform = new Function<SourcePath, Path>() {
-      @Override
-      public Path apply(SourcePath sourcePath) {
-        return sourcePath.resolve();
-      }
-    };
     // Maintain ordering and duplication if necessary.
-    return FluentIterable.from(sourcePaths).transform(transform).toList();
+    return FluentIterable.from(sourcePaths).transform(TO_PATH).toList();
   }
 
   public static ImmutableSortedSet<SourcePath> toSourcePathsSortedByNaturalOrder(
