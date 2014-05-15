@@ -25,6 +25,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Maps;
@@ -67,6 +68,7 @@ class SchemeGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final PartialGraph partialGraph;
   private final BuildRule primaryRule;
+  private final ImmutableSet<BuildRule> includedRules;
   private final String schemeName;
   private final Path outputDirectory;
   private final ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder;
@@ -76,11 +78,13 @@ class SchemeGenerator {
       ProjectFilesystem projectFilesystem,
       PartialGraph partialGraph,
       BuildRule primaryRule,
+      ImmutableSet<BuildRule> includedRules,
       String schemeName,
       Path outputDirectory) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.primaryRule = Preconditions.checkNotNull(primaryRule);
+    this.includedRules = Preconditions.checkNotNull(includedRules);
     this.schemeName = Preconditions.checkNotNull(schemeName);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     buildRuleToTargetMapBuilder = ImmutableMap.builder();
@@ -114,7 +118,7 @@ class SchemeGenerator {
         new Predicate<BuildRule>() {
           @Override
           public boolean apply(BuildRule input) {
-            return buildRuleToTargetMap.containsKey(input);
+            return buildRuleToTargetMap.containsKey(input) && includedRules.contains(input);
           }
         });
 

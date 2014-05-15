@@ -96,6 +96,7 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         rootRule,
+        ImmutableSet.of(rootRule, leftRule, rightRule, childRule),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"));
 
@@ -170,6 +171,7 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         rootRule,
+        ImmutableSet.of(rootRule, testRule),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"));
 

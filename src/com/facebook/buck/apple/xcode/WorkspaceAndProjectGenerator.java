@@ -90,18 +90,19 @@ public class WorkspaceAndProjectGenerator {
         workspaceName,
         outputDirectory);
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        partialGraph,
-        actualTargetRule,
-        workspaceName,
-        outputDirectory.resolve(workspaceName + ".xcworkspace"));
-
     Iterable<BuildRule> allRules = Iterables.concat(
         RuleDependencyFinder.getAllRules(
             partialGraph,
             ImmutableList.of(workspaceBuildable.getSrcTarget().getBuildTarget())),
         ImmutableList.of(workspaceTargetRule));
+
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        partialGraph,
+        actualTargetRule,
+        ImmutableSet.copyOf(allRules),
+        workspaceName,
+        outputDirectory.resolve(workspaceName + ".xcworkspace"));
 
     Multimap<String, BuildRule> buildRulesByTargetBasePath =
         BuildRules.buildRulesByTargetBasePath(allRules);
