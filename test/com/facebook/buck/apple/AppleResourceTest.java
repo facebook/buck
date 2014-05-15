@@ -42,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Unit tests for {@link AppleResource}.
@@ -59,6 +60,7 @@ public class AppleResourceTest {
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of();
     args.files = ImmutableSortedSet.of();
+    args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
@@ -83,6 +85,7 @@ public class AppleResourceTest {
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of();
     args.files = ImmutableSortedSet.<SourcePath>of(new TestSourcePath("image.png"));
+    args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
@@ -108,7 +111,7 @@ public class AppleResourceTest {
   }
 
   /**
-   * Tests an osx_resource rule with no file or directory resources.
+   * Tests an osx_resource rule with no file, directory, or variant resources.
    */
   @Test
   public void testOsxResourceRuleWithNoResources() throws IOException {
@@ -118,6 +121,7 @@ public class AppleResourceTest {
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of();
     args.files = ImmutableSortedSet.of();
+    args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
@@ -142,6 +146,7 @@ public class AppleResourceTest {
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of();
     args.files = ImmutableSortedSet.<SourcePath>of(new TestSourcePath("image.png"));
+    args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
@@ -177,6 +182,7 @@ public class AppleResourceTest {
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of(Paths.get("MyLibrary.bundle"));
     args.files = ImmutableSortedSet.of();
+    args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
@@ -203,7 +209,7 @@ public class AppleResourceTest {
   }
 
   /**
-   * Tests the inputs of an ios_resource rule with a directory and files.
+   * Tests the inputs of an ios_resource rule with a directory, files, and variants.
    */
   @Test
   public void testInputsForRuleWithDirectoryAndFiles() throws IOException {
@@ -213,6 +219,12 @@ public class AppleResourceTest {
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of(Paths.get("MyLibrary.bundle"));
     args.files = ImmutableSortedSet.<SourcePath>of(new TestSourcePath("Resources/MyImage.jpg"));
+
+    Map<String, SourcePath> variant =
+        ImmutableMap.<String, SourcePath>of("en", new TestSourcePath("Resources/Real.jpg"));
+    Map<String, Map<String, SourcePath>> variants =
+        ImmutableMap.of("Virtual.jpg", variant);
+    args.variants = Optional.of(variants);
 
     AppleResource appleResource = new AppleResource(
         // Pretend that MyLibrary.bundle contains two files: an image and a sound file.
@@ -232,7 +244,8 @@ public class AppleResourceTest {
         ImmutableList.of(
             Paths.get("MyLibrary.bundle/BundleImage.jpg"),
             Paths.get("MyLibrary.bundle/BundleSound.wav"),
-            Paths.get("Resources/MyImage.jpg")),
+            Paths.get("Resources/MyImage.jpg"),
+            Paths.get("Resources/Real.jpg")),
           appleResource.getInputsToCompareToOutput());
   }
 
@@ -249,6 +262,7 @@ public class AppleResourceTest {
     args.files = ImmutableSortedSet.<SourcePath>of(
         new TestSourcePath("Resources/MySound.wav"),
         new TestSourcePath("Resources/MyImage.jpg"));
+    args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),

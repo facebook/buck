@@ -32,12 +32,14 @@ import com.facebook.buck.util.DirectoryTraverser;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Copies the image, sound, NIB/XIB, and other resources
@@ -49,6 +51,12 @@ import java.util.List;
  *   name = 'res',
  *   dirs = ['MyLibrary.bundle'],
  *   files = glob(['Resources/**']),
+ *   variants = {
+ *     'Resources/Localizable.strings' : {
+ *       'en' : 'Resources/en.lproj/Localizable.strings',
+ *       'fr' : 'Resources/fr.lproj/Localizable.strings',
+ *     },
+ *   },
  * )
  * </pre>
  */
@@ -57,6 +65,7 @@ public class AppleResource extends AbstractBuildable {
   private final DirectoryTraverser directoryTraverser;
   private final ImmutableSortedSet<Path> dirs;
   private final ImmutableSortedSet<SourcePath> files;
+  private final ImmutableMap<String, ImmutableMap<String, SourcePath>> variants;
   private final Path outputDirectory;
 
   AppleResource(
@@ -67,6 +76,19 @@ public class AppleResource extends AbstractBuildable {
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
     this.dirs = ImmutableSortedSet.copyOf(args.dirs);
     this.files = ImmutableSortedSet.copyOf(args.files);
+
+    if (args.variants.isPresent()) {
+      Map<String, Map<String, SourcePath>> variants = args.variants.get();
+      ImmutableMap.Builder<String, ImmutableMap<String, SourcePath>> variantsBuilder =
+          ImmutableMap.builder();
+      for (String path : variants.keySet()) {
+        variantsBuilder.put(path, ImmutableMap.copyOf(variants.get(path)));
+      }
+      this.variants = variantsBuilder.build();
+    } else {
+      this.variants = ImmutableMap.of();
+    }
+
     Preconditions.checkNotNull(outputPathSubdirectory);
     BuildTarget target = params.getBuildTarget();
     Path baseOutputDirectory = Paths.get(
@@ -94,6 +116,13 @@ public class AppleResource extends AbstractBuildable {
     return files;
   }
 
+  /**
+   * Returns a map of variant files to evaluate for this resource rule.
+   */
+  public ImmutableMap<String, ImmutableMap<String, SourcePath>> getVariants() {
+    return variants;
+  }
+
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
     ImmutableSortedSet.Builder<Path> inputsToConsiderForCachingPurposes = ImmutableSortedSet
@@ -104,6 +133,12 @@ public class AppleResource extends AbstractBuildable {
           dir,
           inputsToConsiderForCachingPurposes,
           directoryTraverser);
+    }
+
+    for (String virtualPathName : variants.keySet()) {
+      Map<String, SourcePath> variant = variants.get(virtualPathName);
+      inputsToConsiderForCachingPurposes.addAll(
+          SourcePaths.filterInputsToCompareToOutput(variant.values()));
     }
 
     inputsToConsiderForCachingPurposes.addAll(SourcePaths.filterInputsToCompareToOutput(files));
@@ -135,6 +170,8 @@ public class AppleResource extends AbstractBuildable {
     for (SourcePath file : files) {
       steps.add(CopyStep.forFile(file.resolve(), outputDirectory));
     }
+
+    // TODO(grp): Support copying variant resources like Xcode.
 
     return steps.build();
   }

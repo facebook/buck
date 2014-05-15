@@ -54,6 +54,7 @@ public class PBXGroup extends PBXReference {
   private final List<PBXReference> children;
 
   private final LoadingCache<String, PBXGroup> childGroupsByName;
+  private final LoadingCache<String, PBXVariantGroup> childVariantGroupsByName;
   private final LoadingCache<SourceTreePath, PBXFileReference> fileReferencesBySourceTreePath;
 
   public PBXGroup(String name, String path, SourceTree sourceTree) {
@@ -67,6 +68,16 @@ public class PBXGroup extends PBXReference {
           @Override
           public PBXGroup load(String key) throws Exception {
             PBXGroup group = new PBXGroup(key, null, SourceTree.GROUP);
+            children.add(group);
+            return group;
+          }
+        });
+
+    childVariantGroupsByName = CacheBuilder.newBuilder().build(
+        new CacheLoader<String, PBXVariantGroup>() {
+          @Override
+          public PBXVariantGroup load(String key) throws Exception {
+            PBXVariantGroup group = new PBXVariantGroup(key, null, SourceTree.GROUP);
             children.add(group);
             return group;
           }
@@ -88,6 +99,10 @@ public class PBXGroup extends PBXReference {
 
   public PBXGroup getOrCreateChildGroupByName(String name) {
     return childGroupsByName.getUnchecked(name);
+  }
+
+  public PBXVariantGroup getOrCreateChildVariantGroupByName(String name) {
+    return childVariantGroupsByName.getUnchecked(name);
   }
 
   public PBXFileReference getOrCreateFileReferenceBySourceTreePath(SourceTreePath sourceTreePath) {

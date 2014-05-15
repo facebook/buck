@@ -55,6 +55,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
@@ -393,7 +394,7 @@ public class ProjectGenerator {
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
     // -- configurations
-    Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
+    Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
     setTargetBuildConfigurations(
         rule.getBuildTarget(),
         target,
@@ -523,7 +524,7 @@ public class ProjectGenerator {
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
     // -- configurations
-    Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
+    Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
     setTargetBuildConfigurations(
         rule.getBuildTarget(),
         target,
@@ -642,7 +643,7 @@ public class ProjectGenerator {
               configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
                   new SourceTreePath(
                       PBXReference.SourceTree.SOURCE_ROOT,
-                      this.repoRootRelativeToOutputDirectory.resolve(
+                      repoRootRelativeToOutputDirectory.resolve(
                           layers.targetLevelConfigFile.get()).normalize()));
           outputConfiguration.setBaseConfigurationReference(fileReference);
 
@@ -681,7 +682,7 @@ public class ProjectGenerator {
             configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.SOURCE_ROOT,
-                    this.repoRootRelativeToOutputDirectory.resolve(configurationFilePath)));
+                    repoRootRelativeToOutputDirectory.resolve(configurationFilePath)));
         XCBuildConfiguration outputConfiguration =
             target.getBuildConfigurationList().getBuildConfigurationsByName()
                 .getUnchecked(configuration.getName());
@@ -810,7 +811,7 @@ public class ProjectGenerator {
     PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
-            this.repoRootRelativeToOutputDirectory.resolve(path)));
+            repoRootRelativeToOutputDirectory.resolve(path)));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     sourcesBuildPhase.getFiles().add(buildFile);
     String customFlags = sourceFlags.get(sourcePath);
@@ -830,7 +831,7 @@ public class ProjectGenerator {
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
-            this.repoRootRelativeToOutputDirectory.resolve(path)));
+            repoRootRelativeToOutputDirectory.resolve(path)));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     NSDictionary settings = new NSDictionary();
     String headerFlags = sourceFlags.get(headerPath);
@@ -847,17 +848,46 @@ public class ProjectGenerator {
   }
 
   private void addResourcesBuildPhase(
-      PBXNativeTarget target, PBXGroup targetGroup, Iterable<Path> resources) {
+      PBXNativeTarget target,
+      PBXGroup targetGroup,
+      Iterable<AppleResource> resources) {
     PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
     PBXBuildPhase phase = new PBXResourcesBuildPhase();
     target.getBuildPhases().add(phase);
-    for (Path resource : resources) {
-      PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-          new SourceTreePath(
+    for (AppleResource resource : resources) {
+      Iterable<Path> paths = Iterables.concat(
+          SourcePaths.toPaths(resource.getFiles()),
+          resource.getDirs());
+      for (Path path : paths) {
+        PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SOURCE_ROOT,
+                repoRootRelativeToOutputDirectory.resolve(path)));
+        PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+        phase.getFiles().add(buildFile);
+      }
+
+      for (String virtualOutputPath : resource.getVariants().keySet()) {
+        ImmutableMap<String, SourcePath> contents = resource.getVariants().get(virtualOutputPath);
+
+        String variantName = Paths.get(virtualOutputPath).getFileName().toString();
+        PBXVariantGroup variantGroup =
+            resourcesGroup.getOrCreateChildVariantGroupByName(variantName);
+
+        PBXBuildFile buildFile = new PBXBuildFile(variantGroup);
+        phase.getFiles().add(buildFile);
+
+        for (String childVirtualName : contents.keySet()) {
+          Path childPath = contents.get(childVirtualName).resolve();
+          SourceTreePath sourceTreePath = new SourceTreePath(
               PBXReference.SourceTree.SOURCE_ROOT,
-              this.repoRootRelativeToOutputDirectory.resolve(resource)));
-      PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-      phase.getFiles().add(buildFile);
+              repoRootRelativeToOutputDirectory.resolve(childPath));
+
+          variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
+              childVirtualName,
+              sourceTreePath);
+        }
+      }
     }
   }
 
@@ -881,7 +911,7 @@ public class ProjectGenerator {
         resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
-                this.repoRootRelativeToOutputDirectory.resolve(dir)));
+                repoRootRelativeToOutputDirectory.resolve(dir)));
 
         Path pathRelativeToProjectRoot = outputDirectory.relativize(dir);
         scriptArguments.add("$PROJECT_DIR/" + pathRelativeToProjectRoot.toString());
@@ -1171,7 +1201,7 @@ public class ProjectGenerator {
   private Path relativizeBuckRelativePathToGeneratedProject(BuildTarget buildTarget, String path) {
     Path originalProjectPath = projectFilesystem.getPathForRelativePath(
         Paths.get(buildTarget.getBasePathWithSlash()));
-    return this.repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path);
+    return repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path);
   }
 
   private void collectRecursiveFrameworkDependencies(
@@ -1239,25 +1269,27 @@ public class ProjectGenerator {
    * Collect resources from recursive dependencies.
    *
    * @param rule  Build rule at the tip of the traversal.
-   * @return  Paths to resource files and folders, children of folder are not included.
+   * @return The recursive resource buildables.
    */
-  private Iterable<Path> collectRecursiveResources(BuildRule rule, BuildRuleType resourceRuleType) {
+  private Iterable<AppleResource> collectRecursiveResources(
+      BuildRule rule,
+      BuildRuleType resourceRuleType) {
     Iterable<BuildRule> resourceRules = getRecursiveRuleDependenciesOfType(rule, resourceRuleType);
-    ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
+    ImmutableSet.Builder<AppleResource> resources = ImmutableSet.builder();
     for (BuildRule resourceRule : resourceRules) {
       AppleResource resource =
           (AppleResource) Preconditions.checkNotNull(resourceRule.getBuildable());
-      paths.addAll(resource.getDirs());
-      paths.addAll(SourcePaths.toPaths(resource.getFiles()));
+      resources.add(resource);
     }
-    return paths.build();
+    return resources.build();
   }
 
   /**
    * Collect asset catalogs from recursive dependencies.
    */
   private Iterable<AppleAssetCatalog> collectRecursiveAssetCatalogs(BuildRule rule) {
-    Iterable<BuildRule> assetCatalogRules = getRecursiveRuleDependenciesOfType(rule,
+    Iterable<BuildRule> assetCatalogRules = getRecursiveRuleDependenciesOfType(
+        rule,
         AppleAssetCatalogDescription.TYPE);
     ImmutableSet.Builder<AppleAssetCatalog> assetCatalogs = ImmutableSet.builder();
     for (BuildRule assetCatalogRule : assetCatalogRules) {

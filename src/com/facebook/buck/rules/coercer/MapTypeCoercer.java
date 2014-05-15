@@ -21,7 +21,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -38,7 +37,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   @SuppressWarnings("unchecked")
   @Override
   public Class<ImmutableMap<K, V>> getOutputClass() {
-    return (Class<ImmutableMap<K, V>>) (Class<?>) ImmutableSortedSet.class;
+    return (Class<ImmutableMap<K, V>>) (Class<?>) ImmutableMap.class;
   }
 
   @Override

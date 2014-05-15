@@ -19,8 +19,11 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.SourcePath;
 
+import com.google.common.base.Optional;
+
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.Map;
 
 /**
  * Arguments common to {@link IosResourceDescription} and
@@ -29,4 +32,5 @@ import java.util.Set;
 public class AppleResourceDescriptionArg implements ConstructorArg {
   public Set<Path> dirs;
   public Set<SourcePath> files;
+  public Optional<Map<String, Map<String, SourcePath>>> variants;
 }
