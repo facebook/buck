@@ -44,7 +44,9 @@ if command -v watchman &> /dev/null; then
 else
     echo >&2 "Watchman not found, please install when using buckd."
     echo >&2 "See https://github.com/facebook/watchman for details."
-    echo >&2 "(brew install --HEAD watchman on OS X)"
+    if [[ "$OSTYPE" =~ ^darwin ]]; then
+      echo >&2 "(brew install --HEAD watchman on OS X)"
+    fi
     # Bail if watchman isn't installed as we know java's
     # FileSystemWatcher will take too long to process events.
     exit 0
