@@ -108,7 +108,7 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
       ImmutableSortedSet<BuildRule> moduleDeps) {
     this.outputFile = BuildTargets.getGenPath(
         buildTarget,
-        "__gwt_binary_%s__/" + buildTarget.getShortName() + ".war");
+        "__gwt_binary_%s__/" + buildTarget.getShortName() + ".zip");
     this.modules = Preconditions.checkNotNull(modules);
     Preconditions.checkArgument(
         !modules.isEmpty(),
@@ -194,11 +194,11 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    // Create a clean directory where the .war file will be written.
+    // Create a clean directory where the .zip file will be written.
     Path workingDirectory = getPathToOutputFile().getParent();
     steps.add(new MakeCleanDirectoryStep(workingDirectory));
 
-    // Write the deploy files into a separate directory so that the generated .war is smaller.
+    // Write the deploy files into a separate directory so that the generated .zip is smaller.
     final Path deployDirectory = workingDirectory.resolve("deploy");
     steps.add(new MkdirStep(deployDirectory));
 
@@ -260,7 +260,7 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
   }
 
   /**
-   * @return The {@code .war} file produced by this rule.
+   * @return The {@code .zip} file produced by this rule.
    */
   @Override
   public Path getPathToOutputFile() {
