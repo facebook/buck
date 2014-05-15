@@ -58,6 +58,7 @@ import javax.annotation.Nullable;
  */
 public abstract class JavacStep implements Step {
 
+  public static final String SRC_ZIP = ".src.zip";
   // TODO(user) s/protected/get...()/g
   protected final Path outputDirectory;
 

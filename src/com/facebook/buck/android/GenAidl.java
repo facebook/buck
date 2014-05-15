@@ -16,9 +16,12 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.java.JavacStep.SRC_ZIP;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
+import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -26,6 +29,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RecordArtifactsInDirectoryStep;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
@@ -36,8 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 /**
  * Buildable for generating a .java file from an .aidl file. Example:
@@ -66,11 +68,15 @@ public class GenAidl extends AbstractBuildable {
   private final BuildTarget buildTarget;
   private final Path aidlFilePath;
   private final String importPath;
+  private final Path output;
+  private final Path genPath;
 
   GenAidl(BuildTarget buildTarget, Path aidlFilePath, String importPath) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
     this.importPath = Preconditions.checkNotNull(importPath);
+    this.genPath = BuildTargets.getGenPath(buildTarget, "%s");
+    this.output = genPath.resolve(String.format("lib%s%S", buildTarget.getShortName(), SRC_ZIP));
   }
 
   @Override
@@ -79,10 +85,8 @@ public class GenAidl extends AbstractBuildable {
   }
 
   @Override
-  @Nullable
   public Path getPathToOutputFile() {
-    // A gen_aidl() does not have a "primary output" at this time.
-    return null;
+    return output;
   }
 
   @Override
@@ -102,25 +106,41 @@ public class GenAidl extends AbstractBuildable {
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    Path outputDirectory = Paths.get(
-        BuckConstant.BIN_DIR,
-        buildTarget.getBasePath(),
-        "." + buildTarget.getShortName() + ".aidl");
-    commands.add(new MkdirStep(outputDirectory));
+    commands.add(new MakeCleanDirectoryStep(genPath));
 
-    AidlStep command = new AidlStep(aidlFilePath,
+    Path outputDirectory = BuildTargets.getBinPath(buildTarget, "__%s.aidl");
+    commands.add(new MakeCleanDirectoryStep(outputDirectory));
+
+    AidlStep command = new AidlStep(
+        buildTarget,
+        aidlFilePath,
         ImmutableSet.of(importPath),
         outputDirectory);
     commands.add(command);
 
     // Files must ultimately be written to GEN_DIR to be used with genfile().
     Path genDirectory = Paths.get(BuckConstant.GEN_DIR, importPath);
+
+    // Warn the user if the genDirectory is not under the output directory.
+    if (!importPath.startsWith(buildTarget.getBasePath())) {
+      // TODO(simons): Make this fatal. Give people some time to clean up their rules.
+      context.logError("%s, gen_aidl import path (%s) should be a child of %s",
+          buildTarget, importPath, buildTarget.getBasePath());
+    }
+
     commands.add(new MkdirStep(genDirectory));
 
     commands.add(new RecordArtifactsInDirectoryStep(
         buildableContext,
         outputDirectory,
         genDirectory));
+
+    commands.add(new JarDirectoryStep(
+            output,
+            ImmutableSet.of(outputDirectory),
+            /* main class */ null,
+            /* manifest */ null));
+    buildableContext.recordArtifact(output);
 
     return commands.build();
   }

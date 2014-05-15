@@ -22,11 +22,9 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Hint;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.File;
 import java.nio.file.Path;
 
 public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
@@ -45,19 +43,14 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    // import_path is an anomaly: it is a path that is relative to the project root rather than
-    // relative to the build file directory.
-    File importPath = new File(args.importPath);
-    if (!importPath.isDirectory()) {
-      throw new RuntimeException("Directory does not exist: " + importPath.getAbsolutePath());
-    }
-
     return new GenAidl(params.getBuildTarget(), args.aidl, args.importPath);
   }
 
   public static class Arg implements ConstructorArg {
     public Path aidl;
-    @Hint(name = "import_path")
+
+    // import_path is an anomaly: it is a path that is relative to the project root rather than
+    // relative to the build file directory.
     public String importPath;
 
     public Optional<ImmutableSortedSet<BuildRule>> deps;

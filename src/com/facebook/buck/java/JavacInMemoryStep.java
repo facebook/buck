@@ -201,7 +201,7 @@ public class JavacInMemoryStep extends JavacStep {
         Iterable<? extends JavaFileObject> javaFileObjects = fileManager.getJavaFileObjects(
             absolutifier.apply(path).toFile());
         compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
-      } else if (path.toString().endsWith(".src.zip")) {
+      } else if (path.toString().endsWith(SRC_ZIP)) {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
         for (Enumeration<? extends ZipEntry> entries = zipFile.entries();

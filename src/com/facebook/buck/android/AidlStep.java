@@ -16,9 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
@@ -26,18 +28,22 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 
 public class AidlStep extends ShellStep {
 
+  private final BuildTarget target;
   private final Path aidlFilePath;
   private final Set<String> importDirectoryPaths;
   private final Path destinationDirectory;
 
   public AidlStep(
+      BuildTarget target,
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory) {
+    this.target = Preconditions.checkNotNull(target);
     this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
     this.importDirectoryPaths = ImmutableSet.copyOf(importDirectoryPaths);
     this.destinationDirectory = Preconditions.checkNotNull(destinationDirectory);
@@ -51,6 +57,7 @@ public class AidlStep extends ShellStep {
     // mode.
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    verifyImportPaths(projectFilesystem, importDirectoryPaths);
     args.add(androidPlatformTarget.getAidlExecutable().toString());
 
     // For some reason, all of the flags to aidl do not permit a space between the flag name and
@@ -64,7 +71,8 @@ public class AidlStep extends ShellStep {
 
     // search path for import statements
     for (String importDirectoryPath : importDirectoryPaths) {
-      args.add("-I" + importDirectoryPath);
+      Path resovled = projectFilesystem.resolve(Paths.get(importDirectoryPath));
+      args.add("-I" + resovled);
     }
 
     // base output folder for generated files
@@ -73,6 +81,14 @@ public class AidlStep extends ShellStep {
     args.add(aidlFilePath.toString());
 
     return args.build();
+  }
+
+  private void verifyImportPaths(ProjectFilesystem filesystem, Set<String> importDirectoryPaths) {
+    for (String path : importDirectoryPaths) {
+      if (!filesystem.exists(Paths.get(path))) {
+        throw new HumanReadableException("%s: Cannot find import path: %s", target, path);
+      }
+    }
   }
 
   @Override

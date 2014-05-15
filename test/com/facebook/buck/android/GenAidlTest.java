@@ -32,7 +32,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -46,9 +46,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-/**
- * Unit test for {@link com.facebook.buck.android.GenAidl}.
- */
 public class GenAidlTest {
 
   @Test
@@ -56,7 +53,7 @@ public class GenAidlTest {
     BuildContext context = null;
 
     Path pathToAidl = Paths.get("java/com/example/base/IWhateverService.aidl");
-    String importPath = "java/com/example/base/";
+    String importPath = "java/com/example/base";
 
     BuildTarget target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
     Buildable genAidlRule = new GenAidl(target, pathToAidl, importPath);
@@ -84,19 +81,23 @@ public class GenAidlTest {
           public Path resolve(Path path) {
             return path;
           }
-        })
-        .times(2);
+
+          @Override
+          public boolean exists(Path pathRelativeToProjectRoot) {
+            return true;
+          }
+        });
     replay(androidPlatformTarget, executionContext);
 
     Path outputDirectory = Paths.get(
         BuckConstant.BIN_DIR,
-        "/java/com/example/base/.IWhateverService.aidl");
-    MkdirStep mkdirStep = (MkdirStep) steps.get(0);
+        "/java/com/example/base/__IWhateverService.aidl");
+    MakeCleanDirectoryStep mkdirStep = (MakeCleanDirectoryStep) steps.get(1);
     assertEquals("gen_aidl() should make a directory at " + outputDirectory,
         outputDirectory,
-        mkdirStep.getPath(executionContext));
+        mkdirStep.getPath());
 
-    ShellStep aidlStep = (ShellStep) steps.get(1);
+    ShellStep aidlStep = (ShellStep) steps.get(2);
     assertEquals(
         "gen_aidl() should use the aidl binary to write .java files.",
         String.format("%s -b -p%s -I%s -o%s %s",
@@ -107,7 +108,7 @@ public class GenAidlTest {
             pathToAidl),
         aidlStep.getDescription(executionContext));
 
-    assertEquals(4, steps.size());
+    assertEquals(6, steps.size());
 
     verify(androidPlatformTarget, executionContext);
   }

@@ -182,7 +182,7 @@ public class ExternalJavacStep extends JavacStep {
 
       if (path.toString().endsWith(".java")) {
         sources.add(path);
-      } else if (path.toString().endsWith(".src.zip")) {
+      } else if (path.toString().endsWith(SRC_ZIP)) {
         if (!workingDirectory.isPresent()) {
           throw new HumanReadableException(
               "Attempting to compile target %s which specified a .src.zip input %s but no " +
