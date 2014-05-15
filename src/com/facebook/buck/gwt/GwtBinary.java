@@ -214,6 +214,7 @@ public class GwtBinary extends AbstractBuildable implements HasDepsOverride {
 
         ImmutableList.Builder<String> javaArgsBuilder = ImmutableList.builder();
         javaArgsBuilder.add("java");
+        javaArgsBuilder.add("-Dgwt.normalizeTimestamps=true");
         javaArgsBuilder.addAll(vmArgs);
         javaArgsBuilder.add(
             "-classpath", Joiner.on(File.pathSeparator).join(

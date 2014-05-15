@@ -52,8 +52,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     public Optional<ImmutableSortedSet<BuildRule>> deps;
 
     /**
-     * In practice, these may be values such as {@code -Dgwt.normalizeTimestamps=true} or
-     * {@code -Xmx512m}.
+     * In practice, these may be values such as {@code -Xmx512m}.
      */
     public Optional<ImmutableList<String>> vmArgs;
 
