@@ -76,7 +76,7 @@ public class GenAidl extends AbstractBuildable {
     this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
     this.importPath = Preconditions.checkNotNull(importPath);
     this.genPath = BuildTargets.getGenPath(buildTarget, "%s");
-    this.output = genPath.resolve(String.format("lib%s%S", buildTarget.getShortName(), SRC_ZIP));
+    this.output = genPath.resolve(String.format("lib%s%s", buildTarget.getShortName(), SRC_ZIP));
   }
 
   @Override

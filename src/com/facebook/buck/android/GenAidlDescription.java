@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.google.common.base.Optional;
@@ -42,7 +41,7 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
   }
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Arg args) {
+  public GenAidl createBuildable(BuildRuleParams params, Arg args) {
     return new GenAidl(params.getBuildTarget(), args.aidl, args.importPath);
   }
 
