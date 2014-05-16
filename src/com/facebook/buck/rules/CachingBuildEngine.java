@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
@@ -221,8 +222,16 @@ public class CachingBuildEngine implements BuildEngine {
             }
 
             private void recordBuildRuleFailure(BuildResult result) {
-              // TODO(mbolin): Delete all genfiles and metadata, as they are not guaranteed to be
-              // valid at this point?
+              // TODO(mbolin): Delete all files produced by the rule, as they are not guaranteed to
+              // be valid at this point?
+              try {
+                onDiskBuildInfo.deleteExistingMetadata();
+              } catch (IOException e) {
+                eventBus.post(ThrowableLogEvent.create(
+                    e,
+                    "Error when deleting metadata for %s.",
+                    rule));
+              }
 
               // Note that startOfBuildWasRecordedOnTheEventBus will be false if onSuccess() was
               // never invoked.
@@ -342,6 +351,7 @@ public class CachingBuildEngine implements BuildEngine {
     try {
       executeCommandsNowThatDepsAreBuilt(rule, context, onDiskBuildInfo, buildInfoRecorder);
     } catch (Exception e) {
+      // If the build fails, delete all of the on disk metadata.
       return new BuildResult(e);
     }
 

@@ -69,4 +69,6 @@ public interface OnDiskBuildInfo {
    */
   // TODO(task #3321496): Delete this part of the interface after zipping is fixed.
   public void makeOutputFileExecutable(Buildable buildable) throws IOException;
+
+  public void deleteExistingMetadata() throws IOException;
 }

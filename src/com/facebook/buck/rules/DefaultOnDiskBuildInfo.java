@@ -112,4 +112,9 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     File file = projectFilesystem.getFileForRelativePath(buildable.getPathToOutputFile());
     file.setExecutable(true /* executable */, false /* ownerOnly */);
   }
+
+  @Override
+  public void deleteExistingMetadata() throws IOException {
+    projectFilesystem.rmdir(metadataDirectory);
+  }
 }
