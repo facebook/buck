@@ -103,6 +103,13 @@ public class ProcessExecutor {
       // killed the process or a step failed causing us to kill all other running steps. Neither of
       // these is an exceptional situation.
       return new Result(1, /* stdout */ null, /* stderr */ null);
+    } finally {
+      process.destroy();
+      try {
+        process.waitFor();
+      } catch (InterruptedException e) {
+        // Swallow the exception and continue/return.
+      }
     }
 
     String stdoutText = getDataIfNotPrinted(stdOutToWriteTo, shouldPrintStdOut);
