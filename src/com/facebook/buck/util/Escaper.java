@@ -49,7 +49,9 @@ public final class Escaper {
    * @return possibly quoted string
    */
   public static String escapeAsBashString(String str) {
-    if (BASH_SPECIAL_CHARS.matchesNoneOf(str)) {
+    if ("".equals(str)) {
+      return "''";
+    } else if (BASH_SPECIAL_CHARS.matchesNoneOf(str)) {
       return str;
     } else {
       return new StringBuilder("'").append(str.replace("'", "'\\''")).append("'").toString();

@@ -44,6 +44,7 @@ public class EscaperTest {
     assertEquals("'$a'", Escaper.escapeAsBashString("$a"));
     assertEquals("'a\nb'", Escaper.escapeAsBashString("a\nb"));
     assertEquals("'a\tb'", Escaper.escapeAsBashString("a\tb"));
+    assertEquals("''", Escaper.escapeAsBashString(""));
   }
 
   @Test
