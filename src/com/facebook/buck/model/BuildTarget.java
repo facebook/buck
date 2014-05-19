@@ -21,7 +21,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -39,7 +38,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   public static final String BUILD_TARGET_PREFIX = "//";
 
-  private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[a-zA-Z_]+");
+  private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z_]+");
 
   private final String baseName;
   private final String shortName;
@@ -64,6 +63,14 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
         "baseName must start with // but was %s",
         baseName);
 
+    // There's a chance that the (String, String) constructor was called, but a flavour was
+    // specified as part of the short name. Handle that case.
+    int hashIndex = shortName.lastIndexOf("#");
+    if (hashIndex != -1 && !flavor.isPresent()) {
+      flavor = Optional.of(shortName.substring(hashIndex + 1));
+      shortName = shortName.substring(0, hashIndex);
+    }
+
     Preconditions.checkArgument(!shortName.contains("#"),
         "Build target name cannot contain '#' but was: %s.",
         shortName);
@@ -72,14 +79,14 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
       if (!VALID_FLAVOR_PATTERN.matcher(flavorName).matches()) {
         throw new IllegalArgumentException("Invalid flavor: " + flavorName);
       }
-      shortName += "#" + flavorName;
     }
 
     // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
     this.baseName = baseName.replace("\\", "/");
     this.shortName = shortName;
     this.flavor = flavor;
-    this.fullyQualifiedName = baseName + ":" + shortName;
+    this.fullyQualifiedName =
+        baseName + ":" + shortName + (flavor.isPresent() ? "#" + flavor.get() : "");
   }
 
   /**
@@ -117,20 +124,20 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   /**
    * If this build target were //third_party/java/guava:guava-latest, then this would return
-   * "guava-latest".
+   * "guava-latest". Note that the flavor of the target is included here.
    */
-  @JsonProperty("shortName")
   public String getShortName() {
+    return shortName + (flavor.isPresent() ? "#" + flavor.get() : "");
+  }
+
+  @JsonProperty("shortName")
+  public String getShortNameOnly() {
     return shortName;
   }
 
-  @VisibleForTesting
-  String getShortNameWithoutFlavor() {
-    if (!isFlavored()) {
-      return shortName;
-    } else {
-      return shortName.substring(0, shortName.length() - flavor.get().length() - 1);
-    }
+  @JsonProperty("flavor")
+  public String getFlavor() {
+    return flavor.or("");
   }
 
   /**

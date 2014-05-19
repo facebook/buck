@@ -84,11 +84,11 @@ public class EventSerializationTest {
   @Test
   public void testParseEventFinished() throws IOException {
     ParseEvent.Finished event = ParseEvent.finished(ImmutableList.<BuildTarget>of(
-        new BuildTarget("//base", "short")), Optional.<DependencyGraph>absent());
+        new BuildTarget("//base", "short", "flv")), Optional.<DependencyGraph>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildTargets\":[{\"baseName\":\"//base\",\"shortName\":\"short\"}]," +
+        "\"buildTargets\":[{\"baseName\":\"//base\",\"shortName\":\"short\",\"flavor\":\"flv\"}]," +
         "\"type\":\"ParseFinished\"}", message);
   }
 
@@ -99,7 +99,7 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildTargets\":[{\"baseName\":\"//base\",\"shortName\":\"short\"}]," +
+        "\"buildTargets\":[{\"baseName\":\"//base\",\"shortName\":\"short\",\"flavor\":\"\"}]," +
         "\"type\":\"BuildStarted\"}", message);
   }
 
@@ -110,8 +110,8 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildTargets\":[{\"baseName\":\"//base\",\"shortName\":\"short\"}],\"exitCode\":0," +
-        "\"type\":\"BuildFinished\"}", message);
+        "\"buildTargets\":[{\"baseName\":\"//base\",\"shortName\":\"short\",\"flavor\":\"\"}]" +
+        ",\"exitCode\":0,\"type\":\"BuildFinished\"}", message);
   }
 
   @Test
