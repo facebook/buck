@@ -173,6 +173,10 @@ public class ProjectGenerator {
   public static final String PATH_TO_ASSET_CATALOG_BUILD_PHASE_SCRIPT = System.getProperty(
       "buck.path_to_compile_asset_catalogs_build_phase_sh",
       "src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh");
+  public static final String PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT =
+      System.getProperty(
+          "buck.path_override_for_asset_catalog_build_phase",
+          null);
 
   private final PartialGraph partialGraph;
   private final ProjectFilesystem projectFilesystem;
@@ -219,15 +223,21 @@ public class ProjectGenerator {
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.projectName = Preconditions.checkNotNull(projectName);
     this.options = ImmutableSet.copyOf(options);
-    this.placedAssetCatalogBuildPhaseScript =
-        this.projectFilesystem.getPathForRelativePath(
-            BuckConstant.BIN_PATH.resolve(
-                "xcode-scripts/compile_asset_catalogs_build_phase.sh"));
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.repoRootRelativeToOutputDirectory =
         this.outputDirectory.normalize().toAbsolutePath().relativize(
             projectFilesystem.getRootPath().toAbsolutePath());
+
+    if (PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT != null) {
+      this.placedAssetCatalogBuildPhaseScript =
+          this.repoRootRelativeToOutputDirectory.resolve(
+              PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT);
+    } else {
+      this.placedAssetCatalogBuildPhaseScript = this.projectFilesystem.getPathForRelativePath(
+          BuckConstant.BIN_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh"));
+    }
+
     this.project = new PBXProject(projectName);
 
     this.buildRuleToGeneratedTargetBuilder = ImmutableMap.builder();
