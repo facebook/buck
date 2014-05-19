@@ -87,35 +87,19 @@ public final class Ansi {
   }
 
   public String asErrorText(String text) {
-    if (isAnsiTerminal) {
-      return ERROR_SEQUENCE + text + RESET;
-    } else {
-      return text;
-    }
+    return wrapWithColor(ERROR_SEQUENCE, text);
   }
 
   public String asWarningText(String text) {
-    if (isAnsiTerminal) {
-      return WARNING_SEQUENCE + text + RESET;
-    } else {
-      return text;
-    }
+    return wrapWithColor(WARNING_SEQUENCE, text);
   }
 
   public String asSuccessText(String text) {
-    if (isAnsiTerminal) {
-      return SUCCESS_SEQUENCE + text + RESET;
-    } else {
-      return text;
-    }
+    return wrapWithColor(SUCCESS_SEQUENCE, text);
   }
 
   public String asSubtleText(String text) {
-    if (isAnsiTerminal) {
-      return SUBTLE_SEQUENCE + text + RESET;
-    } else {
-      return text;
-    }
+    return wrapWithColor(SUBTLE_SEQUENCE, text);
   }
 
   public String getHighlightedWarningSequence() {
@@ -127,27 +111,15 @@ public final class Ansi {
   }
 
   public String asHighlightedFailureText(String text) {
-    if (isAnsiTerminal) {
-      return HIGHLIGHTED_ERROR_SEQUENCE + text + RESET;
-    } else {
-      return text;
-    }
+    return wrapWithColor(HIGHLIGHTED_ERROR_SEQUENCE, text);
   }
 
   public String asHighlightedWarningText(String text) {
-    if (isAnsiTerminal) {
-      return HIGHLIGHTED_WARNING_SEQUENCE + text + RESET;
-    } else {
-      return text;
-    }
+    return wrapWithColor(HIGHLIGHTED_WARNING_SEQUENCE, text);
   }
 
   public String asHighlightedSuccessText(String text) {
-    if (isAnsiTerminal) {
-      return HIGHLIGHTED_SUCCESS_SEQUENCE + text + RESET;
-    } else {
-      return text;
-    }
+    return wrapWithColor(HIGHLIGHTED_SUCCESS_SEQUENCE, text);
   }
 
   public String asNoWrap(String text) {
@@ -227,4 +199,29 @@ public final class Ansi {
   }
 
   public static enum SeverityLevel { OK, WARNING, ERROR }
+
+  private String wrapWithColor(String color, String text) {
+    if (!isAnsiTerminal) {
+      return text;
+    }
+    // Skip tabs, because they don't like being prefixed with color.
+    int firstNonTab = indexOfFirstNonTab(text);
+    if (firstNonTab == -1) {
+      return color + text + RESET;
+    }
+    return text.substring(0, firstNonTab) + color + text.substring(firstNonTab) + RESET;
+  }
+
+  /**
+   * @return the index of the first character that's not a tab, or -1 if none is found.
+   */
+  private static int indexOfFirstNonTab(String s) {
+    final int length = s.length();
+    for (int i = 0; i < length; i++) {
+      if (s.charAt(i) != '\t') {
+        return i;
+      }
+    }
+    return -1;
+  }
 }
