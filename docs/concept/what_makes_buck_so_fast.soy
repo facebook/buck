@@ -10,6 +10,8 @@
 
 <h2>A build rule knows all of the inputs that can affect its output</h2>
 
+<p>
+
 Buck is designed so that anything that can affect the output of a build rule must be specified
 as an input to the build rule: hidden state is not allowed. (This is also important for ensuring that
 results are consistent and reproducible for all developers.) Therefore, we can be sure that once a
@@ -30,6 +32,8 @@ Therefore, breaking modules into finer dependencies creates opportunities for in
 parallelism, improving throughput.
 
 <h2>Buck can store the outputs it generates in a cache</h2>
+
+<p>
 
 A build rule knows all of the inputs that can affect its output, and therefore it can combine that
 information into a hash that represents the total input. This hash is used as
@@ -69,36 +73,25 @@ build</code> should not build anything locally, as all outputs should be able to
 This works because the cache key computed by Buck when run on the CI system should match the key computed by Buck
 on your local machine.
 
-<h2>A Java rule computes its ABI when it is built</h2>
-
-Oftentimes, a developer will modify Java code in a way that does not affect its interface. For example, adding
-or removing private methods, as well as modifying the implementation of existing methods (regardless of their visibility),
-does not change the <a href="http://en.wikipedia.org/wiki/Application_binary_interface">ABI</a> of a Java file.
+<h2>If a Java library's API doesn't change, code that uses the library doesn't need to be rebuilt</h2>
 
 <p>
 
-When Buck builds a {call buck.java_library /} rule, it also computes its ABI<sup><a href="#footnote-abi">1</a></sup>.
+Oftentimes, a developer will modify Java code in a way that does not affect its externally-visible
+API. For example, adding or removing private methods, as well as modifying the implementation of
+existing methods (regardless of their visibility), does not change the API of a Java file.
+
+<p>
+
+When Buck builds a {call buck.java_library /} rule, it also computes its API.
 Normally, modifying a private method
 in a {call buck.java_library /} would cause it and all rules that depend on it to be rebuilt because the change in
 cache keys would propagate up the DAG. However, Buck has special logic for a {call buck.java_library /} where,
-if the <code>.java</code> input files have not changed since the previous build, and the ABI for each of its Java
+if the <code>.java</code> input files have not changed since the previous build, and the API for each of its Java
 dependencies has not changed since the previous build, then the {call buck.java_library /} will not be recompiled.
-This is valid because we know that neither the input <code>.java</code> files nor the ABI against which they
+This is valid because we know that neither the input <code>.java</code> files nor the API against which they
 would be compiled has changed, so the result would be the same if the rule were rebuilt. This localizes how much
 Java code needs to be recompiled in response to a change, again reducing build times.
-
-<hr>
-
-<p>
-
-<sup id="footnote-abi">1</sup>The ABI computed by Buck is stricter
-than <a href="http://docs.oracle.com/javase/specs/jls/se7/html/jls-13.html">what the Java Language Specification (JLS)
-uses to define binary compatibility</a>.
-In Buck, the ABI defines an equivalence relationship, whereas in the JLS, it does not. This is primarily done
-because the ABI is represented as a SHA-1 hash, which is cheap to compare. However, this does mean that adding a
-new method to a class results in a new ABI for a {call buck.java_library /} in Buck, which triggers a rebuild in dependent rules.
-By comparison, the JLS would consider the old and new versions of the library binary compatible, thereby determining
-recompilation of dependent rules unnecessary.
     {/param}
   {/call}
 {/template}
