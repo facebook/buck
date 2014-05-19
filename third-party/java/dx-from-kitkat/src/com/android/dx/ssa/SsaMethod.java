@@ -496,6 +496,10 @@ public final class SsaMethod {
 
         if (oldSource != null) {
             int reg = oldSource.getReg();
+            if (reg == newSource.getReg()) {
+                // No need to remove the instruction from the use list then immediately re-add it.
+                return;
+            }
             useList[reg].remove(insn);
         }
 
