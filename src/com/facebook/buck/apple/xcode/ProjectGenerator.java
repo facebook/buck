@@ -229,14 +229,8 @@ public class ProjectGenerator {
         this.outputDirectory.normalize().toAbsolutePath().relativize(
             projectFilesystem.getRootPath().toAbsolutePath());
 
-    if (PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT != null) {
-      this.placedAssetCatalogBuildPhaseScript =
-          this.repoRootRelativeToOutputDirectory.resolve(
-              PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT);
-    } else {
-      this.placedAssetCatalogBuildPhaseScript = this.projectFilesystem.getPathForRelativePath(
-          BuckConstant.BIN_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh"));
-    }
+    this.placedAssetCatalogBuildPhaseScript = this.projectFilesystem.getPathForRelativePath(
+        BuckConstant.BIN_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh"));
 
     this.project = new PBXProject(projectName);
 
@@ -944,12 +938,20 @@ public class ProjectGenerator {
       return;
     }
 
-    // In order for the script to run, it must be accessible by Xcode and deserves to be part of the
-    // generated output.
-    shouldPlaceAssetCatalogCompiler = true;
+    Path assetCatalogBuildPhaseScriptRelativeToProjectRoot;
 
-    Path assetCatalogBuildPhaseScriptRelativeToProjectRoot =
-        outputDirectory.relativize(placedAssetCatalogBuildPhaseScript);
+    if (PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT != null) {
+      assetCatalogBuildPhaseScriptRelativeToProjectRoot =
+          this.repoRootRelativeToOutputDirectory.resolve(
+              PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT).normalize();
+    } else {
+      // In order for the script to run, it must be accessible by Xcode and
+      // deserves to be part of the generated output.
+      shouldPlaceAssetCatalogCompiler = true;
+
+      assetCatalogBuildPhaseScriptRelativeToProjectRoot =
+          outputDirectory.relativize(placedAssetCatalogBuildPhaseScript);
+    }
 
     // Map asset catalog paths to their shell script arguments relative to the project's root
     String combinedAssetCatalogsToBeSplitIntoBundlesScriptArguments =
@@ -960,13 +962,13 @@ public class ProjectGenerator {
 
     StringBuilder scriptBuilder = new StringBuilder("set -e\n");
     if (commonAssetCatalogs.size() != 0) {
-      scriptBuilder.append("\"$SRCROOT/\"" +
+      scriptBuilder.append("\"${PROJECT_DIR}/\"" +
               assetCatalogBuildPhaseScriptRelativeToProjectRoot.toString() + " " +
               combinedCommonAssetCatalogsScriptArguments + "\n");
     }
 
     if (assetCatalogsToSplitIntoBundles.size() != 0) {
-      scriptBuilder.append("\"$SRCROOT/\"" +
+      scriptBuilder.append("\"${PROJECT_DIR}/\"" +
               assetCatalogBuildPhaseScriptRelativeToProjectRoot.toString() + " -b " +
               combinedAssetCatalogsToBeSplitIntoBundlesScriptArguments);
     }
