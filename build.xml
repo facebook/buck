@@ -175,8 +175,37 @@
     </javac>
   </target>
 
+  <property name="dx.src.dir" value="${basedir}/third-party/java/dx-from-kitkat/src" />
+
+  <property name="dx.classes.dir" value="${build.dir}/dx_classes" />
+
+  <fileset dir="${lib.dir}" id="dx.jars">
+    <include name="guava-15.0.jar" />
+  </fileset>
+
+  <path id="dx.classpath">
+    <fileset refid="dx.jars" />
+  </path>
 
   <target name="dx">
+    <mkdir dir="${dx.classes.dir}" />
+
+    <javac destdir="${dx.classes.dir}"
+           classpathref="dx.classpath"
+           debug="on"
+           deprecation="on"
+           includeAntRuntime="no"
+           >
+      <src path="${dx.src.dir}" />
+    </javac>
+
+    <jar destfile="${build.dir}/dx.jar">
+      <zipfileset includes="**/*.class" src="${lib.dir}/guava-15.0.jar"/>
+      <fileset dir="${dx.classes.dir}" />
+      <manifest>
+        <attribute name="Main-Class" value="com.android.dx.command.Main" />
+      </manifest>
+    </jar>
   </target>
 
   <target name="jar"

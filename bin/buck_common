@@ -353,7 +353,7 @@ PATH_TO_XCODE_SCRIPTS="${BUCK_DIRECTORY}/src/com/facebook/buck/apple"
 PATH_TO_COMPILE_ASSET_CATALOGS_PY="${PATH_TO_XCODE_SCRIPTS}/compile_asset_catalogs.py"
 PATH_TO_COMPILE_ASSET_CATALOGS_BUILD_PHASE_SH="${PATH_TO_XCODE_SCRIPTS}/compile_asset_catalogs_build_phase.sh"
 
-BUCK_PATH_TO_CUSTOM_DX=""
+BUCK_PATH_TO_CUSTOM_DX="${BUCK_DIRECTORY}/third-party/java/dx-from-kitkat/etc/dx"
 
 # Run Buck "unpacked": specifying its individual classpath elements rather than from a
 # single monolithic JAR file that includes all of its dependencies. This speeds up Buck development
