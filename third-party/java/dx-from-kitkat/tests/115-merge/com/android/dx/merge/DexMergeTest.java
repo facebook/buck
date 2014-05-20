@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 /**
@@ -141,11 +142,13 @@ public final class DexMergeTest extends TestCase {
 
         Dex dexA = resourceToDexBuffer("/testdata/Basic.dex");
         Dex dexB = resourceToDexBuffer("/testdata/TryCatchFinally.dex");
-        Dex merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
+        Dex merged = new DexMerger(
+            ImmutableList.of(dexA, dexB), CollisionPolicy.KEEP_FIRST).merge();
 
         int maxLength = 0;
         for (int i = 0; i < steps; i++) {
-            DexMerger dexMerger = new DexMerger(dexA, merged, CollisionPolicy.KEEP_FIRST);
+            DexMerger dexMerger = new DexMerger(
+                ImmutableList.of(dexA, merged), CollisionPolicy.KEEP_FIRST);
             dexMerger.setCompactWasteThreshold(compactWasteThreshold);
             merged = dexMerger.merge();
             maxLength = Math.max(maxLength, merged.getLength());
@@ -158,7 +161,8 @@ public final class DexMergeTest extends TestCase {
     public ClassLoader mergeAndLoad(String dexAResource, String dexBResource) throws Exception {
         Dex dexA = resourceToDexBuffer(dexAResource);
         Dex dexB = resourceToDexBuffer(dexBResource);
-        Dex merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
+        Dex merged = new DexMerger(
+            ImmutableList.of(dexA, dexB), CollisionPolicy.KEEP_FIRST).merge();
         File mergedDex = File.createTempFile("DexMergeTest", ".classes.dex");
         merged.writeTo(mergedDex);
         File mergedJar = dexToJar(mergedDex);

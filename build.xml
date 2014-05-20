@@ -213,6 +213,23 @@
     </jar>
   </target>
 
+  <!--
+       Note: two of the dx tests (the two tests for the merger) run the command
+       "dalvik" and expect it to be a working dalvik virtual machine.
+       Fulfilling this expectation is no easy task.  Here's how I did it.
+
+       - Be on Linux (Dalvik doesn't build for Mac).
+       - Check out Android (I used ICS because I had it lying around).
+       - make -kj25 dalvik-host
+       - If you built on a remote machine, rsync "out" to where you are
+         developing Buck, inside of a dedicated directory called "android"
+         or something.
+       - Edit android/out/host/linux-x86/dalvik to change the log tags to
+         "*:w", because a spurious info message was messing up the test.
+       - Delete android/out/host/linux-x86/dx so the tests will use our dx.
+       - Run this rule as
+         ANDROID_BUILD_TOP=/path/to/android PATH=$PATH:$ANDROID_BUILD_TOP/out/host/linux-x86/bin ant dx-tests
+       -->
   <target name="dx-tests" depends="dx">
     <exec
         failonerror="true"

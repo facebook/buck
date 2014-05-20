@@ -19,6 +19,7 @@ package com.android.dx.merge;
 import com.android.dex.Dex;
 import com.android.dex.DexException;
 import java.io.IOException;
+import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 public final class MergeConflictTest extends TestCase {
@@ -28,10 +29,10 @@ public final class MergeConflictTest extends TestCase {
         Dex b = resourceToDexBuffer("/testdata/B.dex");
 
         // a and b don't overlap; this should succeed
-        Dex ab = new DexMerger(a, b, CollisionPolicy.FAIL).merge();
+        Dex ab = new DexMerger(ImmutableList.of(a, b), CollisionPolicy.FAIL).merge();
 
         // a and ab overlap; this should fail
-        DexMerger dexMerger = new DexMerger(a, ab, CollisionPolicy.FAIL);
+        DexMerger dexMerger = new DexMerger(ImmutableList.of(a, ab), CollisionPolicy.FAIL);
         try {
             dexMerger.merge();
             fail();
