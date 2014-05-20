@@ -17,7 +17,7 @@
 # Find dx.jar from dx in the android dev tree
 prog=`which dx`
 progdir=`dirname "${prog}"`
-dxjar=$progdir/../framework/dx.jar
+dxjar=$progdir/../../../../build/dx.jar
 
 javac -cp $dxjar `find . -name "*.java"`
 dx --dex --output=test.jar com/android/dx/merge/* $dxjar
