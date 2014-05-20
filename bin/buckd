@@ -36,6 +36,8 @@ case $arg in
 esac
 done
 
+killBuckd
+
 # Use watchman if available.
 if command -v watchman &> /dev/null; then
     echo >&2 "Using watchman."
@@ -51,8 +53,6 @@ else
     # FileSystemWatcher will take too long to process events.
     exit 0
 fi
-
-killBuckd
 
 # Create .buckd and .buckd/tmp directory if required.
 mkdir -p "$BUCKD_DIR/tmp" &> /dev/null || true

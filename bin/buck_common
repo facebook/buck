@@ -61,6 +61,7 @@ function killBuckd() {
     done
   fi
   rm -rf ${BUCKD_DIR}
+  watchman watch-del "$PROJECT_ROOT" > /dev/null || true
   setBuckdRunning
 }
 
