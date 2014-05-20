@@ -1,4 +1,5 @@
 <project name="buck" default="default">
+  <property environment="env"/>
 
   <property name="src.dir" value="${basedir}/src" />
   <property name="aosp.src.dir" value="third-party/java/aosp/src" />
@@ -175,7 +176,10 @@
     </javac>
   </target>
 
-  <property name="dx.src.dir" value="${basedir}/third-party/java/dx-from-kitkat/src" />
+  <property name="dx.base.dir" value="${basedir}/third-party/java/dx-from-kitkat" />
+  <property name="dx.src.dir" value="${dx.base.dir}/src" />
+  <property name="dx.test.dir" value="${dx.base.dir}/tests" />
+  <property name="dx.etc.dir" value="${dx.base.dir}/etc" />
 
   <property name="dx.classes.dir" value="${build.dir}/dx_classes" />
 
@@ -206,6 +210,15 @@
         <attribute name="Main-Class" value="com.android.dx.command.Main" />
       </manifest>
     </jar>
+  </target>
+
+  <target name="dx-tests" depends="dx">
+    <exec
+        failonerror="true"
+        dir="${dx.test.dir}"
+        executable="./run-all-tests">
+      <env key="PATH" path="${env.PATH}:${dx.etc.dir}"/>
+    </exec>
   </target>
 
   <target name="jar"
