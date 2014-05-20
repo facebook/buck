@@ -37,3 +37,7 @@ local.properties
 # OS X
 .DS_Store
 
+# vim swp files
+.*.swp
+.*.swo
+
