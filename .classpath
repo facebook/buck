@@ -5,6 +5,7 @@
 	<classpathentry kind="src" path="build/javacc"/>
 	<classpathentry excluding="**/BUCK" kind="src" path="third-party/java/aosp/src"/>
 	<classpathentry excluding="**/BUCK|**/testdata/**" kind="src" path="test"/>
+	<classpathentry kind="src" path="third-party/java/dx-from-kitkat/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/args4j-2.0.28.jar"/>
 	<classpathentry kind="lib" path="lib/cglib-nodep-2.2.jar"/>

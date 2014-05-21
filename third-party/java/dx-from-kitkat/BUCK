@@ -1,0 +1,8 @@
+java_library(
+  name = 'dx',
+  srcs = glob(['src/**/*.java']),
+  deps = [
+    '//lib:guava',
+  ],
+  visibility = ['PUBLIC'],
+)

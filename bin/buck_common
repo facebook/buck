@@ -361,6 +361,7 @@ BUCK_PATH_TO_CUSTOM_DX="${BUCK_DIRECTORY}/third-party/java/dx-from-kitkat/etc/dx
 BUCK_JAVA_CLASSPATH=\
 "${BUCK_DIRECTORY}"/src:\
 "${BUCK_DIRECTORY}"/build/classes:\
+"${BUCK_DIRECTORY}"/build/dx_classes:\
 "${BUCK_DIRECTORY}"/lib/args4j-2.0.28.jar:\
 "${BUCK_DIRECTORY}"/lib/ddmlib-22.5.3.jar:\
 "${BUCK_DIRECTORY}"/lib/guava-15.0.jar:\
