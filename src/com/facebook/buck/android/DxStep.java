@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Set;
@@ -55,6 +56,12 @@ public class DxStep extends ShellStep {
      * points to instead of the {@code dx} in the user's Android SDK.
      */
     USE_CUSTOM_DX_IF_AVAILABLE,
+
+    /**
+     * Execute DX in-process instead of fork/execing.
+     * This only works with custom dx.
+     */
+    RUN_IN_PROCESS,
     ;
   }
 
@@ -97,6 +104,11 @@ public class DxStep extends ShellStep {
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
     this.getPathToCustomDx = Preconditions.checkNotNull(getPathToCustomDx);
+
+    Preconditions.checkArgument(
+        !options.contains(Option.RUN_IN_PROCESS) ||
+            options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE),
+        "In-process dexing is only supported with custom DX");
   }
 
   @Override
@@ -113,7 +125,9 @@ public class DxStep extends ShellStep {
 
     builder.add(dx);
 
-    if (!XMX_OVERRIDE.isEmpty()) {
+    // Add the Xmx override, but not for in-process dexing, since the dexer won't understand it.
+    // Also, if DX works in-process, it probably wouldn't need an enlarged Xmx.
+    if (!XMX_OVERRIDE.isEmpty() && !options.contains(Option.RUN_IN_PROCESS)) {
       builder.add(XMX_OVERRIDE);
     }
 
@@ -144,6 +158,36 @@ public class DxStep extends ShellStep {
     }
 
     return builder.build();
+  }
+
+  @Override
+  public int execute(ExecutionContext context) {
+    if (options.contains(Option.RUN_IN_PROCESS)) {
+      return executeInProcess(context);
+    } else {
+      return super.execute(context);
+    }
+  }
+
+  private int executeInProcess(ExecutionContext context) {
+    ImmutableList<String> argv = getShellCommandInternal(context);
+
+    // The first arguments should be ".../dx --dex".  Strip them off
+    // because we bypass the dispatcher and go straight to the dexer.
+    Preconditions.checkState(argv.get(0).endsWith("/dx"));
+    Preconditions.checkState(argv.get(1).equals("--dex"));
+    ImmutableList<String> args = argv.subList(2, argv.size());
+
+    try {
+      return new com.android.dx.command.dexer.Main().run(
+          args.toArray(new String[args.size()]),
+          context.getStdOut(),
+          context.getStdErr()
+      );
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
   }
 
   @Override

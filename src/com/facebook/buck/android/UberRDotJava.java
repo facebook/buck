@@ -72,6 +72,12 @@ public class UberRDotJava extends AbstractBuildable implements
 
   public static final String R_DOT_JAVA_LINEAR_ALLOC_SIZE = "r_dot_java_linear_alloc_size";
 
+  /** Options to use with {@link com.facebook.buck.android.DxStep} when dexing R.java. */
+  public static final EnumSet<DxStep.Option> DX_OPTIONS = EnumSet.of(
+      DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
+      DxStep.Option.RUN_IN_PROCESS,
+      DxStep.Option.NO_OPTIMIZE);
+
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final JavacOptions javacOptions;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
@@ -175,7 +181,7 @@ public class UberRDotJava extends AbstractBuildable implements
       steps.add(new DxStep(
               getPathToRDotJavaDex(),
               Collections.singleton(getPathToCompiledRDotJavaFiles()),
-              EnumSet.of(DxStep.Option.NO_OPTIMIZE)));
+              DX_OPTIONS));
 
       final EstimateLinearAllocStep estimateLinearAllocStep = new EstimateLinearAllocStep(
           getPathToCompiledRDotJavaFiles());
