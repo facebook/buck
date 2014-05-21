@@ -432,7 +432,7 @@ public final class Main {
    * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
-  @SuppressWarnings("PMD.EmptyCatchBlock")
+  @SuppressWarnings({"PMD.EmptyCatchBlock", "PMD.PrematureDeclaration"})
   public int executeCommand(
       File projectRoot,
       Command.ParseResult commandParseResult,
@@ -492,14 +492,13 @@ public final class Main {
             androidDirectoryResolver,
             javacEnv);
 
-
-    @Nullable ArtifactCacheFactory artifactCacheFactory = null;
-
     // No more early outs: acquire the command semaphore and become the only executing command.
     // This must happen immediately before the try block to ensure that the semaphore is released.
     if (!commandSemaphore.tryAcquire()) {
       return BUSY_EXIT_CODE;
     }
+
+    @Nullable ArtifactCacheFactory artifactCacheFactory = null;
 
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
     // be the last resource, so that it is closed first and can deliver its queued events to the

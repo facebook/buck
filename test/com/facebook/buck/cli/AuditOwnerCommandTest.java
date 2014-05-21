@@ -439,7 +439,7 @@ public class AuditOwnerCommandTest {
     AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(graph, options);
     command.printOwnersOnlyJsonReport(report);
 
-    String EXPECTED_JSON = Joiner.on("").join(
+    String expectedJson = Joiner.on("").join(
       "{",
       "\"com/test/subtest/random.java\":[\"//base/name:name\"],",
       "\"java/somefolder/badfolder/somefile.java\":[\"//base/name:name\"],",
@@ -447,7 +447,7 @@ public class AuditOwnerCommandTest {
       "}"
     );
 
-    assertEquals(EXPECTED_JSON, console.getTextWrittenToStdOut());
+    assertEquals(expectedJson, console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
   }
 
