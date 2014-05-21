@@ -74,7 +74,7 @@ public class BuildTargets {
    */
   public static BuildTarget createFlavoredBuildTarget(
       HasBuildTarget hasBuildTarget,
-      String flavor) {
+      Flavor flavor) {
     Preconditions.checkNotNull(hasBuildTarget);
     Preconditions.checkNotNull(flavor);
     BuildTarget buildTarget = hasBuildTarget.getBuildTarget();

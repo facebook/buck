@@ -20,6 +20,7 @@ import static com.facebook.buck.android.UnsortedAndroidResourceDeps.Callback;
 
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -32,7 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidLibraryGraphEnhancer {
 
-  private static final String DUMMY_R_DOT_JAVA_FLAVOR = "dummy_r_dot_java";
+  private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR = new Flavor("dummy_r_dot_java");
 
   private final BuildTarget dummyRDotJavaBuildTarget;
   private final BuildRuleParams originalBuildRuleParams;

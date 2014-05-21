@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -47,7 +48,7 @@ public interface JavaLibrary extends Buildable, HasClasspathEntries, HasJavaAbi 
    * the {@link Buildable} will be the original JAR file, which is why it would contain
    * {@code .class} files.
    */
-  public static final String GWT_MODULE_FLAVOR = "gwt_module";
+  public static final Flavor GWT_MODULE_FLAVOR = new Flavor("gwt_module");
 
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to

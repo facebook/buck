@@ -21,6 +21,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -42,18 +43,23 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   private final String baseName;
   private final String shortName;
-  private final Optional<String> flavor;
+  private final Optional<Flavor> flavor;
   private final String fullyQualifiedName;
 
   public BuildTarget(String baseName, String shortName) {
-    this(baseName, shortName, /* flavor */ Optional.<String>absent());
+    this(baseName, shortName, Optional.<Flavor>absent());
   }
 
+  @VisibleForTesting
   public BuildTarget(String baseName, String shortName, String flavor) {
+    this(baseName, shortName, new Flavor(flavor));
+  }
+
+  public BuildTarget(String baseName, String shortName, Flavor flavor) {
     this(baseName, shortName, Optional.of(flavor));
   }
 
-  private BuildTarget(String baseName, String shortName, Optional<String> flavor) {
+  private BuildTarget(String baseName, String shortName, Optional<Flavor> flavor) {
     Preconditions.checkNotNull(baseName);
     // shortName may be the empty string when parsing visibility patterns.
     Preconditions.checkNotNull(shortName);
@@ -67,7 +73,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     // specified as part of the short name. Handle that case.
     int hashIndex = shortName.lastIndexOf("#");
     if (hashIndex != -1 && !flavor.isPresent()) {
-      flavor = Optional.of(shortName.substring(hashIndex + 1));
+      flavor = Optional.of(new Flavor(shortName.substring(hashIndex + 1)));
       shortName = shortName.substring(0, hashIndex);
     }
 
@@ -75,8 +81,8 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
         "Build target name cannot contain '#' but was: %s.",
         shortName);
     if (flavor.isPresent()) {
-      String flavorName = flavor.get();
-      if (!VALID_FLAVOR_PATTERN.matcher(flavorName).matches()) {
+      Flavor flavorName = flavor.get();
+      if (!VALID_FLAVOR_PATTERN.matcher(flavorName.toString()).matches()) {
         throw new IllegalArgumentException("Invalid flavor: " + flavorName);
       }
     }
@@ -136,8 +142,8 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   }
 
   @JsonProperty("flavor")
-  public String getFlavor() {
-    return flavor.or("");
+  public Flavor getFlavor() {
+    return flavor.or(Flavor.DEFAULT);
   }
 
   /**

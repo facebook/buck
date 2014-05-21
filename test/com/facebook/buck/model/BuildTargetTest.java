@@ -85,7 +85,7 @@ public class BuildTargetTest {
   public void testBuildTargetWithFlavor() {
     BuildTarget target = new BuildTarget("//foo/bar", "baz", "dex");
     assertEquals("baz#dex", target.getShortName());
-    assertEquals("dex", target.getFlavor());
+    assertEquals(new Flavor("dex"), target.getFlavor());
     assertTrue(target.isFlavored());
   }
 
@@ -93,7 +93,7 @@ public class BuildTargetTest {
   public void testBuildTargetWithoutFlavor() {
     BuildTarget target = new BuildTarget("//foo/bar", "baz");
     assertEquals(target.getShortName(), "baz");
-    assertEquals("", target.getFlavor());
+    assertEquals(Flavor.DEFAULT, target.getFlavor());
     assertFalse(target.isFlavored());
   }
 
@@ -119,19 +119,19 @@ public class BuildTargetTest {
 
   @Test
   public void testFlavorDerivedFromShortNameIfAbsent() {
-    assertEquals("dex", new BuildTarget("//foo/bar", "baz#dex").getFlavor());
+    assertEquals(new Flavor("dex"), new BuildTarget("//foo/bar", "baz#dex").getFlavor());
   }
 
   @Test
   public void testFlavorDefaultsToTheEmptyStringIfNotSet() {
-    assertEquals("", new BuildTarget("//foo/bar", "baz").getFlavor());
+    assertEquals(Flavor.DEFAULT, new BuildTarget("//foo/bar", "baz").getFlavor());
   }
 
   @Test
   public void testNotSettingTheFlavorInTheShortStringButLookingLikeYouMightIsTeasingAndWrong() {
     try {
       // Hilarious case that might result in an IndexOutOfBoundsException
-      assertEquals("", new BuildTarget("//foo/bar", "baz#").getFlavor());
+      new BuildTarget("//foo/bar", "baz#");
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Invalid flavor: ", e.getMessage());
