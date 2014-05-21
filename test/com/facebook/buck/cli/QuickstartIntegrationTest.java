@@ -66,7 +66,7 @@ public class QuickstartIntegrationTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(projectFilesystem,
             Optional.<String>absent(),
-            new DefaultPropertyFinder(projectFilesystem));
+            new DefaultPropertyFinder(projectFilesystem, System.getenv()));
 
     // looks at local.properties, ANDROID_SDK, and ANDROID_HOME
     Path androidSdk =

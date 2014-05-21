@@ -81,6 +81,7 @@ import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -461,11 +462,6 @@ public final class Main {
       console.getStdErr().println(commandParseResult.getErrorText().get());
     }
 
-    // No more early outs: acquire the command semaphore and become the only executing command.
-    if (!commandSemaphore.tryAcquire()) {
-      return BUSY_EXIT_CODE;
-    }
-
     ProcessExecutor processExecutor = new ProcessExecutor(console);
 
     int exitCode;
@@ -475,7 +471,9 @@ public final class Main {
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(processExecutor);
 
     // Configure the AndroidDirectoryResolver.
-    PropertyFinder propertyFinder = new DefaultPropertyFinder(projectFilesystem);
+    PropertyFinder propertyFinder = new DefaultPropertyFinder(
+        projectFilesystem,
+        getClientEnvironment(context));
     AndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             projectFilesystem,
@@ -494,10 +492,18 @@ public final class Main {
             androidDirectoryResolver,
             javacEnv);
 
+
+    @Nullable ArtifactCacheFactory artifactCacheFactory = null;
+
+    // No more early outs: acquire the command semaphore and become the only executing command.
+    // This must happen immediately before the try block to ensure that the semaphore is released.
+    if (!commandSemaphore.tryAcquire()) {
+      return BUSY_EXIT_CODE;
+    }
+
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
     // be the last resource, so that it is closed first and can deliver its queued events to the
     // other resources before they are closed.
-    @Nullable ArtifactCacheFactory artifactCacheFactory = null;
     try (AbstractConsoleEventBusListener consoleListener =
              createConsoleEventListener(clock, console, verbosity, executionEnvironment);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
@@ -601,6 +607,20 @@ public final class Main {
       }
     }
     return exitCode;
+  }
+
+  /**
+   * @return the client environment, which is either the process environment or the
+   * environment sent to the daemon by the Nailgun client. This method should always be used
+   * in preference to System.getenv() and should be the only call to System.getenv() within the
+   * Buck codebase to ensure that the use of the Buck daemon is transparent.
+   */
+  @SuppressWarnings("unchecked") // Safe as Property is a Map<String, String>.
+  private Map<String, String> getClientEnvironment(Optional<NGContext> context) {
+    if (context.isPresent()) {
+      return (Map) context.get().getEnv();
+    }
+    return System.getenv();
   }
 
   private static void closeCreatedArtifactCaches(ArtifactCacheFactory artifactCacheFactory) {

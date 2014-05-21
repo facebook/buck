@@ -31,9 +31,13 @@ public class DefaultPropertyFinder implements PropertyFinder {
   private static final Path LOCAL_PROPERTIES_PATH = Paths.get("local.properties");
 
   private final ProjectFilesystem projectFilesystem;
+  private final Map<String, String> environment;
 
-  public DefaultPropertyFinder(ProjectFilesystem projectFilesystem) {
+  public DefaultPropertyFinder(
+      ProjectFilesystem projectFilesystem,
+      Map<String, String> environment) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.environment = Preconditions.checkNotNull(environment);
   }
 
   /**
@@ -60,7 +64,7 @@ public class DefaultPropertyFinder implements PropertyFinder {
         findDirectoryByPropertiesThenEnvironmentVariable(
             localProperties,
             new HostFilesystem(),
-            System.getenv(),
+            environment,
             propertyName,
             environmentVariables);
   }

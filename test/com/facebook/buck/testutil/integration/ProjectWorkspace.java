@@ -45,6 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Properties;
 
 import javax.annotation.Nullable;
 
@@ -363,6 +364,15 @@ public class ProjectWorkspace {
 
     @Override
     public void addClientListener(NGClientListener listener) {
+    }
+
+    @Override
+    public Properties getEnv() {
+      Properties properties = new Properties();
+      for (String key : System.getenv().keySet()) {
+        properties.setProperty(key, System.getenv().get(key));
+      }
+      return properties;
     }
   }
 }
