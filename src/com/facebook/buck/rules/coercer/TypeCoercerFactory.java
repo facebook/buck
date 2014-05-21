@@ -115,6 +115,10 @@ public class TypeCoercerFactory {
     if (type instanceof Class) {
       Class<?> rawClass = Primitives.wrap((Class<?>) type);
 
+      if (rawClass.isEnum()) {
+        return new EnumTypeCoercer<>(rawClass);
+      }
+
       TypeCoercer<?> selectedTypeCoercer = null;
       for (TypeCoercer<?> typeCoercer : nonContainerTypeCoercers) {
         if (rawClass.isAssignableFrom(typeCoercer.getOutputClass())) {

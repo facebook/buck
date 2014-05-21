@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Type;
@@ -366,6 +367,59 @@ public class TypeCoercerTest {
     assertEquals(expected, result);
   }
 
+  @Test
+  public void coerceToEnumsShouldWorkWithUpperAndLowerCaseValues()
+      throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    ImmutableList<String> input = ImmutableList.of("grey", "YELLOW", "red", "PURPLE");
+
+    Object result = coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), input);
+    ImmutableList<TestEnum> expected =
+        ImmutableList.of(TestEnum.grey, TestEnum.yellow, TestEnum.RED, TestEnum.PURPLE);
+
+    assertEquals(expected, result);
+  }
+
+  @Test
+  public void coerceFromTurkishIsShouldWork()
+      throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    String pinkWithLowercaseTurkishI = "p\u0131nk";
+    String pinkWithUppercaseTurkishI = "P\u0130NK";
+    String whiteWithLowercaseTurkishI = "wh\u0131te";
+    String whiteWithUppercaseTurkishI = "WH\u0130TE";
+
+    ImmutableList<String> input = ImmutableList.of(pinkWithLowercaseTurkishI,
+        pinkWithUppercaseTurkishI, whiteWithLowercaseTurkishI, whiteWithUppercaseTurkishI);
+    ImmutableList<TestEnum> expected = ImmutableList.of(
+        TestEnum.PINK, TestEnum.PINK, TestEnum.white, TestEnum.white);
+    Object result = coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), input);
+    assertEquals(expected, result);
+  }
+
+  @Test
+  @Ignore("Test compiles and passes but checkstyle 4 barfs on the commented-out line assigning " +
+          "the expected var: try reinstating after arc lint moves to checkstyle 5.5")
+  public void coerceToTurkishIsShouldWork()
+      throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    String violetWithLowerCaseTurkishI = "v\u0131olet";
+    String violetWithUpperCaseTurkishI = "V\u0130OLET";
+    ImmutableList<String> input = ImmutableList.of(
+        "violet", "VIOLET", violetWithLowerCaseTurkishI, violetWithUpperCaseTurkishI);
+    ImmutableList<TestEnum> expected = ImmutableList.of(
+      // Remove @ignore and uncomment line below once we have checkstyle 5.5
+      // Also reinstate the extra value for TestEnum
+      // TestEnum.V\u0130OLET, TestEnum.V\u0130OLET, TestEnum.V\u0130OLET, TestEnum.V\u0130OLET
+    );
+
+    Object result = coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), input);
+    assertEquals(expected, result);
+  }
+
   @SuppressWarnings("unused")
   static class TestFields {
     public ImmutableMap<String, ImmutableList<Integer>> stringMapOfLists;
@@ -383,5 +437,11 @@ public class TypeCoercerTest {
     public Pair<Path, String> pairOfPathsAndStrings;
     public ImmutableList<AppleSource> listOfAppleSources;
     public ImmutableSortedSet<Label> labels;
+    public ImmutableList<TestEnum> listOfTestEnums;
   }
+
+  private static enum TestEnum { RED, PURPLE, yellow, grey, PINK, white }
+  // Reinstate this value when we have checkstyle 5.5: see coerceToTurkishShouldWork
+  // for more information
+  // V\u0130OLET
 }
