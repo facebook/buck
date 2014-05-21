@@ -1,0 +1,5 @@
+genrule(
+  name = 'something',
+  cmd = 'touch $OUT',
+  out = 'X',
+)

@@ -27,6 +27,9 @@ import com.google.common.base.Preconditions;
 
 import org.kohsuke.args4j.Option;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import javax.annotation.Nullable;
 
 public abstract class AbstractCommandOptions {
@@ -49,6 +52,12 @@ public abstract class AbstractCommandOptions {
       name = "--no-cache",
       usage = "Whether to ignore the [cache] declared in .buckconfig.")
   private boolean noCache = false;
+
+  @Nullable
+  @Option(
+      name = "--output-events-to-file",
+      usage = "Serialize event bus events to the given file as line-oriented JSON objects.")
+  private String eventsOutputPath = null;
 
   @Option(
       name = HELP_LONG_ARG,
@@ -79,6 +88,14 @@ public abstract class AbstractCommandOptions {
 
   public boolean showHelp() {
     return help;
+  }
+
+  public Optional<Path> getEventsOutputPath() {
+    if (eventsOutputPath == null) {
+      return Optional.absent();
+    } else {
+      return Optional.of(Paths.get(eventsOutputPath));
+    }
   }
 
   protected CommandLineBuildTargetNormalizer getCommandLineBuildTargetNormalizer() {

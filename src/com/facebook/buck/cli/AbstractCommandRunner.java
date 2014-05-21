@@ -17,6 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -31,6 +33,7 @@ import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,6 +43,7 @@ import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -121,6 +125,13 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
    */
   public final synchronized int runCommandWithOptions(T options) throws IOException {
     this.options = options;
+    // At this point, we have parsed options but haven't started running the command yet.  This is
+    // a good opportunity to augment the event bus with our serialize-to-file event-listener.
+    Optional<Path> eventsOutputPath = options.getEventsOutputPath();
+    if (eventsOutputPath.isPresent()) {
+      BuckEventListener listener = new FileSerializationEventBusListener(eventsOutputPath.get());
+      eventBus.register(listener);
+    }
     return runCommandWithOptionsInternal(options);
   }
 
