@@ -292,7 +292,7 @@ public class BlockDumper
             boolean isStatic = AccessFlags.isStatic(meth.getAccessFlags());
             int paramWidth = computeParamWidth(meth, isStatic);
             rmeth =
-                Optimizer.optimize(rmeth, paramWidth, isStatic, true, advice);
+                new Optimizer().optimize(rmeth, paramWidth, isStatic, true, advice);
         }
 
         BasicBlockList blocks = rmeth.getBlocks();

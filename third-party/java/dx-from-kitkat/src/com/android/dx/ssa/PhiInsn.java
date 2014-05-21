@@ -315,10 +315,11 @@ public final class PhiInsn extends SsaInsn {
         return true;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @param optimizer*/
     @Override
-    public boolean hasSideEffect() {
-        return Optimizer.getPreserveLocals() && getLocalAssignment() != null;
+    public boolean hasSideEffect(Optimizer optimizer) {
+        return optimizer.getPreserveLocals() && getLocalAssignment() != null;
     }
 
     /** {@inheritDoc} */

@@ -96,6 +96,8 @@ public class EscapeAnalysis {
         TOP, NONE, METHOD, INTER, GLOBAL
     }
 
+    /** optimizer that we're working for */
+    private final Optimizer optimizer;
     /** method we're processing */
     private SsaMethod ssaMeth;
     /** ssaMeth.getRegCount() */
@@ -106,9 +108,11 @@ public class EscapeAnalysis {
     /**
      * Constructs an instance.
      *
+     * @param optimizer
      * @param ssaMeth method to process
      */
-    private EscapeAnalysis(SsaMethod ssaMeth) {
+    private EscapeAnalysis(Optimizer optimizer, SsaMethod ssaMeth) {
+        this.optimizer = optimizer;
         this.ssaMeth = ssaMeth;
         this.regCount = ssaMeth.getRegCount();
         this.latticeValues = new ArrayList<EscapeSet>();
@@ -202,10 +206,11 @@ public class EscapeAnalysis {
      * Performs escape analysis on a method. Finds scalar replaceable arrays and
      * replaces them with equivalent registers.
      *
+     * @param optimizer
      * @param ssaMethod {@code non-null;} method to process
      */
-    public static void process(SsaMethod ssaMethod) {
-        new EscapeAnalysis(ssaMethod).run();
+    public static void process(Optimizer optimizer, SsaMethod ssaMethod) {
+        new EscapeAnalysis(optimizer, ssaMethod).run();
     }
 
     /**
@@ -512,7 +517,7 @@ public class EscapeAnalysis {
             ssaMeth.onInsnsChanged();
 
             // Convert the method back to SSA form
-            SsaConverter.updateSsaMethod(ssaMeth, regCount);
+            SsaConverter.updateSsaMethod(optimizer, ssaMeth, regCount);
 
             // Propagate and remove extra moves added by scalar replacement
             movePropagate();

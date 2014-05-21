@@ -130,7 +130,7 @@ public class OptimizerOptions {
         steps.remove(Optimizer.OptionalStep.CONST_COLLECTOR);
 
         RopMethod skipRopMethod
-                = Optimizer.optimize(nonOptRmeth,
+                = new Optimizer().optimize(nonOptRmeth,
                         paramSize, isStatic, args.localInfo, advice, steps);
 
         int normalInsns

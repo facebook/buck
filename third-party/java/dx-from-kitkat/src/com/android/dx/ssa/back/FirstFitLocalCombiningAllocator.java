@@ -47,6 +47,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     /** local debug flag */
     private static final boolean DEBUG = false;
 
+    /** optimizer that we're working for */
+    private final Optimizer optimizer;
+
     /** maps local variable to a list of associated SSA registers */
     private final Map<LocalItem, ArrayList<RegisterSpec>> localVariables;
 
@@ -80,15 +83,18 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     /**
      * Constructs instance.
      *
+     * @param optimizer
      * @param ssaMeth {@code non-null;} method to process
      * @param interference non-null interference graph for SSA registers
      * @param minimizeRegisters true if converter should take steps to
-     * minimize rop-form registers
      */
     public FirstFitLocalCombiningAllocator(
-            SsaMethod ssaMeth, InterferenceGraph interference,
+            Optimizer optimizer,
+            SsaMethod ssaMeth,
+            InterferenceGraph interference,
             boolean minimizeRegisters) {
         super(ssaMeth, interference);
+        this.optimizer = optimizer;
 
         ssaRegsMapped = new BitSet(ssaMeth.getRegCount());
 
@@ -672,7 +678,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
                     if (insn.getOpcode().getOpcode() ==
                             RegOps.MOVE_RESULT_PSEUDO) {
                         moveResultPseudoInsns.add((NormalSsaInsn) insn);
-                    } else if (Optimizer.getAdvice().requiresSourcesInOrder(
+                    } else if (optimizer.getAdvice().requiresSourcesInOrder(
                             insn.getOriginalRopInsn().getOpcode(),
                             insn.getSources())) {
                         invokeRangeInsns.add((NormalSsaInsn) insn);

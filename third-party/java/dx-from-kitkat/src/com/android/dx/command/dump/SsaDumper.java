@@ -96,20 +96,20 @@ public class SsaDumper extends BlockDumper {
         int paramWidth = computeParamWidth(meth, isStatic);
 
         if (args.ssaStep == null) {
-            ssaMeth = Optimizer.debugNoRegisterAllocation(rmeth,
+            ssaMeth = new Optimizer().debugNoRegisterAllocation(rmeth,
                     paramWidth, isStatic, true, advice,
                     EnumSet.allOf(Optimizer.OptionalStep.class));
         } else if ("edge-split".equals(args.ssaStep)) {
-            ssaMeth = Optimizer.debugEdgeSplit(rmeth, paramWidth,
+            ssaMeth = new Optimizer().debugEdgeSplit(rmeth, paramWidth,
                     isStatic, true, advice);
         } else if ("phi-placement".equals(args.ssaStep)) {
-            ssaMeth = Optimizer.debugPhiPlacement(
+            ssaMeth = new Optimizer().debugPhiPlacement(
                     rmeth, paramWidth, isStatic, true, advice);
         } else if ("renaming".equals(args.ssaStep)) {
-            ssaMeth = Optimizer.debugRenaming(
+            ssaMeth = new Optimizer().debugRenaming(
                     rmeth, paramWidth, isStatic, true, advice);
         } else if ("dead-code".equals(args.ssaStep)) {
-            ssaMeth = Optimizer.debugDeadCodeRemover(
+            ssaMeth = new Optimizer().debugDeadCodeRemover(
                     rmeth, paramWidth, isStatic,true, advice);
         }
 

@@ -298,7 +298,7 @@ public class CfTranslator {
                         }
 
                         nonOptRmeth = rmeth;
-                        rmeth = Optimizer.optimize(rmeth,
+                        rmeth = new Optimizer().optimize(rmeth,
                                 paramSize, isStatic, cfOptions.localInfo, advice);
 
                         if (DEBUG) {

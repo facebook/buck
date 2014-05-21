@@ -39,7 +39,7 @@ public class SsaConverter {
      * pointer argument
      * @return output in SSA form
      */
-    public static SsaMethod convertToSsaMethod(RopMethod rmeth,
+    public static SsaMethod convertToSsaMethod(Optimizer optimizer, RopMethod rmeth,
             int paramWidth, boolean isStatic) {
         SsaMethod result
             = SsaMethod.newFromRopMethod(rmeth, paramWidth, isStatic);
@@ -49,7 +49,7 @@ public class SsaConverter {
         LocalVariableInfo localInfo = LocalVariableExtractor.extract(result);
 
         placePhiFunctions(result, localInfo, 0);
-        new SsaRenamer(result).run();
+        new SsaRenamer(optimizer, result).run();
 
         /*
          * The exit block, added here, is not considered for edge splitting
@@ -67,10 +67,10 @@ public class SsaConverter {
      * @param ssaMeth input
      * @param threshold registers below this number are unchanged
      */
-    public static void updateSsaMethod(SsaMethod ssaMeth, int threshold) {
+    public static void updateSsaMethod(Optimizer optimizer, SsaMethod ssaMeth, int threshold) {
         LocalVariableInfo localInfo = LocalVariableExtractor.extract(ssaMeth);
         placePhiFunctions(ssaMeth, localInfo, threshold);
-        new SsaRenamer(ssaMeth, threshold).run();
+        new SsaRenamer(optimizer, ssaMeth, threshold).run();
     }
 
     /**
