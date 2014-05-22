@@ -1,0 +1,21 @@
+java_test(
+  name = 'test-with-junit',
+  srcs = [
+    'ClassWithoutTestsA.java',
+    'ClassWithTestsA.java',
+  ],
+  deps = [
+    '//lib:junit'
+  ],
+)
+
+java_test(
+  name = 'test-with-junit-4-8-2',
+  srcs = [
+    'ClassWithoutTestsB.java',
+    'ClassWithTestsB.java',
+  ],
+  deps = [
+    '//lib:junit-4-8-2'
+  ],
+)
