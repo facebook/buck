@@ -408,5 +408,6 @@
     </exec>
   </target>
 
+  <target name="pre-checkin" depends="clean, default, compile-tests, lint"/>
   <target name="all" depends="jar, test, javadoc, client" />
 </project>
