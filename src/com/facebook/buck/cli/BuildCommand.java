@@ -140,7 +140,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         console,
         getBuckEventBus(),
         Optional.<TargetDevice>absent(),
-        getCommandRunnerParams().getPlatform());
+        getCommandRunnerParams().getPlatform(),
+        getCommandRunnerParams().getEnvironment());
     int exitCode = 0;
     try {
       exitCode = executeBuildAndPrintAnyFailuresToConsole(buildTargets, build, console);

@@ -1303,6 +1303,7 @@ public class DefaultJavaLibraryTest {
           .setDebugEnabled(true)
           .setEventBus(BuckEventBusFactory.newInstance())
           .setPlatform(Platform.detect())
+          .setEnvironment(ImmutableMap.copyOf(System.getenv()))
           .build();
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,

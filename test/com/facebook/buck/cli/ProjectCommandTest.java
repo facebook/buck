@@ -233,7 +233,8 @@ public class ProjectCommandTest {
           new InstanceArtifactCacheFactory(artifactCache),
           BuckEventBusFactory.newInstance(),
           BuckTestConstant.PYTHON_INTERPRETER,
-          Platform.detect()));
+          Platform.detect(),
+          ImmutableMap.copyOf(System.getenv())));
     }
 
     @Override

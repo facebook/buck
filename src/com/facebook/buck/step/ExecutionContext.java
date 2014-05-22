@@ -29,9 +29,12 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 import java.io.PrintStream;
+
+import javax.annotation.Nullable;
 
 public class ExecutionContext {
 
@@ -47,6 +50,7 @@ public class ExecutionContext {
   private final ProcessExecutor processExecutor;
   private final BuckEventBus eventBus;
   private final Platform platform;
+  private final ImmutableMap<String, String> environment;
 
   private ExecutionContext(
       ProjectFilesystem projectFilesystem,
@@ -58,7 +62,8 @@ public class ExecutionContext {
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
       BuckEventBus eventBus,
-      Platform platform) {
+      Platform platform,
+      ImmutableMap<String, String> environment) {
     this.verbosity = Preconditions.checkNotNull(console).getVerbosity();
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.console = Preconditions.checkNotNull(console);
@@ -71,6 +76,7 @@ public class ExecutionContext {
     this.processExecutor = new ProcessExecutor(console);
     this.eventBus = Preconditions.checkNotNull(eventBus);
     this.platform = Preconditions.checkNotNull(platform);
+    this.environment = Preconditions.checkNotNull(environment);
   }
 
   /**
@@ -88,7 +94,8 @@ public class ExecutionContext {
         isJacocoEnabled(),
         isDebugEnabled,
         eventBus,
-        platform);
+        platform,
+        this.environment);
   }
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
@@ -194,18 +201,23 @@ public class ExecutionContext {
     return new Builder();
   }
 
+  public ImmutableMap<String, String> getEnvironment() {
+    return environment;
+  }
+
   public static class Builder {
 
-    private ProjectFilesystem projectFilesystem = null;
-    private Console console = null;
+    @Nullable private ProjectFilesystem projectFilesystem = null;
+    @Nullable private Console console = null;
     private Optional<AndroidPlatformTarget> androidPlatformTarget = Optional.absent();
     private Optional<TargetDevice> targetDevice = Optional.absent();
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
     private boolean isJacocoEnabled = false;
     private boolean isDebugEnabled = false;
-    private BuckEventBus eventBus = null;
-    private Platform platform = null;
+    @Nullable private BuckEventBus eventBus = null;
+    @Nullable private Platform platform = null;
+    @Nullable private ImmutableMap<String, String> environment = null;
 
     private Builder() {}
 
@@ -220,7 +232,8 @@ public class ExecutionContext {
           isJacocoEnabled,
           isDebugEnabled,
           eventBus,
-          platform);
+          platform,
+          environment);
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
@@ -234,6 +247,7 @@ public class ExecutionContext {
       setDebugEnabled(executionContext.isDebugEnabled());
       setEventBus(executionContext.getBuckEventBus());
       setPlatform(executionContext.getPlatform());
+      setEnvironment(executionContext.getEnvironment());
       return this;
     }
 
@@ -287,6 +301,11 @@ public class ExecutionContext {
 
     public Builder setPlatform(Platform platform) {
       this.platform = Preconditions.checkNotNull(platform);
+      return this;
+    }
+
+    public Builder setEnvironment(ImmutableMap<String, String> environment) {
+      this.environment = Preconditions.checkNotNull(environment);
       return this;
     }
   }

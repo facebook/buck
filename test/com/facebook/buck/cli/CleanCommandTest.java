@@ -30,6 +30,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
 
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
@@ -109,7 +110,8 @@ public class CleanCommandTest extends EasyMockSupport {
         new InstanceArtifactCacheFactory(createMock(ArtifactCache.class)),
         createMock(BuckEventBus.class),
         createMock(Parser.class),
-        Platform.detect());
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
     return new CleanCommand(params);
   }
 

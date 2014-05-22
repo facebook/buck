@@ -28,6 +28,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 
@@ -41,7 +42,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       String pythonInterpreter,
-      Platform platform) {
+      Platform platform,
+      ImmutableMap<String, String> environment) {
     super(console,
         projectFilesystem,
         androidDirectoryResolver,
@@ -49,7 +51,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
         artifactCacheFactory,
         eventBus,
         pythonInterpreter,
-        platform);
+        platform,
+        environment);
   }
 
   // Admittedly, this class has no additional methods beyond its superclass today, but we will
@@ -71,6 +74,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
     private String pythonInterpreter = BuckTestConstant.PYTHON_INTERPRETER;
     private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     private Platform platform = Platform.detect();
+    private ImmutableMap environment = ImmutableMap.copyOf(System.getenv());
 
     public CommandRunnerParamsForTesting build() {
       return new CommandRunnerParamsForTesting(
@@ -81,7 +85,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
           artifactCacheFactory,
           eventBus,
           pythonInterpreter,
-          platform);
+          platform,
+          environment);
     }
 
     public Builder setConsole(Console console) {

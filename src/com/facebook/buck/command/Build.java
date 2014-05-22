@@ -44,6 +44,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.Closeable;
@@ -76,6 +77,7 @@ public class Build implements Closeable {
 
   /**
    * @param buildDependencies How to include dependencies when building rules.
+   * @param environment
    */
   public Build(
       DependencyGraph dependencyGraph,
@@ -93,7 +95,8 @@ public class Build implements Closeable {
       boolean isDebugEnabled,
       BuildDependencies buildDependencies,
       BuckEventBus eventBus,
-      Platform platform) {
+      Platform platform,
+      ImmutableMap<String, String> environment) {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
@@ -109,6 +112,7 @@ public class Build implements Closeable {
         .setDebugEnabled(isDebugEnabled)
         .setEventBus(eventBus)
         .setPlatform(platform)
+        .setEnvironment(environment)
         .build();
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.buildEngine = Preconditions.checkNotNull(buildEngine);

@@ -28,6 +28,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Uninterruptibles;
 
@@ -52,6 +53,7 @@ public class DefaultStepRunnerTest {
         .setConsole(new TestConsole())
         .setEventBus(eventBus)
         .setPlatform(Platform.detect())
+        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
 
     DefaultStepRunner runner = new DefaultStepRunner(context, 3);
@@ -92,6 +94,7 @@ public class DefaultStepRunnerTest {
         .setConsole(new TestConsole())
         .setEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(Platform.detect())
+        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
 
     DefaultStepRunner runner = new DefaultStepRunner(context, 3);

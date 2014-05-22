@@ -268,6 +268,7 @@ public class GenruleTest {
         })
         .setEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(platform)
+        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
   }
 
@@ -521,6 +522,7 @@ public class GenruleTest {
         .setAndroidPlatformTarget(Optional.of(android))
         .setEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(Platform.detect())
+        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

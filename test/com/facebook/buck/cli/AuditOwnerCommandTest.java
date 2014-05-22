@@ -42,6 +42,7 @@ import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.base.Joiner;
@@ -236,7 +237,8 @@ public class AuditOwnerCommandTest {
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
         buckConfig.getPythonInterpreter(),
-        Platform.detect()));
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv())));
   }
 
   @Test

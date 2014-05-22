@@ -63,6 +63,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
@@ -471,9 +472,10 @@ public final class Main {
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(processExecutor);
 
     // Configure the AndroidDirectoryResolver.
+    ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
     PropertyFinder propertyFinder = new DefaultPropertyFinder(
         projectFilesystem,
-        getClientEnvironment(context));
+        clientEnvironment);
     AndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             projectFilesystem,
@@ -576,7 +578,8 @@ public final class Main {
               artifactCacheFactory,
               buildEventBus,
               parser,
-              platform));
+              platform,
+              clientEnvironment));
 
       // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
       if (webServer.isPresent()) {
@@ -615,11 +618,11 @@ public final class Main {
    * Buck codebase to ensure that the use of the Buck daemon is transparent.
    */
   @SuppressWarnings("unchecked") // Safe as Property is a Map<String, String>.
-  private Map<String, String> getClientEnvironment(Optional<NGContext> context) {
+  private ImmutableMap<String, String> getClientEnvironment(Optional<NGContext> context) {
     if (context.isPresent()) {
-      return (Map) context.get().getEnv();
+      return ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());
     }
-    return System.getenv();
+    return ImmutableMap.copyOf(System.getenv());
   }
 
   private static void closeCreatedArtifactCaches(ArtifactCacheFactory artifactCacheFactory) {

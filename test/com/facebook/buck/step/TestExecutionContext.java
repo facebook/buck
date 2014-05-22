@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -37,7 +38,8 @@ public class TestExecutionContext {
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(new File(".")))
         .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect());
+        .setPlatform(Platform.detect())
+        .setEnvironment(ImmutableMap.copyOf(System.getenv()));
   }
 
   public static ExecutionContext newInstance() {

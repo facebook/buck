@@ -129,7 +129,8 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       Console console,
       BuckEventBus eventBus,
       Optional<TargetDevice> targetDevice,
-      Platform platform) {
+      Platform platform,
+      ImmutableMap<String, String> environment) {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
     }
@@ -148,6 +149,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         isDebugEnabled(),
         getBuildDependencies(),
         eventBus,
-        platform);
+        platform,
+        environment);
   }
 }

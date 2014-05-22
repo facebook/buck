@@ -276,6 +276,7 @@ public class ApkGenruleTest {
         })
         .setEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(Platform.LINUX) // Fix platform to Linux to use bash in genrule.
+        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
   }
 }

@@ -29,6 +29,7 @@ import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -66,7 +67,7 @@ public class QuickstartIntegrationTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(projectFilesystem,
             Optional.<String>absent(),
-            new DefaultPropertyFinder(projectFilesystem, System.getenv()));
+            new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
 
     // looks at local.properties, ANDROID_SDK, and ANDROID_HOME
     Path androidSdk =

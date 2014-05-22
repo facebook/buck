@@ -333,7 +333,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         console,
         getBuckEventBus(),
         options.getTargetDeviceOptional(),
-        getCommandRunnerParams().getPlatform())) {
+        getCommandRunnerParams().getPlatform(),
+        getCommandRunnerParams().getEnvironment())) {
 
       // Build all of the test rules.
       int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(

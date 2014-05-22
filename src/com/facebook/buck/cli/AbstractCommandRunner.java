@@ -33,6 +33,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -55,6 +56,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final BuckEventBus eventBus;
   private final Platform platform;
   private final AndroidDirectoryResolver androidDirectoryResolver;
+  private final ImmutableMap<String, String> environment;
 
   /** This is constructed lazily. */
   @Nullable private T options;
@@ -74,6 +76,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     this.platform = Preconditions.checkNotNull(params.getPlatform());
     this.androidDirectoryResolver =
         Preconditions.checkNotNull(params.getAndroidDirectoryResolver());
+    this.environment = Preconditions.checkNotNull(params.getEnvironment());
   }
 
   abstract T createOptions(BuckConfig buckConfig);
@@ -230,6 +233,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
                 getBuckEventBus()))
         .setEventBus(eventBus)
         .setPlatform(platform)
+        .setEnvironment(environment)
         .build();
   }
 

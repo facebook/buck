@@ -30,6 +30,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.easymock.EasyMockSupport;
@@ -62,6 +63,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         .setConsole(new TestConsole())
         .setEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(Platform.detect())
+        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
 
     ExternalJavacStep firstOrder = createTestStep(BuildDependencies.FIRST_ORDER_ONLY);

@@ -34,6 +34,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.regex.Pattern;
@@ -53,6 +54,7 @@ class CommandRunnerParams {
   private final BuckEventBus eventBus;
   private final Platform platform;
   private final AndroidDirectoryResolver androidDirectoryResolver;
+  private ImmutableMap<String, String> environment;
 
   @VisibleForTesting
   CommandRunnerParams(
@@ -63,7 +65,8 @@ class CommandRunnerParams {
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       String pythonInterpreter,
-      Platform platform) {
+      Platform platform,
+      ImmutableMap<String, String> environment) {
     this(console,
         projectFilesystem,
         androidDirectoryResolver,
@@ -82,7 +85,8 @@ class CommandRunnerParams {
                 return RuleKey.builder(buildRule, new NullFileHashCache());
               }
             }),
-        platform);
+        platform,
+        environment);
   }
 
   public CommandRunnerParams(
@@ -94,7 +98,8 @@ class CommandRunnerParams {
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       Parser parser,
-      Platform platform) {
+      Platform platform,
+      ImmutableMap<String, String> environment) {
     this.console = Preconditions.checkNotNull(console);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
@@ -104,6 +109,7 @@ class CommandRunnerParams {
     this.parser = Preconditions.checkNotNull(parser);
     this.platform = Preconditions.checkNotNull(platform);
     this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
+    this.environment = Preconditions.checkNotNull(environment);
   }
 
   public Ansi getAnsi() {
@@ -148,5 +154,9 @@ class CommandRunnerParams {
 
   public BuildEngine getBuildEngine() {
     return buildEngine;
+  }
+
+  public ImmutableMap<String, String> getEnvironment() {
+    return environment;
   }
 }

@@ -25,12 +25,14 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import org.easymock.EasyMockSupport;
 import org.easymock.IAnswer;
@@ -42,6 +44,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 import java.util.logging.Level;
 
 public class ShellStepTest extends EasyMockSupport {
@@ -265,6 +268,20 @@ public class ShellStepTest extends EasyMockSupport {
     prepareContextForOutput(Verbosity.ALL);
     command.interactWithProcess(context, process);
     assertEquals("", console.getTextWrittenToStdErr());
+  }
+
+  @Test
+  public void processEnvironmentIsUnionOfContextAndStepEnvironments() {
+    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
+    ExecutionContext context = TestExecutionContext.newBuilder()
+        .setEnvironment(ImmutableMap.of("CONTEXT_ENVIRONMENT_VARIABLE", "CONTEXT_VALUE"))
+        .build();
+    Map<String, String> subProcessEnvironment = Maps.newHashMap();
+    subProcessEnvironment.put("PROCESS_ENVIRONMENT_VARIABLE", "PROCESS_VALUE");
+    command.setProcessEnvironment(context, subProcessEnvironment);
+    assertEquals("Sub-process environment should be union of client and step environments.",
+        subProcessEnvironment,
+        ImmutableMap.builder().putAll(context.getEnvironment()).putAll(ENV).build());
   }
 
 }

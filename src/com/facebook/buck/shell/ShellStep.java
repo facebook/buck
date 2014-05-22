@@ -87,11 +87,7 @@ public abstract class ShellStep implements Step {
     // Kick off a Process in which this ShellCommand will be run.
     ProcessBuilder processBuilder = new ProcessBuilder(getShellCommand(context));
 
-    // Add environment variables, if appropriate.
-    if (!getEnvironmentVariables(context).isEmpty()) {
-      Map<String, String> environment = processBuilder.environment();
-      environment.putAll(getEnvironmentVariables(context));
-    }
+    setProcessEnvironment(context, processBuilder.environment());
 
     if (workingDirectory != null) {
       processBuilder.directory(workingDirectory);
@@ -114,6 +110,19 @@ public abstract class ShellStep implements Step {
 
     onProcessFinished(exitCode);
     return exitCode;
+  }
+
+  @VisibleForTesting
+  void setProcessEnvironment(ExecutionContext context, Map<String, String> environment) {
+
+    // Replace environment with client environment.
+    environment.clear();
+    environment.putAll(context.getEnvironment());
+
+    // Add extra environment variables for step, if appropriate.
+    if (!getEnvironmentVariables(context).isEmpty()) {
+      environment.putAll(getEnvironmentVariables(context));
+    }
   }
 
   @VisibleForTesting
