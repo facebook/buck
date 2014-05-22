@@ -74,7 +74,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
     private String pythonInterpreter = BuckTestConstant.PYTHON_INTERPRETER;
     private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     private Platform platform = Platform.detect();
-    private ImmutableMap environment = ImmutableMap.copyOf(System.getenv());
+    private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
 
     public CommandRunnerParamsForTesting build() {
       return new CommandRunnerParamsForTesting(
