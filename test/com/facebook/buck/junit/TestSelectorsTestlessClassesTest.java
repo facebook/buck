@@ -33,7 +33,7 @@ import java.io.IOException;
 /**
  * Test to demonstrate how, with or without the use of --filter, a class that contains no @Test
  * methods will never result in an internal NoTestsRemainException being returned to the user as an
- * error.
+ * error.  See {@link JUnitRunner#interpretResults(java.util.List)} for why this is weird.
  */
 public class TestSelectorsTestlessClassesTest {
 
