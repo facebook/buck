@@ -190,7 +190,9 @@ public class ExopackageInstaller {
     installSecondaryDexFiles(hashesToInstall, hashToBasename);
 
     // TODO(user): Make this work on Gingerbread.
-    AdbHelper.executeCommandWithErrorChecking(device, "am force-stop " + packageName);
+    try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "kill_app")) {
+      AdbHelper.executeCommandWithErrorChecking(device, "am force-stop " + packageName);
+    }
 
     return true;
   }
