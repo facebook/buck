@@ -108,7 +108,7 @@ public class GenAidlTest {
             pathToAidl),
         aidlStep.getDescription(executionContext));
 
-    assertEquals(6, steps.size());
+    assertEquals(5, steps.size());
 
     verify(androidPlatformTarget, executionContext);
   }

@@ -26,7 +26,6 @@ import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.RecordArtifactsInDirectoryStep;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -129,11 +128,6 @@ public class GenAidl extends AbstractBuildable {
     }
 
     commands.add(new MkdirStep(genDirectory));
-
-    commands.add(new RecordArtifactsInDirectoryStep(
-        buildableContext,
-        outputDirectory,
-        genDirectory));
 
     commands.add(new JarDirectoryStep(
             output,
