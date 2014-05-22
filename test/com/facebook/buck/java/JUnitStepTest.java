@@ -78,6 +78,7 @@ public class JUnitStepTest {
         isDebugEnabled,
         pretendBuildId,
         TestSelectorList.empty(),
+        /* isDryRun */ false,
         testRunnerClassesDirectory);
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
@@ -99,6 +100,7 @@ public class JUnitStepTest {
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults.toString(),
             "5000",
+            "",
             "",
             testClass1,
             testClass2),
@@ -142,6 +144,7 @@ public class JUnitStepTest {
         isDebugEnabled,
         pretendBuildId,
         TestSelectorList.empty(),
+        /* isDryRun */ false,
         testRunnerClassesDirectory);
 
 
@@ -171,6 +174,7 @@ public class JUnitStepTest {
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults.toString(),
             "0",
+            "",
             "",
             testClass1,
             testClass2),

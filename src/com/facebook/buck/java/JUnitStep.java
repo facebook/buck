@@ -66,6 +66,7 @@ public class JUnitStep extends ShellStep {
   private final boolean isDebugEnabled;
   private final BuildId buildId;
   private TestSelectorList testSelectorList;
+  private final boolean isDryRun;
 
   /**
    *  If EMMA is not enabled, then JaCoco is enabled for the code-coverage analysis.
@@ -103,7 +104,8 @@ public class JUnitStep extends ShellStep {
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
       BuildId buildId,
-      TestSelectorList testSelectorList) {
+      TestSelectorList testSelectorList,
+      boolean isDryRun) {
     this(classpathEntries,
         testClassNames,
         vmArgs,
@@ -114,6 +116,7 @@ public class JUnitStep extends ShellStep {
         isDebugEnabled,
         buildId,
         testSelectorList,
+        isDryRun,
         Paths.get(System.getProperty(
                 "buck.testrunner_classes",
                 new File("build/testrunner/classes").getAbsolutePath())));
@@ -131,6 +134,7 @@ public class JUnitStep extends ShellStep {
       boolean isDebugEnabled,
       BuildId buildId,
       TestSelectorList testSelectorList,
+      boolean isDryRun,
       Path testRunnerClassesDirectory) {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.testClassNames = ImmutableSet.copyOf(testClassNames);
@@ -142,6 +146,7 @@ public class JUnitStep extends ShellStep {
     this.isDebugEnabled = isDebugEnabled;
     this.buildId = buildId;
     this.testSelectorList = Preconditions.checkNotNull(testSelectorList);
+    this.isDryRun = isDryRun;
     this.testRunnerClassesDirectory = Preconditions.checkNotNull(testRunnerClassesDirectory);
   }
 
@@ -224,6 +229,9 @@ public class JUnitStep extends ShellStep {
       }
     }
     args.add(selectorsArgBuilder.toString());
+
+    // Dry-run flag.
+    args.add(isDryRun ? "non-empty-dry-run-flag" : "");
 
     // List all of the tests to be run.
     for (String testClassName : testClassNames) {

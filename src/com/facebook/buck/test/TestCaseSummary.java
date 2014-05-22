@@ -45,6 +45,7 @@ public class TestCaseSummary {
   private final String testCaseName;
   private final ImmutableList<TestResultSummary> testResults;
   private final boolean isSuccess;
+  private final boolean isDryRun;
   private final boolean hasAssumptionViolations;
   private final int skippedCount;
   private final int failureCount;
@@ -59,6 +60,7 @@ public class TestCaseSummary {
     this.testResults = ImmutableList.copyOf(testResults);
 
     boolean isSuccess = true;
+    boolean isDryRun = false;
     boolean hasAssumptionViolations = false;
     int skippedCount = 0;
     int failureCount = 0;
@@ -67,6 +69,10 @@ public class TestCaseSummary {
       totalTime += result.getTime();
       switch (result.getType()) {
         case SUCCESS:
+          break;
+
+        case DRY_RUN:
+          isDryRun = true;
           break;
 
         case ASSUMPTION_VIOLATION:
@@ -81,6 +87,7 @@ public class TestCaseSummary {
       }
     }
     this.isSuccess = isSuccess;
+    this.isDryRun = isDryRun;
     this.hasAssumptionViolations = hasAssumptionViolations;
     this.skippedCount = skippedCount;
     this.failureCount = failureCount;
@@ -94,6 +101,7 @@ public class TestCaseSummary {
     this.testCaseName = summary.testCaseName;
     this.testResults = summary.testResults;
     this.isSuccess = summary.isSuccess;
+    this.isDryRun = summary.isDryRun;
     this.hasAssumptionViolations = summary.hasAssumptionViolations;
     this.skippedCount = summary.skippedCount;
     this.failureCount = summary.failureCount;
@@ -122,7 +130,10 @@ public class TestCaseSummary {
   public String getOneLineSummary(boolean hasPassingDependencies, Ansi ansi) {
     String statusText;
     Ansi.SeverityLevel severityLevel;
-    if (!isSuccess()) {
+    if (isDryRun) {
+      severityLevel = Ansi.SeverityLevel.WARNING;
+      statusText = "DRYRUN";
+    } else if (!isSuccess()) {
       if (hasPassingDependencies) {
         severityLevel = Ansi.SeverityLevel.ERROR;
         statusText = "FAIL";

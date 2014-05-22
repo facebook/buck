@@ -188,6 +188,7 @@ public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, 
   public List<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
+      boolean isDryRun,
       TestSelectorList testSelectorList) {
     // If no classes were generated, then this is probably a java_test() that declares a number of
     // other java_test() rules as deps, functioning as a test suite. In this case, simply return an
@@ -220,7 +221,8 @@ public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, 
         executionContext.isJacocoEnabled(),
         executionContext.isDebugEnabled(),
         executionContext.getBuckEventBus().getBuildId(),
-        testSelectorList);
+        testSelectorList,
+        isDryRun);
     steps.add(junit);
 
     return steps.build();
@@ -293,7 +295,8 @@ public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, 
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext context,
-      final boolean isUsingTestSelectors) {
+      final boolean isUsingTestSelectors,
+      final boolean isDryRun) {
     final ImmutableSet<String> contacts = getContacts();
     return new Callable<TestResults>() {
 
@@ -309,7 +312,13 @@ public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, 
         List<TestCaseSummary> summaries = Lists.newArrayListWithCapacity(testClassNames.size());
         ProjectFilesystem filesystem = context.getProjectFilesystem();
         for (String testClass : testClassNames) {
-          String testSelectorSuffix = isUsingTestSelectors ? ".test_selectors" : "";
+          String testSelectorSuffix = "";
+          if (isUsingTestSelectors) {
+            testSelectorSuffix += ".test_selectors";
+          }
+          if (isDryRun) {
+            testSelectorSuffix += ".dry_run";
+          }
           String path = String.format("%s%s.xml", testClass, testSelectorSuffix);
           File testResultFile = filesystem.getFileForRelativePath(
               getPathToTestOutputDirectory().resolve(path));

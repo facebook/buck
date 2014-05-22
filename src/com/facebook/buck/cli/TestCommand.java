@@ -139,9 +139,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     Iterable<TestRule> results = getCandidateRules(build.getActionGraph());
 
     results = filterTestRules(options, results);
-    if (options.isPrintMatchingTestRules()) {
+    if (options.isDryRun()) {
       printMatchingTestRules(console, results);
-      return 0;
     }
 
     BuildContext buildContext = build.getBuildContext();
@@ -316,9 +315,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         });
 
     testRules = filterTestRules(options, testRules);
-    if (options.isPrintMatchingTestRules()) {
+    if (options.isDryRun()) {
       printMatchingTestRules(console, testRules);
-      return 0;
     }
 
     // Create artifact cache to initialize Cassandra connection, if appropriate.
@@ -528,6 +526,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         List<Step> testSteps = test.runTests(
             buildContext,
             executionContext,
+            options.isDryRun(),
             options.getTestSelectorList());
         if (!testSteps.isEmpty()) {
           stepsBuilder.addAll(testSteps);
@@ -545,7 +544,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
               getCachingStatusTransformingCallable(
                   isTestRunRequired,
                   test.interpretTestResults(executionContext,
-                      /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty())),
+                      /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
+                      /*isDryRun*/ options.isDryRun())),
               test.getBuildTarget());
       FutureCallback<TestResults> onTestFinishedCallback =
           getFutureCallback(grouper, test, options, printTestResults);

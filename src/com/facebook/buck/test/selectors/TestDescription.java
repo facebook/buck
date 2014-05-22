@@ -16,6 +16,8 @@
 
 package com.facebook.buck.test.selectors;
 
+import java.util.Objects;
+
 /**
  * A non-JUnit specific way of describing a test-method inside a test-class.  This meants that the
  * test-selectors code does not need a dependency on JUnit.
@@ -37,4 +39,15 @@ public class TestDescription {
    public String getMethodName() {
      return methodName;
    }
- }
+
+  @Override
+  public boolean equals(Object obj) {
+    return (obj instanceof TestDescription) &&
+        this.hashCode() == obj.hashCode();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.className, this.methodName);
+  }
+}

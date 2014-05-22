@@ -76,6 +76,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   public List<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
+      boolean isDryRun,
       TestSelectorList testSelectorList) {
     throw new UnsupportedOperationException("runTests() not supported in fake");
   }
@@ -83,7 +84,8 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      boolean isUsingTestSelectors) {
+      boolean isUsingTestSelectors,
+      boolean isDryRun) {
     throw new UnsupportedOperationException("interpretTestResults() not supported in fake");
   }
 

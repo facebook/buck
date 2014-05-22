@@ -16,6 +16,7 @@
 
 package com.facebook.buck.junit;
 
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 
@@ -42,7 +43,9 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -69,16 +72,20 @@ public final class JUnitRunner {
   private final List<String> testClassNames;
   private final long defaultTestTimeoutMillis;
   private final TestSelectorList testSelectorList;
+  private final boolean isDryRun;
+  private final Set<TestDescription> seenDescriptions = new HashSet<>();
 
   public JUnitRunner(
       File outputDirectory,
       List<String> testClassNames,
       long defaultTestTimeoutMillis,
-      TestSelectorList testSelectorList) {
+      TestSelectorList testSelectorList,
+      boolean isDryRun) {
     this.outputDirectory = outputDirectory;
     this.testClassNames = testClassNames;
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
     this.testSelectorList = testSelectorList;
+    this.isDryRun = isDryRun;
   }
 
   public void run() throws Throwable {
@@ -94,7 +101,12 @@ public final class JUnitRunner {
         } else {
           String className = description.getClassName();
           TestDescription testDescription = new TestDescription(className, methodName);
-          return testSelectorList.isIncluded(testDescription);
+          seenDescriptions.add(testDescription);
+          if (isDryRun) {
+            return false;
+          } else {
+            return testSelectorList.isIncluded(testDescription);
+          }
         }
       }
 
@@ -125,7 +137,7 @@ public final class JUnitRunner {
         jUnitCore.run(request);
       }
 
-      results = interpretResults(results);
+      results = interpretResults(className, results);
       if (results != null) {
         writeResult(className, results);
       }
@@ -145,7 +157,26 @@ public final class JUnitRunner {
    * NoTestsRemainException to be thrown, which is propagated back as an error.
    */
   /* @Nullable */
-  private List<TestResult> interpretResults(List<TestResult> results) {
+  private List<TestResult> interpretResults(String className, List<TestResult> results) {
+    // For dry runs, write fake results for every method seen in the given class.
+    if (isDryRun) {
+      List<TestResult> fakeResults = new ArrayList<>();
+      for (TestDescription seenDescription : seenDescriptions) {
+        if (seenDescription.getClassName().equals(className)) {
+          TestResult fakeResult = new TestResult(
+            seenDescription.getClassName(),
+              seenDescription.getMethodName(),
+              0L,
+              ResultType.DRY_RUN,
+              null,
+              "",
+              "");
+          fakeResults.add(fakeResult);
+        }
+      }
+      return fakeResults;
+    }
+
     // When not using any command line filtering options, all results should be recorded.
     if (testSelectorList.isEmpty()) {
       if (isSingleResultCausedByNoTestsRemainException(results)) {
@@ -319,7 +350,13 @@ public final class JUnitRunner {
     trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 
     // Write the result to a file.
-    String testSelectorSuffix = testSelectorList.isEmpty() ? "" : ".test_selectors";
+    String testSelectorSuffix = "";
+    if (!testSelectorList.isEmpty()) {
+      testSelectorSuffix += ".test_selectors";
+    }
+    if (isDryRun) {
+      testSelectorSuffix += ".dry_run";
+    }
     File outputFile = new File(outputDirectory, testClassName + testSelectorSuffix + ".xml");
     OutputStream output = new BufferedOutputStream(new FileOutputStream(outputFile));
     StreamResult streamResult = new StreamResult(output);
@@ -370,14 +407,17 @@ public final class JUnitRunner {
           .build();
     }
 
-    // Each argument other than the first one should be a class name to run.
-    List<String> testClassNames = Arrays.asList(args).subList(3, args.length);
+    boolean isDryRun = !args[3].isEmpty();
+
+    // Each subsequent argument should be a class name to run.
+    List<String> testClassNames = Arrays.asList(args).subList(4, args.length);
 
     // Run the tests.
     new JUnitRunner(outputDirectory,
         testClassNames,
         defaultTestTimeoutMillis,
-        testSelectorList)
+        testSelectorList,
+        isDryRun)
     .run();
 
     // Explicitly exit to force the test runner to complete even if tests have sloppily left behind

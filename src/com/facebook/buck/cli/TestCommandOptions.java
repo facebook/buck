@@ -67,7 +67,7 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Option(
       name = "--dry-run",
       usage = "Print tests that match the given command line options, but don't run them.")
-  private boolean printMatchingTestRules;
+  private boolean isDryRun;
 
   @AdditionalOptions
   private TargetDeviceOptions targetDeviceOptions;
@@ -139,8 +139,8 @@ public class TestCommandOptions extends BuildCommandOptions {
     return testSelectorOptions.shouldExplain();
   }
 
-  public boolean isPrintMatchingTestRules() {
-    return printMatchingTestRules;
+  public boolean isDryRun() {
+    return isDryRun;
   }
 
   public boolean isMatchedByLabelOptions(Set<Label> labels) {

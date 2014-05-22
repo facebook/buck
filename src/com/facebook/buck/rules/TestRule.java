@@ -52,6 +52,7 @@ public interface TestRule extends HasBuildTarget {
    * @param buildContext Because this method may be run without
    *     {@link BuildEngine#build(BuildContext, BuildRule)} having been run, this is supplied in
    *     case any non-cacheable build work needs to be done.
+   * @param isDryRun
    * @param executionContext Provides context for creating {@link Step}s.
    * @param testSelectorList Provides a way of selecting which tests to include or exclude
    *     from a run.
@@ -60,11 +61,13 @@ public interface TestRule extends HasBuildTarget {
   public List<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
+      boolean isDryRun,
       TestSelectorList testSelectorList);
 
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      boolean isUsingTestSelectors);
+      boolean isUsingTestSelectors,
+      boolean isDryRun);
 
   /**
    * @return The set of labels for this build rule.

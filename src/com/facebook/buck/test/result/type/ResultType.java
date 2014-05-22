@@ -17,7 +17,8 @@
 package com.facebook.buck.test.result.type;
 
 public enum ResultType {
-  SUCCESS,
-  FAILURE,
   ASSUMPTION_VIOLATION,
+  DRY_RUN,
+  FAILURE,
+  SUCCESS,
 }
