@@ -25,16 +25,26 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 public class AndroidResourceDescription implements Description<AndroidResourceDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("android_resource");
+
+  private static final ImmutableSet<String> NON_ASSET_FILENAMES =
+      ImmutableSet.of(".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
+
   private final Optional<Path> aaptOverride;
 
   public AndroidResourceDescription(Optional<Path> aaptOverride) {
@@ -69,15 +79,52 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         aaptOverride);
   }
 
-  private ImmutableSortedSet<Path> collectInputFiles(
+  @VisibleForTesting
+  ImmutableSortedSet<Path> collectInputFiles(
       ProjectFilesystem filesystem,
       Optional<Path> inputDir) {
     if (!inputDir.isPresent()) {
       return ImmutableSortedSet.of();
     }
-    ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
+    final ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
+
+    // aapt, unless specified a pattern, ignores certain files and directories. We follow the same
+    // logic as the default pattern found at http://goo.gl/OTTK88 and line 61.
+    FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
+      @Override
+      public FileVisitResult preVisitDirectory(
+          Path dir,
+          BasicFileAttributes attr) throws IOException {
+        String dirName = dir.getFileName().toString();
+        // Special case: directory starting with '_' as per aapt.
+        if (dirName.charAt(0) == '_' || !isResource(dirName)) {
+          return FileVisitResult.SKIP_SUBTREE;
+        }
+        return FileVisitResult.CONTINUE;
+      }
+
+      @Override
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
+        String filename = file.getFileName().toString();
+        if (isResource(filename)) {
+          paths.add(file);
+        }
+        return FileVisitResult.CONTINUE;
+      }
+
+      private boolean isResource(String fileOrDirName) {
+        if (NON_ASSET_FILENAMES.contains(fileOrDirName.toLowerCase())) {
+          return false;
+        }
+        if (fileOrDirName.charAt(fileOrDirName.length() - 1) == '~') {
+          return false;
+        }
+        return true;
+      }
+    };
+
     try {
-      paths.addAll(filesystem.getFilesUnderPath(inputDir.get()));
+      filesystem.walkRelativeFileTree(inputDir.get(), fileVisitor);
     } catch (IOException e) {
       throw new HumanReadableException(e, "Error traversing directory: %s.", inputDir.get());
     }
