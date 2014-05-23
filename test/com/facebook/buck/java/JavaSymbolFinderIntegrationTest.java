@@ -32,6 +32,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
@@ -57,7 +58,8 @@ public class JavaSymbolFinderIntegrationTest {
     BuckConfig config = BuckConfig.createFromFiles(
         projectFilesystem,
         ImmutableList.of(projectFilesystem.getFileForRelativePath(".buckconfig")),
-        Platform.detect());
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
     ImmutableSet<Description<?>> allDescriptions =
         DefaultKnownBuildRuleTypes
         .getDefaultKnownBuildRuleTypes(projectFilesystem)

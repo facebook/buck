@@ -176,7 +176,8 @@ public class ProjectCommandTest {
         new StringReader(contents),
         dummyProjectFilesystem,
         new BuildTargetParser(dummyProjectFilesystem),
-        Platform.detect());
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
   }
 
   private static void checkPredicate(

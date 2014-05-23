@@ -31,6 +31,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -131,7 +132,12 @@ public class JavaBuckConfigTest {
       throws IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     BuildTargetParser parser = new BuildTargetParser(filesystem);
-    BuckConfig raw = BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
+    BuckConfig raw = BuckConfig.createFromReader(
+        reader,
+        filesystem,
+        parser,
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
     return new JavaBuckConfig(raw);
   }
 }

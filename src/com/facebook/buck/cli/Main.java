@@ -440,14 +440,18 @@ public final class Main {
       Optional<NGContext> context,
       String... args) throws IOException {
 
+    // Get the client environment, either from this process or from the Nailgun context.
+    ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
+
 
     // Create common command parameters. projectFilesystem initialization looks odd because it needs
     // ignorePaths from a BuckConfig instance, which in turn needs a ProjectFilesystem (i.e. this
     // solves a bootstrapping issue).
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(
         Paths.get(projectRoot.getPath()),
-        createBuckConfig(new ProjectFilesystem(projectRoot), platform).getIgnorePaths());
-    BuckConfig config = createBuckConfig(projectFilesystem, platform);
+        createBuckConfig(new ProjectFilesystem(projectRoot), platform, clientEnvironment)
+            .getIgnorePaths());
+    BuckConfig config = createBuckConfig(projectFilesystem, platform, clientEnvironment);
     Verbosity verbosity = VerbosityParser.parse(args);
     Optional<String> color;
     final boolean isDaemon = context.isPresent();
@@ -472,7 +476,6 @@ public final class Main {
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(processExecutor);
 
     // Configure the AndroidDirectoryResolver.
-    ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
     PropertyFinder propertyFinder = new DefaultPropertyFinder(
         projectFilesystem,
         clientEnvironment);
@@ -774,7 +777,10 @@ public final class Main {
   /**
    * @param projectFilesystem The directory that is the root of the project being built.
    */
-  private static BuckConfig createBuckConfig(ProjectFilesystem projectFilesystem, Platform platform)
+  private static BuckConfig createBuckConfig(
+      ProjectFilesystem projectFilesystem,
+      Platform platform,
+      ImmutableMap<String, String> environment)
       throws IOException {
     ImmutableList.Builder<File> configFileBuilder = ImmutableList.builder();
     File configFile = projectFilesystem.getFileForRelativePath(DEFAULT_BUCK_CONFIG_FILE_NAME);
@@ -788,7 +794,11 @@ public final class Main {
     }
 
     ImmutableList<File> configFiles = configFileBuilder.build();
-    return BuckConfig.createFromFiles(projectFilesystem, configFiles, platform);
+    return BuckConfig.createFromFiles(
+        projectFilesystem,
+        configFiles,
+        platform,
+        environment);
   }
 
   /**

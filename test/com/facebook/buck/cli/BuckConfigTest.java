@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -370,7 +371,12 @@ public class BuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[project]",
         "ignore = .git, foo, bar/, baz//, a/b/c"));
-    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
+    BuckConfig config = BuckConfig.createFromReader(
+        reader,
+        filesystem,
+        parser,
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
 
     ImmutableSet<Path> ignorePaths = config.getIgnorePaths();
     assertEquals("Should ignore paths, sans trailing slashes", ignorePaths,
@@ -399,7 +405,12 @@ public class BuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[cache]",
         "dir = cache_dir"));
-    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
+    BuckConfig config = BuckConfig.createFromReader(
+        reader,
+        filesystem,
+        parser,
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
 
     ImmutableSet<Path> ignorePaths = config.getIgnorePaths();
     assertTrue("Relative cache directory should be in set of ignored paths",
@@ -417,7 +428,12 @@ public class BuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[cache]",
         "dir = /cache_dir"));
-    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
+    BuckConfig config = BuckConfig.createFromReader(
+        reader,
+        filesystem,
+        parser,
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
 
     ImmutableSet<Path> ignorePaths = config.getIgnorePaths();
     assertFalse("Absolute cache directory should not be in set of ignored paths",
@@ -584,7 +600,8 @@ public class BuckConfigTest {
             .put("PATHEXT", "")
             .build(),
         ImmutableMap.of("buck.path_to_python_interp", jython.getAbsolutePath()));
-    assertEquals("Should fallback to Jython.",
+    assertEquals(
+        "Should fallback to Jython.",
         jython.getAbsolutePath(),
         config.getPythonInterpreter());
   }
@@ -613,19 +630,38 @@ public class BuckConfigTest {
     config.getProguardJarOverride();
   }
 
+  @Test
+  public void getEnvUsesSuppliedEnvironment() {
+    String name = "SOME_ENVIRONMENT_VARIABLE";
+    String value = "SOME_VALUE";
+    FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.of(name, value));
+    String[] expected = {value};
+    assertArrayEquals("Should match value in environment.", expected, config.getEnv(name, ":"));
+  }
+
   private BuckConfig createWithDefaultFilesystem(Reader reader, @Nullable BuildTargetParser parser)
       throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     if (parser == null) {
       parser = new BuildTargetParser(projectFilesystem);
     }
-    return BuckConfig.createFromReader(reader, projectFilesystem, parser, Platform.detect());
+    return BuckConfig.createFromReader(
+        reader,
+        projectFilesystem,
+        parser,
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
   }
 
   private BuckConfig createFromText(String... lines) throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
     BuildTargetParser parser = new BuildTargetParser(projectFilesystem);
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
-    return BuckConfig.createFromReader(reader, projectFilesystem, parser, Platform.detect());
+    return BuckConfig.createFromReader(
+        reader,
+        projectFilesystem,
+        parser,
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
   }
 }

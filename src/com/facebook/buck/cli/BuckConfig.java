@@ -110,6 +110,8 @@ public class BuckConfig {
 
   private final Platform platform;
 
+  private final ImmutableMap<String, String> environment;
+
   private enum ArtifactCacheNames {
     dir,
     cassandra
@@ -131,7 +133,8 @@ public class BuckConfig {
   BuckConfig(Map<String, Map<String, String>> sectionsToEntries,
       ProjectFilesystem projectFilesystem,
       BuildTargetParser buildTargetParser,
-      Platform platform) {
+      Platform platform,
+      ImmutableMap<String, String> environment) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
 
@@ -149,7 +152,8 @@ public class BuckConfig {
         this.getEntriesForSection(ALIAS_SECTION_HEADER),
         buildTargetParser);
 
-    this.platform = platform;
+    this.platform = Preconditions.checkNotNull(platform);
+    this.environment = Preconditions.checkNotNull(environment);
   }
 
   /**
@@ -161,7 +165,8 @@ public class BuckConfig {
    */
   public static BuckConfig createFromFiles(ProjectFilesystem projectFilesystem,
       Iterable<File> files,
-      Platform platform)
+      Platform platform,
+      ImmutableMap<String, String> environment)
       throws IOException {
     Preconditions.checkNotNull(projectFilesystem);
     Preconditions.checkNotNull(files);
@@ -172,7 +177,8 @@ public class BuckConfig {
           ImmutableMap.<String, Map<String, String>>of(),
           projectFilesystem,
           buildTargetParser,
-          platform);
+          platform,
+          environment);
     }
 
     // Convert the Files to Readers.
@@ -180,7 +186,12 @@ public class BuckConfig {
     for (File file : files) {
       readers.add(Files.newReader(file, Charsets.UTF_8));
     }
-    return createFromReaders(readers.build(), projectFilesystem, buildTargetParser, platform);
+    return createFromReaders(
+        readers.build(),
+        projectFilesystem,
+        buildTargetParser,
+        platform,
+        environment);
   }
 
   /**
@@ -220,10 +231,15 @@ public class BuckConfig {
       Reader reader,
       ProjectFilesystem projectFilesystem,
       BuildTargetParser buildTargetParser,
-      Platform platform)
+      Platform platform,
+      ImmutableMap<String, String> environment)
       throws IOException {
     return createFromReaders(
-        ImmutableList.of(reader), projectFilesystem, buildTargetParser, platform);
+        ImmutableList.of(reader),
+        projectFilesystem,
+        buildTargetParser,
+        platform,
+        environment);
   }
 
   @VisibleForTesting
@@ -279,10 +295,16 @@ public class BuckConfig {
   static BuckConfig createFromReaders(Iterable<Reader> readers,
       ProjectFilesystem projectFilesystem,
       BuildTargetParser buildTargetParser,
-      Platform platform)
+      Platform platform,
+      ImmutableMap<String, String> environment)
       throws IOException {
     Map<String, Map<String, String>> sectionsToEntries = createFromReaders(readers);
-    return new BuckConfig(sectionsToEntries, projectFilesystem, buildTargetParser, platform);
+    return new BuckConfig(
+        sectionsToEntries,
+        projectFilesystem,
+        buildTargetParser,
+        platform,
+        environment);
   }
 
   public ImmutableMap<String, String> getEntriesForSection(String section) {
@@ -707,7 +729,7 @@ public class BuckConfig {
 
   @VisibleForTesting
   String[] getEnv(String propertyName, String separator) {
-    String value = System.getenv(propertyName);
+    String value = environment.get(propertyName);
     if (value == null) {
       value = "";
     }
