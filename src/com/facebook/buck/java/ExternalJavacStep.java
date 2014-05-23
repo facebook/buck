@@ -133,8 +133,10 @@ public class ExternalJavacStep extends JavacStep {
 
     ProcessBuilder processBuilder = new ProcessBuilder(command.build());
 
-    // Add additional information to the environment
+    // Set environment to client environment and add additional information.
     Map<String, String> env = processBuilder.environment();
+    env.clear();
+    env.putAll(context.getEnvironment());
     env.put("BUCK_INVOKING_RULE", invokingRule.or(""));
     env.put("BUCK_TARGET", target.toString());
     env.put("BUCK_DIRECTORY_ROOT", context.getProjectDirectoryRoot().toString());

@@ -31,6 +31,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
@@ -170,12 +171,17 @@ public class ProjectWorkspace {
   }
 
   public ProcessResult runBuckdCommand(String... args) throws IOException {
+    return runBuckdCommand(ImmutableMap.copyOf(System.getenv()), args);
+  }
+
+  public ProcessResult runBuckdCommand(ImmutableMap<String, String> environment, String... args)
+      throws IOException {
 
     assertTrue("setUp() must be run before this method is invoked", isSetUp);
     CapturingPrintStream stdout = new CapturingPrintStream();
     CapturingPrintStream stderr = new CapturingPrintStream();
 
-    NGContext context = new TestContext();
+    NGContext context = new TestContext(environment);
 
     Main main = new Main(stdout, stderr);
     int exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>of(context), args);
@@ -357,9 +363,15 @@ public class ProjectWorkspace {
    */
   private class TestContext extends NGContext {
 
-    public TestContext() {
+    Properties properties;
+
+    public TestContext(ImmutableMap<String, String> environment) {
       in = new ByteArrayInputStream(new byte[0]);
       setExitStream(new CapturingPrintStream());
+      properties = new Properties();
+      for (String key : environment.keySet()) {
+        properties.setProperty(key, environment.get(key));
+      }
     }
 
     @Override
@@ -368,10 +380,6 @@ public class ProjectWorkspace {
 
     @Override
     public Properties getEnv() {
-      Properties properties = new Properties();
-      for (String key : System.getenv().keySet()) {
-        properties.setProperty(key, System.getenv().get(key));
-      }
       return properties;
     }
   }

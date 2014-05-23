@@ -17,10 +17,13 @@
 package com.facebook.buck.java;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -37,6 +40,8 @@ public class ExternalJavacIntegrationTest {
   @Test
   public void whenExternalJavacIsSetCompilationSucceeds()
     throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "external_javac", tmp);
 
@@ -52,6 +57,8 @@ public class ExternalJavacIntegrationTest {
   @Test
   public void whenExternalSrcZipUsedCompilationSucceeds()
       throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "external_javac_src_zip", tmp);
 
@@ -68,6 +75,8 @@ public class ExternalJavacIntegrationTest {
   @Test
   public void whenExternalJavacFailsOutputIsInFailureMessage()
       throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "external_javac", tmp);
     workspace.setUp();
@@ -84,6 +93,24 @@ public class ExternalJavacIntegrationTest {
     assertThat(
         "Expected exit code should have been in failure message.", result.getStderr(),
         Matchers.containsString("42"));
+  }
+
+  @Test
+  public void whenBuckdUsesExternalJavacThenClientEnvironmentUsed() throws IOException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "external_javac", tmp);
+    workspace.setUp();
+
+    File javac = workspace.getFile("check_env.sh");
+    javac.setExecutable(true);
+
+    workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.getAbsolutePath());
+    workspace.runBuckdCommand(
+        ImmutableMap.of("CHECK_THIS_VARIABLE", "1"),
+        "build",
+        "example")
+        .assertSuccess();
+
   }
 
 }
