@@ -181,7 +181,7 @@ public class TestResultFormatterTest {
 
     formatter.reportResult(builder, results);
 
-    assertEquals("PASS  500ms  1 Passed   0 Failed   com.example.FooTest",
+    assertEquals("PASS    500ms  1 Passed   0 Skipped   0 Failed   com.example.FooTest",
         toString(builder));
   }
 
@@ -195,7 +195,7 @@ public class TestResultFormatterTest {
     formatter.reportResult(builder, results);
 
     String expected = String.format(Joiner.on('\n').join(
-        "FAIL  200ms  0 Passed   1 Failed   com.example.FooTest",
+        "FAIL    200ms  0 Passed   0 Skipped   1 Failed   com.example.FooTest",
         "FAILURE %s: %s",
         "%s",
         "====STANDARD OUT====",

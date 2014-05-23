@@ -40,10 +40,13 @@ public class TestCaseSummary {
           return new TestCaseSummary(summary, /* isCached */ true);
         }
       };
+  public static final int MAX_STATUS_WIDTH = 6;
 
   private final String testCaseName;
   private final ImmutableList<TestResultSummary> testResults;
   private final boolean isSuccess;
+  private final boolean hasAssumptionViolations;
+  private final int skippedCount;
   private final int failureCount;
   private final long totalTime;
   private final boolean isCached;
@@ -56,16 +59,30 @@ public class TestCaseSummary {
     this.testResults = ImmutableList.copyOf(testResults);
 
     boolean isSuccess = true;
+    boolean hasAssumptionViolations = false;
+    int skippedCount = 0;
     int failureCount = 0;
     long totalTime = 0L;
     for (TestResultSummary result : testResults) {
       totalTime += result.getTime();
-      if (!result.isSuccess()) {
-        isSuccess = false;
-        ++failureCount;
+      switch (result.getType()) {
+        case SUCCESS:
+          break;
+
+        case ASSUMPTION_VIOLATION:
+          hasAssumptionViolations = true;
+          ++skippedCount;
+          break;
+
+        case FAILURE:
+          isSuccess = false;
+          ++failureCount;
+          break;
       }
     }
     this.isSuccess = isSuccess;
+    this.hasAssumptionViolations = hasAssumptionViolations;
+    this.skippedCount = skippedCount;
     this.failureCount = failureCount;
     this.totalTime = totalTime;
     this.isCached = false;
@@ -77,6 +94,8 @@ public class TestCaseSummary {
     this.testCaseName = summary.testCaseName;
     this.testResults = summary.testResults;
     this.isSuccess = summary.isSuccess;
+    this.hasAssumptionViolations = summary.hasAssumptionViolations;
+    this.skippedCount = summary.skippedCount;
     this.failureCount = summary.failureCount;
     this.totalTime = summary.totalTime;
     this.isCached = isCached;
@@ -84,6 +103,10 @@ public class TestCaseSummary {
 
   public boolean isSuccess() {
     return isSuccess;
+  }
+
+  public boolean hasAssumptionViolations() {
+    return hasAssumptionViolations;
   }
 
   public String getTestCaseName() {
@@ -97,26 +120,41 @@ public class TestCaseSummary {
 
   /** @return a one-line, printable summary */
   public String getOneLineSummary(boolean hasPassingDependencies, Ansi ansi) {
-    String status;
+    String statusText;
     Ansi.SeverityLevel severityLevel;
     if (!isSuccess()) {
       if (hasPassingDependencies) {
         severityLevel = Ansi.SeverityLevel.ERROR;
-        status = ansi.asHighlightedStatusText(severityLevel, "FAIL");
+        statusText = "FAIL";
       } else {
         severityLevel = Ansi.SeverityLevel.WARNING;
-        status = ansi.asHighlightedStatusText(severityLevel, "DROP");
+        statusText = "DROP";
       }
     } else {
-      severityLevel = Ansi.SeverityLevel.OK;
-      status = ansi.asHighlightedStatusText(severityLevel, "PASS");
+      if (hasAssumptionViolations) {
+        severityLevel = Ansi.SeverityLevel.WARNING;
+        statusText = "ASSUME";
+      } else {
+        severityLevel = Ansi.SeverityLevel.OK;
+        statusText = "PASS";
+      }
     }
 
-    return String.format("%s %s %2d Passed  %2d Failed   %s",
+    String status = ansi.asHighlightedStatusText(severityLevel, statusText);
+    int paddingWidth = MAX_STATUS_WIDTH - statusText.length();
+    String padding = "";
+    for (int position = 0; position < paddingWidth; position++) {
+      padding += ' ';
+    }
+
+    int passedCount = testResults.size() - failureCount - skippedCount;
+    return String.format("%s%s %s %2d Passed  %2d Skipped  %2d Failed   %s",
         status,
+        padding,
         !isCached ? TimeFormat.formatForConsole(totalTime, ansi)
                   : ansi.asHighlightedStatusText(severityLevel, "CACHED"),
-        testResults.size() - failureCount,
+        passedCount,
+        skippedCount,
         failureCount,
         testCaseName);
   }
@@ -132,7 +170,19 @@ public class TestCaseSummary {
   @Override
   public String toString() {
     return String.format("%s %s",
-        isSuccess() ? "PASS" : "FAIL",
+        getShortStatusSummaryString(),
         testCaseName);
+  }
+
+  private String getShortStatusSummaryString() {
+    if (isSuccess) {
+      if (hasAssumptionViolations) {
+        return "ASSUME";
+      } else {
+        return "PASS";
+      }
+    } else {
+      return "FAIL";
+    }
   }
 }

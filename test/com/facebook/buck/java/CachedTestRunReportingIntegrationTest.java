@@ -88,7 +88,7 @@ public class CachedTestRunReportingIntegrationTest {
     }
     // Test that Test status is reported
     assertTrue(result.getStderr().contains("com.example.LameTest"));
-    String status = expectSuccess ? "PASS CACHED" : "FAIL CACHED";
+    String status = expectSuccess ? "PASS   CACHED" : "FAIL   CACHED";
     return result.getStderr().contains(status);
   }
 }

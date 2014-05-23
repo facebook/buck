@@ -141,25 +141,27 @@ public class TestSelectorsIntegrationTest {
   private void assertOutputWithSelectors(ProjectWorkspace.ProcessResult result) {
     String stderr = result.getStderr();
     assertThat(stderr, containsString(
-        "PASS <100ms  1 Passed   0 Failed   com.example.clown.CarTest"));
+        "PASS   <100ms  1 Passed   0 Skipped   0 Failed   com.example.clown.CarTest"));
     assertThat(stderr, containsString(
-        "PASS <100ms  1 Passed   0 Failed   com.example.clown.FlowerTest"));
+        "PASS   <100ms  1 Passed   0 Skipped   0 Failed   com.example.clown.FlowerTest"));
     assertThat(stderr, containsString(
-        "PASS <100ms  1 Passed   0 Failed   com.example.clown.PrimeMinisterialDecreeTest"));
+        "PASS   <100ms  1 Passed   0 Skipped   0 Failed   " +
+        "com.example.clown.PrimeMinisterialDecreeTest"));
     assertThat(stderr, containsString(
-        "PASS <100ms  1 Passed   0 Failed   com.example.clown.ShoesTest"));
+        "PASS   <100ms  1 Passed   0 Skipped   0 Failed   com.example.clown.ShoesTest"));
   }
 
   private void assertOutputWithoutSelectors(ProjectWorkspace.ProcessResult result) {
     String stderr = result.getStderr();
     assertThat(stderr, containsString(
-        "PASS <100ms  3 Passed   0 Failed   com.example.clown.CarTest"));
+        "PASS   <100ms  3 Passed   0 Skipped   0 Failed   com.example.clown.CarTest"));
     assertThat(stderr, containsString(
-        "PASS <100ms  3 Passed   0 Failed   com.example.clown.FlowerTest"));
+        "PASS   <100ms  3 Passed   0 Skipped   0 Failed   com.example.clown.FlowerTest"));
     assertThat(stderr, containsString(
-        "FAIL <100ms  5 Passed   1 Failed   com.example.clown.PrimeMinisterialDecreeTest"));
+        "FAIL   <100ms  5 Passed   0 Skipped   1 Failed   " +
+        "com.example.clown.PrimeMinisterialDecreeTest"));
     assertThat(stderr, containsString(
-        "PASS <100ms  2 Passed   0 Failed   com.example.clown.ShoesTest"));
+        "PASS   <100ms  2 Passed   0 Skipped   0 Failed   com.example.clown.ShoesTest"));
   }
 
   private void assertCached(ProjectWorkspace.ProcessResult result) {

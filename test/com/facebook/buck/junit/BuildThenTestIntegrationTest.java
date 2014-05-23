@@ -54,7 +54,7 @@ public class BuildThenTestIntegrationTest {
       "Test output is incorrect:\n=====\n" + testResult.getStderr() + "=====\n",
       testResult.getStderr().contains(
         "TESTING //:example\n" +
-        "PASS <100ms  1 Passed   0 Failed   com.example.MyTest\n" +
+        "PASS   <100ms  1 Passed   0 Skipped   0 Failed   com.example.MyTest\n" +
         "TESTS PASSED\n"));
     testResult.assertSuccess("Passing tests should exit with 0.");
     workspace.verify();

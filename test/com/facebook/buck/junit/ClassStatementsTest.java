@@ -51,7 +51,8 @@ public class ClassStatementsTest {
     String stderr = result.getStderr();
     assertThat("Explanatory exception output is present", stderr, containsString("BOOM!"));
 
-    String passString = "PASS <100ms  3 Passed   0 Failed   com.example.EverythingOKTest";
+    String passString = "PASS   <100ms  3 Passed   0 Skipped   0 Failed   " +
+        "com.example.EverythingOKTest";
     assertThat("Some tests still pass", stderr, containsString(passString));
 
     Pattern failPattern = Pattern.compile("^FAIL +(\\d+)ms.+com.example.HasBeforeClassFailure$",

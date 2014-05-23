@@ -101,6 +101,7 @@ public class TestResultFormatter {
   public void runComplete(ImmutableList.Builder<String> addTo, List<TestResults> completedResults) {
     // Print whether each test succeeded or failed.
     boolean isAllTestsPassed = true;
+    boolean isAnyAssumptionViolated = false;
     ListMultimap<TestResults, TestCaseSummary> failingTests = ArrayListMultimap.create();
 
     int numFailures = 0;
@@ -110,13 +111,23 @@ public class TestResultFormatter {
         numFailures += summary.getFailureCount();
         failingTests.putAll(summary, summary.getFailures());
       }
+      for (TestCaseSummary testCaseSummary : summary.getTestCases()) {
+        if (testCaseSummary.hasAssumptionViolations()) {
+          isAnyAssumptionViolated = true;
+          break;
+        }
+      }
     }
 
     // Print the summary of the test results.
     if (completedResults.isEmpty()) {
       addTo.add(ansi.asHighlightedFailureText("NO TESTS RAN"));
     } else if (isAllTestsPassed) {
-      addTo.add(ansi.asHighlightedSuccessText("TESTS PASSED"));
+      if (isAnyAssumptionViolated) {
+        addTo.add(ansi.asHighlightedWarningText("TESTS PASSED (with some assumption violations)"));
+      } else {
+        addTo.add(ansi.asHighlightedSuccessText("TESTS PASSED"));
+      }
     } else {
       addTo.add(ansi.asHighlightedFailureText(
           String.format("TESTS FAILED: %d Failures", numFailures)));

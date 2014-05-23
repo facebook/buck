@@ -39,7 +39,7 @@ class VacationFixture extends ExternalResource {
   // Regular expression to match test-result lines: the first group is PASS, FAIL, etc., the last
   // is the full test class name.
   public static final Pattern RESULT_LINE_PATTERN = Pattern.compile(
-      "^(\\w+) .+? (com\\.example\\.\\S+)$",
+      "^\\s*(\\w+) .+? (com\\.example\\.\\S+)$",
       Pattern.MULTILINE);
 
   static final TestName VACATION_TEST = new TestName("com.example.vacation.VacationTest");
