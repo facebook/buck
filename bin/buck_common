@@ -423,6 +423,7 @@ BUCK_JAVA_ARGS=( \
   -Dbuck.path_to_compile_asset_catalogs_build_phase_sh="${PATH_TO_COMPILE_ASSET_CATALOGS_BUILD_PHASE_SH}" \
   -Dbuck.path_to_intellij_py="${BUCK_DIRECTORY}"/src/com/facebook/buck/command/intellij.py \
   -Dbuck.path_to_static_content="${BUCK_DIRECTORY}"/webserver/static \
+  -Dbuck.path_to_pex="${BUCK_DIRECTORY}"/src/com/facebook/buck/python/pex.py \
   -Dbuck.git_commit="${BUCK_CURRENT_VERSION}" \
   -Dbuck.git_commit_timestamp="${BUCK_VERSION_TIMESTAMP}" \
   -Dbuck.git_dirty="${BUCK_REPOSITORY_DIRTY}" \

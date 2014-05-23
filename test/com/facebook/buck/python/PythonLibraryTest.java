@@ -17,35 +17,16 @@
 package com.facebook.buck.python;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-import static org.easymock.EasyMock.createMock;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 
 /**
  * Unit test for {@link PythonLibrary}.
@@ -60,76 +41,10 @@ public class PythonLibraryTest {
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of(src);
     PythonLibrary pythonLibrary = new PythonLibrary(
         new BuildTarget("//scripts/python", "foo"),
-        srcs);
+        srcs,
+        ImmutableSortedSet.<SourcePath>of());
 
     assertTrue(pythonLibrary.getProperties().is(LIBRARY));
   }
 
-  @Test
-  public void testFlattening() throws IOException {
-    BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
-    ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
-    srcs.add(new TestSourcePath("baz.py"));
-    srcs.add(new TestSourcePath("foo/__init__.py"));
-    srcs.add(new TestSourcePath("foo/bar.py"));
-    PythonLibrary rule = new PythonLibrary(pyLibraryTarget, srcs.build());
-
-    FakeBuildableContext buildableContext = new FakeBuildableContext();
-    BuildContext buildContext = createMock(BuildContext.class);
-    List<Step> steps = rule.getBuildSteps(buildContext, buildableContext);
-
-    final String projectRoot = projectRootDir.getRoot().getAbsolutePath();
-    final String pylibpath = "__pylib_py_library";
-
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File(projectRoot));
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-      .setProjectFilesystem(projectFilesystem)
-      .build();
-
-    MoreAsserts.assertSteps(
-        "python_library() should ensure each file is linked and has its destination directory made",
-        ImmutableList.of(
-            String.format(
-              "mkdir -p %s/%s/%s",
-              projectRoot,
-              BuckConstant.GEN_DIR,
-              pylibpath
-              ),
-            String.format(
-              "mkdir -p %s/%s/%s/foo",
-              projectRoot,
-              BuckConstant.GEN_DIR,
-              pylibpath
-              ),
-            String.format(
-              "ln -f -s ../../../baz.py %s/%s/%s/baz.py",
-              projectRoot,
-              BuckConstant.GEN_DIR,
-              pylibpath
-              ),
-            String.format(
-              "ln -f -s ../../../../foo/__init__.py %s/%s/%s/foo/__init__.py",
-              projectRoot,
-              BuckConstant.GEN_DIR,
-              pylibpath
-              ),
-            String.format(
-              "ln -f -s ../../../../foo/bar.py %s/%s/%s/foo/bar.py",
-              projectRoot,
-              BuckConstant.GEN_DIR,
-              pylibpath
-              )
-        ),
-        steps.subList(1, 6),
-        executionContext);
-
-    ImmutableSet<Path> artifacts = buildableContext.getRecordedArtifacts();
-    assertEquals(
-      ImmutableSet.of(
-        Paths.get("buck-out/gen/__pylib_py_library/baz.py"),
-        Paths.get("buck-out/gen/__pylib_py_library/foo/__init__.py"),
-        Paths.get("buck-out/gen/__pylib_py_library/foo/bar.py")
-      ),
-      artifacts);
-  }
 }
