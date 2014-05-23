@@ -307,7 +307,7 @@ public class CfTranslator {
                         }
 
                         if (cfOptions.statistics) {
-                            CodeStatistics.updateRopStatistics(
+                            cfOptions.codeStatistics.updateRopStatistics(
                                     nonOptRmeth, rmeth);
                         }
                     }
@@ -410,7 +410,7 @@ public class CfTranslator {
         optCode.assignIndices(callback);
         nonOptCode.assignIndices(callback);
 
-        CodeStatistics.updateDexStatistics(nonOptCode, optCode);
-        CodeStatistics.updateOriginalByteCount(originalByteCount);
+        cfOptions.codeStatistics.updateDexStatistics(nonOptCode, optCode);
+        cfOptions.codeStatistics.updateOriginalByteCount(originalByteCount);
     }
 }

@@ -544,7 +544,7 @@ public class Main {
         }
 
         if (args.optimize && args.statistics) {
-            CodeStatistics.dumpStatistics(dxConsole.out);
+            args.cfOptions.codeStatistics.dumpStatistics(dxConsole.out);
         }
 
         return true;
@@ -1527,6 +1527,7 @@ public class Main {
             cfOptions.dontOptimizeListFile = dontOptimizeListFile;
             cfOptions.statistics = statistics;
             cfOptions.warn = dxConsole.err;
+            cfOptions.codeStatistics = new CodeStatistics();
 
             dexOptions = new DexOptions();
             dexOptions.forceJumbo = forceJumbo;
