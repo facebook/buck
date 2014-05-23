@@ -28,10 +28,10 @@ public class DxConsole {
     /**
      * Standard output stream. Links to {@code System.out} by default.
      */
-    public static PrintStream out = System.out;
+    public PrintStream out = System.out;
 
     /**
      * Error output stream. Links to {@code System.err} by default.
      */
-    public static PrintStream err = System.err;
+    public PrintStream err = System.err;
 }
