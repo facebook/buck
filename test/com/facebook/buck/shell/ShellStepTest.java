@@ -30,6 +30,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -41,6 +42,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -51,6 +53,7 @@ public class ShellStepTest extends EasyMockSupport {
 
   private ExecutionContext context;
   private TestConsole console;
+  private Process process;
 
   private static final ImmutableList<String> ARGS = ImmutableList.of("bash", "-c", "echo $V1 $V2");
 
@@ -102,6 +105,36 @@ public class ShellStepTest extends EasyMockSupport {
     replayAll();
   }
 
+  private void prepareContextAndProcessForInput(
+      Verbosity verbosity,
+      final Optional<OutputStream> stdin) throws Exception {
+
+    resetAll();
+
+    console = new TestConsole();
+    console.setVerbosity(verbosity);
+    ProcessExecutor processExecutor = new ProcessExecutor(console);
+    expect(context.getVerbosity()).andStubReturn(verbosity);
+    expect(context.getProcessExecutor()).andStubReturn(processExecutor);
+
+    // Setup a mocked process object.
+    process = createMock(Process.class);
+
+    // If a stdin stream was specified, then make the mocked process return it.
+    if (stdin.isPresent()) {
+      expect(process.getOutputStream()).andReturn(stdin.get());
+    }
+
+    // Set defaults for the output and exit values.
+    expect(process.getInputStream()).andStubReturn(new ByteArrayInputStream(new byte[0]));
+    expect(process.getErrorStream()).andStubReturn(new ByteArrayInputStream(new byte[0]));
+    process.destroy();
+    expect(process.waitFor()).andStubReturn(0);
+    expect(process.exitValue()).andStubReturn(0);
+
+    replayAll();
+  }
+
   private static Process createProcess(
       final int exitValue,
       final String stdout,
@@ -149,11 +182,18 @@ public class ShellStepTest extends EasyMockSupport {
         cmd,
         workingDirectory,
         /* shouldPrintStdErr */ false,
-        /* shouldRecordStdOut */ false);
+        /* shouldRecordStdOut */ false,
+        /* stdin */ Optional.<String>absent());
   }
 
   private static ShellStep createCommand(boolean shouldPrintStdErr, boolean shouldPrintStdOut) {
-    return createCommand(ENV, ARGS, null, shouldPrintStdErr, shouldPrintStdOut);
+    return createCommand(
+        ENV,
+        ARGS,
+        null,
+        shouldPrintStdErr,
+        shouldPrintStdOut,
+        /* stdin */ Optional.<String>absent());
   }
 
   private static ShellStep createCommand(
@@ -161,7 +201,8 @@ public class ShellStepTest extends EasyMockSupport {
       final ImmutableList<String> cmd,
       File workingDirectory,
       final boolean shouldPrintStdErr,
-      final boolean shouldPrintStdOut) {
+      final boolean shouldPrintStdOut,
+      final Optional<String> stdin) {
     return new ShellStep(workingDirectory) {
       @Override
       public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
@@ -170,6 +211,10 @@ public class ShellStepTest extends EasyMockSupport {
       @Override
       public String getShortName() {
          return cmd.get(0);
+      }
+      @Override
+      protected Optional<String> getStdin() {
+        return stdin;
       }
       @Override
       protected ImmutableList<String> getShellCommandInternal(
@@ -282,6 +327,35 @@ public class ShellStepTest extends EasyMockSupport {
     assertEquals("Sub-process environment should be union of client and step environments.",
         subProcessEnvironment,
         ImmutableMap.builder().putAll(context.getEnvironment()).putAll(ENV).build());
+  }
+
+  @Test
+  public void testStdinGetsToProcessWhenPresent() throws Exception {
+    final Optional<String> stdin = Optional.of("hello world!");
+    final ByteArrayOutputStream output = new ByteArrayOutputStream();
+    ShellStep command = createCommand(
+        ImmutableMap.<String, String>of(),
+        ImmutableList.of("cat", "-"),
+        null,
+        /*shouldPrintStdErr*/ true,
+        /*shouldPrintStdOut*/ true,
+        stdin);
+    prepareContextAndProcessForInput(Verbosity.ALL, Optional.<OutputStream>of(output));
+    command.interactWithProcess(context, process);
+  }
+
+  @Test
+  public void testStdinDoesNotGetToProcessWhenAbsent() throws Exception {
+    final Optional<String> stdin = Optional.absent();
+    ShellStep command = createCommand(
+        ImmutableMap.<String, String>of(),
+        ImmutableList.of("cat", "-"),
+        null,
+        /*shouldPrintStdErr*/ true,
+        /*shouldPrintStdOut*/ true,
+        stdin);
+    prepareContextAndProcessForInput(Verbosity.ALL, Optional.<OutputStream>absent());
+    command.interactWithProcess(context, process);
   }
 
 }

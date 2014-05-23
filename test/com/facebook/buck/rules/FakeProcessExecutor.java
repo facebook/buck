@@ -20,6 +20,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.base.Optional;
 
 
 public class FakeProcessExecutor extends ProcessExecutor {
@@ -48,7 +49,8 @@ public class FakeProcessExecutor extends ProcessExecutor {
       Process process,
       boolean shouldPrintStdOut,
       boolean shouldPrintStdErr,
-      boolean isSilent) {
+      boolean isSilent,
+      Optional<String> stdin) {
     return new Result(exitStatus,
         expectedOut,
         expectedErr);

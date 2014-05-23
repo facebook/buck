@@ -17,8 +17,11 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 
 import javax.annotation.Nullable;
@@ -44,14 +47,15 @@ public class ProcessExecutor {
   }
 
   /**
-   * Convenience method for {@link #execute(Process, boolean, boolean, boolean)} with boolean values
-   * set to {@code false}.
+   * Convenience method for {@link #execute(Process, boolean, boolean, boolean, Optional<String>)}
+   * with boolean values set to {@code false} and optional values set to absent.
    */
   public Result execute(Process process) {
     return execute(process,
         /* shouldPrintStdOut */ false,
         /* shouldPrintStdErr */ false,
-        /* isSilent */ false);
+        /* isSilent */ false,
+        /* stdin */ Optional.<String>absent());
   }
 
   /**
@@ -68,7 +72,9 @@ public class ProcessExecutor {
       Process process,
       boolean shouldPrintStdOut,
       boolean shouldPrintStdErr,
-      boolean isSilent) {
+      boolean isSilent,
+      Optional<String> stdin) {
+
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
     @SuppressWarnings("resource")
@@ -95,13 +101,25 @@ public class ProcessExecutor {
 
     // Block until the Process completes.
     try {
+
+      // If a stdin string was specific, then write that first.  This shouldn't cause
+      // deadlocks, as the stdout/stderr consumers are running in separate threads.
+      if (stdin.isPresent()) {
+        try (OutputStreamWriter stdinWriter = new OutputStreamWriter(process.getOutputStream())) {
+          stdinWriter.write(stdin.get());
+        }
+      }
+
+      // Wait for the process and consumer threads to finish.
       process.waitFor();
       stdOutConsumer.join();
       stdErrConsumer.join();
-    } catch (InterruptedException e) {
-      // Buck was killed while waiting for the consumers to finish. This means either the user
-      // killed the process or a step failed causing us to kill all other running steps. Neither of
-      // these is an exceptional situation.
+
+    } catch (InterruptedException | IOException e) {
+      // Buck was killed while waiting for the consumers to finish or while writing stdin
+      // to the process. This means either the user killed the process or a step failed
+      // causing us to kill all other running steps. Neither of these is an exceptional
+      // situation.
       return new Result(1, /* stdout */ null, /* stderr */ null);
     } finally {
       process.destroy();
@@ -143,7 +161,8 @@ public class ProcessExecutor {
   }
 
   /**
-   * Values from the result of {@link ProcessExecutor#execute(Process, boolean, boolean, boolean)}.
+   * Values from the result of
+   * {@link ProcessExecutor#execute(Process, boolean, boolean, boolean, Optional<String>)}.
    */
   public static class Result {
     private final int exitCode;

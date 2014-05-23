@@ -25,6 +25,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -95,6 +96,11 @@ public abstract class ShellStep implements Step {
       processBuilder.directory(context.getProjectDirectoryRoot());
     }
 
+    Optional<String> stdin = getStdin();
+    if (stdin.isPresent()) {
+      processBuilder.redirectInput(ProcessBuilder.Redirect.PIPE);
+    }
+
     Process process;
     int exitCode;
     try {
@@ -131,7 +137,8 @@ public abstract class ShellStep implements Step {
     ProcessExecutor.Result result = executor.execute(process,
         /* shouldPrintStdOut */ false,
         /* shouldPrintStdErr */ false,
-        context.getVerbosity() == Verbosity.SILENT);
+        context.getVerbosity() == Verbosity.SILENT,
+        getStdin());
     stdout = result.getStdout();
     stderr = result.getStderr();
 
@@ -161,6 +168,10 @@ public abstract class ShellStep implements Step {
       shellCommandArgs = getShellCommandInternal(context);
     }
     return shellCommandArgs;
+  }
+
+  protected Optional<String> getStdin() {
+    return Optional.absent();
   }
 
   /**
