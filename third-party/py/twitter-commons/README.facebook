@@ -1,0 +1,9 @@
+Project URL: 
+Git repo to clone: https://github.com/twitter/commons.git
+Git revision: 2ae206f07e40678fc9e672f8a67ec0d8c90e2807
+License: Apache 2.0
+Local modifications:
+ - Only imported the "src/python/twitter/common/python" subdirectory
+   of the above repo, to avoid unneeded clutter.
+ - Added "src/python/twitter/__init__.py" and "src/python/twitter/common/__init__.py"
+   to allow importing from source.
