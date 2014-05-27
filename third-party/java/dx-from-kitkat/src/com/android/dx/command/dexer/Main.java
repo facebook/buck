@@ -830,9 +830,9 @@ public class Main {
         try {
             Manifest manifest = makeManifest();
             OutputStream out = openOutput(fileName);
-            JarOutputStream jarOut = new JarOutputStream(out, manifest);
 
             try {
+                JarOutputStream jarOut = new JarOutputStream(out, manifest);
                 for (Map.Entry<String, byte[]> e :
                          outputResources.entrySet()) {
                     String name = e.getKey();
@@ -849,9 +849,9 @@ public class Main {
                     jarOut.write(contents);
                     jarOut.closeEntry();
                 }
-            } finally {
                 jarOut.finish();
                 jarOut.flush();
+            } finally {
                 closeOutput(out);
             }
         } catch (Exception ex) {
