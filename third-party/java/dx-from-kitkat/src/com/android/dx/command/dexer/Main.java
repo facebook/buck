@@ -243,6 +243,13 @@ public class Main {
                 return runMonoDex();
             }
         } finally {
+            if (threadPool != null) {
+                // Uh, oh.  We failed to shut down our thread pool.
+                // Let's do so now to avoid leaking threads in long-running processes.
+                // Worker threads shouldn't have any side effects,
+                // so we shouldn't have to shutdownNow or awaitTermination.
+                threadPool.shutdown();
+            }
             closeOutput(humanOutRaw);
         }
     }
@@ -522,9 +529,16 @@ public class Main {
         if (args.numThreads > 1) {
             try {
                 threadPool.shutdown();
-                threadPool.awaitTermination(600L, TimeUnit.SECONDS);
+                boolean terminated = threadPool.awaitTermination(600L, TimeUnit.SECONDS);
+                threadPool = null;
+                if (!terminated) {
+                    throw new RuntimeException("Timed out waiting for threads.");
+                }
             } catch (InterruptedException ex) {
-                throw new RuntimeException("Timed out waiting for threads.");
+                // Forward the interrupt to our worker threads.
+                threadPool.shutdownNow();
+                // We don't really tolerate interruption.
+                throw new RuntimeException("Dexing interrupted.");
             }
         }
 
