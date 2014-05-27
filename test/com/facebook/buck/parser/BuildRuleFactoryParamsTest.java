@@ -20,13 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -50,7 +47,6 @@ public class BuildRuleFactoryParamsTest {
   @ClassRule public static TemporaryFolder folder = new TemporaryFolder();
   private static ProjectFilesystem filesystem;
   private BuildTargetParser parser;
-  private BuildFileTree tree;
 
   @BeforeClass
   public static void layOutExampleProject() throws IOException {
@@ -79,7 +75,6 @@ public class BuildRuleFactoryParamsTest {
   @Before
   public void prepareParser() throws IOException {
     parser = new BuildTargetParser(filesystem);
-    tree = new FilesystemBackedBuildFileTree(filesystem);
   }
 
   @Test
@@ -90,7 +85,6 @@ public class BuildRuleFactoryParamsTest {
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
         filesystem,
-        tree,
         parser,
         buildTarget,
         new FakeRuleKeyBuilderFactory());
@@ -106,57 +100,11 @@ public class BuildRuleFactoryParamsTest {
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
         filesystem,
-        tree,
         parser,
         buildTarget,
         new FakeRuleKeyBuilderFactory());
     assertEquals(Paths.get("src/com/facebook/A.java"),
         params.resolveFilePathRelativeToBuildFileDirectory("A.java"));
-  }
-
-  @Test
-  public void testShouldWarnIfPathsContainReferencesToParentDirectories() {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//src/com/facebook/demo:Main");
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        null /* instance */,
-        filesystem,
-        tree,
-        parser,
-        buildTarget,
-        new FakeRuleKeyBuilderFactory());
-    // File exists, but is in a parent directory.
-    try {
-      params.resolveFilePathRelativeToBuildFileDirectory("../A.java");
-      fail("Expected path to be rejected.");
-    } catch (HumanReadableException e) {
-      assertEquals("\"src/com/facebook/demo/../A.java\" in target " +
-          "\"//src/com/facebook/demo:Main\" refers to a parent directory.",
-          e.getMessage());
-    }
-  }
-
-  @Test
-  public void testShouldWarnWhenAFileCrossesABuckPackageBoundary() {
-    BuildTargetFactory.newInstance("//src/com/facebook/demo:demo");
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//src/com/facebook:boundary");
-
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        null /* instance */,
-        filesystem,
-        tree,
-        parser,
-        buildTarget,
-        new FakeRuleKeyBuilderFactory());
-    try {
-      // File exists, but crosses a buck package boundary.
-      params.resolveFilePathRelativeToBuildFileDirectory("demo/B.java");
-      fail("Expected path to be rejected as it crosses a buck package boundary");
-    } catch (HumanReadableException e) {
-      assertEquals("\"src/com/facebook/demo/B.java\" in target \"//src/com/facebook:boundary\" " +
-          "crosses a buck package boundary. Find the nearest BUCK file in the directory " +
-          "containing this file and refer to the rule referencing the desired file.",
-          e.getMessage());
-    }
   }
 
   @Test
@@ -166,7 +114,6 @@ public class BuildRuleFactoryParamsTest {
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
         filesystem,
-        tree,
         parser,
         buildTarget,
         new FakeRuleKeyBuilderFactory());
@@ -185,7 +132,6 @@ public class BuildRuleFactoryParamsTest {
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance /* instance */,
         filesystem,
-        tree,
         parser,
         target,
         new FakeRuleKeyBuilderFactory());
@@ -203,7 +149,6 @@ public class BuildRuleFactoryParamsTest {
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance /* instance */,
         filesystem,
-        tree,
         parser,
         target,
         new FakeRuleKeyBuilderFactory());
@@ -221,7 +166,6 @@ public class BuildRuleFactoryParamsTest {
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance /* instance */,
         filesystem,
-        tree,
         parser,
         target,
         new FakeRuleKeyBuilderFactory());
@@ -245,7 +189,6 @@ public class BuildRuleFactoryParamsTest {
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance /* instance */,
         filesystem,
-        tree,
         parser,
         target,
         new FakeRuleKeyBuilderFactory());

@@ -592,14 +592,10 @@ public class Parser {
             target.getBuildFile(projectFilesystem));
       }
 
-      BuildFileTree buildFileTree;
-      buildFileTree = buildFileTreeCache.getInput();
-
       BuildRuleBuilder<?> buildRuleBuilder;
       BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
           map,
           projectFilesystem,
-          buildFileTree,
           buildTargetParser,
           target,
           ruleKeyBuilderFactory);

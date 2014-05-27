@@ -31,7 +31,6 @@ import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -98,11 +97,9 @@ public class KnownBuildRuleTypesTest {
     params = new BuildRuleFactoryParams(
         Maps.<String, Object>newHashMap(),
         filesystem,
-        new FilesystemBackedBuildFileTree(filesystem),
         new BuildTargetParser(filesystem),
         BuildTargetFactory.newInstance("//:foo"),
-        new FakeRuleKeyBuilderFactory(),
-        true);
+        new FakeRuleKeyBuilderFactory());
   }
 
   @Test

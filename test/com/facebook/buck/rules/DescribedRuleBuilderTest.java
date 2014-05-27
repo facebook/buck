@@ -20,7 +20,6 @@ import static com.facebook.buck.testutil.IdentityPathAbsolutifier.getIdentityAbs
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -143,7 +142,6 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance,
         projectFilesystem,
-        new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
         new BuildTargetParser(projectFilesystem),
         new BuildTarget("//my", shortName),
         new FakeRuleKeyBuilderFactory());

@@ -17,14 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -42,23 +38,8 @@ public final class NonCheckingBuildRuleFactoryParams {
     return new BuildRuleFactoryParams(
         instance,
         new ProjectFilesystem(new File(".")),
-        new NonCheckingBuildFileTree(),
         buildTargetParser,
         target,
-        new FakeRuleKeyBuilderFactory(),
-        /* ignoreFileExistenceChecks */ true);
+        new FakeRuleKeyBuilderFactory());
   }
-
-  private static class NonCheckingBuildFileTree extends InMemoryBuildFileTree {
-
-    public NonCheckingBuildFileTree() {
-      super(ImmutableSet.<BuildTarget>of());
-    }
-
-    @Override
-    public Collection<Path> getChildPaths(BuildTarget buildTarget) {
-      return ImmutableSet.of();
-    }
-  }
-
 }
