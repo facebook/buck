@@ -443,7 +443,6 @@ public final class Main {
     // Get the client environment, either from this process or from the Nailgun context.
     ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
 
-
     // Create common command parameters. projectFilesystem initialization looks odd because it needs
     // ignorePaths from a BuckConfig instance, which in turn needs a ProjectFilesystem (i.e. this
     // solves a bootstrapping issue).
@@ -473,7 +472,9 @@ public final class Main {
     ImmutableList<BuckEventListener> eventListeners;
     BuildId buildId = new BuildId();
     Clock clock = new DefaultClock();
-    ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(processExecutor);
+    ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
+        processExecutor,
+        clientEnvironment);
 
     // Configure the AndroidDirectoryResolver.
     PropertyFinder propertyFinder = new DefaultPropertyFinder(

@@ -32,6 +32,7 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -111,7 +112,9 @@ public class ShBinaryRuleIntegrationTest {
     File outputFile = workspace.getFile("buck-out/gen/app/output.txt");
     List<String> lines = Files.readLines(outputFile, Charsets.US_ASCII);
     ExecutionEnvironment executionEnvironment =
-        new DefaultExecutionEnvironment(new FakeProcessExecutor());
+        new DefaultExecutionEnvironment(
+            new FakeProcessExecutor(),
+            ImmutableMap.copyOf(System.getenv()));
     String expectedPlatform = executionEnvironment.getPlatform().getPrintableName();
     assertEquals(expectedPlatform, lines.get(0));
     assertEquals("arg1 arg2", lines.get(1));

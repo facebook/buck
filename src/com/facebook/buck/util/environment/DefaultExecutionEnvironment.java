@@ -20,6 +20,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.sun.management.OperatingSystemMXBean;
 
 import java.io.IOException;
@@ -37,10 +38,14 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   private static final long  MEGABYTE = 1024L * 1024L;
   private final Platform platform;
   private final ProcessExecutor processExecutor;
+  private final ImmutableMap<String, String> environment;
 
-  public DefaultExecutionEnvironment(ProcessExecutor processExecutor) {
+  public DefaultExecutionEnvironment(
+      ProcessExecutor processExecutor,
+      ImmutableMap<String, String> environment) {
     this.platform = Platform.detect();
     this.processExecutor = Preconditions.checkNotNull(processExecutor);
+    this.environment = Preconditions.checkNotNull(environment);
   }
 
   @Override
@@ -56,7 +61,7 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
 
   @Override
   public String getUsername() {
-    return Optional.fromNullable(System.getenv("USER")).or("unknown");
+    return Optional.fromNullable(environment.get("USER")).or("unknown");
   }
 
   @Override

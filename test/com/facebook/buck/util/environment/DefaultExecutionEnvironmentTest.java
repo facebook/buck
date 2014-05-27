@@ -17,7 +17,9 @@ package com.facebook.buck.util.environment;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.FakeProcessExecutor;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
@@ -71,5 +73,14 @@ public class DefaultExecutionEnvironmentTest {
     assertEquals(
         Optional.absent(),
         DefaultExecutionEnvironment.parseWifiSsid("some garbage"));
+  }
+
+  @Test
+  public void getUsernameUsesSuppliedEnvironment() {
+    String name = "TEST_USER_PLEASE_IGNORE";
+    DefaultExecutionEnvironment environment = new DefaultExecutionEnvironment(
+        new FakeProcessExecutor(),
+        ImmutableMap.of("USER", name));
+    assertEquals("Username should match test data.", name, environment.getUsername());
   }
 }
