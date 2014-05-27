@@ -52,6 +52,7 @@ import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -76,6 +77,11 @@ import javax.annotation.Nullable;
  * worth merging them.
  */
 public class PreDexMerge extends AbstractBuildable implements InitializableFromDisk<BuildOutput> {
+
+  /** Options to use with {@link DxStep} when merging pre-dexed files. */
+  private static final EnumSet<DxStep.Option> DX_MERGE_OPTIONS = EnumSet.of(
+      DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
+      DxStep.Option.NO_OPTIMIZE);
 
   private static final String PRIMARY_DEX_HASH_KEY = "primary_dex_hash";
   private static final String SECONDARY_DEX_DIRECTORIES_KEY = "secondary_dex_directories";
@@ -201,7 +207,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
         sortResult.dexInputHashesProvider,
         paths.successDir,
         /* numThreads */ Optional.<Integer>absent(),
-        AndroidBinary.DX_MERGE_OPTIONS));
+        DX_MERGE_OPTIONS));
 
     // Record the primary dex SHA1 so exopackage apks can use it to compute their ABI keys.
     // Single dex apks cannot be exopackages, so they will never need ABI keys.
@@ -265,7 +271,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     buildableContext.recordArtifact(primaryDexPath);
 
     // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
-    steps.add(new DxStep(primaryDexPath, filesToDex, AndroidBinary.DX_MERGE_OPTIONS));
+    steps.add(new DxStep(primaryDexPath, filesToDex, DX_MERGE_OPTIONS));
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,
