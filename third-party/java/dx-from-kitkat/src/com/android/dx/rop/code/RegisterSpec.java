@@ -442,6 +442,10 @@ public final class RegisterSpec
             return null;
         }
 
+        if (this.equals(other.reg, other.type, other.local)) {
+            return this;
+        }
+
         LocalItem resultLocal =
             ((local == null) || !local.equals(other.getLocalItem()))
             ? null : local;
