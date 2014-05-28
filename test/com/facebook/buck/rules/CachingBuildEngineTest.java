@@ -615,6 +615,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         Iterable<Path> inputs,
         @Nullable String pathToOutputFile,
         List<Step> buildSteps) {
+      super(params.getBuildTarget());
       this.inputs = inputs;
       this.pathToOutputFile = pathToOutputFile == null ? null : Paths.get(pathToOutputFile);
       this.buildSteps = buildSteps;
@@ -670,13 +671,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     private static final String RULE_KEY_WITHOUT_DEPS_HASH =
         "efd7d450d9f1c3d9e43392dec63b1f31692305b9";
     private static final String ABI_KEY_FOR_DEPS_HASH = "92d6de0a59080284055bcde5d2923f144b216a59";
-    private final BuildTarget buildTarget;
 
     private boolean isAbiLoadedFromDisk = false;
     private final BuildOutputInitializer<Object> buildOutputInitializer;
 
     TestAbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
-      this.buildTarget = buildRuleParams.getBuildTarget();
+      super(buildRuleParams.getBuildTarget());
       this.buildOutputInitializer =
           new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
     }

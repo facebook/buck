@@ -83,24 +83,25 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleResolver ruleResolver) {
-    Buildable gwtModule = createGwtModule(arg);
     BuildTarget prebuiltJarBuildTarget = describedRule.getBuildTarget();
     BuildTarget flavoredBuildTarget = BuildTargets.createFlavoredBuildTarget(
         prebuiltJarBuildTarget, JavaLibrary.GWT_MODULE_FLAVOR);
+    BuildRuleParams params = new BuildRuleParams(
+        flavoredBuildTarget,
+            /* deps */ ImmutableSortedSet.<BuildRule>of(describedRule),
+        BuildTargetPattern.PUBLIC,
+        projectFilesystem,
+        ruleKeyBuilderFactory);
+    Buildable gwtModule = createGwtModule(params.getBuildTarget(), arg);
     BuildRule rule = new AbstractBuildable.AnonymousBuildRule(
         BuildRuleType.GWT_MODULE,
         gwtModule,
-        new BuildRuleParams(
-            flavoredBuildTarget,
-            /* deps */ ImmutableSortedSet.<BuildRule>of(describedRule),
-            BuildTargetPattern.PUBLIC,
-            projectFilesystem,
-            ruleKeyBuilderFactory));
+        params);
     ruleResolver.addToIndex(rule.getBuildTarget(), rule);
   }
 
   @VisibleForTesting
-  static Buildable createGwtModule(Arg arg) {
+  static Buildable createGwtModule(BuildTarget target, Arg arg) {
     // Because a PrebuiltJar rarely requires any building whatsoever (it could if the source_jar
     // is a BuildRuleSourcePath), we make the PrebuiltJar a dependency of the GWT module. If this
     // becomes a performance issue in practice, then we will explore reducing the dependencies of
@@ -117,7 +118,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         Collections.singleton(inputToCompareToOutput));
     final Path pathToExistingJarFile = inputToCompareToOutput.resolve();
 
-    Buildable buildable = new AbstractBuildable() {
+    Buildable buildable = new AbstractBuildable(target) {
       @Override
       public Collection<Path> getInputsToCompareToOutput() {
         return inputsToCompareToOutput;

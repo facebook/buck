@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -42,7 +43,8 @@ public class MacosxFramework extends AbstractBuildable {
   private final ImmutableSet<XcodeRuleConfiguration> configurations;
   private final ImmutableSortedSet<String> frameworks;
 
-  public MacosxFramework(MacosxFrameworkDescription.Arg arg) {
+  public MacosxFramework(BuildTarget target, MacosxFrameworkDescription.Arg arg) {
+    super(target);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
     frameworks = Preconditions.checkNotNull(arg.frameworks);
 

@@ -114,7 +114,6 @@ public class Genrule extends AbstractBuildable {
 
   protected final Map<Path, Path> srcsToAbsolutePaths;
 
-  protected final BuildTarget target;
   private final ImmutableSortedSet<BuildRule> deps;
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
@@ -132,8 +131,8 @@ public class Genrule extends AbstractBuildable {
       Optional<String> cmdExe,
       String out,
       final Function<Path, Path> relativeToAbsolutePathFunction) {
+    super(target);
     this.deps = deps;
-    this.target = Preconditions.checkNotNull(target);
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = Preconditions.checkNotNull(cmd);
     this.bash = Preconditions.checkNotNull(bash);

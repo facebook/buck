@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -47,7 +48,8 @@ public class IosTest extends AbstractBuildable {
   private final ImmutableSortedSet<BuildRule> sourceUnderTest;
   private final IosTestType testType;
 
-  public IosTest(IosTestDescription.Arg arg) {
+  public IosTest(BuildTarget target, IosTestDescription.Arg arg) {
+    super(target);
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
     frameworks = Preconditions.checkNotNull(arg.frameworks);

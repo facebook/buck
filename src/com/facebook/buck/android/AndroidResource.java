@@ -87,8 +87,6 @@ public class AndroidResource extends AbstractBuildable
     }
   };
 
-  private final BuildTarget buildTarget;
-
   @Nullable
   private final Path res;
 
@@ -129,7 +127,7 @@ public class AndroidResource extends AbstractBuildable
       @Nullable Path manifestFile,
       boolean hasWhitelistedStrings,
       Optional<Path> aaptOverride) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.res = res;
     this.resSrcs = Preconditions.checkNotNull(resSrcs);
     this.rDotJavaPackage = rDotJavaPackage;
@@ -188,11 +186,6 @@ public class AndroidResource extends AbstractBuildable
   @Override
   public boolean hasWhitelistedStrings() {
     return hasWhitelistedStrings;
-  }
-
-  @Override
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   @Override
@@ -270,7 +263,7 @@ public class AndroidResource extends AbstractBuildable
   @Override
   public String getRDotJavaPackage() {
     if (rDotJavaPackage == null) {
-      throw new RuntimeException("No package for " + buildTarget.getFullyQualifiedName());
+      throw new RuntimeException("No package for " + target.getFullyQualifiedName());
     }
     return rDotJavaPackage;
   }

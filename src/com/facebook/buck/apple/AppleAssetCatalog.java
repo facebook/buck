@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -53,8 +54,10 @@ public class AppleAssetCatalog extends AbstractBuildable {
   private final boolean copyToBundles;
 
   AppleAssetCatalog(
+      BuildTarget target,
       Supplier<Collection<Path>> inputPathsSupplier,
       AppleAssetCatalogDescription.Arg args) {
+    super(target);
     Preconditions.checkArgument(Iterables.all(args.dirs, new Predicate<Path>() {
               @Override
               public boolean apply(@Nullable Path input) {

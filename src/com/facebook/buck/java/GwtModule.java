@@ -16,7 +16,6 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
@@ -54,16 +53,12 @@ public class GwtModule extends AbstractBuildable {
   GwtModule(
       BuildableParams buildableParams,
       ImmutableSortedSet<SourcePath> filesForGwtModule) {
+    super(buildableParams.getBuildTarget());
     this.buildableParams = Preconditions.checkNotNull(buildableParams);
-    BuildTarget buildTarget = buildableParams.getBuildTarget();
     this.outputFile = BuildTargets.getGenPath(
-        buildTarget,
-        "__gwt_module_%s__/" + buildTarget.getShortName() + ".jar");
+        target,
+        "__gwt_module_%s__/" + target.getShortName() + ".jar");
     this.filesForGwtModule = Preconditions.checkNotNull(filesForGwtModule);
-  }
-
-  public BuildTarget getBuildTarget() {
-    return buildableParams.getBuildTarget();
   }
 
   @Override

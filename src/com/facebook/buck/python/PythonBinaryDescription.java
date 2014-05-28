@@ -45,7 +45,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
     // It's safe to do this, since we know that the arg marshaller fills in optional sets as empty
     // sets. Because we're nice like that.
-    return new PythonBinary(args.deps.get(), args.main);
+    return new PythonBinary(params.getBuildTarget(), args.deps.get(), args.main);
   }
 
   public static class Arg implements ConstructorArg {

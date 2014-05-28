@@ -40,7 +40,7 @@ public class XcodeProjectConfigDescription
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new XcodeProjectConfig(args);
+    return new XcodeProjectConfig(params.getBuildTarget(), args);
   }
 
   public static class Arg implements ConstructorArg {

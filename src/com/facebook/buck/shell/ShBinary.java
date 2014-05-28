@@ -47,26 +47,25 @@ public class ShBinary extends AbstractBuildable
 
   private final SourcePath main;
   private final ImmutableSet<SourcePath> resources;
-  private final BuildTarget target;
 
   /** The path where the output will be written. */
   private final Path output;
 
   private final BuildOutputInitializer<Object> buildOutputInitializer;
 
-  protected ShBinary(BuildTarget buildTarget,
+  protected ShBinary(BuildTarget target,
       SourcePath main,
       ImmutableSet<SourcePath> resources) {
+    super(target);
     this.main = Preconditions.checkNotNull(main);
     this.resources = Preconditions.checkNotNull(resources);
 
-    this.target = Preconditions.checkNotNull(buildTarget);
     this.output = Paths.get(
         BuckConstant.GEN_DIR,
         target.getBasePath(),
         "__" + target.getShortName() + "__",
         target.getShortName() + ".sh");
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(target, this);
   }
 
   @Override

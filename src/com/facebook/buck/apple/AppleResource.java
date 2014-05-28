@@ -68,10 +68,11 @@ public class AppleResource extends AbstractBuildable {
   private final Path outputDirectory;
 
   AppleResource(
-      DirectoryTraverser directoryTraverser,
       BuildTarget target,
+      DirectoryTraverser directoryTraverser,
       AppleResourceDescriptionArg args,
       Optional<Path> outputPathSubdirectory) {
+    super(target);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
     this.dirs = ImmutableSortedSet.copyOf(args.dirs);
     this.files = ImmutableSortedSet.copyOf(args.files);

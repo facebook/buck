@@ -54,7 +54,12 @@ public class PrebuiltNativeLibraryDescription
       throw new HumanReadableException(e, "Error traversing directory %s.", args.nativeLibs);
     }
 
-    return new PrebuiltNativeLibrary(args.nativeLibs, args.isAsset.or(false), librarySources);
+    return new PrebuiltNativeLibrary(
+        params.getBuildTarget(),
+        args.nativeLibs,
+        args.isAsset.or(false),
+        librarySources
+    );
   }
 
   public static class Args implements ConstructorArg {

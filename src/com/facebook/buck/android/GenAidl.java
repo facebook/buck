@@ -64,14 +64,13 @@ public class GenAidl extends AbstractBuildable {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
 
-  private final BuildTarget buildTarget;
   private final Path aidlFilePath;
   private final String importPath;
   private final Path output;
   private final Path genPath;
 
   GenAidl(BuildTarget buildTarget, Path aidlFilePath, String importPath) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
     this.importPath = Preconditions.checkNotNull(importPath);
     this.genPath = BuildTargets.getGenPath(buildTarget, "%s");
@@ -107,11 +106,11 @@ public class GenAidl extends AbstractBuildable {
 
     commands.add(new MakeCleanDirectoryStep(genPath));
 
-    Path outputDirectory = BuildTargets.getBinPath(buildTarget, "__%s.aidl");
+    Path outputDirectory = BuildTargets.getBinPath(target, "__%s.aidl");
     commands.add(new MakeCleanDirectoryStep(outputDirectory));
 
     AidlStep command = new AidlStep(
-        buildTarget,
+        target,
         aidlFilePath,
         ImmutableSet.of(importPath),
         outputDirectory);
@@ -121,10 +120,10 @@ public class GenAidl extends AbstractBuildable {
     Path genDirectory = Paths.get(BuckConstant.GEN_DIR, importPath);
 
     // Warn the user if the genDirectory is not under the output directory.
-    if (!importPath.startsWith(buildTarget.getBasePath())) {
+    if (!importPath.startsWith(target.getBasePath())) {
       // TODO(simons): Make this fatal. Give people some time to clean up their rules.
       context.logError("%s, gen_aidl import path (%s) should be a child of %s",
-          buildTarget, importPath, buildTarget.getBasePath());
+          target, importPath, target.getBasePath());
     }
 
     commands.add(new MkdirStep(genDirectory));

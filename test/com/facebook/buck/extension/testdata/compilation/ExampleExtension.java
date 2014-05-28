@@ -17,6 +17,7 @@
 package com.facebook.buck.extension;
 
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -30,6 +31,10 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class ExampleExtension extends AbstractBuildable {
+
+  public ExampleExtension(BuildTarget target) {
+    super(target);
+  }
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {

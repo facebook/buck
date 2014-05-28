@@ -171,12 +171,16 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
 
     @Override
     public Buildable createBuildable(BuildRuleParams params, Arg args) {
-      return new FakeBuildable();
+      return new FakeBuildable(params.getBuildTarget());
     }
   }
 
   private abstract static class FakeBuildableWithHasDepsOverride extends FakeBuildable
-      implements DependencyEnhancer {}
+      implements DependencyEnhancer {
+    public FakeBuildableWithHasDepsOverride(BuildTarget target) {
+      super(target);
+    }
+  }
 
   /**
    * {@link Description} that produces a {@link Buildable} whose
@@ -186,7 +190,7 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
   private static class DemandingNominalDescription extends NominalDescription {
     @Override
     public Buildable createBuildable(BuildRuleParams params, Arg args) {
-      return new FakeBuildableWithHasDepsOverride() {
+      return new FakeBuildableWithHasDepsOverride(params.getBuildTarget()) {
         @Override
         public ImmutableSortedSet<BuildRule> getEnhancedDeps(
             BuildRuleResolver ruleResolver,
@@ -210,7 +214,11 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
     private final ImmutableSortedSet<BuildRule> deps;
 
     /** @param filesOfInterest from deps of type {@link BuildRuleWithInterestingFile}. */
-    FileCollector(Set<Path> filesOfInterest, ImmutableSortedSet<BuildRule> deps) {
+    FileCollector(
+        BuildTarget target,
+        Set<Path> filesOfInterest,
+        ImmutableSortedSet<BuildRule> deps) {
+      super(target);
       this.filesOfInterest = ImmutableSet.copyOf(filesOfInterest);
       this.deps = Preconditions.checkNotNull(deps);
     }
@@ -252,7 +260,7 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
         }
       }
 
-      return new FileCollector(filesOfInterest.build(), deps.build());
+      return new FileCollector(params.getBuildTarget(), filesOfInterest.build(), deps.build());
     }
   }
 

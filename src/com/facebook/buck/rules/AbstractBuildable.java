@@ -16,6 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
+import com.google.common.base.Preconditions;
+
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
@@ -23,7 +27,13 @@ import javax.annotation.Nullable;
 /**
  * No-op implementations of all methods from {@link Buildable}.
  */
-public abstract class AbstractBuildable implements Buildable {
+public abstract class AbstractBuildable implements Buildable, HasBuildTarget {
+
+  protected final BuildTarget target;
+
+  protected AbstractBuildable(BuildTarget target) {
+    this.target = Preconditions.checkNotNull(target);
+  }
 
   @Override
   public BuildableProperties getProperties() {
@@ -33,6 +43,11 @@ public abstract class AbstractBuildable implements Buildable {
   @Nullable
   @Override
   public abstract Path getPathToOutputFile();
+
+  @Override
+  public BuildTarget getBuildTarget() {
+    return target;
+  }
 
   public static class AnonymousBuildRule extends AbstractBuildRule implements BuildRule {
     private final Buildable buildable;

@@ -46,14 +46,13 @@ public class PythonLibrary extends AbstractBuildable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  private final BuildTarget target;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final Path pythonPathDirectory;
 
   protected PythonLibrary(
       BuildTarget target,
       ImmutableSortedSet<SourcePath> srcs) {
-    this.target = Preconditions.checkNotNull(target);
+    super(target);
     Preconditions.checkNotNull(srcs);
     Preconditions.checkArgument(!srcs.isEmpty(), "Must specify srcs for %s.", target);
     this.srcs = srcs;

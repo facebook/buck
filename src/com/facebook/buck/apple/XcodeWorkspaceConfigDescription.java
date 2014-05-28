@@ -40,7 +40,7 @@ public class XcodeWorkspaceConfigDescription
 
   @Override
   public XcodeWorkspaceConfig createBuildable(BuildRuleParams params, Arg args) {
-    return new XcodeWorkspaceConfig(args);
+    return new XcodeWorkspaceConfig(params.getBuildTarget(), args);
   }
 
   public static class Arg implements ConstructorArg {

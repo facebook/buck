@@ -52,6 +52,7 @@ public class GenParcelable extends AbstractBuildable {
   private final Path outputDirectory;
 
   GenParcelable(BuildTarget target, Set<SourcePath> srcs) {
+    super(target);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.outputDirectory = BuildTargets.getGenPath(target, "__%s__");
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -36,7 +37,8 @@ public class XcodeProjectConfig extends AbstractBuildable {
   private final String projectName;
   private final ImmutableSet<BuildRule> rules;
 
-  public XcodeProjectConfig(XcodeProjectConfigDescription.Arg arg) {
+  public XcodeProjectConfig(BuildTarget target, XcodeProjectConfigDescription.Arg arg) {
+    super(target);
     projectName = Preconditions.checkNotNull(arg.projectName);
     rules = Preconditions.checkNotNull(arg.rules);
   }

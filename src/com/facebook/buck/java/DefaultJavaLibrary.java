@@ -107,7 +107,6 @@ public class DefaultJavaLibrary extends AbstractBuildable
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  private final BuildTarget target;
   protected ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> resources;
@@ -176,7 +175,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       JavacOptions javacOptions) {
-    this.target = Preconditions.checkNotNull(target);
+    super(target);
     this.deps = ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(deps)
         .addAll(exportedDeps)
@@ -226,11 +225,6 @@ public class DefaultJavaLibrary extends AbstractBuildable
         });
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(target, this);
-  }
-
-  @Override
-  public BuildTarget getBuildTarget() {
-    return target;
   }
 
   public ImmutableSortedSet<BuildRule> getDeps() {

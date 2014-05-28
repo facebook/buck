@@ -105,6 +105,7 @@ public class GwtBinary extends AbstractBuildable implements DependencyEnhancer {
       List<String> experimentalArgs,
       ImmutableSortedSet<BuildRule> originalDeps,
       ImmutableSortedSet<BuildRule> moduleDeps) {
+    super(buildTarget);
     this.outputFile = BuildTargets.getGenPath(
         buildTarget,
         "__gwt_binary_%s__/" + buildTarget.getShortName() + ".zip");

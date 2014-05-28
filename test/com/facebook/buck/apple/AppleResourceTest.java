@@ -59,8 +59,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeDirectoryTraverser(),
         new BuildTarget("//path/to/app", "MyApp"),
+        new FakeDirectoryTraverser(),
         args,
         Optional.<Path>absent());
 
@@ -81,8 +81,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeDirectoryTraverser(),
         new BuildTarget("//path/to/app", "MyApp"),
+        new FakeDirectoryTraverser(),
         args,
         Optional.<Path>absent());
 
@@ -114,8 +114,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeDirectoryTraverser(),
         new BuildTarget("//path/to/app", "MyApp"),
+        new FakeDirectoryTraverser(),
         args,
         Optional.of(Paths.get("Resources")));
 
@@ -136,8 +136,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeDirectoryTraverser(),
         new BuildTarget("//path/to/app", "MyApp"),
+        new FakeDirectoryTraverser(),
         args,
         Optional.of(Paths.get("Resources")));
 
@@ -169,8 +169,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeDirectoryTraverser(),
         new BuildTarget("//path/to/app", "MyApp"),
+        new FakeDirectoryTraverser(),
         args,
         Optional.<Path>absent());
 
@@ -208,6 +208,7 @@ public class AppleResourceTest {
     args.variants = Optional.of(variants);
 
     AppleResource appleResource = new AppleResource(
+        new BuildTarget("//path/to/app", "MyApp"),
         // Pretend that MyLibrary.bundle contains two files: an image and a sound file.
         new FakeDirectoryTraverser(
             ImmutableMap.<String, Collection<FakeDirectoryTraverser.Entry>>of(
@@ -216,7 +217,6 @@ public class AppleResourceTest {
                     new FakeDirectoryTraverser.Entry(null, "BundleImage.jpg"),
                     new FakeDirectoryTraverser.Entry(null, "BundleSound.wav")
                 ))),
-        new BuildTarget("//path/to/app", "MyApp"),
         args,
         Optional.<Path>absent());
 
@@ -243,8 +243,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeDirectoryTraverser(),
         new BuildTarget("//path/to/app", "MyApp"),
+        new FakeDirectoryTraverser(),
         args,
         Optional.<Path>absent());
 

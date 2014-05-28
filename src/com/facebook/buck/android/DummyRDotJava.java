@@ -65,7 +65,6 @@ public class DummyRDotJava extends AbstractBuildable
     implements AbiRule, HasJavaAbi, InitializableFromDisk<DummyRDotJava.BuildOutput> {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
-  private final BuildTarget buildTarget;
   private final JavacOptions javacOptions;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -76,10 +75,10 @@ public class DummyRDotJava extends AbstractBuildable
       Set<HasAndroidResourceDeps> androidResourceDeps,
       BuildTarget buildTarget,
       JavacOptions javacOptions) {
+    super(buildTarget);
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
@@ -92,7 +91,7 @@ public class DummyRDotJava extends AbstractBuildable
   @Override
   public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(buildTarget);
+    final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(target);
     steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
@@ -128,7 +127,7 @@ public class DummyRDotJava extends AbstractBuildable
     final Path rDotJavaClassesFolder = getRDotJavaBinFolder();
     steps.add(new MakeCleanDirectoryStep(rDotJavaClassesFolder));
 
-    Path pathToAbiOutputDir = getPathToAbiOutputDir(buildTarget);
+    Path pathToAbiOutputDir = getPathToAbiOutputDir(target);
     steps.add(new MakeCleanDirectoryStep(pathToAbiOutputDir));
     Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi");
 
@@ -139,7 +138,7 @@ public class DummyRDotJava extends AbstractBuildable
             rDotJavaClassesFolder,
             Optional.of(pathToAbiOutputFile),
             javacOptions,
-            buildTarget);
+            target);
     steps.add(javacStep);
 
     steps.add(new AbstractExecutionStep("record_abi_key") {
@@ -186,7 +185,7 @@ public class DummyRDotJava extends AbstractBuildable
   }
 
   public Path getRDotJavaBinFolder() {
-    return getRDotJavaBinFolder(buildTarget);
+    return getRDotJavaBinFolder(target);
   }
 
   public ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps() {
@@ -217,11 +216,6 @@ public class DummyRDotJava extends AbstractBuildable
   @Override
   public Sha1HashCode getAbiKey() {
     return buildOutputInitializer.getBuildOutput().rDotTxtSha1;
-  }
-
-  @Override
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   public static class BuildOutput {

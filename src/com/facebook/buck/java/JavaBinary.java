@@ -52,7 +52,6 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
-  private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> deps;
 
   @Nullable
@@ -73,7 +72,7 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
       @Nullable Path manifestFile,
       @Nullable Path metaInfDirectory,
       DirectoryTraverser directoryTraverser) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.deps = Preconditions.checkNotNull(deps);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
@@ -134,7 +133,7 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
       includePaths = ImmutableSet.copyOf(getTransitiveClasspathEntries().values());
     }
 
-    Path outputFile = getOutputFile();
+    Path outputFile = getPathToOutputFile();
     Step jar = new JarDirectoryStep(outputFile, includePaths, mainClass, manifestFile);
     commands.add(jar);
 
@@ -148,17 +147,13 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
   }
 
   private Path getOutputDirectory() {
-    return Paths.get(String.format("%s/%s", BuckConstant.GEN_DIR, buildTarget.getBasePath()));
+    return Paths.get(String.format("%s/%s", BuckConstant.GEN_DIR, target.getBasePath()));
   }
 
   @Override
   public Path getPathToOutputFile() {
-    return getOutputFile();
-  }
-
-  Path getOutputFile() {
     return Paths.get(
-        String.format("%s/%s.jar", getOutputDirectory(), buildTarget.getShortName()));
+        String.format("%s/%s.jar", getOutputDirectory(), target.getShortName()));
   }
 
   @Override
@@ -166,9 +161,9 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
     Preconditions.checkState(
         mainClass != null,
         "Must specify a main class for %s in order to to run it.",
-        buildTarget.getFullyQualifiedName());
+        target.getFullyQualifiedName());
 
     return ImmutableList.of("java", "-jar",
-        projectFilesystem.getAbsolutifier().apply(getOutputFile()).toString());
+        projectFilesystem.getAbsolutifier().apply(getPathToOutputFile()).toString());
   }
 }

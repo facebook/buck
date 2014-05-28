@@ -66,7 +66,8 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     Preconditions.checkNotNull(flavor);
 
     Preconditions.checkArgument(baseName.startsWith(BUILD_TARGET_PREFIX),
-        "baseName must start with // but was %s",
+        "baseName must start with %s but was %s",
+        BUILD_TARGET_PREFIX,
         baseName);
 
     // There's a chance that the (String, String) constructor was called, but a flavour was

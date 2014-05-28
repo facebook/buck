@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -36,7 +37,8 @@ public class XcodeWorkspaceConfig extends AbstractBuildable {
 
   private final BuildRule srcTarget;
 
-  protected XcodeWorkspaceConfig(XcodeWorkspaceConfigDescription.Arg arg) {
+  protected XcodeWorkspaceConfig(BuildTarget target, XcodeWorkspaceConfigDescription.Arg arg) {
+    super(target);
     this.srcTarget = Preconditions.checkNotNull(arg.srcTarget);
   }
 

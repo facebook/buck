@@ -50,7 +50,6 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
   protected static final String DEFAULT_CPP_COMPILER = "g++";
   protected static final String DEFAULT_C_COMPILER = "gcc";
 
-  private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> headers;
@@ -60,7 +59,7 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> headers) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.deps = Preconditions.checkNotNull(deps);
     this.headers = Preconditions.checkNotNull(headers);
     this.srcs = Preconditions.checkNotNull(srcs);
@@ -145,6 +144,6 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
 
   @Override
   public Path getPathToOutputFile() {
-    return BuildTargets.getBinPath(buildTarget, getOutputFileNameFormat());
+    return BuildTargets.getBinPath(target, getOutputFileNameFormat());
   }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -50,7 +51,8 @@ public class PythonBinary extends AbstractBuildable implements BinaryBuildRule {
   private final ImmutableSortedSet<BuildRule> deps;
   private final Path main;
 
-  protected PythonBinary(ImmutableSortedSet<BuildRule> deps, Path main) {
+  protected PythonBinary(BuildTarget target, ImmutableSortedSet<BuildRule> deps, Path main) {
+    super(target);
     this.deps = Preconditions.checkNotNull(deps);
     this.main = Preconditions.checkNotNull(main);
   }

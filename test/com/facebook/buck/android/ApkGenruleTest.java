@@ -130,9 +130,8 @@ public class ApkGenruleTest {
       public Buildable getBuildable() {
         class Dummy extends FakeBuildable implements InstallableApk {
 
-          @Override
-          public BuildTarget getBuildTarget() {
-            return apkTarget;
+          public Dummy() {
+            super(apkTarget);
           }
 
           @Override

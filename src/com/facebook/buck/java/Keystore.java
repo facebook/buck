@@ -33,12 +33,11 @@ import javax.annotation.Nullable;
 
 public class Keystore extends AbstractBuildable {
 
-  private final BuildTarget buildTarget;
   private final Path pathToStore;
   private final Path pathToProperties;
 
   Keystore(BuildTarget buildTarget, Path store, Path properties) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.pathToStore = Preconditions.checkNotNull(store);
     this.pathToProperties = Preconditions.checkNotNull(properties);
   }
@@ -57,10 +56,6 @@ public class Keystore extends AbstractBuildable {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder;
-  }
-
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   public Path getPathToStore() {

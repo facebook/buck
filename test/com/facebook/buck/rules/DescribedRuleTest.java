@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -65,7 +66,7 @@ public class DescribedRuleTest {
         new FakeProjectFilesystem(),
         new FakeRuleKeyBuilderFactory());
 
-    ExampleBuildable expected = new ExampleBuildable("nada");
+    ExampleBuildable expected = new ExampleBuildable(params.getBuildTarget(), "nada");
     DescribedRule rule = new DescribedRule(new BuildRuleType("example"),
         expected,
         params);
@@ -94,7 +95,7 @@ public class DescribedRuleTest {
 
       @Override
       public Buildable createBuildable(BuildRuleParams params, Dto args) {
-        return new ExampleBuildable(args.name);
+        return new ExampleBuildable(params.getBuildTarget(), args.name);
       }
     };
 
@@ -158,7 +159,7 @@ public class DescribedRuleTest {
 
       @Override
       public Buildable createBuildable(BuildRuleParams params, Dto args) {
-        return new ExampleBuildable("hello world");
+        return new ExampleBuildable(params.getBuildTarget(), "hello world");
       }
     };
 
@@ -218,7 +219,7 @@ public class DescribedRuleTest {
 
       @Override
       public Buildable createBuildable(BuildRuleParams params, Dto args) {
-        return new ExampleBuildable("hello world");
+        return new ExampleBuildable(params.getBuildTarget(), "hello world");
       }
     };
 
@@ -270,7 +271,7 @@ public class DescribedRuleTest {
       public Buildable createBuildable(BuildRuleParams params, Dto args) {
         // Here is the key line of code being verified by this test!
         int optimizationLevel = args.optimize.or(Integer.valueOf(Dto.DEFAULT_OPTIMIZE));
-        return new ExampleBuildable(String.valueOf(optimizationLevel));
+        return new ExampleBuildable(params.getBuildTarget(), String.valueOf(optimizationLevel));
       }
     };
 
@@ -307,7 +308,8 @@ public class DescribedRuleTest {
 
     private final String message;
 
-    public ExampleBuildable(String message) {
+    public ExampleBuildable(BuildTarget target, String message) {
+      super(target);
       this.message = message;
     }
 

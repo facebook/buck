@@ -68,7 +68,7 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
             return paths.build();
           }
         });
-    return new AppleAssetCatalog(inputPathsSupplier, args);
+    return new AppleAssetCatalog(params.getBuildTarget(), inputPathsSupplier, args);
   }
 
   public static class Arg implements ConstructorArg {

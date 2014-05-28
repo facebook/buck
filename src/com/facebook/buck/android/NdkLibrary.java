@@ -78,6 +78,7 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
       List<String> flags,
       boolean isAsset,
       Optional<String> ndkVersion) {
+    super(buildTarget);
     this.isAsset = isAsset;
 
     this.makefileDirectory = buildTarget.getBasePathWithSlash();

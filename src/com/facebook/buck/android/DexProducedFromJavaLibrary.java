@@ -73,7 +73,6 @@ public class DexProducedFromJavaLibrary extends AbstractBuildable
   @VisibleForTesting
   static final String LINEAR_ALLOC_KEY_ON_DISK_METADATA = "linearalloc";
 
-  private final BuildTarget buildTarget;
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -81,7 +80,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildable
   DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
       JavaLibrary javaLibrary) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.javaLibrary = Preconditions.checkNotNull(javaLibrary);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
@@ -157,11 +156,6 @@ public class DexProducedFromJavaLibrary extends AbstractBuildable
     return buildOutputInitializer;
   }
 
-  @Override
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
-  }
-
   static class BuildOutput {
     private final int linearAllocEstimate;
     private BuildOutput(int linearAllocEstimate) {
@@ -177,7 +171,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildable
   }
 
   public Path getPathToDex() {
-    return BuildTargets.getGenPath(buildTarget, "%s.dex.jar");
+    return BuildTargets.getGenPath(target, "%s.dex.jar");
   }
 
   public boolean hasOutput() {

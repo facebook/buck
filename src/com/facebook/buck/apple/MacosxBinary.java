@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -43,7 +44,8 @@ public class MacosxBinary extends AbstractBuildable implements AppleBuildable {
   private final ImmutableMap<SourcePath, String> perFileFlags;
   private final ImmutableSortedSet<String> frameworks;
 
-  public MacosxBinary(MacosxBinaryDescription.Arg arg) {
+  public MacosxBinary(BuildTarget target, MacosxBinaryDescription.Arg arg) {
+    super(target);
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
     frameworks = Preconditions.checkNotNull(arg.frameworks);

@@ -48,8 +48,6 @@ public class ProjectConfig extends AbstractBuildable {
 
   private final boolean isIntelliJPlugin;
 
-  private final BuildTarget buildTarget;
-
   protected ProjectConfig(
       BuildTarget buildTarget,
       @Nullable BuildRule srcRule,
@@ -57,6 +55,7 @@ public class ProjectConfig extends AbstractBuildable {
       @Nullable BuildRule testRule,
       @Nullable List<String> testRoots,
       boolean isIntelliJPlugin) {
+    super(buildTarget);
     Preconditions.checkArgument(srcRule != null || testRule != null,
         "At least one of src_target or test_target must be specified in %s.",
         buildTarget.getFullyQualifiedName());
@@ -65,7 +64,6 @@ public class ProjectConfig extends AbstractBuildable {
         "but was %s.",
         testRule);
 
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.srcRule = srcRule;
     if (srcRoots != null) {
       this.srcSourceRoots = ImmutableList.copyOf(Iterables.transform(srcRoots,
@@ -93,10 +91,6 @@ public class ProjectConfig extends AbstractBuildable {
     }
 
     this.isIntelliJPlugin = isIntelliJPlugin;
-  }
-
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   /**

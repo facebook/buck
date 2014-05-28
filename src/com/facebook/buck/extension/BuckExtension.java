@@ -64,7 +64,6 @@ public class BuckExtension extends AbstractBuildable {
       /* source level */ "7",
       /* target level */ "7");
 
-  private final BuildTarget target;
   private final ImmutableSortedSet<? extends SourcePath> srcs;
   private final ImmutableSortedSet<? extends SourcePath> resources;
   private final ImmutableSortedSet<BuildRule> deps;
@@ -77,7 +76,7 @@ public class BuckExtension extends AbstractBuildable {
       ImmutableSortedSet<? extends SourcePath> srcs,
       ImmutableSortedSet<? extends SourcePath> resources,
       ImmutableSortedSet<BuildRule> deps) {
-    this.target = Preconditions.checkNotNull(target);
+    super(target);
     this.srcs = Preconditions.checkNotNull(srcs);
     this.resources = Preconditions.checkNotNull(resources);
     this.deps = Preconditions.checkNotNull(deps);

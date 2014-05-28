@@ -65,6 +65,7 @@ public class BuildConfig extends AbstractBuildable {
       BuildTarget buildTarget,
       String appPackage,
       boolean debug) {
+    super(buildTarget);
     this.appPackage = Preconditions.checkNotNull(appPackage);
     this.debug = debug;
     this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "__%s__")

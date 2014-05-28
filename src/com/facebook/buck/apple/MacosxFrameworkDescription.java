@@ -46,7 +46,7 @@ public class MacosxFrameworkDescription implements Description<MacosxFrameworkDe
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new MacosxFramework(args);
+    return new MacosxFramework(params.getBuildTarget(), args);
   }
 
   public static class Arg implements ConstructorArg {

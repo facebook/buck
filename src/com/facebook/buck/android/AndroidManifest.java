@@ -71,7 +71,6 @@ import java.util.Set;
  */
 public class AndroidManifest extends AbstractBuildable implements DependencyEnhancer {
 
-  private final BuildTarget buildTarget;
   private final SourcePath skeletonFile;
 
   /** These must be sorted so {@link #getInputsToCompareToOutput} returns a consistent value. */
@@ -82,7 +81,7 @@ public class AndroidManifest extends AbstractBuildable implements DependencyEnha
   protected AndroidManifest(BuildTarget buildTarget,
       SourcePath skeletonFile,
       Set<Path> manifestFiles) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     this.pathToOutputFile = Paths.get(
@@ -102,10 +101,6 @@ public class AndroidManifest extends AbstractBuildable implements DependencyEnha
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder;
-  }
-
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   public SourcePath getSkeletonFile() {

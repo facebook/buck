@@ -92,7 +92,6 @@ public class ResourcesFilter extends AbstractBuildable
     }
   }
 
-  private final BuildTarget buildTarget;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final ResourceCompressionMode resourceCompressionMode;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
@@ -103,7 +102,7 @@ public class ResourcesFilter extends AbstractBuildable
       AndroidResourceDepsFinder androidResourceDepsFinder,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesStep.ResourceFilter resourceFilter) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
@@ -118,10 +117,6 @@ public class ResourcesFilter extends AbstractBuildable
   @Override
   public ImmutableSet<Path> getNonEnglishStringFiles() {
     return buildOutputInitializer.getBuildOutput().nonEnglishStringFiles;
-  }
-
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   @Override
@@ -222,7 +217,7 @@ public class ResourcesFilter extends AbstractBuildable
   }
 
   private String getResDestinationBasePath() {
-    return BuildTargets.getBinPath(buildTarget, "__filtered__%s__").toString();
+    return BuildTargets.getBinPath(target, "__filtered__%s__").toString();
   }
 
   @Override

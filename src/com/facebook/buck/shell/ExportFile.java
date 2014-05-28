@@ -83,11 +83,11 @@ public class ExportFile extends AbstractBuildable {
 
   @VisibleForTesting
   ExportFile(BuildTarget target, ExportFileDescription.Arg args) {
+    super(target);
     if (args.src.isPresent()) {
       this.src = args.src.get();
     } else {
-      this.src = new PathSourcePath(
-          Paths.get(String.format("%s%s", target.getBasePathWithSlash(), target.getShortName())));
+      this.src = new PathSourcePath(Paths.get(target.getBasePath(), target.getShortName()));
     }
 
     final String outName = args.out.or(target.getShortName());

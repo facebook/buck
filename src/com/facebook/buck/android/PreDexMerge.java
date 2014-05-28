@@ -80,7 +80,6 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
   private static final String PRIMARY_DEX_HASH_KEY = "primary_dex_hash";
   private static final String SECONDARY_DEX_DIRECTORIES_KEY = "secondary_dex_directories";
 
-  private final BuildTarget buildTarget;
   private final Path primaryDexPath;
   private final DexSplitMode dexSplitMode;
   private final ImmutableSet<DexProducedFromJavaLibrary> preDexDeps;
@@ -93,7 +92,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
       DexSplitMode dexSplitMode,
       ImmutableSet<DexProducedFromJavaLibrary> preDexDeps,
       UberRDotJava uberRDotJava) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.preDexDeps = Preconditions.checkNotNull(preDexDeps);
@@ -132,7 +131,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     private final Path metadataFile;
 
     private SplitDexPaths() {
-      Path workDir = BuildTargets.getBinPath(buildTarget, "_%s_output");
+      Path workDir = BuildTargets.getBinPath(target, "_%s_output");
 
       metadataDir = workDir.resolve("metadata");
       jarfilesDir = workDir.resolve("jarfiles");

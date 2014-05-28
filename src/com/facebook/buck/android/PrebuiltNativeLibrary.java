@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -50,9 +51,11 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
   private final ImmutableSortedSet<Path> librarySources;
 
   protected PrebuiltNativeLibrary(
+      BuildTarget target,
       Path nativeLibsDirectory,
       boolean isAsset,
       ImmutableSortedSet<Path> librarySources) {
+    super(target);
     this.isAsset = isAsset;
     this.libraryPath = Preconditions.checkNotNull(nativeLibsDirectory);
     this.librarySources = Preconditions.checkNotNull(librarySources);

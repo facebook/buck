@@ -67,6 +67,7 @@ public class PythonBinaryTest {
         .build(ruleResolver);
 
     PythonBinary buildable = new PythonBinary(
+        new BuildTarget("//test", "test"),
         ImmutableSortedSet.<BuildRule>of(javaLibrary, pyLibraryRule),
         Paths.get("foo"));
 

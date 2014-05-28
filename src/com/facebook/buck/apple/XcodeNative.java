@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -49,7 +50,8 @@ import javax.annotation.Nullable;
 public class XcodeNative extends AbstractBuildable {
   private final SourcePath projectContainerPath;
 
-  public XcodeNative(XcodeNativeDescription.Arg arg) {
+  public XcodeNative(BuildTarget target, XcodeNativeDescription.Arg arg) {
+    super(target);
     this.projectContainerPath = Preconditions.checkNotNull(arg.projectContainerPath);
   }
 

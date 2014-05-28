@@ -43,7 +43,7 @@ public class XcodeNativeDescription implements Description<XcodeNativeDescriptio
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new XcodeNative(args);
+    return new XcodeNative(params.getBuildTarget(), args);
   }
 
   public static class Arg implements ConstructorArg {

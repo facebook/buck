@@ -57,7 +57,6 @@ import javax.annotation.Nullable;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class ShTest extends AbstractBuildable implements TestRule {
 
-  private final BuildTarget buildTarget;
   private final SourcePath test;
   private final ImmutableSet<Label> labels;
 
@@ -65,7 +64,7 @@ public class ShTest extends AbstractBuildable implements TestRule {
       BuildTarget buildTarget,
       SourcePath test,
       Set<Label> labels) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.test = Preconditions.checkNotNull(test);
     this.labels = ImmutableSet.copyOf(labels);
   }
@@ -94,11 +93,6 @@ public class ShTest extends AbstractBuildable implements TestRule {
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     // Nothing to build: test is run directly.
     return ImmutableList.of();
-  }
-
-  @Override
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   @Nullable
@@ -157,7 +151,7 @@ public class ShTest extends AbstractBuildable implements TestRule {
         TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
             TestResultSummary.class);
         TestCaseSummary testCaseSummary = new TestCaseSummary(
-            buildTarget.getFullyQualifiedName(),
+            target.getFullyQualifiedName(),
             ImmutableList.of(testResultSummary));
         return new TestResults(getBuildTarget(), ImmutableList.of(testCaseSummary), contacts);
       }

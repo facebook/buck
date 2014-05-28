@@ -219,7 +219,8 @@ public class AndroidBinary extends AbstractBuildable implements
       boolean exopackage,
       Set<BuildRule> preprocessJavaClassesDeps,
       Optional<String> preprocessJavaClassesBash) {
-    this.originalBuildRuleParams = Preconditions.checkNotNull(params);
+    super(params.getBuildTarget());
+    this.originalBuildRuleParams = params;
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
     this.aaptOverride = Preconditions.checkNotNull(aaptOverride);

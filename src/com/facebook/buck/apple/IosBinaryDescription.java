@@ -36,7 +36,7 @@ public class IosBinaryDescription implements Description<IosBinaryDescription.Ar
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new IosBinary(args);
+    return new IosBinary(params.getBuildTarget(), args);
   }
 
   @Override

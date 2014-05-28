@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
@@ -27,6 +28,10 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class FakeBuildable extends AbstractBuildable {
+
+  public FakeBuildable(BuildTarget target) {
+    super(target);
+  }
 
   @Nullable
   private Path pathToOutputFile;

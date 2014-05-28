@@ -70,7 +70,6 @@ public class PrebuiltJar extends AbstractBuildable
       declaredClasspathEntriesSupplier;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
-  private final BuildTarget target;
   private final ImmutableSortedSet<BuildRule> deps;
 
   PrebuiltJar(
@@ -79,7 +78,7 @@ public class PrebuiltJar extends AbstractBuildable
       Optional<SourcePath> sourceJar,
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl) {
-    this.target = buildableParams.getBuildTarget();
+    super(buildableParams.getBuildTarget());
     this.deps = buildableParams.getDeps();
     this.binaryJar = Preconditions.checkNotNull(binaryJar);
     this.sourceJar = Preconditions.checkNotNull(sourceJar);

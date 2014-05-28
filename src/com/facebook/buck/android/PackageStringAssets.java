@@ -52,7 +52,6 @@ public class PackageStringAssets extends AbstractBuildable
 
   private static final String STRING_ASSETS_ZIP_HASH = "STRING_ASSETS_ZIP_HASH";
 
-  private final BuildTarget buildTarget;
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final UberRDotJava uberRDotJava;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -61,7 +60,7 @@ public class PackageStringAssets extends AbstractBuildable
       BuildTarget buildTarget,
       FilteredResourcesProvider filteredResourcesProvider,
       UberRDotJava uberRDotJava) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    super(buildTarget);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -148,6 +147,6 @@ public class PackageStringAssets extends AbstractBuildable
   }
 
   private Path getPathToStringAssetsDir() {
-    return BuildTargets.getBinPath(buildTarget, "__strings_%s__");
+    return BuildTargets.getBinPath(target, "__strings_%s__");
   }
 }
