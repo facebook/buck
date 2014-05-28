@@ -106,8 +106,11 @@ public class RobolectricTest extends JavaTest {
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
-    super.getEnhancedDeps(ruleResolver);
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(
+      BuildRuleResolver ruleResolver,
+      Iterable<BuildRule> declaredDeps,
+      Iterable<BuildRule> inferredDeps) {
+    super.getEnhancedDeps(ruleResolver, declaredDeps, inferredDeps);
     AndroidLibraryGraphEnhancer.Result result = new AndroidLibraryGraphEnhancer(
         buildRuleParams.getBuildTarget(),
         buildRuleParams,
@@ -122,9 +125,11 @@ public class RobolectricTest extends JavaTest {
         : ImmutableSet.<Path>of();
 
     this.deps = result.getBuildRuleParams().getDeps();
-    return deps;
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(deps)
+        .addAll(inferredDeps)
+        .build();
   }
-
 
   @Override
   protected Set<Path> getBootClasspathEntries(ExecutionContext context) {

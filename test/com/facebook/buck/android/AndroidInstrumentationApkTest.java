@@ -81,37 +81,41 @@ public class AndroidInstrumentationApkTest {
     buildRuleIndex.put(javaLibrary4.getBuildTarget(), javaLibrary4);
     BuildRuleResolver ruleResolver = new BuildRuleResolver(buildRuleIndex);
 
-    Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(
+    BuildRule keystore = KeystoreBuilder.createBuilder(
         new BuildTarget("//keystores", "debug"))
         .setProperties(Paths.get("keystores/debug.properties"))
         .setStore(Paths.get("keystores/debug.keystore"))
-        .build(ruleResolver)
-        .getBuildable();
+        .build(ruleResolver);
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.
     AndroidBinaryBuilder.Builder androidBinaryBuilder = AndroidBinaryBuilder.newBuilder();
+    ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.<BuildRule>of(
+        javaLibrary2,
+        javaLibrary3);
     androidBinaryBuilder
         .setBuildTarget(new BuildTarget("//apps", "app"))
         .setManifest(new TestSourcePath("apps/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:18")
-        .setKeystore(keystore)
-        .setOriginalDeps(ImmutableSortedSet.<BuildRule>of(
-                javaLibrary2,
-                javaLibrary3));
+        .setKeystore((Keystore) keystore.getBuildable())
+        .setOriginalDeps(originalDeps);
     BuildRule androidBinaryRule = androidBinaryBuilder.build(ruleResolver);
     AndroidBinary androidBinary = (AndroidBinary) androidBinaryRule.getBuildable();
-    androidBinary.getEnhancedDeps(ruleResolver);
+    androidBinary.getEnhancedDeps(ruleResolver, originalDeps, ImmutableSortedSet.of(keystore));
 
     // AndroidInstrumentationApk transitively depends on :lib1, :lib2, :lib3, and :lib4.
+    ImmutableSortedSet<BuildRule> apkOriginalDeps = ImmutableSortedSet.<BuildRule>of(
+        javaLibrary2,
+        javaLibrary4);
     AndroidInstrumentationApk androidInstrumentationApk = new AndroidInstrumentationApk(
         new FakeBuildRuleParams(new BuildTarget("//apps", "instrumentation")),
         new TestSourcePath("apps/InstrumentationAndroidManifest.xml"),
         androidBinary,
         androidBinaryRule,
-        ImmutableSortedSet.<BuildRule>of(
-            javaLibrary2,
-            javaLibrary4));
-    androidInstrumentationApk.getEnhancedDeps(ruleResolver);
+        apkOriginalDeps);
+    androidInstrumentationApk.getEnhancedDeps(
+        ruleResolver,
+        apkOriginalDeps,
+        ImmutableSortedSet.of(androidBinaryRule));
 
     assertEquals(
         "//apps:app should have three JAR files to dex.",

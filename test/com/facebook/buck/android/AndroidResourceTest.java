@@ -228,22 +228,25 @@ public class AndroidResourceTest {
     // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
     // right thing when it gets a non-AndroidResourceRule as well as an AndroidResourceRule.
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
+    BuildRule keystore = KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .build(ruleResolver)
-        .getBuildable();
+        .build(ruleResolver);
 
+    ImmutableSortedSet<BuildRule> declaredDeps = ImmutableSortedSet.of(a, c);
     BuildRule e = AndroidBinaryBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
             .setManifest(new TestSourcePath("AndroidManfiest.xml"))
             .setTarget("Google Inc.:Google APIs:16")
-            .setKeystore(keystore)
-            .setOriginalDeps(ImmutableSortedSet.of(a, c))
+            .setKeystore((Keystore) keystore.getBuildable())
+            .setOriginalDeps(declaredDeps)
             .build(ruleResolver);
-    e.getBuildable().getEnhancedDeps(ruleResolver);
+    ((AndroidBinary) e.getBuildable()).getEnhancedDeps(
+        ruleResolver,
+        declaredDeps,
+        ImmutableSortedSet.of(keystore));
 
-    ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(a);
+        ImmutableList < HasAndroidResourceDeps > deps2 = UberRDotJavaUtil.getAndroidResourceDeps(a);
     assertTrue(
         String.format(
             "Topological sort %s should be either %s or %s", deps, validResult1, validResult2),

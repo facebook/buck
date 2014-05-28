@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DependencyEnhancer;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -61,7 +62,7 @@ import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class JavaTest extends DefaultJavaLibrary implements TestRule {
+public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, TestRule {
 
   private final ImmutableList<String> vmArgs;
 
@@ -102,10 +103,13 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     this.contacts = ImmutableSet.copyOf(contacts);
   }
 
-
   @Override
-  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
-    ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(
+      BuildRuleResolver ruleResolver,
+      Iterable<BuildRule> declaredDeps,
+      Iterable<BuildRule> inferredDeps) {
+
+    ImmutableSet.Builder<BuildRule> sourcesUnderTestBuilder = ImmutableSet.builder();
     for (BuildTarget target : sourceTargetsUnderTest) {
       BuildRule rule = ruleResolver.get(target);
       if (rule == null) {
@@ -115,7 +119,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
             target);
       }
       if (rule.getBuildable() instanceof JavaLibrary) {
-        builder.add(rule);
+        sourcesUnderTestBuilder.add(rule);
       } else {
         // In this case, the source under test specified in the build file was not a Java library
         // rule. Since EMMA requires the sources to be in Java, we will throw this exception and
@@ -127,8 +131,12 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
             rule.getType().getName());
       }
     }
-    sourceUnderTest = builder.build();
-    return deps;
+    sourceUnderTest = sourcesUnderTestBuilder.build();
+
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(deps)  // These contain the declaredDeps already.
+        .addAll(inferredDeps)
+        .build();
   }
 
 

@@ -702,13 +702,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
       return null;
     }
 
-    @Nullable
-    @Override
-    public ImmutableSortedSet<BuildRule> getEnhancedDeps(
-        BuildRuleResolver ruleResolver) {
-      return null;
-    }
-
     @Override
     public BuildTarget getBuildTarget() {
       return buildTarget;

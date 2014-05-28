@@ -90,23 +90,23 @@ public class AndroidTransitiveDependencyGraphTest {
             .build());
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
+    BuildRule keystore = KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .build(ruleResolver)
-        .getBuildable();
+        .build(ruleResolver);
 
+    ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(libraryRule, manifestRule);
     AndroidBinary binaryRule = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
-        .setOriginalDeps(ImmutableSortedSet.of(libraryRule, manifestRule))
+        .setOriginalDeps(originalDeps)
         .setBuildTargetsToExcludeFromDex(
             ImmutableSet.of(BuildTargetFactory.newInstance("//third_party/guava:guava")))
         .setManifest(new TestSourcePath("java/src/com/facebook/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(keystore)
+        .setKeystore((Keystore) keystore.getBuildable())
         .build(ruleResolver)
         .getBuildable();
-    binaryRule.getEnhancedDeps(ruleResolver);
+    binaryRule.getEnhancedDeps(ruleResolver, originalDeps, ImmutableSortedSet.of(keystore));
 
     // Verify that the correct transitive dependencies are found.
     AndroidTransitiveDependencies transitiveDeps = binaryRule.findTransitiveDependencies();
@@ -169,27 +169,30 @@ public class AndroidTransitiveDependencyGraphTest {
         .build(ruleResolver);
 
     BuildTarget keystoreTarget = new BuildTarget("//keystore", "debug");
-    Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
+    BuildRule keystore = KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
         .addDep(androidLibraryKeystore)
-        .build(ruleResolver)
-        .getBuildable();
+        .build(ruleResolver);
 
     BuildTarget androidLibraryTarget = new BuildTarget("//java/com/facebook/base", "base");
     BuildRule androidLibrary = AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
         .addSrc(Paths.get("java/com/facebook/base/Base.java"))
         .build(ruleResolver);
 
+    ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(androidLibrary);
     AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
         .setBuildTarget(new BuildTarget("//apps/sample", "app"))
         .setManifest(new TestSourcePath("apps/sample/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(keystore)
-        .setOriginalDeps(ImmutableSortedSet.of(androidLibrary))
+        .setKeystore((Keystore) keystore.getBuildable())
+        .setOriginalDeps(originalDeps)
         .build(ruleResolver)
         .getBuildable();
-    androidBinary.getEnhancedDeps(ruleResolver);
+    androidBinary.getEnhancedDeps(
+        ruleResolver,
+        originalDeps,
+        ImmutableSortedSet.of(keystore));
 
     AndroidDexTransitiveDependencies androidTransitiveDeps = androidBinary
         .findDexTransitiveDependencies();

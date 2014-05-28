@@ -26,6 +26,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DependencyEnhancer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
@@ -51,7 +52,7 @@ import java.nio.file.Path;
  * Therefore, this class takes responsibility for making sure the appropriate bits are excluded.
  * Failing to do so will generate mysterious runtime errors when running the test.
  */
-public class AndroidInstrumentationApk extends AndroidBinary {
+public class AndroidInstrumentationApk extends AndroidBinary implements DependencyEnhancer {
 
   private final BuildRule apkUnderTestAsRule;
   private final SourcePath manifest;
@@ -101,7 +102,10 @@ public class AndroidInstrumentationApk extends AndroidBinary {
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(
+      BuildRuleResolver ruleResolver,
+      Iterable<BuildRule> declaredDeps,
+      Iterable<BuildRule> inferredDeps) {
     // Create the AndroidBinaryGraphEnhancer for this rule.
     final ImmutableSortedSet<BuildRule> originalDepsAndApk =
         ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -167,6 +171,9 @@ public class AndroidInstrumentationApk extends AndroidBinary {
 
     setGraphEnhancementResult(result);
 
-    return result.getFinalDeps();
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(result.getFinalDeps())
+        .addAll(inferredDeps)
+        .build();
   }
 }

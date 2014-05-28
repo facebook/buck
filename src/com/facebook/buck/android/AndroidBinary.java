@@ -40,6 +40,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.DependencyEnhancer;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -103,7 +104,7 @@ import java.util.Set;
  * </pre>
  */
 public class AndroidBinary extends AbstractBuildable implements
-    HasAndroidPlatformTarget, HasClasspathEntries, InstallableApk, AbiRule {
+    AbiRule, DependencyEnhancer, HasAndroidPlatformTarget, HasClasspathEntries, InstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
@@ -161,7 +162,6 @@ public class AndroidBinary extends AbstractBuildable implements
   private final JavacOptions javacOptions;
   private final SourcePath manifest;
   private final String target;
-  private final ImmutableSortedSet<BuildRule> originalDeps;
   private final ImmutableSortedSet<BuildRule> classpathDeps;
   private final Keystore keystore;
   private final PackageType packageType;
@@ -225,7 +225,6 @@ public class AndroidBinary extends AbstractBuildable implements
     this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
-    this.originalDeps = Preconditions.checkNotNull(originalDeps);
     this.classpathDeps = originalDeps;
     this.keystore = Preconditions.checkNotNull(keystore);
     this.packageType = Preconditions.checkNotNull(packageType);
@@ -247,12 +246,16 @@ public class AndroidBinary extends AbstractBuildable implements
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver resolver) {
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(
+      BuildRuleResolver ruleResolver,
+      Iterable<BuildRule> declaredDeps,
+      Iterable<BuildRule> inferredDeps) {
     final ImmutableSortedSet<BuildRule> enhancedDeps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(originalDeps)
+            .addAll(declaredDeps)
+            .addAll(inferredDeps)
             .addAll(preprocessJavaClassesDeps)
-            .add(resolver.get(keystore.getBuildTarget()))
+            .add(ruleResolver.get(keystore.getBuildTarget()))
             .build();
 
     AndroidTransitiveDependencyGraph androidTransitiveDependencyGraph =
@@ -262,7 +265,7 @@ public class AndroidBinary extends AbstractBuildable implements
           false;
     ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = BuildRules.toBuildRulesFor(
         getBuildTarget(),
-        resolver,
+        ruleResolver,
         buildTargetsToExcludeFromDex,
         allowNonExistentRule);
     rulesToExcludeFromDex = FluentIterable.from(buildRulesToExcludeFromDex)
@@ -296,7 +299,7 @@ public class AndroidBinary extends AbstractBuildable implements
 
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalBuildRuleParams.copyWithChangedDeps(enhancedDeps),
-        resolver,
+        ruleResolver,
         resourceCompressionMode,
         resourceFilter,
         androidResourceDepsFinder,
