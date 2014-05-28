@@ -60,3 +60,76 @@ def java_test(
     ] + vm_args,
     **kwargs
   )
+
+
+def buck_java_test(
+    source_under_test,
+    deps,
+    resources=None,
+    util_deps=None):
+  """
+  Partitions the .java files in this directory into three groups:
+  test utility classes, unit tests, and integration tests. This will
+  generate at most three build rules (where NAME is the name of the
+  directory that uses this macro):
+
+  :NAME
+  :NAME-util
+  :NAME-integration-tests
+
+  This simplifies things so that most BUCK files under //test/... can
+  be reduced to a single macro. This also ensures that unit tests and
+  integration tests can be run independently using labels.
+  """
+  name = get_base_path().split('/')[-1]
+
+  unit_tests = []
+  integration_tests = []
+  utils = []
+  for src in glob(['*.java']):
+    if src.endswith('IntegrationTest.java'):
+      integration_tests.append(src)
+    elif src.endswith('Test.java'):
+      unit_tests.append(src)
+    else:
+      utils.append(src)
+
+  has_utils = len(utils) > 0
+  utils_target = name + '-util'
+  if has_utils:
+    java_library(
+      name = utils_target,
+      srcs = utils,
+      deps = util_deps or deps,
+      visibility = [
+        '//test/...', 
+      ],
+    )
+
+  test_deps = deps[:]
+  if has_utils:
+    test_deps.append(':' + utils_target)
+
+  if len(unit_tests) > 0:
+    java_test(
+      name = name,
+      srcs = unit_tests,
+      resources = resources,
+      labels = [
+        'unit',
+      ],
+      source_under_test = source_under_test,
+      deps = test_deps,
+    )
+
+  if len(integration_tests) > 0:
+    java_test(
+      name = name + '-integration-tests',
+      srcs = integration_tests,
+      resources = resources,
+      labels = [
+        'integration',
+      ],
+      source_under_test = source_under_test,
+      deps = test_deps,
+    )

@@ -1,26 +1,10 @@
-java_library(
-  name = 'testutil',
-  srcs = [
-    'AbstractBuilder.java',
-    'BuildRuleParamsFactory.java',
-    'DefaultKnownBuildRuleTypes.java',
-    'FakeBuildRuleBuilderParams.java',
-    'FakeBuildable.java',
-    'FakeBuildableContext.java',
-    'FakeBuildContext.java',
-    'FakeBuildRule.java',
-    'FakeBuildRuleParams.java',
-    'FakeJavaPackageFinder.java',
-    'FakeOnDiskBuildInfo.java',
-    'FakeProcessExecutor.java',
-    'FakeRuleKeyBuilderFactory.java',
-    'FakeTestRule.java',
-    'NonCheckingBuildRuleFactoryParams.java',
-    'ProjectConfigBuilder.java',
-    'RetainOrderComparator.java',
-    'TestSourcePath.java',
+buck_java_test(
+  source_under_test = [
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:types',
   ],
-  deps = [
+  util_deps = [
     '//lib:guava',
     '//lib:jsr305',
     '//lib:junit',
@@ -44,19 +28,6 @@ java_library(
     '//test/com/facebook/buck/step:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/util:testutil',
-  ],
-  visibility = [
-    '//test/...',
-  ],
-)
-
-java_test(
-  name = 'rules',
-  srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/rules:types',
   ],
   deps = [
     '//lib:easymock',
@@ -95,13 +66,12 @@ java_test(
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
-    '//test/com/facebook/buck/java:testutil',
+    '//test/com/facebook/buck/java:java-util',
     '//test/com/facebook/buck/step:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//test/com/facebook/buck/timing:testutil',
     '//test/com/facebook/buck/util:testutil',
-    ':testutil',
     '//third-party/java/astyanax:astyanax-cassandra',
     '//third-party/java/astyanax:astyanax-core',
     '//third-party/java/astyanax:astyanax-thrift',
