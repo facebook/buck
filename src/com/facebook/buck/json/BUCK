@@ -3,6 +3,7 @@ java_library(
   srcs = glob(['*.java']),
   deps = [
     '//lib:guava',
+    '//lib:jsr305',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util:constants',

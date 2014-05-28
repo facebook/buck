@@ -50,11 +50,11 @@ class CommandRunnerParams {
   private final BuildEngine buildEngine;
   private final ArtifactCacheFactory artifactCacheFactory;
   private final Console console;
+  private final ImmutableMap<String, String> environment;
   private final Parser parser;
   private final BuckEventBus eventBus;
   private final Platform platform;
   private final AndroidDirectoryResolver androidDirectoryResolver;
-  private ImmutableMap<String, String> environment;
 
   @VisibleForTesting
   CommandRunnerParams(
@@ -77,6 +77,7 @@ class CommandRunnerParams {
         new Parser(projectFilesystem,
             buildRuleTypes,
             console,
+            environment,
             pythonInterpreter,
             /* tempFilePatterns */ ImmutableSet.<Pattern>of(),
             new RuleKeyBuilderFactory() {

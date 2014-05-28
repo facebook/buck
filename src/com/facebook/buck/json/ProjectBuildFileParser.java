@@ -32,6 +32,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
 
@@ -52,6 +53,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 /**
  * Delegates to buck.py for parsing of buck build files.  Constructed on demand for the
  * parsing phase and must be closed afterward to free up resources.
@@ -68,12 +71,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
       "src/com/facebook/buck/parser/buck.py");
 
+  private final ImmutableMap<String, String> environment;
+
   private Optional<Path> pathToBuckPy;
 
-  private Process buckPyProcess;
-
-  private BuildFileToJsonParser buckPyStdoutParser;
-  private BufferedWriter buckPyStdinWriter;
+  @Nullable private Process buckPyProcess;
+  @Nullable BuildFileToJsonParser buckPyStdoutParser;
+  @Nullable private BufferedWriter buckPyStdinWriter;
 
   private final File projectRoot;
   private final ImmutableSet<Path> ignorePaths;
@@ -94,7 +98,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       String pythonInterpreter,
       ImmutableSet<Description<?>> descriptions,
       EnumSet<Option> parseOptions,
-      Console console) {
+      Console console,
+      ImmutableMap<String, String> environment) {
     this.projectRoot = projectFilesystem.getProjectRoot();
     this.descriptions = Preconditions.checkNotNull(descriptions);
     this.ignorePaths = projectFilesystem.getIgnorePaths();
@@ -103,6 +108,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.parseOptions = parseOptions;
     this.pathToBuckPy = Optional.absent();
     this.console = Preconditions.checkNotNull(console);
+    this.environment = Preconditions.checkNotNull(environment);
 
     // Default to server mode unless explicitly unset internally.
     setServerMode(true);
@@ -151,6 +157,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
    */
   private void init() throws IOException {
     ProcessBuilder processBuilder = new ProcessBuilder(buildArgs());
+    processBuilder.environment().clear();
+    processBuilder.environment().putAll(environment);
     buckPyProcess = processBuilder.start();
 
     OutputStream stdin = buckPyProcess.getOutputStream();
@@ -214,10 +222,15 @@ public class ProjectBuildFileParser implements AutoCloseable {
   public static List<Map<String, Object>> getAllRulesInProject(
       ProjectBuildFileParserFactory factory,
       Iterable<String> includes,
-      Console console)
+      Console console,
+      ImmutableMap<String, String> environment)
       throws BuildFileParseException {
     try (ProjectBuildFileParser buildFileParser =
-             factory.createParser(includes, EnumSet.of(Option.STRIP_NULL), console)) {
+             factory.createParser(
+                 includes,
+                 EnumSet.of(Option.STRIP_NULL),
+                 console,
+                 environment)) {
       buildFileParser.setServerMode(false);
       return buildFileParser.getAllRulesInternal(Optional.<Path>absent());
     } catch (IOException e) {
@@ -259,6 +272,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ensureNotClosed();
     initIfNeeded();
 
+    // Check isInitialized implications (to avoid Eradicate warnings).
+    Preconditions.checkNotNull(buckPyStdoutParser);
+    Preconditions.checkNotNull(buckPyStdinWriter);
+    Preconditions.checkNotNull(buckPyProcess);
+
     // When in server mode, we require a build file.  When not in server mode, we
     // cannot accept a build file.  Pretty stupid, actually.  Consider fixing this.
     Preconditions.checkState(buildFile.isPresent() == isServerMode);
@@ -281,6 +299,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     try {
       if (isInitialized) {
+
+        // Check isInitialized implications (to avoid Eradicate warnings).
+        Preconditions.checkNotNull(buckPyStdoutParser);
+        Preconditions.checkNotNull(buckPyStdinWriter);
+        Preconditions.checkNotNull(buckPyProcess);
+
         try {
           buckPyStdoutParser.close();
         } catch (IOException e) {

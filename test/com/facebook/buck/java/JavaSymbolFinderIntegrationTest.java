@@ -75,7 +75,8 @@ public class JavaSymbolFinderIntegrationTest {
         projectBuildFileParserFactory,
         config,
         buckEventBus,
-        new TestConsole());
+        new TestConsole(),
+        ImmutableMap.copyOf(System.getenv()));
 
     SetMultimap<String, String> foundTargets =
         finder.findTargetsForSymbols(ImmutableSet.of("com.example.a.A"));

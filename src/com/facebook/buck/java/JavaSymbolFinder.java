@@ -29,6 +29,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -65,18 +66,21 @@ public class JavaSymbolFinder {
   private final BuckConfig config;
   private final BuckEventBus buckEventBus;
   private final Console console;
+  private final ImmutableMap<String, String> environment;
 
   public JavaSymbolFinder(
       ProjectFilesystem projectFilesystem,
       ProjectBuildFileParserFactory projectBuildFileParserFactory,
       BuckConfig config,
       BuckEventBus buckEventBus,
-      Console console) {
+      Console console,
+      ImmutableMap<String, String> environment) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.projectBuildFileParserFactory = Preconditions.checkNotNull(projectBuildFileParserFactory);
     this.config = Preconditions.checkNotNull(config);
     this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
     this.console = Preconditions.checkNotNull(console);
+    this.environment = Preconditions.checkNotNull(environment);
   }
 
   /**
@@ -130,7 +134,8 @@ public class JavaSymbolFinder {
         // TODO(jacko): Get this from the right place when plugins are working.
         config.getDefaultIncludes(),
         EnumSet.noneOf(ProjectBuildFileParser.Option.class),
-        console)) {
+        console,
+        environment)) {
       for (Path sourceFile : sourceFilePaths) {
         for (Path buckFile : possibleBuckFilesForSourceFile(sourceFile)) {
           List<Map<String, Object>> rules;

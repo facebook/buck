@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.util.Console;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.EnumSet;
 
@@ -28,11 +29,12 @@ public interface ProjectBuildFileParserFactory {
   /**
    * Construct a new parser on demand using the provided common project build files.
    *
-   * @param commonIncludes Common build files to be imported into each build file parsed.
+   * @param commonIncludes Common build files to be imported into each build file parsed.xs
    * @return Parser instance.
    */
   public ProjectBuildFileParser createParser(
       Iterable<String> commonIncludes,
       EnumSet<ProjectBuildFileParser.Option> parseOptions,
-      Console console);
+      Console console,
+      ImmutableMap<String, String> environment);
 }

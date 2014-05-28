@@ -60,7 +60,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final BuckEventBus eventBus;
   private final Platform platform;
   private final AndroidDirectoryResolver androidDirectoryResolver;
-  private final ImmutableMap<String, String> environment;
+  protected final ImmutableMap<String, String> environment;
 
   /** This is constructed lazily. */
   @Nullable private T options;

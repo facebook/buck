@@ -99,7 +99,8 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
              factory.createParser(
                  options.getBuckConfig().getDefaultIncludes(),
                  EnumSet.noneOf(ProjectBuildFileParser.Option.class),
-                 console)) {
+                 console,
+                 environment)) {
       PrintStream out = console.getStdOut();
       for (String pathToBuildFile : options.getArguments()) {
         // Print a comment with the path to the build file.

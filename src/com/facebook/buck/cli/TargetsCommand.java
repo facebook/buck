@@ -221,8 +221,11 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       List<Map<String, Object>> rules;
       try {
         File buildFile = buildTarget.getBuildFile(getProjectFilesystem());
-        rules = getParser().parseBuildFile(buildFile, defaultIncludes,
-            EnumSet.noneOf(ProjectBuildFileParser.Option.class));
+        rules = getParser().parseBuildFile(
+            buildFile,
+            defaultIncludes,
+            EnumSet.noneOf(ProjectBuildFileParser.Option.class),
+            environment);
       } catch (BuildTargetException e) {
         console.printErrorText(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
@@ -335,7 +338,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       ruleObjects = parser.parseBuildFile(
           buildTarget.getBuildFile(getProjectFilesystem()),
           options.getDefaultIncludes(),
-          EnumSet.noneOf(ProjectBuildFileParser.Option.class));
+          EnumSet.noneOf(ProjectBuildFileParser.Option.class),
+          environment);
     } catch (BuildTargetException | BuildFileParseException e) {
       // TODO(devjasta): this doesn't smell right!
       return null;
