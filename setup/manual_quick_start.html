@@ -1,0 +1,115 @@
+<!doctype html><html xmlns="http://www.w3.org/1999/xhtml"><head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns#"><title>Buck: Manual Quick Start</title><link type="image/png" rel="shortcut icon" href="/buck/static/favicon.png" /><meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" /><meta http-equiv="content-type" content="text/html;charset=utf-8"><link type="text/css" rel="stylesheet" href="/buck/static/buck.css"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o), m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga'); ga('create', 'UA-40185670-1', 'github.io'); ga('send', 'pageview');</script><meta property="og:locale" content="en_US"><meta property="og:title" content="Manual Quick Start"><meta property="og:site_name" content="Buck: an Android build tool"><meta property="og:image" content="http://facebook.github.io/buck/static/og.png"><meta property="og:type" content="article"><meta property="fb:admins" content="584556688222168"></head><body><div id="fb-root"></div><script>(function(d, s, id) {var js, fjs = d.getElementsByTagName(s)[0]; if (d.getElementById(id)) return; js = d.createElement(s); js.id = id; js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=584556688222168"; fjs.parentNode.insertBefore(js, fjs);}(document, 'script', 'facebook-jssdk'));</script><header class='topbar'><nav class='width'><a href='http://facebook.github.io/buck/'><h1>Buck</h1></a><ul class='menu'><li><a href='/buck/setup/quick_start.html'>Get Started</a><li><a href='https://groups.google.com/forum/#!forum/buck-build'>Group</a><li><a href='/buck/javadoc/'>API</a><li><a href='https://github.com/facebook/buck'>GitHub</a></ul></nav></header><section class='content'><div class='width'><article><h1>Manual Quick Start</h1><div class="overview"><p><strong>Note: Buck works only on Mac OS X and Linux. Windows is not supported.</strong></p>This is a quick start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to build your first Android application from scratch using Buck. You can find a more detailed explanation about each step in the development process by reading the individual articles on more specific topics.<p>If you have built an Android application before, then you likely have all of the tools required by Buck installed on your computer already. For more detailed instructions for installing Buck, please see <a href="install.html">Downloading and Installing Buck</a>.<p><strong>Note:</strong> The commands in this guide are designed to be copy-pasteable, idempotent, and usable on both Mac OS X and Linux. Sometimes this results in some unusual constructions (such as using <code>echo</code> instead of <code>vi</code> or <code>emacs</code> to create a file). Bear in mind that this is a <em>quick</em> start guide, so few things are quicker than copy-and-paste!<h2>Install Buck</h2>Run the following commands to checkout Buck from GitHub, build it, and add it to your <code>$PATH</code>:<pre>
+git clone https://github.com/facebook/buck.git
+cd buck
+ant
+sudo ln -s ${PWD}/bin/buck /usr/bin/buck</pre>While there, you may also want to set up <a href="/buck/command/buckd.html"><code>buckd</code></a>:<pre>sudo ln -s ${PWD}/bin/buckd /usr/bin/buckd</pre><em>Currently, there is no way to download a precompiled binary for Buck.</em><p>Now that you have Buck installed on your machine, let's use it to build a sample Android application. We should start our project in an empty directory, so create a new one and navigate to it:<pre>
+mkdir -p ~/my-first-buck-project/
+cd ~/my-first-buck-project/
+</pre><strong>Note: the following instructions will now assume that all commands are run from your <code>~/my-first-buck-project</code> directory.</strong><h2>Compile Java</h2>Android applications are typically written in Java, so the first thing we will do is configure Buck to compile Java code against the Android API. To do so, Buck needs to know where your Android SDK is. Assuming that your Android SDK is installed in <code>~/android-sdk-mac</code>, run the following command to create a <code>local.properties</code> file that tells Buck where to find your Android SDK:<pre>
+echo -n sdk.dir= > local.properties && \
+    echo ~/android-sdk-mac >> local.properties
+</pre>Now that Buck can locate your Android SDK, it is time to compile some Java code. First, we create a simple <code>Activity</code> at <code>java/com/example/activity/MyFirstActivity.java</code>:<pre>
+mkdir -p java/com/example/activity/
+echo "package com.example.activity;
+
+import android.app.Activity;
+import android.os.Bundle;
+
+public class MyFirstActivity extends Activity {
+  
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+  }
+}" > java/com/example/activity/MyFirstActivity.java
+</pre>Now we need a build file that defines a build rule to compile this Java code, so we create an <code><a href="rule/android_library.html">android_library()</a></code> rule in <code>java/com/example/activity/BUCK</code>:<pre>
+echo "android_library(
+  name = 'activity',
+  srcs = glob(['*.java']),
+  visibility = [ 'PUBLIC' ],
+)
+
+project_config(
+  src_target = ':activity',
+)" > java/com/example/activity/BUCK
+</pre>Now we can compile our Java code using Buck:<pre>buck build //java/com/example/activity:activity</pre><strong>Note:</strong> Buck generates its output in the <code>buck-out</code> directory, so this is a good time to specify <code>buck-out</code> as something that should be ignored by your version control system.<h2>Package Resources</h2>Android applications frequently contain resources, such as strings and images. For this example, we will create a trivial Android resource bundle that contains a single string:<pre>
+mkdir -p res/com/example/activity/res/values/
+echo "&lt;?xml version='1.0' encoding='utf-8' ?>
+&lt;resources>
+  &lt;string name='app_name'>Hello World&lt;/string>
+&lt;/resources>" > res/com/example/activity/res/values/strings.xml
+</pre>Buck needs a way to reference this collection of resources, so we need to create a build file that defines an <code><a href="rule/android_resource.html">android_resource()</a></code> rule:<pre>
+echo "android_resource(
+  name = 'res',
+  res = 'res',
+  package = 'com.example',
+  visibility = [
+    '//apps/myapp:',
+  ],
+)
+
+project_config(
+  src_target = ':res',
+)" > res/com/example/activity/BUCK
+</pre><h2>Create a Keystore</h2>In practice, you will want to be able to test your Android app on a physical Android device, which means that it needs to be signed.<p>We will create app-specific information, such as the key and manifest, in its own directory to keep things tidy:<pre>mkdir -p apps/myapp/</pre>To keep things simple, we will create a self-signed certificate for debugging. Unfortunately, this is not a one-liner because there is a number of prompts from the <code>keytool</code> command:<pre>
+keytool -genkey -keystore apps/myapp/debug.keystore -alias my_alias \
+    -keyalg RSA -keysize 2048 -validity 10000
+</pre>when prompted for a keystore password, just use <code>android</code> (and then type it again to confirm it), and hit Enter to accept the default values for name, organizational unit, etc.<p>Then create a <code>.properties</code> file that stores all of this information:<pre>
+echo "key.alias=my_alias
+key.store.password=android
+key.alias.password=android" > apps/myapp/debug.keystore.properties
+</pre><h2>Build an APK</h2>An Android application needs a manifest named <code>AndroidManifest.xml</code>, so we must create such a file:<pre>
+echo "&lt;?xml version='1.0' encoding='utf-8'?>
+&lt;manifest xmlns:android='http://schemas.android.com/apk/res/android'
+          package='com.example'
+          >
+
+  &lt;application
+      android:label='@string/app_name'
+      android:hardwareAccelerated='true'>
+    &lt;activity android:name='.activity.MyFirstActivity'>
+      &lt;intent-filter>
+        &lt;action android:name='android.intent.action.MAIN' />
+        &lt;category android:name='android.intent.category.LAUNCHER' />
+      &lt;/intent-filter>
+    &lt;/activity>
+  &lt;/application>
+
+&lt;/manifest>" > apps/myapp/AndroidManifest.xml
+</pre>Now we define an <a href="/buck/rule/android_binary.html"><code>android_binary</code></a> and <a href="/buck/rule/keystore.html"><code>keystore</code></a> rule in our build file:<pre>
+echo "android_binary(
+  name = 'app',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:16',
+  keystore = ':debug_keystore',
+  deps = [
+    '//java/com/example/activity:activity',
+    '//res/com/example/activity:res',
+  ],
+)
+
+keystore(
+  name = 'debug_keystore',
+  store = 'debug.keystore',
+  properties = 'debug.keystore.properties',
+)
+
+project_config(
+  src_target = ':app',
+)" > apps/myapp/BUCK
+</pre>Building an <code>android_binary()</code> rule will produce an APK:<pre>buck build //apps/myapp:app</pre>Alternatively, if you have an Android device connected to your computer, you can build and install the APK in one step:<pre>buck install //apps/myapp:app</pre><h2>Create an Alias</h2>Typing <code>buck build //apps/myapp:app</code> every time you want to rebuild your APK can be tedious. Fortunately, Buck makes it possible to define an <em>alias</em> for a build target. An alias can always be used in place of a build target when using Buck's command-line interface.<p>Aliases must be defined in a config file in the root of the project:<pre>
+echo "[alias]
+    app = //apps/myapp:app" > .buckconfig
+</pre>With this alias in place, the command to build and install the APK is much shorter and easier to remember:<pre>buck install app</pre><h2>Create an IntelliJ Project</h2>You likely want to develop your Android app using an IDE. Fortunately, Buck can generate an IntelliJ project from the <code><a href="rule/project_config.html">project_config()</code></a> rules you defined in your build files.<p>In order to ensure that IntelliJ recognizes where your Java folders are, you need to specify the following in your <code>.buckconfig</code> file:<pre>
+echo "[java]
+    src_roots = /java/" >> .buckconfig
+</pre><p>Now you can create the IntelliJ project by running the following command:<pre>buck project</pre>Note that you will likely want to exclude these generated files from version control, so add the following to your <code>.gitignore</code> file (or <code>.hgignore</code> if you are using Mercurial) along with the files generated by <code>buckd</code>:<pre>
+echo "*.iml
+/.idea/compiler.xml
+/.idea/libraries/*.xml
+/.idea/modules.xml
+/.idea/runConfigurations/Debug_Buck_test.xml" > .gitignore
+/buck-cache
+/buck-out
+/.buckd
+</pre>Now you can build your Android application from either IntelliJ or the command line.</div></article><nav><h3>Getting Started</h3><ul><li><a href="/buck/">Overview</a><li><a href="/buck/setup/quick_start.html">Quick Start</a><li><a href="/buck/setup/install.html">Downloading and Installing Buck</a></ul><h3>About</h3><ul><li><a href="/buck/concept/what_makes_buck_so_fast.html">What Makes Buck so Fast?</a><li><a href="/buck/concept/troubleshooting.html">Troubleshooting</a><li><a href="/buck/about/performance_tuning.html">Performance Tuning</a><li><a href="/buck/concept/faq.html">FAQ</a></ul><h3>Concepts</h3><ul><li><a href="/buck/concept/build_rule.html">Build Rule</a><li><a href="/buck/concept/build_target.html">Build Target</a><li><a href="/buck/concept/build_file.html">Build File</a><li><a href="/buck/concept/buckversion.html">.buckversion</a><li><a href="/buck/concept/nobuckcheck.html">.nobuckcheck</a><li><a href="/buck/concept/buckconfig.html">.buckconfig</a><li><a href="/buck/concept/build_target_pattern.html">Build Target Pattern</a><li><a href="/buck/concept/visibility.html">Visibility</a></ul><h3>Build Rules</h3><ul><li><a href="/buck/rule/android_binary.html">android_binary()</a><li><a href="/buck/rule/android_library.html">android_library()</a><li><a href="/buck/rule/android_resource.html">android_resource()</a><li><a href="/buck/rule/apk_genrule.html">apk_genrule()</a><li><a href="/buck/rule/gen_aidl.html">gen_aidl()</a><li><a href="/buck/rule/genrule.html">genrule()</a><li><a href="/buck/rule/java_binary.html">java_binary()</a><li><a href="/buck/rule/java_library.html">java_library()</a><li><a href="/buck/rule/java_test.html">java_test()</a><li><a href="/buck/rule/keystore.html">keystore()</a><li><a href="/buck/rule/ndk_library.html">ndk_library()</a><li><a href="/buck/rule/prebuilt_jar.html">prebuilt_jar()</a><li><a href="/buck/rule/prebuilt_native_library.html">prebuilt_native_library()</a><li><a href="/buck/rule/project_config.html">project_config()</a></ul><h3>Functions</h3><ul><li><a href="/buck/function/genfile.html">genfile()</a><li><a href="/buck/function/glob.html">glob()</a><li><a href="/buck/function/include_defs.html">include_defs()</a></ul><h3>Commands</h3><ul><li><a href="/buck/command/audit.html">buck audit</a><li><a href="/buck/command/build.html">buck build</a><li><a href="/buck/command/clean.html">buck clean</a><li><a href="/buck/command/install.html">buck install</a><li><a href="/buck/command/project.html">buck project</a><li><a href="/buck/command/quickstart.html">buck quickstart</a><li><a href="/buck/command/targets.html">buck targets</a><li><a href="/buck/command/test.html">buck test</a><li><a href="/buck/command/uninstall.html">buck uninstall</a><li><a href="/buck/command/buckd.html">buckd</a></ul><h3>Extending Buck</h3><ul><li><a href="/buck/extending/macros.html">Custom Macros</a><li><a href="/buck/extending/rules.html">Custom Rules</a></ul><h3>Contributing to Buck</h3><ul><li><a href="https://groups.google.com/group/buck-build">Discussion Group</a><li><a href="https://github.com/facebook/buck/issues/new">Report a Bug</a><li><a href="/buck/contributing/development.html">Development Workflow</a><li><a href="/buck/contributing/codestyle.html">Code Style</a><li><a href="/buck/javadoc">API</a><li><a href="https://github.com/facebook/buck">Browse the Source Code</a></ul></ul></nav></div></section><footer><div class='width'>&copy; Copyright Facebook, 2013 -</div></footer></body></html>

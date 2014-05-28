@@ -1,0 +1,77 @@
+<!doctype html><html xmlns="http://www.w3.org/1999/xhtml"><head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns#"><title>Buck: .buckconfig</title><link type="image/png" rel="shortcut icon" href="/buck/static/favicon.png" /><meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" /><meta http-equiv="content-type" content="text/html;charset=utf-8"><link type="text/css" rel="stylesheet" href="/buck/static/buck.css"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o), m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga'); ga('create', 'UA-40185670-1', 'github.io'); ga('send', 'pageview');</script><meta property="og:locale" content="en_US"><meta property="og:title" content=".buckconfig"><meta property="og:site_name" content="Buck: an Android build tool"><meta property="og:image" content="http://facebook.github.io/buck/static/og.png"><meta property="og:type" content="article"><meta property="fb:admins" content="584556688222168"></head><body><div id="fb-root"></div><script>(function(d, s, id) {var js, fjs = d.getElementsByTagName(s)[0]; if (d.getElementById(id)) return; js = d.createElement(s); js.id = id; js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=584556688222168"; fjs.parentNode.insertBefore(js, fjs);}(document, 'script', 'facebook-jssdk'));</script><header class='topbar'><nav class='width'><a href='http://facebook.github.io/buck/'><h1>Buck</h1></a><ul class='menu'><li><a href='/buck/setup/quick_start.html'>Get Started</a><li><a href='https://groups.google.com/forum/#!forum/buck-build'>Group</a><li><a href='/buck/javadoc/'>API</a><li><a href='https://github.com/facebook/buck'>GitHub</a></ul></nav></header><section class='content'><div class='width'><article><h1>.buckconfig</h1><div class="overview">The root of your project may contain a configuration file named <code>.buckconfig</code>. If present, Buck will read this file before executing its business logic so that any customizations specified in <code>.buckconfig</code> will take effect. This file uses the <a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>.<p>The root of your project may also contain a second configuration file named <code>.buckconfig.local</code>. Its format is exactly the same as that of <code>.buckconfig</code>, but any definition in <code>.buckconfig.local</code> will override that of <code>.buckconfig</code>. In practice, <code>.buckconfig</code> will be a version-controlled file that contains settings that are applicable to all team members (such as standard includes for build files), whereas <code>.buckconfig.local</code> will be excluded from version control because it contains user-specific overrides (such as personal aliases).<h2>[alias]</h2>As demonstrated in the <a href="/buck/setup/quick_start.html">Quick Start</a> instructions, aliases for build targets can be defined in <code>.buckconfig</code>:<pre>
+[alias]
+  app     = //apps/myapp:app
+  apptest = //apps/myapp:test
+</pre>This facilitates command-line use:<pre>
+buck build app
+buck test apptest
+</pre><h2>[buildfile]</h2>This section may define an <code>includes</code> property that can specify a path to a file of macros and constants that will automatically be included in every build file. Therefore, defining the following:<pre>
+[buildfile]
+  includes = //core/DEFS
+</pre>is the equivalent of manually invoking <code>include_defs('//core/DEFS')</code> at the start of every build file. See <a href="/buck/function/include_defs.html"><code>include_defs()</code></a> for more details.<h2>[cache]</h2>This section configures build artifact caching, which can be disabled (default), on the filesystem, or in a distributed cache that can be shared among developers. Note that the <code>mode</code> property determines which other properties, if any, are relevant to caching configuration. The following example configures buck to use directory-based caching, in which case the Cassandra-related settings are ignored.<pre>
+[cache]
+    # Build artifact caching configuration.
+    #
+    # mode is a comma-separated set of caching mechanisms to use:
+    #   dir       : Use a directory-based cache.
+    #   cassandra : Use a distributed Cassandra cache.
+    #
+    # The default set is empty.
+    mode = dir, cassandra
+
+    # Directory path used for directory-based caching. The default directory is
+    # buck-cache.
+    dir = buck-cache
+
+    # Comma-separated set of known Cassandra cache nodes, for example:
+    #
+    #   hosts = artifactcache1.example.com, artifactcache2.example.com
+    #
+    # The default set is empty.
+    hosts = localhost
+
+    # Port on which to connect to Cassandra cache nodes. The default port is
+    # 9160.
+    port = 9160
+
+    # Treat the Cassandra cache as readonly or readwrite.  The default mode is
+    # readwrite.
+    cassandra_mode = readwrite
+</pre>Initial Cassandra setup is generally straightforward, and warrants no special instructions beyond the following:<ul><li>The <code>thrift_framed_transport_size_in_mb</code> and <code>thrift_max_message_length_in_mb</code> defaults may be too low, depending on maximum artifact size. If these settings are left too low, then larger artifacts will not be cached and throughput may suffer due to network transport error recovery.<li>The <code>scripts/init_cassandra_node.cql</code> script must be run once in order to create the <code>ArtifactCache</code> keyspace that buck uses.</ul><h2>[adb]</h2>This section controls adb restart behavior on errors.<pre>
+# This specifies a whether to restart adb on failure
+# or not.
+adb_restart_on_failure = true
+</pre><h2>[color]</h2>Specify the following to disable colorized output:<pre>
+[color]
+  ui = false
+</pre><h2>[java]</h2>This section may define a <code>src_roots</code> property that specifies file paths to roots of Java code (where a root contains a tree of Java folders where the folder structure mirrors the package structure). This list of paths is comma-delimited. Paths that start with a slash are relative to the root of the project. All other paths can match a folder anywhere in the tree. For example:<pre>
+[java]
+  src_roots = src, /java/, /javatests/
+</pre>Will match the <code>java</code> and <code>javatests</code> folders in the root of the project, as well as any folder named <code>src</code> in the project.<p><strong>Note:</strong> This is primarily used as a hack to help determine where resources from a <code>java_library()</code> should be placed within the generated JAR file. Hopefully <code>src_roots</code> will be removed at some point.<h2>[ndk]</h2>This section may define both <code>min_version</code> and <code>max_version</code> properties to enable Buck to check before building an <a href="/buck/rule/ndk_library.html"><code>ndk_library</code></a> that the project supports the configured NDK. Both properties must be specified to enable this check. For example, to support only versions r7 through r8d:<pre>
+[ndk]
+  min_version = r7
+  max_version = r8d
+</pre><h2>[test]</h2>This section may define a <code>timeout</code> for each test that buck runs. The value given is in milliseconds.<pre>
+# This specifies a maximum timeout of 5 minutes (300000 
+# milliseconds) per test. A JUnit test can override this 
+# via its `@Test` annotation.
+timeout = 300000
+</pre><h2>[project]</h2>This section may define a <code>default_android_manifest</code> property to identify the <code>AndroidManifest.xml</code> that should be used when the <code>src_target</code> of a <a href="/buck/rule/project_config.html"><code>project_config()</code></a> rule is an Android rule (e.g., <a href="/buck/rule/android_library.html"><code>android_library()</code></a>), but there is no <code>AndroidManifest.xml</code> file in the same directory as the build file. Because an IDE configuration for an Android project needs an <code>AndroidManifest.xml</code>, this provides a convenient fallback, preventing the need to litter your project with boilerplate <code>AndroidManifest.xml</code> files.<pre>
+[project]
+  default_android_manifest = //shared/AndroidManifest.xml
+</pre>This section may also define an <code>initial_targets</code> property, which is a space-delimited list of build targets to run when <code>buck project</code> is executed. Frequently, this is a list of <code>genrule</code>s whose outputs need to exist in order for an IDE to be able to build a project natively (i.e., without the help of Buck).<p>For example, if you had a <code>genrule()</code> for generating a JAR from a <a href="http://thrift.apache.org/">Thrift definition file</a>, and you had a <code>java_library()</code> rule that depended on that JAR, then you would want to be sure that <code>genrule()</code> was built before importing the project into IntelliJ because IntelliJ does not know how to build your <code>genrule()</code> as part of its built-in build process:<pre>
+[project]
+  initial_targets = //java/com/facebook/schema:generate_thrift_jar
+</pre>This section may also define an <code>ignore</code> property that specifies a comma-separated list of subtrees within the project root which are ignored in the following contexts:<ul><li>Buck daemon filesystem monitoring<li>Filesystem traversal when searching for tests and BUCK files<li>IntelliJ project indexing</ul>Buck automatically excludes its own output, e.g. <code>buck-out</code>, <code>.buckd</code>, and <code>.idea</code>, as well as the cache directory (see the "dir" setting of the "cache" section), but it makes no assumptions about source control systems.<pre>
+[project]
+  ignore = .git
+</pre>This section may also define a <code>temp_files</code> property that specifies a comma-separated list of <code>java.util.regex.Pattern</code> regular expressions which match temporary and backup files which should be ignored by Buck daemon filesystem monitoring. Setting this property to match any temporary files created by your IDE or editor will avoid unnecessary cache invalidation when using the Buck daemon.<pre>
+[project]
+  temp_files = ^#.*#$, .*~$, .*\.swp$
+</pre>A <code>post_process</code> property can reference a script that should be executed after the project files are generated. Because <code>buck project</code> is currently based on heuristics, the IntelliJ project that it generates may not be exactly what you want if you are using a non-traditional project structure. In these cases, you may want to let <code>buck project</code> do the bulk of the heavy-lifting, and then let your <code>post_process</code> script do some cleanup on the generated files.<pre>
+[project]
+  post_process = ./scripts/post_process_buck_project.sh
+</pre><h2>[log]</h2>This section controls how buck will log information about builds for later inspection.<pre>
+[log]
+  max_traces = 25
+</pre>Will limit buck to creating, at most, 25 <a href="/buck/about/performance_tuning.html">Chrome Traces</a>.</div></article><nav><h3>Getting Started</h3><ul><li><a href="/buck/">Overview</a><li><a href="/buck/setup/quick_start.html">Quick Start</a><li><a href="/buck/setup/install.html">Downloading and Installing Buck</a></ul><h3>About</h3><ul><li><a href="/buck/concept/what_makes_buck_so_fast.html">What Makes Buck so Fast?</a><li><a href="/buck/concept/troubleshooting.html">Troubleshooting</a><li><a href="/buck/about/performance_tuning.html">Performance Tuning</a><li><a href="/buck/concept/faq.html">FAQ</a></ul><h3>Concepts</h3><ul><li><a href="/buck/concept/build_rule.html">Build Rule</a><li><a href="/buck/concept/build_target.html">Build Target</a><li><a href="/buck/concept/build_file.html">Build File</a><li><a href="/buck/concept/buckversion.html">.buckversion</a><li><a href="/buck/concept/nobuckcheck.html">.nobuckcheck</a><li><a href="/buck/concept/buckconfig.html">.buckconfig</a><li><a href="/buck/concept/build_target_pattern.html">Build Target Pattern</a><li><a href="/buck/concept/visibility.html">Visibility</a></ul><h3>Build Rules</h3><ul><li><a href="/buck/rule/android_binary.html">android_binary()</a><li><a href="/buck/rule/android_library.html">android_library()</a><li><a href="/buck/rule/android_resource.html">android_resource()</a><li><a href="/buck/rule/apk_genrule.html">apk_genrule()</a><li><a href="/buck/rule/gen_aidl.html">gen_aidl()</a><li><a href="/buck/rule/genrule.html">genrule()</a><li><a href="/buck/rule/java_binary.html">java_binary()</a><li><a href="/buck/rule/java_library.html">java_library()</a><li><a href="/buck/rule/java_test.html">java_test()</a><li><a href="/buck/rule/keystore.html">keystore()</a><li><a href="/buck/rule/ndk_library.html">ndk_library()</a><li><a href="/buck/rule/prebuilt_jar.html">prebuilt_jar()</a><li><a href="/buck/rule/prebuilt_native_library.html">prebuilt_native_library()</a><li><a href="/buck/rule/project_config.html">project_config()</a></ul><h3>Functions</h3><ul><li><a href="/buck/function/genfile.html">genfile()</a><li><a href="/buck/function/glob.html">glob()</a><li><a href="/buck/function/include_defs.html">include_defs()</a></ul><h3>Commands</h3><ul><li><a href="/buck/command/audit.html">buck audit</a><li><a href="/buck/command/build.html">buck build</a><li><a href="/buck/command/clean.html">buck clean</a><li><a href="/buck/command/install.html">buck install</a><li><a href="/buck/command/project.html">buck project</a><li><a href="/buck/command/quickstart.html">buck quickstart</a><li><a href="/buck/command/targets.html">buck targets</a><li><a href="/buck/command/test.html">buck test</a><li><a href="/buck/command/uninstall.html">buck uninstall</a><li><a href="/buck/command/buckd.html">buckd</a></ul><h3>Extending Buck</h3><ul><li><a href="/buck/extending/macros.html">Custom Macros</a><li><a href="/buck/extending/rules.html">Custom Rules</a></ul><h3>Contributing to Buck</h3><ul><li><a href="https://groups.google.com/group/buck-build">Discussion Group</a><li><a href="https://github.com/facebook/buck/issues/new">Report a Bug</a><li><a href="/buck/contributing/development.html">Development Workflow</a><li><a href="/buck/contributing/codestyle.html">Code Style</a><li><a href="/buck/javadoc">API</a><li><a href="https://github.com/facebook/buck">Browse the Source Code</a></ul></ul></nav></div></section><footer><div class='width'>&copy; Copyright Facebook, 2013 -</div></footer></body></html>
