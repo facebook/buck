@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.RuleKey;
@@ -70,7 +69,7 @@ public class AppleResource extends AbstractBuildable {
 
   AppleResource(
       DirectoryTraverser directoryTraverser,
-      BuildRuleParams params,
+      BuildTarget target,
       AppleResourceDescriptionArg args,
       Optional<Path> outputPathSubdirectory) {
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
@@ -90,7 +89,6 @@ public class AppleResource extends AbstractBuildable {
     }
 
     Preconditions.checkNotNull(outputPathSubdirectory);
-    BuildTarget target = params.getBuildTarget();
     Path baseOutputDirectory = Paths.get(
         BuckConstant.BIN_DIR,
         target.getBasePath(),

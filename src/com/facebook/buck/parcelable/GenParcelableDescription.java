@@ -41,7 +41,7 @@ public class GenParcelableDescription implements Description<GenParcelableDescri
 
   @Override
   public GenParcelable createBuildable(BuildRuleParams params, Arg args) {
-    return new GenParcelable(params, args.srcs);
+    return new GenParcelable(params.getBuildTarget(), args.srcs);
   }
 
   public static class Arg implements ConstructorArg {

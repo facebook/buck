@@ -54,7 +54,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     javacOptions.setAnnotationProcessingData(annotationParams);
 
     return new JavaTest(
-        params,
+        params.getBuildTarget(),
         args.srcs.get(),
         args.resources.get(),
         args.labels.get(),
@@ -62,6 +62,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         args.proguardConfig,
         javacOptions.build(),
         args.vmArgs.get(),
+        params.getDeps(),
         args.sourceUnderTest.get());
   }
 

@@ -79,10 +79,8 @@ public class JavaTestBuilder {
     }
 
     public JavaTest build() {
-      FakeBuildRuleParams params = new FakeBuildRuleParams(target, deps.build());
-
       return new JavaTest(
-          params,
+          target,
           srcs.build(),
           resources.build(),
           labels.build(),
@@ -90,6 +88,7 @@ public class JavaTestBuilder {
           proguardConfig,
           JavacOptions.DEFAULTS,
           vmArgs,
+          deps.build(),
           sourcesUnderTest.build());
     }
 

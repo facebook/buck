@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyEnhancer;
 import com.facebook.buck.rules.Label;
@@ -80,7 +79,7 @@ public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, 
   private ImmutableSet<BuildRule> sourceUnderTest;
 
   protected JavaTest(
-      BuildRuleParams buildRuleParams,
+      BuildTarget target,
       Set<SourcePath> srcs,
       Set<SourcePath> resources,
       Set<Label> labels,
@@ -88,12 +87,14 @@ public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, 
       Optional<Path> proguardConfig,
       JavacOptions javacOptions,
       List<String> vmArgs,
+      ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTarget> sourceUnderTest) {
-    super(buildRuleParams,
+    super(target,
         srcs,
         resources,
         proguardConfig,
         ImmutableList.<String>of(),
+        deps,
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         javacOptions);

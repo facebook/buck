@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -168,17 +167,18 @@ public class DefaultJavaLibrary extends AbstractBuildable
   };
 
   protected DefaultJavaLibrary(
-      BuildableParams buildableParams,
+      BuildTarget target,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
       Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
+      ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       JavacOptions javacOptions) {
-    this.target = buildableParams.getBuildTarget();
+    this.target = Preconditions.checkNotNull(target);
     this.deps = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(buildableParams.getDeps())
+        .addAll(deps)
         .addAll(exportedDeps)
         .build();
     this.srcs = ImmutableSortedSet.copyOf(srcs);
@@ -225,8 +225,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
           }
         });
 
-    this.buildOutputInitializer =
-        new BuildOutputInitializer<>(buildableParams.getBuildTarget(), this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(target, this);
   }
 
   @Override

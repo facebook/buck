@@ -882,12 +882,14 @@ public class DefaultJavaLibraryTest {
     FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         buildTarget,
         ImmutableSortedSet.copyOf(deps));
+
     Buildable buildable = new DefaultJavaLibrary(
-        buildRuleParams,
+        buildRuleParams.getBuildTarget(),
         srcsAsPaths,
         /* resources */ ImmutableSet.<SourcePath>of(),
         /* proguardConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
+        buildRuleParams.getDeps(),
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         JavacOptions.DEFAULTS) {
@@ -1235,20 +1237,10 @@ public class DefaultJavaLibraryTest {
     VALID_JAVA_LIBRARY("//tools/java/src/com/facebook/somejava:library") {
       @Override
       public BuildRule createRule(BuildTarget target) {
-        FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(target);
-        Buildable buildable = new DefaultJavaLibrary(
-            buildRuleParams,
-            ImmutableSet.of(new TestSourcePath("MyClass.java")),
-            ImmutableSet.<SourcePath>of(),
-            Optional.of(Paths.get("MyProguardConfig")),
-            /* postprocessClassesCommands */ ImmutableList.<String>of(),
-            /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
-            /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-            JavacOptions.DEFAULTS);
-        return new AbstractBuildable.AnonymousBuildRule(
-            JavaLibraryDescription.TYPE,
-            buildable,
-            buildRuleParams);
+        return JavaLibraryBuilder.createBuilder(target)
+            .addSrc(Paths.get("MyClass.java"))
+            .setProguardConfig(Paths.get("MyProguardConfig"))
+            .build(new BuildRuleResolver());
       }
     };
 

@@ -55,11 +55,12 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
     InstallableApk installableApk = (InstallableApk) args.apk.getBuildable();
 
     return new ApkGenrule(
-        params,
+        params.getBuildTarget(),
         args.srcs.get(),
         args.cmd,
         args.bash,
         args.cmdExe,
+        params.getDeps(),
         params.getPathAbsolutifier(),
         installableApk);
   }

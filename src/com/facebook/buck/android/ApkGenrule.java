@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InstallableApk;
@@ -30,6 +30,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -57,20 +58,22 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   private final InstallableApk apk;
   private final Function<Path, Path> relativeToAbsolutePathFunction;
 
-  ApkGenrule(BuildRuleParams buildRuleParams,
+  ApkGenrule(
+      BuildTarget target,
       List<Path> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
+      ImmutableSortedSet<BuildRule> deps,
       Function<Path, Path> relativeToAbsolutePathFunction,
       InstallableApk apk) {
-    super(buildRuleParams.getBuildTarget(),
-        buildRuleParams.getDeps(),
+    super(target,
+        deps,
         srcs,
         cmd,
         bash,
         cmdExe,
-        /* out */ buildRuleParams.getBuildTarget().getShortName() + ".apk",
+        /* out */ target.getShortName() + ".apk",
         relativeToAbsolutePathFunction);
 
     this.apk = Preconditions.checkNotNull(apk);

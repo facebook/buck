@@ -19,7 +19,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -83,8 +82,7 @@ public class ExportFile extends AbstractBuildable {
   private final Path out;
 
   @VisibleForTesting
-  ExportFile(final BuildRuleParams params, ExportFileDescription.Arg args) {
-    final BuildTarget target = params.getBuildTarget();
+  ExportFile(BuildTarget target, ExportFileDescription.Arg args) {
     if (args.src.isPresent()) {
       this.src = args.src.get();
     } else {

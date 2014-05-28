@@ -73,11 +73,12 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     javacOptions.setAnnotationProcessingData(annotationParams);
 
     return new DefaultJavaLibrary(
-        params,
+        params.getBuildTarget(),
         args.srcs.get(),
         args.resources.get(),
         args.proguardConfig,
         args.postprocessClassesCommands.get(),
+        params.getDeps(),
         args.exportedDeps.get(),
         args.providedDeps.get(),
         javacOptions.build());

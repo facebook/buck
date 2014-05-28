@@ -39,7 +39,7 @@ public class ExportFileDescription implements Description<ExportFileDescription.
 
   @Override
   public ExportFile createBuildable(BuildRuleParams params, Arg args) {
-    return new ExportFile(params, args);
+    return new ExportFile(params.getBuildTarget(), args);
   }
 
   public static class Arg implements ConstructorArg {

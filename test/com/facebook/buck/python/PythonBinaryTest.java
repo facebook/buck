@@ -42,14 +42,14 @@ public class PythonBinaryTest {
   public void testGetPythonPathEntries() {
     BuildTarget orphanPyLibraryTarget = new BuildTarget("//", "orphan_python_library");
     PythonLibrary orphanPyLibrary = new PythonLibrary(
-        new FakeBuildRuleParams(orphanPyLibraryTarget),
+        orphanPyLibraryTarget,
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("java/src/com/javalib/orphan/sadpanda.py")));
     BuildRule orphanPyLibraryRule = createBuildRule(orphanPyLibrary, orphanPyLibraryTarget);
 
     BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
     PythonLibrary pyLibrary = new PythonLibrary(
-        new FakeBuildRuleParams(pyLibraryTarget),
+        pyLibraryTarget,
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("python/tastypy.py")));
 

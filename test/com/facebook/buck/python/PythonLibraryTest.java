@@ -24,8 +24,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
@@ -58,12 +56,10 @@ public class PythonLibraryTest {
 
   @Test
   public void testGetters() {
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        new BuildTarget("//scripts/python", "foo"));
     SourcePath src = new TestSourcePath("");
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of(src);
     PythonLibrary pythonLibrary = new PythonLibrary(
-        buildRuleParams,
+        new BuildTarget("//scripts/python", "foo"),
         srcs);
 
     assertTrue(pythonLibrary.getProperties().is(LIBRARY));
@@ -76,8 +72,7 @@ public class PythonLibraryTest {
     srcs.add(new TestSourcePath("baz.py"));
     srcs.add(new TestSourcePath("foo/__init__.py"));
     srcs.add(new TestSourcePath("foo/bar.py"));
-    PythonLibrary rule = new PythonLibrary(new FakeBuildRuleParams(pyLibraryTarget),
-        srcs.build());
+    PythonLibrary rule = new PythonLibrary(pyLibraryTarget, srcs.build());
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     BuildContext buildContext = createMock(BuildContext.class);

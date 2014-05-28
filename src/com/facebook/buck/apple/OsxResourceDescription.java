@@ -48,7 +48,7 @@ public class OsxResourceDescription implements Description<AppleResourceDescript
   public AppleResource createBuildable(BuildRuleParams params, AppleResourceDescriptionArg args) {
     return new AppleResource(
         new DefaultDirectoryTraverser(),
-        params,
+        params.getBuildTarget(),
         args,
         OUTPUT_RESOURCE_PATH);
   }

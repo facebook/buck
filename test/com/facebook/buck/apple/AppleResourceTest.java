@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
@@ -54,9 +53,6 @@ public class AppleResourceTest {
    */
   @Test
   public void testIosResourceRuleWithNoResources() throws IOException {
-    FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        new BuildTarget("//path/to/app", "MyApp"));
-
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of();
     args.files = ImmutableSortedSet.of();
@@ -64,7 +60,7 @@ public class AppleResourceTest {
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
-        buildRuleParams,
+        new BuildTarget("//path/to/app", "MyApp"),
         args,
         Optional.<Path>absent());
 
@@ -79,9 +75,6 @@ public class AppleResourceTest {
    */
   @Test
   public void testIosResourceRuleWithOneResource() throws IOException {
-    FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        new BuildTarget("//path/to/app", "MyApp"));
-
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of();
     args.files = ImmutableSortedSet.<SourcePath>of(new TestSourcePath("image.png"));
@@ -89,7 +82,7 @@ public class AppleResourceTest {
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
-        buildRuleParams,
+        new BuildTarget("//path/to/app", "MyApp"),
         args,
         Optional.<Path>absent());
 
@@ -115,9 +108,6 @@ public class AppleResourceTest {
    */
   @Test
   public void testOsxResourceRuleWithNoResources() throws IOException {
-    FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        new BuildTarget("//path/to/app", "MyApp"));
-
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of();
     args.files = ImmutableSortedSet.of();
@@ -125,7 +115,7 @@ public class AppleResourceTest {
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
-        buildRuleParams,
+        new BuildTarget("//path/to/app", "MyApp"),
         args,
         Optional.of(Paths.get("Resources")));
 
@@ -140,9 +130,6 @@ public class AppleResourceTest {
    */
   @Test
   public void testOsxResourceRuleWithOneResource() throws IOException {
-    FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        new BuildTarget("//path/to/app", "MyApp"));
-
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of();
     args.files = ImmutableSortedSet.<SourcePath>of(new TestSourcePath("image.png"));
@@ -150,7 +137,7 @@ public class AppleResourceTest {
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
-        buildRuleParams,
+        new BuildTarget("//path/to/app", "MyApp"),
         args,
         Optional.of(Paths.get("Resources")));
 
@@ -176,9 +163,6 @@ public class AppleResourceTest {
    */
   @Test
   public void testIosResourceRuleWithDirectoryResource() throws IOException {
-    FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        new BuildTarget("//path/to/app", "MyApp"));
-
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of(Paths.get("MyLibrary.bundle"));
     args.files = ImmutableSortedSet.of();
@@ -186,7 +170,7 @@ public class AppleResourceTest {
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
-        buildRuleParams,
+        new BuildTarget("//path/to/app", "MyApp"),
         args,
         Optional.<Path>absent());
 
@@ -213,9 +197,6 @@ public class AppleResourceTest {
    */
   @Test
   public void testInputsForRuleWithDirectoryAndFiles() throws IOException {
-    FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        new BuildTarget("//path/to/app", "MyApp"));
-
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of(Paths.get("MyLibrary.bundle"));
     args.files = ImmutableSortedSet.<SourcePath>of(new TestSourcePath("Resources/MyImage.jpg"));
@@ -235,7 +216,7 @@ public class AppleResourceTest {
                     new FakeDirectoryTraverser.Entry(null, "BundleImage.jpg"),
                     new FakeDirectoryTraverser.Entry(null, "BundleSound.wav")
                 ))),
-        buildRuleParams,
+        new BuildTarget("//path/to/app", "MyApp"),
         args,
         Optional.<Path>absent());
 
@@ -254,9 +235,6 @@ public class AppleResourceTest {
    */
   @Test
   public void testGettersForDirsAndFiles() throws IOException {
-    FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        new BuildTarget("//path/to/app", "MyApp"));
-
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of(Paths.get("MyLibrary.bundle"), Paths.get("Another.bundle"));
     args.files = ImmutableSortedSet.<SourcePath>of(
@@ -266,7 +244,7 @@ public class AppleResourceTest {
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
-        buildRuleParams,
+        new BuildTarget("//path/to/app", "MyApp"),
         args,
         Optional.<Path>absent());
 

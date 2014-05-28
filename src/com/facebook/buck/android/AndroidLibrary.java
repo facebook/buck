@@ -62,11 +62,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnha
       ImmutableSortedSet<BuildRule> providedDeps,
       JavacOptions javacOptions,
       Optional<Path> manifestFile) {
-    super(buildRuleParams,
+    super(buildRuleParams.getBuildTarget(),
         srcs,
         resources,
         proguardConfig,
         postprocessClassesCommands,
+        buildRuleParams.getDeps(),
         exportedDeps,
         providedDeps,
         javacOptions);

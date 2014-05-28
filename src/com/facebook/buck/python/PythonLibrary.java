@@ -21,7 +21,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
@@ -47,17 +46,16 @@ public class PythonLibrary extends AbstractBuildable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  private final BuildTarget buildTarget;
+  private final BuildTarget target;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final Path pythonPathDirectory;
 
-  protected PythonLibrary(BuildRuleParams buildRuleParams,
+  protected PythonLibrary(
+      BuildTarget target,
       ImmutableSortedSet<SourcePath> srcs) {
-    this.buildTarget = buildRuleParams.getBuildTarget();
+    this.target = Preconditions.checkNotNull(target);
     Preconditions.checkNotNull(srcs);
-    Preconditions.checkArgument(!srcs.isEmpty(),
-        "Must specify srcs for %s.",
-        buildRuleParams.getBuildTarget());
+    Preconditions.checkArgument(!srcs.isEmpty(), "Must specify srcs for %s.", target);
     this.srcs = srcs;
     this.pythonPathDirectory = getPathToPythonPathDirectory();
   }
@@ -76,12 +74,12 @@ public class PythonLibrary extends AbstractBuildable {
   private Path getPathToPythonPathDirectory() {
     return Paths.get(
         BuckConstant.GEN_DIR,
-        buildTarget.getBasePath(),
+        target.getBasePath(),
         getPathUnderGenDirectory());
   }
 
   private String getPathUnderGenDirectory() {
-    return "__pylib_" + buildTarget.getShortName();
+    return "__pylib_" + target.getShortName();
   }
 
   @Override

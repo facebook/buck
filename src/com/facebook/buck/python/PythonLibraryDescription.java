@@ -47,6 +47,6 @@ public class PythonLibraryDescription implements Description<Arg> {
 
   @Override
   public PythonLibrary createBuildable(BuildRuleParams params, Arg args) {
-    return new PythonLibrary(params, args.srcs);
+    return new PythonLibrary(params.getBuildTarget(), args.srcs);
   }
 }

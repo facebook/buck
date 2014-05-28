@@ -62,4 +62,9 @@ public class JavaLibraryBuilder
     arg.srcs = amend(arg.srcs, new PathSourcePath(path));
     return this;
   }
+
+  public JavaLibraryBuilder setProguardConfig(Path proguardConfig) {
+    arg.proguardConfig = Optional.of(proguardConfig);
+    return this;
+  }
 }
