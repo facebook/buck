@@ -11,7 +11,7 @@ java_library(
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/model:BuildTargetFactory',
-    '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/rules:rules-util',
     '//lib:guava',
     '//lib:jsr305',
     '//lib:junit',
