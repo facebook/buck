@@ -568,7 +568,7 @@ public class DefaultJavaLibraryTest {
         BuildTargetFactory.newInstance("//:tinylib"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
 
     String javaAbiRuleKeyHash = Strings.repeat("b", 40);
@@ -581,7 +581,7 @@ public class DefaultJavaLibraryTest {
         Strings.repeat("c", 40),
         BuildTargetFactory.newInstance("//:javalib"),
         /* srcs */ ImmutableSet.<String>of(),
-        /* deps */ ImmutableSet.<BuildRule>of(tinyLibrary, fakeJavaAbiRule),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(tinyLibrary, fakeJavaAbiRule),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
 
     Hasher hasher = Hashing.sha1().newHasher();
@@ -605,7 +605,7 @@ public class DefaultJavaLibraryTest {
         BuildTargetFactory.newInstance("//:tinylib"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
 
     // Create two java_library rules, each of which depends on //:tinylib, but only one of which
@@ -615,13 +615,13 @@ public class DefaultJavaLibraryTest {
         commonWithExportAbiKeyHash,
         BuildTargetFactory.newInstance("//:common_with_export"),
         /* srcs */ ImmutableSet.<String>of(),
-        /* deps */ ImmutableSet.<BuildRule>of(tinyLibrary),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(tinyLibrary),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(tinyLibrary));
     BuildRule commonNoExport = createDefaultJavaLibaryRuleWithAbiKey(
         /* abiHash */ null,
         BuildTargetFactory.newInstance("//:common_no_export"),
         /* srcs */ ImmutableSet.<String>of(),
-        /* deps */ ImmutableSet.<BuildRule>of(tinyLibrary),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(tinyLibrary),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
 
     // Verify getAbiKeyForDeps() for the two //:common_XXX rules.
@@ -687,8 +687,8 @@ public class DefaultJavaLibraryTest {
         commonLibAbiKeyHash,
         BuildTargetFactory.newInstance("//:commonlib"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
-        /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(),
+        /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
 
     // Create two java_library rules, each of which depends on //:commonlib, but only one of which
@@ -698,14 +698,14 @@ public class DefaultJavaLibraryTest {
         libWithExportAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_with_export"),
         /* srcs */ ImmutableSet.<String>of(),
-        /* deps */ ImmutableSet.<BuildRule>of(commonLibrary),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(commonLibrary),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(commonLibrary));
     String libNoExportAbiKeyHash = Strings.repeat("c", 40);
     BuildRule libNoExport = createDefaultJavaLibaryRuleWithAbiKey(
         /* abiHash */ libNoExportAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_no_export"),
         /* srcs */ ImmutableSet.<String>of(),
-        /* deps */ ImmutableSet.<BuildRule>of(commonLibrary),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(commonLibrary),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
 
     // Verify getAbiKey() for the two //:lib_XXX rules.
@@ -743,29 +743,29 @@ public class DefaultJavaLibraryTest {
         BuildTargetFactory.newInstance("//:lib_d"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(),
-        /* exporedtDeps */ ImmutableSet.<BuildRule>of());
+        /* deps */ ImmutableSortedSet.<BuildRule>of(),
+        /* exporedtDeps */ ImmutableSortedSet.<BuildRule>of());
     BuildRule libC = createDefaultJavaLibaryRuleWithAbiKey(
         libCAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_c"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(libD),
-        /* exporedtDeps */ ImmutableSet.<BuildRule>of(libD));
+        /* deps */ ImmutableSortedSet.<BuildRule>of(libD),
+        /* exporedtDeps */ ImmutableSortedSet.<BuildRule>of(libD));
     BuildRule libB = createDefaultJavaLibaryRuleWithAbiKey(
         libBAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_b"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(libC),
-        /* exportedDeps */ ImmutableSet.<BuildRule>of(libC));
+        /* deps */ ImmutableSortedSet.<BuildRule>of(libC),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(libC));
     BuildRule libA = createDefaultJavaLibaryRuleWithAbiKey(
         libAAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_a"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(libB),
-        /* exportedDeps */ ImmutableSet.<BuildRule>of(libB));
+        /* deps */ ImmutableSortedSet.<BuildRule>of(libB),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(libB));
 
     assertEquals(
         "If a rule has no dependencies its final ABI key should be the rule's own ABI key.",
@@ -811,29 +811,29 @@ public class DefaultJavaLibraryTest {
         BuildTargetFactory.newInstance("//:lib_d2"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(),
-        /* exportedDeps */ ImmutableSet.<BuildRule>of());
+        /* deps */ ImmutableSortedSet.<BuildRule>of(),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
     libC = createDefaultJavaLibaryRuleWithAbiKey(
         libCAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_c2"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(libD),
-        /* exportDeps */ ImmutableSet.<BuildRule>of());
+        /* deps */ ImmutableSortedSet.<BuildRule>of(libD),
+        /* exportDeps */ ImmutableSortedSet.<BuildRule>of());
     libB = createDefaultJavaLibaryRuleWithAbiKey(
         libBAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_b2"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(libC),
-        /* exportedDeps */ ImmutableSet.<BuildRule>of(libC));
+        /* deps */ ImmutableSortedSet.<BuildRule>of(libC),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(libC));
     libA = createDefaultJavaLibaryRuleWithAbiKey(
         libAAbiKeyHash,
         BuildTargetFactory.newInstance("//:lib_a2"),
         // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSet.<BuildRule>of(libB),
-        /* exportedDeps */ ImmutableSet.<BuildRule>of(libB));
+        /* deps */ ImmutableSortedSet.<BuildRule>of(libB),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(libB));
 
     assertEquals(
         "If export_deps is false, the final ABI key should be the rule's own ABI key.",
@@ -872,8 +872,8 @@ public class DefaultJavaLibraryTest {
       @Nullable final String partialAbiHash,
       BuildTarget buildTarget,
       ImmutableSet<String> srcs,
-      ImmutableSet<BuildRule> deps,
-      ImmutableSet<BuildRule> exportedDeps) {
+      ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<BuildRule> exportedDeps) {
     ImmutableSortedSet<SourcePath> srcsAsPaths = FluentIterable.from(srcs)
         .transform(MorePaths.TO_PATH)
         .transform(SourcePaths.TO_SOURCE_PATH)
@@ -1242,8 +1242,8 @@ public class DefaultJavaLibraryTest {
             ImmutableSet.<SourcePath>of(),
             Optional.of(Paths.get("MyProguardConfig")),
             /* postprocessClassesCommands */ ImmutableList.<String>of(),
-            /* exportedDeps */ ImmutableSet.<BuildRule>of(),
-            /* providedDeps */ ImmutableSet.<BuildRule>of(),
+            /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+            /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
             JavacOptions.DEFAULTS);
         return new AbstractBuildable.AnonymousBuildRule(
             JavaLibraryDescription.TYPE,
@@ -1338,8 +1338,8 @@ public class DefaultJavaLibraryTest {
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<Path>absent(),
           /* postprocessClassesCommands */ ImmutableList.<String>of(),
-          /* exportedDeps */ ImmutableSet.<BuildRule>of(),
-          /* providedDeps */ ImmutableSet.<BuildRule>of(),
+          /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+          /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
           options.build(),
           /* manifestFile */ Optional.<Path>absent());
       return new AbstractBuildable.AnonymousBuildRule(

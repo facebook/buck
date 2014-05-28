@@ -173,8 +173,8 @@ public class DefaultJavaLibrary extends AbstractBuildable
       Set<? extends SourcePath> resources,
       Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
-      Set<BuildRule> exportedDeps,
-      Set<BuildRule> providedDeps,
+      ImmutableSortedSet<BuildRule> exportedDeps,
+      ImmutableSortedSet<BuildRule> providedDeps,
       JavacOptions javacOptions) {
     this.target = buildableParams.getBuildTarget();
     this.deps = ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -185,8 +185,8 @@ public class DefaultJavaLibrary extends AbstractBuildable
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.postprocessClassesCommands = Preconditions.checkNotNull(postprocessClassesCommands);
-    this.exportedDeps = ImmutableSortedSet.copyOf(exportedDeps);
-    this.providedDeps = ImmutableSortedSet.copyOf(providedDeps);
+    this.exportedDeps = exportedDeps;
+    this.providedDeps = providedDeps;
     this.additionalClasspathEntries = ImmutableSet.of();
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
 

@@ -38,7 +38,7 @@ public class FakeDefaultJavaLibrary extends DefaultJavaLibrary {
       Set<SourcePath> resources,
       Optional<Path> proguardConfig,
       AnnotationProcessingParams annotationProcessingParams,
-      Set<BuildRule> exportedDeps,
+      ImmutableSortedSet<BuildRule> exportedDeps,
       boolean ruleInputsAreCached) {
     super(buildRuleParams,
         srcs,
