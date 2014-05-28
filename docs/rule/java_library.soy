@@ -48,7 +48,7 @@ of the compiled class files and resources.
   target="_blank">Class.getResource()</a>.
   <p>
   <strong>Note:</strong> Buck uses the <code>src_roots</code> property in
-  {sp}<a href="{ROOT}concept/buckconfig.html"><code>buckconfig.html</code></a>
+  {sp}<a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>
   {sp}to help determine where resources should be placed within the generated JAR file.
   <p>
   {/param}
@@ -102,9 +102,9 @@ of the compiled class files and resources.
   {param desc}
   These represent dependencies that are known to be provided at run
   time, but are required in order for the code to compile. Examples of
-  <code>provided_deps</code> include the JEE servlet APIs. When this
+  {sp}<code>provided_deps</code> include the JEE servlet APIs. When this
   rule is included in a <code>java_binary</code>, the
-  <code>provided_deps</code> will not be packaged into the output.
+  {sp}<code>provided_deps</code> will not be packaged into the output.
   {/param}
 {/call}
 
@@ -128,7 +128,7 @@ java_library(
 
 # A rule that compiles all of the .java files under the directory in
 # which the rule is defined using glob(). It also excludes an
-# individual file that may has additional dependencies, so it is
+# individual file that may have additional dependencies, so it is
 # compiled by a separate rule.
 java_library(
   name = 'messenger',

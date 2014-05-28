@@ -17,7 +17,7 @@ no repeated or trailing separators (<code>/</code>).
 Patterns may contain shell-like wildcards <code>*</code>, <code>?</code>, <code>[charset]</code>.
 
 Additionally, a path element <code>**</code> will match any subpath. For instance
-<code>foo/**/bar</code> is equivalent to <code>["foo/bar", "foo/*/bar", "foo/*/*/bar",
+{sp}<code>foo&#x2F;**/bar</code> is equivalent to <code>["foo/bar", "foo&#x2F;*/bar", "foo&#x2F;*&#x2F;*/bar",
 ...]</code>.
 {/param}
 
@@ -41,7 +41,7 @@ Additionally, a path element <code>**</code> will match any subpath. For instanc
 
 {call buck.functionArg}
   {param name : 'include_dotfiles' /}
-  {param default : 'false' /}
+  {param default : 'False' /}
   {param desc}
   Whether <code>*</code> and <code>**</code> patterns should capture file or directory names
   starting with a dot.
@@ -71,7 +71,7 @@ All of the regular files under the directory '.git':
 <pre class="prettyprint lang-py">glob(['.git&#x2F**/'])</pre>
 
 All of the files starting with '.' under a regular (non-dot) directory:
-<pre class="prettyprint lang-py">glob(['**&#x2F/.*'])</pre>
+<pre class="prettyprint lang-py">glob(['**&#x2F.*'])</pre>
 
 All of the regular <code>.java</code> and <code>.aidl</code> files in this directory:
 <pre class="prettyprint lang-py">glob(['*.java', '*.aidl'])</pre>
