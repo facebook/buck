@@ -266,6 +266,9 @@ footer {
   font-weight: bold;
 }
 
+.fb_iframe_widget {
+    padding-left: 1em;
+}
 
 /* tabletish */
 
@@ -292,7 +295,6 @@ footer {
     width: 960px;
     /* make columns add to <880 for 60 gutter */
   }
-
 
   header.hero hgroup {
     float: left;
@@ -323,5 +325,4 @@ footer {
     float: left;
     width: 220px;
   }
-
 }
