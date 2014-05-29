@@ -175,7 +175,9 @@ public class DaemonIntegrationTest {
     NGContext context = new NGContext() {
       @Override
       public Properties getEnv() {
-        return new Properties();
+        Properties properties = new Properties();
+        properties.setProperty("PATH", System.getenv("PATH"));
+        return properties;
       }
     };
     try (TestNGInputStream inputStream = new TestNGInputStream(
