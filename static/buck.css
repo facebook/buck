@@ -293,7 +293,6 @@ footer {
     /* make columns add to <880 for 60 gutter */
   }
 
-
   header.hero hgroup {
     float: left;
     width: 438px;
@@ -324,4 +323,7 @@ footer {
     width: 220px;
   }
 
+  .fb_iframe_widget {
+    float: right;
+  }
 }
