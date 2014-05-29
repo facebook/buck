@@ -419,5 +419,8 @@ Small Device Styles
     max-width: 480px;
     font-size: 11px;
   }
-
+    
+  .fb-like{
+    float: right;
+    }
 }
