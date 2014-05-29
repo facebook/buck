@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
+import static com.facebook.buck.java.PopularAndroidJavaCompilerEnvironment.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -36,8 +37,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.net.URI;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.tools.JavaCompiler;
@@ -90,17 +92,11 @@ public class DalvikStatsToolTest {
 
   @Before
   public void setUp() throws Exception {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
     outputDir = tmpDir.newFolder("output");
-    builder.add("-d", outputDir.toString());
-
-    ImmutableList<JavaSourceFromString> inputs = ImmutableList.of(
+    compileSources(
+        outputDir,
         new JavaSourceFromString("TestClass", TEST_CLASS),
         new JavaSourceFromString("TestClassWithInner", TEST_CLASS_WITH_INNER));
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    JavaCompiler.CompilationTask task =
-        compiler.getTask(null, null, null, builder.build(), null, inputs);
-    assertTrue(task.call());
   }
 
   @Test
@@ -156,48 +152,55 @@ public class DalvikStatsToolTest {
    */
   @Test
   public void testMultiANewArray() throws IOException {
-    // Avoid unused method warnings for types we statically analyze.
-    UsesMultiANewArray.createMultiArray();
-    UsesMultiANewArrayAndExplicitArrayCall.createMultiArray();
+    // A test class that uses the MULTIANEWARRAY instruction but calls no methods explicitly.
+    JavaSourceFromString usesMultiANewArray =
+        new JavaSourceFromString(
+            "UsesMultiANewArray",
+            createSource(
+                "public class UsesMultiANewArray {",
+                "  static Object createMultiArray() {",
+                "    return new Object[1][1];",
+                "  }",
+                "}"));
 
-    ClassReader usesImplicitOnly = new ClassReader(UsesMultiANewArray.class.getName());
+    // A test class that uses MULTINEWARRAY and also calls Array.newInstance(Class, int...)
+    // explicitly.
+    JavaSourceFromString usesMultiANewArrayAndExplicitArrayCall =
+        new JavaSourceFromString(
+            "UsesMultiANewArrayAndExplicitArrayCall",
+            createSource(
+                "import java.lang.reflect.Array;",
+                "public class UsesMultiANewArrayAndExplicitArrayCall {",
+                "  static Object createMultiArray() {",
+                "    Array.newInstance(Object.class, 1, 1);",
+                "    return new Object[1][1];",
+                "  }",
+                "}"));
+
+    compileSources(outputDir, usesMultiANewArray, usesMultiANewArrayAndExplicitArrayCall);
+
+    ClassReader usesImplicitOnly = new ClassReader(
+        Files.newInputStream(
+            new File(outputDir, "UsesMultiANewArray.class").toPath()));
     DalvikStatsTool.Stats implicitStats = DalvikStatsTool.getEstimateInternal(usesImplicitOnly);
 
-    ClassReader usesBoth = new ClassReader(UsesMultiANewArrayAndExplicitArrayCall.class.getName());
+    ClassReader usesBoth = new ClassReader(Files.newInputStream(
+        new File(outputDir, "UsesMultiANewArrayAndExplicitArrayCall.class").toPath()));
     DalvikStatsTool.Stats bothStats = DalvikStatsTool.getEstimateInternal(usesBoth);
 
     assertEquals(implicitStats.methodReferences.size(), bothStats.methodReferences.size());
   }
 
-  /**
-   * A test class that uses the MULTIANEWARRAY instruction but calls no methods explicitly.
-   */
-  private static class UsesMultiANewArray {
-    static Object createMultiArray() {
-      return new Object[1][1];
-    }
-  }
-
-  /**
-   * A test class that uses MULTINEWARRAY and also calls Array.newInstance(Class, int...)
-   * explicitly.
-   */
-  private static class UsesMultiANewArrayAndExplicitArrayCall {
-    static Object createMultiArray() {
-      Array.newInstance(Object.class, 1, 1);
-      return new Object[1][1];
-    }
-  }
 
   /**
    * A file object used to represent source coming from a string.
    */
   public class JavaSourceFromString extends SimpleJavaFileObject {
+
     /**
      * The source code of this "file".
      */
     final String code;
-
     /**
      * Constructs a new JavaSourceFromString.
      * @param name the name of the compilation unit represented by this file object
@@ -212,8 +215,8 @@ public class DalvikStatsToolTest {
     public CharSequence getCharContent(boolean ignoreEncodingErrors) {
       return code;
     }
-  }
 
+  }
   private static String createSource(String... args) {
     return Joiner.on("\n").join(args);
   }
@@ -244,5 +247,17 @@ public class DalvikStatsToolTest {
       }
     }
     fail(sbError.toString());
+  }
+
+  private void compileSources(File outputDir, JavaSourceFromString... sources) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    builder.add("-d", outputDir.toString());
+    builder.add("-target", TARGETED_JAVA_VERSION);
+    builder.add("-source", TARGETED_JAVA_VERSION);
+
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    JavaCompiler.CompilationTask task =
+        compiler.getTask(null, null, null, builder.build(), null, Arrays.asList(sources));
+    assertTrue(task.call());
   }
 }

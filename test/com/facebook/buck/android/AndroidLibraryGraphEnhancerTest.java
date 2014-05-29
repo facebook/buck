@@ -90,6 +90,7 @@ public class AndroidLibraryGraphEnhancerTest {
     assertTrue(result.getOptionalDummyRDotJava().isPresent());
     assertEquals(
         "DummyRDotJava must contain these exact AndroidResourceRules.",
+        // Note: these are the reverse order to which they are in the buildRuleParams.
         ImmutableList.of(resourceRule1.getBuildable(), resourceRule2.getBuildable()),
         result.getOptionalDummyRDotJava().get().getAndroidResourceDeps());
 

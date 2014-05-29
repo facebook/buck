@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.android.AndroidResource.BuildOutput;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -166,7 +167,10 @@ public class AndroidResourceTest {
    * to be sure that we perform a topological sort, the resulting traversal of which is either
    * {@code A B D C} or {@code A D B C}.
    * <p>
-   * We choose these letters in particular.
+   * The reason for the correct result being reversed is because we want the resources with the most
+   * dependencies listed first on the path, so that they're used in preference to the ones that they
+   * depend on (presumably, the reason for extending the initial set of resources was to override
+   * values).
    */
   @Test
   public void testGetAndroidResourceDeps() {
@@ -210,19 +214,15 @@ public class AndroidResourceTest {
         return input.getBuildable();
       }
     };
-    // Note that a topological sort for a DAG is not guaranteed to be unique. In this particular
-    // case, there are two possible valid outcomes.
-    ImmutableList<Buildable> validResult1 = FluentIterable.from(ImmutableList.of(a, b, d, c))
-        .transform(ruleToBuildable)
-        .toList();
-    ImmutableList<Buildable> validResult2 = FluentIterable.from(ImmutableList.of(a, d, b, c))
+    // Note that a topological sort for a DAG is not guaranteed to be unique, but we order nodes
+    // within the same depth of the search.
+    ImmutableList<Buildable> result = FluentIterable.from(ImmutableList.of(a, d, b, c))
         .transform(ruleToBuildable)
         .toList();
 
-    assertTrue(
-        String.format(
-            "Topological sort %s should be either %s or %s", deps, validResult1, validResult2),
-        deps.equals(validResult1) || deps.equals(validResult2));
+    assertEquals(
+        String.format("Topological sort %s should be %s", deps, result),
+        deps, result);
 
     // Introduce an AndroidBinaryRule that depends on A and C and verify that the same topological
     // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
@@ -246,11 +246,10 @@ public class AndroidResourceTest {
         declaredDeps,
         ImmutableSortedSet.of(keystore));
 
-        ImmutableList < HasAndroidResourceDeps > deps2 = UberRDotJavaUtil.getAndroidResourceDeps(a);
-    assertTrue(
-        String.format(
-            "Topological sort %s should be either %s or %s", deps, validResult1, validResult2),
-            deps2.equals(validResult1) || deps2.equals(validResult2));
+    ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(a);
+    assertEquals(
+        String.format("Topological sort %s should be %s", deps, result),
+        deps2, result);
   }
 
   @Test
@@ -285,10 +284,13 @@ public class AndroidResourceTest {
                 buildableContext)
             .isEmpty());
 
+    // The resources come from UberRDotJavaUtil.getAndroidResourceDeps returns the resources in the
+    // reverse alphabetical order (because there's no complex dependency graph) See
+    // testGetAndroidResourceDeps in this class for why this is the expected ordering.
     Sha1HashCode expectedSha1 = HasAndroidResourceDeps.ABI_HASHER.apply(
         ImmutableList.of(
-            (HasAndroidResourceDeps) resourceRule1.getBuildable(),
-            (HasAndroidResourceDeps) resourceRule2.getBuildable()));
+            (HasAndroidResourceDeps) resourceRule2.getBuildable(),
+            (HasAndroidResourceDeps) resourceRule1.getBuildable()));
     buildableContext.assertContainsMetadataMapping(
         AndroidResource.METADATA_KEY_FOR_ABI,
         expectedSha1.getHash());

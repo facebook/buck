@@ -189,8 +189,8 @@ public class ProjectIntegrationTest {
     assertEquals(
         Joiner.on('\n').join(
             "foo/fooproject.xcodeproj",
-            "bar/barproject.xcodeproj"
-        ) + '\n',
+            "bar/barproject.xcodeproj",
+            ""),
         result.getStdout());
   }
 }
