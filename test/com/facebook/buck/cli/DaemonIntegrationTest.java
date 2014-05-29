@@ -44,7 +44,6 @@ import com.martiansoftware.nailgun.NGSecurityManager;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -67,7 +66,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@Ignore("Exhausts inotify limit on CI server.")
 public class DaemonIntegrationTest {
 
   private static final int SUCCESS_EXIT_CODE = 0;
