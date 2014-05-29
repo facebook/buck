@@ -145,7 +145,6 @@ java_library(
     'NoopArtifactCache.java',
     'ProjectConfig.java',
     'ProjectConfigDescription.java',
-    'RecordArtifactsInDirectoryStep.java',
     'TargetNodeToBuildRuleTransformer.java',
     'TestRule.java',
     'TestRunEvent.java',

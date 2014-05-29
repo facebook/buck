@@ -24,11 +24,12 @@ import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.RecordArtifactsInDirectoryStep;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -121,11 +122,13 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
         binDirectory,
         flags);
 
-    Step recordStep = new RecordArtifactsInDirectoryStep(
-        buildableContext,
+    Step mkDirStep = new MakeCleanDirectoryStep(genDirectory);
+    Step copyStep = CopyStep.forDirectory(
         binDirectory,
-        genDirectory);
-    return ImmutableList.of(nkdBuildStep, recordStep);
+        genDirectory,
+        CopyStep.DirectoryMode.CONTENTS_ONLY);
+    buildableContext.recordArtifactsInDirectory(genDirectory);
+    return ImmutableList.of(nkdBuildStep, mkDirStep, copyStep);
   }
 
   /**
