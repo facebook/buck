@@ -266,6 +266,9 @@ footer {
   font-weight: bold;
 }
 
+.fb_iframe_widget {
+    padding-left: 1em;
+}
 
 /* tabletish */
 
