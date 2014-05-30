@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Matcher;
 import java.util.Set;
 
 public class AndroidPlatformTargetTest {
@@ -262,6 +263,26 @@ public class AndroidPlatformTargetTest {
               new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs").getAbsolutePath(),
               androidSdkDir.getPath()),
           e.getMessage());
+    }
+  }
+
+  @Test
+  public void testPlatformTargetPattern() {
+    testPlatformTargetRegex("Google Inc.:Google APIs:8", true, "8");
+    testPlatformTargetRegex("Google Inc.:Google APIs:17", true, "17");
+    testPlatformTargetRegex("android-8", true, "8");
+    testPlatformTargetRegex("android-17", true, "17");
+    testPlatformTargetRegex("Google Inc.:Google APIs:", false, null);
+    testPlatformTargetRegex("Google Inc.:Google APIs:blah", false, null);
+    testPlatformTargetRegex("android-", false, null);
+    testPlatformTargetRegex("android-blah", false, null);
+  }
+
+  private void testPlatformTargetRegex(String input, boolean matches, String id) {
+    Matcher matcher = AndroidPlatformTarget.PLATFORM_TARGET_PATTERN.matcher(input);
+    assertEquals(matches, matcher.matches());
+    if (matches) {
+      assertEquals(id, matcher.group(1));
     }
   }
 }

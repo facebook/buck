@@ -47,6 +47,10 @@ public class AndroidPlatformTarget {
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:19";
   public static final String ANDROID_VERSION_PREFIX = "android-";
 
+  @VisibleForTesting
+  static final Pattern PLATFORM_TARGET_PATTERN = Pattern.compile(
+      "(?:Google Inc\\.:Google APIs:|android-)(\\d+)");
+
   private final String name;
   private final Path androidJar;
   private final List<Path> bootclasspathEntries;
@@ -160,8 +164,7 @@ public class AndroidPlatformTarget {
     Preconditions.checkNotNull(platformId);
     Preconditions.checkNotNull(androidDirectoryResolver);
 
-    Pattern platformPattern = Pattern.compile("Google Inc\\.:Google APIs:(\\d+)");
-    Matcher platformMatcher = platformPattern.matcher(platformId);
+    Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
     if (platformMatcher.matches()) {
       try {
         int apiLevel = Integer.parseInt(platformMatcher.group(1));
