@@ -66,13 +66,20 @@ public class AdbHelper {
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
+
+  /**
+   * If this environment variable is set, the device with the specified serial
+   * number is targeted. The -s option overrides this.
+   */
+  static final String SERIAL_NUMBER_ENV = "ANDROID_SERIAL";
+
   // Taken from ddms source code.
   public static final long INSTALL_TIMEOUT = 2 * 60 * 1000; // 2 min
   public static final long GETPROP_TIMEOUT = 2 * 1000; // 2 seconds
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
-  @Nullable private final ExecutionContext context;
+  private final ExecutionContext context;
   private final Console console;
   private final BuckEventBus buckEventBus;
   private final BuckConfig buckConfig;
@@ -86,7 +93,7 @@ public class AdbHelper {
       BuckConfig buckConfig) {
     this.options = Preconditions.checkNotNull(adbOptions);
     this.deviceOptions = Preconditions.checkNotNull(deviceOptions);
-    this.context = context;
+    this.context = Preconditions.checkNotNull(context);
     this.console = Preconditions.checkNotNull(console);
     this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
     this.buckConfig = Preconditions.checkNotNull(buckConfig);
@@ -127,6 +134,9 @@ public class AdbHelper {
         boolean serialMatches = true;
         if (deviceOptions.hasSerialNumber()) {
           serialMatches = device.getSerialNumber().equals(deviceOptions.getSerialNumber());
+        } else if (context.getEnvironment().containsKey(SERIAL_NUMBER_ENV)) {
+          serialMatches = device.getSerialNumber().equals(
+              context.getEnvironment().get(SERIAL_NUMBER_ENV));
         }
 
         boolean deviceTypeMatches;

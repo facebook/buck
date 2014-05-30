@@ -28,8 +28,11 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -85,13 +88,18 @@ public class AdbHelperTest {
   }
 
   private AdbHelper createAdbHelper(String... args) throws CmdLineException {
+    return createAdbHelper(TestExecutionContext.newInstance(), args);
+  }
+
+  private AdbHelper createAdbHelper(ExecutionContext executionContext, String... args)
+      throws CmdLineException {
     Console console = new TestConsole();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     InstallCommandOptions options = getOptions(args);
     return new AdbHelper(
         options.adbOptions(),
         options.targetDeviceOptions(),
-        /* executionContext */ null,
+        executionContext,
         console,
         eventBus,
         buckConfig);
@@ -198,6 +206,33 @@ public class AdbHelperTest {
     for (int i = 0; i < devices.length; i++) {
       AdbHelper myAdbHelper = createAdbHelper(
           TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, devices[i].getSerialNumber());
+      List<IDevice> filteredDevices = myAdbHelper.filterDevices(devices);
+      assertNotNull(filteredDevices);
+      assertEquals(1, filteredDevices.size());
+      assertSame(devices[i], filteredDevices.get(0));
+    }
+  }
+
+  /**
+   * Verify that filtering by environment variable works.
+   */
+  @Test
+  public void whenSerialNumberSetInEnvironmentThenCorrectDeviceFound()
+      throws CmdLineException {
+    IDevice[] devices = new IDevice[] {
+        createRealDevice("1", IDevice.DeviceState.ONLINE),
+        createEmulator("2", IDevice.DeviceState.ONLINE),
+        createRealDevice("3", IDevice.DeviceState.ONLINE),
+        createEmulator("4", IDevice.DeviceState.ONLINE)
+    };
+
+    for (int i = 0; i < devices.length; i++) {
+      AdbHelper myAdbHelper = createAdbHelper(
+          TestExecutionContext.newBuilder()
+              .setEnvironment(ImmutableMap.of(
+                      AdbHelper.SERIAL_NUMBER_ENV,
+                      devices[i].getSerialNumber()))
+              .build());
       List<IDevice> filteredDevices = myAdbHelper.filterDevices(devices);
       assertNotNull(filteredDevices);
       assertEquals(1, filteredDevices.size());
@@ -391,4 +426,5 @@ public class AdbHelperTest {
     device.setName("testDevice");
     assertFalse(basicAdbHelper.installApkOnDevice(device, apk, false));
   }
+
 }
