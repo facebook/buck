@@ -837,7 +837,7 @@ public class AndroidBinary extends AbstractBuildable implements
   }
 
   /**
-   * All native libs are copied to this directory before running aapt.
+   * All native libs are copied to this directory before running apkbuilder.
    */
   private Path getPathForNativeLibs() {
     return getBinPath("__native_libs_%s__");
