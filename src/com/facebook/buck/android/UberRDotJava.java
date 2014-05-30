@@ -43,8 +43,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
@@ -55,7 +55,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -150,7 +149,7 @@ public class UberRDotJava extends AbstractBuildable implements
         });
   }
 
-  public Map<String, HashCode> getClassNamesToHashes() {
+  public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
     return buildOutputInitializer.getBuildOutput().rDotJavaClassesHash;
   }
 
@@ -200,7 +199,7 @@ public class UberRDotJava extends AbstractBuildable implements
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    Map<String, HashCode> classesHash = ImmutableMap.of();
+    ImmutableSortedMap<String, HashCode> classesHash = ImmutableSortedMap.of();
     if (!filteredResourcesProvider.getResDirectories().isEmpty()) {
       List<String> lines;
       try {
@@ -231,11 +230,11 @@ public class UberRDotJava extends AbstractBuildable implements
 
   public static class BuildOutput {
     private final Optional<Integer> rDotJavaDexLinearAllocEstimate;
-    private final Map<String, HashCode> rDotJavaClassesHash;
+    private final ImmutableSortedMap<String, HashCode> rDotJavaClassesHash;
 
     public BuildOutput(
         Optional<Integer> rDotJavaDexLinearAllocSizeEstimate,
-        Map<String, HashCode> rDotJavaClassesHash) {
+        ImmutableSortedMap<String, HashCode> rDotJavaClassesHash) {
       this.rDotJavaDexLinearAllocEstimate =
           Preconditions.checkNotNull(rDotJavaDexLinearAllocSizeEstimate);
       this.rDotJavaClassesHash = Preconditions.checkNotNull(rDotJavaClassesHash);
