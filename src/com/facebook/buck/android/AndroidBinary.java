@@ -608,6 +608,20 @@ public class AndroidBinary extends AbstractBuildable implements
       nativeLibraryDirectories = ImmutableSet.of();
     }
 
+    // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
+    ImmutableSet<Path> nativeLibraryAsAssetDirectories;
+    if (!transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+      Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
+      Path libSubdirectory = pathForNativeLibsAsAssets.resolve("assets").resolve("lib");
+      steps.add(new MakeCleanDirectoryStep(libSubdirectory));
+      for (Path nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
+        AndroidBinary.copyNativeLibrary(nativeLibDir, libSubdirectory, cpuFilters, steps);
+      }
+      nativeLibraryAsAssetDirectories = ImmutableSet.of(pathForNativeLibsAsAssets);
+    } else {
+      nativeLibraryAsAssetDirectories = ImmutableSet.of();
+    }
+
     // If non-english strings are to be stored as assets, pass them to ApkBuilder.
     ImmutableSet.Builder<Path> zipFiles = ImmutableSet.builder();
     zipFiles.addAll(dexFilesInfo.secondaryDexZips);
@@ -620,7 +634,7 @@ public class AndroidBinary extends AbstractBuildable implements
         aaptPackageResources.getResourceApkPath(),
         getSignedApkPath(),
         dexFilesInfo.primaryDexPath,
-        /* assetDirectories */ ImmutableSet.<Path>of(),
+        nativeLibraryAsAssetDirectories,
         nativeLibraryDirectories,
         zipFiles.build(),
         dexTransitiveDependencies.pathsToThirdPartyJars,
@@ -841,6 +855,13 @@ public class AndroidBinary extends AbstractBuildable implements
    */
   private Path getPathForNativeLibs() {
     return getBinPath("__native_libs_%s__");
+  }
+
+  /**
+   * All native-libs-as-assets are copied to this directory before running apkbuilder.
+   */
+  private Path getPathForNativeLibsAsAssets() {
+    return getBinPath("__native_libs_as_assets_%s__");
   }
 
   public Keystore getKeystore() {

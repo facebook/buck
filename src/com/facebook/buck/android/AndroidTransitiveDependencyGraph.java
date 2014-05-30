@@ -22,7 +22,6 @@ import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.PrebuiltJar;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.Optionals;
@@ -166,8 +165,6 @@ public class AndroidTransitiveDependencyGraph {
     // as raw files under /assets/lib/ directory in the APK.
     final ImmutableSet.Builder<Path> nativeLibAssetsDirectories = ImmutableSet.builder();
 
-    final ImmutableSet.Builder<BuildTarget> nativeTargetsWithAssets = ImmutableSet.builder();
-
     // Path to the module's manifest file
     final ImmutableSet.Builder<Path> manifestFiles = ImmutableSet.builder();
 
@@ -185,7 +182,6 @@ public class AndroidTransitiveDependencyGraph {
           NativeLibraryBuildable nativeLibraryRule = (NativeLibraryBuildable) rule.getBuildable();
           if (nativeLibraryRule.isAsset()) {
             nativeLibAssetsDirectories.add(nativeLibraryRule.getLibraryPath());
-            nativeTargetsWithAssets.add(rule.getBuildTarget());
           } else {
             nativeLibsDirectories.add(nativeLibraryRule.getLibraryPath());
           }
@@ -222,7 +218,6 @@ public class AndroidTransitiveDependencyGraph {
         nativeLibsDirectories.build(),
         nativeLibAssetsDirectories.build(),
         assetsDirectories.build(),
-        nativeTargetsWithAssets.build(),
         manifestFiles.build(),
         proguardConfigs.build());
   }

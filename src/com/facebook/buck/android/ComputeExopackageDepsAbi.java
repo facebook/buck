@@ -134,6 +134,13 @@ public class ComputeExopackageDepsAbi
                 }
               }
 
+              // Same deal for native libs as assets.
+              for (final Path libDir : transitiveDependencies.nativeLibAssetsDirectories) {
+                for (Path nativeFile : filesystem.getFilesUnderPath(libDir)) {
+                  filesToHash.put(nativeFile, "native_lib_as_asset");
+                }
+              }
+
               // Resources get copied from third-party JARs, so hash them.
               for (Path jar : dexTransitiveDependencies.pathsToThirdPartyJars) {
                 filesToHash.put(jar, "third-party jar");

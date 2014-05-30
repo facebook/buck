@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -25,7 +24,6 @@ public class AndroidTransitiveDependencies {
   public final ImmutableSet<Path> nativeLibsDirectories;
   public final ImmutableSet<Path> nativeLibAssetsDirectories;
   public final ImmutableSet<Path> assetsDirectories;
-  public final ImmutableSet<BuildTarget> nativeTargetsWithAssets;
   public final ImmutableSet<Path> manifestFiles;
   public final ImmutableSet<Path> proguardConfigs;
 
@@ -34,7 +32,6 @@ public class AndroidTransitiveDependencies {
           ImmutableSet.<Path>of(),
           ImmutableSet.<Path>of(),
           ImmutableSet.<Path>of(),
-          ImmutableSet.<BuildTarget>of(),
           ImmutableSet.<Path>of(),
           ImmutableSet.<Path>of());
 
@@ -42,13 +39,11 @@ public class AndroidTransitiveDependencies {
       ImmutableSet<Path> nativeLibsDirectories,
       ImmutableSet<Path> nativeLibAssetsDirectories,
       ImmutableSet<Path> assetsDirectories,
-      ImmutableSet<BuildTarget> nativeTargetsWithAssets,
       ImmutableSet<Path> manifestFiles,
       ImmutableSet<Path> proguardConfigs) {
     this.nativeLibsDirectories = Preconditions.checkNotNull(nativeLibsDirectories);
     this.nativeLibAssetsDirectories = Preconditions.checkNotNull(nativeLibAssetsDirectories);
     this.assetsDirectories = Preconditions.checkNotNull(assetsDirectories);
-    this.nativeTargetsWithAssets = Preconditions.checkNotNull(nativeTargetsWithAssets);
     this.manifestFiles = Preconditions.checkNotNull(manifestFiles);
     this.proguardConfigs = Preconditions.checkNotNull(proguardConfigs);
   }

@@ -133,10 +133,6 @@ public class AndroidTransitiveDependencyGraphTest {
         ImmutableSet.of(Paths.get("assets")),
         transitiveDeps.assetsDirectories);
     assertEquals(
-        "There should be one NativeLibraryBuildable that is an asset.",
-        ImmutableSet.of(new BuildTarget("//java/com/facebook/prebuilt_native_library", "library")),
-        transitiveDeps.nativeTargetsWithAssets);
-    assertEquals(
         "Because manifest file was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
         ImmutableSet.of(Paths.get("java/src/com/facebook/module/AndroidManifest.xml")),

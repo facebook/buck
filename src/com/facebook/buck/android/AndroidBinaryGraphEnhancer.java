@@ -377,10 +377,7 @@ public class AndroidBinaryGraphEnhancer {
         .addAll(getTargetsAsRules(
                 FluentIterable.from(unsortedAndroidResourceDeps.getAssetOnlyDeps())
                     .transform(HasBuildTarget.TO_TARGET)
-                    .toList()))
-        .addAll(getTargetsAsRules(
-                androidResourceDepsFinder.getAndroidTransitiveDependencies()
-                    .nativeTargetsWithAssets));
+                    .toList()));
     if (manifest instanceof BuildRuleSourcePath) {
       builder.add(((BuildRuleSourcePath) manifest).getRule());
     }

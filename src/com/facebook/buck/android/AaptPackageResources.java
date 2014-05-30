@@ -159,19 +159,10 @@ public class AaptPackageResources extends AbstractBuildable
     steps.add(collectAssets);
 
     Optional<Path> assetsDirectory;
-    if (androidTransitiveDependencies.assetsDirectories.isEmpty() &&
-        androidTransitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+    if (androidTransitiveDependencies.assetsDirectories.isEmpty()) {
       assetsDirectory = Optional.absent();
     } else {
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
-    }
-
-    if (!androidTransitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
-      Path nativeLibAssetsDir = assetsDirectory.get().resolve("lib");
-      steps.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
-      for (Path nativeLibDir : androidTransitiveDependencies.nativeLibAssetsDirectories) {
-        AndroidBinary.copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, cpuFilters, steps);
-      }
     }
 
     steps.add(new MkdirStep(getResourceApkPath().getParent()));

@@ -184,16 +184,56 @@ public class AndroidBinaryIntegrationTest {
     // (with very high probability).
     Thread.sleep(1500);
 
+    ApkInspector apkInspector;
+
+
+    // Change the binary and ensure that we re-run apkbuilder.
     workspace.replaceFileContents(
         "native/fakenative/jni/fakesystem.c", "exit(status)", "exit(1+status)");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
-    result.assertSuccess();
+    workspace.runBuckCommand("build", EXOPACKAGE_TARGET).assertSuccess();
 
-    BuckBuildLog buildLog = workspace.getBuildLog();
+    workspace.getBuildLog().assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    apkInspector = new ApkInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/multidex/app-exo.apk"));
+    apkInspector.assertFileExists("lib/armeabi/libfakenative.so");
+    apkInspector.assertFileDoesNotExist("assets/lib/armeabi/libfakenative.so");
 
-    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+
+    // Now convert it into an asset native library and ensure that we re-run apkbuilder.
+    workspace.replaceFileContents(
+        "native/fakenative/jni/BUCK",
+        "name = 'fakenative',",
+        "name = 'fakenative',\nis_asset=True,");
+
+    workspace.resetBuildLogFile();
+    workspace.runBuckCommand("build", EXOPACKAGE_TARGET).assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    apkInspector = new ApkInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/multidex/app-exo.apk"));
+    apkInspector.assertFileDoesNotExist("lib/armeabi/libfakenative.so");
+    apkInspector.assertFileExists("assets/lib/armeabi/libfakenative.so");
+
+
+    // Now edit it again and make sure we re-run apkbuilder.
+    Thread.sleep(1500);
+
+    workspace.replaceFileContents(
+        "native/fakenative/jni/fakesystem.c", "exit(1+status)", "exit(2+status)");
+
+    workspace.resetBuildLogFile();
+    workspace.runBuckCommand("build", EXOPACKAGE_TARGET).assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    apkInspector = new ApkInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/multidex/app-exo.apk"));
+    apkInspector.assertFileDoesNotExist("lib/armeabi/libfakenative.so");
+    apkInspector.assertFileExists("assets/lib/armeabi/libfakenative.so");
   }
 
   @Test
