@@ -97,6 +97,7 @@ public class ExternalJavacIntegrationTest {
 
   @Test
   public void whenBuckdUsesExternalJavacThenClientEnvironmentUsed() throws IOException {
+    assumeTrue(Platform.detect() != Platform.LINUX);
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "external_javac", tmp);
     workspace.setUp();
