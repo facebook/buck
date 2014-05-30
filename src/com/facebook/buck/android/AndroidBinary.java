@@ -175,9 +175,8 @@ public class AndroidBinary extends AbstractBuildable implements
 
   // All the following fields are set in {@link #getEnhancedDeps(BuildRuleResolver)}.
   protected ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
-  protected AndroidResourceDepsFinder androidResourceDepsFinder;
+  protected AndroidPackageableCollection packageableCollection;
   private FilteredResourcesProvider filteredResourcesProvider;
-  private UberRDotJava uberRDotJava;
   private AaptPackageResources aaptPackageResources;
   private Optional<PackageStringAssets> packageStringAssets;
   private Optional<PreDexMerge> preDexMerge;
@@ -249,8 +248,6 @@ public class AndroidBinary extends AbstractBuildable implements
             .add(ruleResolver.get(keystore.getBuildTarget()))
             .build();
 
-    AndroidTransitiveDependencyGraph androidTransitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(getClasspathDeps());
     // Create the BuildRule and Buildable for UberRDotJava.
     boolean allowNonExistentRule =
           false;
@@ -275,14 +272,6 @@ public class AndroidBinary extends AbstractBuildable implements
               }
             })
         .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
-    androidResourceDepsFinder = new AndroidResourceDepsFinder(
-        androidTransitiveDependencyGraph,
-        rulesToExcludeFromDex) {
-      @Override
-      protected ImmutableList<HasAndroidResourceDeps> findMyAndroidResourceDeps() {
-        return UberRDotJavaUtil.getAndroidResourceDeps(enhancedDeps);
-      }
-    };
 
     boolean shouldPreDex = !disablePreDex &&
         PackageType.DEBUG.equals(packageType) &&
@@ -293,7 +282,6 @@ public class AndroidBinary extends AbstractBuildable implements
         ruleResolver,
         resourceCompressionMode,
         resourceFilter,
-        androidResourceDepsFinder,
         manifest,
         packageType,
         cpuFilters,
@@ -302,6 +290,7 @@ public class AndroidBinary extends AbstractBuildable implements
         primaryDexPath,
         dexSplitMode,
         buildTargetsToExcludeFromDex,
+        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         javacOptions,
         exopackage,
         keystore);
@@ -314,7 +303,7 @@ public class AndroidBinary extends AbstractBuildable implements
 
   protected void setGraphEnhancementResult(AndroidBinaryGraphEnhancer.EnhancementResult result) {
     filteredResourcesProvider = result.getFilteredResourcesProvider();
-    uberRDotJava = result.getUberRDotJava();
+    packageableCollection = result.getPackageableCollection();
     aaptPackageResources = result.getAaptPackageResources();
     packageStringAssets = result.getPackageStringAssets();
     preDexMerge = result.getPreDexMerge();
@@ -574,16 +563,10 @@ public class AndroidBinary extends AbstractBuildable implements
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies();
-
     // Create the .dex files if we aren't doing pre-dexing.
-    AndroidDexTransitiveDependencies dexTransitiveDependencies =
-        findDexTransitiveDependencies();
     Path signedApkPath = getSignedApkPath();
     DexFilesInfo dexFilesInfo = addFinalDxSteps(
         context,
-        transitiveDependencies,
-        dexTransitiveDependencies,
         filteredResourcesProvider.getResDirectories(),
         buildableContext,
         steps);
@@ -595,11 +578,11 @@ public class AndroidBinary extends AbstractBuildable implements
 
     // Copy the transitive closure of files in native_libs to a single directory, if any.
     ImmutableSet<Path> nativeLibraryDirectories;
-    if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
+    if (!packageableCollection.nativeLibsDirectories.isEmpty()) {
       Path pathForNativeLibs = getPathForNativeLibs();
       Path libSubdirectory = pathForNativeLibs.resolve("lib");
       steps.add(new MakeCleanDirectoryStep(libSubdirectory));
-      for (Path nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
+      for (Path nativeLibDir : packageableCollection.nativeLibsDirectories) {
         copyNativeLibrary(nativeLibDir, libSubdirectory, cpuFilters, steps);
       }
       nativeLibraryDirectories = ImmutableSet.of(libSubdirectory);
@@ -609,11 +592,11 @@ public class AndroidBinary extends AbstractBuildable implements
 
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
     ImmutableSet<Path> nativeLibraryAsAssetDirectories;
-    if (!transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+    if (!packageableCollection.nativeLibAssetsDirectories.isEmpty()) {
       Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
       Path libSubdirectory = pathForNativeLibsAsAssets.resolve("assets").resolve("lib");
       steps.add(new MakeCleanDirectoryStep(libSubdirectory));
-      for (Path nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
+      for (Path nativeLibDir : packageableCollection.nativeLibAssetsDirectories) {
         AndroidBinary.copyNativeLibrary(nativeLibDir, libSubdirectory, cpuFilters, steps);
       }
       nativeLibraryAsAssetDirectories = ImmutableSet.of(pathForNativeLibsAsAssets);
@@ -636,7 +619,7 @@ public class AndroidBinary extends AbstractBuildable implements
         nativeLibraryAsAssetDirectories,
         nativeLibraryDirectories,
         zipFiles.build(),
-        dexTransitiveDependencies.pathsToThirdPartyJars,
+        packageableCollection.pathsToThirdPartyJars,
         keystore.getPathToStore(),
         keystore.getPathToPropertiesFile(),
         /* debugMode */ false);
@@ -692,8 +675,6 @@ public class AndroidBinary extends AbstractBuildable implements
    */
   private DexFilesInfo addFinalDxSteps(
       BuildContext context,
-      final AndroidTransitiveDependencies transitiveDependencies,
-      final AndroidDexTransitiveDependencies dexTransitiveDependencies,
       ImmutableList<Path> resDirectories,
       BuildableContext buildableContext,
       ImmutableList.Builder<Step> steps) {
@@ -709,9 +690,9 @@ public class AndroidBinary extends AbstractBuildable implements
       steps.add(new MakeCleanDirectoryStep(preprocessJavaClassesOutDir));
       steps.add(new SymlinkFilesIntoDirectoryStep(
           context.getProjectRoot(),
-          dexTransitiveDependencies.classpathEntriesToDex,
+          packageableCollection.classpathEntriesToDex,
           preprocessJavaClassesInDir));
-      classpathEntriesToDex = FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
+      classpathEntriesToDex = FluentIterable.from(packageableCollection.classpathEntriesToDex)
           .transform(new Function<Path, Path>() {
             @Override
             public Path apply(Path classpathEntry) {
@@ -758,14 +739,14 @@ public class AndroidBinary extends AbstractBuildable implements
       });
 
     } else {
-      classpathEntriesToDex = dexTransitiveDependencies.classpathEntriesToDex;
+      classpathEntriesToDex = packageableCollection.classpathEntriesToDex;
     }
 
     // Execute proguard if desired (transforms input classpaths).
     if (packageType.isBuildWithObfuscation()) {
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
-          transitiveDependencies.proguardConfigs,
+          packageableCollection.proguardConfigs,
           steps,
           resDirectories,
           buildableContext);
@@ -797,7 +778,7 @@ public class AndroidBinary extends AbstractBuildable implements
 
       addDexingSteps(
           classpathEntriesToDex,
-          dexTransitiveDependencies.classNamesToHashesSupplier,
+          packageableCollection.classNamesToHashesSupplier,
           secondaryDexDirectoriesBuilder,
           steps,
           primaryDexPath);
@@ -823,12 +804,8 @@ public class AndroidBinary extends AbstractBuildable implements
     return new DexFilesInfo(primaryDexPath, secondaryDexZips.build());
   }
 
-  public AndroidTransitiveDependencies findTransitiveDependencies() {
-    return androidResourceDepsFinder.getAndroidTransitiveDependencies();
-  }
-
-  public AndroidDexTransitiveDependencies findDexTransitiveDependencies() {
-    return androidResourceDepsFinder.getAndroidDexTransitiveDependencies(uberRDotJava);
+  public AndroidPackageableCollection getAndroidPackageableCollection() {
+    return packageableCollection;
   }
 
   /**

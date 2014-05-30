@@ -92,6 +92,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
     return new NdkLibrary(
         params.getBuildTarget(),
+        params.getDeps(),
         srcs.build(),
         args.flags.get(),
         args.isAsset.or(false),

@@ -16,10 +16,11 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.model.HasBuildTarget;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 
-public interface HasJavaClassHashes {
+public interface HasJavaClassHashes extends HasBuildTarget {
 
   /**
    * @return a (possibly empty) map of names of {@code .class} files in the output of this rule

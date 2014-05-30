@@ -107,10 +107,11 @@ public class AndroidInstrumentationApkTest {
         javaLibrary2,
         javaLibrary4);
     AndroidInstrumentationApk androidInstrumentationApk = new AndroidInstrumentationApk(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//apps", "instrumentation")).build(),
+        new FakeBuildRuleParamsBuilder(new BuildTarget("//apps", "instrumentation"))
+            .setDeps(apkOriginalDeps)
+            .build(),
         new TestSourcePath("apps/InstrumentationAndroidManifest.xml"),
         androidBinary,
-        androidBinaryRule,
         apkOriginalDeps);
     androidInstrumentationApk.getEnhancedDeps(
         ruleResolver,
@@ -123,10 +124,10 @@ public class AndroidInstrumentationApkTest {
             Paths.get("buck-out/gen/java/com/example/lib1.jar"),
             Paths.get("buck-out/gen/java/com/example/lib2.jar"),
             Paths.get("buck-out/gen/java/com/example/lib3.jar")),
-        androidBinary.findDexTransitiveDependencies().classpathEntriesToDex);
+        androidBinary.getAndroidPackageableCollection().classpathEntriesToDex);
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
         ImmutableSet.of(Paths.get("buck-out/gen/java/com/example/lib4.jar")),
-        androidInstrumentationApk.findDexTransitiveDependencies().classpathEntriesToDex);
+        androidInstrumentationApk.getAndroidPackageableCollection().classpathEntriesToDex);
   }
 }

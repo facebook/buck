@@ -21,8 +21,8 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.android.AndroidBinary;
-import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibrary;
+import com.facebook.buck.android.AndroidPackageableCollection;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaBinary;
@@ -361,9 +361,9 @@ public class Project {
         Buildable buildable = srcRule.getBuildable();
         if (buildable instanceof AndroidBinary) {
           AndroidBinary androidBinary = (AndroidBinary) buildable;
-          AndroidDexTransitiveDependencies binaryDexTransitiveDependencies =
-              androidBinary.findDexTransitiveDependencies();
-          noDxJarsBuilder.addAll(binaryDexTransitiveDependencies.noDxClasspathEntries);
+          AndroidPackageableCollection packageableCollection =
+              androidBinary.getAndroidPackageableCollection();
+          noDxJarsBuilder.addAll(packageableCollection.noDxClasspathEntries);
         }
       }
 
@@ -730,10 +730,10 @@ public class Project {
       Set<Path> classpathEntriesToDex;
       if (module.srcRule.getBuildable() instanceof AndroidBinary) {
         AndroidBinary androidBinary = (AndroidBinary) module.srcRule.getBuildable();
-        AndroidDexTransitiveDependencies dexTransitiveDependencies =
-            androidBinary.findDexTransitiveDependencies();
+        AndroidPackageableCollection packageableCollection =
+            androidBinary.getAndroidPackageableCollection();
         classpathEntriesToDex = Sets.newHashSet(Sets.intersection(noDxJars,
-            dexTransitiveDependencies.classpathEntriesToDex));
+            packageableCollection.classpathEntriesToDex));
       } else {
         classpathEntriesToDex = ImmutableSet.of();
       }

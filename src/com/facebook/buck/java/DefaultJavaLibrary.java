@@ -19,6 +19,8 @@ package com.facebook.buck.java;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
@@ -105,7 +107,7 @@ import javax.annotation.Nullable;
  */
 public class DefaultJavaLibrary extends AbstractBuildable
     implements JavaLibrary, AbiRule, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibrary.Data> {
+    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -798,5 +800,20 @@ public class DefaultJavaLibrary extends AbstractBuildable
   @Nullable
   public Path getPathToOutputFile() {
     return outputJar.orNull();
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(deps);
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    if (outputJar.isPresent()) {
+      collector.addClasspathEntry(this, outputJar.get());
+    }
+    if (proguardConfig.isPresent()) {
+      collector.addProguardConfig(target, proguardConfig.get());
+    }
   }
 }

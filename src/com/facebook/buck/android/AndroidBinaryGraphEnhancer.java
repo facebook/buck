@@ -16,13 +16,12 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.UnsortedAndroidResourceDeps.Callback;
+import static com.facebook.buck.android.AndroidPackageableCollection.ResourceDetails;
 
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
-import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
@@ -39,9 +38,11 @@ import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -64,7 +65,6 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildRuleResolver ruleResolver;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ResourceFilter resourceFilter;
-  private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final SourcePath manifest;
   private final PackageType packageType;
   private final ImmutableSet<TargetCpuType> cpuFilters;
@@ -72,7 +72,8 @@ public class AndroidBinaryGraphEnhancer {
   private final boolean shouldPreDex;
   private final Path primaryDexPath;
   private final DexSplitMode dexSplitMode;
-  private final ImmutableSet<BuildTarget> buildRulesToExcludeFromDex;
+  private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
+  private final ImmutableSet<BuildTarget> resourcesToExclude;
   private final JavacOptions javacOptions;
   private final boolean exopackage;
   private final Keystore keystore;
@@ -82,7 +83,6 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleResolver ruleResolver,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourcesFilter,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
       SourcePath manifest,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters,
@@ -90,7 +90,8 @@ public class AndroidBinaryGraphEnhancer {
       boolean shouldPreDex,
       Path primaryDexPath,
       DexSplitMode dexSplitMode,
-      ImmutableSet<BuildTarget> buildRulesToExcludeFromDex,
+      ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
+      ImmutableSet<BuildTarget> resourcesToExclude,
       JavacOptions javacOptions,
       boolean exopackage,
       Keystore keystore) {
@@ -100,7 +101,6 @@ public class AndroidBinaryGraphEnhancer {
     this.ruleResolver = Preconditions.checkNotNull(ruleResolver);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.resourceFilter = Preconditions.checkNotNull(resourcesFilter);
-    this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.packageType = Preconditions.checkNotNull(packageType);
     this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
@@ -108,7 +108,8 @@ public class AndroidBinaryGraphEnhancer {
     this.shouldPreDex = shouldPreDex;
     this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
-    this.buildRulesToExcludeFromDex = Preconditions.checkNotNull(buildRulesToExcludeFromDex);
+    this.buildTargetsToExcludeFromDex = Preconditions.checkNotNull(buildTargetsToExcludeFromDex);
+    this.resourcesToExclude = Preconditions.checkNotNull(resourcesToExclude);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.exopackage = exopackage;
     this.keystore = Preconditions.checkNotNull(keystore);
@@ -118,11 +119,14 @@ public class AndroidBinaryGraphEnhancer {
     ImmutableSortedSet.Builder<BuildRule> enhancedDeps = ImmutableSortedSet.naturalOrder();
     enhancedDeps.addAll(originalDeps);
 
-    UnsortedAndroidResourceDeps androidResourceDepsForEnhancement =
-        UnsortedAndroidResourceDeps.createFrom(originalDeps,  Optional.<Callback>absent());
+    AndroidPackageableCollector collector =
+        new AndroidPackageableCollector(buildTargetsToExcludeFromDex, resourcesToExclude);
+    collector.addPackageables(AndroidPackageableCollector.getPackageableRules(originalDeps));
+    AndroidPackageableCollection packageableCollection = collector.build();
+    ResourceDetails resourceDetails = packageableCollection.resourceDetails;
 
     ImmutableSortedSet<BuildRule> resourceRules =
-        getAndroidResourcesAsRules(androidResourceDepsForEnhancement);
+        getTargetsAsRules(resourceDetails.resourcesWithNonEmptyResDir);
 
     BuildTarget buildTargetForFilterResources =
         createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR);
@@ -133,7 +137,8 @@ public class AndroidBinaryGraphEnhancer {
     if (needsResourceFiltering) {
       ResourcesFilter resourcesFilter = new ResourcesFilter(
           buildTargetForFilterResources,
-          androidResourceDepsFinder,
+          resourceDetails.resourceDirectories,
+          resourceDetails.whitelistedStringDirectories,
           resourceCompressionMode,
           resourceFilter);
       BuildRule resourcesFilterBuildRule = buildRuleAndAddToIndex(
@@ -146,15 +151,17 @@ public class AndroidBinaryGraphEnhancer {
       enhancedDeps.add(resourcesFilterBuildRule);
       resourceRules = ImmutableSortedSet.of(resourcesFilterBuildRule);
     } else {
-      filteredResourcesProvider = new IdentityResourcesProvider(androidResourceDepsFinder);
+      filteredResourcesProvider =
+          new IdentityResourcesProvider(resourceDetails.resourceDirectories);
     }
 
     BuildTarget buildTargetForUberRDotJava = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
     UberRDotJava uberRDotJava = new UberRDotJava(
         buildTargetForUberRDotJava,
         filteredResourcesProvider,
+        getTargetsAsResourceDeps(resourceDetails.resourcesWithNonEmptyResDir),
+        resourceDetails.rDotJavaPackages,
         javacOptions,
-        androidResourceDepsFinder,
         shouldPreDex,
         shouldBuildStringSourceMap);
     BuildRule uberRDotJavaBuildRule = buildRuleAndAddToIndex(
@@ -163,6 +170,14 @@ public class AndroidBinaryGraphEnhancer {
         buildTargetForUberRDotJava,
         resourceRules);
     enhancedDeps.add(uberRDotJavaBuildRule);
+
+    // TODO(natthu): Try to avoid re-building the collection by passing UberRDotJava directly.
+    if (!packageableCollection.resourceDetails.rDotJavaPackages.isEmpty()) {
+      collector.addClasspathEntry(
+          uberRDotJava,
+          uberRDotJava.getPathToCompiledRDotJavaFiles());
+    }
+    packageableCollection = collector.build();
 
     Optional<PackageStringAssets> packageStringAssets = Optional.absent();
     if (resourceCompressionMode.isStoreStringsAsAssets()) {
@@ -187,19 +202,19 @@ public class AndroidBinaryGraphEnhancer {
         buildTargetForAapt,
         manifest,
         filteredResourcesProvider,
-        androidResourceDepsFinder.getAndroidTransitiveDependencies().assetsDirectories,
+        packageableCollection.assetsDirectories,
         packageType,
         cpuFilters);
     BuildRule aaptPackageResourcesBuildRule = buildRuleAndAddToIndex(
         aaptPackageResources,
         BuildRuleType.AAPT_PACKAGE,
         buildTargetForAapt,
-        getAdditionalAaptDeps(resourceRules, androidResourceDepsForEnhancement));
+        getAdditionalAaptDeps(resourceRules, packageableCollection));
     enhancedDeps.add(aaptPackageResourcesBuildRule);
 
     Optional<PreDexMerge> preDexMerge = Optional.absent();
     if (shouldPreDex) {
-      BuildRule preDexMergeRule = createPreDexMergeRule(uberRDotJava);
+      BuildRule preDexMergeRule = createPreDexMergeRule(uberRDotJava, packageableCollection);
       preDexMerge = Optional.of((PreDexMerge) preDexMergeRule.getBuildable());
       enhancedDeps.add(preDexMergeRule);
     }
@@ -211,8 +226,7 @@ public class AndroidBinaryGraphEnhancer {
       computeExopackageDepsAbi = Optional.of(
           new ComputeExopackageDepsAbi(
               buildTargetForAbiCalculation,
-              androidResourceDepsFinder,
-              uberRDotJava,
+              packageableCollection,
               aaptPackageResources,
               packageStringAssets,
               preDexMerge,
@@ -229,7 +243,7 @@ public class AndroidBinaryGraphEnhancer {
 
     return new EnhancementResult(
         filteredResourcesProvider,
-        uberRDotJava,
+        packageableCollection,
         aaptPackageResources,
         packageStringAssets,
         preDexMerge,
@@ -244,19 +258,29 @@ public class AndroidBinaryGraphEnhancer {
    * This method may modify {@code ruleResolver}, inserting new rules into its index.
    */
   @VisibleForTesting
-  BuildRule createPreDexMergeRule(UberRDotJava uberRDotJava) {
+  BuildRule createPreDexMergeRule(
+      UberRDotJava uberRDotJava,
+      AndroidPackageableCollection packageableCollection) {
     ImmutableSet.Builder<DexProducedFromJavaLibrary> preDexDeps = ImmutableSet.builder();
-    ImmutableSet<JavaLibrary> transitiveJavaDeps = Classpaths
-        .getClasspathEntries(originalDeps).keySet();
-    for (JavaLibrary javaLibrary : transitiveJavaDeps) {
-      // If the rule has no output file (which happens when a java_library has no srcs or
-      // resources, but export_deps is true), then there will not be anything to dx.
-      if (javaLibrary.getPathToOutputFile() == null) {
+    for (BuildTarget buildTarget : packageableCollection.javaLibrariesToDex) {
+      Preconditions.checkState(
+          !buildTargetsToExcludeFromDex.contains(buildTarget),
+          "JavaLibrary should have been excluded from target to dex: %s", buildTarget);
+
+      BuildRule libraryRule = ruleResolver.get(buildTarget);
+      Preconditions.checkNotNull(libraryRule);
+
+      // Skip uber R.java since UberRDotJava takes care of dexing.
+      if (libraryRule.getBuildable() == uberRDotJava) {
         continue;
       }
 
-      // If the rule is in the no_dx list, then do not pre-dex it.
-      if (buildRulesToExcludeFromDex.contains(javaLibrary.getBuildTarget())) {
+      Preconditions.checkState(libraryRule.getBuildable() instanceof JavaLibrary);
+      JavaLibrary javaLibrary = (JavaLibrary) libraryRule.getBuildable();
+
+      // If the rule has no output file (which happens when a java_library has no srcs or
+      // resources, but export_deps is true), then there will not be anything to dx.
+      if (javaLibrary.getPathToOutputFile() == null) {
         continue;
       }
 
@@ -302,7 +326,7 @@ public class AndroidBinaryGraphEnhancer {
 
   static class EnhancementResult {
     private final FilteredResourcesProvider filteredResourcesProvider;
-    private final UberRDotJava uberRDotJava;
+    private final AndroidPackageableCollection packageableCollection;
     private final AaptPackageResources aaptPackageResources;
     private final Optional<PackageStringAssets> packageStringAssets;
     private final Optional<PreDexMerge> preDexMerge;
@@ -311,14 +335,14 @@ public class AndroidBinaryGraphEnhancer {
 
     public EnhancementResult(
         FilteredResourcesProvider filteredResourcesProvider,
-        UberRDotJava uberRDotJava,
+        AndroidPackageableCollection packageableCollection,
         AaptPackageResources aaptPackageBuildable,
         Optional<PackageStringAssets> packageStringAssets,
         Optional<PreDexMerge> preDexMerge,
         Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
         ImmutableSortedSet<BuildRule> finalDeps) {
       this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
-      this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
+      this.packageableCollection = Preconditions.checkNotNull(packageableCollection);
       this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageBuildable);
       this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);
       this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
@@ -328,10 +352,6 @@ public class AndroidBinaryGraphEnhancer {
 
     public FilteredResourcesProvider getFilteredResourcesProvider() {
       return filteredResourcesProvider;
-    }
-
-    public UberRDotJava getUberRDotJava() {
-      return uberRDotJava;
     }
 
     public AaptPackageResources getAaptPackageResources() {
@@ -353,6 +373,10 @@ public class AndroidBinaryGraphEnhancer {
     public Optional<PackageStringAssets> getPackageStringAssets() {
       return packageStringAssets;
     }
+
+    public AndroidPackageableCollection getPackageableCollection() {
+      return packageableCollection;
+    }
   }
 
   private BuildTarget createBuildTargetWithFlavor(Flavor flavor) {
@@ -361,21 +385,13 @@ public class AndroidBinaryGraphEnhancer {
         flavor);
   }
 
-  private ImmutableSortedSet<BuildRule> getAndroidResourcesAsRules(
-      UnsortedAndroidResourceDeps unsortedAndroidResourceDeps) {
-    return getTargetsAsRules(
-        FluentIterable.from(unsortedAndroidResourceDeps.getResourceDeps())
-            .transform(HasBuildTarget.TO_TARGET)
-            .toList());
-  }
-
   private ImmutableSortedSet<BuildRule> getAdditionalAaptDeps(
       ImmutableSortedSet<BuildRule> resourceRules,
-      UnsortedAndroidResourceDeps unsortedAndroidResourceDeps) {
+      AndroidPackageableCollection packageableCollection) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(resourceRules)
-        .addAll(getTargetsAsRules(
-                FluentIterable.from(unsortedAndroidResourceDeps.getAssetOnlyDeps())
+        .addAll(getTargetsAsRules(FluentIterable.from(
+                    packageableCollection.resourceDetails.resourcesWithEmptyResButNonEmptyAssetsDir)
                     .transform(HasBuildTarget.TO_TARGET)
                     .toList()));
     if (manifest instanceof BuildRuleSourcePath) {
@@ -401,6 +417,20 @@ public class AndroidBinaryGraphEnhancer {
         ruleResolver,
         buildTargets,
         /* allowNonExistentRules */ false);
+  }
+
+  private ImmutableList<HasAndroidResourceDeps> getTargetsAsResourceDeps(
+      Collection<BuildTarget> targets) {
+    return FluentIterable.from(getTargetsAsRules(targets))
+        .transform(BuildRules.TO_BUILDABLE)
+        .transform(new Function<Buildable, HasAndroidResourceDeps>() {
+                     @Override
+                     public HasAndroidResourceDeps apply(Buildable input) {
+                       Preconditions.checkState(input instanceof HasAndroidResourceDeps);
+                       return (HasAndroidResourceDeps) input;
+                     }
+                   })
+        .toList();
   }
 
   private BuildRule buildRuleAndAddToIndex(

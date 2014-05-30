@@ -80,8 +80,9 @@ public class UberRDotJava extends AbstractBuildable implements
       DxStep.Option.NO_OPTIMIZE);
 
   private final FilteredResourcesProvider filteredResourcesProvider;
+  private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
+  private final ImmutableSet<String> rDotJavaPackages;
   private final JavacOptions javacOptions;
-  private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final boolean rDotJavaNeedsDexing;
   private final boolean shouldBuildStringSourceMap;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -89,14 +90,16 @@ public class UberRDotJava extends AbstractBuildable implements
   UberRDotJava(
       BuildTarget buildTarget,
       FilteredResourcesProvider filteredResourcesProvider,
+      ImmutableList<HasAndroidResourceDeps> resourceDeps,
+      ImmutableSet<String> rDotJavaPackages,
       JavacOptions javacOptions,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap) {
     super(buildTarget);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
+    this.resourceDeps = Preconditions.checkNotNull(resourceDeps);
+    this.rDotJavaPackages = Preconditions.checkNotNull(rDotJavaPackages);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
-    this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -167,9 +170,6 @@ public class UberRDotJava extends AbstractBuildable implements
   ) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    AndroidResourceDetails androidResourceDetails =
-        androidResourceDepsFinder.getAndroidResourceDetails();
-    ImmutableSet<String> rDotJavaPackages = androidResourceDetails.rDotJavaPackages;
     ImmutableList<Path> resDirectories = filteredResourcesProvider.getResDirectories();
 
     if (!resDirectories.isEmpty()) {
@@ -232,7 +232,7 @@ public class UberRDotJava extends AbstractBuildable implements
 
   @Override
   public Sha1HashCode getAbiKeyForDeps() {
-    return HasAndroidResourceDeps.ABI_HASHER.apply(androidResourceDepsFinder.getAndroidResources());
+    return HasAndroidResourceDeps.ABI_HASHER.apply(resourceDeps);
   }
 
   public static class BuildOutput {

@@ -54,8 +54,7 @@ public class ComputeExopackageDepsAbi
     implements InitializableFromDisk<BuildOutput> {
   private static final String METADATA_KEY = "EXOPACKAGE_ABI_OF_DEPS";
 
-  private final AndroidResourceDepsFinder androidResourceDepsFinder;
-  private final UberRDotJava uberRDotJava;
+  private final AndroidPackageableCollection packageableCollection;
   private final AaptPackageResources aaptPackageResources;
   private final Optional<PackageStringAssets> packageStringAssets;
   private final Optional<PreDexMerge> preDexMerge;
@@ -64,15 +63,13 @@ public class ComputeExopackageDepsAbi
 
   public ComputeExopackageDepsAbi(
       BuildTarget buildTarget,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
-      UberRDotJava uberRDotJava,
+      AndroidPackageableCollection packageableCollection,
       AaptPackageResources aaptPackageResources,
       Optional<PackageStringAssets> packageStringAssets,
       Optional<PreDexMerge> preDexMerge,
       Keystore keystore) {
     super(buildTarget);
-    this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
-    this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
+    this.packageableCollection = Preconditions.checkNotNull(packageableCollection);
     this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);
     this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
@@ -94,11 +91,6 @@ public class ComputeExopackageDepsAbi
           public int execute(ExecutionContext context) {
             try {
               ProjectFilesystem filesystem = context.getProjectFilesystem();
-
-              AndroidTransitiveDependencies transitiveDependencies =
-                  androidResourceDepsFinder.getAndroidTransitiveDependencies();
-              AndroidDexTransitiveDependencies dexTransitiveDependencies =
-                  androidResourceDepsFinder.getAndroidDexTransitiveDependencies(uberRDotJava);
 
               // For exopackages, the only significant thing android_binary does is apkbuilder,
               // so we need to include all of the apkbuilder inputs in the ABI key.
@@ -128,21 +120,21 @@ public class ComputeExopackageDepsAbi
               // AndroidTransitiveDependencies doesn't provide BuildRules, only paths.
               // We could augment it, but our current native libraries are small enough that
               // we can just hash them all without too much of a perf hit.
-              for (final Path libDir : transitiveDependencies.nativeLibsDirectories) {
+              for (final Path libDir : packageableCollection.nativeLibsDirectories) {
                 for (Path nativeFile : filesystem.getFilesUnderPath(libDir)) {
                   filesToHash.put(nativeFile, "native_lib");
                 }
               }
 
               // Same deal for native libs as assets.
-              for (final Path libDir : transitiveDependencies.nativeLibAssetsDirectories) {
+              for (final Path libDir : packageableCollection.nativeLibAssetsDirectories) {
                 for (Path nativeFile : filesystem.getFilesUnderPath(libDir)) {
                   filesToHash.put(nativeFile, "native_lib_as_asset");
                 }
               }
 
               // Resources get copied from third-party JARs, so hash them.
-              for (Path jar : dexTransitiveDependencies.pathsToThirdPartyJars) {
+              for (Path jar : packageableCollection.pathsToThirdPartyJars) {
                 filesToHash.put(jar, "third-party jar");
               }
 

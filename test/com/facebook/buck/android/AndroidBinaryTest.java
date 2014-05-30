@@ -106,17 +106,15 @@ public class AndroidBinaryTest {
     AndroidBinary androidBinary = (AndroidBinary) androidBinaryRule.getBuildable();
     androidBinary.getEnhancedDeps(ruleResolver, originalDeps, ImmutableSortedSet.of(keystoreRule));
 
-    AndroidTransitiveDependencies transitiveDependencies =
-        androidBinary.findTransitiveDependencies();
-    AndroidDexTransitiveDependencies dexTransitiveDependencies =
-        androidBinary.findDexTransitiveDependencies();
+    AndroidPackageableCollection packageableCollection =
+        androidBinary.getAndroidPackageableCollection();
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     androidBinary.addProguardCommands(
-        dexTransitiveDependencies.classpathEntriesToDex,
-        transitiveDependencies.proguardConfigs,
+        packageableCollection.classpathEntriesToDex,
+        packageableCollection.proguardConfigs,
         commands,
         ImmutableList.<Path>of(),
         buildableContext);

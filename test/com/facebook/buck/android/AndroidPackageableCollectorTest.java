@@ -28,6 +28,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -35,7 +37,7 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 
-public class AndroidTransitiveDependencyGraphTest {
+public class AndroidPackageableCollectorTest {
 
   /**
    * This is a regression test to ensure that an additional 1 second startup cost is not
@@ -76,6 +78,8 @@ public class AndroidTransitiveDependencyGraphTest {
 
     BuildRule libraryRule = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook:example"))
+        .setProguardConfig(Paths.get("debug.pro"))
+        .addSrc(Paths.get("Example.java"))
         .addDep(guavaRule)
         .addDep(jsr305Rule)
         .addDep(prebuiltNativeLibraryBuild)
@@ -109,13 +113,15 @@ public class AndroidTransitiveDependencyGraphTest {
     binaryRule.getEnhancedDeps(ruleResolver, originalDeps, ImmutableSortedSet.of(keystore));
 
     // Verify that the correct transitive dependencies are found.
-    AndroidTransitiveDependencies transitiveDeps = binaryRule.findTransitiveDependencies();
-    AndroidDexTransitiveDependencies dexTransitiveDeps =
-        binaryRule.findDexTransitiveDependencies();
+    AndroidPackageableCollection packageableCollection =
+        binaryRule.getAndroidPackageableCollection();
     assertEquals(
         "Because guava was passed to no_dx, it should not be in the classpathEntriesToDex list",
-        ImmutableSet.of(Paths.get("third_party/jsr-305/jsr305.jar")),
-        dexTransitiveDeps.classpathEntriesToDex);
+        ImmutableSet.of(
+            Paths.get("third_party/jsr-305/jsr305.jar"),
+            BuckConstant.GEN_PATH.resolve(
+                "java/src/com/facebook/lib__example__output/example.jar")),
+        packageableCollection.classpathEntriesToDex);
     assertEquals(
         "Because guava was passed to no_dx, it should not be treated as a third-party JAR whose " +
             "resources need to be extracted and repacked in the APK. If this is done, then code " +
@@ -126,28 +132,130 @@ public class AndroidTransitiveDependencyGraphTest {
             "the resource in fb4a. Because the resource was loaded on startup, this introduced a " +
             "substantial regression in the startup time for the fb4a app.",
         ImmutableSet.of(Paths.get("third_party/jsr-305/jsr305.jar")),
-        dexTransitiveDeps.pathsToThirdPartyJars);
+        packageableCollection.pathsToThirdPartyJars);
     assertEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
         ImmutableSet.of(Paths.get("assets")),
-        transitiveDeps.assetsDirectories);
+        packageableCollection.assetsDirectories);
     assertEquals(
         "Because manifest file was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
         ImmutableSet.of(Paths.get("java/src/com/facebook/module/AndroidManifest.xml")),
-        transitiveDeps.manifestFiles);
+        packageableCollection.manifestFiles);
     assertEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
             "transitive dependencies.",
         ImmutableSet.of(((NativeLibraryBuildable) ndkLibrary.getBuildable()).getLibraryPath()),
-        transitiveDeps.nativeLibsDirectories);
+        packageableCollection.nativeLibsDirectories);
     assertEquals(
         "Because a prebuilt native library  was declared as a dependency (and asset), it should " +
             "be added to the transitive dependecies.",
         ImmutableSet.of(((NativeLibraryBuildable) prebuiltNativeLibraryBuild.getBuildable())
             .getLibraryPath()),
-        transitiveDeps.nativeLibAssetsDirectories);
+        packageableCollection.nativeLibAssetsDirectories);
+    assertEquals(
+        ImmutableSet.of(Paths.get("debug.pro")),
+        packageableCollection.proguardConfigs);
+  }
+
+  /**
+   * Create the following dependency graph of {@link AndroidResource}s:
+   * <pre>
+   *    A
+   *  / | \
+   * B  |  D
+   *  \ | /
+   *    C
+   * </pre>
+   * Note that an ordinary breadth-first traversal would yield either {@code A B C D} or
+   * {@code A D C B}. However, either of these would be <em>wrong</em> in this case because we need
+   * to be sure that we perform a topological sort, the resulting traversal of which is either
+   * {@code A B D C} or {@code A D B C}.
+   * <p>
+   * The reason for the correct result being reversed is because we want the resources with the most
+   * dependencies listed first on the path, so that they're used in preference to the ones that they
+   * depend on (presumably, the reason for extending the initial set of resources was to override
+   * values).
+   */
+  @Test
+  public void testGetAndroidResourceDeps() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRule c = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
+            .setRes(Paths.get("res_c"))
+            .setRDotJavaPackage("com.facebook")
+            .build());
+
+    BuildRule b = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
+            .setRes(Paths.get("res_b"))
+            .setRDotJavaPackage("com.facebook")
+            .setDeps(ImmutableSortedSet.of(c))
+            .build());
+
+    BuildRule d = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
+            .setRes(Paths.get("res_d"))
+            .setRDotJavaPackage("com.facebook")
+            .setDeps(ImmutableSortedSet.of(c))
+            .build());
+
+    BuildRule a = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
+            .setRes(Paths.get("res_a"))
+            .setRDotJavaPackage("com.facebook")
+            .setDeps(ImmutableSortedSet.of(b, c, d))
+            .build());
+
+    AndroidPackageableCollector collector = new AndroidPackageableCollector();
+    collector.addPackageables(ImmutableList.of(((AndroidPackageable) a.getBuildable())));
+
+    // Note that a topological sort for a DAG is not guaranteed to be unique, but we order nodes
+    // within the same depth of the search.
+    ImmutableList<BuildTarget> result = FluentIterable.from(ImmutableList.of(a, d, b, c))
+        .transform(BuildTarget.TO_TARGET)
+        .toList();
+
+    assertEquals(
+        String.format("Android resources should be topologically sorted."),
+        result,
+        collector.build().resourceDetails.resourcesWithNonEmptyResDir);
+
+    // Introduce an AndroidBinaryRule that depends on A and C and verify that the same topological
+    // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
+    // right thing when it gets a non-AndroidResourceRule as well as an AndroidResourceRule.
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
+    BuildRule keystore = KeystoreBuilder.createBuilder(keystoreTarget)
+        .setStore(Paths.get("keystore/debug.keystore"))
+        .setProperties(Paths.get("keystore/debug.keystore.properties"))
+        .build(ruleResolver);
+
+    ImmutableSortedSet<BuildRule> declaredDeps = ImmutableSortedSet.of(a, c);
+    BuildRule e = AndroidBinaryBuilder.newBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
+        .setManifest(new TestSourcePath("AndroidManfiest.xml"))
+        .setTarget("Google Inc.:Google APIs:16")
+        .setKeystore((Keystore) keystore.getBuildable())
+        .setOriginalDeps(declaredDeps)
+        .build(ruleResolver);
+    AndroidBinary androidBinary = ((AndroidBinary) e.getBuildable());
+    androidBinary.getEnhancedDeps(
+        ruleResolver,
+        declaredDeps,
+        ImmutableSortedSet.of(keystore));
+
+    assertEquals(
+        String.format("Android resources should be topologically sorted."),
+        result,
+        androidBinary
+            .getAndroidPackageableCollection()
+            .resourceDetails
+            .resourcesWithNonEmptyResDir);
   }
 
   /**
@@ -190,12 +298,12 @@ public class AndroidTransitiveDependencyGraphTest {
         originalDeps,
         ImmutableSortedSet.of(keystore));
 
-    AndroidDexTransitiveDependencies androidTransitiveDeps = androidBinary
-        .findDexTransitiveDependencies();
+    AndroidPackageableCollection packageableCollection =
+        androidBinary.getAndroidPackageableCollection();
     assertEquals(
         "Classpath entries should include facebook/base but not keystore/base.",
         ImmutableSet.of(
             BuckConstant.GEN_PATH.resolve("java/com/facebook/base/lib__base__output/base.jar")),
-        androidTransitiveDeps.classpathEntriesToDex);
+        packageableCollection.classpathEntriesToDex);
   }
 }

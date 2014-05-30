@@ -17,30 +17,23 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.android.AndroidResource.BuildOutput;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.java.Keystore;
-import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.FileHashCache;
-import com.google.common.base.Function;
 import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -119,11 +112,12 @@ public class AndroidResourceTest {
         .buildAsBuildable();
 
     String commonHash = Strings.repeat("a", 40);
-    FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
-        "java/src/com/facebook/base/res/drawable/A.xml", commonHash,
-        "java/src/com/facebook/base/assets/drawable/B.xml", Strings.repeat("b", 40),
-        "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
-        "java/src/com/facebook/base/AndroidManifest.xml", Strings.repeat("d", 40)));
+    FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.of(
+            "java/src/com/facebook/base/res/drawable/A.xml", commonHash,
+            "java/src/com/facebook/base/assets/drawable/B.xml", Strings.repeat("b", 40),
+            "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
+            "java/src/com/facebook/base/AndroidManifest.xml", Strings.repeat("d", 40)));
 
     RuleKey ruleKey1 =
         getRuleKeyWithoutDepsFromResource(buildTarget, androidResource1, fakeFileHashCache);
@@ -144,104 +138,6 @@ public class AndroidResourceTest {
         resource,
         new FakeBuildRuleParamsBuilder(buildTarget).setFileHashCache(fileHashCache).build());
     return rule.getRuleKeyWithoutDeps();
-  }
-  /**
-   * Create the following dependency graph of {@link AndroidResource}s:
-   * <pre>
-   *    A
-   *  / | \
-   * B  |  D
-   *  \ | /
-   *    C
-   * </pre>
-   * Note that an ordinary breadth-first traversal would yield either {@code A B C D} or
-   * {@code A D C B}. However, either of these would be <em>wrong</em> in this case because we need
-   * to be sure that we perform a topological sort, the resulting traversal of which is either
-   * {@code A B D C} or {@code A D B C}.
-   * <p>
-   * The reason for the correct result being reversed is because we want the resources with the most
-   * dependencies listed first on the path, so that they're used in preference to the ones that they
-   * depend on (presumably, the reason for extending the initial set of resources was to override
-   * values).
-   */
-  @Test
-  public void testGetAndroidResourceDeps() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    BuildRule c = ruleResolver.addToIndex(
-        AndroidResourceRuleBuilder.newBuilder()
-            .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
-            .setRes(Paths.get("res_c"))
-            .setRDotJavaPackage("com.facebook")
-            .build());
-
-    BuildRule b = ruleResolver.addToIndex(
-        AndroidResourceRuleBuilder.newBuilder()
-            .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
-            .setRes(Paths.get("res_b"))
-            .setRDotJavaPackage("com.facebook")
-            .setDeps(ImmutableSortedSet.of(c))
-            .build());
-
-    BuildRule d = ruleResolver.addToIndex(
-        AndroidResourceRuleBuilder.newBuilder()
-            .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
-            .setRes(Paths.get("res_d"))
-            .setRDotJavaPackage("com.facebook")
-            .setDeps(ImmutableSortedSet.of(c))
-            .build());
-
-    BuildRule a = ruleResolver.addToIndex(
-        AndroidResourceRuleBuilder.newBuilder()
-            .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
-            .setRes(Paths.get("res_a"))
-            .setRDotJavaPackage("com.facebook")
-            .setDeps(ImmutableSortedSet.of(b, c, d))
-            .build());
-
-    ImmutableList<HasAndroidResourceDeps> deps = UberRDotJavaUtil.getAndroidResourceDeps(a);
-
-    Function<BuildRule, Buildable> ruleToBuildable = new Function<BuildRule, Buildable>() {
-      @Override
-      public Buildable apply(BuildRule input) {
-        return input.getBuildable();
-      }
-    };
-    // Note that a topological sort for a DAG is not guaranteed to be unique, but we order nodes
-    // within the same depth of the search.
-    ImmutableList<Buildable> result = FluentIterable.from(ImmutableList.of(a, d, b, c))
-        .transform(ruleToBuildable)
-        .toList();
-
-    assertEquals(
-        String.format("Topological sort %s should be %s", deps, result),
-        deps, result);
-
-    // Introduce an AndroidBinaryRule that depends on A and C and verify that the same topological
-    // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
-    // right thing when it gets a non-AndroidResourceRule as well as an AndroidResourceRule.
-    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    BuildRule keystore = KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(Paths.get("keystore/debug.keystore"))
-        .setProperties(Paths.get("keystore/debug.keystore.properties"))
-        .build(ruleResolver);
-
-    ImmutableSortedSet<BuildRule> declaredDeps = ImmutableSortedSet.of(a, c);
-    BuildRule e = AndroidBinaryBuilder.newBuilder()
-            .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
-            .setManifest(new TestSourcePath("AndroidManfiest.xml"))
-            .setTarget("Google Inc.:Google APIs:16")
-            .setKeystore((Keystore) keystore.getBuildable())
-            .setOriginalDeps(declaredDeps)
-            .build(ruleResolver);
-    ((AndroidBinary) e.getBuildable()).getEnhancedDeps(
-        ruleResolver,
-        declaredDeps,
-        ImmutableSortedSet.of(keystore));
-
-    ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(a);
-    assertEquals(
-        String.format("Topological sort %s should be %s", deps, result),
-        deps2, result);
   }
 
   @Test

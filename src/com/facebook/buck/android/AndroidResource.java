@@ -69,7 +69,8 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class AndroidResource extends AbstractBuildable
-    implements AbiRule, HasAndroidResourceDeps, InitializableFromDisk<AndroidResource.BuildOutput> {
+    implements AbiRule, HasAndroidResourceDeps, InitializableFromDisk<AndroidResource.BuildOutput>,
+    AndroidPackageable {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
@@ -110,6 +111,7 @@ public class AndroidResource extends AbstractBuildable
 
   private final boolean hasWhitelistedStrings;
 
+  private final ImmutableSortedSet<BuildRule> deps;
   private final Supplier<ImmutableList<HasAndroidResourceDeps>> transitiveAndroidResourceDeps;
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -141,6 +143,7 @@ public class AndroidResource extends AbstractBuildable
       pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
     }
 
+    this.deps = Preconditions.checkNotNull(deps);
     this.transitiveAndroidResourceDeps = Suppliers.memoize(
         new Supplier<ImmutableList<HasAndroidResourceDeps>>() {
           @Override
@@ -291,6 +294,28 @@ public class AndroidResource extends AbstractBuildable
   @Override
   public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
     return buildOutputInitializer;
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(deps);
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    if (res != null) {
+      if (hasWhitelistedStrings) {
+        collector.addStringWhitelistedResourceDirectory(target, res, rDotJavaPackage);
+      } else {
+        collector.addResourceDirectory(target, res, rDotJavaPackage);
+      }
+    }
+    if (assets != null) {
+      collector.addAssetsDirectory(target, assets);
+    }
+    if (manifestFile != null) {
+      collector.addManifestFile(target, manifestFile);
+    }
   }
 
   public static class BuildOutput {

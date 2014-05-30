@@ -56,6 +56,7 @@ public class PrebuiltNativeLibraryDescription
 
     return new PrebuiltNativeLibrary(
         params.getBuildTarget(),
+        params.getDeps(),
         args.nativeLibs,
         args.isAsset.or(false),
         librarySources

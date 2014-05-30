@@ -57,6 +57,7 @@ public class PrebuiltNativeLibraryBuilder {
     public PrebuiltNativeLibrary buildAsBuildable() {
       return new PrebuiltNativeLibrary(
           buildTarget,
+          ImmutableSortedSet.<BuildRule>of(),
           nativeLibs,
           isAsset,
           ImmutableSortedSet.<Path>of());

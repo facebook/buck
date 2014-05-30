@@ -16,12 +16,10 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.JavaLibrary;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * This is something that an {@link AndroidBinary} must create to find the transitive closure
@@ -30,8 +28,6 @@ import com.google.common.collect.ImmutableSet;
 abstract class AndroidResourceDepsFinder {
 
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
-  private final ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex;
-  private final AndroidTransitiveDependencies androidTransitiveDependencies;
 
   /*
    * Currently, allAndroidResources are expensive to compute, so we calculate them lazily.
@@ -39,11 +35,8 @@ abstract class AndroidResourceDepsFinder {
 
   private final Supplier<ImmutableList<HasAndroidResourceDeps>> androidResourceDepsSupplier;
 
-  public AndroidResourceDepsFinder(AndroidTransitiveDependencyGraph transitiveDependencyGraph,
-      ImmutableSet<JavaLibrary> buildRulesToExcludeFromDex) {
+  public AndroidResourceDepsFinder(AndroidTransitiveDependencyGraph transitiveDependencyGraph) {
     this.transitiveDependencyGraph = Preconditions.checkNotNull(transitiveDependencyGraph);
-    this.buildRulesToExcludeFromDex = Preconditions.checkNotNull(buildRulesToExcludeFromDex);
-    this.androidTransitiveDependencies = transitiveDependencyGraph.findDependencies();
 
     this.androidResourceDepsSupplier = Suppliers.memoize(
         new Supplier<ImmutableList<HasAndroidResourceDeps>>() {
@@ -52,10 +45,6 @@ abstract class AndroidResourceDepsFinder {
             return findMyAndroidResourceDeps();
           }
         });
-  }
-
-  public AndroidTransitiveDependencies getAndroidTransitiveDependencies() {
-    return androidTransitiveDependencies;
   }
 
   /**
@@ -68,14 +57,6 @@ abstract class AndroidResourceDepsFinder {
 
   public AndroidResourceDetails getAndroidResourceDetails() {
     return transitiveDependencyGraph.findAndroidResourceDetails(getAndroidResources());
-  }
-
-  public AndroidDexTransitiveDependencies getAndroidDexTransitiveDependencies(
-      UberRDotJava uberRDotJava) {
-    return transitiveDependencyGraph.findDexDependencies(
-        getAndroidResources(),
-        buildRulesToExcludeFromDex,
-        uberRDotJava);
   }
 
   /**

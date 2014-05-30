@@ -18,6 +18,8 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildable;
@@ -54,7 +56,7 @@ import java.nio.file.Path;
 
 public class PrebuiltJar extends AbstractBuildable
     implements JavaLibrary, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibrary.Data> {
+    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -208,6 +210,17 @@ public class PrebuiltJar extends AbstractBuildable
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
 
     return steps.build();
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(deps);
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    collector.addClasspathEntry(this, getBinaryJar().resolve());
+    collector.addPathToThirdPartyJar(getBuildTarget(), getBinaryJar().resolve());
   }
 
   class CalculateAbiStep implements Step {

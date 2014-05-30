@@ -38,7 +38,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Set;
 
-public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnhancer {
+public class AndroidLibrary extends DefaultJavaLibrary
+    implements DependencyEnhancer, AndroidPackageable {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
@@ -123,6 +124,14 @@ public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnha
           .build();
     } else {
       return super.getInputsToCompareToOutput();
+    }
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    super.addToCollector(collector);
+    if (manifestFile.isPresent()) {
+      collector.addManifestFile(target, manifestFile.get());
     }
   }
 }

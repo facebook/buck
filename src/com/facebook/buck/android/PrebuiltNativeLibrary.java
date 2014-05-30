@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -43,14 +44,17 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLibraryBuildable {
+public class PrebuiltNativeLibrary extends AbstractBuildable
+    implements NativeLibraryBuildable, AndroidPackageable {
 
   private final boolean isAsset;
   private final Path libraryPath;
   private final ImmutableSortedSet<Path> librarySources;
+  private final ImmutableSortedSet<BuildRule> deps;
 
   protected PrebuiltNativeLibrary(
       BuildTarget target,
+      ImmutableSortedSet<BuildRule> deps,
       Path nativeLibsDirectory,
       boolean isAsset,
       ImmutableSortedSet<Path> librarySources) {
@@ -58,6 +62,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
     this.isAsset = isAsset;
     this.libraryPath = Preconditions.checkNotNull(nativeLibsDirectory);
     this.librarySources = Preconditions.checkNotNull(librarySources);
+    this.deps = Preconditions.checkNotNull(deps);
   }
 
   @Override
@@ -94,5 +99,19 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
       BuildableContext buildableContext) {
     // We're checking in prebuilt libraries for now, so this is a noop.
     return ImmutableList.of();
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(deps);
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    if (isAsset) {
+      collector.addNativeLibAssetsDirectory(getLibraryPath());
+    } else {
+      collector.addNativeLibsDirectory(getLibraryPath());
+    }
   }
 }

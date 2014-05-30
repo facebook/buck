@@ -25,6 +25,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -72,7 +73,13 @@ public class NdkLibraryBuilder {
     }
 
     public NdkLibrary buildAsBuildable() {
-      return new NdkLibrary(buildTarget, sources.build(), flags.build(), isAsset, ndkVersion);
+      return new NdkLibrary(
+          buildTarget,
+          ImmutableSortedSet.<BuildRule>of(),
+          sources.build(),
+          flags.build(),
+          isAsset,
+          ndkVersion);
     }
 
     public BuildRule build() {

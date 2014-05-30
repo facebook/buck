@@ -90,18 +90,21 @@ public class ResourcesFilter extends AbstractBuildable
     }
   }
 
-  private final AndroidResourceDepsFinder androidResourceDepsFinder;
+  private final ImmutableList<Path> resDirectories;
+  private final ImmutableSet<Path> whitelistedStringDirs;
   private final ResourceCompressionMode resourceCompressionMode;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public ResourcesFilter(
       BuildTarget buildTarget,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
+      ImmutableList<Path> resDirectories,
+      ImmutableSet<Path> whitelistedStringDirs,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesStep.ResourceFilter resourceFilter) {
     super(buildTarget);
-    this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
+    this.resDirectories = Preconditions.checkNotNull(resDirectories);
+    this.whitelistedStringDirs = Preconditions.checkNotNull(whitelistedStringDirs);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -137,16 +140,14 @@ public class ResourcesFilter extends AbstractBuildable
       final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    AndroidResourceDetails androidResourceDetails =
-        androidResourceDepsFinder.getAndroidResourceDetails();
-    final ImmutableList.Builder<Path> filteredResDirectories = ImmutableList.builder();
+    final ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
     final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
-        androidResourceDetails.resDirectories,
-        androidResourceDetails.whitelistedStringDirs,
-        filteredResDirectories);
+        resDirectories,
+        whitelistedStringDirs,
+        filteredResDirectoriesBuilder);
     steps.add(filterResourcesStep);
 
-    final ImmutableList<Path> resDirectories = filteredResDirectories.build();
+    final ImmutableList<Path> filteredResDirectories = filteredResDirectoriesBuilder.build();
     final Supplier<ImmutableSet<Path>> nonEnglishStringFiles = Suppliers.memoize(
         new Supplier<ImmutableSet<Path>>() {
           @Override
@@ -155,7 +156,7 @@ public class ResourcesFilter extends AbstractBuildable
           }
         });
 
-    for (Path outputResourceDir : resDirectories) {
+    for (Path outputResourceDir : filteredResDirectories) {
       buildableContext.recordArtifactsInDirectory(outputResourceDir);
     }
 
@@ -164,7 +165,7 @@ public class ResourcesFilter extends AbstractBuildable
       public int execute(ExecutionContext context) {
         buildableContext.addMetadata(
             RES_DIRECTORIES_KEY,
-            Iterables.transform(resDirectories, Functions.toStringFunction()));
+            Iterables.transform(filteredResDirectories, Functions.toStringFunction()));
         buildableContext.addMetadata(
             NON_ENGLISH_STRING_FILES_KEY,
             Iterables.transform(nonEnglishStringFiles.get(), Functions.toStringFunction()));

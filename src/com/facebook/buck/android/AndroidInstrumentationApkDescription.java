@@ -56,7 +56,6 @@ public class AndroidInstrumentationApkDescription
         params,
         args.manifest,
         getUnderlyingApk((InstallableApk) args.apk.getBuildable()),
-        args.apk,
         args.deps.get());
   }
 

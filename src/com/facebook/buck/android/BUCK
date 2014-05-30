@@ -10,6 +10,23 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
+PACKAGEABLE_SOURCES = [
+  'AndroidPackageable.java',
+  'AndroidPackageableCollection.java',
+  'AndroidPackageableCollector.java',
+]
+java_library(
+  name = 'packageable',
+  srcs = PACKAGEABLE_SOURCES,
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/java:classhash',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+  ],
+  visibility = ['PUBLIC'],
+)
+
 RULES_SRCS = [
   'AaptPackageResources.java',
   'AndroidBinaryGraphEnhancer.java',
@@ -65,6 +82,7 @@ java_library(
   srcs = RULES_SRCS,
   deps = [
     ':exceptions',
+    ':packageable',
     ':split_dex',
     ':steps',
     '//lib:guava',
@@ -121,7 +139,8 @@ java_library(
 
 java_library(
   name = 'steps',
-  srcs = glob(['*.java'], excludes = EXCEPTION_SRCS + RULES_SRCS + SPLIT_DEX_SRCS),
+  srcs = glob(['*.java'],
+              excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS),
   deps = [
     ':exceptions',
     ':split_dex',
@@ -133,6 +152,7 @@ java_library(
     '//src/com/facebook/buck/dalvik/firstorder:firstorder',
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',

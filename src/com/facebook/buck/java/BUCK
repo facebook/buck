@@ -20,6 +20,7 @@ java_library(
   ],
   deps = [
     '//lib:guava',
+    '//src/com/facebook/buck/model:model',
   ],
   visibility = ['PUBLIC'],
 )
@@ -93,6 +94,7 @@ java_library(
     ':support',
     '//lib:guava',
     '//lib:jsr305',
+    '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java/abi:protocol',

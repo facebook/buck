@@ -22,6 +22,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
@@ -56,7 +57,8 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuildable {
+public class NdkLibrary extends AbstractBuildable
+    implements NativeLibraryBuildable, AndroidPackageable {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
@@ -69,12 +71,14 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
   private final Path buildArtifactsDirectory;
   private final Path genDirectory;
 
+  private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSortedSet<SourcePath> sources;
   private final ImmutableList<String> flags;
   private final Optional<String> ndkVersion;
 
   protected NdkLibrary(
       BuildTarget buildTarget,
+      ImmutableSortedSet<BuildRule> deps,
       Set<SourcePath> sources,
       List<String> flags,
       boolean isAsset,
@@ -89,6 +93,7 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
 
     Preconditions.checkArgument(!sources.isEmpty(),
         "Must include at least one file (Android.mk?) in ndk_library rule");
+    this.deps = Preconditions.checkNotNull(deps);
     this.sources = ImmutableSortedSet.copyOf(sources);
     this.flags = ImmutableList.copyOf(flags);
 
@@ -163,5 +168,19 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     return SourcePaths.filterInputsToCompareToOutput(sources);
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(deps);
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    if (isAsset) {
+      collector.addNativeLibAssetsDirectory(getLibraryPath());
+    } else {
+      collector.addNativeLibsDirectory(getLibraryPath());
+    }
   }
 }

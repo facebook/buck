@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
@@ -46,7 +47,6 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -99,7 +99,6 @@ public class AndroidBinaryGraphEnhancerTest {
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
-        createStrictMock(AndroidResourceDepsFinder.class),
         createStrictMock(PathSourcePath.class),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.< AndroidBinary.TargetCpuType>of(),
@@ -108,6 +107,7 @@ public class AndroidBinaryGraphEnhancerTest {
         BuildTargets.getBinPath(apkTarget, "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
         buildRulesToExcludeFromDex,
+        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
         /* exopackage */ false,
         createStrictMock(Keystore.class));
@@ -128,8 +128,22 @@ public class AndroidBinaryGraphEnhancerTest {
             ruleKeyBuilderFactory));
     ruleResolver.addToIndex(uberRDotJavaTarget, uberRDotJavaRule);
 
-    BuildRule preDexMergeRule =
-        graphEnhancer.createPreDexMergeRule(uberRDotJava);
+    AndroidPackageableCollection collection =
+        new AndroidPackageableCollector(
+            ImmutableSet.of(javaDep2BuildTarget),
+            /* resourcesToExclude */ ImmutableSet.<BuildTarget>of())
+            .addClasspathEntry(
+                ((HasJavaClassHashes) javaDep1.getBuildable()), Paths.get("ignored"))
+            .addClasspathEntry(
+                ((HasJavaClassHashes) javaDep2.getBuildable()), Paths.get("ignored"))
+            .addClasspathEntry(
+                ((HasJavaClassHashes) javaLib.getBuildable()), Paths.get("ignored"))
+            .build();
+
+
+    BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(
+        uberRDotJava,
+        collection);
     BuildTarget dexMergeTarget = new BuildTarget("//java/com/example", "apk", "dex_merge");
     BuildRule dexMergeRule = ruleResolver.get(dexMergeTarget);
 
@@ -166,12 +180,6 @@ public class AndroidBinaryGraphEnhancerTest {
         new FakeRuleKeyBuilderFactory());
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
-    AndroidResourceDepsFinder depsFinder = createStrictMock(AndroidResourceDepsFinder.class);
-    expect(depsFinder.getAndroidResources()).andStubReturn(
-        ImmutableList.<HasAndroidResourceDeps>of());
-    expect(depsFinder.getAndroidTransitiveDependencies()).andStubReturn(
-        AndroidTransitiveDependencies.EMPTY);
-
     // set it up.
     Keystore keystore = createStrictMock(Keystore.class);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
@@ -179,7 +187,6 @@ public class AndroidBinaryGraphEnhancerTest {
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
-        depsFinder,
         new TestSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<AndroidBinary.TargetCpuType>of(),
@@ -187,11 +194,12 @@ public class AndroidBinaryGraphEnhancerTest {
         /* shouldPreDex */ false,
         BuildTargets.getBinPath(apkTarget, "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
-        ImmutableSet.<BuildTarget>of(),
+        /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
+        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
         /* exopackage */ true,
         keystore);
-    replay(depsFinder, keystore);
+    replay(keystore);
     EnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();
@@ -247,7 +255,7 @@ public class AndroidBinaryGraphEnhancerTest {
     assertTrue(result.getPackageStringAssets().isPresent());
     assertTrue(result.getComputeExopackageDepsAbi().isPresent());
 
-    verify(depsFinder, keystore);
+    verify(keystore);
   }
 
   private BuildRule findRuleForBuilable(BuildRuleResolver ruleResolver, Class<?> buildableClass) {

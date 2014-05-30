@@ -32,9 +32,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -54,17 +54,14 @@ import java.nio.file.Path;
  */
 public class AndroidInstrumentationApk extends AndroidBinary implements DependencyEnhancer {
 
-  private final BuildRule apkUnderTestAsRule;
   private final SourcePath manifest;
   private final AndroidBinary apkUnderTest;
-  private final ImmutableSortedSet<BuildRule> originalDeps;
   private final BuildRuleParams params;
 
   AndroidInstrumentationApk(
       BuildRuleParams buildRuleParams,
       SourcePath manifest,
       AndroidBinary apkUnderTest,
-      BuildRule apkUnderTestAsRule,
       ImmutableSortedSet<BuildRule> originalDeps) {
     super(buildRuleParams,
         JavacOptions.DEFAULTS,
@@ -90,8 +87,6 @@ public class AndroidInstrumentationApk extends AndroidBinary implements Dependen
         apkUnderTest.getPreprocessJavaClassesBash());
     this.manifest = Preconditions.checkNotNull(manifest);
     this.apkUnderTest = Preconditions.checkNotNull(apkUnderTest);
-    this.apkUnderTestAsRule = Preconditions.checkNotNull(apkUnderTestAsRule);
-    this.originalDeps = Preconditions.checkNotNull(originalDeps);
     this.params = Preconditions.checkNotNull(buildRuleParams);
   }
 
@@ -105,45 +100,21 @@ public class AndroidInstrumentationApk extends AndroidBinary implements Dependen
       BuildRuleResolver ruleResolver,
       Iterable<BuildRule> declaredDeps,
       Iterable<BuildRule> inferredDeps) {
-    // Create the AndroidBinaryGraphEnhancer for this rule.
-    final ImmutableSortedSet<BuildRule> originalDepsAndApk =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(originalDeps)
-            .add(apkUnderTestAsRule)
-            .build();
     rulesToExcludeFromDex = FluentIterable.from(
         ImmutableSet.<JavaLibrary>builder()
             .addAll(apkUnderTest.getRulesToExcludeFromDex())
             .addAll(Classpaths.getClasspathEntries(apkUnderTest.getClasspathDeps()).keySet())
             .build())
         .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
-    AndroidTransitiveDependencyGraph androidTransitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(originalDepsAndApk);
 
-    // The AndroidResourceDepsFinder is the primary data that differentiates how
-    // AndroidInstrumentationApk and AndroidBinaryRule are built.
-    androidResourceDepsFinder = new AndroidResourceDepsFinder(
-        androidTransitiveDependencyGraph,
-        rulesToExcludeFromDex) {
-      @Override
-      protected ImmutableList<HasAndroidResourceDeps> findMyAndroidResourceDeps() {
-        // Filter out the AndroidResourceRules that are needed by this APK but not the APK under
-        // test.
-        ImmutableSet<HasAndroidResourceDeps> originalResources = ImmutableSet.copyOf(
-            UberRDotJavaUtil.getAndroidResourceDeps(apkUnderTestAsRule));
-        ImmutableList<HasAndroidResourceDeps> instrumentationResources =
-            UberRDotJavaUtil.getAndroidResourceDeps(originalDepsAndApk);
-
-        // Include all of the instrumentation resources first, in their original order.
-        ImmutableList.Builder<HasAndroidResourceDeps> allResources = ImmutableList.builder();
-        for (HasAndroidResourceDeps resource : instrumentationResources) {
-          if (!originalResources.contains(resource)) {
-            allResources.add(resource);
-          }
-        }
-        return allResources.build();
-      }
-    };
+    // TODO(natthu): Instrumentation APKs should also exclude native libraries and assets from the
+    // apk under test.
+    AndroidPackageableCollection.ResourceDetails resourceDetails =
+        apkUnderTest.getAndroidPackageableCollection().resourceDetails;
+    ImmutableSet<BuildTarget> resourcesToExclude = ImmutableSet.copyOf(
+        Iterables.concat(
+            resourceDetails.resourcesWithNonEmptyResDir,
+            resourceDetails.resourcesWithEmptyResButNonEmptyAssetsDir));
 
     Path primaryDexPath = AndroidBinary.getPrimaryDexPath(getBuildTarget());
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
@@ -151,7 +122,6 @@ public class AndroidInstrumentationApk extends AndroidBinary implements Dependen
         ruleResolver,
         ResourceCompressionMode.DISABLED,
         ResourceFilter.EMPTY_FILTER,
-        androidResourceDepsFinder,
         manifest,
         PackageType.INSTRUMENTED,
         apkUnderTest.getCpuFilters(),
@@ -159,7 +129,8 @@ public class AndroidInstrumentationApk extends AndroidBinary implements Dependen
         /* shouldPreDex */ false,
         primaryDexPath,
         DexSplitMode.NO_SPLIT,
-        /* rulesToExcludeFromDex */ ImmutableSortedSet.<BuildTarget>of(),
+        FluentIterable.from(rulesToExcludeFromDex).transform(TO_TARGET).toSet(),
+        resourcesToExclude,
         JavacOptions.DEFAULTS,
         /* exopackage */ false,
         apkUnderTest.getKeystore());
