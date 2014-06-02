@@ -77,7 +77,7 @@ public class AndroidInstrumentationApk extends AndroidBinary implements Dependen
         // Do not split the test apk even if the tested apk is split
         DexSplitMode.NO_SPLIT,
         apkUnderTest.getBuildTargetsToExcludeFromDex(),
-        apkUnderTest.isUseAndroidProguardConfigWithOptimizations(),
+        apkUnderTest.getSdkProguardConfig(),
         apkUnderTest.getOptimizationPasses(),
         apkUnderTest.getProguardConfig(),
         apkUnderTest.getResourceCompressionMode(),

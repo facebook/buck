@@ -56,7 +56,6 @@ public class AndroidBinaryBuilder {
     private AndroidBinary.PackageType packageType = AndroidBinary.PackageType.DEBUG;
     private DexSplitMode dexSplitMode = DexSplitMode.NO_SPLIT;
     private Set<BuildTarget> buildTargetsToExcludeFromDex = ImmutableSet.of();
-    private boolean useAndroidProguardConfig = false;
     private Optional<Integer> proguardOptimizationPasses = Optional.absent();
     private Optional<SourcePath> proguardConfig = Optional.absent();
     private ResourceCompressionMode resourceCompressionMode = ResourceCompressionMode.DISABLED;
@@ -78,7 +77,7 @@ public class AndroidBinaryBuilder {
           packageType,
           dexSplitMode,
           buildTargetsToExcludeFromDex,
-          useAndroidProguardConfig,
+          ProGuardObfuscateStep.SdkProguardType.DEFAULT,
           proguardOptimizationPasses,
           proguardConfig,
           resourceCompressionMode,

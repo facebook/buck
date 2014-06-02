@@ -16,20 +16,34 @@
 
 package com.facebook.buck.android;
 
+import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.util.AndroidPlatformTarget;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
+import org.easymock.EasyMockSupport;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class ProGuardObfuscateStepTest {
+public class ProGuardObfuscateStepTest extends EasyMockSupport {
   @Rule
   public final TemporaryFolder tmpDir = new TemporaryFolder();
 
@@ -49,5 +63,60 @@ public class ProGuardObfuscateStepTest {
       }
       assertEquals("Zip file should have zero-length contents", 0, totalSize);
     }
+  }
+
+  @Test
+  public void testSdkConfigArgs() {
+    ExecutionContext context = createMock(ExecutionContext.class);
+    AndroidPlatformTarget target = createMock(AndroidPlatformTarget.class);
+    expect(context.getProjectDirectoryRoot()).andStubReturn(new File("root"));
+    expect(context.getAndroidPlatformTarget()).andStubReturn(target);
+    expect(target.getProguardConfig()).andStubReturn(Paths.get("sdk-default.pro"));
+    expect(target.getOptimizedProguardConfig()).andStubReturn(Paths.get("sdk-optimized.pro"));
+    expect(target.getBootclasspathEntries()).andStubReturn(ImmutableList.<Path>of());
+    replayAll();
+
+    checkSdkConfig(context, ProGuardObfuscateStep.SdkProguardType.DEFAULT, "sdk-default.pro");
+    checkSdkConfig(context, ProGuardObfuscateStep.SdkProguardType.OPTIMIZED, "sdk-optimized.pro");
+    checkSdkConfig(context, ProGuardObfuscateStep.SdkProguardType.NONE, null);
+
+    verifyAll();
+  }
+
+  private void checkSdkConfig(
+      ExecutionContext context,
+      ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
+      String expectedPath) {
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ProGuardObfuscateStep.create(
+        /* proguardJarOverride */ Optional.<Path>absent(),
+        Paths.get("generated/proguard.txt"),
+        /* customProguardConfigs */ ImmutableSet.<Path>of(),
+        sdkProguardConfig,
+        /* optimizationPasses */ Optional.<Integer>absent(),
+        /* inputAndOutputEntries */ ImmutableMap.<Path, Path>of(),
+        /* additionalLibraryJarsForProguard */ ImmutableSet.<Path>of(),
+        Paths.get("proguard-directory"),
+        new FakeBuildableContext(),
+        steps);
+    ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
+        (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(0);
+
+    String found = null;
+    Iterator<String> argsIt = commandLineHelperStep.getParameters(context).iterator();
+    while (argsIt.hasNext()) {
+      String arg = argsIt.next();
+      if (!arg.equals("-include")) {
+        continue;
+      }
+      assertTrue(argsIt.hasNext());
+      String file = argsIt.next();
+      if (file.startsWith("sdk-")) {
+        found = file;
+        break;
+      }
+    }
+
+    assertEquals(expectedPath, found);
   }
 }

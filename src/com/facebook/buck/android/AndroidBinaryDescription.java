@@ -81,6 +81,21 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
           args.keystore.getType().getName());
     }
 
+    ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
+        args.androidSdkProguardConfig.or(ProGuardObfuscateStep.SdkProguardType.DEFAULT);
+
+    // If the old boolean version of this argument was specified, make sure the new form
+    // was not specified, and allow the old form to override the default.
+    if (args.useAndroidProguardConfigWithOptimizations.isPresent()) {
+      Preconditions.checkArgument(
+          !args.androidSdkProguardConfig.isPresent(),
+          "The deprecated use_android_proguard_config_with_optimizations parameter" +
+              " cannot be used with android_sdk_proguard_config.");
+      androidSdkProguardConfig = args.useAndroidProguardConfigWithOptimizations.or(false)
+              ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
+              : ProGuardObfuscateStep.SdkProguardType.DEFAULT;
+    }
+
     DexSplitMode dexSplitMode = createDexSplitMode(args);
     return new AndroidBinary(
         params,
@@ -93,7 +108,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         getPackageType(args),
         dexSplitMode,
         args.noDx.or(ImmutableSet.<BuildTarget>of()),
-        args.useAndroidProguardConfigWithOptimizations.or(false),
+        androidSdkProguardConfig,
         args.optimizationPasses,
         args.proguardConfig,
         getCompressionMode(args),
@@ -161,6 +176,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<Boolean> disablePreDex;
     public Optional<Boolean> exopackage;
     public Optional<String> dexCompression;
+    public Optional<ProGuardObfuscateStep.SdkProguardType> androidSdkProguardConfig;
     public Optional<Boolean> useAndroidProguardConfigWithOptimizations;
     public Optional<Integer> optimizationPasses;
     public Optional<SourcePath> proguardConfig;

@@ -160,7 +160,7 @@ public class AndroidBinary extends AbstractBuildable implements
   private final PackageType packageType;
   private DexSplitMode dexSplitMode;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
-  private final boolean useAndroidProguardConfigWithOptimizations;
+  private final ProGuardObfuscateStep.SdkProguardType sdkProguardConfig;
   private final Optional<Integer> optimizationPasses;
   private final Optional<SourcePath> proguardConfig;
   private final ResourceCompressionMode resourceCompressionMode;
@@ -199,7 +199,7 @@ public class AndroidBinary extends AbstractBuildable implements
       PackageType packageType,
       DexSplitMode dexSplitMode,
       Set<BuildTarget> buildTargetsToExcludeFromDex,
-      boolean useAndroidProguardConfigWithOptimizations,
+      ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
       Optional<Integer> proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
       ResourceCompressionMode resourceCompressionMode,
@@ -222,7 +222,7 @@ public class AndroidBinary extends AbstractBuildable implements
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.buildTargetsToExcludeFromDex = ImmutableSet.copyOf(
         Preconditions.checkNotNull(buildTargetsToExcludeFromDex));
-    this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
+    this.sdkProguardConfig = sdkProguardConfig;
     this.optimizationPasses = Preconditions.checkNotNull(proguardOptimizationPasses);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
@@ -365,8 +365,7 @@ public class AndroidBinary extends AbstractBuildable implements
                            })
                 .toList())
         .setReflectively("packageType", packageType)
-        .setReflectively(
-            "useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
+        .setReflectively("sdkProguardConfig", sdkProguardConfig)
         .setReflectively(
             "optimizationPasses", optimizationPasses)
         .setReflectively("resourceCompressionMode", resourceCompressionMode)
@@ -425,6 +424,10 @@ public class AndroidBinary extends AbstractBuildable implements
 
   public Optional<String> getPreprocessJavaClassesBash() {
     return preprocessJavaClassesBash;
+  }
+
+  ProGuardObfuscateStep.SdkProguardType getSdkProguardConfig() {
+    return sdkProguardConfig;
   }
 
   public Optional<Integer> getOptimizationPasses() {
@@ -949,7 +952,7 @@ public class AndroidBinary extends AbstractBuildable implements
         proguardJarOverride,
         generatedProGuardConfig,
         proguardConfigsBuilder.build(),
-        useAndroidProguardConfigWithOptimizations,
+        sdkProguardConfig,
         optimizationPasses,
         inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
@@ -1112,10 +1115,6 @@ public class AndroidBinary extends AbstractBuildable implements
         new ExopackageInfo(
             preDexMerge.get().getMetadataTxtPath(),
             preDexMerge.get().getDexDirectory()));
-  }
-
-  boolean isUseAndroidProguardConfigWithOptimizations() {
-    return useAndroidProguardConfigWithOptimizations;
   }
 
   public ImmutableSortedSet<BuildRule> getClasspathDeps() {

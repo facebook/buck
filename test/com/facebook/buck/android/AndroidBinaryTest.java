@@ -148,7 +148,7 @@ public class AndroidBinaryTest {
         Optional.<Path>absent(),
         Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"),
         ImmutableSet.<Path>of(),
-        false,
+        ProGuardObfuscateStep.SdkProguardType.DEFAULT,
         Optional.<Integer>absent(),
         ImmutableMap.of(
             Paths.get(

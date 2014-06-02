@@ -80,6 +80,19 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {/call}
 
 {call buck.arg}
+  {param name : 'android_sdk_proguard_config' /}
+  {param default : '\'default\'' /}
+  {param desc}
+  The type of proguard configuration to use from the Android SDK.
+  Options are <code>'default'</code> to use the default config,
+  <code>'optimized'</code> to use the config with optimizations enabled,
+  or <code>'none'</code> to not use any standard configuration
+  (you will need to supply your own version, otherwise your
+  app will probably not work).
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'no_dx' /}
   {param default : '[]' /}
   {param desc}
