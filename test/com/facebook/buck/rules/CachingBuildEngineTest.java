@@ -595,7 +595,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         pathToOutputFile,
         buildSteps);
 
-    return new AbstractBuildable.AnonymousBuildRule(
+    return new DescribedRule(
         JavaLibraryDescription.TYPE,
         buildRule,
         buildRuleParams);

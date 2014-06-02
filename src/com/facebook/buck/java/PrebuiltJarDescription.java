@@ -93,7 +93,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         projectFilesystem,
         ruleKeyBuilderFactory);
     Buildable gwtModule = createGwtModule(params.getBuildTarget(), arg);
-    BuildRule rule = new AbstractBuildable.AnonymousBuildRule(
+    BuildRule rule = new DescribedRule(
         BuildRuleType.GWT_MODULE,
         gwtModule,
         params);

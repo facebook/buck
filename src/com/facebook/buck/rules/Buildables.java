@@ -72,7 +72,7 @@ public class Buildables {
         buildRuleParams.getProjectFilesystem(),
         buildRuleParams.getRuleKeyBuilderFactory());
 
-    return new AbstractBuildable.AnonymousBuildRule(
+    return new DescribedRule(
         buildRuleType,
         buildable,
         paramsWithDeps);

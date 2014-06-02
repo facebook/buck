@@ -22,9 +22,9 @@ import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
@@ -94,7 +94,7 @@ public class AndroidBinaryBuilder {
 
     public BuildRule build(BuildRuleResolver ruleResolver) {
       return ruleResolver.addToIndex(
-          new AbstractBuildable.AnonymousBuildRule(
+          new DescribedRule(
               AndroidBinaryDescription.TYPE,
               build(),
               new FakeBuildRuleParams(buildTarget, originalDeps)));

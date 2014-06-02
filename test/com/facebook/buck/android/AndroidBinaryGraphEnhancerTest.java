@@ -35,11 +35,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -120,7 +120,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new BuildTarget("//java/com/example", "apk", "uber_r_dot_java");
     expect(uberRDotJava.getBuildTarget()).andStubReturn(uberRDotJavaTarget);
     replay(uberRDotJava);
-    BuildRule uberRDotJavaRule = new AbstractBuildable.AnonymousBuildRule(
+    BuildRule uberRDotJavaRule = new DescribedRule(
         BuildRuleType.UBER_R_DOT_JAVA,
         uberRDotJava,
         new BuildRuleParams(

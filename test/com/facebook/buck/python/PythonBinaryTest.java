@@ -21,10 +21,10 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
@@ -77,7 +77,7 @@ public class PythonBinaryTest {
 
   private static BuildRule createBuildRule(PythonLibrary pythonLibrary, BuildTarget buildTarget) {
     BuildRuleParams params = new FakeBuildRuleParams(buildTarget);
-    return new AbstractBuildable.AnonymousBuildRule(PythonLibraryDescription.TYPE,
+    return new DescribedRule(PythonLibraryDescription.TYPE,
         pythonLibrary,
         params);
   }

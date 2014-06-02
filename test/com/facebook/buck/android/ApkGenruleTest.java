@@ -30,13 +30,13 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildable;
@@ -167,7 +167,7 @@ public class ApkGenruleTest {
       }
     };
     ApkGenrule apkGenrule = description.createBuildable(params, arg);
-    BuildRule rule = new AbstractBuildable.AnonymousBuildRule(
+    BuildRule rule = new DescribedRule(
         ApkGenruleDescription.TYPE,
         apkGenrule,
         params);

@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -159,7 +158,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
 
     GwtModule gwtModule = gwtModuleOptional.get();
-    BuildRule rule = new AbstractBuildable.AnonymousBuildRule(
+    BuildRule rule = new DescribedRule(
         BuildRuleType.GWT_MODULE,
         gwtModule,
         new BuildRuleParams(

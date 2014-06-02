@@ -60,7 +60,7 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
     // The BuildRule determines its deps by extracting them from the rule parameters.
     BuildRuleParams params = createBuildRuleParams();
 
-    AbstractBuildable.AnonymousBuildRule rule = new AbstractBuildable.AnonymousBuildRule(
+    DescribedRule rule = new DescribedRule(
         description.getBuildRuleType(), build(), params);
     resolver.addToIndex(target, rule);
     return rule;

@@ -17,9 +17,9 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.google.common.base.Function;
@@ -76,7 +76,7 @@ public class GenruleBuilder {
         }
       };
       Buildable buildable = description.createBuildable(params, args);
-      return new AbstractBuildable.AnonymousBuildRule(
+      return new DescribedRule(
           description.getBuildRuleType(),
           buildable,
           params);

@@ -17,9 +17,9 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
@@ -95,7 +95,7 @@ public class JavaTestBuilder {
     public BuildRule build(BuildRuleResolver resolver) {
       FakeBuildRuleParams params = new FakeBuildRuleParams(target, deps.build());
 
-      AbstractBuildable.AnonymousBuildRule rule = new AbstractBuildable.AnonymousBuildRule(
+      DescribedRule rule = new DescribedRule(
           JavaTestDescription.TYPE,
           build(),
           params);

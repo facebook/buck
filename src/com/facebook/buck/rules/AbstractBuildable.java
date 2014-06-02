@@ -48,30 +48,4 @@ public abstract class AbstractBuildable implements Buildable, HasBuildTarget {
   public BuildTarget getBuildTarget() {
     return target;
   }
-
-  public static class AnonymousBuildRule extends AbstractBuildRule implements BuildRule {
-    private final Buildable buildable;
-    private final BuildRuleType type;
-
-    public AnonymousBuildRule(BuildRuleType type, Buildable buildable, BuildRuleParams params) {
-      super(params, buildable);
-      this.buildable = buildable;
-      this.type = type;
-    }
-
-    @Override
-    public BuildableProperties getProperties() {
-      return buildable.getProperties();
-    }
-
-    @Override
-    public Buildable getBuildable() {
-      return buildable;
-    }
-
-    @Override
-    public BuildRuleType getType() {
-      return type;
-    }
-  }
 }

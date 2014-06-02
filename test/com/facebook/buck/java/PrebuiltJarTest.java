@@ -21,13 +21,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
@@ -102,7 +102,7 @@ public class PrebuiltJarTest {
     buildEngine.createFutureFor(junitJarRule.getBuildTarget());
     buildEngine.doHydrationAfterBuildStepsFinish(
         // I am ashamed. Temporary hack, I hope.
-        new AbstractBuildable.AnonymousBuildRule(
+        new DescribedRule(
             PrebuiltJarDescription.TYPE,
             junitJarRule,
             new FakeBuildRuleParams(junitJarRule.getBuildTarget())

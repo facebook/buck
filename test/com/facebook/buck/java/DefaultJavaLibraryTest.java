@@ -40,7 +40,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
@@ -50,6 +49,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -941,7 +941,7 @@ public class DefaultJavaLibraryTest {
       }
     };
 
-    return new AbstractBuildable.AnonymousBuildRule(
+    return new DescribedRule(
         JavaLibraryDescription.TYPE,
         buildable,
         buildRuleParams);
@@ -1372,7 +1372,7 @@ public class DefaultJavaLibraryTest {
           /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
           options.build(),
           /* manifestFile */ Optional.<Path>absent());
-      return new AbstractBuildable.AnonymousBuildRule(
+      return new DescribedRule(
           AndroidLibraryDescription.TYPE,
           buildable,
           buildRuleParams);
