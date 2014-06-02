@@ -47,6 +47,10 @@ public class AndroidPlatformTarget {
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:19";
   public static final String ANDROID_VERSION_PREFIX = "android-";
 
+  @VisibleForTesting
+  static final Pattern PLATFORM_TARGET_PATTERN = Pattern.compile(
+      "(?:Google Inc\\.:Google APIs:|android-)(\\d+)");
+
   private final String name;
   private final Path androidJar;
   private final List<Path> bootclasspathEntries;
@@ -160,13 +164,18 @@ public class AndroidPlatformTarget {
     Preconditions.checkNotNull(platformId);
     Preconditions.checkNotNull(androidDirectoryResolver);
 
-    Pattern platformPattern = Pattern.compile("Google Inc\\.:Google APIs:(\\d+)");
-    Matcher platformMatcher = platformPattern.matcher(platformId);
+    Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
     if (platformMatcher.matches()) {
       try {
         int apiLevel = Integer.parseInt(platformMatcher.group(1));
+        Factory platformTargetFactory;
+        if (platformId.contains("Google APIs")) {
+          platformTargetFactory = new AndroidWithGoogleApisFactory();
+        } else {
+          platformTargetFactory = new AndroidWithoutGoogleApisFactory();
+        }
         return Optional.of(
-            new AndroidWithGoogleApisFactory().newInstance(androidDirectoryResolver, apiLevel));
+            platformTargetFactory.newInstance(androidDirectoryResolver, apiLevel));
       } catch (NumberFormatException e) {
         return Optional.absent();
       }
@@ -381,6 +390,19 @@ public class AndroidPlatformTarget {
           new File(addonsParentDir, apiDirPrefix + "/libs").getAbsolutePath(),
           androidSdkDir,
           apiLevel);
+    }
+  }
+
+  private static class AndroidWithoutGoogleApisFactory implements Factory {
+    @Override
+    public AndroidPlatformTarget newInstance(
+        final AndroidDirectoryResolver androidDirectoryResolver,
+        final int apiLevel) {
+      return createFromDefaultDirectoryStructure(
+          String.format("android-%d", apiLevel),
+          androidDirectoryResolver,
+          String.format("platforms/android-%d", apiLevel),
+          ImmutableSet.<Path>of());
     }
   }
 

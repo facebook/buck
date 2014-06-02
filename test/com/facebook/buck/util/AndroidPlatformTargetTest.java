@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Matcher;
 import java.util.Set;
 
 public class AndroidPlatformTargetTest {
@@ -262,6 +263,71 @@ public class AndroidPlatformTargetTest {
               new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs").getAbsolutePath(),
               androidSdkDir.getPath()),
           e.getMessage());
+    }
+  }
+
+  @Test
+  public void testLooksForGoogleLibsOnlyWhenGoogleApiTarget() throws IOException {
+    File androidSdkDir = tempDir.newFolder();
+    Path pathToAndroidSdkDir = androidSdkDir.toPath();
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new FakeAndroidDirectoryResolver(
+            Optional.of(androidSdkDir.toPath()),
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
+    File buildToolsDir = new File(androidSdkDir, "build-tools");
+    buildToolsDir.mkdir();
+    new File(buildToolsDir, "android-4.2.2").mkdir();
+
+    File addOnsLibsDir = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
+    addOnsLibsDir.mkdirs();
+    Files.touch(new File(addOnsLibsDir, "effects.jar"));
+    Files.touch(new File(addOnsLibsDir, "maps.jar"));
+    Files.touch(new File(addOnsLibsDir, "usb.jar"));
+
+    // This one should include the Google jars
+    Optional<AndroidPlatformTarget> androidPlatformTargetOption1 =
+        AndroidPlatformTarget.getTargetForId(
+            "Google Inc.:Google APIs:17",
+            androidDirectoryResolver);
+    assertTrue(androidPlatformTargetOption1.isPresent());
+    assertEquals(
+        ImmutableList.of(
+            pathToAndroidSdkDir.resolve("platforms/android-17/android.jar"),
+            pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/effects.jar"),
+            pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/maps.jar"),
+            pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/usb.jar")),
+        androidPlatformTargetOption1.get().getBootclasspathEntries());
+
+    // This one should only include android.jar
+    Optional<AndroidPlatformTarget> androidPlatformTargetOption2 =
+        AndroidPlatformTarget.getTargetForId(
+            "android-17",
+            androidDirectoryResolver);
+    assertTrue(androidPlatformTargetOption2.isPresent());
+    assertEquals(
+        ImmutableList.of(
+            pathToAndroidSdkDir.resolve("platforms/android-17/android.jar")),
+        androidPlatformTargetOption2.get().getBootclasspathEntries());
+  }
+
+  @Test
+  public void testPlatformTargetPattern() {
+    testPlatformTargetRegex("Google Inc.:Google APIs:8", true, "8");
+    testPlatformTargetRegex("Google Inc.:Google APIs:17", true, "17");
+    testPlatformTargetRegex("android-8", true, "8");
+    testPlatformTargetRegex("android-17", true, "17");
+    testPlatformTargetRegex("Google Inc.:Google APIs:", false, "");
+    testPlatformTargetRegex("Google Inc.:Google APIs:blah", false, "");
+    testPlatformTargetRegex("android-", false, "");
+    testPlatformTargetRegex("android-blah", false, "");
+  }
+
+  private void testPlatformTargetRegex(String input, boolean matches, String id) {
+    Matcher matcher = AndroidPlatformTarget.PLATFORM_TARGET_PATTERN.matcher(input);
+    assertEquals(matches, matcher.matches());
+    if (matches) {
+      assertEquals(id, matcher.group(1));
     }
   }
 }
