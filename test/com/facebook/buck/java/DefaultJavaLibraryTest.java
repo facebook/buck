@@ -1229,9 +1229,9 @@ public class DefaultJavaLibraryTest {
     VALID_JAVA_BINARY("//tools/java/src/com/facebook/annotations:custom-processors") {
       @Override
       public BuildRule createRule(BuildTarget target) {
-       return JavaBinaryRuleBuilder.newBuilder(target)
+       return new JavaBinaryRuleBuilder(target)
             .setMainClass("com.facebook.Main")
-            .build();
+            .build(new BuildRuleResolver());
       }
     },
     VALID_JAVA_LIBRARY("//tools/java/src/com/facebook/somejava:library") {

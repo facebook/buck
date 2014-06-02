@@ -474,12 +474,10 @@ public class GenruleTest {
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator");
-    BuildRule javaBinary = JavaBinaryRuleBuilder.newBuilder(buildTarget)
+    return new JavaBinaryRuleBuilder(buildTarget)
         .setDeps(ImmutableSortedSet.of(javaLibrary))
         .setMainClass("com.facebook.util.ManifestGenerator")
-        .build();
-    ruleResolver.addToIndex(buildTarget, javaBinary);
-    return javaBinary;
+        .build(ruleResolver);
   }
 
   private BuildRule createGenrule(BuildRuleResolver ruleResolver,

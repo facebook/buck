@@ -17,57 +17,25 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuilder;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.facebook.buck.util.DefaultDirectoryTraverser;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class JavaBinaryRuleBuilder {
+public class JavaBinaryRuleBuilder extends AbstractBuilder<JavaBinary, JavaBinaryDescription.Args> {
 
-  private JavaBinaryRuleBuilder() {
-    // Utility class
+  public JavaBinaryRuleBuilder(BuildTarget target) {
+    super(new JavaBinaryDescription(), target);
   }
 
-  public static Builder newBuilder(BuildTarget buildTarget) {
-    return new Builder(buildTarget);
+  public JavaBinaryRuleBuilder setDeps(ImmutableSortedSet<BuildRule> deps) {
+    arg.deps = Optional.of(deps);
+    return this;
   }
 
-  public static class Builder {
-    private BuildTarget buildTarget;
-    private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
-    private String mainClass;
-
-    public Builder(BuildTarget buildTarget) {
-      this.buildTarget = buildTarget;
-    }
-
-    public Builder setDeps(ImmutableSortedSet<BuildRule> deps) {
-      this.deps = deps;
-      return this;
-    }
-
-    public Builder setMainClass(String mainClass) {
-      this.mainClass = mainClass;
-      return this;
-    }
-
-    public JavaBinary buildAsBuildable() {
-      return new JavaBinary(
-          buildTarget,
-          deps,
-          mainClass,
-          /* manifestFile */ null,
-          /* metaInfDirectory */ null,
-          new DefaultDirectoryTraverser());
-    }
-
-    public BuildRule build() {
-      return new AbstractBuildable.AnonymousBuildRule(
-          JavaBinaryDescription.TYPE,
-          buildAsBuildable(),
-          new FakeBuildRuleParams(buildTarget));
-    }
+  public JavaBinaryRuleBuilder setMainClass(String mainClass) {
+    arg.mainClass = Optional.of(mainClass);
+    return this;
   }
 }
 
