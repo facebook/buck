@@ -945,7 +945,6 @@ public class AndroidBinary extends AbstractBuildable implements
         });
 
     // Run ProGuard on the classpath entries.
-    // TODO(user): ProGuardObfuscateStep's final argument should be a Path
     Step obfuscateCommand = ProGuardObfuscateStep.create(
         proguardJarOverride,
         generatedProGuardConfig,
