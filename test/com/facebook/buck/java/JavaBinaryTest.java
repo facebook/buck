@@ -73,6 +73,7 @@ public class JavaBinaryTest {
         ImmutableSortedSet.of(libraryRule),
         "com.facebook.base.Main",
         null,
+        /* merge manifests */ true,
         null,
         new DefaultDirectoryTraverser());
 

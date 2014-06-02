@@ -72,6 +72,16 @@ public class JarDirectoryStep implements Step {
   /** If specified, the Manifest file to use for the generated JAR file.  */
   @Nullable
   private final Path manifestFile;
+  /** Indicates that manifest merging should occur. Defaults to true. */
+  private final boolean mergeManifests;
+
+  public JarDirectoryStep(
+      Path pathToOutputFile,
+      Set<Path> entriesToJar,
+      @Nullable String mainClass,
+      @Nullable Path manifestFile) {
+    this(pathToOutputFile, entriesToJar, mainClass, manifestFile, true);
+  }
 
   /**
    * Creates a JAR from the specified entries (most often, classpath entries).
@@ -90,11 +100,13 @@ public class JarDirectoryStep implements Step {
   public JarDirectoryStep(Path pathToOutputFile,
                           Set<Path> entriesToJar,
                           @Nullable String mainClass,
-                          @Nullable Path manifestFile) {
+                          @Nullable Path manifestFile,
+                          boolean mergeManifests) {
     this.pathToOutputFile = Preconditions.checkNotNull(pathToOutputFile);
     this.entriesToJar = ImmutableSet.copyOf(entriesToJar);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
+    this.mergeManifests = mergeManifests;
   }
 
   private String getJarArgs() {
@@ -168,7 +180,14 @@ public class JarDirectoryStep implements Step {
         try (FileInputStream manifestStream = new FileInputStream(
             filesystem.getFileForRelativePath(manifestFile))) {
           Manifest userSupplied = new Manifest(manifestStream);
-          merge(manifest, userSupplied);
+
+          // In the common case, we want to use the merged manifests. In the uncommon case, we just
+          // want to use the one the user gave us.
+          if (mergeManifests) {
+            merge(manifest, userSupplied);
+          } else {
+            manifest = userSupplied;
+          }
         }
       }
 

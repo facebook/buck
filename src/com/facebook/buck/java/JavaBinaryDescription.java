@@ -52,6 +52,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
         args.deps.get(),
         args.mainClass.orNull(),
         args.manifestFile.orNull(),
+        args.mergeManifests.or(true),
         args.metaInfDirectory.orNull(),
         new DefaultDirectoryTraverser());
   }
@@ -60,6 +61,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
     public Optional<ImmutableSortedSet<BuildRule>> deps;
     public Optional<String> mainClass;
     public Optional<SourcePath> manifestFile;
+    public Optional<Boolean> mergeManifests;
     @Beta
     public Optional<Path> metaInfDirectory;
   }

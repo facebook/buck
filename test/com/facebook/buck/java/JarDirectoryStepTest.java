@@ -27,7 +27,9 @@ import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import org.junit.Rule;
@@ -39,9 +41,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.JarInputStream;
+import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -135,7 +142,8 @@ public class JarDirectoryStepTest {
         Paths.get("output.jar"),
         ImmutableSet.of(Paths.get("input.jar")),
         /* main class */ null,
-        Paths.get("manifest"));
+        Paths.get("manifest"),
+        /* merge manifest */ true);
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(tmp))
         .build();
@@ -182,6 +190,74 @@ public class JarDirectoryStepTest {
       }
     }
     assertTrue("Didn't see entries for: " + expected, expected.isEmpty());
+  }
+
+  @Test
+  public void shouldNotMergeManifestsIfRequested() throws IOException {
+    Manifest fromJar = createManifestWithExampleSection(ImmutableMap.of("Not-Seen", "ever"));
+    Manifest fromUser = createManifestWithExampleSection(ImmutableMap.of("cake", "cheese"));
+
+    Manifest seenManifest = jarDirectoryAndReadManifest(fromJar, fromUser, false);
+
+    assertEquals(fromUser.getEntries(), seenManifest.getEntries());
+  }
+
+  @Test
+  public void shouldMergeManifestsIfAsked() throws IOException {
+    Manifest fromJar = createManifestWithExampleSection(ImmutableMap.of("Not-Seen", "ever"));
+    Manifest fromUser = createManifestWithExampleSection(ImmutableMap.of("cake", "cheese"));
+
+    Manifest seenManifest = jarDirectoryAndReadManifest(fromJar, fromUser, true);
+
+    Manifest expectedManifest = new Manifest(fromJar);
+    expectedManifest.getEntries().putAll(fromUser.getEntries());
+    assertEquals(expectedManifest.getEntries(), seenManifest.getEntries());
+  }
+
+  private Manifest createManifestWithExampleSection(Map<String, String> attributes) {
+    Manifest manifest = new Manifest();
+    Attributes attrs = new Attributes();
+    for (Map.Entry<String, String> stringStringEntry : attributes.entrySet()) {
+      attrs.put(new Attributes.Name(stringStringEntry.getKey()), stringStringEntry.getValue());
+    }
+    manifest.getEntries().put("example", attrs);
+    return manifest;
+  }
+
+  private Manifest jarDirectoryAndReadManifest(
+      Manifest fromJar,
+      Manifest fromUser,
+      boolean mergeEntries)
+      throws IOException {
+    // Create a jar with a manifest we'd expect to see merged.
+    File originalJar = folder.newFile("unexpected.jar");
+    JarOutputStream ignored =
+        new JarOutputStream(Files.newOutputStream(originalJar.toPath()), fromJar);
+    ignored.close();
+
+    // Now create the actual manifest
+    File manifestFile = folder.newFile("actual_manfiest.mf");
+    try (OutputStream os = Files.newOutputStream(manifestFile.toPath())) {
+      fromUser.write(os);
+    }
+
+    File tmp = folder.newFolder();
+    File output = new File(tmp, "example.jar");
+    JarDirectoryStep step = new JarDirectoryStep(
+        output.toPath(),
+        ImmutableSortedSet.of(originalJar.toPath()),
+        /* main class */ null,
+        manifestFile.toPath(),
+        mergeEntries);
+    ExecutionContext context = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(new ProjectFilesystem(tmp))
+        .build();
+    step.execute(context);
+
+    // Now verify that the created manifest matches the expected one.
+    try (JarInputStream jis = new JarInputStream(Files.newInputStream(output.toPath()))) {
+      return jis.getManifest();
+    }
   }
 
   private File createZip(File zipFile, String... fileNames) throws IOException {

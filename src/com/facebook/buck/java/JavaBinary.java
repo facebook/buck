@@ -62,6 +62,7 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
 
   @Nullable
   private final SourcePath manifestFile;
+  private final boolean mergeManifests;
 
   @Nullable
   private final Path metaInfDirectory;
@@ -73,12 +74,14 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
       ImmutableSortedSet<BuildRule> deps,
       @Nullable String mainClass,
       @Nullable SourcePath manifestFile,
+      boolean mergeManifests,
       @Nullable Path metaInfDirectory,
       DirectoryTraverser directoryTraverser) {
     super(buildTarget);
     this.deps = Preconditions.checkNotNull(deps);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
+    this.mergeManifests = mergeManifests;
     this.metaInfDirectory = metaInfDirectory;
 
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
@@ -139,7 +142,12 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
 
     Path outputFile = getPathToOutputFile();
     Path manifestPath = manifestFile == null ? null : manifestFile.resolve();
-    Step jar = new JarDirectoryStep(outputFile, includePaths, mainClass, manifestPath);
+    Step jar = new JarDirectoryStep(
+        outputFile,
+        includePaths,
+        mainClass,
+        manifestPath,
+        mergeManifests);
     commands.add(jar);
 
     buildableContext.recordArtifact(outputFile);
