@@ -27,6 +27,8 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -43,6 +45,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -58,7 +61,7 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
   private final String mainClass;
 
   @Nullable
-  private final Path manifestFile;
+  private final SourcePath manifestFile;
 
   @Nullable
   private final Path metaInfDirectory;
@@ -69,7 +72,7 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
       BuildTarget buildTarget,
       ImmutableSortedSet<BuildRule> deps,
       @Nullable String mainClass,
-      @Nullable Path manifestFile,
+      @Nullable SourcePath manifestFile,
       @Nullable Path metaInfDirectory,
       DirectoryTraverser directoryTraverser) {
     super(buildTarget);
@@ -97,7 +100,8 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
     ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
 
     if (manifestFile != null) {
-      builder.add(manifestFile);
+      builder.addAll(
+          SourcePaths.filterInputsToCompareToOutput(Collections.singleton(manifestFile)));
     }
 
     Buildables.addInputsToSortedSet(metaInfDirectory, builder, directoryTraverser);
@@ -134,7 +138,8 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
     }
 
     Path outputFile = getPathToOutputFile();
-    Step jar = new JarDirectoryStep(outputFile, includePaths, mainClass, manifestFile);
+    Path manifestPath = manifestFile == null ? null : manifestFile.resolve();
+    Step jar = new JarDirectoryStep(outputFile, includePaths, mainClass, manifestPath);
     commands.add(jar);
 
     buildableContext.recordArtifact(outputFile);
