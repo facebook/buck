@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.AndroidPlatformTarget;
@@ -50,11 +49,13 @@ public final class ProGuardObfuscateStep extends ShellStep {
   private final Optional<Path> proguardJarOverride;
 
   /**
-   * @return step that writes out ProGuard's command line arguments to a text file and then runs
-   *     ProGuard using those arguments. We write the arguments to a file to avoid blowing out
-   *     exec()'s ARG_MAX limit.
+   * Create steps that write out ProGuard's command line arguments to a text file and then run
+   * ProGuard using those arguments. We write the arguments to a file to avoid blowing out
+   * exec()'s ARG_MAX limit.
+   *
+   * @param steps Where to append the generated steps.
    */
-  public static Step create(
+  public static void create(
       Optional<Path> proguardJarOverride,
       Path generatedProGuardConfig,
       Set<Path> customProguardConfigs,
@@ -63,7 +64,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Map<Path, Path> inputAndOutputEntries,
       Set<Path> additionalLibraryJarsForProguard,
       Path proguardDirectory,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      ImmutableList.Builder<Step> steps) {
 
     Path pathToProGuardCommandLineArgsFile = proguardDirectory.resolve("command-line.txt");
 
@@ -85,7 +87,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
     buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
 
-    return new CompositeStep(ImmutableList.of(commandLineHelperStep, proGuardStep));
+    steps.add(commandLineHelperStep, proGuardStep);
   }
 
   /**

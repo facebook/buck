@@ -129,9 +129,12 @@ public class AndroidBinaryTest {
 
     buildableContext = new FakeBuildableContext();
 
+    ImmutableList.Builder<Step> expectedSteps = ImmutableList.builder();
+
     MakeCleanDirectoryStep expectedClean =
         new MakeCleanDirectoryStep(
             Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
+    expectedSteps.add(expectedClean);
 
     GenProGuardConfigStep expectedGenProguard =
         new GenProGuardConfigStep(
@@ -139,29 +142,28 @@ public class AndroidBinaryTest {
                 "__manifest_apk#aapt_package__/AndroidManifest.xml"),
             ImmutableList.<Path>of(),
             Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"));
+    expectedSteps.add(expectedGenProguard);
 
-    Step expectedObfuscation =
-        ProGuardObfuscateStep.create(
-          Optional.<Path>absent(),
-          Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"),
-          ImmutableSet.<Path>of(),
-          false,
-          Optional.<Integer>absent(),
-          ImmutableMap.of(
-              Paths.get(
-                  "buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
-              Paths.get(
-                  "buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/" +
-                  "java/src/com/facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar")),
-          ImmutableSet.of(
-              Paths.get(
-                "buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar")),
-          Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"),
-          buildableContext);
+    ProGuardObfuscateStep.create(
+        Optional.<Path>absent(),
+        Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"),
+        ImmutableSet.<Path>of(),
+        false,
+        Optional.<Integer>absent(),
+        ImmutableMap.of(
+            Paths.get(
+                "buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
+            Paths.get(
+                "buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/" +
+                "java/src/com/facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar")),
+        ImmutableSet.of(
+            Paths.get(
+              "buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar")),
+        Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"),
+        buildableContext,
+        expectedSteps);
 
-    assertEquals(
-        ImmutableList.of(expectedClean, expectedGenProguard, expectedObfuscation),
-        commands.build());
+    assertEquals(expectedSteps.build(), commands.build());
 
     assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
   }

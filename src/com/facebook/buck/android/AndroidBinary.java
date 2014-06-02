@@ -945,7 +945,7 @@ public class AndroidBinary extends AbstractBuildable implements
         });
 
     // Run ProGuard on the classpath entries.
-    Step obfuscateCommand = ProGuardObfuscateStep.create(
+    ProGuardObfuscateStep.create(
         proguardJarOverride,
         generatedProGuardConfig,
         proguardConfigsBuilder.build(),
@@ -954,8 +954,8 @@ public class AndroidBinary extends AbstractBuildable implements
         inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
         proguardDirectory,
-        buildableContext);
-    steps.add(obfuscateCommand);
+        buildableContext,
+        steps);
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
     // so that we're now dexing the proguarded artifacts).
