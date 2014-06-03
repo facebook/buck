@@ -75,7 +75,7 @@ public class ApkBuilderStep implements Step {
    * @param resourceApk Path to the Apk which only contains resources, no dex files.
    * @param pathToOutputApkFile Path to output our APK to.
    * @param dexFile Path to the classes.dex file.
-   * @param javaResourcesDirectories List of paths to resources to be included in the apk.
+   * @param assetDirectories List of paths to assets to be included in the apk.
    * @param nativeLibraryDirectories List of paths to native directories.
    * @param zipFiles List of paths to zipfiles to be included into the apk.
    * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
@@ -87,7 +87,7 @@ public class ApkBuilderStep implements Step {
       Path resourceApk,
       Path pathToOutputApkFile,
       Path dexFile,
-      ImmutableSet<Path> javaResourcesDirectories,
+      ImmutableSet<Path> assetDirectories,
       ImmutableSet<Path> nativeLibraryDirectories,
       ImmutableSet<Path> zipFiles,
       ImmutableSet<Path> jarFilesThatMayContainResources,
@@ -97,7 +97,7 @@ public class ApkBuilderStep implements Step {
     this.resourceApk = Preconditions.checkNotNull(resourceApk);
     this.pathToOutputApkFile = Preconditions.checkNotNull(pathToOutputApkFile);
     this.dexFile = Preconditions.checkNotNull(dexFile);
-    this.assetDirectories = Preconditions.checkNotNull(javaResourcesDirectories);
+    this.assetDirectories = Preconditions.checkNotNull(assetDirectories);
     this.nativeLibraryDirectories = Preconditions.checkNotNull(nativeLibraryDirectories);
     this.jarFilesThatMayContainResources =
         Preconditions.checkNotNull(jarFilesThatMayContainResources);
