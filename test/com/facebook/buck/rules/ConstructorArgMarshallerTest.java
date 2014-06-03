@@ -418,6 +418,23 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
+  public void specifyingZeroIsNotConsideredOptional() {
+    class Dto implements ConstructorArg {
+      public Optional<Integer> number;
+    }
+
+    Dto dto = new Dto();
+    marshaller.populate(
+        ruleResolver,
+        filesystem,
+        buildRuleFactoryParams(ImmutableMap.<String, Object>of("number", 0)),
+        dto);
+
+    assertTrue(dto.number.isPresent());
+    assertEquals(Optional.of(0), dto.number);
+  }
+
+  @Test
   public void canPopulateSimpleConstructorArgFromBuildFactoryParams() {
     class Dto implements ConstructorArg {
       public String required;
