@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
@@ -229,11 +230,11 @@ public class AuditOwnerCommandTest {
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
+    Repository repository = new Repository("test", filesystem, buildRuleTypes);
     return new AuditOwnerCommand(new CommandRunnerParams(
         console,
-        filesystem,
+        repository,
         androidDirectoryResolver,
-        buildRuleTypes,
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
         buckConfig.getPythonInterpreter(),

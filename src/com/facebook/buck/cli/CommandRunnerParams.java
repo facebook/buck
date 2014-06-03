@@ -17,11 +17,11 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -29,7 +29,6 @@ import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.NullFileHashCache;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,8 +44,6 @@ import java.util.regex.Pattern;
  */
 class CommandRunnerParams {
 
-  private final ProjectFilesystem projectFilesystem;
-  private final KnownBuildRuleTypes buildRuleTypes;
   private final BuildEngine buildEngine;
   private final ArtifactCacheFactory artifactCacheFactory;
   private final Console console;
@@ -55,27 +52,26 @@ class CommandRunnerParams {
   private final BuckEventBus eventBus;
   private final Platform platform;
   private final AndroidDirectoryResolver androidDirectoryResolver;
+  private final Repository repository;
 
   @VisibleForTesting
   CommandRunnerParams(
       Console console,
-      ProjectFilesystem projectFilesystem,
+      Repository repository,
       AndroidDirectoryResolver androidDirectoryResolver,
-      KnownBuildRuleTypes buildRuleTypes,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       String pythonInterpreter,
       Platform platform,
       ImmutableMap<String, String> environment) {
-    this(console,
-        projectFilesystem,
+    this(
+        console,
+        repository,
         androidDirectoryResolver,
-        buildRuleTypes,
         new CachingBuildEngine(),
         artifactCacheFactory,
         eventBus,
-        new Parser(projectFilesystem,
-            buildRuleTypes,
+        new Parser(repository,
             console,
             environment,
             pythonInterpreter,
@@ -92,9 +88,8 @@ class CommandRunnerParams {
 
   public CommandRunnerParams(
       Console console,
-      ProjectFilesystem projectFilesystem,
+      Repository repository,
       AndroidDirectoryResolver androidDirectoryResolver,
-      KnownBuildRuleTypes buildRuleTypes,
       BuildEngine buildEngine,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
@@ -102,8 +97,7 @@ class CommandRunnerParams {
       Platform platform,
       ImmutableMap<String, String> environment) {
     this.console = Preconditions.checkNotNull(console);
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
+    this.repository = Preconditions.checkNotNull(repository);
     this.buildEngine = Preconditions.checkNotNull(buildEngine);
     this.artifactCacheFactory = Preconditions.checkNotNull(artifactCacheFactory);
     this.eventBus = Preconditions.checkNotNull(eventBus);
@@ -125,12 +119,8 @@ class CommandRunnerParams {
     return console.getVerbosity();
   }
 
-  public ProjectFilesystem getProjectFilesystem() {
-    return projectFilesystem;
-  }
-
-  public KnownBuildRuleTypes getBuildRuleTypes() {
-    return buildRuleTypes;
+  public Repository getRepository() {
+    return repository;
   }
 
   public ArtifactCacheFactory getArtifactCacheFactory() {

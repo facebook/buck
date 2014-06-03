@@ -29,6 +29,7 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.ActionGraph;
@@ -82,11 +83,12 @@ public class AuditClasspathCommandTest {
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
+    Repository repository = new Repository("test", projectFilesystem, buildRuleTypes);
+
     auditClasspathCommand = new AuditClasspathCommand(new CommandRunnerParams(
         console,
-        projectFilesystem,
+        repository,
         androidDirectoryResolver,
-        buildRuleTypes,
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
         BuckTestConstant.PYTHON_INTERPRETER,

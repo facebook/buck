@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -36,18 +37,16 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
 
   public CommandRunnerParamsForTesting(
       Console console,
-      ProjectFilesystem projectFilesystem,
+      Repository repository,
       AndroidDirectoryResolver androidDirectoryResolver,
-      KnownBuildRuleTypes buildRuleTypes,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       String pythonInterpreter,
       Platform platform,
       ImmutableMap<String, String> environment) {
     super(console,
-        projectFilesystem,
+        repository,
         androidDirectoryResolver,
-        buildRuleTypes,
         artifactCacheFactory,
         eventBus,
         pythonInterpreter,
@@ -77,11 +76,14 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
 
     public CommandRunnerParamsForTesting build() {
+      Repository repository = new Repository(
+          "command runner params for testing",
+          projectFilesystem,
+          buildRuleTypes);
       return new CommandRunnerParamsForTesting(
           console,
-          projectFilesystem,
+          repository,
           androidDirectoryResolver,
-          buildRuleTypes,
           artifactCacheFactory,
           eventBus,
           pythonInterpreter,

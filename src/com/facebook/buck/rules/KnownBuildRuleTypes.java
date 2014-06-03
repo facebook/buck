@@ -104,7 +104,7 @@ public class KnownBuildRuleTypes {
     return factory;
   }
 
-  public Description<?> getDescription(BuildRuleType buildRuleType) {
+  public Description<? extends ConstructorArg> getDescription(BuildRuleType buildRuleType) {
     Description<?> description = descriptions.get(buildRuleType);
     if (description == null) {
       throw new HumanReadableException(

@@ -2,6 +2,7 @@ java_library(
   name = 'types',
   srcs = [
     'KnownBuildRuleTypes.java',
+    'Repository.java',
   ],
   deps = [
     ':build_rule',

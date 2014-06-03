@@ -33,6 +33,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -40,7 +41,6 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
@@ -118,8 +118,7 @@ public class Parser {
   // TODO(user): Stop caching these in addition to parsedBuildFiles?
   private final Map<BuildTarget, TargetNode<?>> knownBuildTargets;
 
-  private final ProjectFilesystem projectFilesystem;
-  private final KnownBuildRuleTypes buildRuleTypes;
+  private final Repository repository;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private Console console;
@@ -218,30 +217,29 @@ public class Parser {
   }
   private final BuildFileTreeCache buildFileTreeCache;
 
-  public Parser(final ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes,
+  public Parser(
+      final Repository repository,
       Console console,
       ImmutableMap<String, String> environment,
       String pythonInterpreter,
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-    this(projectFilesystem,
-        buildRuleTypes,
+    this(repository,
         console,
         environment,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
         new InputSupplier<BuildFileTree>() {
           @Override
           public BuildFileTree getInput() throws IOException {
-            return new FilesystemBackedBuildFileTree(projectFilesystem);
+            return new FilesystemBackedBuildFileTree(repository.getFilesystem());
           }
         },
-        new BuildTargetParser(projectFilesystem),
+        new BuildTargetParser(repository.getFilesystem()),
          /* knownBuildTargets */ Maps.<BuildTarget, TargetNode<?>>newHashMap(),
         new DefaultProjectBuildFileParserFactory(
-            projectFilesystem,
+            repository.getFilesystem(),
             pythonInterpreter,
-            buildRuleTypes.getAllDescriptions()),
+            repository.getAllDescriptions()),
         tempFilePatterns,
         ruleKeyBuilderFactory);
   }
@@ -251,8 +249,7 @@ public class Parser {
    */
   @VisibleForTesting
   Parser(
-      ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes,
+      Repository repository,
       Console console,
       ImmutableMap<String, String> environment,
       InputSupplier<BuildFileTree> buildFileTreeSupplier,
@@ -261,8 +258,7 @@ public class Parser {
       ProjectBuildFileParserFactory buildFileParserFactory,
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
+    this.repository = Preconditions.checkNotNull(repository);
     this.console = Preconditions.checkNotNull(console);
     this.environment = Preconditions.checkNotNull(environment);
     this.buildFileTreeCache = new BuildFileTreeCache(
@@ -282,7 +278,7 @@ public class Parser {
   }
 
   public File getProjectRoot() {
-    return projectFilesystem.getProjectRoot();
+    return repository.getFilesystem().getProjectRoot();
   }
 
   /**
@@ -360,7 +356,7 @@ public class Parser {
       if (!isCacheComplete(defaultIncludes)) {
         Set<File> buildTargetFiles = Sets.newHashSet();
         for (BuildTarget buildTarget : buildTargets) {
-          File buildFile = buildTarget.getBuildFile(projectFilesystem);
+          File buildFile = buildTarget.getBuildFile(repository.getFilesystem());
           boolean isNewElement = buildTargetFiles.add(buildFile);
           if (isNewElement) {
             parseBuildFile(buildFile, defaultIncludes, buildFileParser);
@@ -559,7 +555,7 @@ public class Parser {
           "Unable to locate dependency \"%s\" for target \"%s\"", buildTarget, sourceTarget);
     }
 
-    File buildFile = buildTarget.getBuildFile(projectFilesystem);
+    File buildFile = buildTarget.getBuildFile(repository.getFilesystem());
     if (isCached(buildFile, defaultIncludes)) {
       throw new HumanReadableException(
           "The build file that should contain %s has already been parsed (%s), " +
@@ -636,16 +632,16 @@ public class Parser {
           normalize(Paths.get((String) map.get("buck.base_path")))
               .resolve("BUCK").toAbsolutePath());
 
-      Description<?> description = buildRuleTypes.getDescription(buildRuleType);
+      Description<?> description = repository.getDescription(buildRuleType);
       if (description == null) {
         throw new HumanReadableException("Unrecognized rule %s while parsing %s.",
             buildRuleType,
-            target.getBuildFile(projectFilesystem));
+            target.getBuildFile(repository.getFilesystem()));
       }
 
       BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
           map,
-          projectFilesystem,
+          repository.getFilesystem(),
           buildTargetParser,
           target,
           ruleKeyBuilderFactory);
@@ -655,7 +651,9 @@ public class Parser {
       if (existingTargetNode != null) {
         throw new HumanReadableException("Duplicate definition for " + target);
       }
-      parsedBuildFiles.put(normalize(target.getBuildFile(projectFilesystem).toPath()), map);
+      parsedBuildFiles.put(
+          normalize(target.getBuildFile(repository.getFilesystem()).toPath()),
+          map);
     }
   }
 
@@ -747,7 +745,7 @@ public class Parser {
    */
   private BuildRuleType parseBuildRuleTypeFromRawRule(Map<String, Object> map) {
     String type = (String) map.get("type");
-    return buildRuleTypes.getBuildRuleType(type);
+    return repository.getBuildRuleType(type);
   }
 
   /**
@@ -778,6 +776,7 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException, IOException {
     Preconditions.checkNotNull(filesystem);
     Preconditions.checkNotNull(includes);
+    ProjectFilesystem projectFilesystem = repository.getFilesystem();
     if (!projectFilesystem.getProjectRoot().equals(filesystem.getProjectRoot())) {
       throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
           projectFilesystem.getProjectRoot(), filesystem.getProjectRoot()));
@@ -846,10 +845,10 @@ public class Parser {
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Parser watched event %s %s\n", event.kind(),
-          projectFilesystem.createContextString(event));
+          repository.getFilesystem().createContextString(event));
     }
 
-    if (projectFilesystem.isPathChangeEvent(event)) {
+    if (repository.getFilesystem().isPathChangeEvent(event)) {
       Path path = (Path) event.context();
 
       if (isPathCreateOrDeleteEvent(event)) {
@@ -903,7 +902,7 @@ public class Parser {
     String packageBuildFilePath =
         buildFileTreeCache.getInput().getBasePathOfAncestorTarget(path).toString();
     invalidateDependents(
-        projectFilesystem.getFileForRelativePath(
+        repository.getFilesystem().getFileForRelativePath(
             packageBuildFilePath + '/' + BuckConstant.BUILD_RULES_FILE_NAME).toPath());
   }
 
@@ -959,7 +958,7 @@ public class Parser {
    * @return An equivalent file constructed from a normalized, absolute path to the given File.
    */
   private Path normalize(Path path) {
-    return projectFilesystem.resolve(path);
+    return repository.getFilesystem().resolve(path);
   }
 
   /**

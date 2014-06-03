@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.ActionGraph;
@@ -65,14 +66,14 @@ public class AuditInputCommandTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     KnownBuildRuleTypes buildRuleTypes =
         DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem);
+    Repository repository = new Repository("test", projectFilesystem, buildRuleTypes);
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
     auditInputCommand = new AuditInputCommand(new CommandRunnerParams(
         console,
-        projectFilesystem,
+        repository,
         new FakeAndroidDirectoryResolver(),
-        buildRuleTypes,
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
         BuckTestConstant.PYTHON_INTERPRETER,

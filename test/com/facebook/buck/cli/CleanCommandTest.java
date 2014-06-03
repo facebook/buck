@@ -20,11 +20,12 @@ import static org.easymock.EasyMock.capture;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.command.Project;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
@@ -34,7 +35,6 @@ import com.google.common.collect.ImmutableMap;
 
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
-import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -47,11 +47,6 @@ import java.nio.file.Path;
 public class CleanCommandTest extends EasyMockSupport {
 
   private ProjectFilesystem projectFilesystem;
-
-  @Before
-  public void setUpFilesystemMock() {
-    projectFilesystem = createMock(ProjectFilesystem.class);
-  }
 
   // TODO(mbolin): When it is possible to inject a mock object for stderr,
   // create a test that runs `buck clean unexpectedarg` and verify that the
@@ -107,14 +102,19 @@ public class CleanCommandTest extends EasyMockSupport {
   }
 
   private CleanCommand createCommand() {
+    projectFilesystem = createMock(ProjectFilesystem.class);
+    Repository repository = new Repository(
+        "mocked",
+        projectFilesystem,
+        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem));
+
     CommandRunnerParams params = new CommandRunnerParams(
         new TestConsole(),
-        projectFilesystem,
+        repository,
         new FakeAndroidDirectoryResolver(),
-        createMock(KnownBuildRuleTypes.class),
         new CachingBuildEngine(),
         new InstanceArtifactCacheFactory(createMock(ArtifactCache.class)),
-        createMock(BuckEventBus.class),
+        BuckEventBusFactory.newInstance(),
         createMock(Parser.class),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));

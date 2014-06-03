@@ -58,6 +58,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.Step;
@@ -112,6 +113,7 @@ public class ParserTest extends EasyMockSupport {
   private Parser testParser;
   private KnownBuildRuleTypes buildRuleTypes;
   private ProjectFilesystem filesystem;
+  private Repository repository;
 
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
@@ -158,6 +160,9 @@ public class ParserTest extends EasyMockSupport {
     filesystem = new ProjectFilesystem(root);
 
     buildRuleTypes = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);
+
+    repository = new Repository("parser test", filesystem, buildRuleTypes);
+
     DefaultProjectBuildFileParserFactory testBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             filesystem,
@@ -207,8 +212,7 @@ public class ParserTest extends EasyMockSupport {
     ProjectBuildFileParserFactory buildFileParserFactory,
     BuildTargetParser buildTargetParser) {
     return new Parser(
-        filesystem,
-        buildRuleTypes,
+        repository,
         new TestConsole(),
         ImmutableMap.copyOf(System.getenv()),
         buildFileTreeSupplier,
@@ -235,9 +239,11 @@ public class ParserTest extends EasyMockSupport {
         "buck.base_path", "testdata/com/facebook/feed/model");
     List<Map<String, Object>> ruleObjects = ImmutableList.of(rawRule);
 
+    ProjectFilesystem fs = new ProjectFilesystem(new File("."));
+    KnownBuildRuleTypes types = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(
+        filesystem);
     Parser parser = new Parser(
-        new ProjectFilesystem(new File(".")),
-        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem),
+        new Repository("test", fs, types),
         new TestConsole(),
         ImmutableMap.copyOf(System.getenv()),
         BuckTestConstant.PYTHON_INTERPRETER,

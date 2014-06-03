@@ -28,6 +28,7 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
@@ -154,8 +155,9 @@ public final class Main {
       this.config = Preconditions.checkNotNull(config);
       this.console = Preconditions.checkNotNull(console);
       this.hashCache = new DefaultFileHashCache(projectFilesystem, console);
-      this.parser = new Parser(projectFilesystem,
-          knownBuildRuleTypes,
+      Repository repository = new Repository("default", projectFilesystem, knownBuildRuleTypes);
+      this.parser = new Parser(
+          repository,
           console,
           environment,
           config.getPythonInterpreter(),
@@ -570,9 +572,11 @@ public final class Main {
         }
       }
 
+      Repository repository = new Repository("default", projectFilesystem, buildRuleTypes);
+
       if (parser == null) {
-        parser = new Parser(projectFilesystem,
-            buildRuleTypes,
+        parser = new Parser(
+            repository,
             console,
             clientEnvironment,
             config.getPythonInterpreter(),
@@ -586,9 +590,8 @@ public final class Main {
           config,
           new CommandRunnerParams(
               console,
-              projectFilesystem,
+              repository,
               androidDirectoryResolver,
-              buildRuleTypes,
               buildEngine,
               artifactCacheFactory,
               buildEventBus,

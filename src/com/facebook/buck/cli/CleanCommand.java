@@ -37,7 +37,7 @@ public class CleanCommand implements CommandRunner {
   public CleanCommand(CommandRunnerParams params) {
     Preconditions.checkNotNull(params);
     console = params.getConsole();
-    filesystem = params.getProjectFilesystem();
+    filesystem = params.getRepository().getFilesystem();
   }
 
   @Override

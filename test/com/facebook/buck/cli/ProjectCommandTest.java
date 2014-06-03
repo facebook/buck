@@ -30,6 +30,7 @@ import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
@@ -226,16 +228,16 @@ public class ProjectCommandTest {
     private BuildCommandOptions buildCommandOptions;
 
     ProjectCommandForTest() {
-      super(new CommandRunnerParams(
-          new TestConsole(),
-              new ProjectFilesystem(new File(".")),
-          new FakeAndroidDirectoryResolver(),
-          getDefaultKnownBuildRuleTypes(new ProjectFilesystem(new File("."))),
-          new InstanceArtifactCacheFactory(artifactCache),
-          BuckEventBusFactory.newInstance(),
-          BuckTestConstant.PYTHON_INTERPRETER,
-          Platform.detect(),
-          ImmutableMap.copyOf(System.getenv())));
+      super(
+          new CommandRunnerParams(
+              new TestConsole(),
+              getTestRepository(),
+              new FakeAndroidDirectoryResolver(),
+              new InstanceArtifactCacheFactory(artifactCache),
+              BuckEventBusFactory.newInstance(),
+              BuckTestConstant.PYTHON_INTERPRETER,
+              Platform.detect(),
+              ImmutableMap.copyOf(System.getenv())));
     }
 
     @Override
@@ -271,6 +273,12 @@ public class ProjectCommandTest {
 
       buildCommandOptions = options;
       return 0;
+    }
+
+    private static Repository getTestRepository() {
+      ProjectFilesystem filesystem = new ProjectFilesystem(new File(".").toPath());
+      KnownBuildRuleTypes buildRuleTypes = getDefaultKnownBuildRuleTypes(filesystem);
+      return new Repository("test", filesystem, buildRuleTypes);
     }
   }
 }

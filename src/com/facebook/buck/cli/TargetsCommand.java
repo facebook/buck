@@ -82,7 +82,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     ImmutableSet.Builder<BuildRuleType> buildRuleTypesBuilder = ImmutableSet.builder();
     for (String name : types) {
       try {
-        buildRuleTypesBuilder.add(getBuildRuleTypes().getBuildRuleType(name));
+        buildRuleTypesBuilder.add(getRepository().getBuildRuleType(name));
       } catch (IllegalArgumentException e) {
         console.printBuildFailure("Invalid build rule type: " + name);
         return 1;

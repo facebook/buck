@@ -94,7 +94,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
         projectFilesystem,
         options.getBuckConfig().getPythonInterpreter(),
         // TODO(simons): When we land dynamic loading, this MUST change.
-        getBuildRuleTypes().getAllDescriptions());
+        getRepository().getAllDescriptions());
     try (ProjectBuildFileParser parser =
              factory.createParser(
                  options.getBuckConfig().getDefaultIncludes(),

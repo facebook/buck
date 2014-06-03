@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
@@ -27,7 +28,6 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEngine;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
@@ -52,8 +52,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
   private final CommandRunnerParams commandRunnerParams;
   protected final Console console;
-  private final ProjectFilesystem projectFilesystem;
-  private final KnownBuildRuleTypes buildRuleTypes;
+  private final Repository repository;
   private final BuildEngine buildEngine;
   private final ArtifactCacheFactory artifactCacheFactory;
   private final Parser parser;
@@ -71,8 +70,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   protected AbstractCommandRunner(CommandRunnerParams params) {
     this.commandRunnerParams = Preconditions.checkNotNull(params);
     this.console = Preconditions.checkNotNull(params.getConsole());
-    this.projectFilesystem = Preconditions.checkNotNull(params.getProjectFilesystem());
-    this.buildRuleTypes = Preconditions.checkNotNull(params.getBuildRuleTypes());
+    this.repository = Preconditions.checkNotNull(params.getRepository());
     this.buildEngine = Preconditions.checkNotNull(params.getBuildEngine());
     this.artifactCacheFactory = Preconditions.checkNotNull(params.getArtifactCacheFactory());
     this.parser = Preconditions.checkNotNull(params.getParser());
@@ -160,11 +158,11 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   }
 
   public ProjectFilesystem getProjectFilesystem() {
-    return projectFilesystem;
+    return repository.getFilesystem();
   }
 
-  public KnownBuildRuleTypes getBuildRuleTypes() {
-    return buildRuleTypes;
+  public Repository getRepository() {
+    return repository;
   }
 
   /**

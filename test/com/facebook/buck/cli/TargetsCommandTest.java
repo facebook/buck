@@ -33,6 +33,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -117,17 +118,18 @@ public class TargetsCommandTest {
   public void setUp() {
     console = new TestConsole();
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     KnownBuildRuleTypes buildRuleTypes =
         DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem);
+    Repository repository = new Repository("test", projectFilesystem, buildRuleTypes);
+    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+
     targetsCommand =
         new TargetsCommand(new CommandRunnerParams(
             console,
-            projectFilesystem,
+            repository,
             androidDirectoryResolver,
-            buildRuleTypes,
             new InstanceArtifactCacheFactory(artifactCache),
             eventBus,
             BuckTestConstant.PYTHON_INTERPRETER,
