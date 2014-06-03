@@ -62,7 +62,7 @@ public class ApkBuilderStep implements Step {
   private final Path resourceApk;
   private final Path dexFile;
   private final Path pathToOutputApkFile;
-  private final ImmutableSet<String> assetDirectories;
+  private final ImmutableSet<Path> assetDirectories;
   private final ImmutableSet<Path> nativeLibraryDirectories;
   private final ImmutableSet<Path> zipFiles;
   private final ImmutableSet<Path> jarFilesThatMayContainResources;
@@ -87,7 +87,7 @@ public class ApkBuilderStep implements Step {
       Path resourceApk,
       Path pathToOutputApkFile,
       Path dexFile,
-      ImmutableSet<String> javaResourcesDirectories,
+      ImmutableSet<Path> javaResourcesDirectories,
       ImmutableSet<Path> nativeLibraryDirectories,
       ImmutableSet<Path> zipFiles,
       ImmutableSet<Path> jarFilesThatMayContainResources,
@@ -129,7 +129,7 @@ public class ApkBuilderStep implements Step {
         builder.addNativeLibraries(
             projectFilesystem.getFileForRelativePath(nativeLibraryDirectory));
       }
-      for (String assetDirectory : assetDirectories) {
+      for (Path assetDirectory : assetDirectories) {
         builder.addSourceFolder(projectFilesystem.getFileForRelativePath(assetDirectory));
       }
       for (Path zipFile : zipFiles) {

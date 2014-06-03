@@ -620,7 +620,7 @@ public class AndroidBinary extends AbstractBuildable implements
         aaptPackageResources.getResourceApkPath(),
         getSignedApkPath(),
         dexFilesInfo.primaryDexPath,
-        /* javaResourcesDirectories */ ImmutableSet.<String>of(),
+        /* javaResourcesDirectories */ ImmutableSet.<Path>of(),
         nativeLibraryDirectories,
         zipFiles.build(),
         dexTransitiveDependencies.pathsToThirdPartyJars,
