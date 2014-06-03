@@ -150,4 +150,13 @@ public class TestSelectionListTest {
     assertTrue(testSelectorList.isIncluded(SHOE_LACES_TEST));
     assertTrue(testSelectorList.isIncluded(PM_DECREE_TEST));
   }
+
+  @Test
+  public void shouldAlwaysIncludeTestsWhenUsingTheEmptySelectorList() {
+    TestSelectorList testSelectorList = TestSelectorList.empty();
+    TestDescription description = new TestDescription("com.example.ClassName", "methodName");
+    assertTrue(
+        "The empty list should include everything",
+        testSelectorList.isIncluded(description));
+  }
 }
