@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
@@ -78,7 +79,7 @@ public abstract class JavacStep implements Step {
 
   protected final ImmutableSet<Path> declaredClasspathEntries;
 
-  protected final Optional<String> invokingRule;
+  protected final Optional<BuildTarget> invokingRule;
 
   protected final BuildDependencies buildDependencies;
 
@@ -127,7 +128,7 @@ public abstract class JavacStep implements Step {
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> pathToOutputAbiFile,
-      Optional<String> invokingRule,
+      Optional<BuildTarget> invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList) {
@@ -183,8 +184,9 @@ public abstract class JavacStep implements Step {
         ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
         ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
 
+        String invoker = invokingRule.isPresent() ? invokingRule.get().toString() : "";
         errorMessage.add(String.format("Rule %s builds with its transitive " +
-            "dependencies but not with its first order dependencies.", invokingRule.or("")));
+            "dependencies but not with its first order dependencies.", invoker));
         errorMessage.add("The following packages were missing:");
         errorMessage.add(Joiner.on(LINE_SEPARATOR).join(failedImports));
         if (suggestBuildRules.isPresent()) {

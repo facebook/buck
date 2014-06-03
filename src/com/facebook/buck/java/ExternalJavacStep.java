@@ -56,7 +56,7 @@ public class ExternalJavacStep extends JavacStep {
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> pathToOutputAbiFile,
-      Optional<String> invokingRule,
+      Optional<BuildTarget> invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList,
@@ -137,7 +137,7 @@ public class ExternalJavacStep extends JavacStep {
     Map<String, String> env = processBuilder.environment();
     env.clear();
     env.putAll(context.getEnvironment());
-    env.put("BUCK_INVOKING_RULE", invokingRule.or(""));
+    env.put("BUCK_INVOKING_RULE", (invokingRule.isPresent() ? invokingRule.get().toString() : ""));
     env.put("BUCK_TARGET", target.toString());
     env.put("BUCK_DIRECTORY_ROOT", context.getProjectDirectoryRoot().toString());
     env.put("BUCK_OUTPUT_ABI_FILE", pathToOutputAbiFile.or(new File("").toPath()).toString());

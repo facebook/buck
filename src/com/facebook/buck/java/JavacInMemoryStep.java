@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.MissingSymbolEvent;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
@@ -71,7 +72,7 @@ public class JavacInMemoryStep extends JavacStep {
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> pathToOutputAbiFile,
-      Optional<String> invokingRule,
+      Optional<BuildTarget> invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList) {

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.java.abi.AbiWriterProtocol;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
@@ -148,7 +149,7 @@ public class JavacInMemoryStepIntegrationTest {
         /* declated classpathEntries */ ImmutableSet.<Path>of(),
         JavacOptions.builder().build(),
         Optional.of(pathToOutputAbiFile),
-        Optional.<String>absent(),
+        Optional.<BuildTarget>absent(),
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
         Optional.of(pathToSrcsList));

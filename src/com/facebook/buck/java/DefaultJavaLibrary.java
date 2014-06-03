@@ -285,7 +285,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
             declaredClasspathEntries,
             javacOptions,
             Optional.of(getPathToAbiOutputFile()),
-            Optional.of(target.getFullyQualifiedName()),
+            Optional.of(target),
             buildDependencies,
             suggestBuildRules,
             Optional.of(pathToSrcsList),
@@ -299,7 +299,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
             declaredClasspathEntries,
             javacOptions,
             Optional.of(getPathToAbiOutputFile()),
-            Optional.of(target.getFullyQualifiedName()),
+            Optional.of(target),
             buildDependencies,
             suggestBuildRules,
             Optional.of(pathToSrcsList));

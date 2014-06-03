@@ -16,32 +16,34 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.model.BuildTarget;
+
 public class MissingSymbolEvent extends AbstractBuckEvent {
 
   public enum SymbolType {
     Java
   }
 
-  private final String target;
+  private final BuildTarget target;
 
   private final String symbol;
   private final SymbolType type;
 
-  private MissingSymbolEvent(String target, String symbol, SymbolType type) {
+  private MissingSymbolEvent(BuildTarget target, String symbol, SymbolType type) {
     this.target = target;
     this.symbol = symbol;
     this.type = type;
   }
 
   public static MissingSymbolEvent create(
-      String target,
+      BuildTarget target,
       String symbol,
       SymbolType type) {
     return new MissingSymbolEvent(target, symbol, type);
   }
 
   public String getTarget() {
-    return target;
+    return target.getFullyQualifiedName();
   }
 
   public String getSymbol() {

@@ -37,7 +37,7 @@ public class JavacStepUtil {
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> pathToOutputAbiFile,
-      Optional<String> invokingRule,
+      Optional<BuildTarget> invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList,

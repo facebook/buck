@@ -95,7 +95,7 @@ public class ExternalJavacTest extends EasyMockSupport {
                       /* targetLevel */ "6"))
               .build(),
           /* pathToOutputAbiFile */ Optional.<Path>absent(),
-          /* invokingRule */ Optional.<String>absent(),
+          /* invokingRule */ Optional.<BuildTarget>absent(),
           /* buildDependencies */ buildDependencies,
           /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
           /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST),

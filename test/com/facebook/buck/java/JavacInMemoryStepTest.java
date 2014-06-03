@@ -20,6 +20,7 @@ import static com.facebook.buck.java.JavaCompilerEnvironment.TARGETED_JAVA_VERSI
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
@@ -103,7 +104,7 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
           /* declaredClasspathEntries */ ImmutableSet.of(Paths.get("foo.jar")),
           /* JavacOptions */ JavacOptions.DEFAULTS,
           /* pathToOutputAbiFile */ Optional.<Path>absent(),
-          /* invokingRule */ Optional.<String>absent(),
+          /* invokingRule */ Optional.<BuildTarget>absent(),
           /* buildDependencies */ buildDependencies,
           /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
           /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST));

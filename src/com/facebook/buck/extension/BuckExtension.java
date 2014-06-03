@@ -113,7 +113,7 @@ public class BuckExtension extends AbstractBuildable {
             declaredClasspath,
             javacOptions,
             Optional.of(abi),
-            Optional.of(target.toString()),
+            Optional.of(target),
             BuildDependencies.FIRST_ORDER_ONLY,
             Optional.<JavacStep.SuggestBuildRules>absent(),
             /* path to sources list */ Optional.<Path>absent()));

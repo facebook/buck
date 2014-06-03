@@ -143,7 +143,7 @@ public class UberRDotJavaUtil {
             .setJavaCompilerEnviornment(javacOptions.getJavaCompilerEnvironment())
             .build(),
         pathToOutputAbiFile,
-        Optional.<String>absent(),
+        Optional.<BuildTarget>absent(),
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
         /* pathToSrcsList */ Optional.<Path>absent(),
