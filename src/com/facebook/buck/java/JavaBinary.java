@@ -170,7 +170,7 @@ public class JavaBinary extends AbstractBuildable implements BinaryBuildRule,
   }
 
   @Override
-  public List<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
+  public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
     Preconditions.checkState(
         mainClass != null,
         "Must specify a main class for %s in order to to run it.",

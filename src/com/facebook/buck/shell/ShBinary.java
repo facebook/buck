@@ -105,7 +105,7 @@ public class ShBinary extends AbstractBuildable
   }
 
   @Override
-  public List<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
+  public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
     return ImmutableList.of(projectFilesystem
           .getFileForRelativePath(output.toString())
           .getAbsolutePath()

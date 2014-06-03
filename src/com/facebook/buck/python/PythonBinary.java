@@ -72,7 +72,7 @@ public class PythonBinary extends AbstractBuildable implements BinaryBuildRule {
   }
 
   @Override
-  public List<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
+  public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
     String pythonPath = Joiner.on(':').join(
         Iterables.transform(
             getPythonPathEntries(),
