@@ -19,25 +19,52 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.IOException;
+import java.util.List;
 
-public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
+public class CleanCommand implements CommandRunner {
+  private final Console console;
+  private final ProjectFilesystem filesystem;
+
   public CleanCommand(CommandRunnerParams params) {
-    super(params);
+    Preconditions.checkNotNull(params);
+    console = params.getConsole();
+    filesystem = params.getProjectFilesystem();
   }
 
   @Override
-  CleanCommandOptions createOptions(BuckConfig buckConfig) {
-    return new CleanCommandOptions(buckConfig);
+  public int runCommand(BuckConfig buckConfig, List<String> args) throws IOException {
+    CleanCommandOptions options = new CleanCommandOptions(buckConfig);
+    CmdLineParser parser = new CmdLineParserAdditionalOptions(options);
+
+    boolean hasValidOptions = false;
+    try {
+      parser.parseArgument(args);
+      hasValidOptions = true;
+    } catch (CmdLineException e) {
+      console.getStdErr().println(e.getMessage());
+    }
+
+    if (hasValidOptions && !options.showHelp()) {
+      return runCommandWithOptions(options);
+    } else {
+      console.getStdErr().println("deletes any generated files");
+      parser.printUsage(console.getStdErr());
+      return 1;
+    }
   }
 
-  @Override
-  int runCommandWithOptionsInternal(CleanCommandOptions options) throws IOException {
+  int runCommandWithOptions(CleanCommandOptions options) throws IOException {
     if (!options.getArguments().isEmpty()) {
-      getStdErr().printf("Unrecognized argument%s to buck clean: %s\n",
+      console.getStdErr().printf("Unrecognized argument%s to buck clean: %s\n",
           options.getArguments().size() == 1 ? "" : "s",
           Joiner.on(' ').join(options.getArguments()));
       return 1;
@@ -58,27 +85,20 @@ public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
     // directories itself so we can blow away BuckConstant.ANNOTATION_DIR as part of `buck clean`.
     // This will also reduce how long `buck project` takes.
     //
-    ProjectFilesystem projectFilesystem = getProjectFilesystem();
-
     if (options.isCleanBuckProjectFiles()) {
       // Delete directories that were created for the purpose of `buck project`.
       // TODO(mbolin): Unify these two directories under a single buck-ide directory,
       // which is distinct from the buck-out directory.
-      projectFilesystem.rmdir(Project.ANDROID_GEN_PATH);
-      projectFilesystem.rmdir(BuckConstant.ANNOTATION_PATH);
+      filesystem.rmdir(Project.ANDROID_GEN_PATH);
+      filesystem.rmdir(BuckConstant.ANNOTATION_PATH);
     } else {
       // On Windows, you have to close all files that will be deleted.
       // Because buck clean will delete build.log, you must close it first.
       JavaUtilsLoggingBuildListener.closeLogFile();
-      projectFilesystem.rmdir(BuckConstant.BIN_PATH);
-      projectFilesystem.rmdir(BuckConstant.GEN_PATH);
+      filesystem.rmdir(BuckConstant.BIN_PATH);
+      filesystem.rmdir(BuckConstant.GEN_PATH);
     }
 
     return 0;
-  }
-
-  @Override
-  String getUsageIntro() {
-    return "deletes any generated files";
   }
 }

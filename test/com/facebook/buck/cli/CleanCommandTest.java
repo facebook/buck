@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
+import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -45,6 +46,13 @@ import java.nio.file.Path;
  */
 public class CleanCommandTest extends EasyMockSupport {
 
+  private ProjectFilesystem projectFilesystem;
+
+  @Before
+  public void setUpFilesystemMock() {
+    projectFilesystem = createMock(ProjectFilesystem.class);
+  }
+
   // TODO(mbolin): When it is possible to inject a mock object for stderr,
   // create a test that runs `buck clean unexpectedarg` and verify that the
   // exit code is 1 and that the appropriate error message is printed.
@@ -53,7 +61,6 @@ public class CleanCommandTest extends EasyMockSupport {
   public void testCleanCommandNoArguments() throws CmdLineException, IOException {
     // Set up mocks.
     CleanCommand cleanCommand = createCommand();
-    ProjectFilesystem projectFilesystem = cleanCommand.getProjectFilesystem();
     Capture<Path> binDir = new Capture<>();
     projectFilesystem.rmdir(capture(binDir));
     Capture<Path> genDir = new Capture<>();
@@ -75,7 +82,6 @@ public class CleanCommandTest extends EasyMockSupport {
   public void testCleanCommandWithProjectArgument() throws CmdLineException, IOException {
     // Set up mocks.
     CleanCommand cleanCommand = createCommand();
-    ProjectFilesystem projectFilesystem = cleanCommand.getProjectFilesystem();
     Capture<Path> androidGenDir = new Capture<>();
     projectFilesystem.rmdir(capture(androidGenDir));
     Capture<Path> annotationDir = new Capture<>();
@@ -103,7 +109,7 @@ public class CleanCommandTest extends EasyMockSupport {
   private CleanCommand createCommand() {
     CommandRunnerParams params = new CommandRunnerParams(
         new TestConsole(),
-        createMock(ProjectFilesystem.class),
+        projectFilesystem,
         new FakeAndroidDirectoryResolver(),
         createMock(KnownBuildRuleTypes.class),
         new CachingBuildEngine(),
