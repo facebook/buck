@@ -75,6 +75,7 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
@@ -554,6 +555,43 @@ public class DefaultJavaLibraryTest {
             getJavaLibrary(parent),
             Paths.get("buck-out/gen/lib__parent__output/parent.jar")),
         getJavaLibrary(parent).getOutputClasspathEntries());
+  }
+
+  /**
+   * Tests that an error is thrown when non-java library rules are listed in the exported deps
+   * parameter.
+   */
+  @Test
+  public void testExportedDepsShouldOnlyContainJavaLibraryRules() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    BuildTarget genruleBuildTarget = BuildTargetFactory.newInstance("//generated:stuff");
+    BuildRule genrule = GenruleBuilder.createGenrule(genruleBuildTarget)
+        .setBash("echo 'aha' > $OUT")
+        .setOut("stuff.txt")
+        .build();
+    ruleResolver.addToIndex(genruleBuildTarget, genrule);
+
+    String commonLibAbiKeyHash = Strings.repeat("a", 40);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
+
+    try {
+      createDefaultJavaLibaryRuleWithAbiKey(
+          commonLibAbiKeyHash,
+          buildTarget,
+          // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+          /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
+          /* deps */ ImmutableSortedSet.<BuildRule>of(),
+          /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(genrule));
+      fail("A non-java library listed as exported dep should have thrown.");
+    } catch (HumanReadableException e) {
+      String expected =
+          buildTarget + ": exported dep " +
+          genruleBuildTarget + " (" + genrule.getType() + ") " +
+          "must be a type of java library.";
+      assertEquals(expected, e.getMessage());
+    }
+
   }
 
   /**

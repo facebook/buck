@@ -49,6 +49,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -176,6 +177,18 @@ public class DefaultJavaLibrary extends AbstractBuildable
       ImmutableSortedSet<BuildRule> providedDeps,
       JavacOptions javacOptions) {
     super(target);
+
+    // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
+    // and so only make sense for java library types.
+    for (BuildRule dep : exportedDeps) {
+      if (!(dep.getBuildable() instanceof JavaLibrary)) {
+        throw new HumanReadableException(
+            target.getBuildTarget() + ": exported dep " +
+            dep.getBuildTarget() + " (" + dep.getType() + ") " +
+            "must be a type of java library.");
+      }
+    }
+
     this.deps = ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(deps)
         .addAll(exportedDeps)
