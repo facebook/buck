@@ -245,7 +245,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     } else if (options.getWorkspaceAndProjects()) {
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
           getProjectFilesystem(),
-          getProjectFilesystem().getPathForRelativePath(Paths.get("_gen")),
           partialGraph,
           executionContext,
           Iterables.getOnlyElement(passedInTargetsSet));
