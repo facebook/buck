@@ -45,7 +45,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 public class PrebuiltJarDescription implements Description<PrebuiltJarDescription.Arg>,
     FlavorableDescription<PrebuiltJarDescription.Arg>{
@@ -125,7 +124,9 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       }
 
       @Override
-      public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+      public ImmutableList<Step> getBuildSteps(
+          BuildContext context,
+          BuildableContext buildableContext) {
         buildableContext.recordArtifact(getPathToOutputFile());
         return ImmutableList.of();
       }

@@ -158,7 +158,7 @@ public class UberRDotJava extends AbstractBuildable implements
   }
 
   @Override
-  public List<Step> getBuildSteps(
+  public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       final BuildableContext buildableContext
   ) {

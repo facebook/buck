@@ -274,7 +274,9 @@ public class DescribedRuleTest {
     }
 
     @Override
-    public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context,
+        BuildableContext buildableContext) {
       return ImmutableList.<Step>of(new EchoStep(message));
     }
 

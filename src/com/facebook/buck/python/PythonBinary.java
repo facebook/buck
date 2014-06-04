@@ -40,7 +40,6 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -77,7 +76,8 @@ public class PythonBinary extends AbstractBuildable implements BinaryBuildRule {
         Iterables.transform(
             getPythonPathEntries(),
             projectFilesystem.getAbsolutifier()));
-    return ImmutableList.of(String.format("PYTHONPATH=%s", pythonPath), "python",
+    return ImmutableList.of(
+        String.format("PYTHONPATH=%s", pythonPath), "python",
         projectFilesystem.getAbsolutifier().apply(main).toString());
   }
 
@@ -117,7 +117,9 @@ public class PythonBinary extends AbstractBuildable implements BinaryBuildRule {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
     // TODO(mbolin): Package Python code, if appropriate. There does not appear to be a standard
     // cross-platform way to do this.
     return ImmutableList.of();

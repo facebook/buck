@@ -51,7 +51,6 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 
 public class PrebuiltJar extends AbstractBuildable
     implements JavaLibrary, HasClasspathEntries, ExportDependencies,
@@ -198,7 +197,9 @@ public class PrebuiltJar extends AbstractBuildable
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Create a step to compute the ABI key.

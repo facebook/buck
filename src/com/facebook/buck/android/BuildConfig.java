@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * {@link BuildConfig} is a {@link Buildable} that can generate a BuildConfig.java file.
@@ -85,7 +84,10 @@ public class BuildConfig extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.add(new MakeCleanDirectoryStep(pathToOutputFile.getParent()));

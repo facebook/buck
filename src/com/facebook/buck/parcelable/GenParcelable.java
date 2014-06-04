@@ -39,7 +39,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -69,7 +68,7 @@ public class GenParcelable extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(
+  public ImmutableList<Step> getBuildSteps(
       final BuildContext buildContext,
       BuildableContext buildableContext) {
     Step step = new Step() {

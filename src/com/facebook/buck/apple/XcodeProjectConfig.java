@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -63,7 +62,7 @@ public class XcodeProjectConfig extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(
+  public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }

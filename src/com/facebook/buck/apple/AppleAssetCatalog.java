@@ -31,7 +31,6 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -90,7 +89,7 @@ public class AppleAssetCatalog extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(
+  public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
     // This rule does not perform any build steps. Rather, the top-level binary target will

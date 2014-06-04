@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -90,7 +89,9 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
     // We're checking in prebuilt libraries for now, so this is a noop.
     return ImmutableList.of();
   }

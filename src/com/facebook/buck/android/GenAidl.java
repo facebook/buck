@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Buildable for generating a .java file from an .aidl file. Example:
@@ -101,7 +100,10 @@ public class GenAidl extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     commands.add(new MakeCleanDirectoryStep(genPath));

@@ -51,7 +51,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Builds an extension for buck. This is similar to a {@code java_library}, but will automatically
@@ -92,7 +91,10 @@ public class BuckExtension extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+
     JavacOptions javacOptions = JavacOptions.builder()
         .setJavaCompilerEnviornment(BUCK_ENV)
         .build();

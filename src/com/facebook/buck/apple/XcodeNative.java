@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -73,7 +72,9 @@ public class XcodeNative extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
     // TODO(user): The buck native implementation will likely call product to xcodebuild with
     // some set of xcode build settings, collect the build products (a bundle or archive) and copy
     // them to the generated files directory.

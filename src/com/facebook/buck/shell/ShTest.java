@@ -90,7 +90,9 @@ public class ShTest extends AbstractBuildable implements TestRule {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
     // Nothing to build: test is run directly.
     return ImmutableList.of();
   }

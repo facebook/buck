@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -67,7 +66,9 @@ public class Keystore extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
     // Nothing to build: this is like a glorified exported_deps() rule.
     return ImmutableList.of();
   }

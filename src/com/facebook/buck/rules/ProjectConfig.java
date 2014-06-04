@@ -135,7 +135,7 @@ public class ProjectConfig extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(
+  public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }

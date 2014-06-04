@@ -1210,7 +1210,9 @@ public class ParserTest extends EasyMockSupport {
         }
 
         @Override
-        public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+        public ImmutableList<Step> getBuildSteps(
+            BuildContext context,
+            BuildableContext buildableContext) {
           return ImmutableList.of();
         }
 

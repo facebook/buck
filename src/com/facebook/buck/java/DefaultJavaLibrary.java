@@ -494,7 +494,9 @@ public class DefaultJavaLibrary extends AbstractBuildable
    * attribute. They are compiled into a directory under {@link BuckConstant#BIN_DIR}.
    */
   @Override
-  public final List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public final ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Only override the bootclasspath if this rule is supposed to compile Android code.

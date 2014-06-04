@@ -630,9 +630,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context,
+        BuildableContext buildableContext) {
       buildableContext.recordArtifact(pathToOutputFile);
-      return buildSteps;
+      return ImmutableList.copyOf(buildSteps);
     }
 
     @Override
@@ -687,7 +689,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context,
+        BuildableContext buildableContext) {
       throw new UnsupportedOperationException("method should not be called");
     }
 
@@ -785,7 +789,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context,
+        BuildableContext buildableContext) {
       return ImmutableList.of();
     }
   }

@@ -49,7 +49,6 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -200,7 +199,9 @@ public class AndroidResource extends AbstractBuildable
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      final BuildableContext buildableContext) {
     // If there is no res directory, then there is no R.java to generate.
     // TODO(mbolin): Change android_resources() so that 'res' is required.
     if (getRes() == null) {

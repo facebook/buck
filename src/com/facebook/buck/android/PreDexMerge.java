@@ -106,7 +106,10 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MkdirStep(primaryDexPath.getParent()));
 

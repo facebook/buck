@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.List;
 
 public class ShBinary extends AbstractBuildable
     implements BinaryBuildRule, InitializableFromDisk<Object> {
@@ -79,7 +78,10 @@ public class ShBinary extends AbstractBuildable
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+
     MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(output.getParent());
 
     // Generate an .sh file that builds up an environment and invokes the user's script.

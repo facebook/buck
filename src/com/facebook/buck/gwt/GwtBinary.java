@@ -192,7 +192,10 @@ public class GwtBinary extends AbstractBuildable implements DependencyEnhancer {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Create a clean directory where the .zip file will be written.
