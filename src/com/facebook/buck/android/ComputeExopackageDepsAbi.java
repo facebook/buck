@@ -149,6 +149,8 @@ public class ComputeExopackageDepsAbi
                 hasher.putByte((byte) 0);
                 hasher.putUnencodedChars(filesystem.computeSha1(path));
                 hasher.putByte((byte) 0);
+                hasher.putUnencodedChars(entry.getValue());
+                hasher.putByte((byte) 0);
               }
 
               buildableContext.addMetadata(METADATA_KEY, hasher.hash().toString());
