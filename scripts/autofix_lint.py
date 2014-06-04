@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 
 from collections import defaultdict
 
+
 class LintProblem(object):
     """Stores a reference to a checkstyle problem.
     """
@@ -44,36 +45,36 @@ class Fixer(object):
 
 
 class DeleteLineFixer(Fixer):
-  """Fixes lint problems that are on a single line.
-  """
-  def fix_it(self, problem):
-    result = []
-    line_count = 1
-    with open(problem.file_name, 'r') as file:
-      for line in file.readlines():
-        new_line = line
-        if line_count != problem.line:
-          result.append(new_line)
-        line_count += 1
+    """Fixes lint problems that are on a single line.
+    """
+    def fix_it(self, problem):
+        result = []
+        line_count = 1
+        with open(problem.file_name, 'r') as file:
+            for line in file.readlines():
+                new_line = line
+                if line_count != problem.line:
+                    result.append(new_line)
+                line_count += 1
 
-    with open(problem.file_name, 'w') as file:
-      file.write(''.join(result))
-      file.truncate()
+        with open(problem.file_name, 'w') as file:
+            file.write(''.join(result))
+            file.truncate()
 
-    return {
-      'line': problem.line
-    }
+        return {
+            'line': problem.line
+        }
 
-  def get_translate_function(self, translate_metadata):
-    def translateFunc(problem):
-      if problem.line < translate_metadata['line']:
-        return problem
-      else:
-        return problem.cloneWithNewOffset(
-          problem.line - 1,
-          problem.column)
+    def get_translate_function(self, translate_metadata):
+        def translateFunc(problem):
+            if problem.line < translate_metadata['line']:
+                return problem
+            else:
+                return problem.cloneWithNewOffset(
+                    problem.line - 1,
+                    problem.column)
 
-    return translateFunc
+        return translateFunc
 
 
 class SingleLineFixer(Fixer):
@@ -115,7 +116,7 @@ class SingleLineFixer(Fixer):
     def get_translate_function(self, translate_metadata):
         def translateFunc(problem):
             if (problem.line != translate_metadata['line'] or
-                        problem.column < translate_metadata['column']):
+                    problem.column < translate_metadata['column']):
                 return problem
             else:
                 return problem.cloneWithNewOffset(
@@ -125,9 +126,9 @@ class SingleLineFixer(Fixer):
         return translateFunc
 
 
-# Map of file names to an array of functions to apply to translate original FileIndex's to the new
-# FileIndex after
-OFFSET_FUNCTIONS=defaultdict(list)
+# Map of file names to an array of functions to apply to translate original
+# FileIndex's to the new FileIndex after
+OFFSET_FUNCTIONS = defaultdict(list)
 
 
 def apply_offsets(problem):
@@ -174,7 +175,11 @@ class FixTrailingOperator(Fixer):
                     new_line = line.rstrip() + ' ' + operator + '\n'
                 elif line_count == problem.line:
                     oldlen = len(line)
-                    new_line = re.sub(re.escape(operator) + '\s*', '', line, count=1)
+                    new_line = re.sub(
+                        re.escape(operator) + '\s*',
+                        '',
+                        line,
+                        count=1)
                     line_len_delta = oldlen - len(new_line)
                 result.append(new_line)
                 line_count += 1
@@ -192,7 +197,7 @@ class FixTrailingOperator(Fixer):
     def get_translate_function(self, translate_metadata):
         def translateFunc(problem):
             if (translate_metadata['line'] != problem.line or
-                        translate_metadata['column'] < problem.column):
+                    translate_metadata['column'] < problem.column):
                 return problem
             else:
                 return problem.cloneWithNewOffset(
@@ -212,16 +217,17 @@ class FixFollowedByWhitespace(SingleLineFixer):
                                   "WhitespaceAfterCheck")
 
     def fix_problem_line(self, problem, line):
-        return (line[0:problem.column-1] +
+        return (line[0:problem.column - 1] +
                 ' ' +
-                line[problem.column-1:])
+                line[problem.column - 1:])
 
 
 @fixer
 class FixJunit3Use(SingleLineFixer):
     """Convert JUnit3 -> JUnit4 APIs
     """
-    JUNIT_ASSERT_RE = re.compile('junit\.framework\.TestCase\.(fail|assert\w*)')
+    JUNIT_ASSERT_RE = re.compile(
+        'junit\.framework\.TestCase\.(fail|assert\w*)')
 
     def matches(self, problem):
         return (problem.message == 'The package junit.framework belongs to '
@@ -234,9 +240,9 @@ class FixJunit3Use(SingleLineFixer):
             # the junit regex.
             problem.column = match.start()
         return FixJunit3Use.JUNIT_ASSERT_RE.sub(
-                        r"org.junit.Assert.\1",
-                        line,
-                        count=1)
+            r"org.junit.Assert.\1",
+            line,
+            count=1)
 
     def modify_result(self, result, problem):
         additional_metadata = {}
@@ -268,11 +274,12 @@ class FixJunit3Use(SingleLineFixer):
         """
         if 'start_index' in translate_metadata:
             def translateFunc(problem):
-                if (problem.line >= translate_metadata['start_index'] and
-                            problem.line < translate_metadata['end_index']):
-                    new_line = (
-                        translate_metadata['offset_array'].index(problem.line) +
-                            translate_metadata['start_index'])
+                start_index = translate_metadata['start_index']
+                end_index = translate_metadata['end_index']
+                offset_array = translate_metadata['offset_array']
+                if (problem.line >= start_index and
+                        problem.line < end_index):
+                    new_line = offset_array.index(problem.line) + start_index
                     return problem.cloneWithNewOffset(
                         new_line,
                         problem.column)
@@ -285,12 +292,12 @@ class FixJunit3Use(SingleLineFixer):
 
 @fixer
 class FixUnusedImport(DeleteLineFixer):
-  """Fixes unused imports.
-  """
-  def matches(self, problem):
-    return (problem.source == "com.puppycrawl.tools."
-                              "checkstyle.checks.imports."
-                              "UnusedImportsCheck")
+    """Fixes unused imports.
+    """
+    def matches(self, problem):
+        return (problem.source == "com.puppycrawl.tools."
+                                  "checkstyle.checks.imports."
+                                  "UnusedImportsCheck")
 
 
 def main():
@@ -318,9 +325,11 @@ def main():
             for fixer in FIXERS:
                 if fixer.matches(problem):
                     translate_metadata = fixer.fix_it(apply_offsets(problem))
-                    offset_function = fixer.get_translate_function(translate_metadata)
+                    offset_function = fixer.get_translate_function(
+                        translate_metadata)
                     if offset_function:
-                        OFFSET_FUNCTIONS[problem.file_name].append(offset_function)
+                        OFFSET_FUNCTIONS[problem.file_name].append(
+                            offset_function)
 
 
 if __name__ == "__main__":

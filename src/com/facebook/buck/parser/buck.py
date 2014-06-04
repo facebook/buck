@@ -19,8 +19,10 @@ except ImportError:
 # TODO(user): upgrade to a jython including os.relpath
 def relpath(path, start=os.path.curdir):
     """
-    Return a relative filepath to path from the current directory or an
-    optional start point.
+    Return a relative filepath
+
+    This returns the relative filepath to path from the current directory or
+    an optional start point.
     """
     if not path:
         raise ValueError("no path specified")
@@ -54,14 +56,14 @@ def relpath(path, start=os.path.curdir):
 BUILD_FUNCTIONS = []
 BUILD_RULES_FILE_NAME = 'BUCK'
 
+
 def provide_for_build(func):
     BUILD_FUNCTIONS.append(func)
     return func
 
 
 class LazyBuildEnvPartial:
-    """Pairs a function with a build environment in which it should be
-    executed.
+    """Pairs a function with a build environment in which it will be executed.
 
     Note that although both the function and build environment must be
     specified via the constructor, the build environment may be reassigned
@@ -84,8 +86,7 @@ class LazyBuildEnvPartial:
 
 
 def make_build_file_symbol_table(build_env):
-    """Creates a symbol table with functions decorated by @provide_for_build.
-    """
+    """Creates a symbol table with functions decorated by provide_for_build."""
     symbol_table = {}
     lazy_functions = []
     for func in BUILD_FUNCTIONS:
@@ -105,8 +106,8 @@ def update_lazy_functions(lazy_functions, build_env):
 
 
 def add_rule(rule, build_env):
-    # Include the base path of the BUILD file so the reader consuming this JSON
-    # will know which BUILD file the rule came from.
+    # Include the base path of the BUILD file so the reader consuming this
+    # JSON will know which BUILD file the rule came from.
     if 'name' not in rule:
         raise ValueError(
             'rules must contain the field \'name\'.  Found %s.' % rule)
@@ -149,7 +150,9 @@ def well_formed_tokens(tokens):
 
 
 def path_join(path, element):
-    """Add a new path element to a path, assuming None encodes the empty path.
+    """Add a new path element to a path
+
+    This method assumes None encodes the empty path.
     """
     if path is None:
         return element
@@ -264,6 +267,7 @@ def glob_walk(pattern, root, include_dotfiles=False):
         normpath_join, iglob, isresult, visited, tokens, None,
         os.path.realpath(root))
 
+
 def glob_match_internal(include_dotfiles, tokens, chunks):
     """Recursive routine for glob_match.
 
@@ -311,6 +315,7 @@ def glob_match_internal(include_dotfiles, tokens, chunks):
             fnmatch.fnmatch(chunk, token) and
             glob_match_internal(include_dotfiles, next_tokens, next_chunks))
 
+
 def glob_match(pattern, path, include_dotfiles=False):
     """Checks if a given (non necessarily existing) path matches a 'pattern'.
 
@@ -321,6 +326,7 @@ def glob_match(pattern, path, include_dotfiles=False):
     tokens = split_path(pattern)
     chunks = split_path(path)
     return glob_match_internal(include_dotfiles, tokens, chunks)
+
 
 @provide_for_build
 def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
@@ -357,6 +363,7 @@ def genfile(src, build_env=None):
 @provide_for_build
 def include_defs(name, build_env=None):
     """Loads a file in the context of the current build file.
+
     Name must begin with "//" and references a file relative to the project
     root.
 
@@ -433,9 +440,7 @@ class BuildFileProcessor:
         self.root_build_env = build_env
 
     def process(self, build_file):
-        """Process an individual build file and output JSON of result to
-        stdout.
-        """
+        """Process an individual build file and output JSON to stdout."""
 
         # Reset build_env for each build file so that the variables declared in
         # the build file or the files in includes through include_defs() don't
@@ -471,36 +476,51 @@ class BuildFileProcessor:
                 print json.dumps(value)
 
 # Inexplicably, this script appears to run faster when the arguments passed
-# into it are absolute paths. However, we want the "buck.base_path" property of
-# each rule to be printed out to be the base path of the build target that
+# into it are absolute paths. However, we want the "buck.base_path" property
+# of each rule to be printed out to be the base path of the build target that
 # identifies the rule. That means that when parsing a BUILD file, we must know
 # its path relative to the root of the project to produce the base path.
 #
 # To that end, the first argument to this script must be an absolute path to
-# the project root.  It must be followed by one or more absolute paths to BUILD
-# files under the project root. If no paths to BUILD files are specified, then
-# it will traverse the project root for BUILD files, excluding directories of
-# generated files produced by Buck.
+# the project root.  It must be followed by one or more absolute paths to
+# BUILD files under the project root.  If no paths to BUILD files are
+# specified, then it will traverse the project root for BUILD files, excluding
+# directories of generated files produced by Buck.
 #
 # All of the build rules that are parsed from the BUILD files will be printed
 # to stdout by a JSON parser. That means that printing out other information
 # for debugging purposes will likely break the JSON parsing, so be careful!
+
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option(
-        '--project_root', action='store', type='string', dest='project_root')
-    parser.add_option('--include', action='append', dest='include')
-    parser.add_option('--ignore_path', action='append', dest='ignore_paths')
+        '--project_root',
+        action='store',
+        type='string',
+        dest='project_root')
     parser.add_option(
-        '--server', action='store_true', dest='server',
+        '--include',
+        action='append',
+        dest='include')
+    parser.add_option(
+        '--ignore_path',
+        action='append',
+        dest='ignore_paths')
+    parser.add_option(
+        '--server',
+        action='store_true',
+        dest='server',
         help='Invoke as a server to parse individual BUCK files on demand.')
     parser.add_option(
-        '--strip_none', action='store_true', dest='strip_none',
+        '--strip_none',
+        action='store_true',
+        dest='strip_none',
         help='Invoke as a server to parse individual BUCK files on demand.')
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
-    # example, it might be like "C:\project\.\rule". We normalize it in order
+    # example, it might be like "C:\project\.\rule".  We normalize it in order
     # to make it consistent with ignore_paths.
     project_root = os.path.abspath(options.project_root)
 

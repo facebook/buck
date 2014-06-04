@@ -47,243 +47,270 @@ logger = logging.getLogger('compile_asset_catalog')
 
 
 def get_xcode_path():
-  cmd = ['xcode-select', '--print-path']
-  return subprocess.check_output(cmd).strip()
+    cmd = ['xcode-select', '--print-path']
+    return subprocess.check_output(cmd).strip()
 
 
 def get_actool_env_path(platform):
-  platform = 'iPhoneSimulator' if platform == 'iphonesimulator' else 'iPhoneOS'
-  xcode_path = get_xcode_path()
-  return ':'.join([os.path.join(xcode_path, 'Platforms', platform + '.platform', 'Developer/usr/bin/actool'),
-                   os.path.join(xcode_path, 'usr/bin'),
-                   '/usr/bin',
-                   '/bin',
-                   '/usr/sbin',
-                   '/sbin'])
+    platform = 'iPhoneSimulator'
+    if platform != 'iphonesimulator':
+        platform = 'iPhoneOS'
+    xcode_path = get_xcode_path()
+    return ':'.join([
+        os.path.join(
+            xcode_path,
+            'Platforms',
+            platform + '.platform',
+            'Developer/usr/bin/actool'),
+        os.path.join(xcode_path, 'usr/bin'),
+        '/usr/bin',
+        '/bin',
+        '/usr/sbin',
+        '/sbin'])
 
 
 def version_components_from_string(v):
-  return v.split('.')
+    return v.split('.')
 
 
 def major_version_from_version_string(v):
-  return int(version_components_from_string(v)[0])
+    return int(version_components_from_string(v)[0])
 
 
 def minor_version_from_version_string(v):
-  components = version_components_from_string(v)
-  if len(components) < 2:
-    raise ValueError(v + ': does not have a minor version')
-  return int(components[1])
+    components = version_components_from_string(v)
+    if len(components) < 2:
+        raise ValueError(v + ': does not have a minor version')
+    return int(components[1])
 
 
 def catalog_name_from_path(path):
-  return os.path.splitext(os.path.basename(path))[0]
+    return os.path.splitext(os.path.basename(path))[0]
 
 
-def actool_cmds(target, platform, devices, output, catalog_paths, split_into_bundles):
-  """Returns an array of tuples.  Each tuple is (command, output_directory).
-     command is an array of command line parameters, while directory is a
-     directory that is expected to exist."""
+def actool_cmds(target, platform, devices, output, catalog_paths,
+                split_into_bundles):
+    """Returns an array of tuples.  Each tuple is (command, output_directory).
+       command is an array of command line parameters, while directory is a
+       directory that is expected to exist."""
 
-  # When splitting into bundles, Assets.car cannot be used, so force the
-  # deployment target to a version that does not support it.
-  if split_into_bundles:
-    if platform == 'macosx' and (minor_version_from_version_string(target) >= 9):
-      target = '10.8'
-    elif major_version_from_version_string(target) >= 7:
-      target = '6.0'
+    # When splitting into bundles, Assets.car cannot be used, so force the
+    # deployment target to a version that does not support it.
+    if split_into_bundles:
+        if (platform == 'macosx' and
+                minor_version_from_version_string(target) >= 9):
+            target = '10.8'
+        elif major_version_from_version_string(target) >= 7:
+            target = '6.0'
 
-  base_cmd = ['actool',
-         '--output-format',
-         'human-readable-text',
-         '--notices',
-         '--warnings',
-         '--platform',
-         platform,
-         '--minimum-deployment-target',
-         target]
+    base_cmd = [
+        'actool',
+        '--output-format',
+        'human-readable-text',
+        '--notices',
+        '--warnings',
+        '--platform',
+        platform,
+        '--minimum-deployment-target',
+        target]
 
-  for d in devices:
-    base_cmd.extend(['--target-device', d])
+    for d in devices:
+        base_cmd.extend(['--target-device', d])
 
-  base_cmd.extend(['--compress-pngs', '--compile'])
+    base_cmd.extend(['--compress-pngs', '--compile'])
 
-  if split_into_bundles:
-    bundle_directories = [catalog_name_from_path(path) + '.bundle' for path in catalog_paths]
-    output_directories = [os.path.join(output, bundle) for bundle in bundle_directories]
+    if split_into_bundles:
+        bundle_directories = [
+            catalog_name_from_path(path) + '.bundle' for path in catalog_paths]
+        output_directories = [
+            os.path.join(output, bundle) for bundle in bundle_directories]
 
-    pairs = zip(output_directories, catalog_paths)
-    cmds = []
-    for (output_directory,catalog_path) in pairs:
-      cmd = list(base_cmd)
-      cmd.extend([output_directory,catalog_path])
-      cmds.append(cmd)
+        pairs = zip(output_directories, catalog_paths)
+        cmds = []
+        for (output_directory, catalog_path) in pairs:
+            cmd = list(base_cmd)
+            cmd.extend([output_directory, catalog_path])
+            cmds.append(cmd)
 
-    return zip(cmds, output_directories)
-  else:
-    base_cmd.append(output)
-    base_cmd.extend(catalog_paths)
-    return [(base_cmd, output)]
+        return zip(cmds, output_directories)
+    else:
+        base_cmd.append(output)
+        base_cmd.extend(catalog_paths)
+        return [(base_cmd, output)]
 
 
 def mkdir_p(path):
-  try:
-    os.makedirs(path)
-  except OSError as e:
-    if e.errno == errno.EEXIST and os.path.isdir(path):
-      pass
-    else:
-      raise
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 
 # We don't know all the different types of potential warnings actool outputs.
 # We assume that they have some potential preamble, then "warning:" and then
 # the message. In the case that the preamble is a path, we truncate the path
-# to a suffix that indicates the asset name to make it easier to debug in Xcode.
-ACTOOL_WARNING_REGEX = re.compile('(?P<asset_path>.*:)?\s*warning:\s*(?P<message>.*)')
+# to a suffix that indicates the asset name to make it easier to debug in
+# Xcode.
+ACTOOL_WARNING_REGEX = re.compile(
+    '(?P<asset_path>.*:)?\s*warning:\s*(?P<message>.*)')
 
 
 def transform_actool_output_line(line):
-  line = line.rstrip()
+    line = line.rstrip()
 
-  # Xcode seems to ignore actool's warnings when they are piped through
-  # stdout as normal.  We want to treat these as errors that must be
-  # resolved.  This filter formats the warnings nicely to make it easy to
-  # resolve them.
-  #
-  # Sample:
-  #   /path/to/images.xcassets:./some.imageset: warning: ...
-  # should be:
-  #  error: images.xcassets:./some.imageset: warning: ...
-  matches = ACTOOL_WARNING_REGEX.match(line)
-  if matches:
-    groups = matches.groupdict()
-    if (groups['asset_path']):
-      groups['asset_path'] = os.path.basename(groups['asset_path'])
-    line = 'error: ' + groups['asset_path'] + ': ' + groups['message']
-  return line
+    # Xcode seems to ignore actool's warnings when they are piped through
+    # stdout as normal.  We want to treat these as errors that must be
+    # resolved.  This filter formats the warnings nicely to make it easy to
+    # resolve them.
+    #
+    # Sample:
+    #   /path/to/images.xcassets:./some.imageset: warning: ...
+    # should be:
+    #  error: images.xcassets:./some.imageset: warning: ...
+    matches = ACTOOL_WARNING_REGEX.match(line)
+    if matches:
+        groups = matches.groupdict()
+        if (groups['asset_path']):
+            groups['asset_path'] = os.path.basename(groups['asset_path'])
+        line = 'error: ' + groups['asset_path'] + ': ' + groups['message']
+    return line
 
 
 def transform_actool_output(stdout):
-  has_errors = False
+    has_errors = False
 
-  # Using `for line in proc.stdout` causes OS X to barf with errno=35.  Not
-  # sure why, but it appears to be a rate limiting issue.  Creating the loop
-  # manually appears to resolve the issue.
-  line = stdout.readline()
-  while line:
-    line = transform_actool_output_line(line)
-    if line.startswith('error:'):
-      has_errors = True
-    print line
+    # Using `for line in proc.stdout` causes OS X to barf with errno=35.  Not
+    # sure why, but it appears to be a rate limiting issue.  Creating the loop
+    # manually appears to resolve the issue.
     line = stdout.readline()
-  return not has_errors
+    while line:
+        line = transform_actool_output_line(line)
+        if line.startswith('error:'):
+            has_errors = True
+        print line
+        line = stdout.readline()
+    return not has_errors
 
 
-def compile_asset_catalogs(target, platform, devices, output, catalogs, split_into_bundles):
-  cmd_pairs = actool_cmds(target, platform, devices, output, catalogs, split_into_bundles)
-  actool_env_path = get_actool_env_path(platform)
+def compile_asset_catalogs(target, platform, devices, output, catalogs,
+                           split_into_bundles):
+    cmd_pairs = actool_cmds(
+        target,
+        platform,
+        devices,
+        output,
+        catalogs,
+        split_into_bundles)
+    actool_env_path = get_actool_env_path(platform)
 
-  env = os.environ.copy()
-  env['PATH'] = actool_env_path
+    env = os.environ.copy()
+    env['PATH'] = actool_env_path
 
-  errors_encountered = False
+    errors_encountered = False
 
-  for (cmd, output_directory) in cmd_pairs:
-    mkdir_p(output_directory)
+    for (cmd, output_directory) in cmd_pairs:
+        mkdir_p(output_directory)
 
-    logger.info('PATH=' + actool_env_path + ' ' + ' '.join(cmd))
+        logger.info('PATH=' + actool_env_path + ' ' + ' '.join(cmd))
 
-    # The explicit PATH is provided because Xcode runs actool with an explicit
-    # PATH when it runs as part of the automatic "Copy Bundle Resources" phase.
-    # This ensures that the tool is run in the same environment as expected.
-    #
-    # Note that check_output raises an exception if the exit code indicates an
-    # error, which is the desired behavior here.
-    actool_output = subprocess.check_output(cmd, env=env)
-    actool_stdout = StringIO.StringIO(actool_output)
-    success = transform_actool_output(actool_stdout)
+        # The explicit PATH is provided because Xcode runs actool with an
+        # explicit PATH when it runs as part of the automatic "Copy Bundle
+        # Resources" phase.  This ensures that the tool is run in the same
+        # environment as expected.
+        #
+        # Note that check_output raises an exception if the exit code
+        # indicates an error, which is the desired behavior here.
+        actool_output = subprocess.check_output(cmd, env=env)
+        actool_stdout = StringIO.StringIO(actool_output)
+        success = transform_actool_output(actool_stdout)
 
-    if not success:
-      errors_encountered = True
+        if not success:
+            errors_encountered = True
 
-  return not errors_encountered
+    return not errors_encountered
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-t', '--target', required=True,
-                      help='Target operating system version for deployment')
-  parser.add_argument('-p', '--platform', required=True,
-                      help='Target platform.  Choices are iphonesimulator, '
-                      'iphoneos, and macosx.')
-  parser.add_argument('-d', '--device', action='append', type=str,
-                      help='Choices are iphone and ipad. May be specified '
-                      'multiple times. When platform is macosx, this '
-                      'option cannot be specified. Otherwise, this option '
-                      'must be specified.')
-  parser.add_argument('-b', '--bundles', action='store_true',
-                      help='Use the legacy output format, which copies '
-                      'asset catalogs to their sibling bundles. Without '
-                      'this option, all assets are copied to the root (or '
-                      'compiled into Assets.car)')
-  parser.add_argument('-o', '--output', required=True,
-                      help='Output directory for the specified asset '
-                      'catalog(s).')
-  parser.add_argument('-v', '--verbose', action='store_true',
-                      help='Print verbose output')
-  parser.add_argument('catalogs', metavar='catalog', type=str, nargs='+',
-                      help='Paths to asset catalogs to be compiled')
-  args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--target', required=True,
+                        help='Target operating system version for deployment')
+    parser.add_argument('-p', '--platform', required=True,
+                        help='Target platform.  Choices are iphonesimulator, '
+                        'iphoneos, and macosx.')
+    parser.add_argument('-d', '--device', action='append', type=str,
+                        help='Choices are iphone and ipad. May be specified '
+                        'multiple times. When platform is macosx, this '
+                        'option cannot be specified. Otherwise, this option '
+                        'must be specified.')
+    parser.add_argument('-b', '--bundles', action='store_true',
+                        help='Use the legacy output format, which copies '
+                        'asset catalogs to their sibling bundles. Without '
+                        'this option, all assets are copied to the root (or '
+                        'compiled into Assets.car)')
+    parser.add_argument('-o', '--output', required=True,
+                        help='Output directory for the specified asset '
+                        'catalog(s).')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Print verbose output')
+    parser.add_argument('catalogs', metavar='catalog', type=str, nargs='+',
+                        help='Paths to asset catalogs to be compiled')
+    args = parser.parse_args()
 
-  logging.basicConfig(level=(logging.DEBUG if args.verbose else logging.INFO))
-  logger.info('Compiling asset catalogs...')
+    logging.basicConfig(
+        level=(logging.DEBUG if args.verbose else logging.INFO))
+    logger.info('Compiling asset catalogs...')
 
-  args.catalogs = map(os.path.abspath, args.catalogs)
-  args.output = os.path.abspath(args.output)
+    args.catalogs = map(os.path.abspath, args.catalogs)
+    args.output = os.path.abspath(args.output)
 
-  # Validation:
-  #
-  # - deployment target is a version string
-  # - platform is one of the appropriate choices
-  # - when platform is macosx, devices are not specified. otherwise, devices must be specified
-  # - devices are valid values
-  # - asset catalogs paths end in .xcassets
-  for component in args.target.split('.'):
-    try:
-      int(component)
-    except:
-      raise ValueError(args.target + ': target must be a version string')
+    # Validation:
+    #
+    # - deployment target is a version string
+    # - platform is one of the appropriate choices
+    # - when platform is macosx, devices are not specified.  Otherwise,
+    #   devices must be specified
+    # - devices are valid values
+    # - asset catalogs paths end in .xcassets
+    for component in args.target.split('.'):
+        try:
+            int(component)
+        except:
+            raise ValueError(args.target + ': target must be a version string')
 
-  if (args.platform != 'iphonesimulator' and args.platform != 'iphoneos'
-      and args.platform != 'macosx'):
-    raise ValueError(args.platform + ': platform must be either iphoneos, '
-                     'iphonesimulator, or macosx')
+    if (args.platform != 'iphonesimulator' and args.platform != 'iphoneos'
+            and args.platform != 'macosx'):
+        raise ValueError(args.platform + ': platform must be either iphoneos, '
+                         'iphonesimulator, or macosx')
 
-  if args.platform == 'macosx' and args.device != None:
-    raise ValueError('devices must not be specified when platform is macosx')
-  elif args.platform != 'macosx' \
-       and (args.device == None or len(args.device) == 0):
-    raise ValueError('devices must be specified when platform is iphoneos '
-                     'or iphonesimulator')
+    if args.platform == 'macosx' and args.device is not None:
+        raise ValueError(
+            'devices must not be specified when platform is macosx')
+    elif args.platform != 'macosx' and (args.device or len(args.device) == 0):
+        raise ValueError('devices must be specified when platform is iphoneos '
+                         'or iphonesimulator')
 
-  for device in args.device:
-    if device != 'iphone' and device != 'ipad':
-      raise ValueError(device + ': device(s) must be either iphone or ipad')
+    for device in args.device:
+        if device != 'iphone' and device != 'ipad':
+            raise ValueError(
+                device + ': device(s) must be either iphone or ipad')
 
-  for path in args.catalogs:
-    if os.path.splitext(os.path.basename(path))[1] != '.xcassets':
-      raise ValueError(path + ': catalog paths must have an xcassets extension')
+    for path in args.catalogs:
+        if os.path.splitext(os.path.basename(path))[1] != '.xcassets':
+            raise ValueError(
+                path + ': catalog paths must have an xcassets extension')
 
-  # When the target platform is macosx, the device supplied to actool is 'mac'
-  if args.platform == 'macosx':
-    args.device = ['mac']
+    # When the target platform is macosx, the device supplied to actool is
+    # 'mac'
+    if args.platform == 'macosx':
+        args.device = ['mac']
 
-  exit_code = 0
-  if not compile_asset_catalogs(args.target, args.platform, args.device,
-                                args.output, args.catalogs, args.bundles):
-    exit_code = 1
+    exit_code = 0
+    if not compile_asset_catalogs(args.target, args.platform, args.device,
+                                  args.output, args.catalogs, args.bundles):
+        exit_code = 1
 
-  logger.info('Done')
-  sys.exit(exit_code)
+    logger.info('Done')
+    sys.exit(exit_code)
