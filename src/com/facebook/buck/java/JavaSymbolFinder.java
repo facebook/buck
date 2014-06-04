@@ -23,6 +23,7 @@ import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -37,7 +38,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -62,6 +62,7 @@ public class JavaSymbolFinder {
       JavaTestDescription.TYPE.getName());
 
   private final ProjectFilesystem projectFilesystem;
+  private final SrcRootsFinder srcRootsFinder;
   private final ProjectBuildFileParserFactory projectBuildFileParserFactory;
   private final BuckConfig config;
   private final BuckEventBus buckEventBus;
@@ -70,12 +71,14 @@ public class JavaSymbolFinder {
 
   public JavaSymbolFinder(
       ProjectFilesystem projectFilesystem,
+      SrcRootsFinder srcRootsFinder,
       ProjectBuildFileParserFactory projectBuildFileParserFactory,
       BuckConfig config,
       BuckEventBus buckEventBus,
       Console console,
       ImmutableMap<String, String> environment) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.srcRootsFinder = Preconditions.checkNotNull(srcRootsFinder);
     this.projectBuildFileParserFactory = Preconditions.checkNotNull(projectBuildFileParserFactory);
     this.config = Preconditions.checkNotNull(config);
     this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
@@ -92,28 +95,36 @@ public class JavaSymbolFinder {
    * @return A multimap of symbols to the targets that define them, of the form:
    *         {"com.example.a.A": set("//com/example/a:a", "//com/another/a:a")}
    */
-  public ImmutableSetMultimap<String, String> findTargetsForSymbols(Collection<String> symbols) {
+  public ImmutableSetMultimap<String, BuildTarget> findTargetsForSymbols(Set<String> symbols) {
     // TODO(jacko): Handle files that aren't included in any rule.
 
-    // First collect all the code files that define our symbols.
+    // First find all the source roots in the current project.
+    Collection<Path> srcRoots;
+    try {
+      srcRoots = srcRootsFinder.getAllSrcRootPaths(config.getSrcRoots());
+    } catch (IOException e) {
+      buckEventBus.post(ThrowableLogEvent.create(e, "Error while searching for source roots."));
+      return ImmutableSetMultimap.of();
+    }
+
+    // Now collect all the code files that define our symbols.
     Multimap<String, Path> symbolsToSourceFiles = HashMultimap.create();
     for (String symbol : symbols) {
-      symbolsToSourceFiles.putAll(symbol, getDefiningPaths(symbol));
+      symbolsToSourceFiles.putAll(symbol, getDefiningPaths(symbol, srcRoots));
     }
 
     // Now find all the targets that define all those code files. We do this in one pass because we
     // don't want to instantiate a new parser subprocess for every symbol.
     Set<Path> allSourceFilePaths = ImmutableSet.copyOf(symbolsToSourceFiles.values());
-    Multimap<Path, String> sourceFilesToTargets = getTargetsForSourceFiles(allSourceFilePaths);
+    Multimap<Path, BuildTarget> sourceFilesToTargets = getTargetsForSourceFiles(allSourceFilePaths);
 
     // Now build the map from from symbols to build targets.
-    ImmutableSetMultimap.Builder<String, String> symbolsToTargets = ImmutableSetMultimap.builder();
+    ImmutableSetMultimap.Builder<String, BuildTarget> symbolsToTargets =
+        ImmutableSetMultimap.builder();
     for (String symbol : symbolsToSourceFiles.keySet()) {
-      Set<String> allTargets = Sets.newHashSet();
       for (Path sourceFile : symbolsToSourceFiles.get(symbol)) {
-        allTargets.addAll(sourceFilesToTargets.get(sourceFile));
+        symbolsToTargets.putAll(symbol, sourceFilesToTargets.get(sourceFile));
       }
-      symbolsToTargets.putAll(symbol, allTargets);
     }
 
     return symbolsToTargets.build();
@@ -125,10 +136,10 @@ public class JavaSymbolFinder {
    * over a collection of source files, rather than a single file at a time, because instantiating
    * the BUCK file parser is expensive. (It spawns a Python subprocess.)
    */
-  private ImmutableMultimap<Path, String> getTargetsForSourceFiles(
+  private ImmutableMultimap<Path, BuildTarget> getTargetsForSourceFiles(
       Collection<Path> sourceFilePaths) {
     Map<Path, List<Map<String, Object>>> parsedBuildFiles = Maps.newHashMap();
-    ImmutableSetMultimap.Builder<Path, String> sourceFileTargetsMultimap =
+    ImmutableSetMultimap.Builder<Path, BuildTarget> sourceFileTargetsMultimap =
         ImmutableSetMultimap.builder();
     try (ProjectBuildFileParser parser = projectBuildFileParserFactory.createParser(
         // TODO(jacko): Get this from the right place when plugins are working.
@@ -153,10 +164,10 @@ public class JavaSymbolFinder {
               @SuppressWarnings("unchecked")
               List<String> srcs = (List<String>) ruleMap.get("srcs");
               if (isSourceFilePathInSrcsList(sourceFile, srcs, buckFile.getParent())) {
-                String name = (String) ruleMap.get("name");
                 Path buckFileDir = buckFile.getParent();
-                String target = "//" + (buckFileDir != null ? buckFileDir : "") + ":" + name;
-                sourceFileTargetsMultimap.put(sourceFile, target);
+                String baseName = "//" + (buckFileDir != null ? buckFileDir : "");
+                String shortName = (String) ruleMap.get("name");
+                sourceFileTargetsMultimap.put(sourceFile, new BuildTarget(baseName, shortName));
               }
             }
           }
@@ -220,11 +231,11 @@ public class JavaSymbolFinder {
    * To do this, open up all the Java files that could define it (see {@link #getCandidatePaths})
    * and parse them with our Eclipse-based {@link JavaFileParser}.
    */
-  private ImmutableSortedSet<Path> getDefiningPaths(String symbol) {
+  private ImmutableSortedSet<Path> getDefiningPaths(String symbol, Collection<Path> srcRoots) {
     ImmutableSortedSet.Builder<Path> definingPaths = ImmutableSortedSet.naturalOrder();
     JavaFileParser parser = JavaFileParser.createJavaFileParser(JavaCompilerEnvironment.DEFAULT);
 
-    for (Path candidatePath : getCandidatePaths(symbol)) {
+    for (Path candidatePath : getCandidatePaths(symbol, srcRoots)) {
       try {
         String content = projectFilesystem.readFileIfItExists(
             projectFilesystem.getPathForRelativeExistingPath(candidatePath)).get();
@@ -246,15 +257,15 @@ public class JavaSymbolFinder {
    * possibilities for the package name and resolving against all the available source roots.
    * Returns only those candidates that actually exist.
    */
-  private ImmutableSortedSet<Path> getCandidatePaths(String symbol) {
+  private ImmutableSortedSet<Path> getCandidatePaths(String symbol, Collection<Path> srcRoots) {
     ImmutableSortedSet.Builder<Path> candidatePaths = ImmutableSortedSet.naturalOrder();
     List<String> symbolParts = Lists.newArrayList(symbol.split("\\."));
     for (int symbolIndex = 0; symbolIndex < symbolParts.size(); symbolIndex++) {
       List<String> pathPartsList = symbolParts.subList(0, symbolIndex);
       String[] pathParts = pathPartsList.toArray(new String[pathPartsList.size()]);
       String candidateFileName = symbolParts.get(symbolIndex) + ".java";
-      for (String srcRoot : config.getSrcRoots()) {
-        Path candidatePath = Paths.get(srcRoot, pathParts).resolve(candidateFileName);
+      for (Path srcRoot : srcRoots) {
+        Path candidatePath = srcRoot.resolve(Paths.get("", pathParts)).resolve(candidateFileName);
         if (projectFilesystem.exists(candidatePath)) {
           candidatePaths.add(candidatePath);
         }

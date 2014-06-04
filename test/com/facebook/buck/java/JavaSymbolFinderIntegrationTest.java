@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.testutil.TestConsole;
@@ -64,6 +65,7 @@ public class JavaSymbolFinderIntegrationTest {
         DefaultKnownBuildRuleTypes
         .getDefaultKnownBuildRuleTypes(projectFilesystem)
         .getAllDescriptions();
+    SrcRootsFinder srcRootsFinder = new SrcRootsFinder(projectFilesystem);
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             projectFilesystem,
@@ -72,18 +74,19 @@ public class JavaSymbolFinderIntegrationTest {
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     JavaSymbolFinder finder = new JavaSymbolFinder(
         projectFilesystem,
+        srcRootsFinder,
         projectBuildFileParserFactory,
         config,
         buckEventBus,
         new TestConsole(),
         ImmutableMap.copyOf(System.getenv()));
 
-    SetMultimap<String, String> foundTargets =
+    SetMultimap<String, BuildTarget> foundTargets =
         finder.findTargetsForSymbols(ImmutableSet.of("com.example.a.A"));
 
     assertEquals(
         "JavaSymbolFinder failed to find the right target.",
-        ImmutableSetMultimap.of("com.example.a.A", "//java/com/example/a:a"),
+        ImmutableSetMultimap.of("com.example.a.A", new BuildTarget("//java/com/example/a", "a")),
         foundTargets);
   }
 }

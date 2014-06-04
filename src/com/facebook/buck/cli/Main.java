@@ -538,7 +538,10 @@ public final class Main {
           projectFilesystem,
           config,
           webServer,
-          consoleListener);
+          console,
+          consoleListener,
+          buildRuleTypes,
+          clientEnvironment);
 
       ImmutableList<String> remainingArgs = ImmutableList.copyOf(
           Arrays.copyOfRange(args, 1, args.length));
@@ -751,7 +754,10 @@ public final class Main {
       ProjectFilesystem projectFilesystem,
       BuckConfig config,
       Optional<WebServer> webServer,
-      AbstractConsoleEventBusListener consoleEventBusListener) {
+      Console console,
+      AbstractConsoleEventBusListener consoleEventBusListener,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      ImmutableMap<String, String> environment) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
@@ -765,6 +771,14 @@ public final class Main {
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
 
 
+
+    eventListenersBuilder.add(MissingSymbolsHandler.createListener(
+            projectFilesystem,
+            knownBuildRuleTypes.getAllDescriptions(),
+            config,
+            buckEvents,
+            console,
+            environment));
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
 

@@ -4,3 +4,9 @@ java_library(
   # This rule is missing the following dependency:
   # deps = ['//java/com/example/a:a'],
 )
+
+# Same as above, but as a test rather than a library.
+java_test(
+  name = 'test',
+  srcs = ['B.java'],
+)

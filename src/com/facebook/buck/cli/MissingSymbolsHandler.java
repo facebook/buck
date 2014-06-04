@@ -1,0 +1,186 @@
+/*
+ * Copyright 2014-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.cli;
+
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.MissingSymbolEvent;
+import com.facebook.buck.java.JavaSymbolFinder;
+import com.facebook.buck.java.SrcRootsFinder;
+import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.Description;
+import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimap;
+import com.google.common.eventbus.Subscribe;
+
+import java.util.Collection;
+import java.util.Set;
+
+public class MissingSymbolsHandler {
+
+  private final Console console;
+  private final JavaSymbolFinder javaSymbolFinder;
+
+  private MissingSymbolsHandler(
+      Console console,
+      JavaSymbolFinder javaSymbolFinder) {
+    this.console = Preconditions.checkNotNull(console);
+    this.javaSymbolFinder = Preconditions.checkNotNull(javaSymbolFinder);
+  }
+
+  public static MissingSymbolsHandler create(
+      ProjectFilesystem projectFilesystem,
+      ImmutableSet<Description<?>> descriptions,
+      BuckConfig config,
+      BuckEventBus buckEventBus,
+      Console console,
+      ImmutableMap<String, String> environment) {
+    SrcRootsFinder srcRootsFinder = new SrcRootsFinder(projectFilesystem);
+    ProjectBuildFileParserFactory projectBuildFileParserFactory =
+        new DefaultProjectBuildFileParserFactory(
+            projectFilesystem,
+            config.getPythonInterpreter(),
+            descriptions);
+    JavaSymbolFinder javaSymbolFinder = new JavaSymbolFinder(
+        projectFilesystem,
+        srcRootsFinder,
+        projectBuildFileParserFactory,
+        config,
+        buckEventBus,
+        console,
+        environment);
+    return new MissingSymbolsHandler(
+        console,
+        javaSymbolFinder);
+  }
+
+  /**
+   * Instantiate a MissingSymbolsHandler and wrap it in a listener that calls it on the appropriate
+   * events. This is done as part of the global listener setup in Main, and it's the entry point
+   * into most of the dependency autodetection code.
+   */
+  public static BuckEventListener createListener(
+      ProjectFilesystem projectFilesystem,
+      ImmutableSet<Description<?>> descriptions,
+      BuckConfig config,
+      BuckEventBus buckEventBus,
+      Console console,
+      ImmutableMap<String, String> environment) {
+    final MissingSymbolsHandler missingSymbolsHandler = create(
+        projectFilesystem,
+        descriptions,
+        config,
+        buckEventBus,
+        console,
+        environment);
+
+    final Multimap<BuildId, MissingSymbolEvent> missingSymbolEvents = HashMultimap.create();
+
+    BuckEventListener missingSymbolsListener = new BuckEventListener() {
+      @Override
+      public void outputTrace(BuildId buildId) {
+        missingSymbolsHandler.printNeededDependencies(missingSymbolEvents.get(buildId));
+        missingSymbolEvents.removeAll(buildId);
+      }
+
+      @Subscribe
+      public void onMissingSymbol(MissingSymbolEvent event) {
+        missingSymbolEvents.put(event.getBuildId(), event);
+      }
+    };
+
+    return missingSymbolsListener;
+  }
+
+  /**
+   * Using missing symbol events from the build and the JavaSymbolFinder class, build a list of
+   * missing dependencies for each broken target.
+   */
+  public ImmutableSetMultimap<BuildTarget, BuildTarget> getNeededDependencies(
+      Collection<MissingSymbolEvent> missingSymbolEvents) {
+    ImmutableSetMultimap.Builder<BuildTarget, String> targetsMissingSymbolsBuilder =
+        ImmutableSetMultimap.builder();
+    for (MissingSymbolEvent event : missingSymbolEvents) {
+      if (event.getType() != MissingSymbolEvent.SymbolType.Java) {
+        throw new UnsupportedOperationException("Only implemented for Java.");
+      }
+      targetsMissingSymbolsBuilder.put(event.getTarget(), event.getSymbol());
+    }
+    ImmutableSetMultimap<BuildTarget, String> targetsMissingSymbols =
+        targetsMissingSymbolsBuilder.build();
+    ImmutableSetMultimap<String, BuildTarget> symbolProviders =
+        javaSymbolFinder.findTargetsForSymbols(ImmutableSet.copyOf(targetsMissingSymbols.values()));
+
+    ImmutableSetMultimap.Builder<BuildTarget, BuildTarget> neededDeps =
+        ImmutableSetMultimap.builder();
+
+    for (BuildTarget target: targetsMissingSymbols.keySet()) {
+      for (String symbol : targetsMissingSymbols.get(target)) {
+        // TODO(jacko): Properly handle symbols that are defined in more than one place.
+        // TODO(jacko): Properly handle target visibility.
+        neededDeps.putAll(target, ImmutableSortedSet.copyOf(symbolProviders.get(symbol)));
+      }
+    }
+
+    return neededDeps.build();
+  }
+
+  /**
+   * Get a list of missing dependencies from {@link #getNeededDependencies} and print it to the
+   * console in a list-of-Python-strings way that's easy to copy and paste.
+   */
+  private void printNeededDependencies(Collection<MissingSymbolEvent> missingSymbolEvents) {
+    ImmutableSetMultimap<BuildTarget, BuildTarget> neededDependencies =
+        getNeededDependencies(missingSymbolEvents);
+    Set<BuildTarget> sortedTargets = ImmutableSortedSet.copyOf(neededDependencies.keySet());
+    for (BuildTarget target : sortedTargets) {
+      print(formatTarget(target) + " is missing deps:");
+      Set<BuildTarget> sortedDeps = ImmutableSortedSet.copyOf(neededDependencies.get(target));
+      for (BuildTarget neededDep : sortedDeps) {
+        print("    '" + neededDep + "',");
+      }
+    }
+  }
+
+  /**
+   * Format a target string so that the path to the BUCK file its in is easily copyable.
+   */
+  private String formatTarget(BuildTarget buildTarget) {
+    String targetString = buildTarget.toString();
+    int colonIndex = targetString.indexOf(":");
+    return String.format(
+        "%s/%s (%s)",
+        targetString.substring(2, colonIndex),
+        BuckConstant.BUILD_RULES_FILE_NAME,
+        targetString.substring(colonIndex));
+  }
+
+  private void print(String line) {
+    console.getStdOut().println(console.getAnsi().asWarningText(line));
+  }
+}
