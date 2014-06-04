@@ -1,7 +1,7 @@
 [
 {
   "annotationProcessorDeps" : [ ],
-  "annotationProcessorOnly" : false,
+  "annotationProcessorOnly" : null,
   "annotationProcessorParams" : [ ],
   "annotationProcessors" : [ ],
   "buck.base_path" : "testdata/com/facebook/buck/cli",

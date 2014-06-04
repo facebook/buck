@@ -186,4 +186,15 @@ public class BuckPyFunctionTest {
         ""
     ), definition);
   }
+
+  @Test
+  public void optionalBooleanValuesShouldBeRepresentedByNone() {
+    class Dto implements ConstructorArg {
+      public Optional<Boolean> field;
+    }
+
+    String definition = buckPyFunction.toPythonFunction(new BuildRuleType("boolean"), new Dto());
+
+    assertTrue(definition, definition.contains(", field=None,"));
+  }
 }

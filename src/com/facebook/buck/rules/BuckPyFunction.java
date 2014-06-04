@@ -115,6 +115,8 @@ public class BuckPyFunction {
       return "{}";
     } else if (Collection.class.isAssignableFrom(resultClass)) {
       return "[]";
+    } else if (param.isOptional()) {
+      return "None";
     } else if (Boolean.class.equals(resultClass)) {
       return "False";
     } else {
