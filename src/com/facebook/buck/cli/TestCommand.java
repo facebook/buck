@@ -34,6 +34,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
+import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.Buildable;
@@ -289,10 +290,24 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       BuildTargetException, BuildFileParseException, ExecutionException {
     Logging.setLoggingLevelForVerbosity(console.getVerbosity());
 
+    // We won't have a list of targets until the build is already started, so BuildEvents will get
+    // an empty list.
+    ImmutableList<BuildTarget> emptyTargetsList = ImmutableList.of();
+
+    // Post the build started event, setting it to the Parser recorded start time if appropriate.
+    if (getParser().getParseStartTime().isPresent()) {
+      getBuckEventBus().post(
+          BuildEvent.started(emptyTargetsList),
+          getParser().getParseStartTime().get());
+    } else {
+      getBuckEventBus().post(BuildEvent.started(emptyTargetsList));
+    }
+
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
     RawRulePredicate predicate = RawRulePredicates.isTestRule();
-    PartialGraph partialGraph = PartialGraph.createPartialGraph(predicate,
+    PartialGraph partialGraph = PartialGraph.createPartialGraph(
+        predicate,
         getProjectFilesystem(),
         options.getDefaultIncludes(),
         getParser(),
@@ -301,7 +316,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     final ActionGraph graph = partialGraph.getActionGraph();
 
     // Look up all of the test rules in the action graph.
-    Iterable<TestRule> testRules = Iterables.transform(partialGraph.getTargets(),
+    Iterable<TestRule> testRules = Iterables.transform(
+        partialGraph.getTargets(),
         new Function<BuildTarget, TestRule>() {
           @Override
           public TestRule apply(BuildTarget buildTarget) {
@@ -337,6 +353,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // Build all of the test rules.
       int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(
           testRules, build, console);
+      getBuckEventBus().post(BuildEvent.finished(emptyTargetsList, exitCode));
       if (exitCode != 0) {
         return exitCode;
       }
