@@ -25,6 +25,7 @@ import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
@@ -104,13 +105,19 @@ public class MissingSymbolsHandler {
     BuckEventListener missingSymbolsListener = new BuckEventListener() {
       @Override
       public void outputTrace(BuildId buildId) {
-        missingSymbolsHandler.printNeededDependencies(missingSymbolEvents.get(buildId));
-        missingSymbolEvents.removeAll(buildId);
+        // If we put {@link #printNeededDependencies} here, it's output won't be visible in buckd.
+        // Instead, we listen for BuildEvent.Finished, below.
       }
 
       @Subscribe
       public void onMissingSymbol(MissingSymbolEvent event) {
         missingSymbolEvents.put(event.getBuildId(), event);
+      }
+
+      @Subscribe
+      public void onBuildFinished(BuildEvent.Finished event) {
+        missingSymbolsHandler.printNeededDependencies(missingSymbolEvents.get(event.getBuildId()));
+        missingSymbolEvents.removeAll(event.getBuildId());
       }
     };
 
