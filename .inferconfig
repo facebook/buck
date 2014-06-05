@@ -1,0 +1,6 @@
+{
+  "eradicate_whitelist": [
+    "src",
+    "plugin"
+  ]
+}
