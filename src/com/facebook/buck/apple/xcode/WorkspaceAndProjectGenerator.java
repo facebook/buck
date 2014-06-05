@@ -52,16 +52,19 @@ public class WorkspaceAndProjectGenerator {
   static final String DEPENDENCIES_GROUP = "Dependencies";
 
   private final ProjectFilesystem projectFilesystem;
+  private final Path outputDirectory;
   private final PartialGraph partialGraph;
   private final ExecutionContext executionContext;
   private final BuildTarget workspaceConfigTarget;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
+      Path outputDirectory,
       PartialGraph partialGraph,
       ExecutionContext executionContext,
       BuildTarget workspaceConfigTarget) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
     this.workspaceConfigTarget = Preconditions.checkNotNull(workspaceConfigTarget);
@@ -81,8 +84,6 @@ public class WorkspaceAndProjectGenerator {
     BuildRule actualTargetRule = workspaceBuildable.getSrcTarget();
 
     String workspaceName = workspaceBuildable.getSrcTarget().getBuildTarget().getShortName();
-
-    Path outputDirectory = Paths.get(workspaceBuildable.getBuildTarget().getBasePath());
 
     WorkspaceGenerator workspaceGenerator = new WorkspaceGenerator(
         projectFilesystem,
