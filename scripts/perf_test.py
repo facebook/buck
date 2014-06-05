@@ -160,12 +160,17 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
         })
     start = datetime.now()
     with tempfile.TemporaryFile() as tmpFile:
-        subprocess.check_call(
-            [args.path_to_buck, 'build', target, '-v', '5'],
-            stdout=tmpFile,
-            stderr=tmpFile,
-            cwd=cwd,
-            env=env)
+        try:
+            subprocess.check_call(
+                [args.path_to_buck, 'build', target, '-v', '5'],
+                stdout=tmpFile,
+                stderr=tmpFile,
+                cwd=cwd,
+                env=env)
+        except:
+            tmpFile.seek(0)
+            log('Buck build failed: %s', tmpFile.read())
+            raise
         tmpFile.seek(0)
         build_output = tmpFile.read()
     finish = datetime.now()
