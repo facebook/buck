@@ -22,7 +22,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
-import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibrary;
@@ -620,21 +619,6 @@ public class AndroidBinary extends AbstractBuildable implements
     if (packageStringAssets.isPresent()) {
       final Path pathToStringAssetsZip = packageStringAssets.get().getPathToStringAssetsZip();
       zipFiles.add(pathToStringAssetsZip);
-      // TODO(natthu): Remove this check once we figure out what's exactly causing APKs missing
-      // string assets zip sometimes.
-      steps.add(
-          new AbstractExecutionStep("check_string_assets_zip_exists") {
-            @Override
-            public int execute(ExecutionContext context) {
-              if (!context.getProjectFilesystem().exists(pathToStringAssetsZip)) {
-                context.postEvent(LogEvent.severe(
-                        "Zip file containing non-english strings was not created: %s",
-                        pathToStringAssetsZip));
-                return 1;
-              }
-              return 0;
-            }
-          });
     }
 
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
