@@ -27,7 +27,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -44,12 +43,6 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
 
   private static final ImmutableSet<String> NON_ASSET_FILENAMES =
       ImmutableSet.of(".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
-
-  private final Optional<Path> aaptOverride;
-
-  public AndroidResourceDescription(Optional<Path> aaptOverride) {
-    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
-  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -75,8 +68,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         args.assets.orNull(),
         collectInputFiles(filesystem, args.assets),
         args.manifest.orNull(),
-        args.hasWhitelistedStrings.or(false),
-        aaptOverride);
+        args.hasWhitelistedStrings.or(false));
   }
 
   @VisibleForTesting

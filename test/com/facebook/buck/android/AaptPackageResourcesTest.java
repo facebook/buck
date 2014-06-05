@@ -64,8 +64,7 @@ public class AaptPackageResourcesTest {
         resourcesFilter,
         AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
-        /* aaptOverride */ Optional.<Path>absent());
+        /* cpuFilters */ ImmutableSet.<TargetCpuType>of());
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -119,8 +118,7 @@ public class AaptPackageResourcesTest {
         resourcesFilter,
         AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
-        ImmutableSet.<TargetCpuType>of(),
-        /* aaptOverride */ Optional.<Path>absent());
+        ImmutableSet.<TargetCpuType>of());
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     Set<Path> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
@@ -175,8 +173,7 @@ public class AaptPackageResourcesTest {
         resourcesFilter,
         AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
-        ImmutableSet.<TargetCpuType>of(),
-        /* aaptOverride */ Optional.<Path>absent());
+        ImmutableSet.<TargetCpuType>of());
 
     AndroidResource resourceOne = (AndroidResource) ruleResolver.get(
         BuildTargetFactory.newInstance("//facebook/base:libraryOne_resources")).getBuildable();

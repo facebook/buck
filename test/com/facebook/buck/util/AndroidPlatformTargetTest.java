@@ -34,8 +34,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.regex.Matcher;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 public class AndroidPlatformTargetTest {
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
@@ -55,7 +55,11 @@ public class AndroidPlatformTargetTest {
 
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
         .createFromDefaultDirectoryStructure(
-            name, androidDirectoryResolver, platformDirectoryPath, additionalJarPaths);
+            name,
+            androidDirectoryResolver,
+            platformDirectoryPath,
+            additionalJarPaths,
+            /* aaptOverride */ Optional.<Path>absent());
     assertEquals(name, androidPlatformTarget.getName());
     assertEquals(ImmutableList.of(Paths.get("/home/android/platforms/android-16/android.jar")),
         androidPlatformTarget.getBootclasspathEntries());
@@ -98,7 +102,10 @@ public class AndroidPlatformTargetTest {
 
     String platformId = "Google Inc.:Google APIs:17";
     Optional<AndroidPlatformTarget> androidPlatformTargetOption =
-        AndroidPlatformTarget.getTargetForId(platformId, androidDirectoryResolver);
+        AndroidPlatformTarget.getTargetForId(
+            platformId,
+            androidDirectoryResolver,
+            /* aaptOverride */ Optional.<Path>absent());
 
     assertTrue(androidPlatformTargetOption.isPresent());
     AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
@@ -145,7 +152,10 @@ public class AndroidPlatformTargetTest {
 
     String platformId = "Google Inc.:Google APIs:17";
     Optional<AndroidPlatformTarget> androidPlatformTargetOption =
-        AndroidPlatformTarget.getTargetForId(platformId, androidDirectoryResolver);
+        AndroidPlatformTarget.getTargetForId(
+            platformId,
+            androidDirectoryResolver,
+            /* aaptOverride */ Optional.<Path>absent());
 
     assertTrue(androidPlatformTargetOption.isPresent());
     AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
@@ -197,7 +207,8 @@ public class AndroidPlatformTargetTest {
     Optional<AndroidPlatformTarget> androidPlatformTargetOption =
         AndroidPlatformTarget.getTargetForId(
             "Google Inc.:Google APIs:17",
-            androidDirectoryResolver);
+            androidDirectoryResolver,
+            /* aaptOverride */ Optional.<Path>absent());
     assertTrue(androidPlatformTargetOption.isPresent());
 
     assertEquals(
@@ -232,7 +243,8 @@ public class AndroidPlatformTargetTest {
     Optional<AndroidPlatformTarget> androidPlatformTargetOption =
         AndroidPlatformTarget.getTargetForId(
             "Google Inc.:Google APIs:17",
-            androidDirectoryResolver);
+            androidDirectoryResolver,
+            /* aaptOverride */ Optional.<Path>absent());
     assertTrue(androidPlatformTargetOption.isPresent());
 
     // Verify that addOnsLibsDir2 was picked up since addOnsLibsDir1 is empty.
@@ -252,7 +264,10 @@ public class AndroidPlatformTargetTest {
             /* androidNdkDir */ Optional.<Path>absent(),
             /* ndkVersion */ Optional.<String>absent());
     try {
-      AndroidPlatformTarget.getTargetForId(platformId, androidDirectoryResolver);
+      AndroidPlatformTarget.getTargetForId(
+          platformId,
+          androidDirectoryResolver,
+          /* aaptOverride */ Optional.<Path>absent());
       fail("Should have thrown HumanReadableException");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -289,7 +304,8 @@ public class AndroidPlatformTargetTest {
     Optional<AndroidPlatformTarget> androidPlatformTargetOption1 =
         AndroidPlatformTarget.getTargetForId(
             "Google Inc.:Google APIs:17",
-            androidDirectoryResolver);
+            androidDirectoryResolver,
+            /* aaptOverride */ Optional.<Path>absent());
     assertTrue(androidPlatformTargetOption1.isPresent());
     assertEquals(
         ImmutableList.of(
@@ -303,7 +319,8 @@ public class AndroidPlatformTargetTest {
     Optional<AndroidPlatformTarget> androidPlatformTargetOption2 =
         AndroidPlatformTarget.getTargetForId(
             "android-17",
-            androidDirectoryResolver);
+            androidDirectoryResolver,
+            /* aaptOverride */ Optional.<Path>absent());
     assertTrue(androidPlatformTargetOption2.isPresent());
     assertEquals(
         ImmutableList.of(

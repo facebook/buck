@@ -53,15 +53,12 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
 
   private final JavacOptions javacOptions;
   private final Optional<Path> proguardJarOverride;
-  private final Optional<Path> aaptOverride;
 
   public AndroidBinaryDescription(
       JavacOptions javacOptions,
-      Optional<Path> proguardJarOverride,
-      Optional<Path> aaptOverride) {
+      Optional<Path> proguardJarOverride) {
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
-    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
   }
 
   @Override
@@ -89,7 +86,6 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         params,
         javacOptions,
         proguardJarOverride,
-        aaptOverride,
         args.manifest,
         args.target,
         args.deps.get(),

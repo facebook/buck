@@ -112,6 +112,7 @@ public abstract class AbstractCommandOptions {
     return Build.findAndroidPlatformTarget(
         actionGraph,
         androidDirectoryResolver,
-        eventBus);
+        eventBus,
+        buckConfig);
   }
 }

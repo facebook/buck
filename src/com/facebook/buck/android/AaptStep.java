@@ -42,21 +42,18 @@ public class AaptStep extends ShellStep {
 
   @SuppressWarnings("unused")
   private final boolean isCrunchPngFiles;
-  private final Optional<Path> aaptOverride;
 
   public AaptStep(
       Path androidManifest,
       Set<Path> resDirectories,
       Optional<Path> assetsDirectory,
       Path pathToOutputApkFile,
-      boolean isCrunchPngFiles,
-      Optional<Path> aaptOverride) {
+      boolean isCrunchPngFiles) {
     this.androidManifest = Preconditions.checkNotNull(androidManifest);
     this.resDirectories = ImmutableSet.copyOf(resDirectories);
     this.assetsDirectory = Preconditions.checkNotNull(assetsDirectory);
     this.pathToOutputApkFile = Preconditions.checkNotNull(pathToOutputApkFile);
     this.isCrunchPngFiles = isCrunchPngFiles;
-    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
   }
 
   @Override
@@ -64,11 +61,7 @@ public class AaptStep extends ShellStep {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
 
-    if (aaptOverride.isPresent()) {
-      builder.add(aaptOverride.get().toString());
-    } else {
-      builder.add(androidPlatformTarget.getAaptExecutable().toString());
-    }
+    builder.add(androidPlatformTarget.getAaptExecutable().toString());
     builder.add("package");
 
     // verbose flag, if appropriate.

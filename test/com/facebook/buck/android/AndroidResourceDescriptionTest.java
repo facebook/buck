@@ -83,8 +83,7 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFolder("res/dirs/_dir");
     tmpFolder.newFile("res/dirs/_dir/ignore");
 
-    AndroidResourceDescription description =
-        new AndroidResourceDescription(Optional.<Path>absent());
+    AndroidResourceDescription description = new AndroidResourceDescription();
     Set<Path> inputs = description.collectInputFiles(
             new ProjectFilesystem(tmpFolder.getRoot().toPath()),
             Optional.of(Paths.get("res")));

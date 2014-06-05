@@ -71,7 +71,6 @@ public class AndroidBinaryBuilder {
           new FakeBuildRuleParams(buildTarget, originalDeps),
           JavacOptions.DEFAULTS,
           /* proguardJarOverride */ Optional.<Path>absent(),
-          /* aaptOverride */ Optional.<Path>absent(),
           manifest,
           target,
           originalDeps,

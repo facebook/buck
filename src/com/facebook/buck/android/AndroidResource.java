@@ -112,7 +112,6 @@ public class AndroidResource extends AbstractBuildable
 
   private final Supplier<ImmutableList<HasAndroidResourceDeps>> transitiveAndroidResourceDeps;
 
-  private final Optional<Path> aaptOverride;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   protected AndroidResource(
@@ -124,8 +123,7 @@ public class AndroidResource extends AbstractBuildable
       @Nullable Path assets,
       ImmutableSortedSet<Path> assetsSrcs,
       @Nullable Path manifestFile,
-      boolean hasWhitelistedStrings,
-      Optional<Path> aaptOverride) {
+      boolean hasWhitelistedStrings) {
     super(buildTarget);
     this.res = res;
     this.resSrcs = Preconditions.checkNotNull(resSrcs);
@@ -156,7 +154,6 @@ public class AndroidResource extends AbstractBuildable
           }
         });
 
-    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
@@ -224,8 +221,7 @@ public class AndroidResource extends AbstractBuildable
         pathToTextSymbolsDir,
         rDotJavaPackage,
         /* isTempRDotJava */ true,
-        /* extraLibraryPackages */ ImmutableSet.<String>of(),
-        aaptOverride);
+        /* extraLibraryPackages */ ImmutableSet.<String>of());
 
     buildableContext.recordArtifact(pathToTextSymbolsFile);
 

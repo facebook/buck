@@ -76,7 +76,6 @@ public class AndroidBinaryGraphEnhancer {
   private final JavacOptions javacOptions;
   private final boolean exopackage;
   private final Keystore keystore;
-  private final Optional<Path> aaptOverride;
 
   AndroidBinaryGraphEnhancer(
       BuildRuleParams originalParams,
@@ -94,8 +93,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<BuildTarget> buildRulesToExcludeFromDex,
       JavacOptions javacOptions,
       boolean exopackage,
-      Keystore keystore,
-      Optional<Path> aaptOverride) {
+      Keystore keystore) {
     this.buildRuleParams = Preconditions.checkNotNull(originalParams);
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
@@ -114,7 +112,6 @@ public class AndroidBinaryGraphEnhancer {
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.exopackage = exopackage;
     this.keystore = Preconditions.checkNotNull(keystore);
-    this.aaptOverride = Preconditions.checkNotNull(aaptOverride);
   }
 
   EnhancementResult createAdditionalBuildables() {
@@ -157,7 +154,6 @@ public class AndroidBinaryGraphEnhancer {
         buildTargetForUberRDotJava,
         filteredResourcesProvider,
         javacOptions,
-        aaptOverride,
         androidResourceDepsFinder,
         shouldPreDex,
         shouldBuildStringSourceMap);
@@ -193,8 +189,7 @@ public class AndroidBinaryGraphEnhancer {
         filteredResourcesProvider,
         androidResourceDepsFinder.getAndroidTransitiveDependencies(),
         packageType,
-        cpuFilters,
-        aaptOverride);
+        cpuFilters);
     BuildRule aaptPackageResourcesBuildRule = buildRuleAndAddToIndex(
         aaptPackageResources,
         BuildRuleType.AAPT_PACKAGE,

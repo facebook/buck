@@ -46,14 +46,12 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
@@ -112,8 +110,7 @@ public class AndroidBinaryGraphEnhancerTest {
         buildRulesToExcludeFromDex,
         JavacOptions.DEFAULTS,
         /* exopackage */ false,
-        createStrictMock(Keystore.class),
-        /* aaptOverride */ Optional.<Path>absent());
+        createStrictMock(Keystore.class));
 
     UberRDotJava uberRDotJava = createMock(UberRDotJava.class);
     BuildTarget uberRDotJavaTarget =
@@ -193,8 +190,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
         /* exopackage */ true,
-        keystore,
-        /* aaptOverride */ Optional.<Path>absent());
+        keystore);
     replay(depsFinder, keystore);
     EnhancementResult result = graphEnhancer.createAdditionalBuildables();
 

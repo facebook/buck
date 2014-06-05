@@ -69,7 +69,6 @@ public class AndroidInstrumentationApk extends AndroidBinary implements Dependen
     super(buildRuleParams,
         JavacOptions.DEFAULTS,
         /* proguardJarOverride */ Optional.<Path>absent(),
-        /* aaptOverride */ Optional.<Path>absent(),
         manifest,
         apkUnderTest.getTarget(),
         originalDeps,
@@ -163,8 +162,7 @@ public class AndroidInstrumentationApk extends AndroidBinary implements Dependen
         /* rulesToExcludeFromDex */ ImmutableSortedSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
         /* exopackage */ false,
-        apkUnderTest.getKeystore(),
-        /* aaptOverride */ Optional.<Path>absent());
+        apkUnderTest.getKeystore());
 
     AndroidBinaryGraphEnhancer.EnhancementResult result =
         graphEnhancer.createAdditionalBuildables();

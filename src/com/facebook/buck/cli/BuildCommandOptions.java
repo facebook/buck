@@ -150,6 +150,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         getBuildDependencies(),
         eventBus,
         platform,
-        environment);
+        environment,
+        buckConfig);
   }
 }

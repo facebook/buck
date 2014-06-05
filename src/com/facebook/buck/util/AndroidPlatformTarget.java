@@ -160,7 +160,8 @@ public class AndroidPlatformTarget {
    */
   public static Optional<AndroidPlatformTarget> getTargetForId(
       String platformId,
-      AndroidDirectoryResolver androidDirectoryResolver) {
+      AndroidDirectoryResolver androidDirectoryResolver,
+      Optional<Path> aaptOverride) {
     Preconditions.checkNotNull(platformId);
     Preconditions.checkNotNull(androidDirectoryResolver);
 
@@ -175,7 +176,7 @@ public class AndroidPlatformTarget {
           platformTargetFactory = new AndroidWithoutGoogleApisFactory();
         }
         return Optional.of(
-            platformTargetFactory.newInstance(androidDirectoryResolver, apiLevel));
+            platformTargetFactory.newInstance(androidDirectoryResolver, apiLevel, aaptOverride));
       } catch (NumberFormatException e) {
         return Optional.absent();
       }
@@ -185,14 +186,17 @@ public class AndroidPlatformTarget {
   }
 
   public static AndroidPlatformTarget getDefaultPlatformTarget(
-      AndroidDirectoryResolver androidDirectoryResolver) {
-    return getTargetForId(DEFAULT_ANDROID_PLATFORM_TARGET, androidDirectoryResolver).get();
+      AndroidDirectoryResolver androidDirectoryResolver,
+      Optional<Path> aaptOverride) {
+    return getTargetForId(DEFAULT_ANDROID_PLATFORM_TARGET, androidDirectoryResolver, aaptOverride)
+        .get();
   }
 
   private static interface Factory {
     public AndroidPlatformTarget newInstance(
         AndroidDirectoryResolver androidDirectoryResolver,
-        int apiLevel);
+        int apiLevel,
+        Optional<Path> aaptOverride);
   }
 
   /**
@@ -205,7 +209,8 @@ public class AndroidPlatformTarget {
       String name,
       AndroidDirectoryResolver androidDirectoryResolver,
       String platformDirectoryPath,
-      Set<Path> additionalJarPaths) {
+      Set<Path> additionalJarPaths,
+      Optional<Path> aaptOverride) {
     Path androidSdkDir = androidDirectoryResolver.findAndroidSdkDir();
     if (!androidSdkDir.isAbsolute()) {
       throw new HumanReadableException(
@@ -263,7 +268,7 @@ public class AndroidPlatformTarget {
         name,
         androidJar.toAbsolutePath(),
         bootclasspathEntries,
-        androidSdkDir.resolve(buildToolsPath).resolve("aapt").toAbsolutePath(),
+        aaptOverride.or(androidSdkDir.resolve(buildToolsPath).resolve("aapt").toAbsolutePath()),
         androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
         androidSdkDir.resolve(buildToolsPath).resolve("aidl").toAbsolutePath(),
         androidSdkDir.resolve("tools/zipalign").toAbsolutePath(),
@@ -330,7 +335,8 @@ public class AndroidPlatformTarget {
     @Override
     public AndroidPlatformTarget newInstance(
         final AndroidDirectoryResolver androidDirectoryResolver,
-        final int apiLevel) {
+        final int apiLevel,
+        Optional<Path> aaptOverride) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
       Path androidSdkDir = androidDirectoryResolver.findAndroidSdkDir();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
@@ -378,7 +384,8 @@ public class AndroidPlatformTarget {
                 String.format("Google Inc.:Google APIs:%d", apiLevel),
                 androidDirectoryResolver,
                 String.format("platforms/android-%d", apiLevel),
-                additionalJarPaths.build());
+                additionalJarPaths.build(),
+                aaptOverride);
           }
         }
       }
@@ -397,12 +404,14 @@ public class AndroidPlatformTarget {
     @Override
     public AndroidPlatformTarget newInstance(
         final AndroidDirectoryResolver androidDirectoryResolver,
-        final int apiLevel) {
+        final int apiLevel,
+        Optional<Path> aaptOverride) {
       return createFromDefaultDirectoryStructure(
           String.format("android-%d", apiLevel),
           androidDirectoryResolver,
           String.format("platforms/android-%d", apiLevel),
-          ImmutableSet.<Path>of());
+          /* additionalJarPaths */ ImmutableSet.<Path>of(),
+          aaptOverride);
     }
   }
 

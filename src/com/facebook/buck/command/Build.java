@@ -19,6 +19,7 @@ package com.facebook.buck.command;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.android.HasAndroidPlatformTarget;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
@@ -96,11 +97,15 @@ public class Build implements Closeable {
       BuildDependencies buildDependencies,
       BuckEventBus eventBus,
       Platform platform,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      BuckConfig buckConfig) {
     this.actionGraph = Preconditions.checkNotNull(actionGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
-        actionGraph, androidDirectoryResolver, eventBus);
+        actionGraph,
+        androidDirectoryResolver,
+        eventBus,
+        buckConfig);
     this.executionContext = ExecutionContext.builder()
         .setProjectFilesystem(projectFilesystem)
         .setConsole(console)
@@ -138,7 +143,8 @@ public class Build implements Closeable {
   public static Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
       final ActionGraph actionGraph,
       final AndroidDirectoryResolver androidDirectoryResolver,
-      final BuckEventBus eventBus) {
+      final BuckEventBus eventBus,
+      final BuckConfig buckConfig) {
     Optional<Path> androidSdkDirOption =
         androidDirectoryResolver.findAndroidSdkDirSafe();
     if (!androidSdkDirOption.isPresent()) {
@@ -183,7 +189,9 @@ public class Build implements Closeable {
         Optional<AndroidPlatformTarget> result;
         if (androidPlatformTargetId != null) {
           Optional<AndroidPlatformTarget> target = AndroidPlatformTarget.getTargetForId(
-              androidPlatformTargetId, androidDirectoryResolver);
+              androidPlatformTargetId,
+              androidDirectoryResolver,
+              buckConfig.getAaptOverride());
           if (target.isPresent()) {
             result = target;
           } else {
@@ -191,7 +199,7 @@ public class Build implements Closeable {
           }
         } else if (isEncounteredAndroidRuleInTraversal) {
           AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
-              .getDefaultPlatformTarget(androidDirectoryResolver);
+              .getDefaultPlatformTarget(androidDirectoryResolver, buckConfig.getAaptOverride());
           eventBus.post(LogEvent.warning("No Android platform target specified. Using default: %s",
               androidPlatformTarget.getName()));
           result = Optional.of(androidPlatformTarget);
