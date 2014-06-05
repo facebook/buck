@@ -793,15 +793,28 @@ public class BuckConfig {
   }
 
   /**
-   * Returns the path to the aapt executable that is overridden by the current project. If not
-   * specified, the Android platform aapt will be used.
+   * Returns the path to the platform specific aapt executable that is overridden by the current
+   * project. If not specified, the Android platform aapt will be used.
    */
   public Optional<Path> getAaptOverride() {
     Optional<String> pathString = getValue("tools", "aapt");
-    if (pathString.isPresent()) {
-      return checkPathExists(pathString.get(), "Overridden aapt path not found: ");
+    if (!pathString.isPresent()) {
+      return Optional.absent();
     }
-    return Optional.absent();
+
+    String platformDir;
+    if (platform == Platform.LINUX) {
+      platformDir = "linux";
+    } else if (platform == Platform.MACOS) {
+      platformDir = "mac";
+    } else if (platform == Platform.WINDOWS) {
+      platformDir = "windows";
+    } else {
+      return Optional.absent();
+    }
+
+    Path pathToAapt = Paths.get(pathString.get(), platformDir, "aapt");
+    return checkPathExists(pathToAapt.toString(), "Overridden aapt path not found: ");
   }
 
   public Optional<Path> checkPathExists(String pathString, String errorMsg) {
