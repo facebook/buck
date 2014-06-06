@@ -230,7 +230,7 @@ public class AuditOwnerCommandTest {
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-    Repository repository = new Repository("test", filesystem, buildRuleTypes);
+    Repository repository = new Repository("test", filesystem, buildRuleTypes, buckConfig);
     return new AuditOwnerCommand(new CommandRunnerParams(
         console,
         repository,

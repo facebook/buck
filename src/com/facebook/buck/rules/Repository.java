@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -29,14 +30,17 @@ public class Repository {
   private final String name;
   private final ProjectFilesystem filesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
+  private final BuckConfig buckConfig;
 
   public Repository(
       String name,
       ProjectFilesystem filesystem,
-      KnownBuildRuleTypes buildRuleTypes) {
+      KnownBuildRuleTypes buildRuleTypes,
+      BuckConfig buckConfig) {
     this.name = Preconditions.checkNotNull(name);
     this.filesystem = Preconditions.checkNotNull(filesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
+    this.buckConfig = Preconditions.checkNotNull(buckConfig);
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -53,6 +57,10 @@ public class Repository {
 
   public ImmutableSet<Description<?>> getAllDescriptions() {
     return buildRuleTypes.getAllDescriptions();
+  }
+
+  public BuckConfig getBuckConfig() {
+    return buckConfig;
   }
 
   public String toString() {

@@ -106,7 +106,8 @@ public class CleanCommandTest extends EasyMockSupport {
     Repository repository = new Repository(
         "mocked",
         projectFilesystem,
-        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem));
+        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem),
+        new FakeBuckConfig());
 
     CommandRunnerParams params = new CommandRunnerParams(
         new TestConsole(),

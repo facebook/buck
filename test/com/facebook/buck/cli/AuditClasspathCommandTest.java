@@ -74,7 +74,7 @@ public class AuditClasspathCommandTest {
   private AuditClasspathCommand auditClasspathCommand;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException {
     console = new TestConsole();
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
@@ -82,8 +82,9 @@ public class AuditClasspathCommandTest {
         DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem);
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckConfig buckConfig = new FakeBuckConfig();
 
-    Repository repository = new Repository("test", projectFilesystem, buildRuleTypes);
+    Repository repository = new Repository("test", projectFilesystem, buildRuleTypes, buckConfig);
 
     auditClasspathCommand = new AuditClasspathCommand(new CommandRunnerParams(
         console,
@@ -110,7 +111,7 @@ public class AuditClasspathCommandTest {
   }
 
   @Test
-  public void testClassPathOutput() {
+  public void testClassPathOutput() throws IOException {
     // Build a DependencyGraph of build rules manually.
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     List<String> targets = Lists.newArrayList();

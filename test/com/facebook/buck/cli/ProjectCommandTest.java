@@ -93,7 +93,7 @@ public class ProjectCommandTest {
             "[project]",
             "initial_targets = " + javaLibraryTargetName));
 
-    ProjectCommandForTest command = new ProjectCommandForTest();
+    ProjectCommandForTest command = new ProjectCommandForTest(buckConfig);
     command.createPartialGraphCallReturnValues.push(
         createGraphFromBuildRules(ImmutableList.of(ruleConfig)));
 
@@ -142,7 +142,7 @@ public class ProjectCommandTest {
         .setSrcRule(ruleWith)
         .build(ruleResolver);
 
-    ProjectCommandForTest command = new ProjectCommandForTest();
+    ProjectCommandForTest command = new ProjectCommandForTest(buckConfig);
     command.createPartialGraphCallReturnValues.addLast(
         createGraphFromBuildRules(ImmutableList.<BuildRule>of(ruleConfig)));
     command.createPartialGraphCallReturnValues.addLast(
@@ -223,15 +223,16 @@ public class ProjectCommandTest {
    * appears to be a bug in EasyMock.
    */
   private static class ProjectCommandForTest extends ProjectCommand {
+
     private List<RawRulePredicate> createPartialGraphCallPredicates = Lists.newArrayList();
     private LinkedList<PartialGraph> createPartialGraphCallReturnValues = Lists.newLinkedList();
     private BuildCommandOptions buildCommandOptions;
 
-    ProjectCommandForTest() {
+    ProjectCommandForTest(BuckConfig buckConfig) {
       super(
           new CommandRunnerParams(
               new TestConsole(),
-              getTestRepository(),
+              getTestRepository(buckConfig),
               new FakeAndroidDirectoryResolver(),
               new InstanceArtifactCacheFactory(artifactCache),
               BuckEventBusFactory.newInstance(),
@@ -275,10 +276,10 @@ public class ProjectCommandTest {
       return 0;
     }
 
-    private static Repository getTestRepository() {
+    private static Repository getTestRepository(BuckConfig buckConfig) {
       ProjectFilesystem filesystem = new ProjectFilesystem(new File(".").toPath());
       KnownBuildRuleTypes buildRuleTypes = getDefaultKnownBuildRuleTypes(filesystem);
-      return new Repository("test", filesystem, buildRuleTypes);
+      return new Repository("test", filesystem, buildRuleTypes, buckConfig);
     }
   }
 }

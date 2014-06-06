@@ -66,7 +66,11 @@ public class AuditInputCommandTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     KnownBuildRuleTypes buildRuleTypes =
         DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem);
-    Repository repository = new Repository("test", projectFilesystem, buildRuleTypes);
+    Repository repository = new Repository(
+        "test",
+        projectFilesystem,
+        buildRuleTypes,
+        new FakeBuckConfig());
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 

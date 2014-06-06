@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -161,7 +162,7 @@ public class ParserTest extends EasyMockSupport {
 
     buildRuleTypes = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);
 
-    repository = new Repository("parser test", filesystem, buildRuleTypes);
+    repository = new Repository("parser test", filesystem, buildRuleTypes, new FakeBuckConfig());
 
     DefaultProjectBuildFileParserFactory testBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
@@ -243,7 +244,7 @@ public class ParserTest extends EasyMockSupport {
     KnownBuildRuleTypes types = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(
         filesystem);
     Parser parser = new Parser(
-        new Repository("test", fs, types),
+        new Repository("test", fs, types, new FakeBuckConfig()),
         new TestConsole(),
         ImmutableMap.copyOf(System.getenv()),
         BuckTestConstant.PYTHON_INTERPRETER,

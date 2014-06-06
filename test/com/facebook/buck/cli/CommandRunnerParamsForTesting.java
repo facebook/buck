@@ -79,7 +79,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
       Repository repository = new Repository(
           "command runner params for testing",
           projectFilesystem,
-          buildRuleTypes);
+          buildRuleTypes,
+          new FakeBuckConfig());
       return new CommandRunnerParamsForTesting(
           console,
           repository,

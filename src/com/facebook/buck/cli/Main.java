@@ -155,7 +155,11 @@ public final class Main {
       this.config = Preconditions.checkNotNull(config);
       this.console = Preconditions.checkNotNull(console);
       this.hashCache = new DefaultFileHashCache(projectFilesystem, console);
-      Repository repository = new Repository("default", projectFilesystem, knownBuildRuleTypes);
+      Repository repository = new Repository(
+          "default",
+          projectFilesystem,
+          knownBuildRuleTypes,
+          config);
       this.parser = new Parser(
           repository,
           console,
@@ -575,7 +579,7 @@ public final class Main {
         }
       }
 
-      Repository repository = new Repository("default", projectFilesystem, buildRuleTypes);
+      Repository repository = new Repository("default", projectFilesystem, buildRuleTypes, config);
 
       if (parser == null) {
         parser = new Parser(
