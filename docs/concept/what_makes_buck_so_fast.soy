@@ -31,6 +31,14 @@ the nodes in the graph have gone through the queue.
 Therefore, breaking modules into finer dependencies creates opportunities for increased
 parallelism, improving throughput.
 
+<p>
+
+In light of all this, by default Buck uses first order dependencies.  First order dependencies mean
+that you need to specify the dependencies of your library, plus any libraries that your library
+happens to depend on.  This behavior can be changed at runtime with the
+{sp}<code><a href="{ROOT}command/build.html">buck build</a></code> command by specifying a
+different value for <code>--build-dependencies</code>.
+
 <h2>Buck can store the outputs it generates in a cache</h2>
 
 <p>
