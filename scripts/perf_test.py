@@ -169,7 +169,7 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
                 env=env)
         except:
             tmpFile.seek(0)
-            log('Buck build failed: %s', tmpFile.read())
+            log('Buck build failed: %s' % tmpFile.read())
             raise
         tmpFile.seek(0)
         build_output = tmpFile.read()
