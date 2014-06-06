@@ -110,9 +110,13 @@ BUCK_SUCCESS_FILE="build/successful-build"
 # If there is a .buckversion file in the project root, then make sure that Buck is at that version.
 # The only way to override this is to include a .nobuckcheck file in the project root.
 if [ -e "${PROJECT_ROOT}/.nobuckcheck" ]; then
-  echo >&2 ":::"
-  echo >&2 "::: '.nobuckcheck' file is present.  Not updating buck"
-  echo >&2 ":::"
+  # Stop this warning from being printed twice when buck invokes buckd.
+  if [ ! $ALREADY_PRINTED_NOBUCKCHECK_WARNING ] ; then
+    export ALREADY_PRINTED_NOBUCKCHECK_WARNING=1
+    echo >&2 ":::"
+    echo >&2 "::: '.nobuckcheck' file is present.  Not updating buck"
+    echo >&2 ":::"
+  fi
 elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
   BUCK_COMMIT_HASH_AND_BRANCH=`cat ${PROJECT_ROOT}/.buckversion`
 
