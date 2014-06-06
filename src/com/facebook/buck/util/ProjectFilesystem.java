@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
@@ -61,13 +62,13 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.zip.ZipEntry;
 
 /**
  * An injectable service for interacting with the filesystem relative to the project root.
@@ -637,7 +638,18 @@ public class ProjectFilesystem {
     Preconditions.checkState(!Iterables.isEmpty(pathsToIncludeInZip));
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
       for (Path path : pathsToIncludeInZip) {
-        ZipEntry entry = new ZipEntry(path.toString());
+        CustomZipEntry entry = new CustomZipEntry(path.toString());
+
+        // Support executable files.  If we detect this file is executable, store this
+        // information as 0100 in the field typically used in zip implementations for
+        // POSIX file permissions.  We'll use this information when unzipping.
+        Path full = getPathForRelativePath(path);
+        File file = full.toFile();
+        if (file.canExecute()) {
+          entry.setExternalAttributes(MorePosixFilePermissions.toMode(
+              EnumSet.of(PosixFilePermission.OWNER_EXECUTE)) << 16);
+        }
+
         zip.putNextEntry(entry);
         try (InputStream input = java.nio.file.Files.newInputStream(getPathForRelativePath(path))) {
           ByteStreams.copy(input, zip);

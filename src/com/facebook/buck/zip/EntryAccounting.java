@@ -44,6 +44,8 @@ class EntryAccounting {
   private final Method method;
   private Hasher crc = Hashing.crc32().newHasher();
   private long offset;
+  private long externalAttributes = 0;
+
   /*
    * General purpose bit flag:
    *  Bit 00: encrypted file
@@ -78,6 +80,7 @@ class EntryAccounting {
 
     if (entry instanceof CustomZipEntry) {
       deflater.setLevel(((CustomZipEntry) entry).getCompressionLevel());
+      externalAttributes = ((CustomZipEntry) entry).getExternalAttributes();
     }
   }
 
@@ -153,6 +156,10 @@ class EntryAccounting {
 
   public int getRequiredExtractVersion() {
     return method.getRequiredExtractVersion();
+  }
+
+  public long getExternalAttributes() {
+    return externalAttributes;
   }
 
   public long writeLocalFileHeader(OutputStream out) throws IOException {
@@ -315,4 +322,5 @@ class EntryAccounting {
       throw new IllegalArgumentException("Cannot determine zip method from: " + fromZipMethod);
     }
   }
+
 }

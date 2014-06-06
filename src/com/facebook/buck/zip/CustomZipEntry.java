@@ -27,6 +27,7 @@ import java.util.zip.ZipEntry;
 public class CustomZipEntry extends ZipEntry {
 
   private int compressionLevel = Deflater.DEFAULT_COMPRESSION;
+  private long externalAttributes = 0;
 
   public CustomZipEntry(ZipEntry other) {
     super(other);
@@ -61,4 +62,13 @@ public class CustomZipEntry extends ZipEntry {
   public int getCompressionLevel() {
     return compressionLevel;
   }
+
+  public long getExternalAttributes() {
+    return externalAttributes;
+  }
+
+  public void setExternalAttributes(long externalAttributes) {
+    this.externalAttributes = externalAttributes;
+  }
+
 }

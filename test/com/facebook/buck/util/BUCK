@@ -33,6 +33,7 @@ java_test(
     '//lib:hamcrest-core',
     '//lib:hamcrest-library',
     '//lib:junit',
+    '//third-party/java/commons-compress:commons-compress',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:network',

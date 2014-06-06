@@ -25,6 +25,8 @@ java_library(
     ':stream',
     '//lib:guava',
     '//lib:jsr305',
+    '//third-party/java/commons-compress:commons-compress',
+    '//src/com/facebook/buck/util:io',
   ],
   visibility = [ 'PUBLIC' ],
 )

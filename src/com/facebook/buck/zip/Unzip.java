@@ -16,17 +16,21 @@
 
 package com.facebook.buck.zip;
 
+import com.facebook.buck.util.MorePosixFilePermissions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Enumeration;
+import java.util.Set;
 
 public class Unzip {
 
@@ -47,8 +51,10 @@ public class Unzip {
     Files.createDirectories(folder.toPath());
 
     ImmutableList.Builder<Path> filesWritten = ImmutableList.builder();
-    try (ZipInputStream zip = new ZipInputStream(new FileInputStream(zipFile))) {
-      for (ZipEntry entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
+    try (ZipFile zip = new ZipFile(new File(zipFile))) {
+      Enumeration<ZipArchiveEntry> entries = zip.getEntries();
+      while (entries.hasMoreElements()) {
+        ZipArchiveEntry entry = entries.nextElement();
         String fileName = entry.getName();
         File target = new File(folder, fileName);
         if (target.exists() && !overwriteExistingFiles) {
@@ -69,8 +75,24 @@ public class Unzip {
           filesWritten.add(target.toPath());
           // Write file
           try (FileOutputStream out = new FileOutputStream(target)) {
-            ByteStreams.copy(zip, out);
+            ByteStreams.copy(zip.getInputStream(entry), out);
           }
+
+          // We encode whether this file was executable via storing 0100 in the fields
+          // that are typically used by zip implementations to store POSIX permissions.
+          // If we find it was executable, use the platform independent java interface
+          // to make this unpacked file executable.
+          Set<PosixFilePermission> permissions =
+              MorePosixFilePermissions.fromMode(entry.getExternalAttributes() >> 16);
+          if (permissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
+              // TODO(user): Currently, at least for POSIX filesystems, this just
+              // adds execute permissions for the owner.  However, it might be nice to
+              // add these for all roles (e.g. owner, group, other) that already have
+              // read perms (e.g. rw-r----- => rwx-r-x--, instead of rw-r----- =>
+              // rwxr-----).
+              target.setExecutable(/* executable */ true, /* ownerOnly */ true);
+          }
+
         }
       }
     }

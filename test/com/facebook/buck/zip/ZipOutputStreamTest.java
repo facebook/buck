@@ -25,12 +25,14 @@ import static java.util.zip.Deflater.NO_COMPRESSION;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.util.MorePosixFilePermissions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
@@ -38,6 +40,8 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,8 +52,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -444,4 +450,42 @@ public class ZipOutputStreamTest {
 
     assertArrayEquals(expected, seen);
   }
+
+  @Test
+  public void testThatExternalAttributesFieldIsFunctional()
+      throws IOException {
+
+    // Prepare some sample modes to write into the zip file.
+    final ImmutableList<String> samples = ImmutableList.of(
+        "rwxrwxrwx",
+        "rw-r--r--",
+        "--x--x--x",
+        "---------"
+    );
+
+    for (String stringMode : samples) {
+      long mode = MorePosixFilePermissions.toMode(PosixFilePermissions.fromString(stringMode));
+
+      // Write a tiny sample zip file, which sets the external attributes per the
+      // permission sample above.
+      try (CustomZipOutputStream out =
+               ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING)) {
+        CustomZipEntry entry = new CustomZipEntry("test");
+        entry.setTime(System.currentTimeMillis());
+        entry.setExternalAttributes(mode << 16);
+        out.putNextEntry(entry);
+        out.write(new byte[0]);
+      }
+
+      // Now re-read the zip file using apache's commons-compress, which supports parsing
+      // the external attributes field.
+      try (ZipFile in = new ZipFile(output)) {
+        Enumeration<ZipArchiveEntry> entries = in.getEntries();
+        ZipArchiveEntry entry = entries.nextElement();
+        assertEquals(mode, entry.getExternalAttributes() >> 16);
+        assertFalse(entries.hasMoreElements());
+      }
+    }
+  }
+
 }

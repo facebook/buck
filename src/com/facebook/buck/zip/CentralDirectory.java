@@ -83,12 +83,13 @@ class CentralDirectory {
     size += ByteIo.writeInt(out, entry.getSize());
 
     byte[] nameBytes = entry.getName().getBytes(Charsets.UTF_8);
+    long externalAttributes = entry.getExternalAttributes();
     size += ByteIo.writeShort(out, nameBytes.length);  // Length of name.
     size += ByteIo.writeShort(out, 0);                 // Length of extra data.
     size += ByteIo.writeShort(out, 0);                 // Length of file comment.
     size += ByteIo.writeShort(out, 0);                 // Disk on which file starts.
     size += ByteIo.writeShort(out, 0);                 // internal file attributes (unknown)
-    size += ByteIo.writeInt(out, 0);                   // external file attributes (unknown)
+    size += ByteIo.writeInt(out, externalAttributes);  // external file attributes
     size += ByteIo.writeInt(out, entry.getOffset());   // Offset of local file header.
     out.write(nameBytes);
     size += nameBytes.length;

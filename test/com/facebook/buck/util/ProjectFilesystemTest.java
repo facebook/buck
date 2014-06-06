@@ -31,6 +31,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -49,7 +51,10 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
+import java.util.Enumeration;
+import java.util.Set;
 
 /** Unit test for {@link ProjectFilesystem}. */
 public class ProjectFilesystemTest {
@@ -394,5 +399,32 @@ public class ProjectFilesystemTest {
             Predicates.equalTo(Paths.get("dir1/file2"))),
         containsInAnyOrder(Paths.get("dir1/file2")));
   }
+
+  @Test
+  public void testCreateZipPreservesExecutablePermissions() throws IOException {
+
+    // Create a empty executable file.
+    File exe = tmp.newFile("test.exe");
+    exe.setExecutable(true);
+
+    // Archive it into a zipfile using `ProjectFileSystem.createZip`.
+    File zipFile = new File(tmp.getRoot().toPath().toString() + "/test.zip");
+    filesystem.createZip(ImmutableList.of(exe.toPath()), zipFile);
+
+    // Now unpack the archive (using apache's common-compress, as it preserves
+    // executable permissions) and verify that the archive entry has executable
+    // permissions.
+    try (ZipFile zip = new ZipFile(zipFile)) {
+      Enumeration<ZipArchiveEntry> entries = zip.getEntries();
+      assertTrue(entries.hasMoreElements());
+      ZipArchiveEntry entry = entries.nextElement();
+      Set<PosixFilePermission> permissions =
+          MorePosixFilePermissions.fromMode(entry.getExternalAttributes() >> 16);
+      assertTrue(permissions.contains(PosixFilePermission.OWNER_EXECUTE));
+      assertFalse(entries.hasMoreElements());
+    }
+
+  }
+
 }
 
