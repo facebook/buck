@@ -542,6 +542,7 @@ public final class Main {
           projectFilesystem,
           config,
           webServer,
+          console,
           consoleListener,
           buildRuleTypes,
           clientEnvironment);
@@ -757,6 +758,7 @@ public final class Main {
       ProjectFilesystem projectFilesystem,
       BuckConfig config,
       Optional<WebServer> webServer,
+      Console console,
       AbstractConsoleEventBusListener consoleEventBusListener,
       KnownBuildRuleTypes knownBuildRuleTypes,
       ImmutableMap<String, String> environment) {
