@@ -72,6 +72,7 @@ java_library(
     'Description.java',
     'ExportDependencies.java',
     'Hint.java',
+    'ImplicitDepsInferringDescription.java',
     'Label.java',
     'JavaPackageFinder.java',
     'OnDiskBuildInfo.java',

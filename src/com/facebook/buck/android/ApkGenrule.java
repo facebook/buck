@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InstallableApk;
@@ -30,7 +29,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -64,11 +62,9 @@ public class ApkGenrule extends Genrule implements InstallableApk {
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
-      ImmutableSortedSet<BuildRule> deps,
       Function<Path, Path> relativeToAbsolutePathFunction,
       InstallableApk apk) {
     super(target,
-        deps,
         srcs,
         cmd,
         bash,

@@ -60,7 +60,6 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
         args.cmd,
         args.bash,
         args.cmdExe,
-        params.getDeps(),
         params.getPathAbsolutifier(),
         installableApk);
   }

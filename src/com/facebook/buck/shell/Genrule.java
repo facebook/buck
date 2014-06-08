@@ -20,9 +20,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DependencyEnhancer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
@@ -101,7 +103,7 @@ import java.util.Set;
  * <p>
  * Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends AbstractBuildable {
+public class Genrule extends AbstractBuildable implements DependencyEnhancer {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
@@ -114,7 +116,6 @@ public class Genrule extends AbstractBuildable {
 
   protected final Map<Path, Path> srcsToAbsolutePaths;
 
-  private final ImmutableSortedSet<BuildRule> deps;
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
   private final Path pathToTmpDirectory;
@@ -123,8 +124,9 @@ public class Genrule extends AbstractBuildable {
   private final Path absolutePathToSrcDirectory;
   protected final Function<Path, Path> relativeToAbsolutePathFunction;
 
+  private ImmutableSortedSet<BuildRule> deps;
+
   protected Genrule(BuildTarget target,
-      ImmutableSortedSet<BuildRule> deps,
       List<Path> srcs,
       Optional<String> cmd,
       Optional<String> bash,
@@ -132,7 +134,6 @@ public class Genrule extends AbstractBuildable {
       String out,
       final Function<Path, Path> relativeToAbsolutePathFunction) {
     super(target);
-    this.deps = deps;
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = Preconditions.checkNotNull(cmd);
     this.bash = Preconditions.checkNotNull(bash);
@@ -165,6 +166,12 @@ public class Genrule extends AbstractBuildable {
     this.absolutePathToSrcDirectory = relativeToAbsolutePathFunction.apply(pathToSrcDirectory);
 
     this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
+    this.deps = ImmutableSortedSet.of();
+  }
+
+  @VisibleForTesting
+  void setDeps(ImmutableSortedSet<BuildRule> deps) {
+    this.deps = deps;
   }
 
   /** @return the absolute path to the output file */
@@ -332,5 +339,19 @@ public class Genrule extends AbstractBuildable {
       Path destination = pathToSrcDirectory.resolve(localPath);
       commands.add(new MkdirAndSymlinkFileStep(entry.getKey(), destination));
     }
+  }
+
+  // TODO(natthu): This is misuing graph enhancement to stash the complete deps of the rule.
+  // Remove this once buildables and build rules are merged.
+  @Override
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(
+      BuildRuleResolver ruleResolver,
+      Iterable<BuildRule> declaredDeps,
+      Iterable<BuildRule> inferredDeps) {
+    this.deps = ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(declaredDeps)
+        .addAll(inferredDeps)
+        .build();
+    return this.deps;
   }
 }

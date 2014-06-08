@@ -82,6 +82,17 @@ public class TargetNode<T extends ConstructorArg> {
         detectBuildTargetsAndPathsForParameter(extraDeps, paths, info, params);
       }
     }
+
+    if (description instanceof ImplicitDepsInferringDescription) {
+      Iterable<String> rawTargets =
+          ((ImplicitDepsInferringDescription) description).findDepsFromParams(params);
+      for (String rawTarget : rawTargets) {
+        if (isPossiblyATarget(rawTarget)) {
+          extraDeps.add(params.resolveBuildTarget(rawTarget));
+        }
+      }
+    }
+
     this.extraDeps = ImmutableSortedSet.copyOf(
         Sets.difference(extraDeps.build(), this.declaredDeps));
     this.pathsReferenced = paths.build();

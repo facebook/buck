@@ -18,17 +18,21 @@ package com.facebook.buck.shell;
 
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.regex.Matcher;
 
-public class GenruleDescription implements Description<GenruleDescription.Arg> {
+public class GenruleDescription
+    implements Description<GenruleDescription.Arg>, ImplicitDepsInferringDescription {
 
   public static final BuildRuleType TYPE = new BuildRuleType("genrule");
 
@@ -46,13 +50,26 @@ public class GenruleDescription implements Description<GenruleDescription.Arg> {
   public Genrule createBuildable(BuildRuleParams params, Arg args) {
     return new Genrule(
         params.getBuildTarget(),
-        params.getDeps(),
         args.srcs.get(),
         args.cmd,
         args.bash,
         args.cmdExe,
         args.out,
         params.getPathAbsolutifier());
+  }
+
+  @Override
+  public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params) {
+    Object rawCmd = params.getNullableRawAttribute("cmd");
+    if (rawCmd == null) {
+      return ImmutableList.of();
+    }
+    ImmutableList.Builder<String> targets = ImmutableList.builder();
+    Matcher matcher = AbstractGenruleStep.BUILD_TARGET_PATTERN.matcher(((String) rawCmd));
+    while (matcher.find()) {
+      targets.add(matcher.group(3));
+    }
+    return targets.build();
   }
 
   public class Arg implements ConstructorArg {
