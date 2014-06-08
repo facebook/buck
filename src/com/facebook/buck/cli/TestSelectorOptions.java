@@ -99,7 +99,7 @@ public class TestSelectorOptions {
 
     @Override
     public String getDefaultMetaVariable() {
-      return "LIST<TEST-SELECTORS>";
+      return "TEST-SELECTOR ";
     }
   }
 }
