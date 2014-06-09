@@ -30,7 +30,7 @@ if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCK_CLIENT" ]; then
 
   echo >&2 "Using buckd."
 
-  BUCKD_PORT=`cat ${BUCKD_DIR}/buckd.port`
+  BUCKD_PORT=`cat "${BUCKD_DIR}"/buckd.port`
 
   # Tell buckd whether the client is talking to a tty.
   if [ -t 1 ]; then
@@ -45,7 +45,7 @@ if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCK_CLIENT" ]; then
   else
     # Disable exit on error as exit code 2 is used to indicate the daemon is busy.
     set +e
-    $BUCK_CLIENT --nailgun-port $BUCKD_PORT com.facebook.buck.cli.Main "$@"
+    "$BUCK_CLIENT" --nailgun-port $BUCKD_PORT com.facebook.buck.cli.Main "$@"
     BUCKD_STATUS=$?
     set -e
     # If buck daemon is not busy, return exit code.
@@ -59,8 +59,8 @@ fi
 
 # Daemon is not running, or is busy so start buck process.
 java \
-$BUCK_JAVA_ARGS \
--Djava.io.tmpdir=$BUCK_TMPDIR \
+"${BUCK_JAVA_ARGS[@]}" \
+-Djava.io.tmpdir="$BUCK_TMPDIR" \
 -classpath \
-$BUCK_JAVA_CLASSPATH \
+"$BUCK_JAVA_CLASSPATH" \
 com.facebook.buck.cli.Main "$@"

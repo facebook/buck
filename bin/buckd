@@ -14,7 +14,7 @@ do
   DIR="$( cd -P "$( dirname "$SOURCE"  )" && pwd )"
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-BUCK_BIN_DIRECTORY=$DIR
+BUCK_BIN_DIRECTORY="$DIR"
 
 # Set environment and update buck if required.
 # TODO(user): refactor buck_common in to functions that can be called
@@ -41,8 +41,8 @@ killBuckd
 # Use watchman if available.
 if command -v watchman &> /dev/null; then
     echo >&2 "Using watchman."
-    BUCK_JAVA_ARGS="$BUCK_JAVA_ARGS -Dbuck.buckd_watcher=Watchman"
-    watchman watch $PROJECT_ROOT &> /dev/null
+    BUCK_JAVA_ARGS+=("-Dbuck.buckd_watcher=Watchman")
+    watchman watch "$PROJECT_ROOT" &> /dev/null
 else
     echo >&2 "Watchman not found, please install when using buckd."
     echo >&2 "See https://github.com/facebook/watchman for details."
@@ -58,7 +58,7 @@ fi
 mkdir -p "$BUCKD_DIR/tmp" &> /dev/null || true
 
 # Override $BUCK_TMPDIR to point to a long lived directory
-BUCKD_TMPDIR=$(mktemp -d $BUCKD_DIR/tmp/buck_run.XXXXXXXXXX)
+BUCKD_TMPDIR=$(mktemp -d "${BUCKD_DIR}/tmp/buck_run.XXXXXXXXXX")
 
 # Run buckd. Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
 # Set timeout to 30s (longer than the biggest GC pause seen for a 2GB heap)
@@ -69,15 +69,15 @@ BUCKD_TMPDIR=$(mktemp -d $BUCKD_DIR/tmp/buck_run.XXXXXXXXXX)
 BUCKD_CLIENT_TIMEOUT_MILLIS=30000
 GC_MAX_PAUSE_TARGET=15000
 java \
-$BUCK_JAVA_ARGS \
--XX:MaxGCPauseMillis=${GC_MAX_PAUSE_TARGET} \
+"${BUCK_JAVA_ARGS[@]}" \
+-XX:MaxGCPauseMillis="${GC_MAX_PAUSE_TARGET}" \
 -XX:SoftRefLRUPolicyMSPerMB=0 \
--Djava.io.tmpdir=$BUCKD_TMPDIR \
+-Djava.io.tmpdir="$BUCKD_TMPDIR" \
 -classpath \
-${BUCK_JAVA_CLASSPATH} \
+"$BUCK_JAVA_CLASSPATH" \
 com.martiansoftware.nailgun.NGServer \
-localhost:0 $BUCKD_CLIENT_TIMEOUT_MILLIS &> \
-$BUCKD_LOG_FILE &
+localhost:0 "$BUCKD_CLIENT_TIMEOUT_MILLIS" &> \
+"$BUCKD_LOG_FILE" &
 echo $! > "$BUCKD_PID_FILE"
 # Block until we read the port number from the buckd log file.
 
@@ -87,15 +87,15 @@ while [ ! -f "$BUCKD_LOG_FILE" ]; do
   LOG_WAIT_COUNT=$((LOG_WAIT_COUNT + 1))
   if [ $LOG_WAIT_COUNT -gt 100 ]; then
     echo >&2 "buckd log didn't get created after 10s.  Aborting buckd."
-    kill -9 $(cat $BUCKD_PID_FILE) || true
-    rm -rf $BUCKD_DIR
+    kill -9 $(cat "$BUCKD_PID_FILE") || true
+    rm -rf "$BUCKD_DIR"
     # Since buckd is considered to be an optimization, don't fail builds.
     exit 0
   fi
 done
 
-sed -n '/NGServer/{;s/.*port \([0-9]*\)\.$/\1/p;q;}' > $BUCKD_PORT_FILE \
-<(tail -n +1 -f $BUCKD_LOG_FILE)
+sed -n '/NGServer/{;s/.*port \([0-9]*\)\.$/\1/p;q;}' > "$BUCKD_PORT_FILE" \
+<(tail -n +1 -f "$BUCKD_LOG_FILE")
 
-echo 0 > $BUCKD_RUN_COUNT_FILE
-echo $BUCK_VERSION_UID > $BUCKD_VERSION_FILE
+echo 0 > "$BUCKD_RUN_COUNT_FILE"
+echo "$BUCK_VERSION_UID" > "$BUCKD_VERSION_FILE"
