@@ -601,8 +601,12 @@ public class BuckConfig {
   @VisibleForTesting
   Path getCacheDir() {
     String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
-    if (!cacheDir.isEmpty() && cacheDir.charAt(0) == '/') {
-      return Paths.get(cacheDir);
+    if (!cacheDir.isEmpty()) {
+      if (cacheDir.charAt(0) == '/') {
+        return Paths.get(cacheDir);
+      } else if (cacheDir.charAt(0) == '~') {
+        return Paths.get(cacheDir.replace("~", System.getProperty("user.home")));
+      }
     }
     return projectFilesystem.getAbsolutifier().apply(Paths.get(cacheDir));
   }
