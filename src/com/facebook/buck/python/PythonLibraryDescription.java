@@ -33,6 +33,7 @@ public class PythonLibraryDescription implements Description<Arg> {
   public static class Arg implements ConstructorArg {
     public ImmutableSortedSet<SourcePath> srcs;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<SourcePath>> resources;
   }
 
   @Override
