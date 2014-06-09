@@ -433,7 +433,11 @@ public class DefaultJavaLibrary extends AbstractBuildable
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
         .setReflectively("postprocessClassesCommands", postprocessClassesCommands)
-        .setReflectively("resources", resources);
+        .setReflectively("resources", resources)
+        // provided_deps are already included in the rule key, but we need to explicitly call them
+        // out as "provided" because changing a dep from provided to transtitive should result in a
+        // re-build (otherwise, we'd get a rule key match).
+        .setReflectively("provided_deps", providedDeps);
     return javacOptions.appendToRuleKey(builder);
   }
 

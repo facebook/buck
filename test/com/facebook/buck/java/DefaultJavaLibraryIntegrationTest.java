@@ -365,6 +365,22 @@ public class DefaultJavaLibraryIntegrationTest {
     }
   }
 
+  @Test
+  public void ensureChangingDepFromProvidedToTransitiveTriggersRebuild() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "provided_deps", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:binary").assertSuccess("Successful build should exit with 0.");
+
+    workspace.replaceFileContents("BUCK", "provided_deps = [ ':junit' ],", "");
+    workspace.replaceFileContents("BUCK", "deps = [ ':guava' ]", "deps = [ ':guava', ':junit' ]");
+    workspace.resetBuildLogFile();
+
+    workspace.runBuckBuild("//:binary").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:library");
+  }
+
   /**
    * Asserts that the specified file exists and returns its contents.
    */
