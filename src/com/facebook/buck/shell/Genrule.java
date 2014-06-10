@@ -73,9 +73,8 @@ import java.util.Set;
  * <pre>
  * android_binary(
  *   name = 'katana',
- *   manifest = genfile('AndroidManifest.xml'),
+ *   manifest = ':katana_manifest',
  *   deps = [
- *     ':katana_manifest',
  *     # Additional dependent android_library rules would be listed here, as well.
  *   ],
  * )

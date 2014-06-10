@@ -56,15 +56,13 @@ import java.util.Set;
  *   ],
  * )
  * </pre>
- * This will produce a genfile that will be parameterized by the name of the
+ * This will produce a file under buck-out/gen that will be parameterized by the name of the
  * {@code android_manifest} rule. This can be used as follows:
  * <pre>
  * android_binary(
  *   name = 'my_app',
- *   manifest = genfile('AndroidManifest__my_manifest__.xml'),
- *   deps = [
- *     ':my_manifest',
- *   ],
+ *   manifest = ':my_manifest',
+ *   ...
  * )
  * </pre>
  */

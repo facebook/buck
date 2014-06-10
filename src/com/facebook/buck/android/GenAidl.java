@@ -42,17 +42,15 @@ import java.util.Collection;
 /**
  * Buildable for generating a .java file from an .aidl file. Example:
  * <pre>
- * # This will generate IOrcaService.java in the genfiles directory.
+ * # This will generate IOrcaService.java in the buck-out/gen directory.
  * gen_aidl(
  *   name = 'orcaservice',
  *   aidl = 'IOrcaService.aidl',
  * )
  *
- * # The genfile() function flags the input as a file that can be found in the buck-out/gen
- * # directory.
  * android_library(
  *   name = 'server',
- *   srcs = glob(['*.java']) + [genfile('IOrcaService.java')],
+ *   srcs = glob(['*.java']) + [':orcaservice'],
  *   deps = [
  *     '//first-party/orca/lib-base:lib-base',
  *   ],
@@ -118,7 +116,7 @@ public class GenAidl extends AbstractBuildable {
         outputDirectory);
     commands.add(command);
 
-    // Files must ultimately be written to GEN_DIR to be used with genfile().
+    // Files must ultimately be written to GEN_DIR to be used as source paths.
     Path genDirectory = Paths.get(BuckConstant.GEN_DIR, importPath);
 
     // Warn the user if the genDirectory is not under the output directory.
