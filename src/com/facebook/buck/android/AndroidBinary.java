@@ -188,7 +188,6 @@ public class AndroidBinary extends AbstractBuildable implements
   private Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
 
   /**
-   * @param aaptOverride
    * @param target the Android platform version to target, e.g., "Google Inc.:Google APIs:16". You
    *     can find the list of valid values on your system by running
    *     {@code android list targets --compact}.
