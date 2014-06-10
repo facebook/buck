@@ -602,9 +602,9 @@ public class BuckConfig {
   Path getCacheDir() {
     String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
     if (!cacheDir.isEmpty()) {
-      if (cacheDir.charAt(0) == '/') {
+      if (cacheDir.startsWith("/")) {
         return Paths.get(cacheDir);
-      } else if (cacheDir.charAt(0) == '~') {
+      } else if (cacheDir.startsWith("~/")) {
         return Paths.get(cacheDir.replace("~", System.getProperty("user.home")));
       }
     }
