@@ -39,6 +39,7 @@ import com.facebook.buck.apple.MacosxFramework;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.OsxResourceDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
+import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
@@ -105,6 +106,7 @@ import java.io.InputStream;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -150,6 +152,9 @@ public class ProjectGenerator {
 
     /** Use short BuildTarget name instead of full name for targets */
     USE_SHORT_NAMES_FOR_TARGETS,
+
+    /** Generate headermaps for public headers of libraries */
+    GENERATE_HEADER_MAPS_FOR_LIBRARY_TARGETS,
     ;
   }
 
@@ -197,6 +202,7 @@ public class ProjectGenerator {
   private boolean shouldPlaceAssetCatalogCompiler = false;
   private final ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToGeneratedTargetBuilder;
   private boolean projectGenerated;
+  private List<Path> headerMaps;
 
   /**
    * Populated while generating project configurations, in order to collect the possible
@@ -233,6 +239,7 @@ public class ProjectGenerator {
         BuckConstant.BIN_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh"));
 
     this.project = new PBXProject(projectName);
+    this.headerMaps = new ArrayList<Path>();
 
     this.buildRuleToGeneratedTargetBuilder = ImmutableMap.builder();
     this.buildRuleToXcodeTarget = CacheBuilder.newBuilder().build(
@@ -249,6 +256,11 @@ public class ProjectGenerator {
   @VisibleForTesting
   PBXProject getGeneratedProject() {
     return project;
+  }
+
+  @VisibleForTesting
+  List<Path> getGeneratedHeaderMaps() {
+    return headerMaps;
   }
 
   @Nullable
@@ -385,6 +397,27 @@ public class ProjectGenerator {
         libraryName, libraryName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
     productsGroup.getChildren().add(productReference);
     target.setProductReference(productReference);
+
+    // -- header map
+    if (options.contains(Option.GENERATE_HEADER_MAPS_FOR_LIBRARY_TARGETS)) {
+      HeaderMap.Builder builder = HeaderMap.builder();
+      addGroupedSourcesToHeaderMap(
+          builder,
+          Paths.get(getProductName(rule.getBuildTarget())),
+          buildable.getSrcs(),
+          buildable.getPerFileFlags());
+      // Make .hmap files signable. The empty key is impossible: #include <> or "" does not parse.
+      builder.add(
+          "",
+          "",
+          "\n// @gen" + "erated SignedSource<<00000000000000000000000000000000>>\n");
+      HeaderMap headerMap = builder.build();
+      String headerMapName = getProductName(rule.getBuildTarget()) + "-public-headers.hmap";
+      Path headerMapFile = projectPath.resolve(headerMapName);
+      headerMaps.add(headerMapFile);
+      projectFilesystem.mkdirs(projectPath);
+      projectFilesystem.writeBytesToPath(headerMap.getBytes(), headerMapFile);
+    }
 
     project.getTargets().add(target);
     return target;
@@ -763,6 +796,35 @@ public class ProjectGenerator {
     return HEADER_FILE_EXTENSIONS.contains(Files.getFileExtension(sourcePath.toString()));
   }
 
+  private void addGroupedSourcesToHeaderMap(
+      HeaderMap.Builder headerMap,
+      Path prefix,
+      Iterable<GroupedSource> groupedSources,
+      ImmutableMap<SourcePath, String> sourceFlags) {
+    for (GroupedSource groupedSource : groupedSources) {
+      switch (groupedSource.getType()) {
+        case SOURCE_PATH:
+          if (isHeaderSourcePath(groupedSource.getSourcePath())) {
+            addSourcePathToHeaderMap(
+                groupedSource.getSourcePath(),
+                prefix,
+                headerMap,
+                sourceFlags);
+          }
+          break;
+        case SOURCE_GROUP:
+          addGroupedSourcesToHeaderMap(
+              headerMap,
+              prefix,
+              groupedSource.getSourceGroup(),
+              sourceFlags);
+          break;
+        default:
+          throw new RuntimeException("Unhandled grouped source type: " + groupedSource.getType());
+      }
+    }
+  }
+
   private void addGroupedSourcesToBuildPhases(
       PBXGroup sourcesGroup,
       PBXSourcesBuildPhase sourcesBuildPhase,
@@ -826,6 +888,22 @@ public class ProjectGenerator {
     }
   }
 
+  private void addSourcePathToHeaderMap(
+      SourcePath headerPath,
+      Path prefix,
+      HeaderMap.Builder headerMap,
+      ImmutableMap<SourcePath, String> sourceFlags) {
+    String headerFlags = sourceFlags.get(headerPath);
+    if (headerFlags != null) {
+      HeaderVisibility visibility = HeaderVisibility.fromString(headerFlags);
+      if (visibility == HeaderVisibility.PUBLIC) {
+        // Add an entry: LibraryName/File.h -> Path/From/RepoRoot/File.h
+        Path keyPath = prefix.resolve(headerPath.resolve().getFileName());
+        headerMap.add(keyPath.toString(), headerPath.resolve());
+      }
+    }
+  }
+
   private void addSourcePathToHeadersBuildPhase(
       SourcePath headerPath,
       PBXGroup headersGroup,
@@ -837,10 +915,10 @@ public class ProjectGenerator {
             PBXReference.SourceTree.SOURCE_ROOT,
             repoRootRelativeToOutputDirectory.resolve(path)));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-    NSDictionary settings = new NSDictionary();
     String headerFlags = sourceFlags.get(headerPath);
     if (headerFlags != null) {
       // If we specify nothing, Xcode will use "project" visibility.
+      NSDictionary settings = new NSDictionary();
       settings.put(
           "ATTRIBUTES",
           new NSArray(new NSString(HeaderVisibility.fromString(headerFlags).toXcodeAttribute())));

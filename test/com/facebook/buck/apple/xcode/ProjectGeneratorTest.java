@@ -43,6 +43,7 @@ import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
+import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
@@ -91,6 +92,7 @@ import org.w3c.dom.Document;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -328,6 +330,24 @@ public class ProjectGeneratorTest {
     NSDictionary blechBuildFileSettings = blechHeaderBuildFile.getSettings().get();
     NSArray blechAttributes = (NSArray) blechBuildFileSettings.get("ATTRIBUTES");
     assertArrayEquals(new NSString[]{new NSString("Private")}, blechAttributes.getArray());
+
+    // Test generation of header maps
+    List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
+    assertThat(headerMaps, hasSize(1));
+    Path headerMapFile = headerMaps.get(0);
+    assertEquals(
+        "_gen/GeneratedProject.xcodeproj/lib-public-headers.hmap",
+        headerMapFile.toString());
+
+    byte[] bytes = projectFilesystem.readFileIfItExists(headerMapFile).get().getBytes();
+    HeaderMap map = HeaderMap.deserialize(bytes);
+    assertEquals(2, map.getNumEntries());
+    assertEquals(
+        "\n// @gen" + "erated SignedSource<<00000000000000000000000000000000>>\n",
+        map.lookup(""));
+    assertEquals(
+        "bar.h",
+        map.lookup("lib/bar.h"));
   }
 
   @Test
@@ -1285,6 +1305,11 @@ public class ProjectGeneratorTest {
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       PartialGraph partialGraph, ImmutableSet<BuildTarget> initialBuildTargets) {
+    ImmutableSet<ProjectGenerator.Option> options = ImmutableSet.<ProjectGenerator.Option>builder()
+        .addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS)
+        .add(ProjectGenerator.Option.GENERATE_HEADER_MAPS_FOR_LIBRARY_TARGETS)
+        .build();
+
     return new ProjectGenerator(
         partialGraph,
         initialBuildTargets,
@@ -1292,7 +1317,7 @@ public class ProjectGeneratorTest {
         executionContext,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
-        ProjectGenerator.COMBINED_PROJECT_OPTIONS);
+        options);
   }
 
   private String assertFileRefIsRelativeAndResolvePath(PBXReference fileRef) {
