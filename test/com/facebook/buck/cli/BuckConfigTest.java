@@ -443,6 +443,31 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void testIgnorePathsWithUserHomeCacheDir() throws IOException {
+
+    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
+    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
+    EasyMock.replay(filesystem, parser);
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[cache]",
+        "dir = ~/cache_dir"));
+    BuckConfig config = BuckConfig.createFromReader(
+        reader,
+        filesystem,
+        parser,
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
+
+    ImmutableSet<Path> ignorePaths = config.getIgnorePaths();
+    assertFalse("User home cache directory should not be in set of ignored paths",
+        ignorePaths.contains(System.getProperty("user.home") +
+            File.separator +
+            "cache_dir"));
+
+    EasyMock.verify(filesystem, parser);
+  }
+
+  @Test
   public void testBuckPyIgnorePaths() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "buck_py_ignore_paths", temporaryFolder);
