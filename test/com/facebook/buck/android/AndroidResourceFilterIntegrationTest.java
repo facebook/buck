@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.testutil.integration.ApkInspector;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -56,11 +56,11 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app"));
-    ApkInspector apkInspector = new ApkInspector(apkFile);
+    ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    apkInspector.assertFileExists("res/drawable-mdpi/app_icon.png");
-    apkInspector.assertFileExists("res/drawable-hdpi/app_icon.png");
-    apkInspector.assertFileExists("res/drawable-xhdpi/app_icon.png");
+    zipInspector.assertFileExists("res/drawable-mdpi/app_icon.png");
+    zipInspector.assertFileExists("res/drawable-hdpi/app_icon.png");
+    zipInspector.assertFileExists("res/drawable-xhdpi/app_icon.png");
   }
 
   @Test
@@ -70,11 +70,11 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_mdpi"));
-    ApkInspector apkInspector = new ApkInspector(apkFile);
+    ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    apkInspector.assertFileExists("res/drawable-mdpi/app_icon.png");
-    apkInspector.assertFileDoesNotExist("res/drawable-hdpi/app_icon.png");
-    apkInspector.assertFileDoesNotExist("res/drawable-xhdpi/app_icon.png");
+    zipInspector.assertFileExists("res/drawable-mdpi/app_icon.png");
+    zipInspector.assertFileDoesNotExist("res/drawable-hdpi/app_icon.png");
+    zipInspector.assertFileDoesNotExist("res/drawable-xhdpi/app_icon.png");
   }
 
   @Test
@@ -83,7 +83,7 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_mdpi"));
-    long firstImageCrc = new ApkInspector(apkFile).getCrc("res/drawable-mdpi/app_icon.png");
+    long firstImageCrc = new ZipInspector(apkFile).getCrc("res/drawable-mdpi/app_icon.png");
 
     workspace.copyFile(
         "res/com/sample/base/res/drawable-hdpi/app_icon.png",
@@ -97,7 +97,7 @@ public class AndroidResourceFilterIntegrationTest {
     buildLog.assertTargetBuiltLocally("//apps/sample:app_mdpi");
 
     apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_mdpi"));
-    long secondImageCrc = new ApkInspector(apkFile).getCrc("res/drawable-mdpi/app_icon.png");
+    long secondImageCrc = new ZipInspector(apkFile).getCrc("res/drawable-mdpi/app_icon.png");
 
     assertNotEquals(firstImageCrc, secondImageCrc);
   }
@@ -109,11 +109,11 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_hdpi_xhdpi"));
-    ApkInspector apkInspector = new ApkInspector(apkFile);
+    ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    apkInspector.assertFileDoesNotExist("res/drawable-mdpi/app_icon.png");
-    apkInspector.assertFileExists("res/drawable-hdpi/app_icon.png");
-    apkInspector.assertFileExists("res/drawable-xhdpi/app_icon.png");
+    zipInspector.assertFileDoesNotExist("res/drawable-mdpi/app_icon.png");
+    zipInspector.assertFileExists("res/drawable-hdpi/app_icon.png");
+    zipInspector.assertFileExists("res/drawable-xhdpi/app_icon.png");
   }
 
   @Test
@@ -123,9 +123,9 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_comp_str"));
-    ApkInspector apkInspector = new ApkInspector(apkFile);
+    ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    apkInspector.assertFileExists("assets/strings/fr.fbstr");
+    zipInspector.assertFileExists("assets/strings/fr.fbstr");
   }
 
   @Test
@@ -148,12 +148,12 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_comp_str_xhdpi"));
-    ApkInspector apkInspector = new ApkInspector(apkFile);
+    ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    apkInspector.assertFileExists("assets/strings/fr.fbstr");
-    apkInspector.assertFileExists("res/drawable-xhdpi/app_icon.png");
-    apkInspector.assertFileDoesNotExist("res/drawable-hdpi/app_icon.png");
-    apkInspector.assertFileDoesNotExist("res/drawable-mdpi/app_icon.png");
+    zipInspector.assertFileExists("assets/strings/fr.fbstr");
+    zipInspector.assertFileExists("res/drawable-xhdpi/app_icon.png");
+    zipInspector.assertFileDoesNotExist("res/drawable-hdpi/app_icon.png");
+    zipInspector.assertFileDoesNotExist("res/drawable-mdpi/app_icon.png");
   }
 
   @Test
@@ -163,9 +163,9 @@ public class AndroidResourceFilterIntegrationTest {
     String apkFilePath = String.format(APK_PATH_FORMAT, "app");
 
     File apkFile = workspace.getFile(apkFilePath);
-    ApkInspector apkInspector = new ApkInspector(apkFile);
+    ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    long firstCrc = apkInspector.getCrc("assets/asset_file.txt");
+    long firstCrc = zipInspector.getCrc("assets/asset_file.txt");
 
     workspace.replaceFileContents(
         "res/com/sample/asset_only/assets/asset_file.txt",
@@ -174,9 +174,9 @@ public class AndroidResourceFilterIntegrationTest {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
 
     apkFile = workspace.getFile(apkFilePath);
-    apkInspector = new ApkInspector(apkFile);
+    zipInspector = new ZipInspector(apkFile);
 
-    long secondCrc = apkInspector.getCrc("assets/asset_file.txt");
+    long secondCrc = zipInspector.getCrc("assets/asset_file.txt");
 
     assertNotEquals("Rebuilt APK file must include the new asset file.", firstCrc, secondCrc);
   }

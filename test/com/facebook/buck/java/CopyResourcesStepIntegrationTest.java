@@ -15,26 +15,19 @@
  */
 package com.facebook.buck.java;
 
-import static org.hamcrest.Matchers.isIn;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Sets;
+import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ProcessExecutor;
 
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 public class CopyResourcesStepIntegrationTest {
 
@@ -42,40 +35,20 @@ public class CopyResourcesStepIntegrationTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void testGeneratedResourceIsAlongsideClassFiles() throws IOException {
+  public void testGeneratedResourceIsAlongsideClassFiles()
+      throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "generated_resources", temporaryFolder);
     workspace.setUp();
 
-    // Build the java_library.
-    String buildTarget = "//java/com/example:example";
-    ProcessResult buildResult = workspace.runBuckBuild(buildTarget);
-    buildResult.assertSuccess();
+    File exampleJar = workspace.buildAndReturnOutput("//java/com/example:example");
+    ZipInspector exampleInspector = new ZipInspector(exampleJar);
+    exampleInspector.assertFileExists("com/example/HelloWorld.class");
+    exampleInspector.assertFileExists("com/example/res/helloworld.txt");
 
-    // Use `buck targets` to find the output JAR file.
-    ProcessResult outputFileResult = workspace.runBuckCommand(
-        "targets", "--show_output", buildTarget);
-    outputFileResult.assertSuccess();
-    String pathToGeneratedJarFile = outputFileResult.getStdout().split(" ")[1].trim();
-    File jarFile = workspace.getFile(pathToGeneratedJarFile);
-
-    // Verify the entries in the output JAR file.
-    assertTrue("Should exist: " + jarFile, jarFile.exists());
-    Set<String> entries = Sets.newHashSet();
-    try (JarFile jar = new JarFile(jarFile)) {
-      for (Iterator<JarEntry> iter = Iterators.forEnumeration(jar.entries());
-          iter.hasNext(); ) {
-        JarEntry entry = iter.next();
-        entries.add(entry.getName());
-      }
-    }
-    assertThat("com/example/HelloWorld.class", isIn(entries));
-    assertThat("com/example/res/helloworld.txt", isIn(entries));
-
-    // Execute HelloWorld to ensure it can read the resource.
-    ProcessResult runResult = workspace.runBuckCommand("run", "//java/com/example:HelloWorld");
-    runResult.assertSuccess();
-    // TODO(mbolin): Add this back in when https://phabricator.fb.com/D1247481 is submitted.
-    // assertThat(runResult.getStdout(), containsString("hello world"));
+    File helloWorldJar = workspace.buildAndReturnOutput("//java/com/example:HelloWorld");
+    ProcessExecutor.Result result = workspace.runJar(helloWorldJar);
+    assertEquals("hello world\n", result.getStdout());
+    assertEquals("", result.getStderr());
   }
 }

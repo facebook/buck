@@ -16,8 +16,9 @@
 
 package com.facebook.buck.testutil.integration;
 
+import static org.hamcrest.collection.IsIn.isIn;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -28,34 +29,34 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class ApkInspector {
+public class ZipInspector {
 
-  private final File apkFile;
-  private final ImmutableSet<String> apkFileEntries;
+  private final File zipFile;
+  private final ImmutableSet<String> zipFileEntries;
 
-  public ApkInspector(File apkFile) throws IOException {
-    this.apkFile = Preconditions.checkNotNull(apkFile);
+  public ZipInspector(File zip) throws IOException {
+    this.zipFile = Preconditions.checkNotNull(zip);
 
     final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    try (ZipFile zipFile = new ZipFile(apkFile)) {
+    try (ZipFile zipFile = new ZipFile(zip)) {
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
       while (entries.hasMoreElements()) {
         builder.add(entries.nextElement().getName());
       }
     }
-    this.apkFileEntries = builder.build();
+    this.zipFileEntries = builder.build();
   }
 
   public void assertFileExists(String pathRelativeToRoot) {
-    assertTrue(apkFileEntries.contains(pathRelativeToRoot));
+    assertThat(pathRelativeToRoot, isIn(zipFileEntries));
   }
 
   public void assertFileDoesNotExist(String pathRelativeToRoot) {
-    assertFalse(apkFileEntries.contains(pathRelativeToRoot));
+    assertFalse(zipFileEntries.contains(pathRelativeToRoot));
   }
 
   public long getCrc(String pathRelativeToRoot) throws IOException {
-    try (ZipFile zipFile = new ZipFile(apkFile)) {
+    try (ZipFile zipFile = new ZipFile(this.zipFile)) {
       ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
       long crc = entry.getCrc();
       Preconditions.checkState(crc != -1,

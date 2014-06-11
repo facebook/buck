@@ -23,14 +23,17 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestCommand;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGClientListener;
@@ -46,6 +49,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.Properties;
 
 import javax.annotation.Nullable;
@@ -149,6 +153,36 @@ public class ProjectWorkspace {
     totalArgs[0] = "build";
     System.arraycopy(args, 0, totalArgs, 1, args.length);
     return runBuckCommand(totalArgs);
+  }
+
+  public File buildAndReturnOutput(String target) throws IOException {
+    // Build the java_library.
+    ProjectWorkspace.ProcessResult buildResult = runBuckBuild(target.toString());
+    buildResult.assertSuccess();
+
+    // Use `buck targets` to find the output JAR file.
+    // TODO(jacko): This is going to overwrite the build.log. Maybe stash that and return it?
+    ProjectWorkspace.ProcessResult outputFileResult = runBuckCommand(
+        "targets",
+        "--show_output",
+        target.toString());
+    outputFileResult.assertSuccess();
+    String pathToGeneratedJarFile = outputFileResult.getStdout().split(" ")[1].trim();
+    return getFile(pathToGeneratedJarFile);
+  }
+
+  public ProcessExecutor.Result runJar(File jar, String... args)
+      throws IOException, InterruptedException {
+    List<String> command = ImmutableList.<String>builder()
+        .add("java")
+        .add("-jar")
+        .add(jar.toString())
+        .addAll(ImmutableList.copyOf(args))
+        .build();
+    String[] commandArray = command.toArray(new String[command.size()]);
+    Process process = Runtime.getRuntime().exec(commandArray);
+    ProcessExecutor executor = new ProcessExecutor(new TestConsole());
+    return executor.execute(process);
   }
 
   /**
