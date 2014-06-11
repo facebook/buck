@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
@@ -41,7 +41,7 @@ def dereference_symlinks(src):
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--entry-point', default='__main__')
-    parser.add_argument('--python', default='/usr/bin/python')
+    parser.add_argument('--python', default=sys.executable)
     parser.add_argument('output')
     args = parser.parse_args(argv[1:])
 
