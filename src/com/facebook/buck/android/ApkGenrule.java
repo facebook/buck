@@ -28,10 +28,10 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -113,7 +113,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   }
 
   @Override
-  public Collection<Path> getInputsToCompareToOutput() {
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
   }
 

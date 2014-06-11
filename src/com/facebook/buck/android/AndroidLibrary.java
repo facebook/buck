@@ -30,12 +30,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Set;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnhancer {
@@ -113,7 +113,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnha
   }
 
   @Override
-  public Collection<Path> getInputsToCompareToOutput() {
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
     if (manifestFile.isPresent()) {
       return ImmutableList.<Path>builder()
           .addAll(super.getInputsToCompareToOutput())

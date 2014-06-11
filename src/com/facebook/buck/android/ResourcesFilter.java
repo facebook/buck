@@ -36,13 +36,13 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -119,7 +119,7 @@ public class ResourcesFilter extends AbstractBuildable
   }
 
   @Override
-  public Collection<Path> getInputsToCompareToOutput() {
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
     // Rule key correctness is ensured by depping on all android_resource rules in
     // Builder.setAndroidResourceDepsFinder()
     return ImmutableSet.of();

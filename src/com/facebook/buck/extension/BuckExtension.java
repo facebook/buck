@@ -86,7 +86,7 @@ public class BuckExtension extends AbstractBuildable {
   }
 
   @Override
-  public Collection<Path> getInputsToCompareToOutput() {
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
     return SourcePaths.filterInputsToCompareToOutput(Iterables.concat(srcs, resources));
   }
 

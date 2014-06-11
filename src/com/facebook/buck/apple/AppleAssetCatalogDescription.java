@@ -25,11 +25,11 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -53,10 +53,10 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
   public AppleAssetCatalog createBuildable(BuildRuleParams params, Arg args) {
     final ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
     final Set<Path> dirs = args.dirs;
-    Supplier<Collection<Path>> inputPathsSupplier = Suppliers.memoize(
-        new Supplier<Collection<Path>>() {
+    Supplier<ImmutableCollection<Path>> inputPathsSupplier = Suppliers.memoize(
+        new Supplier<ImmutableCollection<Path>>() {
           @Override
-          public Collection<Path> get() {
+          public ImmutableCollection<Path> get() {
             ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
             for (Path dir : dirs) {
               try {

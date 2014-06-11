@@ -57,6 +57,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -78,7 +79,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -643,7 +643,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public Collection<Path> getInputsToCompareToOutput() {
+    public ImmutableCollection<Path> getInputsToCompareToOutput() {
       return ImmutableList.copyOf(inputs);
     }
 
@@ -684,7 +684,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public Collection<Path> getInputsToCompareToOutput() {
+    public ImmutableCollection<Path> getInputsToCompareToOutput() {
       throw new UnsupportedOperationException("method should not be called");
     }
 

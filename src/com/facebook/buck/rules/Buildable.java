@@ -17,10 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.step.Step;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
-import java.util.Collection;
 
 import javax.annotation.Nullable;
 
@@ -42,7 +42,7 @@ public interface Buildable {
    * cases the inputs may be ordered in any way the rule feels most appropriate.
    */
   // TODO(simons): Use the Description's constructor arg to generate these.
-  public Collection<Path> getInputsToCompareToOutput();
+  public ImmutableCollection<Path> getInputsToCompareToOutput();
 
   /**
    * When this method is invoked, all of its dependencies will have been built.

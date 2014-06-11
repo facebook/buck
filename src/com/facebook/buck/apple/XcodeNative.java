@@ -25,10 +25,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 
 import javax.annotation.Nullable;
@@ -66,7 +66,7 @@ public class XcodeNative extends AbstractBuildable {
   }
 
   @Override
-  public Collection<Path> getInputsToCompareToOutput() {
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
     // TODO(user): Somehow enumerate all files referenced by the xcode project.
     return SourcePaths.filterInputsToCompareToOutput(Collections.singleton(projectContainerPath));
   }

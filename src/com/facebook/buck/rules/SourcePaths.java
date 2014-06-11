@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
@@ -67,7 +68,7 @@ public class SourcePaths {
    * Takes an {@link Iterable} of {@link SourcePath} objects and filters those that are suitable to
    * be returned by {@link Buildable#getInputsToCompareToOutput()}.
    */
-  public static Collection<Path> filterInputsToCompareToOutput(
+  public static ImmutableCollection<Path> filterInputsToCompareToOutput(
       Iterable<? extends SourcePath> sources) {
     // Currently, the only implementation of SourcePath that should be included in the Iterable
     // returned by getInputsToCompareToOutput() is FileSourcePath, so it is safe to filter by that

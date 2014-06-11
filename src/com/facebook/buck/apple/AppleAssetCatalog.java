@@ -25,12 +25,12 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
-import java.util.Collection;
 
 import javax.annotation.Nullable;
 
@@ -48,13 +48,13 @@ import javax.annotation.Nullable;
  */
 public class AppleAssetCatalog extends AbstractBuildable {
 
-  private final Supplier<Collection<Path>> inputPathsSupplier;
+  private final Supplier<ImmutableCollection<Path>> inputPathsSupplier;
   private final ImmutableSet<Path> dirs;
   private final boolean copyToBundles;
 
   AppleAssetCatalog(
       BuildTarget target,
-      Supplier<Collection<Path>> inputPathsSupplier,
+      Supplier<ImmutableCollection<Path>> inputPathsSupplier,
       AppleAssetCatalogDescription.Arg args) {
     super(target);
     Preconditions.checkArgument(Iterables.all(args.dirs, new Predicate<Path>() {
@@ -84,7 +84,7 @@ public class AppleAssetCatalog extends AbstractBuildable {
   }
 
   @Override
-  public Collection<Path> getInputsToCompareToOutput() {
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
     return inputPathsSupplier.get();
   }
 

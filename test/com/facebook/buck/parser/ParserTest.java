@@ -76,6 +76,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -97,7 +98,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -1206,7 +1206,7 @@ public class ParserTest extends EasyMockSupport {
         }
 
         @Override
-        public Collection<Path> getInputsToCompareToOutput() {
+        public ImmutableCollection<Path> getInputsToCompareToOutput() {
           return ImmutableList.of();
         }
 

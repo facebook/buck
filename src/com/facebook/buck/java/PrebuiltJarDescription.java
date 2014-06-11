@@ -39,11 +39,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 
 public class PrebuiltJarDescription implements Description<PrebuiltJarDescription.Arg>,
@@ -113,13 +113,13 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     } else {
       inputToCompareToOutput = arg.binaryJar;
     }
-    final Collection<Path> inputsToCompareToOutput = SourcePaths.filterInputsToCompareToOutput(
-        Collections.singleton(inputToCompareToOutput));
+    final ImmutableCollection<Path> inputsToCompareToOutput =
+        SourcePaths.filterInputsToCompareToOutput(Collections.singleton(inputToCompareToOutput));
     final Path pathToExistingJarFile = inputToCompareToOutput.resolve();
 
     Buildable buildable = new AbstractBuildable(target) {
       @Override
-      public Collection<Path> getInputsToCompareToOutput() {
+      public ImmutableCollection<Path> getInputsToCompareToOutput() {
         return inputsToCompareToOutput;
       }
 

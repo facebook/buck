@@ -33,12 +33,12 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -88,7 +88,7 @@ public class AndroidManifest extends AbstractBuildable implements DependencyEnha
   }
 
   @Override
-  public Collection<Path> getInputsToCompareToOutput() {
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
     return ImmutableList.<Path>builder()
         .addAll(SourcePaths.filterInputsToCompareToOutput(Collections.singleton(skeletonFile)))
         .addAll(manifestFiles)

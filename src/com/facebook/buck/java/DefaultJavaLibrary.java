@@ -60,6 +60,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -476,7 +477,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
   }
 
   @Override
-  public Collection<Path> getInputsToCompareToOutput() {
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
     ImmutableList.Builder<Path> builder = ImmutableList.builder();
     builder.addAll(SourcePaths.filterInputsToCompareToOutput(this.srcs));
     builder.addAll(SourcePaths.filterInputsToCompareToOutput(this.resources));
