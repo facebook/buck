@@ -95,6 +95,8 @@ public class BlockingHttpEndpoint implements HttpEndpoint, Closeable {
           return new HttpResponse(content, response);
         } catch (IOException e) {
           throw new RuntimeException(e);
+        } finally {
+          connection.disconnect();
         }
       }
     });
