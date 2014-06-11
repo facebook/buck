@@ -116,6 +116,10 @@ public class MissingSymbolsHandler {
 
       @Subscribe
       public void onBuildFinished(BuildEvent.Finished event) {
+        // Shortcircuit if there aren't any failures.
+        if (missingSymbolEvents.get(event.getBuildId()).size() == 0) {
+          return;
+        }
         missingSymbolsHandler.printNeededDependencies(missingSymbolEvents.get(event.getBuildId()));
         missingSymbolEvents.removeAll(event.getBuildId());
       }
