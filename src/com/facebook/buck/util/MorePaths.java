@@ -173,4 +173,18 @@ public class MorePaths {
   public static boolean isGeneratedFile(Path pathRelativeToProjectRoot) {
     return pathRelativeToProjectRoot.startsWith(BuckConstant.GEN_PATH);
   }
+
+  /**
+   * Expands "~/foo" into "/home/zuck/foo". Returns regular paths unmodified.
+   */
+  public static Path expandHomeDir(Path path) {
+    if (!path.startsWith("~")) {
+      return path;
+    }
+    Path homePath = Paths.get(System.getProperty("user.home"));
+    if (path.equals(Paths.get("~"))) {
+      return homePath;
+    }
+    return homePath.resolve(path.subpath(1, path.getNameCount()));
+  }
 }

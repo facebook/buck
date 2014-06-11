@@ -420,51 +420,14 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testIgnorePathsWithAbsoluteCacheDir() throws IOException {
-
-    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
-    EasyMock.replay(filesystem, parser);
-    Reader reader = new StringReader(Joiner.on('\n').join(
+  public void testExpandUserHomeCacheDir() throws IOException {
+    BuckConfig config = createFromText(
         "[cache]",
-        "dir = /cache_dir"));
-    BuckConfig config = BuckConfig.createFromReader(
-        reader,
-        filesystem,
-        parser,
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()));
-
-    ImmutableSet<Path> ignorePaths = config.getIgnorePaths();
-    assertFalse("Absolute cache directory should not be in set of ignored paths",
-        ignorePaths.contains("/cache_dir"));
-
-    EasyMock.verify(filesystem, parser);
-  }
-
-  @Test
-  public void testIgnorePathsWithUserHomeCacheDir() throws IOException {
-
-    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
-    EasyMock.replay(filesystem, parser);
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[cache]",
-        "dir = ~/cache_dir"));
-    BuckConfig config = BuckConfig.createFromReader(
-        reader,
-        filesystem,
-        parser,
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()));
-
-    ImmutableSet<Path> ignorePaths = config.getIgnorePaths();
-    assertFalse("User home cache directory should not be in set of ignored paths",
-        ignorePaths.contains(System.getProperty("user.home") +
-            File.separator +
-            "cache_dir"));
-
-    EasyMock.verify(filesystem, parser);
+        "dir = ~/cache_dir");
+    assertEquals(
+        "User home cache directory must be expanded.",
+        MorePaths.expandHomeDir(Paths.get("~/cache_dir")),
+        config.getCacheDir());
   }
 
   @Test

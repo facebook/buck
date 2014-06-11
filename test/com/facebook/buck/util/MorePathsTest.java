@@ -161,4 +161,36 @@ public class MorePathsTest {
         absolutePathToDesiredLinkUnderProjectRoot));
     assertEquals("Hello, World!", dataReadFromSymlink);
   }
+
+  @Test
+  public void testExpandHomeDir() {
+    Path homeDir = Paths.get(System.getProperty("user.home"));
+    assertEquals(
+        "Must expand home dir.",
+        homeDir.resolve("foo"),
+        MorePaths.expandHomeDir(Paths.get("~/foo")));
+
+    assertEquals(
+        "Must expand home dir by itself too.",
+        homeDir,
+        MorePaths.expandHomeDir(Paths.get("~")));
+
+    Path relativePath = Paths.get("foo/bar");
+    assertEquals(
+        "Must not expand relative paths.",
+        relativePath,
+        MorePaths.expandHomeDir(relativePath));
+
+    Path absolutePath = Paths.get("/foo/bar");
+    assertEquals(
+        "Must not expand absolute paths.",
+        absolutePath,
+        MorePaths.expandHomeDir(absolutePath));
+
+    Path funnyHomePath = Paths.get("~jacko/foo");
+    assertEquals(
+        "Must only expand home paths starting with ~/",
+        funnyHomePath,
+        MorePaths.expandHomeDir(funnyHomePath));
+  }
 }

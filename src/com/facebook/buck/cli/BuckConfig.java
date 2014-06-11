@@ -340,7 +340,6 @@ public class BuckConfig {
     builder.add(Paths.get(BuckConstant.BUCK_OUTPUT_DIRECTORY));
     builder.add(Paths.get(".idea"));
 
-    // Take care not to ignore absolute paths.
     Path buckdDir = Paths.get(System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd"));
     Path cacheDir = getCacheDir();
     for (Path path : ImmutableList.of(buckdDir, cacheDir)) {
@@ -601,14 +600,8 @@ public class BuckConfig {
   @VisibleForTesting
   Path getCacheDir() {
     String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
-    if (!cacheDir.isEmpty()) {
-      if (cacheDir.startsWith("/")) {
-        return Paths.get(cacheDir);
-      } else if (cacheDir.startsWith("~/")) {
-        return Paths.get(cacheDir.replace("~", System.getProperty("user.home")));
-      }
-    }
-    return projectFilesystem.getAbsolutifier().apply(Paths.get(cacheDir));
+    Path expandedPath = MorePaths.expandHomeDir(Paths.get(cacheDir));
+    return projectFilesystem.getAbsolutifier().apply(expandedPath);
   }
 
   public Optional<Long> getCacheDirMaxSizeBytes() {
