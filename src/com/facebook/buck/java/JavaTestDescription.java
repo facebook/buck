@@ -56,7 +56,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     return new JavaTest(
         params.getBuildTarget(),
         args.srcs.get(),
-        args.resources.get(),
+        JavaLibraryDescription.validateResources(args, params.getProjectFilesystem()),
         args.labels.get(),
         args.contacts.get(),
         args.proguardConfig,

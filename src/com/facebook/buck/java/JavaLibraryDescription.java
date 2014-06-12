@@ -32,6 +32,7 @@ import com.facebook.buck.rules.FlavorableDescription;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -74,13 +75,30 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     return new DefaultJavaLibrary(
         params.getBuildTarget(),
         args.srcs.get(),
-        args.resources.get(),
+        validateResources(args, params.getProjectFilesystem()),
         args.proguardConfig,
         args.postprocessClassesCommands.get(),
         params.getDeps(),
         args.exportedDeps.get(),
         args.providedDeps.get(),
         javacOptions.build());
+  }
+
+  // TODO(natthu): Consider adding a validateArg() method on Description which gets called before
+  // createBuildable().
+  public static ImmutableSortedSet<SourcePath> validateResources(
+      Arg arg,
+      ProjectFilesystem filesystem) {
+    for (Path path : SourcePaths.filterInputsToCompareToOutput(arg.resources.get())) {
+      if (!filesystem.exists(path)) {
+        throw new HumanReadableException("Error: `resources` argument '%s' does not exist.", path);
+      } else if (filesystem.isDirectory(path)) {
+        throw new HumanReadableException(
+            "Error: a directory is not a valid input to the `resources` argument: %s",
+            path);
+      }
+    }
+    return arg.resources.get();
   }
 
   public static JavacOptions.Builder getJavacOptions(Arg args, JavaCompilerEnvironment javacEnv) {

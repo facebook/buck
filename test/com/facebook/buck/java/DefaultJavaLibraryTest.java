@@ -68,6 +68,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
@@ -104,6 +105,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -179,11 +181,18 @@ public class DefaultJavaLibraryTest {
         .build();
     ruleResolver.addToIndex(genruleBuildTarget, genrule);
 
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem() {
+      @Override
+      public boolean isDirectory(Path path, LinkOption... linkOptionsk) {
+        return false;
+      }
+    };
+
     DefaultJavaLibrary javaRule = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//library:code"))
         .addResource(new BuildRuleSourcePath(genrule))
         .addResource(new TestSourcePath("library/data.txt"))
-        .build(ruleResolver)
+        .build(ruleResolver, filesystem)
         .getBuildable();
 
     assertEquals(
@@ -191,6 +200,26 @@ public class DefaultJavaLibraryTest {
             "should not be part of the RuleKey computation.",
         ImmutableList.of(Paths.get("library/data.txt")),
         javaRule.getInputsToCompareToOutput());
+  }
+
+  @Test
+  public void testJavaLibaryThrowsIfResourceIsDirectory() {
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem() {
+      @Override
+      public boolean isDirectory(Path path, LinkOption... linkOptionsk) {
+        return true;
+      }
+    };
+
+    try {
+      JavaLibraryBuilder
+          .createBuilder(BuildTargetFactory.newInstance("//library:code"))
+          .addResource(new TestSourcePath("library"))
+          .build(new BuildRuleResolver(), filesystem);
+      fail("An exception should have been thrown because a directory was passed as a resource.");
+    } catch (HumanReadableException e) {
+      assertTrue(e.getHumanReadableErrorMessage().contains("a directory is not a valid input"));
+    }
   }
 
   /**
@@ -1042,6 +1071,12 @@ public class DefaultJavaLibraryTest {
     // the chance of order-sensitivity when being inserted into a HashMap.  Just using
     // {foo,bar}.{java,txt} resulted in a passing test even for the old broken code.
 
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem() {
+      @Override
+      public boolean isDirectory(Path path, LinkOption... linkOptionsk) {
+        return false;
+      }
+    };
     BuildRule rule1 = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("agifhbkjdec.java"))
@@ -1052,7 +1087,7 @@ public class DefaultJavaLibraryTest {
         .addResource(new TestSourcePath("bkhajdifcge.txt"))
         .addResource(new TestSourcePath("cabfghjekid.txt"))
         .addResource(new TestSourcePath("chkdbafijge.txt"))
-        .build(new BuildRuleResolver());
+        .build(new BuildRuleResolver(), filesystem);
 
     BuildRule rule2 = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
@@ -1064,7 +1099,7 @@ public class DefaultJavaLibraryTest {
         .addResource(new TestSourcePath("cabfghjekid.txt"))
         .addResource(new TestSourcePath("bkhajdifcge.txt"))
         .addResource(new TestSourcePath("becgkaifhjd.txt"))
-        .build(new BuildRuleResolver());
+        .build(new BuildRuleResolver(), filesystem);
 
     Collection<Path> inputs1 = rule1.getBuildable().getInputsToCompareToOutput();
     Collection<Path> inputs2 = rule2.getBuildable().getInputsToCompareToOutput();

@@ -58,7 +58,7 @@ public class AndroidLibraryDescription implements Description<AndroidLibraryDesc
     return new AndroidLibrary(
         params,
         args.srcs.get(),
-        args.resources.get(),
+        JavaLibraryDescription.validateResources(args, params.getProjectFilesystem()),
         args.proguardConfig,
         args.postprocessClassesCommands.get(),
         args.exportedDeps.get(),

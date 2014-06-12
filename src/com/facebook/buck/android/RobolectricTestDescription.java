@@ -56,7 +56,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     return new RobolectricTest(
         params,
         args.srcs.get(),
-        args.resources.get(),
+        JavaLibraryDescription.validateResources(args, params.getProjectFilesystem()),
         args.labels.get(),
         args.contacts.get(),
         args.proguardConfig,

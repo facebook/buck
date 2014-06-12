@@ -50,9 +50,13 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
     populateWithDefaultValues(this.arg, this.target);
   }
 
-  @SuppressWarnings("unchecked")
   public final B build() {
-    BuildRuleParams params = createBuildRuleParams(new FakeProjectFilesystem());
+    return build(new FakeProjectFilesystem());
+  }
+
+  @SuppressWarnings("unchecked")
+  public final B build(ProjectFilesystem filesystem) {
+    BuildRuleParams params = createBuildRuleParams(filesystem);
 
     return (B) description.createBuildable(params, arg);
   }
@@ -66,7 +70,7 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
     BuildRuleParams params = createBuildRuleParams(filesystem);
 
     DescribedRule rule = new DescribedRule(
-        description.getBuildRuleType(), build(), params);
+        description.getBuildRuleType(), build(filesystem), params);
     resolver.addToIndex(target, rule);
     return rule;
   }
