@@ -36,7 +36,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.RuleMap;
@@ -108,7 +108,7 @@ final class ProjectGeneratorTestUtils {
         throw new RuntimeException(e);
       }
     }
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(target, deps);
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(target).setDeps(deps).build();
     return new DescribedRule(
         description.getBuildRuleType(),
         description.createBuildable(buildRuleParams, overrides.apply(arg)),

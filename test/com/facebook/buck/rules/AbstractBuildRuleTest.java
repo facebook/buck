@@ -199,10 +199,10 @@ public class AbstractBuildRuleTest {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        buildTarget,
-        sortedDeps,
-        visibilityPatterns);
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
+        .setDeps(sortedDeps)
+        .setVisibility(visibilityPatterns)
+        .build();
     return new AbstractBuildRule(buildRuleParams, null) {
       @Override
       public BuildRuleType getType() {

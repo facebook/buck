@@ -25,13 +25,12 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DescribedRule;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -44,7 +43,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMock;
@@ -144,10 +142,7 @@ public class AndroidResourceTest {
     BuildRule rule = new DescribedRule(
         AndroidResourceDescription.TYPE,
         resource,
-        new FakeBuildRuleParams(buildTarget,
-            ImmutableSortedSet.<BuildRule>of(),
-            ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-            fileHashCache));
+        new FakeBuildRuleParamsBuilder(buildTarget).setFileHashCache(fileHashCache).build());
     return rule.getRuleKeyWithoutDeps();
   }
   /**

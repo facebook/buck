@@ -27,7 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DescribedRule;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.util.HumanReadableException;
@@ -122,7 +122,7 @@ public class PythonBinaryTest {
   }
 
   private static BuildRule createBuildRule(PythonLibrary pythonLibrary, BuildTarget buildTarget) {
-    BuildRuleParams params = new FakeBuildRuleParams(buildTarget);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     return new DescribedRule(PythonLibraryDescription.TYPE,
         pythonLibrary,
         params);

@@ -24,11 +24,12 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
@@ -59,7 +60,8 @@ public class CppBinaryRuleTest {
     CppBinaryDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.srcs = srcs;
     arg.deps = Optional.of(deps);
-    FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget, deps);
+    BuildRuleParams buildRuleParams =
+        new FakeBuildRuleParamsBuilder(buildTarget).setDeps(deps).build();
     CppBinary buildable = (CppBinary) description.createBuildable(buildRuleParams, arg);
     return new DescribedRule(description.getBuildRuleType(), buildable, buildRuleParams);
   }
@@ -74,7 +76,8 @@ public class CppBinaryRuleTest {
     arg.srcs = srcs;
     arg.deps = Optional.of(deps);
     arg.headers = headers;
-    FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget, deps);
+    BuildRuleParams buildRuleParams =
+        new FakeBuildRuleParamsBuilder(buildTarget).setDeps(deps).build();
     CppLibrary buildable = (CppLibrary) description.createBuildable(buildRuleParams, arg);
     return new DescribedRule(description.getBuildRuleType(), buildable, buildRuleParams);
   }

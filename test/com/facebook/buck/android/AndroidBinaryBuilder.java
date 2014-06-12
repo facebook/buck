@@ -25,7 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DescribedRule;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -68,7 +68,7 @@ public class AndroidBinaryBuilder {
 
     public AndroidBinary build() {
       return new AndroidBinary(
-          new FakeBuildRuleParams(buildTarget, originalDeps),
+          new FakeBuildRuleParamsBuilder(buildTarget).setDeps(originalDeps).build(),
           JavacOptions.DEFAULTS,
           /* proguardJarOverride */ Optional.<Path>absent(),
           manifest,
@@ -96,7 +96,7 @@ public class AndroidBinaryBuilder {
           new DescribedRule(
               AndroidBinaryDescription.TYPE,
               build(),
-              new FakeBuildRuleParams(buildTarget, originalDeps)));
+              new FakeBuildRuleParamsBuilder(buildTarget).setDeps(originalDeps).build()));
     }
 
     public Builder setBuildTarget(BuildTarget buildTarget) {

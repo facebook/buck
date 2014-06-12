@@ -108,7 +108,7 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
   private static BuildRuleResolver createBuildRuleResolver() {
     // Create a rule with some satellite data and seed a BuildRuleResolver with it.
     BuildRuleWithInterestingFile dep = new BuildRuleWithInterestingFile(
-        new FakeBuildRuleParams(new BuildTarget("//my", "library")),
+        new FakeBuildRuleParamsBuilder(new BuildTarget("//my", "library")).build(),
         Paths.get("my/fileofinterest.txt"));
 
     FakeBuildRule fakeGenrule = new FakeBuildRule(

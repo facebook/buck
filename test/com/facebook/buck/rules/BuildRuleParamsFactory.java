@@ -29,6 +29,6 @@ public class BuildRuleParamsFactory {
    *     that returns the parameter it receives verbatim.
    */
   public static BuildRuleParams createTrivialBuildRuleParams(BuildTarget buildTarget) {
-    return new FakeBuildRuleParams(Preconditions.checkNotNull(buildTarget));
+    return new FakeBuildRuleParamsBuilder(Preconditions.checkNotNull(buildTarget)).build();
   }
 }

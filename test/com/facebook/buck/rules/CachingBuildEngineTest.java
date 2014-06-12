@@ -341,7 +341,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void testAbiRuleCanAvoidRebuild()
       throws InterruptedException, ExecutionException, IOException {
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget);
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget).build();
     TestAbstractCachingBuildRule buildRule = new TestAbstractCachingBuildRule(buildRuleParams);
 
     // The EventBus should be updated with events indicating how the rule was built.
@@ -421,7 +421,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void testAbiKeyAutomaticallyPopulated()
       throws IOException, ExecutionException, InterruptedException {
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget);
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget).build();
     TestAbstractCachingBuildRule buildRule =
         new LocallyBuiltTestAbstractCachingBuildRule(buildRuleParams);
 
@@ -576,18 +576,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     final FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
           "/dev/null", "ae8c0f860a0ecad94ecede79b69460434eddbfbc"));
-    final RuleKeyBuilderFactory ruleKeyBuilderFactory = new RuleKeyBuilderFactory() {
-      @Override
-      public RuleKey.Builder newInstance(BuildRule buildRule) {
-        return RuleKey.builder(buildRule, fileHashCache);
-      }
-    };
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget, sortedDeps) {
-      @Override
-      public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
-        return ruleKeyBuilderFactory;
-      }
-    };
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
+        .setDeps(sortedDeps)
+        .setFileHashCache(fileHashCache)
+        .build();
 
     BuildableAbstractCachingBuildRule buildRule = new BuildableAbstractCachingBuildRule(
         buildRuleParams,

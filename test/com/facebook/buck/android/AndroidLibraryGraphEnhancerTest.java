@@ -31,7 +31,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -48,7 +48,7 @@ public class AndroidLibraryGraphEnhancerTest {
   @Test
   public void testEmptyResources() {
     BuildTarget buildTarget = new BuildTarget("//java/com/example", "library");
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget);
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget).build();
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
@@ -76,9 +76,9 @@ public class AndroidLibraryGraphEnhancerTest {
             .setRes(Paths.get("android_res/com/example/res2"))
             .build());
 
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        buildTarget,
-        ImmutableSortedSet.of(resourceRule1, resourceRule2));
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
+        .setDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
+        .build();
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
@@ -125,9 +125,9 @@ public class AndroidLibraryGraphEnhancerTest {
             .setRes(Paths.get("android_res/com/example/res2"))
             .build());
 
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        buildTarget,
-        ImmutableSortedSet.of(resourceRule1, resourceRule2));
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
+        .setDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
+        .build();
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,

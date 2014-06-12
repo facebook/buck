@@ -25,7 +25,7 @@ import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -107,7 +107,7 @@ public class AndroidInstrumentationApkTest {
         javaLibrary2,
         javaLibrary4);
     AndroidInstrumentationApk androidInstrumentationApk = new AndroidInstrumentationApk(
-        new FakeBuildRuleParams(new BuildTarget("//apps", "instrumentation")),
+        new FakeBuildRuleParamsBuilder(new BuildTarget("//apps", "instrumentation")).build(),
         new TestSourcePath("apps/InstrumentationAndroidManifest.xml"),
         androidBinary,
         androidBinaryRule,

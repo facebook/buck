@@ -44,8 +44,12 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
       BuildTarget target,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
-    this(type,
-        new FakeBuildRuleParams(target, deps, visibilityPatterns));
+    this(
+        type,
+        new FakeBuildRuleParamsBuilder(target)
+            .setDeps(deps)
+            .setVisibility(visibilityPatterns)
+            .build());
   }
 
   public FakeBuildRule(BuildRuleType type, BuildRuleParams buildRuleParams) {
@@ -54,7 +58,7 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   }
 
   public FakeBuildRule(BuildRuleType type, BuildTarget buildTarget) {
-    this(type, new FakeBuildRuleParams(buildTarget));
+    this(type, new FakeBuildRuleParamsBuilder(buildTarget).build());
   }
 
   @Override

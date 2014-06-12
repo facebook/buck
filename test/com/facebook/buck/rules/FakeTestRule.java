@@ -41,7 +41,10 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
                        ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     this(type,
         labels,
-        new FakeBuildRuleParams(target, deps, visibilityPatterns));
+        new FakeBuildRuleParamsBuilder(target)
+            .setDeps(deps)
+            .setVisibility(visibilityPatterns)
+            .build());
   }
 
   public FakeTestRule(BuildRuleType type,

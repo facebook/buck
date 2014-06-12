@@ -18,9 +18,10 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DescribedRule;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -93,7 +94,7 @@ public class JavaTestBuilder {
     }
 
     public BuildRule build(BuildRuleResolver resolver) {
-      FakeBuildRuleParams params = new FakeBuildRuleParams(target, deps.build());
+      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).setDeps(deps.build()).build();
 
       DescribedRule rule = new DescribedRule(
           JavaTestDescription.TYPE,

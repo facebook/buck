@@ -28,35 +28,45 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Paths;
 
-public class FakeBuildRuleParams extends BuildRuleParams {
+public class FakeBuildRuleParamsBuilder {
 
-  public FakeBuildRuleParams(BuildTarget buildTarget) {
-    this(buildTarget, /* deps */ ImmutableSortedSet.<BuildRule>of());
+  private final BuildTarget buildTarget;
+  private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
+  private ImmutableSet<BuildTargetPattern> visibilityPatterns = BuildTargetPattern.PUBLIC;
+  private ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private FileHashCache fileHashCache =
+      new DefaultFileHashCache(new ProjectFilesystem(Paths.get(".")), new TestConsole());
+
+  public FakeBuildRuleParamsBuilder(BuildTarget buildTarget) {
+    this.buildTarget = buildTarget;
   }
 
-  public FakeBuildRuleParams(BuildTarget buildTarget, ImmutableSortedSet<BuildRule> deps) {
-    this(buildTarget, deps, /* visibilityPatterns */ ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+  public FakeBuildRuleParamsBuilder setDeps(ImmutableSortedSet<BuildRule> deps) {
+    this.deps = deps;
+    return this;
   }
 
-  public FakeBuildRuleParams(BuildTarget buildTarget,
-      ImmutableSortedSet<BuildRule> deps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns) {
-    this(
+  public FakeBuildRuleParamsBuilder setVisibility(ImmutableSet<BuildTargetPattern> patterns) {
+    this.visibilityPatterns = patterns;
+    return this;
+  }
+
+  public FakeBuildRuleParamsBuilder setProjectFilesystem(ProjectFilesystem filesystem) {
+    this.filesystem = filesystem;
+    return this;
+  }
+
+  public FakeBuildRuleParamsBuilder setFileHashCache(FileHashCache hashCache) {
+    this.fileHashCache = hashCache;
+    return this;
+  }
+
+  public BuildRuleParams build() {
+    return new BuildRuleParams(
         buildTarget,
         deps,
         visibilityPatterns,
-        new DefaultFileHashCache(new ProjectFilesystem(Paths.get(".")), new TestConsole()));
-  }
-
-  public FakeBuildRuleParams(BuildTarget buildTarget,
-      ImmutableSortedSet<BuildRule> deps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns,
-      FileHashCache fileHashCache) {
-    super(buildTarget,
-        deps,
-        visibilityPatterns,
-        new FakeProjectFilesystem(),
+        filesystem,
         new FakeRuleKeyBuilderFactory(fileHashCache));
   }
-
 }

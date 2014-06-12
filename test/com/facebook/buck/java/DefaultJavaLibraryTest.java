@@ -51,7 +51,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.JavaPackageFinder;
@@ -917,9 +917,9 @@ public class DefaultJavaLibraryTest {
         .transform(SourcePaths.TO_SOURCE_PATH)
         .toSortedSet(Ordering.natural());
 
-    FakeBuildRuleParams buildRuleParams = new FakeBuildRuleParams(
-        buildTarget,
-        ImmutableSortedSet.copyOf(deps));
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
+        .setDeps(ImmutableSortedSet.copyOf(deps))
+        .build();
 
     Buildable buildable = new DefaultJavaLibrary(
         buildRuleParams.getBuildTarget(),

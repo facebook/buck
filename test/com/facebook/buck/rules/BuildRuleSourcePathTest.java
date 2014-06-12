@@ -41,7 +41,7 @@ public class BuildRuleSourcePathTest {
     DescribedRule rule = new DescribedRule(
         new BuildRuleType("example"),
         new FakeBuildable(target).setPathToOutputFile((Path) null),
-        new FakeBuildRuleParams(target));
+        new FakeBuildRuleParamsBuilder(target).build());
     BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
 
     try {
@@ -57,7 +57,7 @@ public class BuildRuleSourcePathTest {
     DescribedRule rule = new DescribedRule(
         new BuildRuleType("example"),
         new FakeBuildable(target).setPathToOutputFile(Paths.get("cheese")),
-        new FakeBuildRuleParams(target));
+        new FakeBuildRuleParamsBuilder(target).build());
 
     BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
 

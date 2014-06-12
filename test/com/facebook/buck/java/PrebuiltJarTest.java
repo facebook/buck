@@ -28,7 +28,7 @@ import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.DescribedRule;
-import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -64,7 +64,8 @@ public class PrebuiltJarTest {
 
   @Before
   public void setUp() {
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(new BuildTarget("//lib", "junit"));
+    BuildRuleParams buildRuleParams =
+        new FakeBuildRuleParamsBuilder(new BuildTarget("//lib", "junit")).build();
 
     junitJarRule = new PrebuiltJar(buildRuleParams,
         new PathSourcePath(PATH_TO_JUNIT_JAR),
@@ -105,8 +106,7 @@ public class PrebuiltJarTest {
         new DescribedRule(
             PrebuiltJarDescription.TYPE,
             junitJarRule,
-            new FakeBuildRuleParams(junitJarRule.getBuildTarget())
-        ),
+            new FakeBuildRuleParamsBuilder(junitJarRule.getBuildTarget()).build()),
         buildResult, onDiskBuildInfo);
 
     // Make sure the ABI key is set as expected.
