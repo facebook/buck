@@ -52,7 +52,8 @@ public class FakeProjectFilesystemTest {
     assertEquals("Some content", contents.get());
 
     contents = filesystem.readFileIfItExists(Paths.get("B.txt"));
-    assertFalse("Fake file system must not return non-existing file contents",
+    assertFalse(
+        "Fake file system must not return non-existing file contents",
         contents.isPresent());
   }
 
@@ -115,7 +116,8 @@ public class FakeProjectFilesystemTest {
 
     filesVisited.clear();
     filesystem.walkRelativeFileTree(Paths.get("root/A"), fileVisitor);
-    assertThat(filesVisited, containsInAnyOrder(
+    assertThat(
+        filesVisited, containsInAnyOrder(
             Paths.get("root/A/B/C.txt"),
             Paths.get("root/A/B.txt")));
   }
@@ -129,5 +131,11 @@ public class FakeProjectFilesystemTest {
         filesystem.newFileInputStream(path), Charsets.UTF_8);
     String contents = CharStreams.toString(reader);
     assertEquals("hello world", contents);
+  }
+
+  @Test
+  public void testAllExistingFileSystem() throws IOException {
+    AllExistingProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    assertTrue(filesystem.exists(Paths.get("somepath.txt")));
   }
 }
