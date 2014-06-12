@@ -101,11 +101,11 @@ public final class JUnitRunner {
         } else {
           String className = description.getClassName();
           TestDescription testDescription = new TestDescription(className, methodName);
-          seenDescriptions.add(testDescription);
-          if (isDryRun) {
-            return false;
+          if (testSelectorList.isIncluded(testDescription)) {
+            seenDescriptions.add(testDescription);
+            return !isDryRun;
           } else {
-            return testSelectorList.isIncluded(testDescription);
+            return false;
           }
         }
       }
@@ -174,7 +174,7 @@ public final class JUnitRunner {
           fakeResults.add(fakeResult);
         }
       }
-      return fakeResults;
+      results = fakeResults;
     }
 
     // When not using any command line filtering options, all results should be recorded.
@@ -222,6 +222,10 @@ public final class JUnitRunner {
 
     TestResult testResult = results.get(0);
     if (testResult.isSuccess()) {
+      return false;
+    }
+
+    if (testResult.failure == null) {
       return false;
     }
 
