@@ -67,7 +67,7 @@ public class AaptPackageResources extends AbstractBuildable
 
   private final SourcePath manifest;
   private final FilteredResourcesProvider filteredResourcesProvider;
-  private final AndroidTransitiveDependencies androidTransitiveDependencies;
+  private final ImmutableSet<Path> assetsDirectories;
   private final PackageType packageType;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -76,13 +76,13 @@ public class AaptPackageResources extends AbstractBuildable
       BuildTarget buildTarget,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
-      AndroidTransitiveDependencies androidTransitiveDependencies,
+      ImmutableSet<Path> assetsDirectories,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters) {
     super(buildTarget);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
-    this.androidTransitiveDependencies = Preconditions.checkNotNull(androidTransitiveDependencies);
+    this.assetsDirectories = Preconditions.checkNotNull(assetsDirectories);
     this.packageType = Preconditions.checkNotNull(packageType);
     this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -128,7 +128,7 @@ public class AaptPackageResources extends AbstractBuildable
         ImmutableList.Builder<Step> commands = ImmutableList.builder();
         try {
           createAllAssetsDirectory(
-              androidTransitiveDependencies.assetsDirectories,
+              assetsDirectories,
               commands,
               context.getProjectFilesystem());
         } catch (IOException e) {
@@ -159,7 +159,7 @@ public class AaptPackageResources extends AbstractBuildable
     steps.add(collectAssets);
 
     Optional<Path> assetsDirectory;
-    if (androidTransitiveDependencies.assetsDirectories.isEmpty()) {
+    if (assetsDirectories.isEmpty()) {
       assetsDirectory = Optional.absent();
     } else {
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());

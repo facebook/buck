@@ -62,7 +62,7 @@ public class AaptPackageResourcesTest {
         new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
-        AndroidTransitiveDependencies.EMPTY,
+        ImmutableSet.<Path>of(),
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of());
 
@@ -116,7 +116,7 @@ public class AaptPackageResourcesTest {
         new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
-        AndroidTransitiveDependencies.EMPTY,
+        ImmutableSet.<Path>of(),
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
 
@@ -171,7 +171,7 @@ public class AaptPackageResourcesTest {
         new BuildTarget("//facebook/base", "apk", "aapt_package"),
         /* manifest */ new TestSourcePath("facebook/base/AndroidManifest.xml"),
         resourcesFilter,
-        AndroidTransitiveDependencies.EMPTY,
+        ImmutableSet.<Path>of(),
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
 

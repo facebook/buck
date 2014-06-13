@@ -187,7 +187,7 @@ public class AndroidBinaryGraphEnhancer {
         buildTargetForAapt,
         manifest,
         filteredResourcesProvider,
-        androidResourceDepsFinder.getAndroidTransitiveDependencies(),
+        androidResourceDepsFinder.getAndroidTransitiveDependencies().assetsDirectories,
         packageType,
         cpuFilters);
     BuildRule aaptPackageResourcesBuildRule = buildRuleAndAddToIndex(
