@@ -4,7 +4,7 @@
       <root url="jar://$PROJECT_DIR$/lib/jackson-annotations-2.0.5.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jackson-core-2.0.5.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jackson-databind-2.0.5.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/args4j-2.0.26.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/args4j-2.0.28.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/ini4j-0.5.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/ddmlib-22.5.3.jar!/" />

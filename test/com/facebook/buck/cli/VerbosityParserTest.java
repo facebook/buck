@@ -38,5 +38,8 @@ public class VerbosityParserTest {
     assertSame(Verbosity.COMMANDS, VerbosityParser.parse("-v", "2"));
 
     assertSame(Verbosity.COMMANDS, VerbosityParser.parse("build", "-v", "2", "--num-threads", "4"));
+
+    assertSame(Verbosity.COMMANDS, VerbosityParser.parse("build", "-v=2"));
+    assertSame(Verbosity.COMMANDS, VerbosityParser.parse("build", "--verbose=2"));
   }
 }

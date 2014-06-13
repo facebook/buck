@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="test-lib">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/args4j-2.0.26.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/args4j-2.0.28.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/cglib-nodep-2.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/easymock-3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jackson-core-2.0.5.jar!/" />

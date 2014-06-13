@@ -19,6 +19,9 @@ package com.facebook.buck.cli;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class VerbosityParser {
 
   @VisibleForTesting static final String VERBOSE_LONG_ARG = "--verbose";
@@ -28,14 +31,22 @@ public class VerbosityParser {
   @VisibleForTesting
   static final Verbosity DEFAULT_VERBOSITY = Verbosity.STANDARD_INFORMATION;
 
+  private static final Pattern VERBOSE_ARG_PATTERN =
+      Pattern.compile("(?:" + VERBOSE_LONG_ARG + "|" + VERBOSE_SHORT_ARG + ")=(\\d+)");
+
   private VerbosityParser() {}
 
   public static Verbosity parse(String... args) {
-    for (int i = 0; i < args.length - 1; i++) {
+    for (int i = 0; i < args.length; i++) {
       String arg = args[i];
-      if (VERBOSE_LONG_ARG.equals(arg) || VERBOSE_SHORT_ARG.equals(arg)) {
+      if ((VERBOSE_LONG_ARG.equals(arg) || VERBOSE_SHORT_ARG.equals(arg)) && i < args.length - 1) {
         String nextArg = args[i + 1];
         int verbosityLevel = Integer.parseInt(nextArg, /* radix */ 10);
+        return getVerbosityForLevel(verbosityLevel);
+      }
+      Matcher matcher = VERBOSE_ARG_PATTERN.matcher(arg);
+      if (matcher.matches()) {
+        int verbosityLevel = Integer.parseInt(matcher.group(1), /* radix */ 10);
         return getVerbosityForLevel(verbosityLevel);
       }
     }
