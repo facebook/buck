@@ -14,6 +14,17 @@ java_library(
 )
 
 java_library(
+  name = 'classhash',
+  srcs = [
+    'HasJavaClassHashes.java',
+  ],
+  deps = [
+    '//lib:guava',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_library(
   name = 'support',
   srcs = [
     'AbiWritingAnnotationProcessingDataDecorator.java',
@@ -29,6 +40,7 @@ java_library(
     'JavaCompilerEnvironment.java',
   ],
   deps = [
+    ':classhash',
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/java/abi:protocol',
@@ -62,6 +74,7 @@ java_library(
     'PrebuiltJarDescription.java',
   ],
   deps = [
+    ':classhash',
     ':steps',
     ':support',
     '//lib:guava',

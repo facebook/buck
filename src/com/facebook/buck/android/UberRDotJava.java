@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.UberRDotJava.BuildOutput;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.AccumulateClassNamesStep;
+import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
@@ -68,7 +69,7 @@ import java.util.Set;
  * Clients of this Buildable may need to know the path to the {@code R.java} file.
  */
 public class UberRDotJava extends AbstractBuildable implements
-    AbiRule, InitializableFromDisk<BuildOutput> {
+    AbiRule, InitializableFromDisk<BuildOutput>, HasJavaClassHashes {
 
   public static final String R_DOT_JAVA_LINEAR_ALLOC_SIZE = "r_dot_java_linear_alloc_size";
 

@@ -29,7 +29,8 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
-public interface JavaLibrary extends Buildable, HasClasspathEntries, HasJavaAbi {
+public interface JavaLibrary  extends Buildable, HasClasspathEntries,
+    HasJavaAbi, HasJavaClassHashes {
 
   /**
    * This Buildable is expected to support the GWT flavor, which is a {@link Buildable} whose output
@@ -86,12 +87,6 @@ public interface JavaLibrary extends Buildable, HasClasspathEntries, HasJavaAbi 
    */
   @Override
   public Sha1HashCode getAbiKey();
-
-  /**
-   * @return a (possibly empty) map of names of {@code .class} files in the output of this rule
-   *     to SHA-1 hashes of their contents.
-   */
-  public ImmutableSortedMap<String, HashCode> getClassNamesToHashes();
 
   public static class Data {
     private final Sha1HashCode abiKey;

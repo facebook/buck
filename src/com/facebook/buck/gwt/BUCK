@@ -3,6 +3,7 @@ java_library(
   srcs = glob(['*.java']),
   deps = [
     '//lib:guava',
+    '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',
     '//src/com/facebook/buck/java:support',
