@@ -4,6 +4,24 @@ android_binary(
   target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   use_split_dex = True,
+  dex_compression = 'jar',
+  primary_dex_patterns = [
+    '/MyApplication^',
+  ],
+  deps = [
+    '//java/com/sample/app:app',
+    '//java/com/sample/lib:lib',
+    '//native/fakenative/jni:fakenative',
+    '//native/mybinary/jni:mybinary',
+  ],
+)
+
+android_binary(
+  name = 'app-art',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:19',
+  keystore = '//keystores:debug',
+  use_split_dex = True,
   primary_dex_patterns = [
     '/MyApplication^',
   ],

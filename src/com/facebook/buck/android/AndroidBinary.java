@@ -211,6 +211,10 @@ public class AndroidBinary extends AbstractBuildRule implements
     }
 
     if (exopackage) {
+      Preconditions.checkArgument(dexSplitMode.getDexStore() == DexStore.JAR,
+          "%s specified exopackage with secondary dex mode %s, " +
+              "which is invalid.  (Only JAR is allowed.)",
+          getBuildTarget(), dexSplitMode.getDexStore());
       Preconditions.checkArgument(enhancementResult.getComputeExopackageDepsAbi().isPresent(),
           "computeExopackageDepsAbi must be set if exopackage is true.");
     }
@@ -894,8 +898,12 @@ public class AndroidBinary extends AbstractBuildRule implements
       secondaryDexDir = Optional.of(secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR));
       steps.add(new MkdirStep(secondaryDexDir.get()));
 
-      secondaryDexDirectories.add(secondaryJarMetaDirParent);
-      secondaryDexDirectories.add(secondaryDexParentDir);
+      if (dexSplitMode.getDexStore() == DexStore.RAW) {
+        secondaryDexDirectories.add(secondaryDexDir.get());
+      } else {
+        secondaryDexDirectories.add(secondaryJarMetaDirParent);
+        secondaryDexDirectories.add(secondaryDexParentDir);
+      }
 
       // Adjust smart-dex inputs for the split-zip case.
       primaryInputsToDex = Suppliers.<Set<Path>>ofInstance(ImmutableSet.of(primaryJarPath));

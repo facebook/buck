@@ -289,6 +289,7 @@ public class AndroidBinaryTest {
         .setShouldSplitDex(true)
         .setLinearAllocHardLimit(0)
         .setPrimaryDexScenarioOverflowAllowed(true)
+        .setDexCompression(DexStore.JAR)
         .build(ruleResolver);
 
     Set<Path> classpath = Sets.newHashSet();

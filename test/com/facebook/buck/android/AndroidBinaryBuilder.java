@@ -69,6 +69,11 @@ public class AndroidBinaryBuilder extends AbstractBuilder<AndroidBinaryDescripti
     return this;
   }
 
+  public AndroidBinaryBuilder setDexCompression(DexStore dexStore) {
+    arg.dexCompression = Optional.of(dexStore);
+    return this;
+  }
+
   public AndroidBinaryBuilder setLinearAllocHardLimit(long limit) {
     arg.linearAllocHardLimit = Optional.of(limit);
     return this;

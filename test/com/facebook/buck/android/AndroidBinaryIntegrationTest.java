@@ -48,6 +48,7 @@ public class AndroidBinaryIntegrationTest {
   private ProjectWorkspace workspace;
 
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
+  private static final String RAW_DEX_TARGET = "//apps/multidex:app-art";
   private static final String EXOPACKAGE_TARGET = "//apps/multidex:app-exo";
 
   @BeforeClass
@@ -82,6 +83,25 @@ public class AndroidBinaryIntegrationTest {
             "buck-out/gen/apps/multidex/app.apk"));
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1.dex.jar");
+    zipInspector.assertFileDoesNotExist("classes2.dex");
+
+    zipInspector.assertFileExists("classes.dex");
+    zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
+  }
+
+
+  @Test
+  public void testRawSplitDexHasSecondary() throws IOException {
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", RAW_DEX_TARGET);
+    result.assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/multidex/app-art.apk"));
+    zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
+    zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/secondary-1.dex.jar");
+    zipInspector.assertFileExists("classes2.dex");
+
 
     zipInspector.assertFileExists("classes.dex");
     zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
@@ -94,6 +114,7 @@ public class AndroidBinaryIntegrationTest {
             "buck-out/gen/apps/multidex/app-exo.apk"));
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/secondary-1.dex.jar");
+    zipInspector.assertFileDoesNotExist("classes2.dex");
 
     zipInspector.assertFileExists("classes.dex");
     zipInspector.assertFileExists("lib/armeabi/libfakenative.so");

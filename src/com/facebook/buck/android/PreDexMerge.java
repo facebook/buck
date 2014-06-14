@@ -168,10 +168,14 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     final SplitDexPaths paths = new SplitDexPaths();
 
-    final ImmutableSet<Path> secondaryDexDirectories = ImmutableSet.of(
-        paths.metadataDir,
-        paths.jarfilesDir);
-
+    final ImmutableSet<Path> secondaryDexDirectories;
+    if (dexSplitMode.getDexStore() == DexStore.RAW) {
+      // Raw classes*.dex files go in the top-level of the APK.
+      secondaryDexDirectories = ImmutableSet.of(paths.jarfilesSubdir);
+    } else {
+      // Otherwise, we want to include the metadata and jars as assets.
+      secondaryDexDirectories = ImmutableSet.of(paths.metadataDir, paths.jarfilesDir);
+    }
     // Do not clear existing directory which might contain secondary dex files that are not
     // re-merged (since their contents did not change).
     steps.add(new MkdirStep(paths.jarfilesSubdir));

@@ -342,7 +342,7 @@ public class SmartDexingStep implements Step {
       steps.add(new RmStep(tempDexJarOutput, true));
       steps.add(new XzStep(repackedJar));
       return new CompositeStep(steps);
-    } else if (DexStore.JAR.matchesPath(outputPath) ||
+    } else if (DexStore.JAR.matchesPath(outputPath) || DexStore.RAW.matchesPath(outputPath) ||
         output.endsWith("classes.dex")) {
       return new DxStep(outputPath, filesToDex, dxOptions);
     } else {

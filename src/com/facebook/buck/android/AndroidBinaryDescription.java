@@ -176,13 +176,17 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
   }
 
   private DexSplitMode createDexSplitMode(Arg args) {
+    // Exopackage builds default to JAR, otherwise, default to RAW.
+    DexStore defaultDexStore = args.exopackage.or(false)
+        ? DexStore.JAR
+        : DexStore.RAW;
     DexSplitStrategy dexSplitStrategy = args.minimizePrimaryDexSize.or(false)
         ? DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
         : DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
     return new DexSplitMode(
         args.useSplitDex.or(false),
         dexSplitStrategy,
-        args.dexCompression.or(DexStore.JAR),
+        args.dexCompression.or(defaultDexStore),
         args.useLinearAllocSplitDex.or(false),
         args.linearAllocHardLimit.or(DEFAULT_LINEAR_ALLOC_HARD_LIMIT),
         args.primaryDexPatterns.or(ImmutableList.<String>of()),

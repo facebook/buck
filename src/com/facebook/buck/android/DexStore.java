@@ -26,6 +26,23 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 enum DexStore {
   /**
+   * Secondary dexes should be raw dex files for inclusion in the APK.
+   */
+  RAW {
+    @Override
+    public String fileNameForSecondary(int index) {
+      // Google expects secondary dex files to start at 2.
+      // I guess classes.dex is number 1.
+      return String.format("classes%d.dex", index + 2);
+    }
+
+    @Override
+    public boolean matchesPath(Path path) {
+      return path.getFileName().toString().matches("classes\\d+\\.dex");
+    }
+  },
+
+  /**
    * Secondary dexes should be compressed using JAR's deflate.
    */
   JAR {
