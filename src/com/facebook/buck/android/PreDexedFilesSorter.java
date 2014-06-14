@@ -162,10 +162,9 @@ public class PreDexedFilesSorter {
 
     Map<Path, DexWithClasses> metadataTxtEntries = Maps.newHashMap();
 
-    String pattern = "secondary-%d" + dexStore.getExtension();
     ImmutableMultimap.Builder<Path, Path> secondaryOutputToInputs = ImmutableMultimap.builder();
     for (int index = 0; index < secondaryDexesContents.size(); index++) {
-      String secondaryDexFilename = String.format(pattern, index + 1);
+      String secondaryDexFilename = dexStore.fileNameForSecondary(index);
       Path pathToSecondaryDex = secondaryDexJarFilesDir.resolve(secondaryDexFilename);
       metadataTxtEntries.put(pathToSecondaryDex, secondaryDexesContents.get(index).get(0));
       Collection<Path> dexContentPaths = Collections2.transform(

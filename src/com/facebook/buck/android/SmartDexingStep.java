@@ -327,7 +327,7 @@ public class SmartDexingStep implements Step {
 
     String output = outputPath.toString();
 
-    if (output.endsWith(DexStore.XZ.getExtension())) {
+    if (DexStore.XZ.matchesPath(outputPath)) {
       List<Step> steps = Lists.newArrayList();
       Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xz$", ".tmp.jar"));
       steps.add(new DxStep(tempDexJarOutput, filesToDex, dxOptions));
@@ -342,7 +342,7 @@ public class SmartDexingStep implements Step {
       steps.add(new RmStep(tempDexJarOutput, true));
       steps.add(new XzStep(repackedJar));
       return new CompositeStep(steps);
-    } else if (output.endsWith(DexStore.JAR.getExtension()) ||
+    } else if (DexStore.JAR.matchesPath(outputPath) ||
         output.endsWith("classes.dex")) {
       return new DxStep(outputPath, filesToDex, dxOptions);
     } else {

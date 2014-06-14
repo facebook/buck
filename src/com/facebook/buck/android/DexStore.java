@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.google.common.base.Preconditions;
+import java.nio.file.Path;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -28,21 +28,45 @@ enum DexStore {
   /**
    * Secondary dexes should be compressed using JAR's deflate.
    */
-  JAR(".dex.jar"),
+  JAR {
+    @Override
+    public String fileNameForSecondary(int index) {
+      // Start at one for easier comprehension by humans.
+      return String.format("secondary-%d.dex.jar", index + 1);
+    }
+
+    @Override
+    public boolean matchesPath(Path path) {
+      return path.getFileName().toString().endsWith(".dex.jar");
+    }
+  },
 
   /**
    * Secondary dexes should be stored uncompressed in jars that will be XZ-compressed.
    */
-  XZ(".dex.jar.xz"),
+  XZ {
+    @Override
+    public String fileNameForSecondary(int index) {
+      // Start at one for easier comprehension by humans.
+      return String.format("secondary-%d.dex.jar.xz", index + 1);
+    }
+
+    @Override
+    public boolean matchesPath(Path path) {
+      return path.getFileName().toString().endsWith(".dex.jar.xz");
+    }
+  },
   ;
 
-  private final String extension;
+  /**
+   * @param index The index of a given secondary dex file, starting from 0.
+   * @return The appropriate name for the secondary dex file at {@code index}.
+   */
+  public abstract String fileNameForSecondary(int index);
 
-  private DexStore(String extension) {
-    this.extension = Preconditions.checkNotNull(extension);
-  }
-
-  public String getExtension() {
-    return extension;
-  }
+  /**
+   * @param path The path where a secondary dex file will be written.
+   * @return Whether that file is of this DexStore type.
+   */
+  public abstract boolean matchesPath(Path path);
 }
