@@ -176,16 +176,13 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
   }
 
   private DexSplitMode createDexSplitMode(Arg args) {
-    DexStore dexStore = "xz".equals(args.dexCompression.or("jar"))
-        ? DexStore.XZ
-        : DexStore.JAR;
     DexSplitStrategy dexSplitStrategy = args.minimizePrimaryDexSize.or(false)
         ? DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
         : DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
     return new DexSplitMode(
         args.useSplitDex.or(false),
         dexSplitStrategy,
-        dexStore,
+        args.dexCompression.or(DexStore.JAR),
         args.useLinearAllocSplitDex.or(false),
         args.linearAllocHardLimit.or(DEFAULT_LINEAR_ALLOC_HARD_LIMIT),
         args.primaryDexPatterns.or(ImmutableList.<String>of()),
@@ -220,7 +217,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<Boolean> minimizePrimaryDexSize;
     public Optional<Boolean> disablePreDex;
     public Optional<Boolean> exopackage;
-    public Optional<String> dexCompression;
+    public Optional<DexStore> dexCompression;
     public Optional<ProGuardObfuscateStep.SdkProguardType> androidSdkProguardConfig;
     public Optional<Boolean> useAndroidProguardConfigWithOptimizations;
     public Optional<Integer> optimizationPasses;
