@@ -23,6 +23,7 @@ import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBuildable;
 import com.facebook.buck.apple.AppleResource;
+import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.IosBinary;
@@ -93,7 +94,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import org.w3c.dom.DOMImplementation;
@@ -168,9 +168,6 @@ public class ProjectGenerator {
   public static final ImmutableSet<Option> SEPARATED_PROJECT_OPTIONS = ImmutableSet.of(
       Option.REFERENCE_EXISTING_XCCONFIGS,
       Option.USE_SHORT_NAMES_FOR_TARGETS);
-
-  private static final ImmutableSet<String> HEADER_FILE_EXTENSIONS =
-    ImmutableSet.of("h", "hh", "hpp");
 
   public static final String PATH_TO_ASSET_CATALOG_COMPILER = System.getProperty(
       "buck.path_to_compile_asset_catalogs_py",
@@ -792,10 +789,6 @@ public class ProjectGenerator {
     }
   }
 
-  private static boolean isHeaderSourcePath(SourcePath sourcePath) {
-    return HEADER_FILE_EXTENSIONS.contains(Files.getFileExtension(sourcePath.toString()));
-  }
-
   private void addGroupedSourcesToHeaderMap(
       HeaderMap.Builder headerMap,
       Path prefix,
@@ -804,7 +797,9 @@ public class ProjectGenerator {
     for (GroupedSource groupedSource : groupedSources) {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
-          if (isHeaderSourcePath(groupedSource.getSourcePath())) {
+          if (SourcePaths.isSourcePathExtensionInSet(
+                  groupedSource.getSourcePath(),
+                  FileExtensions.CLANG_HEADERS)) {
             addSourcePathToHeaderMap(
                 groupedSource.getSourcePath(),
                 prefix,
@@ -834,7 +829,9 @@ public class ProjectGenerator {
     for (GroupedSource groupedSource : groupedSources) {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
-          if (isHeaderSourcePath(groupedSource.getSourcePath())) {
+          if (SourcePaths.isSourcePathExtensionInSet(
+                  groupedSource.getSourcePath(),
+                  FileExtensions.CLANG_HEADERS)) {
             if (headersBuildPhase.isPresent()) {
               addSourcePathToHeadersBuildPhase(
                   groupedSource.getSourcePath(),

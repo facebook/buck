@@ -21,9 +21,11 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.io.Files;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -104,5 +106,9 @@ public class SourcePaths {
     return FluentIterable.from(paths)
         .transform(TO_SOURCE_PATH)
         .toSortedSet(Ordering.natural());
+  }
+
+  public static boolean isSourcePathExtensionInSet(SourcePath sourcePath, Set<String> extensions) {
+    return extensions.contains(Files.getFileExtension(sourcePath.resolve().toString()));
   }
 }
