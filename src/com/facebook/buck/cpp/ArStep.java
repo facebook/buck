@@ -34,7 +34,7 @@ public class ArStep extends ShellStep {
   private final ImmutableSortedSet<Path> srcs;
   private final Path outputFile;
 
-  ArStep(ImmutableSortedSet<Path> srcs,  Path outputFile) {
+  public ArStep(ImmutableSortedSet<Path> srcs,  Path outputFile) {
     this.srcs = Preconditions.checkNotNull(srcs);
     this.outputFile = Preconditions.checkNotNull(outputFile);
   }

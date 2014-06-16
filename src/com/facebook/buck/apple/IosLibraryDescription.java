@@ -46,7 +46,10 @@ public class IosLibraryDescription implements Description<IosLibraryDescription.
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new IosLibrary(params.getBuildTarget(), args);
+    return new IosLibrary(
+        params.getBuildTarget(),
+        args,
+        TargetSources.ofAppleSources(args.srcs));
   }
 
   public static class Arg implements ConstructorArg {

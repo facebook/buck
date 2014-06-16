@@ -46,7 +46,7 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new IosTest(params.getBuildTarget(), args);
+    return new IosTest(params.getBuildTarget(), args, TargetSources.ofAppleSources(args.srcs));
   }
 
   public static class Arg implements ConstructorArg {

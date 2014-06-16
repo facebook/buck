@@ -36,7 +36,7 @@ public class MacosxBinaryDescription implements Description<MacosxBinaryDescript
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new MacosxBinary(params.getBuildTarget(), args);
+    return new MacosxBinary(params.getBuildTarget(), args, TargetSources.ofAppleSources(args.srcs));
   }
 
   @Override

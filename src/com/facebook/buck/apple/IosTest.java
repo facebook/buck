@@ -16,29 +16,24 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cpp.AbstractNativeBuildable;
+import com.facebook.buck.cpp.CompilerStep;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
+import java.util.List;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class IosTest extends AbstractBuildable {
+public class IosTest extends AbstractNativeBuildable {
   private final Path infoPlist;
   private final ImmutableSet<XcodeRuleConfiguration> configurations;
   private final ImmutableList<GroupedSource> srcs;
@@ -47,23 +42,24 @@ public class IosTest extends AbstractBuildable {
   private final ImmutableSortedSet<BuildRule> sourceUnderTest;
   private final IosTestType testType;
 
-  public IosTest(BuildTarget target, IosTestDescription.Arg arg) {
-    super(target);
+  public IosTest(
+      BuildTarget target,
+      IosTestDescription.Arg arg,
+      TargetSources targetSources) {
+    super(
+        target,
+        arg.deps.or(ImmutableSortedSet.<BuildRule>of()),
+        targetSources.srcPaths,
+        targetSources.headerPaths,
+        targetSources.perFileFlags);
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
     frameworks = Preconditions.checkNotNull(arg.frameworks);
     sourceUnderTest = Preconditions.checkNotNull(arg.sourceUnderTest);
     Optional<String> argTestType = Preconditions.checkNotNull(arg.testType);
     testType = IosTestType.fromString(argTestType.or("octest"));
-
-    ImmutableList.Builder<GroupedSource> srcsBuilder = ImmutableList.builder();
-    ImmutableMap.Builder<SourcePath, String> perFileFlagsBuilder = ImmutableMap.builder();
-    RuleUtils.extractSourcePaths(
-        srcsBuilder,
-        perFileFlagsBuilder,
-        arg.srcs);
-    srcs = srcsBuilder.build();
-    perFileFlags = perFileFlagsBuilder.build();
+    srcs = Preconditions.checkNotNull(targetSources.srcs);
+    perFileFlags = Preconditions.checkNotNull(targetSources.perFileFlags);
   }
 
   public Path getInfoPlist() {
@@ -94,26 +90,32 @@ public class IosTest extends AbstractBuildable {
     return testType;
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutputFile() {
-    return null;
+  protected String getCompiler() {
+    return "clang";
   }
 
   @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return SourcePaths.filterInputsToCompareToOutput(GroupedSources.sourcePaths(srcs));
+  protected List<Step> getFinalBuildSteps(ImmutableSortedSet<Path> files, Path outputFile) {
+    if (files.isEmpty()) {
+      return ImmutableList.of();
+    } else {
+      // TODO(user): This needs to create a dylib, not a static library.
+      return ImmutableList.<Step>of(
+          new CompilerStep(
+              /* compiler */ getCompiler(),
+              /* shouldLink */ true,
+              /* srcs */ files,
+              /* outputFile */ outputFile,
+              /* shouldAddProjectRootToIncludePaths */ false,
+              /* includePaths */ ImmutableSortedSet.<Path>of(),
+              /* commandLineArgs */ ImmutableList.<String>of()));
+
+    }
   }
 
   @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
+  protected String getOutputFileNameFormat() {
+    return "%s";
   }
 }

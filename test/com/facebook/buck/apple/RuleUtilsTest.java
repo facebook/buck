@@ -23,6 +23,7 @@ import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
@@ -32,6 +33,8 @@ public class RuleUtilsTest {
   public void extractGroupedSources() {
     ImmutableList.Builder<GroupedSource> sources = ImmutableList.builder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
+    ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
 
     ImmutableList<AppleSource> input = ImmutableList.of(
         AppleSource.ofSourceGroup(
@@ -50,7 +53,12 @@ public class RuleUtilsTest {
                         new Pair<SourcePath, String>(
                             new TestSourcePath("blech.m"), "-fobjc-arc"))))));
 
-    RuleUtils.extractSourcePaths(sources, perFileCompileFlags, input);
+    RuleUtils.extractSourcePaths(
+        sources,
+        perFileCompileFlags,
+        sourcePaths,
+        headerPaths,
+        input);
     assertEquals(
         ImmutableList.of(
             GroupedSource.ofSourceGroup(
@@ -70,5 +78,80 @@ public class RuleUtilsTest {
             new TestSourcePath("bar.m"), "-Wall",
             new TestSourcePath("blech.m"), "-fobjc-arc"),
         perFileCompileFlags.build());
+  }
+
+  @Test
+  public void extractUngroupedHeadersAndSources() {
+    ImmutableList.Builder<GroupedSource> sources = ImmutableList.builder();
+    ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
+    ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
+
+    ImmutableList<AppleSource> input = ImmutableList.of(
+        AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
+        AppleSource.ofSourcePath(new TestSourcePath("bar.h")),
+        AppleSource.ofSourcePath(new TestSourcePath("baz.mm")),
+        AppleSource.ofSourcePath(new TestSourcePath("blech.hh")),
+        AppleSource.ofSourcePath(new TestSourcePath("beeble.c")));
+
+    RuleUtils.extractSourcePaths(
+        sources,
+        perFileCompileFlags,
+        sourcePaths,
+        headerPaths,
+        input);
+    assertEquals(
+        ImmutableSortedSet.of(
+            new TestSourcePath("foo.m"),
+            new TestSourcePath("baz.mm"),
+            new TestSourcePath("beeble.c")),
+        sourcePaths.build());
+    assertEquals(
+        ImmutableSortedSet.of(
+            new TestSourcePath("bar.h"),
+            new TestSourcePath("blech.hh")),
+        headerPaths.build());
+  }
+
+  @Test
+  public void extractGroupedHeadersAndSources() {
+    ImmutableList.Builder<GroupedSource> sources = ImmutableList.builder();
+    ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
+    ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
+
+    ImmutableList<AppleSource> input = ImmutableList.of(
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "Group1",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall"))))),
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "Group2",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new TestSourcePath("baz.hh")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(
+                            new TestSourcePath("blech.mm"), "-fobjc-arc"))))));
+
+    RuleUtils.extractSourcePaths(
+        sources,
+        perFileCompileFlags,
+        sourcePaths,
+        headerPaths,
+        input);
+    assertEquals(
+        ImmutableSortedSet.of(
+            new TestSourcePath("bar.m"),
+            new TestSourcePath("blech.mm")),
+        sourcePaths.build());
+    assertEquals(
+        ImmutableSortedSet.of(
+            new TestSourcePath("foo.h"),
+            new TestSourcePath("baz.hh")),
+        headerPaths.build());
   }
 }

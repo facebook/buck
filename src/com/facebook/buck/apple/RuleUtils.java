@@ -17,10 +17,14 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Collection;
 
 /**
  * Common conversion functions from raw Description Arg specifications.
@@ -30,6 +34,19 @@ public class RuleUtils {
   /** Utility class: do not instantiate. */
   private RuleUtils() {}
 
+  private static void addSourcePathToBuilders(
+      SourcePath sourcePath,
+      ImmutableList.Builder<GroupedSource> outputSources,
+      ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
+      ImmutableSortedSet.Builder<SourcePath> outputHeaderPaths) {
+    if (SourcePaths.isSourcePathExtensionInSet(sourcePath, FileExtensions.CLANG_SOURCES)) {
+      outputSourcePaths.add(sourcePath);
+    } else if (SourcePaths.isSourcePathExtensionInSet(sourcePath, FileExtensions.CLANG_HEADERS)) {
+      outputHeaderPaths.add(sourcePath);
+    }
+    outputSources.add(GroupedSource.ofSourcePath(sourcePath));
+  }
+
   /**
    * Extract the source and header paths and flags from the input list
    * and populate the output collections.
@@ -38,20 +55,34 @@ public class RuleUtils {
    *        they should appear in a generated Xcode project) will be added to
    *        this builder.
    * @param outputPerFileFlags per file flags will be added to this builder
+   * @param outputSourcePaths The ordered list of paths to (non-header) source code
+   *        files, as determined by the file extensions in SOURCE_FILE_EXTENSIONS.
+   * @param outputHeaderPaths The ordered list of paths to header files,
+   *        as determined by the file extensions in HEADER_FILE_EXTENSIONS.
    * @param items input list of sources
    */
   public static void extractSourcePaths(
       ImmutableList.Builder<GroupedSource> outputSources,
       ImmutableMap.Builder<SourcePath, String> outputPerFileFlags,
-      ImmutableList<AppleSource> items) {
+      ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
+      ImmutableSortedSet.Builder<SourcePath> outputHeaderPaths,
+      Collection<AppleSource> items) {
     for (AppleSource item : items) {
       switch (item.getType()) {
         case SOURCE_PATH:
-          outputSources.add(GroupedSource.ofSourcePath(item.getSourcePath()));
+          addSourcePathToBuilders(
+              item.getSourcePath(),
+              outputSources,
+              outputSourcePaths,
+              outputHeaderPaths);
           break;
         case SOURCE_PATH_WITH_FLAGS:
           Pair<SourcePath, String> pair = item.getSourcePathWithFlags();
-          outputSources.add(GroupedSource.ofSourcePath(pair.getFirst()));
+          addSourcePathToBuilders(
+              pair.getFirst(),
+              outputSources,
+              outputSourcePaths,
+              outputHeaderPaths);
           outputPerFileFlags.put(pair.getFirst(), pair.getSecond());
           break;
         case SOURCE_GROUP:
@@ -62,6 +93,8 @@ public class RuleUtils {
           extractSourcePaths(
               nestedSourceGroups,
               outputPerFileFlags,
+              outputSourcePaths,
+              outputHeaderPaths,
               sourceGroupItems);
           outputSources.add(
               GroupedSource.ofSourceGroup(sourceGroupName, nestedSourceGroups.build()));
