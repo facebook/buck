@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,6 +45,7 @@ public class IosLibraryTest {
         AppleSource.ofSourcePath(new TestSourcePath("some_header.h")));
     arg.configs = ImmutableMap.of();
     arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "foo")).build();

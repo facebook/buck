@@ -207,6 +207,7 @@ public class ProjectGeneratorTest {
                         new Pair<SourcePath, String>(
                             new TestSourcePath("blech.m"), "-fobjc-arc"))))));
     arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
         iosLibraryDescription.createBuildable(params, arg), params);
@@ -264,6 +265,7 @@ public class ProjectGeneratorTest {
                     AppleSource.ofSourcePathWithFlags(
                         new Pair<SourcePath, String>(new TestSourcePath("blech.h"), "private"))))));
     arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
         iosLibraryDescription.createBuildable(params, arg), params);
@@ -363,6 +365,7 @@ public class ProjectGeneratorTest {
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
         AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
     arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
         iosLibraryDescription.createBuildable(params, arg), params);
@@ -422,6 +425,7 @@ public class ProjectGeneratorTest {
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
         AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
     arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
     BuildRule rule = new DescribedRule(
         MacosxFrameworkDescription.TYPE,
         macosxFrameworkDescription.createBuildable(params, arg), params);
@@ -486,6 +490,7 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of(
         "$SDKROOT/SystemFramework.framework",
         "$BUILT_PRODUCTS_DIR/LocalFramework.framework");
+    arg.deps = Optional.absent();
 
     BuildRule rule = new DescribedRule(
         MacosxBinaryDescription.TYPE,
@@ -538,6 +543,7 @@ public class ProjectGeneratorTest {
         "$DEVELOPER_DIR/XCTest.framework");
     arg.sourceUnderTest = ImmutableSortedSet.of();
     arg.testType = Optional.absent();
+    arg.deps = Optional.absent();
 
 
     BuildRule rule = new DescribedRule(
@@ -594,6 +600,7 @@ public class ProjectGeneratorTest {
         "$DEVELOPER_DIR/XCTest.framework");
     arg.sourceUnderTest = ImmutableSortedSet.of();
     arg.testType = Optional.of("xctest");
+    arg.deps = Optional.absent();
 
     BuildRule rule = new DescribedRule(
         IosTestDescription.TYPE,
@@ -641,6 +648,7 @@ public class ProjectGeneratorTest {
           "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
+      arg.deps = Optional.absent();
       libraryRule = new DescribedRule(
           IosLibraryDescription.TYPE,
           iosLibraryDescription.createBuildable(params, arg),
@@ -660,6 +668,7 @@ public class ProjectGeneratorTest {
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
       arg.sourceUnderTest = ImmutableSortedSet.of();
       arg.testType = Optional.absent();
+      arg.deps = Optional.absent();
 
       testRule = new DescribedRule(
           IosTestDescription.TYPE,
@@ -702,6 +711,7 @@ public class ProjectGeneratorTest {
             new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
+    arg.deps = Optional.absent();
 
     BuildRule rule = new DescribedRule(
         IosBinaryDescription.TYPE,
@@ -758,6 +768,7 @@ public class ProjectGeneratorTest {
             new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
         iosLibraryDescription.createBuildable(libParams, arg), libParams);
@@ -802,6 +813,7 @@ public class ProjectGeneratorTest {
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
         AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
     arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
         iosLibraryDescription.createBuildable(params, arg), params);
@@ -1202,6 +1214,7 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of();
     arg.srcs = ImmutableList.of();
     arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
 
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
@@ -1271,6 +1284,7 @@ public class ProjectGeneratorTest {
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of();
     arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
         iosLibraryDescription.createBuildable(params, arg), params);
@@ -1345,6 +1359,7 @@ public class ProjectGeneratorTest {
     arg.srcs = ImmutableList.of();
     arg.sourceUnderTest = sourceUnderTest;
     arg.testType = Optional.absent();
+    arg.deps = Optional.absent();
     return new DescribedRule(
         iosTestDescription.getBuildRuleType(),
         iosTestDescription.createBuildable(buildRuleParams, arg),
