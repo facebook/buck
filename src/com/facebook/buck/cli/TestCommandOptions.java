@@ -32,7 +32,10 @@ public class TestCommandOptions extends BuildCommandOptions {
 
   public static final String USE_RESULTS_CACHE = "use_results_cache";
 
-  @Option(name = "--all", usage = "Whether all of the tests should be run.")
+  @Option(name = "--all",
+          usage =
+              "Whether all of the tests should be run. " +
+              "If no targets are given, --all is implied")
   private boolean all = false;
 
   @Option(name = "--code-coverage", usage = "Whether code coverage information will be generated.")
@@ -85,7 +88,7 @@ public class TestCommandOptions extends BuildCommandOptions {
   }
 
   public boolean isRunAllTests() {
-    return all;
+    return all || getArguments().isEmpty();
   }
 
   @Nullable
