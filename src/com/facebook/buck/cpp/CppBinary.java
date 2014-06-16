@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -35,7 +36,12 @@ public class CppBinary extends AbstractNativeBuildable {
       BuildTarget buildTarget,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<SourcePath> srcs) {
-    super(buildTarget, deps, srcs, ImmutableSortedSet.<SourcePath>of());
+    super(
+        buildTarget,
+        deps,
+        srcs,
+        ImmutableSortedSet.<SourcePath>of(),
+        ImmutableMap.<SourcePath, String>of());
   }
 
   @Override
@@ -52,7 +58,8 @@ public class CppBinary extends AbstractNativeBuildable {
             /* srcs */ files,
             /* outputFile */ outputFile,
             /* shouldAddProjectRootToIncludePaths */ true,
-            /* includePaths */ ImmutableSortedSet.<Path>of()));
+            /* includePaths */ ImmutableSortedSet.<Path>of(),
+            /* commandLineArgs */ ImmutableList.<String>of()));
   }
 
   @Override

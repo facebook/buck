@@ -31,6 +31,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -38,6 +39,7 @@ import com.google.common.io.Files;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -53,16 +55,19 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> headers;
+  private final ImmutableMap<SourcePath, String> perSrcFileFlags;
 
   public AbstractNativeBuildable(
       BuildTarget buildTarget,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<SourcePath> srcs,
-      ImmutableSortedSet<SourcePath> headers) {
+      ImmutableSortedSet<SourcePath> headers,
+      ImmutableMap<SourcePath, String> perSrcFileFlags) {
     super(buildTarget);
     this.deps = Preconditions.checkNotNull(deps);
     this.headers = Preconditions.checkNotNull(headers);
     this.srcs = Preconditions.checkNotNull(srcs);
+    this.perSrcFileFlags = Preconditions.checkNotNull(perSrcFileFlags);
   }
 
   /** name of the C compiler to use */
@@ -86,6 +91,18 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
     if (createdDirectories.add(directory)) {
       steps.add(new MkdirStep(directory));
     }
+  }
+
+  private static Collection<String> commandLineArgsForFile(
+      SourcePath file,
+      ImmutableMap<SourcePath, String> perSrcFileFlags) {
+    String srcFileFlags = perSrcFileFlags.get(file);
+    if (srcFileFlags == null) {
+      return ImmutableList.of();
+    }
+    // TODO(user): Ugh, this is terrible. We need to pass in an array everywhere, then
+    // join it on space for Xcode (which takes a single string of course).
+    return ImmutableList.copyOf(srcFileFlags.split(" "));
   }
 
   @Override
@@ -119,7 +136,8 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
             /* srcs */ ImmutableSortedSet.of(src.resolve()),
             /* outputFile */ objectFile,
             /* shouldAddProjectRootToIncludePaths */ true,
-            /* includePaths */ ImmutableSortedSet.<Path>of()));
+            /* includePaths */ ImmutableSortedSet.<Path>of(),
+            /* commandLineArgs */ commandLineArgsForFile(src, perSrcFileFlags)));
       objectFiles.add(objectFile);
     }
 

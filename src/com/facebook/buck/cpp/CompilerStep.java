@@ -25,6 +25,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.util.Collection;
+
 /**
  * Call the given C/C++ compiler.
  *
@@ -39,20 +41,23 @@ public class CompilerStep extends ShellStep {
   private final Path outputFile;
   private final boolean shouldAddProjectRootToIncludePaths;
   private final ImmutableSortedSet<Path> includePaths;
+  private final ImmutableList<String> commandLineArgs;
 
-  CompilerStep(
+  public CompilerStep(
       String compiler,
       boolean shouldLink,
       ImmutableSortedSet<Path> srcs,
       Path outputFile,
       boolean shouldAddProjectRootToIncludePaths,
-      ImmutableSortedSet<Path> includePaths) {
+      ImmutableSortedSet<Path> includePaths,
+      Collection<String> commandLineArgs) {
     this.compiler = Preconditions.checkNotNull(compiler);
     this.shouldLink = shouldLink;
     this.srcs = Preconditions.checkNotNull(srcs);
     this.outputFile = Preconditions.checkNotNull(outputFile);
     this.shouldAddProjectRootToIncludePaths = shouldAddProjectRootToIncludePaths;
     this.includePaths = Preconditions.checkNotNull(includePaths);
+    this.commandLineArgs = ImmutableList.copyOf(commandLineArgs);
   }
 
   @Override
@@ -78,6 +83,8 @@ public class CompilerStep extends ShellStep {
       cmdBuilder.add("-I");
       cmdBuilder.add(includePath.toString());
     }
+
+    cmdBuilder.addAll(commandLineArgs);
 
     for (Path src : srcs) {
       cmdBuilder.add(src.toString());
