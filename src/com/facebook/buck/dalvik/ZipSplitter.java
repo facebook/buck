@@ -18,7 +18,7 @@ package com.facebook.buck.dalvik;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
 
 public interface ZipSplitter {
 
@@ -38,5 +38,5 @@ public interface ZipSplitter {
    * Writes the primary zip file and if necessary, the secondary zip files.
    * @return Secondary output zip files.
    */
-  public Collection<File> execute() throws IOException;
+  public List<File> execute() throws IOException;
 }

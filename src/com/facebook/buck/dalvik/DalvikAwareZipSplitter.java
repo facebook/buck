@@ -35,7 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -135,7 +135,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   }
 
   @Override
-  public Collection<File> execute() throws IOException {
+  public List<File> execute() throws IOException {
     ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
 
     // Start out by writing the primary zip and recording which entries were added to it.

@@ -49,8 +49,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -127,7 +127,8 @@ public class SplitZipStep implements Step {
 
   private final Optional<Path> primaryDexScenarioFile;
 
-  private boolean stepFinished;
+  @Nullable
+  private List<File> outputFiles;
 
   /**
    * @param inputPathsToSplit Input paths that would otherwise have been passed to a single dx --dex
@@ -165,7 +166,6 @@ public class SplitZipStep implements Step {
 
     this.primaryDexScenarioFile = dexSplitMode.getPrimaryDexScenarioFile()
         .transform(SourcePaths.TO_PATH);
-    this.stepFinished = false;
     Preconditions.checkArgument(
         proguardFullConfigFile.isPresent() == proguardMappingFile.isPresent(),
         "ProGuard configuration and mapping must both be present or absent.");
@@ -198,7 +198,7 @@ public class SplitZipStep implements Step {
 
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       File primaryJarFile = primaryJarPath.toFile();
-      Collection<File> secondaryZips = zipSplitterFactory.newInstance(
+      outputFiles = zipSplitterFactory.newInstance(
           projectFilesystem,
           inputJarPaths,
           primaryJarFile,
@@ -212,10 +212,9 @@ public class SplitZipStep implements Step {
 
       try (BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
           Charsets.UTF_8)) {
-        writeMetaList(secondaryMetaInfoWriter, secondaryZips, dexSplitMode.getDexStore());
+        writeMetaList(secondaryMetaInfoWriter, outputFiles, dexSplitMode.getDexStore());
       }
 
-      stepFinished = true;
       return 0;
     } catch (IOException e) {
       context.logError(e, "There was an error running SplitZipStep.");
@@ -344,12 +343,12 @@ public class SplitZipStep implements Step {
   @VisibleForTesting
   static void writeMetaList(
       BufferedWriter writer,
-      Collection<File> jarFiles,
+      List<File> jarFiles,
       DexStore dexStore) throws IOException {
-    for (File secondary : jarFiles) {
-      String filename = transformInputToDexOutput(secondary, dexStore);
-      String jarHash = hexSha1(secondary);
-      String containedClass = findAnyClass(secondary);
+    for (int i = 0; i < jarFiles.size(); i++) {
+      String filename = dexStore.fileNameForSecondary(i);
+      String jarHash = hexSha1(jarFiles.get(i));
+      String containedClass = findAnyClass(jarFiles.get(i));
       writer.write(String.format("%s %s %s",
           filename, jarHash, containedClass));
       writer.newLine();
@@ -395,24 +394,16 @@ public class SplitZipStep implements Step {
     return new Supplier<Multimap<Path, Path>>() {
       @Override
       public Multimap<Path, Path> get() {
-        Preconditions.checkState(stepFinished,
+        Preconditions.checkState(outputFiles != null,
             "SplitZipStep must complete successfully before listing its outputs.");
         ImmutableMultimap.Builder<Path, Path> builder = ImmutableMultimap.builder();
-        for (File inputFile : secondaryJarDir.toFile().listFiles()) {
-          Path outputDexPath = secondaryOutputDir.resolve(
-              transformInputToDexOutput(inputFile, dexSplitMode.getDexStore()));
-          builder.put(outputDexPath, Paths.get(inputFile.getPath()));
+        for (int i = 0; i < outputFiles.size(); i++) {
+          Path outputDexPath =
+              secondaryOutputDir.resolve(dexSplitMode.getDexStore().fileNameForSecondary(i));
+          builder.put(outputDexPath, Paths.get(outputFiles.get(i).getPath()));
         }
         return builder.build();
       }
     };
-  }
-
-  private static String transformInputToDexOutput(File file, DexStore dexStore) {
-    if (DexStore.XZ == dexStore) {
-      return Files.getNameWithoutExtension(file.getName()) + ".dex.jar.xz";
-    } else {
-      return Files.getNameWithoutExtension(file.getName()) + ".dex.jar";
-    }
   }
 }

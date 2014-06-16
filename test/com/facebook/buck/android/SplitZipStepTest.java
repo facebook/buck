@@ -91,7 +91,7 @@ public class SplitZipStepTest {
 
     // Note that we cannot test data[1] (the hash) because zip files change their hash each
     // time they are written due to timestamps written into the file.
-    assertEquals("test.dex.jar", data[0]);
+    assertEquals("secondary-1.dex.jar", data[0]);
     assertTrue(String.format("Unexpected class: %s", data[2]),
         fileToClassName.values().contains(data[2]));
   }

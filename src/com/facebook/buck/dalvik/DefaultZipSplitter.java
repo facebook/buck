@@ -29,8 +29,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 public class DefaultZipSplitter implements ZipSplitter {
@@ -105,7 +105,7 @@ public class DefaultZipSplitter implements ZipSplitter {
 
   // Not safe to execute multiple times.
   @Override
-  public Collection<File> execute() throws IOException {
+  public List<File> execute() throws IOException {
     ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
 
     // Compute the total size of the inputs so that we can figure out whether its safe
