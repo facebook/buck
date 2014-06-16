@@ -76,7 +76,6 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   public AbstractGenruleStep(
       BuildRuleType type,
-
       BuildTarget target,
       CommandString commandString,
       Set<BuildRule> depsToSubstituteInCommandString,
