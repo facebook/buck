@@ -62,7 +62,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         args.proguardConfig,
         javacOptions.build(),
         args.vmArgs.get(),
-        args.sourceUnderTest.get());
+        args.sourceUnderTest.get(),
+        args.resourcesRoot);
   }
 
   public class Arg extends JavaTestDescription.Arg {

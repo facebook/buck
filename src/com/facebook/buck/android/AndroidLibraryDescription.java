@@ -64,6 +64,7 @@ public class AndroidLibraryDescription implements Description<AndroidLibraryDesc
         args.exportedDeps.get(),
         args.providedDeps.get(),
         javacOptions.build(),
+        args.resourcesRoot,
         args.manifest);
 
   }

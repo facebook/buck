@@ -38,6 +38,7 @@ java_library(
     'JavacVersion.java',
     'JavacOptions.java',
     'JavaCompilerEnvironment.java',
+    'ResourcesRootPackageFinder.java',
   ],
   deps = [
     ':classhash',

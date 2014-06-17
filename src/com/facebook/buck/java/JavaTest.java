@@ -88,7 +88,8 @@ public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, 
       JavacOptions javacOptions,
       List<String> vmArgs,
       ImmutableSortedSet<BuildRule> deps,
-      ImmutableSet<BuildTarget> sourceUnderTest) {
+      ImmutableSet<BuildTarget> sourceUnderTest,
+      Optional<Path> resourcesRoot) {
     super(target,
         srcs,
         resources,
@@ -97,7 +98,8 @@ public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, 
         deps,
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        javacOptions);
+        javacOptions,
+        resourcesRoot);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.sourceTargetsUnderTest = Preconditions.checkNotNull(sourceUnderTest);
     this.labels = ImmutableSet.copyOf(labels);

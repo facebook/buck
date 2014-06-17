@@ -959,7 +959,8 @@ public class DefaultJavaLibraryTest {
         buildRuleParams.getDeps(),
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        JavacOptions.DEFAULTS) {
+        JavacOptions.DEFAULTS,
+        /* resourcesRoot */ Optional.<Path>absent()) {
       @Override
       public Sha1HashCode getAbiKey() {
         if (partialAbiHash == null) {
@@ -1406,6 +1407,7 @@ public class DefaultJavaLibraryTest {
           /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
           options.build(),
+          /* resourcesRoot */ Optional.<Path>absent(),
           /* manifestFile */ Optional.<Path>absent());
       return new DescribedRule(
           AndroidLibraryDescription.TYPE,

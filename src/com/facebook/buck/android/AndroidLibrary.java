@@ -61,6 +61,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnha
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       JavacOptions javacOptions,
+      Optional<Path> resourcesRoot,
       Optional<Path> manifestFile) {
     super(buildRuleParams.getBuildTarget(),
         srcs,
@@ -70,7 +71,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnha
         buildRuleParams.getDeps(),
         exportedDeps,
         providedDeps,
-        javacOptions);
+        javacOptions,
+        resourcesRoot);
     this.buildRuleParams = Preconditions.checkNotNull(buildRuleParams);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);

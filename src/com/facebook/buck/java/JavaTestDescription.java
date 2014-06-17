@@ -63,7 +63,8 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         javacOptions.build(),
         args.vmArgs.get(),
         params.getDeps(),
-        args.sourceUnderTest.get());
+        args.sourceUnderTest.get(),
+        args.resourcesRoot);
   }
 
   public static class Arg extends JavaLibraryDescription.Arg {

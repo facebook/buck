@@ -90,7 +90,8 @@ public class JavaTestBuilder {
           JavacOptions.DEFAULTS,
           vmArgs,
           deps.build(),
-          sourcesUnderTest.build());
+          sourcesUnderTest.build(),
+          Optional.<Path>absent());
     }
 
     public BuildRule build(BuildRuleResolver resolver) {

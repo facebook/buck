@@ -120,9 +120,15 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
   @Override
   public String findJavaPackageForPath(String pathRelativeToProjectRoot) {
     String folder = findJavaPackageFolderForPath(pathRelativeToProjectRoot);
-    if (!folder.isEmpty()) {
+    return findJavaPackageWithPackageFolder(pathRelativeToProjectRoot, folder);
+  }
+
+  public static String findJavaPackageWithPackageFolder(
+      String pathRelativeToProjectRoot,
+      String packageFolder) {
+    if (!packageFolder.isEmpty()) {
       // Strip the trailing slash and replace the remaining slashes with dots.
-      return folder.substring(0, folder.length() - 1).replace('/', '.');
+      return packageFolder.substring(0, packageFolder.length() - 1).replace('/', '.');
     } else {
       return "";
     }

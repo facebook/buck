@@ -81,7 +81,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         params.getDeps(),
         args.exportedDeps.get(),
         args.providedDeps.get(),
-        javacOptions.build());
+        javacOptions.build(),
+        args.resourcesRoot);
   }
 
   // TODO(natthu): Consider adding a validateArg() method on Description which gets called before
@@ -129,6 +130,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<ImmutableSet<String>> annotationProcessors;
     public Optional<Boolean> annotationProcessorOnly;
     public Optional<ImmutableList<String>> postprocessClassesCommands;
+    public Optional<Path> resourcesRoot;
 
     public Optional<ImmutableSortedSet<BuildRule>> providedDeps;
     public Optional<ImmutableSortedSet<BuildRule>> exportedDeps;

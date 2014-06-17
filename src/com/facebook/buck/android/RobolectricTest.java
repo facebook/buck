@@ -81,7 +81,8 @@ public class RobolectricTest extends JavaTest {
       Optional<Path> proguardConfig,
       JavacOptions javacOptions,
       List<String> vmArgs,
-      ImmutableSet<BuildTarget> sourceTargetsUnderTest) {
+      ImmutableSet<BuildTarget> sourceTargetsUnderTest,
+      Optional<Path> resourcesRoot) {
     super(buildRuleParams.getBuildTarget(),
         srcs,
         resources,
@@ -91,7 +92,8 @@ public class RobolectricTest extends JavaTest {
         javacOptions,
         vmArgs,
         buildRuleParams.getDeps(),
-        sourceTargetsUnderTest);
+        sourceTargetsUnderTest,
+        resourcesRoot);
     this.buildRuleParams = Preconditions.checkNotNull(buildRuleParams);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
   }

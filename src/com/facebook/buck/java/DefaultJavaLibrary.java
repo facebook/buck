@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
+import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -126,6 +127,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       declaredClasspathEntriesSupplier;
   private final BuildOutputInitializer<Data> buildOutputInitializer;
+  private final Optional<Path> resourcesRoot;
 
   // TODO(jacko): This really should be final, but we need to refactor how we get the
   // AndroidPlatformTarget first before it can be.
@@ -176,7 +178,8 @@ public class DefaultJavaLibrary extends AbstractBuildable
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
-      JavacOptions javacOptions) {
+      JavacOptions javacOptions,
+      Optional<Path> resourcesRoot) {
     super(target);
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
@@ -202,6 +205,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
     this.providedDeps = providedDeps;
     this.additionalClasspathEntries = ImmutableSet.of();
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.resourcesRoot = Preconditions.checkNotNull(resourcesRoot);
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
@@ -581,12 +585,16 @@ public class DefaultJavaLibrary extends AbstractBuildable
     addPostprocessClassesCommands(steps, postprocessClassesCommands, outputDirectory);
 
     // If there are resources, then link them to the appropriate place in the classes directory.
+    JavaPackageFinder finder = context.getJavaPackageFinder();
+    if (resourcesRoot.isPresent()) {
+      finder = new ResourcesRootPackageFinder(resourcesRoot.get(), finder);
+    }
     steps.add(
         new CopyResourcesStep(
             getBuildTarget(),
             resources,
             outputDirectory,
-            context.getJavaPackageFinder()));
+            finder));
 
     if (outputJar.isPresent()) {
       steps.add(new MakeCleanDirectoryStep(getOutputJarDirPath(getBuildTarget())));

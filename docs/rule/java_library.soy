@@ -47,10 +47,25 @@ of the compiled class files and resources.
   href="http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getResource(java.lang.String)"
   target="_blank">Class.getResource()</a>.
   <p>
-  <strong>Note:</strong> Buck uses the <code>src_roots</code> property in
-  {sp}<a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>
-  {sp}to help determine where resources should be placed within the generated JAR file.
+  <strong>Note:</strong> If <code>resources_root</code> isn't set, Buck uses
+  the <code>src_roots</code> property in <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a> to help
+  determine where resources should be placed within the generated JAR file.
   <p>
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources_root' /}
+  {param default : 'None' /}
+  {param desc}
+  The path that resources are resolved against. For example, if{sp}
+  <code>resources_root</code> is <code>"res"</code> and
+  {sp}<code>resources</code>{sp} contains the file{sp}
+  <code>"res/com/example/foo.txt"</code>, that file will end up as{sp}
+  <code>"com/example/foo.txt"</code> in the output JAR. This parameter
+  overrides the <code>src_roots</code> property in <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>.
   {/param}
 {/call}
 

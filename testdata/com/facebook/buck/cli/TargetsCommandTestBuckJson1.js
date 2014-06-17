@@ -14,6 +14,7 @@
   "proguardConfig" : null,
   "providedDeps": [],
   "resources" : [ ],
+  "resourcesRoot" : null,
   "source" : "6",
   "srcs" : [ ],
   "target" : "6",

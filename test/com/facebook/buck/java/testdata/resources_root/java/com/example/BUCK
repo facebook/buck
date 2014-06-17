@@ -1,0 +1,12 @@
+java_library(
+  name = 'example',
+  srcs = ['SupWorld.java'],
+  resources = ['res/com/another/supworld.txt'],
+  resources_root = "res",
+)
+
+java_binary(
+  name = 'SupWorld',
+  main_class = 'com.example.SupWorld',
+  deps = [':example'],
+)
