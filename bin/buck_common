@@ -263,7 +263,7 @@ else
 fi
 
 if [ -z "${MAX_BUCKD_RUNS}" ]; then
-  MAX_BUCKD_RUNS=20
+  MAX_BUCKD_RUNS=64
 fi
 
 # Test for running buck daemon.

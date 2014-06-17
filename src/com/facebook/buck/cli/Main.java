@@ -111,7 +111,7 @@ public final class Main {
 
   private static final int ARTIFACT_CACHE_TIMEOUT_IN_SECONDS = 15;
 
-  private static final TimeSpan DAEMON_SLAYER_TIMEOUT = new TimeSpan(45, TimeUnit.MINUTES);
+  private static final TimeSpan DAEMON_SLAYER_TIMEOUT = new TimeSpan(2, TimeUnit.HOURS);
 
   private static final TimeSpan SUPER_CONSOLE_REFRESH_RATE =
       new TimeSpan(100, TimeUnit.MILLISECONDS);
