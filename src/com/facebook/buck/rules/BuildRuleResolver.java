@@ -89,10 +89,4 @@ public class BuildRuleResolver {
     addToIndex(buildRule.getBuildTarget(), buildRule);
     return buildRule;
   }
-
-  public <T extends BuildRule> T buildAndAddToIndex(BuildRuleBuilder<T> builder) {
-    T buildRule = builder.build(this);
-    addToIndex(buildRule.getBuildTarget(), buildRule);
-    return buildRule;
-  }
 }
