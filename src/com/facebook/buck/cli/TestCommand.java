@@ -52,6 +52,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.result.groups.TestResultsGrouper;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
@@ -88,6 +89,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -465,6 +467,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       StepRunner stepRunner,
       final TestCommandOptions options)
       throws IOException, ExecutionException {
+
+    if (options.isUsingOneTimeOutputDirectories()) {
+      BuckConstant.setOneTimeTestSubdirectory(UUID.randomUUID().toString());
+    }
 
     ImmutableSet<JavaLibrary> rulesUnderTest;
     // If needed, we first run instrumentation on the class files.

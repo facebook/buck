@@ -72,6 +72,15 @@ public class TestCommandOptions extends BuildCommandOptions {
       usage = "Print tests that match the given command line options, but don't run them.")
   private boolean isDryRun;
 
+  @Option(
+      name = "--one-time-output",
+      usage =
+          "Put test-results in a unique, one-time output directory.  " +
+          "This allows multiple tests to be run in parallel without interfering with each other, " +
+          "but at the expense of being unable to use cached results.  " +
+          "WARNING: this is experimental, and only works for Java tests!")
+  private boolean isUsingOneTimeOutput;
+
   @AdditionalOptions
   private TargetDeviceOptions targetDeviceOptions;
 
@@ -124,6 +133,10 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Override
   public boolean isDebugEnabled() {
     return isDebugEnabled;
+  }
+
+  public boolean isUsingOneTimeOutputDirectories() {
+    return isUsingOneTimeOutput;
   }
 
   public boolean isIgnoreFailingDependencies() {

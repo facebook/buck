@@ -284,10 +284,19 @@ public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, 
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    return Paths.get(
-        BuckConstant.GEN_DIR,
-        getBuildTarget().getBaseNameWithSlash(),
-        String.format("__java_test_%s_output__", getBuildTarget().getShortName()));
+    List<String> pathsList = Lists.newArrayList();
+    pathsList.add(getBuildTarget().getBaseNameWithSlash());
+    pathsList.add(String.format("__java_test_%s_output__", getBuildTarget().getShortName()));
+
+    // Putting the one-time test-sub-directory below the usual directory has the nice property that
+    // doing a test run without "--one-time-output" will tidy up all the old one-time directories!
+    String subdir = BuckConstant.oneTimeTestSubdirectory;
+    if (subdir != null && !subdir.isEmpty()) {
+      pathsList.add(subdir);
+    }
+
+    String[] pathsArray = pathsList.toArray(new String[pathsList.size()]);
+    return Paths.get(BuckConstant.GEN_DIR, pathsArray);
   }
 
   private Path getPathToTmpDirectory() {

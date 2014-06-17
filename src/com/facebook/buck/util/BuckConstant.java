@@ -17,8 +17,12 @@
 package com.facebook.buck.util;
 
 
+import com.google.common.base.Preconditions;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import javax.annotation.Nullable;
 
 public class BuckConstant {
 
@@ -54,4 +58,24 @@ public class BuckConstant {
   public static final String BUILD_RULES_FILE_NAME = "BUCK";
 
   private BuckConstant() {}
+
+  /**
+   * An optional path-component for the directory where test-results are written.
+   * <p>
+   * See the --one-time-directory command line option in
+   * {@link com.facebook.buck.cli.TestCommandOptions} and {@link com.facebook.buck.cli.TestCommand}
+   * where this is used to give each parallel buck processes a unique test-results-directory
+   * thereby stopping the parallel processes from interfering with each others results.
+   * <p>
+   * TODO(#4473736) Create a long-term non-hacky solution to this problem!
+   */
+  @Nullable
+  public static String oneTimeTestSubdirectory = null;
+
+  public static void setOneTimeTestSubdirectory(String oneTimeTestSubdirectory) {
+    Preconditions.checkNotNull(oneTimeTestSubdirectory);
+    Preconditions.checkState(!oneTimeTestSubdirectory.isEmpty(), "cannot be an empty string");
+    BuckConstant.oneTimeTestSubdirectory = oneTimeTestSubdirectory;
+  }
+
 }

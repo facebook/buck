@@ -5,6 +5,10 @@ java_library(
   name = 'constants',
   srcs = CONSTANT_SRCS,
   visibility = [ 'PUBLIC' ],
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+  ],
 )
 
 
