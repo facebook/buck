@@ -62,19 +62,9 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
     if (object instanceof Collection) {
       for (Object element : (Iterable<?>) object) {
         // if any element failed, the entire collection fails
-        try {
-          T coercedElement = elementTypeCoercer.coerce(
-              buildRuleResolver, filesystem, pathRelativeToProjectRoot, element);
-          builder.add(coercedElement);
-        } catch (CoerceFailedException e) {
-          CoerceFailedException wrappingException = CoerceFailedException.simple(
-              pathRelativeToProjectRoot,
-              object,
-              getOutputClass(),
-              e.getMessage());
-          wrappingException.initCause(e);
-          throw wrappingException;
-        }
+        T coercedElement = elementTypeCoercer.coerce(
+            buildRuleResolver, filesystem, pathRelativeToProjectRoot, element);
+        builder.add(coercedElement);
       }
     } else {
       throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());

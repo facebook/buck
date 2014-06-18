@@ -32,7 +32,6 @@ import com.facebook.buck.rules.coercer.Pair;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,7 +53,7 @@ import java.util.Map;
 public class TypeCoercerTest {
   private final TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
   private final BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
-  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Test
   public void coercingStringMapOfIntListsShouldBeIdentity()
@@ -418,6 +417,40 @@ public class TypeCoercerTest {
 
     Object result = coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), input);
     assertEquals(expected, result);
+  }
+
+
+  @Test
+  public void invalidSourcePathShouldGiveSpecificErrorMsg() throws NoSuchFieldException {
+    Type type = TestFields.class.getField("setOfSourcePaths").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    Path baratheon = Paths.get("Baratheon.java");
+    Path lannister = Paths.get("Lannister.java");
+    Path stark = Paths.get("Stark.java");
+    Path targaryen = Paths.get("Targaryen.java");
+
+    ImmutableList<Path> input =
+        ImmutableList.of(baratheon, lannister, stark, targaryen);
+
+    for (Path p : input) {
+      if (!p.equals(baratheon)) {
+        filesystem.touch(p);
+      }
+    }
+
+    try {
+      coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), input);
+    } catch (CoerceFailedException e) {
+      String result = e.getMessage();
+      String expected = "Cannot coerce argument 'Baratheon.java'";
+      for (Path p : input) {
+        if (!p.equals(baratheon)) {
+          assertFalse(result.contains(p.toString()));
+        }
+      }
+      assertTrue(result.contains(expected));
+    }
   }
 
   @SuppressWarnings("unused")
