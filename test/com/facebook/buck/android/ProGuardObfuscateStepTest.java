@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -81,6 +82,39 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
     checkSdkConfig(context, ProGuardObfuscateStep.SdkProguardType.NONE, null);
 
     verifyAll();
+  }
+
+  @Test
+  public void testAdditionalLibraryJarsParameterFormatting() {
+    ExecutionContext context = createMock(ExecutionContext.class);
+    AndroidPlatformTarget target = createMock(AndroidPlatformTarget.class);
+    expect(context.getProjectDirectoryRoot()).andStubReturn(new File("root"));
+    expect(context.getAndroidPlatformTarget()).andStubReturn(target);
+    expect(target.getProguardConfig()).andStubReturn(Paths.get("sdk-default.pro"));
+    expect(target.getOptimizedProguardConfig()).andStubReturn(Paths.get("sdk-optimized.pro"));
+    expect(target.getBootclasspathEntries()).andStubReturn(ImmutableList.<Path>of());
+    replayAll();
+
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ProGuardObfuscateStep.create(
+        /* proguardJarOverride */ Optional.<Path>absent(),
+        Paths.get("generated/proguard.txt"),
+        /* customProguardConfigs */ ImmutableSet.<Path>of(),
+        ProGuardObfuscateStep.SdkProguardType.DEFAULT,
+        /* optimizationPasses */ Optional.<Integer>absent(),
+        /* inputAndOutputEntries */ ImmutableMap.<Path, Path>of(),
+        /* additionalLibraryJarsForProguard */ ImmutableSet.<Path>of(
+            Paths.get("myfavorite.jar"), Paths.get("another.jar")),
+        Paths.get("proguard-directory"),
+        new FakeBuildableContext(),
+        steps);
+    ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
+        (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(0);
+    ImmutableList<String> parameters = commandLineHelperStep.getParameters(context);
+    int libraryJarsArgIndex = parameters.indexOf("-libraryjars");
+    int libraryJarsValueIndex = parameters.indexOf("myfavorite.jar:another.jar");
+    assertNotEquals(-1, libraryJarsArgIndex);
+    assertEquals(libraryJarsValueIndex, libraryJarsArgIndex + 1);
   }
 
   private void checkSdkConfig(

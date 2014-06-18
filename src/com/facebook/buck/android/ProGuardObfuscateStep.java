@@ -268,7 +268,6 @@ public final class ProGuardObfuscateStep extends ShellStep {
     ImmutableList<String> getParameters(ExecutionContext context) {
       ImmutableList.Builder<String> args = ImmutableList.builder();
       AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-      Joiner pathJoiner = Joiner.on(':');
 
       // Relative paths should be interpreted relative to project directory root, not the
       // written parameters file.
@@ -307,7 +306,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Iterable<Path> bootclasspathPaths = androidPlatformTarget.getBootclasspathEntries();
       Iterable<Path> libraryJars = Iterables.concat(bootclasspathPaths,
           additionalLibraryJarsForProguard);
-      args.add("-libraryjars").add(pathJoiner.join(libraryJars));
+      args.add("-libraryjars").add(Joiner.on(':').join(libraryJars));
 
       // -dump
       args.add("-printmapping").add(getMappingTxt().toString());
