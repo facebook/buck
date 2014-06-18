@@ -33,7 +33,7 @@ public class AndroidResourceDetails {
    * An {@link Iterator} over this collection will reflect the order of the original list of
    * {@link AndroidResource}s that were specified.
    */
-  public final ImmutableSet<Path> resDirectories;
+  public final ImmutableList<Path> resDirectories;
 
   public final ImmutableSet<Path> whitelistedStringDirs;
 
@@ -48,7 +48,7 @@ public class AndroidResourceDetails {
    */
   @Beta
   public AndroidResourceDetails(ImmutableList<HasAndroidResourceDeps> androidResources) {
-    ImmutableSet.Builder<Path> resDirectoryBuilder = ImmutableSet.builder();
+    ImmutableList.Builder<Path> resDirectoryBuilder = ImmutableList.builder();
     ImmutableSet.Builder<String> rDotJavaPackageBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<Path> whitelistedStringDirsBuilder = ImmutableSet.builder();
     for (HasAndroidResourceDeps androidResource : androidResources) {

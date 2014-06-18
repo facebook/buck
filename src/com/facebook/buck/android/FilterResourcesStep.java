@@ -139,10 +139,6 @@ public class FilterResourcesStep implements Step {
     return nonEnglishStringFilesBuilder.build();
   }
 
-  public ImmutableSet<Path> getOutputResourceDirs() {
-    return inResDirToOutResDirMap.values();
-  }
-
   private int doExecute(ExecutionContext context) throws IOException {
     List<Predicate<Path>> pathPredicates = Lists.newArrayList();
 

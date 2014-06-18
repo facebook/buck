@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -30,7 +31,7 @@ public class IdentityResourcesProvider implements FilteredResourcesProvider {
   }
 
   @Override
-  public ImmutableSet<Path> getResDirectories() {
+  public ImmutableList<Path> getResDirectories() {
     return androidResourceDepsFinder.getAndroidResourceDetails().resDirectories;
   }
 

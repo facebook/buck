@@ -35,7 +35,7 @@ import java.util.Set;
 
 public class GenRDotJavaStep extends ShellStep {
 
-  private final Set<Path> resDirectories;
+  private final ImmutableList<Path> resDirectories;
   private final File androidManifest;
   private final Path genDirectoryPath;
   private final boolean isTempRDotJava;
@@ -61,12 +61,12 @@ public class GenRDotJavaStep extends ShellStep {
    * @param extraLibraryPackages
    */
   public GenRDotJavaStep(
-      Set<Path> resDirectories,
+      ImmutableList<Path> resDirectories,
       Path genDirectoryPath,
       String libraryPackage,
       boolean isTempRDotJava,
       Set<String> extraLibraryPackages) {
-    this.resDirectories = ImmutableSet.copyOf(resDirectories);
+    this.resDirectories = Preconditions.checkNotNull(resDirectories);
 
     File tmpDir = Files.createTempDir();
     tmpDir.deleteOnExit();

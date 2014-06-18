@@ -22,23 +22,21 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.util.Set;
 
 public class GenProGuardConfigStep extends ShellStep {
 
   private final Path androidManifestPath;
-  private final Set<Path> resDirectories;
+  private final ImmutableList<Path> resDirectories;
   private final Path proguardConfigurationPath;
 
   public GenProGuardConfigStep(
       Path androidManifestPath,
-      Set<Path> resDirectories,
+      ImmutableList<Path> resDirectories,
       Path proguardConfigurationPath) {
     this.androidManifestPath = Preconditions.checkNotNull(androidManifestPath);
-    this.resDirectories = ImmutableSet.copyOf(resDirectories);
+    this.resDirectories = Preconditions.checkNotNull(resDirectories);
     this.proguardConfigurationPath = Preconditions.checkNotNull(proguardConfigurationPath);
   }
 

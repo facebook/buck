@@ -691,7 +691,7 @@ public class AndroidBinary extends AbstractBuildable implements
       BuildContext context,
       final AndroidTransitiveDependencies transitiveDependencies,
       final AndroidDexTransitiveDependencies dexTransitiveDependencies,
-      ImmutableSet<Path> resDirectories,
+      ImmutableList<Path> resDirectories,
       BuildableContext buildableContext,
       ImmutableList.Builder<Step> steps) {
     // Execute preprocess_java_classes_binary, if appropriate.
@@ -903,7 +903,7 @@ public class AndroidBinary extends AbstractBuildable implements
       Set<Path> classpathEntriesToDex,
       Set<Path> depsProguardConfigs,
       ImmutableList.Builder<Step> steps,
-      Set<Path> resDirectories,
+      ImmutableList<Path> resDirectories,
       BuildableContext buildableContext) {
     final ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesMap =
         getTransitiveClasspathEntries();

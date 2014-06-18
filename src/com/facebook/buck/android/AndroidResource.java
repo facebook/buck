@@ -42,6 +42,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -49,7 +50,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -213,8 +213,9 @@ public class AndroidResource extends AbstractBuildable
     MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(pathToTextSymbolsDir);
 
     // Searching through the deps, find any additional res directories to pass to aapt.
-    Set<Path> resDirectories = ImmutableSet.copyOf(
-        Iterables.transform(transitiveAndroidResourceDeps.get(), GET_RES_FOR_RULE));
+    ImmutableList<Path> resDirectories = FluentIterable.from(transitiveAndroidResourceDeps.get())
+        .transform(GET_RES_FOR_RULE)
+        .toList();
 
     GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
         resDirectories,

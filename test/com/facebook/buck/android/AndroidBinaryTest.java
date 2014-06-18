@@ -118,7 +118,7 @@ public class AndroidBinaryTest {
         dexTransitiveDependencies.classpathEntriesToDex,
         transitiveDependencies.proguardConfigs,
         commands,
-        ImmutableSet.<Path>of(),
+        ImmutableList.<Path>of(),
         buildableContext);
 
     ImmutableSet<Path> expectedRecordedArtifacts = ImmutableSet.of(
@@ -137,7 +137,7 @@ public class AndroidBinaryTest {
         new GenProGuardConfigStep(
             Paths.get("buck-out/bin/java/src/com/facebook/base/" +
                 "__manifest_apk#aapt_package__/AndroidManifest.xml"),
-            ImmutableSet.<Path>of(),
+            ImmutableList.<Path>of(),
             Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"));
 
     Step expectedObfuscation =
@@ -378,20 +378,21 @@ public class AndroidBinaryTest {
         resolver,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSortedSet.of(keystoreRule));
-    Set<Path> resourceDirectories = ImmutableSet.of(Paths.get("one"), Paths.get("two"));
+    ImmutableList<Path> resourceDirectories = ImmutableList.of(Paths.get("one"), Paths.get("two"));
 
     assertTrue(buildRule.getFilteredResourcesProvider() instanceof ResourcesFilter);
-    FilterResourcesStep filterResourcesStep =
-        ((ResourcesFilter) buildRule.getFilteredResourcesProvider())
-            .createFilterResourcesStep(
-                resourceDirectories,
-                /* whitelistedStringsDir */ ImmutableSet.<Path>of());
+    ImmutableList.Builder<Path> filteredDirs = ImmutableList.builder();
+    ((ResourcesFilter) buildRule.getFilteredResourcesProvider())
+        .createFilterResourcesStep(
+            resourceDirectories,
+                /* whitelistedStringsDir */ ImmutableSet.<Path>of(),
+            filteredDirs);
 
     assertEquals(
-        ImmutableSet.of(
+        ImmutableList.of(
             Paths.get("buck-out/bin/__filtered__target#resources_filter__/0"),
             Paths.get("buck-out/bin/__filtered__target#resources_filter__/1")),
-        filterResourcesStep.getOutputResourceDirs());
+        filteredDirs.build());
   }
 
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(

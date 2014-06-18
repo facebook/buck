@@ -23,7 +23,7 @@ import com.facebook.buck.util.XmlDomParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 import org.w3c.dom.Document;
@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -77,7 +76,7 @@ import java.util.Set;
 public class GenStringSourceMapStep extends AbstractExecutionStep {
 
   private final Path rDotJavaSrcDir;
-  private final Set<Path> resDirectories;
+  private final ImmutableList<Path> resDirectories;
   private final Path destinationPath;
 
   private HashMap<String, Integer> mapResNameToResId = Maps.newHashMap();
@@ -93,11 +92,11 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
    */
   public GenStringSourceMapStep(
       Path rDotJavaSrcDir,
-      Set<Path> resDirectories,
+      ImmutableList<Path> resDirectories,
       Path destinationPath) {
     super("build_string_source_map");
     this.rDotJavaSrcDir = Preconditions.checkNotNull(rDotJavaSrcDir);
-    this.resDirectories = ImmutableSet.copyOf(resDirectories);
+    this.resDirectories = ImmutableList.copyOf(resDirectories);
     this.destinationPath = Preconditions.checkNotNull(destinationPath);
   }
 

@@ -170,7 +170,7 @@ public class UberRDotJava extends AbstractBuildable implements
     AndroidResourceDetails androidResourceDetails =
         androidResourceDepsFinder.getAndroidResourceDetails();
     ImmutableSet<String> rDotJavaPackages = androidResourceDetails.rDotJavaPackages;
-    ImmutableSet<Path> resDirectories = filteredResourcesProvider.getResDirectories();
+    ImmutableList<Path> resDirectories = filteredResourcesProvider.getResDirectories();
 
     if (!resDirectories.isEmpty()) {
       generateAndCompileRDotJavaFiles(resDirectories, rDotJavaPackages, steps, buildableContext);
@@ -253,7 +253,7 @@ public class UberRDotJava extends AbstractBuildable implements
    * will be written to {@link #getPathToCompiledRDotJavaFiles()}.
    */
   private void generateAndCompileRDotJavaFiles(
-      Set<Path> resDirectories,
+      ImmutableList<Path> resDirectories,
       Set<String> rDotJavaPackages,
       ImmutableList.Builder<Step> steps,
       final BuildableContext buildableContext) {
