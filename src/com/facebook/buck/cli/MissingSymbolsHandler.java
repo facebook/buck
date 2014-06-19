@@ -181,7 +181,6 @@ public class MissingSymbolsHandler {
    * Format a target string so that the path to the BUCK file its in is easily copyable.
    */
   private String formatTarget(BuildTarget buildTarget) {
-    String targetString = buildTarget.toString();
     return String.format("%s (:%s)",
         buildTarget.getBuildFilePath(),
         buildTarget.getShortNameOnly());
