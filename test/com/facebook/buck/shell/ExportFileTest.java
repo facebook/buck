@@ -31,7 +31,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.JavaPackageFinder;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;

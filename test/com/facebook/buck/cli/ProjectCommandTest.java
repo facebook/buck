@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
@@ -238,7 +239,8 @@ public class ProjectCommandTest {
               BuckEventBusFactory.newInstance(),
               BuckTestConstant.PYTHON_INTERPRETER,
               Platform.detect(),
-              ImmutableMap.copyOf(System.getenv())));
+              ImmutableMap.copyOf(System.getenv()),
+              new FakeJavaPackageFinder()));
     }
 
     @Override

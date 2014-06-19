@@ -22,11 +22,11 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidDirectoryResolver;
@@ -43,10 +44,10 @@ import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.base.Joiner;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,11 +55,11 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 
 /**
  * Outputs targets that own a specified list of files.
@@ -239,7 +240,8 @@ public class AuditOwnerCommandTest {
         eventBus,
         buckConfig.getPythonInterpreter(),
         Platform.detect(),
-        ImmutableMap.copyOf(System.getenv())));
+        ImmutableMap.copyOf(System.getenv()),
+        new FakeJavaPackageFinder()));
   }
 
   @Test

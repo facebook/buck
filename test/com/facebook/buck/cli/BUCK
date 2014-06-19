@@ -48,6 +48,7 @@ java_library(
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/event:testutil',
+    '//test/com/facebook/buck/java:testutil',
     '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/util:testutil',

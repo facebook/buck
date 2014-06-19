@@ -23,7 +23,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavaLibraryDescription;
@@ -39,12 +38,12 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -258,17 +257,9 @@ public class GenruleTest {
   }
 
   private ExecutionContext newEmptyExecutionContext(Platform platform) {
-    return ExecutionContext.builder()
+    return TestExecutionContext.newBuilder()
         .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
-        .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
-          @Override
-          public Path resolve(Path path) {
-            return path;
-          }
-        })
-        .setEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(platform)
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
   }
 
@@ -514,13 +505,8 @@ public class GenruleTest {
         .build()
         .getBuildable();
 
-    ExecutionContext context = ExecutionContext.builder()
-        .setConsole(new TestConsole())
-        .setProjectFilesystem(new ProjectFilesystem(new File(".")))
+    ExecutionContext context = TestExecutionContext.newBuilder()
         .setAndroidPlatformTarget(Optional.of(android))
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

@@ -31,14 +31,12 @@ java_library(
     'AnnotationProcessingDataDecorator.java',
     'AnnotationProcessingDataDecorators.java',
     'AnnotationProcessingParams.java',
-    'DefaultJavaPackageFinder.java',
     'HasClasspathEntries.java',
     'HasJavaAbi.java',
     'JavaLibrary.java',
     'JavacVersion.java',
     'JavacOptions.java',
     'JavaCompilerEnvironment.java',
-    'ResourcesRootPackageFinder.java',
   ],
   deps = [
     ':classhash',
@@ -51,6 +49,20 @@ java_library(
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'packagefinder',
+  srcs = [
+    'DefaultJavaPackageFinder.java',
+    'JavaPackageFinder.java',
+    'ResourcesRootPackageFinder.java',
+  ],
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/util:exceptions',
   ],
   visibility = ['PUBLIC'],
 )
@@ -76,6 +88,7 @@ java_library(
   ],
   deps = [
     ':classhash',
+    ':packagefinder',
     ':steps',
     ':support',
     '//lib:guava',
@@ -117,6 +130,7 @@ java_library(
     'ZipEntryJavaFileObject.java',
   ],
   deps = [
+    ':packagefinder',
     ':support',
     '//lib:guava',
     '//lib:jsr305',
@@ -149,6 +163,7 @@ java_library(
     'JavaSymbolFinder.java',
   ],
   deps = [
+    ':packagefinder',
     ':rules',
     ':support',
     '//lib:guava',

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.command.Project;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.CachingBuildEngine;
@@ -118,7 +119,8 @@ public class CleanCommandTest extends EasyMockSupport {
         BuckEventBusFactory.newInstance(),
         createMock(Parser.class),
         Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()));
+        ImmutableMap.copyOf(System.getenv()),
+        new FakeJavaPackageFinder());
     return new CleanCommand(params);
   }
 

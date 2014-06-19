@@ -15,7 +15,6 @@
  */
 
 package com.facebook.buck.step;
-import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -24,11 +23,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
-import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.ProjectFilesystem;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Uninterruptibles;
 
@@ -48,14 +43,9 @@ public class DefaultStepRunnerTest {
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
-    ExecutionContext context = ExecutionContext.builder()
-        .setProjectFilesystem(createMock(ProjectFilesystem.class))
-        .setConsole(new TestConsole())
+    ExecutionContext context = TestExecutionContext.newBuilder()
         .setEventBus(eventBus)
-        .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
-
     DefaultStepRunner runner = new DefaultStepRunner(context, 3);
     runner.runStep(passingStep);
     try {
@@ -89,15 +79,7 @@ public class DefaultStepRunnerTest {
     // step will fail so quickly, the result of the 5000ms step will not be observed).
     steps.add(new SleepingStep(5000, 1));
 
-    ExecutionContext context = ExecutionContext.builder()
-        .setProjectFilesystem(createMock(ProjectFilesystem.class))
-        .setConsole(new TestConsole())
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
-        .build();
-
-    DefaultStepRunner runner = new DefaultStepRunner(context, 3);
+    DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance(), 3);
     runner.runStepsInParallelAndWait(steps.build());
 
     // Success if the test timeout is not reached.

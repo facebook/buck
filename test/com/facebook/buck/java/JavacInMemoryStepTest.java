@@ -19,20 +19,14 @@ package com.facebook.buck.java;
 import static com.facebook.buck.java.JavaCompilerEnvironment.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.testutil.IdentityPathAbsolutifier;
-import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.ProjectFilesystem;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
+import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.easymock.EasyMockSupport;
@@ -64,18 +58,7 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
 
   @Test
   public void testJavacCommand() {
-    ExecutionContext context = ExecutionContext.builder()
-        .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
-          @Override
-          public Function<Path, Path> getAbsolutifier() {
-            return IdentityPathAbsolutifier.getIdentityAbsolutifier();
-          }
-        })
-        .setConsole(new TestConsole())
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     JavacInMemoryStep firstOrder = createTestStep(BuildDependencies.FIRST_ORDER_ONLY);
     JavacInMemoryStep warn = createTestStep(BuildDependencies.WARN_ON_TRANSITIVE);

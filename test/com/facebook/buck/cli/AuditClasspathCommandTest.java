@@ -23,6 +23,7 @@ import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.Keystore;
@@ -94,7 +95,8 @@ public class AuditClasspathCommandTest {
         eventBus,
         BuckTestConstant.PYTHON_INTERPRETER,
         Platform.detect(),
-        ImmutableMap.copyOf(System.getenv())));
+        ImmutableMap.copyOf(System.getenv()),
+        new FakeJavaPackageFinder()));
   }
 
   private PartialGraph createGraphFromBuildRules(BuildRuleResolver ruleResolver,

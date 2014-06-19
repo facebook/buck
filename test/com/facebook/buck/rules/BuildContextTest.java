@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.BuckEventBusFactory.CapturingLogEventListener;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;

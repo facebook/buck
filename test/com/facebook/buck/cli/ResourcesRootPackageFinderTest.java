@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.facebook.buck.java.ResourcesRootPackageFinder;
-import com.facebook.buck.rules.FakeJavaPackageFinder;
+import com.facebook.buck.java.FakeJavaPackageFinder;
 
 import org.junit.Test;
 

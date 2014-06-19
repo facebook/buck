@@ -243,6 +243,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
         .setEventBus(eventBus)
         .setPlatform(platform)
         .setEnvironment(environment)
+        .setJavaPackageFinder(commandRunnerParams.getJavaPackageFinder())
         .build();
   }
 

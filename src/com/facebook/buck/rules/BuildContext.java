@@ -20,6 +20,7 @@ import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;

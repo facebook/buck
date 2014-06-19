@@ -38,7 +38,7 @@ import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ExportDependencies;
-import com.facebook.buck.rules.JavaPackageFinder;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.shell.ShellStep;

@@ -17,6 +17,7 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -36,24 +37,24 @@ public class TestExecutionContext {
   public static ExecutionContext.Builder newBuilder() {
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
-        .setProjectFilesystem(new ProjectFilesystem(new File(".")))
+        .setProjectFilesystem(
+            new ProjectFilesystem(new File(".")) {
+              @Override
+              public Path resolve(Path path) {
+                return path;
+              }
+              @Override
+              public Function<Path, Path> getAbsolutifier() {
+                return IdentityPathAbsolutifier.getIdentityAbsolutifier();
+              }
+            })
         .setEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()));
+        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
+        .setJavaPackageFinder(new FakeJavaPackageFinder());
   }
 
   public static ExecutionContext newInstance() {
-    return newBuilder()
-    .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
-      @Override
-      public Path resolve(Path path) {
-        return path;
-      }
-      @Override
-      public Function<Path, Path> getAbsolutifier() {
-        return IdentityPathAbsolutifier.getIdentityAbsolutifier();
-      }
-    })
-    .build();
+    return newBuilder().build();
   }
 }

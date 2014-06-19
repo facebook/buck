@@ -20,6 +20,7 @@ import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -51,6 +52,7 @@ public class ExecutionContext {
   private final BuckEventBus eventBus;
   private final Platform platform;
   private final ImmutableMap<String, String> environment;
+  private final JavaPackageFinder javaPackageFinder;
 
   private ExecutionContext(
       ProjectFilesystem projectFilesystem,
@@ -63,7 +65,8 @@ public class ExecutionContext {
       boolean isDebugEnabled,
       BuckEventBus eventBus,
       Platform platform,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      JavaPackageFinder javaPackageFinder) {
     this.verbosity = Preconditions.checkNotNull(console).getVerbosity();
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.console = Preconditions.checkNotNull(console);
@@ -77,6 +80,7 @@ public class ExecutionContext {
     this.eventBus = Preconditions.checkNotNull(eventBus);
     this.platform = Preconditions.checkNotNull(platform);
     this.environment = Preconditions.checkNotNull(environment);
+    this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
   }
 
   /**
@@ -95,7 +99,8 @@ public class ExecutionContext {
         isDebugEnabled,
         eventBus,
         platform,
-        this.environment);
+        this.environment,
+        this.javaPackageFinder);
   }
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
@@ -140,6 +145,10 @@ public class ExecutionContext {
 
   public Platform getPlatform() {
     return platform;
+  }
+
+  public JavaPackageFinder getJavaPackageFinder() {
+    return javaPackageFinder;
   }
 
   /**
@@ -218,6 +227,7 @@ public class ExecutionContext {
     @Nullable private BuckEventBus eventBus = null;
     @Nullable private Platform platform = null;
     @Nullable private ImmutableMap<String, String> environment = null;
+    @Nullable private JavaPackageFinder javaPackageFinder = null;
 
     private Builder() {}
 
@@ -233,7 +243,8 @@ public class ExecutionContext {
           isDebugEnabled,
           eventBus,
           platform,
-          environment);
+          environment,
+          javaPackageFinder);
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
@@ -248,6 +259,7 @@ public class ExecutionContext {
       setEventBus(executionContext.getBuckEventBus());
       setPlatform(executionContext.getPlatform());
       setEnvironment(executionContext.getEnvironment());
+      setJavaPackageFinder(executionContext.getJavaPackageFinder());
       return this;
     }
 
@@ -306,6 +318,11 @@ public class ExecutionContext {
 
     public Builder setEnvironment(ImmutableMap<String, String> environment) {
       this.environment = Preconditions.checkNotNull(environment);
+      return this;
+    }
+
+    public Builder setJavaPackageFinder(JavaPackageFinder javaPackageFinder) {
+      this.javaPackageFinder = javaPackageFinder;
       return this;
     }
   }

@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.cli.TargetsCommand.TargetsCommandPredicate;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestBuilder;
@@ -138,7 +139,8 @@ public class TargetsCommandTest {
             eventBus,
             BuckTestConstant.PYTHON_INTERPRETER,
             Platform.detect(),
-            ImmutableMap.copyOf(System.getenv())));
+            ImmutableMap.copyOf(System.getenv()),
+            new FakeJavaPackageFinder()));
   }
 
   @Test

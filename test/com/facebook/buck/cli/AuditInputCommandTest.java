@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -82,7 +83,8 @@ public class AuditInputCommandTest {
         eventBus,
         BuckTestConstant.PYTHON_INTERPRETER,
         Platform.detect(),
-        ImmutableMap.copyOf(System.getenv())));
+        ImmutableMap.copyOf(System.getenv()),
+        new FakeJavaPackageFinder()));
   }
 
   private static final String EXPECTED_JSON = Joiner.on("").join(

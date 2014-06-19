@@ -54,7 +54,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
-import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -68,6 +67,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -80,7 +80,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -1363,13 +1362,10 @@ public class DefaultJavaLibraryTest {
           buildContext, new FakeBuildableContext());
       JavacInMemoryStep javacCommand = lastJavacCommand(steps);
 
-      executionContext = ExecutionContext.builder()
+      executionContext = TestExecutionContext.newBuilder()
           .setProjectFilesystem(projectFilesystem)
           .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
           .setDebugEnabled(true)
-          .setEventBus(BuckEventBusFactory.newInstance())
-          .setPlatform(Platform.detect())
-          .setEnvironment(ImmutableMap.copyOf(System.getenv()))
           .build();
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,

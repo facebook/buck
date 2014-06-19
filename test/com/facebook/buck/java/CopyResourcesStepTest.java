@@ -19,7 +19,6 @@ import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;

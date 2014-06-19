@@ -18,6 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.java.FakeJavaPackageFinder;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -35,7 +37,7 @@ import java.io.File;
 
 public class CommandRunnerParamsForTesting extends CommandRunnerParams {
 
-  public CommandRunnerParamsForTesting(
+  private CommandRunnerParamsForTesting(
       Console console,
       Repository repository,
       AndroidDirectoryResolver androidDirectoryResolver,
@@ -43,7 +45,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
       BuckEventBus eventBus,
       String pythonInterpreter,
       Platform platform,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      JavaPackageFinder javaPackageFinder) {
     super(console,
         repository,
         androidDirectoryResolver,
@@ -51,7 +54,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
         eventBus,
         pythonInterpreter,
         platform,
-        environment);
+        environment,
+        javaPackageFinder);
   }
 
   // Admittedly, this class has no additional methods beyond its superclass today, but we will
@@ -74,6 +78,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
     private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     private Platform platform = Platform.detect();
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
+    private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
 
     public CommandRunnerParamsForTesting build() {
       Repository repository = new Repository(
@@ -89,7 +94,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
           eventBus,
           pythonInterpreter,
           platform,
-          environment);
+          environment,
+          javaPackageFinder);
     }
 
     public Builder setConsole(Console console) {

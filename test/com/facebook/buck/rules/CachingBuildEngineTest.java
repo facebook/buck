@@ -36,6 +36,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.JavaLibraryDescription;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;

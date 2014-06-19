@@ -17,11 +17,12 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.rules.Repository;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -53,6 +54,7 @@ class CommandRunnerParams {
   private final Platform platform;
   private final AndroidDirectoryResolver androidDirectoryResolver;
   private final Repository repository;
+  private final JavaPackageFinder javaPackageFinder;
 
   @VisibleForTesting
   CommandRunnerParams(
@@ -63,7 +65,8 @@ class CommandRunnerParams {
       BuckEventBus eventBus,
       String pythonInterpreter,
       Platform platform,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      JavaPackageFinder javaPackageFinder) {
     this(
         console,
         repository,
@@ -83,7 +86,8 @@ class CommandRunnerParams {
               }
             }),
         platform,
-        environment);
+        environment,
+        javaPackageFinder);
   }
 
   public CommandRunnerParams(
@@ -95,7 +99,8 @@ class CommandRunnerParams {
       BuckEventBus eventBus,
       Parser parser,
       Platform platform,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      JavaPackageFinder javaPackageFinder) {
     this.console = Preconditions.checkNotNull(console);
     this.repository = Preconditions.checkNotNull(repository);
     this.buildEngine = Preconditions.checkNotNull(buildEngine);
@@ -105,6 +110,7 @@ class CommandRunnerParams {
     this.platform = Preconditions.checkNotNull(platform);
     this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
     this.environment = Preconditions.checkNotNull(environment);
+    this.javaPackageFinder = javaPackageFinder;
   }
 
   public Ansi getAnsi() {
@@ -149,5 +155,9 @@ class CommandRunnerParams {
 
   public ImmutableMap<String, String> getEnvironment() {
     return environment;
+  }
+
+  public JavaPackageFinder getJavaPackageFinder() {
+    return javaPackageFinder;
   }
 }

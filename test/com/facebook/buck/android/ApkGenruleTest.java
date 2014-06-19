@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -43,18 +44,16 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildable;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.InstallableApk;
-import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.testutil.IdentityPathAbsolutifier;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
@@ -66,7 +65,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -262,22 +260,8 @@ public class ApkGenruleTest {
   }
 
   private ExecutionContext newEmptyExecutionContext() {
-    return ExecutionContext.builder()
-        .setConsole(new TestConsole())
-        .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
-          @Override
-          public Function<Path, Path> getAbsolutifier() {
-            return IdentityPathAbsolutifier.getIdentityAbsolutifier();
-          }
-
-          @Override
-          public Path resolve(Path path) {
-            return path;
-          }
-        })
-        .setEventBus(BuckEventBusFactory.newInstance())
+    return TestExecutionContext.newBuilder()
         .setPlatform(Platform.LINUX) // Fix platform to Linux to use bash in genrule.
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
   }
 }

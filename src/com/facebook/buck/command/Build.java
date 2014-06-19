@@ -33,7 +33,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Builder;
-import com.facebook.buck.rules.JavaPackageFinder;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
@@ -118,6 +118,7 @@ public class Build implements Closeable {
         .setEventBus(eventBus)
         .setPlatform(platform)
         .setEnvironment(environment)
+        .setJavaPackageFinder(javaPackageFinder)
         .build();
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.buildEngine = Preconditions.checkNotNull(buildEngine);

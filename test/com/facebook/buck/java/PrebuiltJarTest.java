@@ -83,7 +83,7 @@ public class PrebuiltJarTest {
     // Execute the CalculateAbiStep.
     Step calculateAbiStep = buildSteps.get(0);
     assertTrue(calculateAbiStep instanceof PrebuiltJar.CalculateAbiStep);
-    ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = calculateAbiStep.execute(executionContext);
     assertEquals("Step should execute successfully.", 0, exitCode);
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,

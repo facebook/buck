@@ -18,18 +18,15 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.easymock.EasyMock;
@@ -150,13 +147,9 @@ public class JUnitStepTest {
 
     TestConsole console = new TestConsole();
     console.setVerbosity(Verbosity.ALL);
-    ExecutionContext executionContext = ExecutionContext.builder()
-        .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
         .setConsole(console)
         .setDebugEnabled(true)
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .build();
 
     List<String> observedArgs = junit.getShellCommand(executionContext);

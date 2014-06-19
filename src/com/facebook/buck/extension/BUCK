@@ -4,6 +4,7 @@ java_library(
   deps = [
     '//lib:guava',
     '//lib:jsr305',
+    '//src/com/facebook/buck/java:packagefinder',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',
     '//src/com/facebook/buck/java:support',
