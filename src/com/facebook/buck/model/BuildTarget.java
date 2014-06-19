@@ -126,7 +126,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   }
 
   public Path getBuildFilePath() {
-    return Paths.get(getBaseNameWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME);
+    return Paths.get(getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME);
   }
 
   /**

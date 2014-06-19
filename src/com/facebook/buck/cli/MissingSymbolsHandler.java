@@ -27,7 +27,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -183,12 +182,9 @@ public class MissingSymbolsHandler {
    */
   private String formatTarget(BuildTarget buildTarget) {
     String targetString = buildTarget.toString();
-    int colonIndex = targetString.indexOf(":");
-    return String.format(
-        "%s/%s (%s)",
-        targetString.substring(2, colonIndex),
-        BuckConstant.BUILD_RULES_FILE_NAME,
-        targetString.substring(colonIndex));
+    return String.format("%s (:%s)",
+        buildTarget.getBuildFilePath(),
+        buildTarget.getShortNameOnly());
   }
 
   private void print(String line) {

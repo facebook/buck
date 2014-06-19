@@ -174,7 +174,7 @@ public class BuildRuleFactoryParamsTest {
       assertEquals(Optional.absent(), params.getOptionalIntegerAttribute("some_value"));
       fail("Should have failed to parse a string as an integer");
     } catch (Exception e) {
-      assertEquals("Expected a integer for some_value in /src/com/facebook/BUCK but was yolo",
+      assertEquals("Expected a integer for some_value in src/com/facebook/BUCK but was yolo",
           e.getMessage());
     }
   }
@@ -197,7 +197,7 @@ public class BuildRuleFactoryParamsTest {
       assertEquals(Optional.absent(), params.getOptionalIntegerAttribute("some_value"));
       fail("Should have failed to parse a string as an integer");
     } catch (Exception e) {
-      assertEquals("Expected a integer for some_value in /src/com/facebook/BUCK but was 3.33",
+      assertEquals("Expected a integer for some_value in src/com/facebook/BUCK but was 3.33",
           e.getMessage());
     }
   }
