@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
@@ -49,6 +50,7 @@ import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -280,5 +282,26 @@ public class ChromeTraceBuildListenerTest {
         resultMap.get(15).getArgs());
 
     verify(context);
+  }
+
+  @Test
+  public void testOutputFailed() throws IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+
+    ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
+        projectFilesystem,
+        /* tracesToKeep */ 3);
+    try {
+      tmpDir.getRoot().setReadOnly();
+      listener.outputTrace(new BuildId("BUILD_ID"));
+      fail("Expected an exception.");
+    } catch (HumanReadableException e) {
+      assertEquals(
+          "Unable to write trace file: java.nio.file.AccessDeniedException: " +
+              projectFilesystem.resolve(BuckConstant.BUCK_OUTPUT_PATH),
+          e.getMessage());
+    }  finally {
+      tmpDir.getRoot().setWritable(true);
+    }
   }
 }

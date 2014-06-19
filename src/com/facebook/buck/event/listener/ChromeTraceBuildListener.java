@@ -132,7 +132,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
       deleteOldTraces();
     } catch (IOException e) {
-      throw new HumanReadableException("Unable to write trace file.");
+      throw new HumanReadableException(e, "Unable to write trace file: " + e);
     }
   }
 
