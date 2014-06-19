@@ -16,7 +16,6 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
@@ -174,7 +173,7 @@ public class JavacInMemoryStep extends JavacStep {
           Diagnostic.Kind kind = diagnostic.getKind();
           if (kind == Diagnostic.Kind.ERROR) {
             ++numErrors;
-            handleMissingSymbolError(diagnostic, context.getBuckEventBus());
+            handleMissingSymbolError(diagnostic, context);
           } else if (kind == Diagnostic.Kind.WARNING || kind == Diagnostic.Kind.MANDATORY_WARNING) {
             ++numWarnings;
           }
@@ -222,13 +221,16 @@ public class JavacInMemoryStep extends JavacStep {
 
   private void handleMissingSymbolError(
       Diagnostic<? extends JavaFileObject> diagnostic,
-      BuckEventBus eventBus) {
+      ExecutionContext context) {
     if (!invokingRule.isPresent()) {
       // This compile isn't associated with any rule, so don't bother reporting missing symbols.
       return;
     }
+    JavacErrorParser javacErrorParser = new JavacErrorParser(
+        context.getProjectFilesystem(),
+        context.getJavaPackageFinder());
     Optional<String> symbol =
-        JavacErrorParser.getMissingSymbolFromCompilerError(diagnostic.toString());
+        javacErrorParser.getMissingSymbolFromCompilerError(diagnostic.toString());
     if (!symbol.isPresent()) {
       // This error wasn't related to a missing symbol, as far as we can tell.
       return;
@@ -237,6 +239,6 @@ public class JavacInMemoryStep extends JavacStep {
         invokingRule.get(),
         symbol.get(),
         MissingSymbolEvent.SymbolType.Java);
-    eventBus.post(event);
+    context.getBuckEventBus().post(event);
   }
 }

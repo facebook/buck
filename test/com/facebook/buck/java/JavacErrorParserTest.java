@@ -18,11 +18,27 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 public class JavacErrorParserTest {
+
+  ProjectFilesystem projectFilesystem;
+  JavacErrorParser javacErrorParser;
+
+  @Before
+  public void setUp() {
+    projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    JavaPackageFinder javaPackageFinder = DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+        ImmutableSet.of("/src/"));
+    javacErrorParser = new JavacErrorParser(projectFilesystem, javaPackageFinder);
+  }
 
   @Test
   public void shouldFindSymbolFromCannotFindSymbolError() {
@@ -36,7 +52,44 @@ public class JavacErrorParserTest {
     assertEquals(
         "JavacErrorParser didn't find the right symbol.",
         Optional.of("com.facebook.buck.util.BuckConstant"),
-        JavacErrorParser.getMissingSymbolFromCompilerError(error));
+        javacErrorParser.getMissingSymbolFromCompilerError(error));
+  }
+
+  @Test
+  public void shouldFindSymbolFromCannotFindSymbolInCurrentPackageError() {
+    String error =
+        projectFilesystem.getRootPath().toAbsolutePath().normalize() +
+        "/src/com/facebook/buck/java/DefaultJavaLibrary.java:277: error: cannot find symbol\n" +
+        "      final JavacStep javacStep;\n" +
+        "            ^\n" +
+        "  symbol:   class JavacStep\n" +
+        "  location: class com.facebook.buck.java.DefaultJavaLibrary";
+
+    assertEquals(
+        "JavacErrorParser didn't find the right symbol.",
+        Optional.of("com.facebook.buck.java.JavacStep"),
+        javacErrorParser.getMissingSymbolFromCompilerError(error));
+
+    String errorWithVariable = error.replace("class JavacStep", "variable JavacStep");
+    assertEquals(
+        "JavacErrorParser didn't find the right symbol for a 'variable' error.",
+        Optional.of("com.facebook.buck.java.JavacStep"),
+        javacErrorParser.getMissingSymbolFromCompilerError(errorWithVariable));
+  }
+
+  @Test
+  public void shouldFindSymbolFromPackageDoesNotExistInCurrentPackageError() {
+    String error =
+        projectFilesystem.getRootPath().toAbsolutePath().normalize() +
+        "/src/com/facebook/Foo.java:60: error: package BarBaz does not exist\n" +
+        "      BarBaz.doStuff(),\n" +
+        "           ^\n";
+
+
+    assertEquals(
+        "JavacErrorParser didn't find the right symbol.",
+        Optional.of("com.facebook.BarBaz"),
+        javacErrorParser.getMissingSymbolFromCompilerError(error));
   }
 
   @Test
@@ -49,7 +102,7 @@ public class JavacErrorParserTest {
       assertEquals(
           "JavacErrorParser didn't find the right symbol.",
           Optional.of("com.facebook.buck.step.ExecutionContext"),
-          JavacErrorParser.getMissingSymbolFromCompilerError(error));
+          javacErrorParser.getMissingSymbolFromCompilerError(error));
 
   }
 
@@ -63,7 +116,7 @@ public class JavacErrorParserTest {
     assertEquals(
         "JavacErrorParser didn't find the right symbol.",
         Optional.of("com.facebook.buck.rules.BuildableProperties.Kind"),
-        JavacErrorParser.getMissingSymbolFromCompilerError(error));
+        javacErrorParser.getMissingSymbolFromCompilerError(error));
   }
 
   @Test
@@ -77,6 +130,6 @@ public class JavacErrorParserTest {
     assertEquals(
         "JavacErrorParser didn't find the right symbol.",
         Optional.of("com.facebook.buck.rules.Description"),
-        JavacErrorParser.getMissingSymbolFromCompilerError(error));
+        javacErrorParser.getMissingSymbolFromCompilerError(error));
   }
 }

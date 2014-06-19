@@ -16,13 +16,20 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JavacErrorParser {
+
+  private final ProjectFilesystem filesystem;
+  private final JavaPackageFinder javaPackageFinder;
 
   private static ImmutableList<Pattern> onePartPatterns = ImmutableList.of(
       Pattern.compile(
@@ -36,9 +43,30 @@ public class JavacErrorParser {
       Pattern.compile(
           "\\s*symbol:\\s+class (?<class>\\S+)\n\\s*location:\\s+package (?<package>\\S+)"));
 
-  private JavacErrorParser() { }
+  // These patterns match missing symbols that live in the current package.  Usually, that means one
+  // java package that's split up into multiple java_library rules, which depend on each other.
+  // Classes in the same package can reference symbols without an import or fully qualified name,
+  // which means we have to infer the package name from the filepath in the error.
+  // NOTE: Regular missing symbols in other packages will often generate compiler errors that match
+  // these patterns, because imported symbols are used unqualified after the import. That means we
+  // might go looking for an imported symbol in the current package (wrong) in addition to the
+  // package it was imported from (right). That's ultimately fine, because the symbol can't exist in
+  // both places (without causing another compiler error).
+  private static ImmutableList<Pattern> localPackagePatterns = ImmutableList.of(
+      Pattern.compile(
+          "^(?<file>.+):[0-9]+: error: cannot find symbol\n" +
+          ".*\n" +
+          ".*\n" +
+          "\\s*symbol:\\s+(class|variable) (?<class>\\S+)"),
+      Pattern.compile(
+          "^(?<file>.+):[0-9]+: error: package (?<class>\\S+) does not exist"));
 
-  public static Optional<String> getMissingSymbolFromCompilerError(String error) {
+  public JavacErrorParser(ProjectFilesystem filesystem, JavaPackageFinder javaPackageFinder) {
+    this.filesystem = Preconditions.checkNotNull(filesystem);
+    this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
+  }
+
+  public Optional<String> getMissingSymbolFromCompilerError(String error) {
     for (Pattern pattern: onePartPatterns) {
       Matcher matcher = pattern.matcher(error);
       if (matcher.find()) {
@@ -53,6 +81,22 @@ public class JavacErrorParser {
       }
     }
 
+    for (Pattern pattern: localPackagePatterns) {
+      Matcher matcher = pattern.matcher(error);
+      if (matcher.find()) {
+        return getMissingSymbolInLocalPackage(matcher);
+      }
+    }
+
     return Optional.absent();
+  }
+
+  private Optional<String> getMissingSymbolInLocalPackage(Matcher matcher) {
+    String fileName = matcher.group("file");
+    String className = matcher.group("class");
+    Path repoRoot = filesystem.getRootPath().toAbsolutePath().normalize();
+    Path relativePath = repoRoot.relativize(Paths.get(fileName));
+    String packageName = javaPackageFinder.findJavaPackageForPath(relativePath.toString());
+    return Optional.of(packageName + "." + className);
   }
 }
