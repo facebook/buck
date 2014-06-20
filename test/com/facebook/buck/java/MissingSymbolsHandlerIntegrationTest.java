@@ -104,6 +104,7 @@ public class MissingSymbolsHandlerIntegrationTest {
 
     String expectedDependencyOutput =
         "java/com/example/b/BUCK (:b) is missing deps:\n" +
+        "    ':moreb',\n" +
         "    '//java/com/example/a:a',\n";
 
     assertThat(
@@ -125,6 +126,7 @@ public class MissingSymbolsHandlerIntegrationTest {
 
     String expectedDependencyOutput =
         "java/com/example/b/BUCK (:test) is missing deps:\n" +
+        "    ':moreb',\n" +
         "    '//java/com/example/a:a',\n";
 
     assertThat(

@@ -16,11 +16,8 @@
 
 package com.example.b;
 
-import com.example.a.A;
-
-public class B {
-  public void goodbyeWorld() {
-    new A().helloWorld();
-    MoreB.conquerWorld();
+public class MoreB {
+  private MoreB() { }
+  public static void conquerWorld() {
   }
 }

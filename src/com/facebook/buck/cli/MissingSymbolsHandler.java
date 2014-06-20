@@ -167,13 +167,25 @@ public class MissingSymbolsHandler {
   private void printNeededDependencies(Collection<MissingSymbolEvent> missingSymbolEvents) {
     ImmutableSetMultimap<BuildTarget, BuildTarget> neededDependencies =
         getNeededDependencies(missingSymbolEvents);
-    Set<BuildTarget> sortedTargets = ImmutableSortedSet.copyOf(neededDependencies.keySet());
-    for (BuildTarget target : sortedTargets) {
+    ImmutableSortedSet.Builder<String> samePackageDeps = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<String> otherPackageDeps = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget target : neededDependencies.keySet()) {
       print(formatTarget(target) + " is missing deps:");
       Set<BuildTarget> sortedDeps = ImmutableSortedSet.copyOf(neededDependencies.get(target));
       for (BuildTarget neededDep : sortedDeps) {
-        print("    '" + neededDep + "',");
+        if (neededDep.getBaseName().equals(target.getBaseName())) {
+          samePackageDeps.add(":" + neededDep.getShortNameOnly());
+        } else {
+          otherPackageDeps.add(neededDep.toString());
+        }
       }
+    }
+    String format = "    '%s',";
+    for (String dep : samePackageDeps.build()) {
+      print(String.format(format, dep));
+    }
+    for (String dep : otherPackageDeps.build()) {
+      print(String.format(format, dep));
     }
   }
 
