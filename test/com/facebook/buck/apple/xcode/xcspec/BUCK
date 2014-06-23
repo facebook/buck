@@ -1,0 +1,13 @@
+java_test(
+  name = 'xcspec',
+  srcs = glob(['*.java']),
+  resources = glob(['testdata/**']),
+  source_under_test = [
+    '//src/com/facebook/buck/apple/xcode/xcspec:xcspec',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/apple/xcode/xcspec:xcspec',
+  ]
+)
