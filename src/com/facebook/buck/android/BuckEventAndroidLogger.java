@@ -16,12 +16,13 @@
 
 package com.facebook.buck.android;
 
-import com.android.common.annotations.NonNull;
 import com.android.common.utils.ILogger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.event.ThrowableLogEvent;
 import com.google.common.base.Strings;
+
+import javax.annotation.Nullable;
 
 /**
  * Implementation of {@link ILogger} which posts to an {@link BuckEventBus}
@@ -35,22 +36,27 @@ public class BuckEventAndroidLogger implements ILogger {
   }
 
   @Override
-  public void error(Throwable throwable, String errorFormat, Object... args) {
-    eventBus.post(ThrowableLogEvent.create(throwable, Strings.nullToEmpty(errorFormat), args));
+  public void error(@Nullable Throwable throwable, @Nullable String errorFormat, Object... args) {
+    String message = Strings.nullToEmpty(errorFormat);
+    if (throwable == null) {
+      eventBus.post(LogEvent.severe(message, args));
+    } else {
+      eventBus.post(ThrowableLogEvent.create(throwable, message, args));
+    }
   }
 
   @Override
-  public void warning(@NonNull String msgFormat, Object... args) {
+  public void warning(String msgFormat, Object... args) {
     eventBus.post(LogEvent.warning(msgFormat, args));
   }
 
   @Override
-  public void info(@NonNull String msgFormat, Object... args) {
+  public void info(String msgFormat, Object... args) {
     eventBus.post(LogEvent.info(msgFormat, args));
   }
 
   @Override
-  public void verbose(@NonNull String msgFormat, Object... args) {
+  public void verbose(String msgFormat, Object... args) {
     eventBus.post(LogEvent.info(msgFormat, args));
   }
 }
