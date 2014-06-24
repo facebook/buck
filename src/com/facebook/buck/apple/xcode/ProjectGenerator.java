@@ -103,6 +103,9 @@ import org.w3c.dom.Element;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -179,6 +182,13 @@ public class ProjectGenerator {
       System.getProperty(
           "buck.path_override_for_asset_catalog_build_phase",
           null);
+
+  private static final FileAttribute<?> READ_ONLY_FILE_ATTRIBUTE =
+    PosixFilePermissions.asFileAttribute(
+      ImmutableSet.<PosixFilePermission>of(
+          PosixFilePermission.OWNER_READ,
+          PosixFilePermission.GROUP_READ,
+          PosixFilePermission.OTHERS_READ));
 
   private final PartialGraph partialGraph;
   private final ProjectFilesystem projectFilesystem;
@@ -413,7 +423,10 @@ public class ProjectGenerator {
       Path headerMapFile = projectPath.resolve(headerMapName);
       headerMaps.add(headerMapFile);
       projectFilesystem.mkdirs(projectPath);
-      projectFilesystem.writeBytesToPath(headerMap.getBytes(), headerMapFile);
+      projectFilesystem.writeBytesToPath(
+          headerMap.getBytes(),
+          headerMapFile,
+          READ_ONLY_FILE_ATTRIBUTE);
     }
 
     project.getTargets().add(target);
@@ -710,7 +723,10 @@ public class ProjectGenerator {
             mangledBuildTargetName(buildTarget) + "-" + configuration.getName() + ".xcconfig");
         String serializedConfiguration = serializeBuildConfiguration(
             configuration, searchPaths, extraConfigs);
-        projectFilesystem.writeContentsToPath(serializedConfiguration, configurationFilePath);
+        projectFilesystem.writeContentsToPath(
+            serializedConfiguration,
+            configurationFilePath,
+            READ_ONLY_FILE_ATTRIBUTE);
 
         PBXFileReference fileReference =
             configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
@@ -1182,7 +1198,10 @@ public class ProjectGenerator {
     } else {
       contentsToWrite = unsignedXmlProject;
     }
-    projectFilesystem.writeContentsToPath(contentsToWrite, serializedProject);
+    projectFilesystem.writeContentsToPath(
+        contentsToWrite,
+        serializedProject,
+        READ_ONLY_FILE_ATTRIBUTE);
     return xcodeprojDir;
   }
 
@@ -1220,7 +1239,10 @@ public class ProjectGenerator {
       DOMSource source = new DOMSource(doc);
       StreamResult result = new StreamResult(outputStream);
       transformer.transform(source, result);
-      projectFilesystem.writeContentsToPath(outputStream.toString(), serializedWorkspace);
+      projectFilesystem.writeContentsToPath(
+          outputStream.toString(),
+          serializedWorkspace,
+          READ_ONLY_FILE_ATTRIBUTE);
     } catch (TransformerException e) {
       throw new RuntimeException(e);
     }

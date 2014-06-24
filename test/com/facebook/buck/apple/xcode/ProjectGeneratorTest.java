@@ -92,6 +92,9 @@ import org.w3c.dom.Document;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -109,6 +112,7 @@ public class ProjectGeneratorTest {
       OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
 
   private ProjectFilesystem projectFilesystem;
+  private FakeProjectFilesystem fakeProjectFilesystem;
   private ExecutionContext executionContext;
   private IosLibraryDescription iosLibraryDescription;
   private IosTestDescription iosTestDescription;
@@ -119,7 +123,8 @@ public class ProjectGeneratorTest {
 
   @Before
   public void setUp() throws IOException {
-    projectFilesystem = new FakeProjectFilesystem();
+    fakeProjectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem = fakeProjectFilesystem;
     executionContext = TestExecutionContext.newInstance();
     iosLibraryDescription = new IosLibraryDescription();
     iosTestDescription = new IosTestDescription();
@@ -1304,6 +1309,32 @@ public class ProjectGeneratorTest {
       target.getBuildConfigurationList().getBuildConfigurationsByName().asMap().keySet();
     assertEquals(ImmutableSet.of("Debug"), projectConfigurationNames);
     assertEquals(projectConfigurationNames, generatedSignedSourceTargetNames);
+  }
+
+  @Test
+  public void testGeneratedProjectIsReadOnly() throws IOException {
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<BuildRule>of(), ImmutableSet.<BuildTarget>of());
+
+    projectGenerator.createXcodeProjects();
+
+    ImmutableSet<PosixFilePermission> permissions =
+      ImmutableSet.of(
+          PosixFilePermission.OWNER_READ,
+          PosixFilePermission.GROUP_READ,
+          PosixFilePermission.OTHERS_READ);
+    FileAttribute<?> expectedAttribute = PosixFilePermissions.asFileAttribute(permissions);
+    // This is lame; Java's PosixFilePermissions class doesn't
+    // implement equals() or hashCode() in its FileAttribute anonymous
+    // class (http://tinyurl.com/nznhfhy).  So instead of comparing
+    // the sets, we have to pull out the attribute and check its value
+    // for equality.
+    FileAttribute<?> actualAttribute =
+      Iterables.getOnlyElement(
+          fakeProjectFilesystem.getFileAttributesAtPath(OUTPUT_PROJECT_FILE_PATH));
+    assertEquals(
+        expectedAttribute.value(),
+        actualAttribute.value());
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
