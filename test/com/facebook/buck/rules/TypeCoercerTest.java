@@ -443,7 +443,7 @@ public class TypeCoercerTest {
       coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), input);
     } catch (CoerceFailedException e) {
       String result = e.getMessage();
-      String expected = "Cannot coerce argument 'Baratheon.java'";
+      String expected = "cannot coerce 'Baratheon.java'";
       for (Path p : input) {
         if (!p.equals(baratheon)) {
           assertFalse(result.contains(p.toString()));

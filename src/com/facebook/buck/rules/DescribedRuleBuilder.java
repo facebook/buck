@@ -100,9 +100,6 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
 
   @Override
   public DescribedRule build(BuildRuleResolver ruleResolver) {
-    ImmutableSortedSet.Builder<BuildRule> declaredRules = expandRules(ruleResolver, declaredDeps);
-    ImmutableSortedSet.Builder<BuildRule> extraRules = expandRules(ruleResolver, extraDeps);
-
     // Populate the constructor arg
     T arg = description.createUnpopulatedConstructorArg();
     ConstructorArgMarshaller inspector =
@@ -116,6 +113,9 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
     } catch (ConstructorArgMarshalException error) {
       throw new HumanReadableException("%s: %s", target, error.getMessage());
     }
+
+    ImmutableSortedSet.Builder<BuildRule> declaredRules = expandRules(ruleResolver, declaredDeps);
+    ImmutableSortedSet.Builder<BuildRule> extraRules = expandRules(ruleResolver, extraDeps);
 
     // Create the buildable using just the declared deps
     BuildRuleParams buildRuleParams = new BuildRuleParams(

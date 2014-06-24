@@ -39,11 +39,6 @@ public class TargetNodeToBuildRuleTransformer<T extends ConstructorArg> {
   }
 
   public DescribedRule transform(BuildRuleResolver ruleResolver) throws NoSuchBuildTargetException {
-    ImmutableSortedSet.Builder<BuildRule> declaredRules =
-        expandRules(ruleResolver, targetNode.getDeclaredDeps());
-    ImmutableSortedSet.Builder<BuildRule> extraRules =
-        expandRules(ruleResolver, targetNode.getExtraDeps());
-
     BuildRuleFactoryParams ruleFactoryParams = targetNode.getRuleFactoryParams();
     Description<T> description = targetNode.getDescription();
     ConstructorArgMarshaller inspector =
@@ -58,6 +53,11 @@ public class TargetNodeToBuildRuleTransformer<T extends ConstructorArg> {
     } catch (ConstructorArgMarshalException e) {
       throw new HumanReadableException("%s: %s", targetNode.getBuildTarget(), e.getMessage());
     }
+
+    ImmutableSortedSet.Builder<BuildRule> declaredRules =
+        expandRules(ruleResolver, targetNode.getDeclaredDeps());
+    ImmutableSortedSet.Builder<BuildRule> extraRules =
+        expandRules(ruleResolver, targetNode.getExtraDeps());
 
     // The params used for the Buildable only contain the declared parameters. However, the deps of
     // the rule include not only those, but also any that were picked up through the deps declared
