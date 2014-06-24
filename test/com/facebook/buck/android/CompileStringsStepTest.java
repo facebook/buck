@@ -41,6 +41,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -343,7 +344,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     }
 
     @Override
-    public void writeBytesToPath(byte[] content, Path path) {
+    public void writeBytesToPath(byte[] content, Path path, FileAttribute<?>... attrs) {
       fileContentsMapBuilder.put(path.getFileName().toString(), content);
     }
 

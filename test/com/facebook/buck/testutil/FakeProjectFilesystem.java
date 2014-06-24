@@ -25,6 +25,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
@@ -44,6 +45,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.Collection;
@@ -104,10 +106,12 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       };
 
   private final Map<Path, byte[]> fileContents;
+  private final Map<Path, ImmutableSet<FileAttribute<?>>> fileAttributes;
 
   public FakeProjectFilesystem() {
     super(Paths.get("."));
     fileContents = Maps.newHashMap();
+    fileAttributes = Maps.newHashMap();
 
     // Generally, tests don't care whether files exist.
     ignoreValidityOfPaths = true;
@@ -119,6 +123,21 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   private void rmFile(Path path) {
     fileContents.remove(path.normalize());
+    fileAttributes.remove(path.normalize());
+  }
+
+  public ImmutableSet<FileAttribute<?>> getFileAttributesAtPath(Path path) {
+    return fileAttributes.get(path);
+  }
+
+  @Override
+  public <A extends BasicFileAttributes> A readAttributes(
+      Path pathRelativeToProjectRoot,
+      Class<A> type,
+      LinkOption... options) {
+    // Converting FileAttribute to BasicFileAttributes sub-interfaces is
+    // really annoying. Let's just not do it.
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -166,7 +185,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   public void rmdir(Path path) {
     Path normalizedPath = path.normalize();
     for (Iterator<Path> iterator = fileContents.keySet().iterator(); iterator.hasNext();) {
-      if (iterator.next().startsWith(normalizedPath)) {
+      Path subPath = iterator.next();
+      if (subPath.startsWith(normalizedPath)) {
+        fileAttributes.remove(subPath.normalize());
         iterator.remove();
       }
     }
@@ -181,27 +202,39 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public void writeLinesToPath(Iterable<String> lines, Path path) {
+  public void writeLinesToPath(
+      Iterable<String> lines,
+      Path path,
+      FileAttribute<?>... attrs) {
     StringBuilder builder = new StringBuilder();
     if (!Iterables.isEmpty(lines)) {
       Joiner.on('\n').appendTo(builder, lines);
       builder.append('\n');
     }
-    writeContentsToPath(builder.toString(), path);
+    writeContentsToPath(builder.toString(), path, attrs);
   }
 
   @Override
-  public void writeContentsToPath(String contents, Path path) {
-    writeBytesToPath(contents.getBytes(Charsets.UTF_8), path);
+  public void writeContentsToPath(
+      String contents,
+      Path path,
+      FileAttribute<?>... attrs) {
+    writeBytesToPath(contents.getBytes(Charsets.UTF_8), path, attrs);
   }
 
   @Override
-  public void writeBytesToPath(byte[] bytes, Path path) {
+  public void writeBytesToPath(
+      byte[] bytes,
+      Path path,
+      FileAttribute<?>... attrs) {
     fileContents.put(path.normalize(), Preconditions.checkNotNull(bytes));
+    fileAttributes.put(path.normalize(), ImmutableSet.copyOf(attrs));
   }
 
   @Override
-  public OutputStream newFileOutputStream(Path pathRelativeToProjectRoot)
+  public OutputStream newFileOutputStream(
+      Path pathRelativeToProjectRoot,
+      FileAttribute<?>... attrs)
     throws IOException {
     // This is a hard API to make testable. We need a hook for when
     // the OutputStream is closed in order to update fileContents.  Do
