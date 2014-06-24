@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.AppleSource;
@@ -88,12 +89,27 @@ public class TypeCoercerTest {
   }
 
   @Test
+  public void coercingSortedSetsShouldThrowOnDuplicates()
+      throws CoerceFailedException, NoSuchFieldException {
+    Type type = TestFields.class.getField("sortedSetOfStrings").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    ImmutableList<String> input = ImmutableList.of("a", "a");
+    try {
+      coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), input);
+      fail();
+    } catch (CoerceFailedException e) {
+      assertEquals("duplicate element \"a\"", e.getMessage());
+    }
+  }
+
+  @Test
   public void coercingSortedSetsShouldActuallyCreateSortedSets()
       throws CoerceFailedException, NoSuchFieldException {
     Type type = TestFields.class.getField("sortedSetOfStrings").getGenericType();
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
-    ImmutableList<String> input = ImmutableList.of("a", "c", "b", "a");
+    ImmutableList<String> input = ImmutableList.of("c", "a", "d", "b");
     Object result = coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), input);
     ImmutableSortedSet<String> expectedResult = ImmutableSortedSet.copyOf(input);
     assertEquals(expectedResult, result);

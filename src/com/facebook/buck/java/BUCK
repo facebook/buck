@@ -81,7 +81,6 @@ java_library(
     'JavaLibraryRules.java',
     'JavaTest.java',
     'JavaTestDescription.java',
-    'JavaTestDescription.java',
     'Keystore.java',
     'KeystoreDescription.java',
     'PrebuiltJar.java',

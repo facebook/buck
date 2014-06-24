@@ -67,7 +67,6 @@ java_library(
     'ConstructorArg.java',
     'ConstructorArgMarshaller.java',
     'ConstructorArgMarshalException.java',
-    'BuildRuleBuilderParams.java',
     'DefaultBuildableParams.java',
     'DefaultOnDiskBuildInfo.java',
     'Description.java',
