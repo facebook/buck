@@ -89,7 +89,7 @@ class ParamInfo implements Comparable<ParamInfo> {
       BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
       Object arg,
-      BuildRuleFactoryParams params) {
+      BuildRuleFactoryParams params) throws ParamInfoException {
     set(ruleResolver, filesystem, arg, params.getNullableRawAttribute(name));
   }
 
@@ -105,7 +105,7 @@ class ParamInfo implements Comparable<ParamInfo> {
       BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
       Object dto,
-      @Nullable Object value) {
+      @Nullable Object value) throws ParamInfoException {
     Object result;
 
     if (value == null) {
@@ -116,20 +116,13 @@ class ParamInfo implements Comparable<ParamInfo> {
       } else if (Boolean.class.isAssignableFrom(typeCoercer.getOutputClass())) {
         result = false;
       } else {
-        throw new IllegalArgumentException(String.format(
-            "Field '%s %s' of object '%s' cannot be null. Build file can be found in %s.",
-            typeCoercer.getOutputClass(),
-            name,
-            dto,
-            pathRelativeToProjectRoot));
+        throw new ParamInfoException(name, "field cannot be null");
       }
     } else {
       try {
         result = typeCoercer.coerce(ruleResolver, filesystem, pathRelativeToProjectRoot, value);
       } catch (CoerceFailedException e) {
-        throw new RuntimeException(
-            String.format("Failed to coerce field named: %s, %s", name, e.getMessage()),
-            e);
+        throw new ParamInfoException(name, e.getMessage(), e);
       }
       if (isOptional) {
         result = Optional.of(result);

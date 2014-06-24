@@ -16,23 +16,25 @@
 
 package com.facebook.buck.rules.coercer;
 
-import java.nio.file.Path;
-
 @SuppressWarnings("serial")
 public class CoerceFailedException extends Exception {
-  public CoerceFailedException(String format, Object... args) {
-    super(String.format(format, args));
+
+  public CoerceFailedException(String message) {
+    super(message);
   }
 
-  public static CoerceFailedException simple(
-      Path pathRelativeToProjectRoot, Object object, Class<?> resultType) {
-    return new CoerceFailedException("%s: Cannot coerce argument '%s' to %s",
-        pathRelativeToProjectRoot, object, resultType);
+  public CoerceFailedException(String message, Throwable cause) {
+    super(message, cause);
   }
 
-  public static CoerceFailedException simple(
-      Path pathRelativeToProjectRoot, Object object, Class<?> resultType, String detail) {
-    return new CoerceFailedException("%s: Cannot coerce argument '%s' to %s, %s",
-        pathRelativeToProjectRoot, object, resultType, detail);
+  public static CoerceFailedException simple(Object object, Class<?> resultType) {
+    return new CoerceFailedException(
+        String.format("cannot coerce '%s' to %s", object, resultType));
   }
+
+  public static CoerceFailedException simple(Object object, Class<?> resultType, String detail) {
+    return new CoerceFailedException(
+        String.format("cannot coerce '%s' to %s, %s", object, resultType, detail));
+  }
+
 }

@@ -104,7 +104,7 @@ public class ParamInfoTest {
   }
 
   @Test
-  public void fieldSetForOptionalFields() throws NoSuchFieldException {
+  public void fieldSetForOptionalFields() throws NoSuchFieldException, ParamInfoException {
     @SuppressWarnings("unused")
     class Example {
       public Optional<String> field;

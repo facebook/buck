@@ -55,7 +55,9 @@ public class EnumTypeCoercer<E extends Enum<E>> extends LeafTypeCoercer<E> {
         }
       }
     }
-    throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass(),
+    throw CoerceFailedException.simple(
+        object,
+        getOutputClass(),
         "Allowed values: " + Arrays.toString(enumClass.getEnumConstants()));
   }
 }

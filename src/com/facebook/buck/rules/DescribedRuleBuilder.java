@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -106,11 +107,15 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
     T arg = description.createUnpopulatedConstructorArg();
     ConstructorArgMarshaller inspector =
         new ConstructorArgMarshaller(Paths.get(target.getBasePath()));
-    inspector.populate(
-        ruleResolver,
-        ruleFactoryParams.getProjectFilesystem(),
-        ruleFactoryParams,
-        arg);
+    try {
+      inspector.populate(
+          ruleResolver,
+          ruleFactoryParams.getProjectFilesystem(),
+          ruleFactoryParams,
+          arg);
+    } catch (ConstructorArgMarshalException error) {
+      throw new HumanReadableException("%s: %s", target, error.getMessage());
+    }
 
     // Create the buildable using just the declared deps
     BuildRuleParams buildRuleParams = new BuildRuleParams(

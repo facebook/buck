@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,11 +49,15 @@ public class TargetNodeToBuildRuleTransformer<T extends ConstructorArg> {
     ConstructorArgMarshaller inspector =
         new ConstructorArgMarshaller(Paths.get(targetNode.getBuildTarget().getBasePath()));
     T arg = description.createUnpopulatedConstructorArg();
-    inspector.populate(
-        ruleResolver,
-        ruleFactoryParams.getProjectFilesystem(),
-        ruleFactoryParams,
-        arg);
+    try {
+      inspector.populate(
+          ruleResolver,
+          ruleFactoryParams.getProjectFilesystem(),
+          ruleFactoryParams,
+          arg);
+    } catch (ConstructorArgMarshalException e) {
+      throw new HumanReadableException("%s: %s", targetNode.getBuildTarget(), e.getMessage());
+    }
 
     // The params used for the Buildable only contain the declared parameters. However, the deps of
     // the rule include not only those, but also any that were picked up through the deps declared

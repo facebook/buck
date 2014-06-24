@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -129,7 +130,11 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
             Maps.<String, Object>newHashMap(),
             new BuildTargetParser(filesystem),
             target);
-    new ConstructorArgMarshaller(Paths.get("."))
-        .populate(resolver, filesystem, factoryParams, arg, true);
+    try {
+      new ConstructorArgMarshaller(Paths.get("."))
+          .populate(resolver, filesystem, factoryParams, arg, true);
+    } catch (ConstructorArgMarshalException error) {
+      throw Throwables.propagate(error);
+    }
   }
 }

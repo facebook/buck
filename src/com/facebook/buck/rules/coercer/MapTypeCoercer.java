@@ -83,7 +83,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
           builder.put(key, value);
         } catch (CoerceFailedException e) {
           CoerceFailedException wrappedException =
-              CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+              CoerceFailedException.simple(object, getOutputClass());
           wrappedException.initCause(e);
           throw wrappedException;
         }
@@ -91,7 +91,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
 
       return builder.build();
     } else {
-      throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputClass());
     }
   }
 }

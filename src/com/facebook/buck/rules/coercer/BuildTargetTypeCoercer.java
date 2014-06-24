@@ -54,6 +54,6 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
       }
     }
 
-    throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputClass());
   }
 }

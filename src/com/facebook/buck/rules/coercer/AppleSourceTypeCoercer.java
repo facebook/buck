@@ -105,30 +105,22 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       Object second = list.size() == 2 ? list.get(1) : null;
 
       if (second instanceof String) {
-        try {
-          return AppleSource.ofSourcePathWithFlags(
-              sourcePathWithFlagsTypeCoercer.coerce(
-                  buildRuleResolver,
-                  filesystem,
-                  pathRelativeToProjectRoot,
-                  object));
-        } catch (CoerceFailedException e) {
-          // Ignore, because we return a better exception at the end of the method.
-        }
+        return AppleSource.ofSourcePathWithFlags(
+            sourcePathWithFlagsTypeCoercer.coerce(
+                buildRuleResolver,
+                filesystem,
+                pathRelativeToProjectRoot,
+                object));
       } else if (second instanceof List) {
-        try {
-          return AppleSource.ofSourceGroup(
-              sourceGroupTypeCoercer.coerce(
-                  buildRuleResolver,
-                  filesystem,
-                  pathRelativeToProjectRoot,
-                  object));
-        } catch (CoerceFailedException e) {
-          // Ignore, because we return a better exception at the end of the method.
-        }
+        return AppleSource.ofSourceGroup(
+            sourceGroupTypeCoercer.coerce(
+                buildRuleResolver,
+                filesystem,
+                pathRelativeToProjectRoot,
+                object));
       }
     }
 
-    throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputClass());
   }
 }

@@ -44,6 +44,6 @@ public class IdentityTypeCoercer<T> extends LeafTypeCoercer<T> {
     if (type.isAssignableFrom(object.getClass())) {
       return type.cast(object);
     }
-    throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputClass());
   }
 }
