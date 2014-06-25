@@ -24,6 +24,7 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -33,6 +34,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.eventbus.EventBus;
 
 import org.easymock.Capture;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -219,6 +221,28 @@ public class WatchmanWatcherTest {
       fail("Should have thrown RuntimeException.");
     } catch (RuntimeException e) {
       assertTrue("Should be Watchman failure.", e.getMessage().startsWith("Watchman failed"));
+    }
+  }
+
+  @Test
+  public void whenQueryResultContainsErrorThenHumanReadableExceptionThrown() throws IOException {
+    String watchmanError = "Watch does not exist.";
+    String watchmanOutput = Joiner.on('\n').join(
+        "{",
+        "\"version\": \"2.9.2\",",
+        "\"error\": \"" + watchmanError + "\"",
+        "}");
+    EventBus eventBus = createStrictMock(EventBus.class);
+    Process process = createWaitForProcessMock(watchmanOutput);
+    replay(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    try {
+      watcher.postEvents();
+      fail("Should have thrown RuntimeException");
+    } catch (RuntimeException e) {
+      assertThat("Should contain watchman error.",
+          e.getMessage(),
+          Matchers.containsString(watchmanError));
     }
   }
 

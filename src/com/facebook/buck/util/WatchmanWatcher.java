@@ -152,6 +152,8 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
                 builder.setDeletionEvent();
               }
               break;
+            case "error":
+              throw new WatchmanWatcherException(jsonParser.nextTextValue());
           }
           break;
         case END_OBJECT:
