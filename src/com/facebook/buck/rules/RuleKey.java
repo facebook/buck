@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
@@ -37,8 +38,6 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
@@ -143,7 +142,7 @@ public class RuleKey {
     @VisibleForTesting
     static final byte SEPARATOR = '\0';
 
-    private static final Logger logger = Logger.getLogger(Builder.class.getName());
+    private static final Logger logger = Logger.get(Builder.class);
 
     private final ImmutableSortedSet<BuildRule> deps;
     private final ImmutableSortedSet<BuildRule> exportedDeps;
@@ -160,7 +159,7 @@ public class RuleKey {
       this.exportedDeps = Preconditions.checkNotNull(exportedDeps);
       this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
       this.hashCache = Preconditions.checkNotNull(hashCache);
-      if (logger.isLoggable(Level.INFO)) {
+      if (logger.isDebugEnabled()) {
         this.logElms = Lists.newArrayList();
       }
     }
@@ -447,7 +446,7 @@ public class RuleKey {
       RuleKey totalRuleKey = new RuleKey(hasher.hash());
 
       if (logElms != null) {
-        logger.info(String.format("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms)));
+        logger.debug("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms));
       }
 
       return new RuleKeyPair(totalRuleKey, ruleKeyWithoutDeps);

@@ -27,6 +27,7 @@ import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.Parser;
@@ -40,6 +41,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.util.DefaultFileHashCache;
@@ -81,6 +83,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
@@ -128,6 +131,8 @@ public final class Main {
   private static final Semaphore commandSemaphore = new Semaphore(1);
 
   private final Platform platform;
+
+  private static final Logger LOG = Logger.get(Main.class);
 
   /**
    * Daemon used to monitor the file system and cache build rules between Main() method
@@ -855,11 +860,22 @@ public final class Main {
     };
   }
 
+  private static void setupLogging() {
+    try {
+      // Bug JDK-6244047: The default FileHandler does not handle the directory not existing,
+      // so we have to create it before any log statements actually run.
+      Files.createDirectories(BuckConstant.LOG_PATH);
+    } catch (IOException e) {
+      System.err.format("Can't create log dir %s: %s\n", BuckConstant.LOG_PATH, e.toString());
+    }
+  }
+
   @VisibleForTesting
   int tryRunMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
       throws IOException, InterruptedException {
     // TODO(user): enforce write command exclusion, but allow concurrent read only commands?
     try {
+      LOG.debug("Starting up with args: %s", Arrays.toString(args));
       return runMainWithExitCode(projectRoot, context, args);
     } catch (HumanReadableException e) {
       Console console = new Console(Verbosity.STANDARD_INFORMATION,
@@ -872,6 +888,8 @@ public final class Main {
       stdErr.println(e);
       e.printStackTrace(stdErr);
       return 0;
+    } finally {
+      LOG.debug("Done.");
     }
   }
 
@@ -881,7 +899,7 @@ public final class Main {
     try {
       exitCode = tryRunMainWithExitCode(projectRoot, context, args);
     } catch (Throwable t) {
-      t.printStackTrace();
+      LOG.error(t, "Uncaught exception at top level");
     } finally {
       // Exit explicitly so that non-daemon threads (of which we use many) don't
       // keep the VM alive.
@@ -890,6 +908,9 @@ public final class Main {
   }
 
   public static void main(String[] args) {
+    // This has to happen first, or else ServiceManager can throw an exception if the
+    // log directory doesn't exist.
+    setupLogging();
     new Main(System.out, System.err).runMainThenExit(args, Optional.<NGContext>absent());
   }
 
@@ -899,6 +920,9 @@ public final class Main {
    * disconnections and interrupt command processing when they occur.
    */
   public static void nailMain(final NGContext context) throws InterruptedException {
+    // This has to happen first, or else ServiceManager can throw an exception if the
+    // log directory doesn't exist.
+    setupLogging();
     try (DaemonSlayer.ExecuteCommandHandle handle =
             DaemonSlayer.getSlayer(context).executeCommand()) {
       new Main(context.out, context.err).runMainThenExit(context.getArgs(), Optional.of(context));
