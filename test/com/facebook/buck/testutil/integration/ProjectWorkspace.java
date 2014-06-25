@@ -191,13 +191,21 @@ public class ProjectWorkspace {
    *   {@code ["project"]}, etc.
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
-  public ProcessResult runBuckCommand(String... args) throws IOException {
+  public ProcessResult runBuckCommand(String... args)
+      throws IOException {
     assertTrue("setUp() must be run before this method is invoked", isSetUp);
     CapturingPrintStream stdout = new CapturingPrintStream();
     CapturingPrintStream stderr = new CapturingPrintStream();
 
     Main main = new Main(stdout, stderr);
-    int exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>absent(), args);
+    int exitCode = 0;
+    try {
+      exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>absent(), args);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      Thread.currentThread().interrupt();
+      exitCode = Main.FAIL_EXIT_CODE;
+    }
 
     return new ProcessResult(exitCode,
         stdout.getContentsAsString(Charsets.UTF_8),
@@ -218,7 +226,14 @@ public class ProjectWorkspace {
     NGContext context = new TestContext(environment);
 
     Main main = new Main(stdout, stderr);
-    int exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>of(context), args);
+    int exitCode = 0;
+    try {
+      exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>of(context), args);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      Thread.currentThread().interrupt();
+      exitCode = Main.FAIL_EXIT_CODE;
+    }
 
     return new ProcessResult(exitCode,
         stdout.getContentsAsString(Charsets.UTF_8),

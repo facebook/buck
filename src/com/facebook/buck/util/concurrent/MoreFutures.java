@@ -90,7 +90,7 @@ public class MoreFutures {
    * Returns the failure for a {@link ListenableFuture}.
    * @param future Must have completed unsuccessfully.
    */
-  public static Throwable getFailure(ListenableFuture<?> future) {
+  public static Throwable getFailure(ListenableFuture<?> future) throws InterruptedException {
     Preconditions.checkArgument(future.isDone());
     Preconditions.checkArgument(!isSuccess(future));
     try {
@@ -98,7 +98,7 @@ public class MoreFutures {
       throw new IllegalStateException("get() should have thrown an exception");
     } catch (ExecutionException e) {
       return e.getCause();
-    } catch (CancellationException | InterruptedException e) {
+    } catch (CancellationException e) {
       throw new IllegalStateException(e);
     }
   }

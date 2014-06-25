@@ -50,7 +50,7 @@ public class MissingSymbolsHandlerIntegrationTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void shouldFindNeededDependenciesFromSymbols() throws IOException {
+  public void shouldFindNeededDependenciesFromSymbols() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "symbol_finder", temporaryFolder);
     workspace.setUp();

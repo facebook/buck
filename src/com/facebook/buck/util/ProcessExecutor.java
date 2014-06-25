@@ -50,7 +50,7 @@ public class ProcessExecutor {
    * Convenience method for {@link #execute(Process, boolean, boolean, boolean, Optional<String>)}
    * with boolean values set to {@code false} and optional values set to absent.
    */
-  public Result execute(Process process) {
+  public Result execute(Process process) throws InterruptedException {
     return execute(process,
         /* shouldPrintStdOut */ false,
         /* shouldPrintStdErr */ false,
@@ -73,7 +73,7 @@ public class ProcessExecutor {
       boolean shouldPrintStdOut,
       boolean shouldPrintStdErr,
       boolean isSilent,
-      Optional<String> stdin) {
+      Optional<String> stdin) throws InterruptedException {
 
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
@@ -115,7 +115,7 @@ public class ProcessExecutor {
       stdOutConsumer.join();
       stdErrConsumer.join();
 
-    } catch (InterruptedException | IOException e) {
+    } catch (IOException e) {
       // Buck was killed while waiting for the consumers to finish or while writing stdin
       // to the process. This means either the user killed the process or a step failed
       // causing us to kill all other running steps. Neither of these is an exceptional
@@ -123,11 +123,7 @@ public class ProcessExecutor {
       return new Result(1, /* stdout */ null, /* stderr */ null);
     } finally {
       process.destroy();
-      try {
-        process.waitFor();
-      } catch (InterruptedException e) {
-        // Swallow the exception and continue/return.
-      }
+      process.waitFor();
     }
 
     String stdoutText = getDataIfNotPrinted(stdOutToWriteTo, shouldPrintStdOut);

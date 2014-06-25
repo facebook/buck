@@ -155,14 +155,13 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
   }
 
   @Override
-  @SuppressWarnings("PMD.EmptyCatchBlock")
   public void close() throws IOException {
     listeningExecutorService.shutdown();
     try {
       // Allow tasks to complete.
       listeningExecutorService.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
-      // Ignore InterruptedException since we're in the process of being shutdown.
+      Thread.currentThread().interrupt();
     }
   }
 }

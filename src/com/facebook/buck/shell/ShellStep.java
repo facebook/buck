@@ -84,7 +84,7 @@ public abstract class ShellStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public int execute(ExecutionContext context) throws InterruptedException {
     // Kick off a Process in which this ShellCommand will be run.
     ProcessBuilder processBuilder = new ProcessBuilder(getShellCommand(context));
 
@@ -132,7 +132,7 @@ public abstract class ShellStep implements Step {
   }
 
   @VisibleForTesting
-  int interactWithProcess(ExecutionContext context, Process process) {
+  int interactWithProcess(ExecutionContext context, Process process) throws InterruptedException {
     ProcessExecutor executor = context.getProcessExecutor();
     ProcessExecutor.Result result = executor.execute(process,
         /* shouldPrintStdOut */ false,

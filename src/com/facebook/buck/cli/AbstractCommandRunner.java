@@ -89,7 +89,8 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   }
 
   @Override
-  public final int runCommand(BuckConfig buckConfig, List<String> args) throws IOException {
+  public final int runCommand(BuckConfig buckConfig, List<String> args)
+      throws IOException, InterruptedException {
     ParserAndOptions<T> parserAndOptions = createParser(buckConfig);
     T options = parserAndOptions.options;
     CmdLineParser parser = parserAndOptions.parser;
@@ -121,7 +122,8 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   /**
    * @return the exit code this process should exit with
    */
-  public final synchronized int runCommandWithOptions(T options) throws IOException {
+  public final synchronized int runCommandWithOptions(T options)
+      throws IOException, InterruptedException {
     this.options = options;
     // At this point, we have parsed options but haven't started running the command yet.  This is
     // a good opportunity to augment the event bus with our serialize-to-file event-listener.
@@ -138,7 +140,8 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
    * been set.
    * @return the exit code this process should exit with
    */
-  abstract int runCommandWithOptionsInternal(T options) throws IOException;
+  abstract int runCommandWithOptionsInternal(T options)
+      throws IOException, InterruptedException;
 
   /**
    * @return may be null
@@ -183,7 +186,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     return buildTargets.build();
   }
 
-  public ArtifactCache getArtifactCache() {
+  public ArtifactCache getArtifactCache() throws InterruptedException {
     // Lazily construct the ArtifactCache, as not all commands (like `buck clean`) need it.
     if (artifactCache == null) {
       synchronized (this) {

@@ -342,7 +342,7 @@ public class Parser {
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus)
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
     postParseStartEvent(buildTargets, eventBus);
@@ -374,7 +374,8 @@ public class Parser {
   @VisibleForTesting
   ActionGraph onlyUseThisWhenTestingToFindAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
-      Iterable<String> defaultIncludes) throws IOException, BuildFileParseException {
+      Iterable<String> defaultIncludes)
+      throws IOException, BuildFileParseException, InterruptedException {
     try (ProjectBuildFileParser parser = buildFileParserFactory.createParser(
         defaultIncludes,
         EnumSet.noneOf(ProjectBuildFileParser.Option.class),
@@ -575,7 +576,7 @@ public class Parser {
       Iterable<String> defaultIncludes,
       EnumSet<ProjectBuildFileParser.Option> parseOptions,
       ImmutableMap<String, String> environment)
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     try (ProjectBuildFileParser projectBuildFileParser =
         buildFileParserFactory.createParser(
             defaultIncludes,
@@ -773,7 +774,7 @@ public class Parser {
   public synchronized List<BuildTarget> filterAllTargetsInProject(ProjectFilesystem filesystem,
                                                      Iterable<String> includes,
                                                      @Nullable RawRulePredicate filter)
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     Preconditions.checkNotNull(filesystem);
     Preconditions.checkNotNull(includes);
     ProjectFilesystem projectFilesystem = repository.getFilesystem();
@@ -815,7 +816,7 @@ public class Parser {
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
       RawRulePredicate filter)
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     ActionGraph actionGraph = parseBuildFilesForTargets(roots, defaultIncludes, eventBus);
 
     return filterGraphTargets(filter, actionGraph);

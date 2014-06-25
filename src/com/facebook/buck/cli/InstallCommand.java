@@ -40,7 +40,8 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
   }
 
   @Override
-  int runCommandWithOptionsInternal(InstallCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(InstallCommandOptions options)
+      throws IOException, InterruptedException {
     // Make sure that only one build target is specified.
     if (options.getArguments().size() != 1) {
       getStdErr().println("Must specify exactly one android_binary() or apk_genrule() rule.");

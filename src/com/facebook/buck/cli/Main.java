@@ -253,7 +253,7 @@ public final class Main {
         Console console,
         ImmutableMap<String, String> environment,
         CommandEvent commandEvent,
-        BuckEventBus eventBus) throws IOException {
+        BuckEventBus eventBus) throws IOException, InterruptedException {
 
       // Synchronize on parser object so that all outstanding watch events are processed
       // as a single, atomic Parser cache update and are not interleaved with Parser cache
@@ -372,7 +372,7 @@ public final class Main {
   }
 
   @VisibleForTesting
-  static void watchFilesystem() throws IOException {
+  static void watchFilesystem() throws IOException, InterruptedException {
     Preconditions.checkNotNull(daemon);
     daemon.filesystemWatcher.postEvents();
   }
@@ -422,7 +422,7 @@ public final class Main {
    * @return an exit code or {@code null} if this is a process that should not exit
    */
   public int runMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
-      throws IOException {
+      throws IOException, InterruptedException {
     if (args.length == 0) {
       return usage();
     }
@@ -452,7 +452,7 @@ public final class Main {
       File projectRoot,
       Command.ParseResult commandParseResult,
       Optional<NGContext> context,
-      String... args) throws IOException {
+      String... args) throws IOException, InterruptedException {
 
     // Get the client environment, either from this process or from the Nailgun context.
     ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
@@ -615,9 +615,10 @@ public final class Main {
       }
 
       buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
-    } catch (Exception e) {
+    } catch (InterruptedException e) {
       closeCreatedArtifactCaches(artifactCacheFactory); // Close cache before exit on exception.
-      throw e;
+      Thread.currentThread().interrupt();
+      return FAIL_EXIT_CODE;
     } finally {
       commandSemaphore.release(); // Allow another command to execute while outputting traces.
     }
@@ -651,7 +652,9 @@ public final class Main {
     return ImmutableMap.copyOf(System.getenv());
   }
 
-  private static void closeCreatedArtifactCaches(ArtifactCacheFactory artifactCacheFactory) {
+  private static void closeCreatedArtifactCaches(
+      @Nullable ArtifactCacheFactory artifactCacheFactory)
+      throws InterruptedException {
     if (null != artifactCacheFactory) {
       artifactCacheFactory.closeCreatedArtifactCaches(ARTIFACT_CACHE_TIMEOUT_IN_SECONDS);
     }
@@ -666,7 +669,7 @@ public final class Main {
       Console console,
       ImmutableMap<String, String> environment,
       CommandEvent commandEvent,
-      BuckEventBus eventBus) throws IOException {
+      BuckEventBus eventBus) throws IOException, InterruptedException {
     // Wire up daemon to new client and console and get cached Parser.
     Daemon daemon = getDaemon(
         projectFilesystem,
@@ -855,7 +858,7 @@ public final class Main {
 
   @VisibleForTesting
   int tryRunMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
-      throws IOException {
+      throws IOException, InterruptedException {
     // TODO(user): enforce write command exclusion, but allow concurrent read only commands?
     try {
       return runMainWithExitCode(projectRoot, context, args);

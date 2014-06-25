@@ -23,5 +23,5 @@ public interface BuckEventListener {
    * Output any trace data collected to the backing store.
    * @param buildId for the trace to be written.
    */
-  public void outputTrace(BuildId buildId);
+  public void outputTrace(BuildId buildId) throws InterruptedException;
 }

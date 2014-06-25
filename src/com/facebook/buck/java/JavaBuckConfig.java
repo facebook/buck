@@ -39,7 +39,8 @@ public class JavaBuckConfig {
     this.delegate = Preconditions.checkNotNull(delegate);
   }
 
-  public JavaCompilerEnvironment getJavaCompilerEnvironment(ProcessExecutor processExecutor) {
+  public JavaCompilerEnvironment getJavaCompilerEnvironment(ProcessExecutor processExecutor)
+      throws InterruptedException {
     Optional<Path> javac = getJavac();
     Optional<JavacVersion> javacVersion = Optional.absent();
     if (javac.isPresent()) {
@@ -75,7 +76,8 @@ public class JavaBuckConfig {
    * @param javac path to the java compiler
    * @return the version of the passed in java compiler
    */
-  private JavacVersion getJavacVersion(ProcessExecutor executor, Path javac) {
+  private JavacVersion getJavacVersion(ProcessExecutor executor, Path javac)
+      throws InterruptedException {
     try {
       ProcessExecutor.Result versionResult = executor.execute(
           Runtime.getRuntime().exec(javac + " -version"));

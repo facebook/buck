@@ -60,7 +60,7 @@ public class MultiArtifactCacheTest {
   }
 
   @Test
-  public void testCacheFetch() {
+  public void testCacheFetch() throws InterruptedException {
     DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache();
     DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
     MultiArtifactCache multiArtifactCache = new MultiArtifactCache(ImmutableList.of(
@@ -85,7 +85,7 @@ public class MultiArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStore() {
+  public void testCacheStore() throws InterruptedException {
     DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache();
     DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
     MultiArtifactCache multiArtifactCache = new MultiArtifactCache(ImmutableList.<ArtifactCache>of(

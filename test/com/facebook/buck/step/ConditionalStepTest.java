@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ConditionalStepTest extends EasyMockSupport {
 
   @Test
-  public void testExecuteConditionalStepWhenTrue() {
+  public void testExecuteConditionalStepWhenTrue() throws InterruptedException {
     // Create a Supplier<Boolean> that returns a value once an external condition has been
     // satisfied.
     final AtomicReference<TriState> condition = new AtomicReference<>(
@@ -70,7 +70,7 @@ public class ConditionalStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testExecuteConditionalStepWhenFalse() {
+  public void testExecuteConditionalStepWhenFalse() throws InterruptedException {
     // Create a Supplier<Boolean> that returns a value once an external condition has been
     // satisfied.
     final AtomicReference<TriState> condition = new AtomicReference<>(

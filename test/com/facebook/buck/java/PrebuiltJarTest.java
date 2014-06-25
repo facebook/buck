@@ -75,7 +75,7 @@ public class PrebuiltJarTest {
   }
 
   @Test
-  public void testAbiKeyIsHashOfFileContents() throws IOException {
+  public void testAbiKeyIsHashOfFileContents() throws IOException, InterruptedException {
     BuildContext buildContext = EasyMock.createMock(BuildContext.class);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> buildSteps = junitJarRule.getBuildSteps(buildContext, buildableContext);

@@ -25,7 +25,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.concurrent.MoreExecutors;
-import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
 
 import org.junit.Test;
@@ -141,12 +140,8 @@ public class BuckEventBusTest {
 
   private static class SleepSubscriber {
     @Subscribe
-    public void sleep(SleepEvent event) {
-      try {
-        Thread.sleep(event.milliseconds);
-      } catch (InterruptedException e) {
-        throw Throwables.propagate(e);
-      }
+    public void sleep(SleepEvent event) throws InterruptedException {
+      Thread.sleep(event.milliseconds);
     }
   }
 

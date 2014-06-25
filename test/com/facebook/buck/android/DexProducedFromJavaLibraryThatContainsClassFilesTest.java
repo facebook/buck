@@ -54,7 +54,7 @@ import java.util.List;
 public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMockSupport {
 
   @Test
-  public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException {
+  public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
     FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(new BuildTarget("//foo", "bar")) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
@@ -132,7 +132,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
   }
 
   @Test
-  public void testGetBuildStepsWhenThereAreNoClassesToDex() throws IOException {
+  public void testGetBuildStepsWhenThereAreNoClassesToDex()
+      throws IOException, InterruptedException {
     JavaLibrary javaLibrary = createMock(JavaLibrary.class);
     expect(javaLibrary.getClassNamesToHashes()).andReturn(
         ImmutableSortedMap.<String, HashCode>of());

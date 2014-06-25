@@ -87,7 +87,7 @@ public class JavacInMemoryStepIntegrationTest {
   }
 
   @Test
-  public void testGetAbiKeyOnSuccessfulCompile() throws IOException {
+  public void testGetAbiKeyOnSuccessfulCompile() throws IOException, InterruptedException {
     JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.execute(executionContext);
@@ -96,7 +96,7 @@ public class JavacInMemoryStepIntegrationTest {
   }
 
   @Test
-  public void testGetAbiKeyOnFailedCompile() throws IOException {
+  public void testGetAbiKeyOnFailedCompile() throws IOException, InterruptedException {
     JavacInMemoryStep javac = createJavac(/* withSyntaxError */ true);
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.execute(executionContext);
@@ -116,7 +116,7 @@ public class JavacInMemoryStepIntegrationTest {
   }
 
   @Test
-  public void testClassesFile() throws IOException {
+  public void testClassesFile() throws IOException, InterruptedException {
     JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.execute(executionContext);

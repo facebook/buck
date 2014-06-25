@@ -19,7 +19,7 @@ package com.facebook.buck.step;
 
 public interface Step {
 
-  public int execute(ExecutionContext context);
+  public int execute(ExecutionContext context) throws InterruptedException;
 
   /** @return a short name/description for the command, such as "javac". Should fit on one line. */
   public String getShortName();

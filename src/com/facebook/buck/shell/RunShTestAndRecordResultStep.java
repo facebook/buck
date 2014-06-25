@@ -53,7 +53,7 @@ public class RunShTestAndRecordResultStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public int execute(ExecutionContext context) throws InterruptedException {
     TestResultSummary summary;
     if (context.getPlatform() == Platform.WINDOWS) {
       // Ignore sh_test on Windows.

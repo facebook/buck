@@ -82,7 +82,7 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   }
 
   @Override
-  public Optional<String> getWifiSsid() {
+  public Optional<String> getWifiSsid() throws InterruptedException {
     // TODO(royw): Support Linux and Windows.
     if (getPlatform().equals(Platform.MACOS)) {
       try {

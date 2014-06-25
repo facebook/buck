@@ -112,8 +112,11 @@ public class DaemonIntegrationTest {
               "//:sleep");
           assertEquals("Should return 0 when no command running.", SUCCESS_EXIT_CODE, exitCode);
         } catch (IOException e) {
-          fail("Should not throw IOException");
+          fail("Should not throw exception.");
           throw Throwables.propagate(e);
+        } catch (InterruptedException e) {
+          fail("Should not throw exception.");
+          Thread.currentThread().interrupt();
         }
       }
     }, 0, TimeUnit.MILLISECONDS);
@@ -127,8 +130,11 @@ public class DaemonIntegrationTest {
               "targets");
           assertEquals("Should return 2 when command running.", Main.BUSY_EXIT_CODE, exitCode);
         } catch (IOException e) {
-          fail("Should not throw IOException.");
+          fail("Should not throw exception.");
           throw Throwables.propagate(e);
+        } catch (InterruptedException e) {
+          fail("Should not throw exception.");
+          Thread.currentThread().interrupt();
         }
       }
     }, 500L, TimeUnit.MILLISECONDS);
@@ -370,7 +376,7 @@ public class DaemonIntegrationTest {
     assertTrue(buildLogFile.isFile());
   }
 
-  private void waitForChange(final Path path) throws IOException {
+  private void waitForChange(final Path path) throws IOException, InterruptedException {
 
     class Watcher {
       private Path path;

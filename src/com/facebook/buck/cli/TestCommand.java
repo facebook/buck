@@ -117,7 +117,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   @Override
-  int runCommandWithOptionsInternal(final TestCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(final TestCommandOptions options)
+      throws IOException, InterruptedException {
     // If the user asked to run all of the tests, use a special method for that that is optimized to
     // parse all of the build files and traverse the action graph to find all of the tests to
     // run.
@@ -289,7 +290,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   private int runAllTests(TestCommandOptions options) throws IOException,
-      BuildTargetException, BuildFileParseException, ExecutionException {
+      BuildTargetException, BuildFileParseException, ExecutionException, InterruptedException {
     Logging.setLoggingLevelForVerbosity(console.getVerbosity());
 
     // We won't have a list of targets until the build is already started, so BuildEvents will get
@@ -452,7 +453,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       Iterable<TestRule> tests,
       BuildContext buildContext,
       ExecutionContext executionContext,
-      TestCommandOptions options) throws IOException, ExecutionException {
+      TestCommandOptions options)
+      throws IOException, ExecutionException, InterruptedException {
 
     try (DefaultStepRunner stepRunner =
             new DefaultStepRunner(executionContext, options.getNumThreads())) {
@@ -466,7 +468,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       ExecutionContext executionContext,
       StepRunner stepRunner,
       final TestCommandOptions options)
-      throws IOException, ExecutionException {
+      throws IOException, ExecutionException, InterruptedException {
 
     if (options.isUsingOneTimeOutputDirectories()) {
       BuckConstant.setOneTimeTestSubdirectory(UUID.randomUUID().toString());
@@ -526,18 +528,14 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     for (TestRule test : tests) {
       // Determine whether the test needs to be executed.
       boolean isTestRunRequired;
-      try {
-        isTestRunRequired = isTestRunRequiredForTest(
-            test,
-            getBuildEngine(),
-            executionContext,
-            testRuleKeyFileHelper,
-            options.isResultsCacheEnabled(),
-            !options.getTestSelectorList().isEmpty());
-      } catch (InterruptedException e) {
-        e.printStackTrace(getStdErr());
-        return 1;
-      }
+      isTestRunRequired = isTestRunRequiredForTest(
+          test,
+          getBuildEngine(),
+          executionContext,
+          testRuleKeyFileHelper,
+          options.isResultsCacheEnabled(),
+          !options.getTestSelectorList().isEmpty());
+
 
       List<Step> steps;
       if (isTestRunRequired) {
@@ -581,9 +579,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     List<TestResults> completedResults;
     try {
       completedResults = uberFuture.get();
-    } catch (InterruptedException e) {
-      e.printStackTrace(getStdErr());
-      return 1;
     } catch (ExecutionException e) {
       e.printStackTrace(getStdErr());
       return 1;

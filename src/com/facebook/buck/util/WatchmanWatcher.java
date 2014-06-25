@@ -102,7 +102,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   }
 
   @Override
-  public void postEvents() throws IOException {
+  public void postEvents() throws IOException, InterruptedException {
     Process watchmanProcess = watchmanProcessSupplier.get();
     watchmanProcess.getOutputStream().write(query.getBytes(Charsets.US_ASCII));
     watchmanProcess.getOutputStream().close();
@@ -170,11 +170,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       token = jsonParser.nextToken();
     }
     int watchmanExitCode;
-    try {
-      watchmanExitCode = watchmanProcess.waitFor();
-    } catch (InterruptedException e) {
-      throw Throwables.propagate(e);
-    }
+    watchmanExitCode = watchmanProcess.waitFor();
     if (watchmanExitCode != 0) {
       ByteArrayOutputStream buffer = new ByteArrayOutputStream();
       ByteStreams.copy(watchmanProcess.getErrorStream(), buffer);

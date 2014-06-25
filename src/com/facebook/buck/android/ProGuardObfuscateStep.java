@@ -137,7 +137,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public int execute(ExecutionContext context) throws InterruptedException {
     int exitCode = super.execute(context);
 
     // proguard has a peculiar behaviour when multiple -injars/outjars pairs are specified in which

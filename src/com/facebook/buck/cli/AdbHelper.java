@@ -195,7 +195,7 @@ public class AdbHelper {
    */
   @Nullable
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  private AndroidDebugBridge createAdb(ExecutionContext context) {
+  private AndroidDebugBridge createAdb(ExecutionContext context) throws InterruptedException {
     try {
       AndroidDebugBridge.init(/* clientSupport */ false);
     } catch (IllegalStateException ex) {
@@ -219,12 +219,7 @@ public class AdbHelper {
       if (timeLeft <= 0) {
         break;
       }
-      try {
-        Thread.sleep(ADB_CONNECT_TIME_STEP_MS);
-      } catch (InterruptedException ex) {
-        Thread.currentThread().interrupt();
-        break;
-      }
+      Thread.sleep(ADB_CONNECT_TIME_STEP_MS);
     }
     return isAdbInitialized(adb) ? adb : null;
   }
@@ -241,7 +236,7 @@ public class AdbHelper {
    *  mode is enabled (-x). This flag is used as a marker that user understands that multiple
    *  devices will be used to install the apk if needed.
    */
-  public boolean adbCall(AdbCallable adbCallable) {
+  public boolean adbCall(AdbCallable adbCallable) throws InterruptedException {
     List<IDevice> devices;
 
     try (TraceEventLogger ignored = TraceEventLogger.start(buckEventBus, "set_up_adb_call")) {
@@ -287,10 +282,6 @@ public class AdbHelper {
       results = Futures.allAsList(futures).get();
     } catch (ExecutionException ex) {
       console.printBuildFailure("Failed: " + adbCallable);
-      ex.printStackTrace(console.getStdErr());
-      return false;
-    } catch (InterruptedException ex) {
-      console.printBuildFailure("Interrupted.");
       ex.printStackTrace(console.getStdErr());
       return false;
     } finally {
@@ -475,7 +466,7 @@ public class AdbHelper {
    */
   public boolean installApk(
       InstallableApk installableApk,
-      InstallCommandOptions options) {
+      InstallCommandOptions options) throws InterruptedException {
     getBuckEventBus().post(InstallEvent.started(installableApk.getBuildTarget()));
 
     final File apk = installableApk.getApkPath().toFile();
@@ -576,7 +567,7 @@ public class AdbHelper {
 
   public int startActivity(
       InstallableApk installableApk,
-      String activity) throws IOException {
+      String activity) throws IOException, InterruptedException {
 
     // Might need the package name and activities from the AndroidManifest.
     Path pathToManifest = installableApk.getManifestPath();
@@ -664,7 +655,7 @@ public class AdbHelper {
    */
   public boolean uninstallApk(
       final String packageName,
-      final UninstallCommandOptions.UninstallOptions uninstallOptions) {
+      final UninstallCommandOptions.UninstallOptions uninstallOptions) throws InterruptedException {
     getBuckEventBus().post(UninstallEvent.started(packageName));
     boolean success = adbCall(
         new AdbHelper.AdbCallable() {

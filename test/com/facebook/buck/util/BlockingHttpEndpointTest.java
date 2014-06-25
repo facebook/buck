@@ -20,8 +20,6 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Throwables;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -89,7 +87,8 @@ public class BlockingHttpEndpointTest {
       try {
         Thread.sleep(delayPeriodMillis);
       } catch (InterruptedException e) {
-        throw Throwables.propagate(e);
+        e.printStackTrace();
+        Thread.currentThread().interrupt();
       }
       return new ByteArrayInputStream(new byte[0]);
     }
@@ -99,7 +98,7 @@ public class BlockingHttpEndpointTest {
       try {
         Thread.sleep(delayPeriodMillis);
       } catch (InterruptedException e) {
-        throw Throwables.propagate(e);
+        Thread.currentThread().interrupt();
       }
       return new ByteArrayOutputStream(0);
     }

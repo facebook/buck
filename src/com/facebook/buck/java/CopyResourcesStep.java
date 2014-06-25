@@ -66,7 +66,7 @@ public class CopyResourcesStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public int execute(ExecutionContext context) throws InterruptedException {
     for (Step step : buildSteps()) {
       int result = step.execute(context);
       if (result != 0) {

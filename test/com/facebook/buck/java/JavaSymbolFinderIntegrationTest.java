@@ -49,7 +49,7 @@ public class JavaSymbolFinderIntegrationTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void shouldFindTargetDefiningSymbol() throws IOException {
+  public void shouldFindTargetDefiningSymbol() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "symbol_finder", temporaryFolder);
     workspace.setUp();

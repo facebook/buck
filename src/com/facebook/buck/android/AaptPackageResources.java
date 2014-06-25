@@ -121,7 +121,7 @@ public class AaptPackageResources extends AbstractBuildable
     // eliminate this now.
     Step collectAssets = new Step() {
       @Override
-      public int execute(ExecutionContext context) {
+      public int execute(ExecutionContext context) throws InterruptedException {
         // This must be done in a Command because the files and directories that are specified may
         // not exist at the time this Command is created because the previous Commands have not run
         // yet.

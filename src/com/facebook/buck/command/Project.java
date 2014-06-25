@@ -168,7 +168,7 @@ public class Project {
       ProcessExecutor processExecutor,
       boolean generateMinimalProject,
       PrintStream stdOut,
-      PrintStream stdErr) throws IOException {
+      PrintStream stdErr) throws IOException, InterruptedException {
     List<Module> modules = createModulesForProjectConfigs();
     writeJsonConfig(jsonTempFile, modules);
 
@@ -974,7 +974,7 @@ public class Project {
   }
 
   private ExitCodeAndOutput processJsonConfig(File jsonTempFile, boolean generateMinimalProject)
-      throws IOException {
+      throws IOException, InterruptedException {
     ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
         .add(pythonInterpreter)
         .add(PATH_TO_INTELLIJ_PY)

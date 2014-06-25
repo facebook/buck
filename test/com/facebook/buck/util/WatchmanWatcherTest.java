@@ -47,7 +47,8 @@ import java.nio.file.WatchEvent;
 public class WatchmanWatcherTest {
 
   @Test
-  public void whenFilesListIsEmptyThenNoEventsAreGenerated() throws IOException {
+  public void whenFilesListIsEmptyThenNoEventsAreGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{",
         "\"version\": \"2.9.2\",",
@@ -64,7 +65,7 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenNameThenModifyEventIsGenerated() throws IOException {
+  public void whenNameThenModifyEventIsGenerated() throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -88,7 +89,7 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenNewIsTrueThenCreateEventIsGenerated() throws IOException {
+  public void whenNewIsTrueThenCreateEventIsGenerated() throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -110,7 +111,8 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenExistsIsFalseThenDeleteEventIsGenerated() throws IOException {
+  public void whenExistsIsFalseThenDeleteEventIsGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -132,7 +134,8 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenNewAndNotExistsThenDeleteEventIsGenerated() throws IOException {
+  public void whenNewAndNotExistsThenDeleteEventIsGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -155,7 +158,8 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenMultipleFilesThenMultipleEventsGenerated() throws IOException {
+  public void whenMultipleFilesThenMultipleEventsGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -184,7 +188,8 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenTooManyChangesThenOverflowEventGenerated() throws IOException {
+  public void whenTooManyChangesThenOverflowEventGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -210,7 +215,8 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenWatchmanFailsThenHumanReadableExceptionThrown() throws IOException {
+  public void whenWatchmanFailsThenHumanReadableExceptionThrown()
+      throws IOException, InterruptedException {
     String watchmanOutput = "";
     EventBus eventBus = createStrictMock(EventBus.class);
     Process process = createWaitForProcessMock(watchmanOutput, 1);
@@ -225,7 +231,8 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenQueryResultContainsErrorThenHumanReadableExceptionThrown() throws IOException {
+  public void whenQueryResultContainsErrorThenHumanReadableExceptionThrown()
+      throws IOException, InterruptedException {
     String watchmanError = "Watch does not exist.";
     String watchmanOutput = Joiner.on('\n').join(
         "{",

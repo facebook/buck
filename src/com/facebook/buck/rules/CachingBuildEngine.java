@@ -167,26 +167,41 @@ public class CachingBuildEngine implements BuildEngine {
             private boolean startOfBuildWasRecordedOnTheEventBus = false;
 
             @Override
+            @SuppressWarnings("PMD.EmptyCatchBlock")
             public void onSuccess(List<BuildRuleSuccess> deps) {
               // Record the start of the build.
               eventBus.post(BuildRuleEvent.started(rule));
               startOfBuildWasRecordedOnTheEventBus = true;
 
               ruleKeys.putIfAbsent(rule.getBuildTarget(), rule.getRuleKey());
-              BuildResult result = buildOnceDepsAreBuilt(
-                  rule,
-                  context,
-                  onDiskBuildInfo,
-                  buildInfoRecorder.get(),
-                  shouldTryToFetchFromCache(deps));
+              BuildResult result = null;
+              try {
+                result = buildOnceDepsAreBuilt(
+                    rule,
+                    context,
+                    onDiskBuildInfo,
+                    buildInfoRecorder.get(),
+                    shouldTryToFetchFromCache(deps));
+              } catch (InterruptedException e) {
+                e.printStackTrace();
+                Thread.currentThread().interrupt();
+                return;
+              }
               if (result.getStatus() == BuildRuleStatus.SUCCESS) {
-                recordBuildRuleSuccess(result);
+                try {
+                  recordBuildRuleSuccess(result);
+                } catch (InterruptedException e) {
+                  e.printStackTrace();
+                  Thread.currentThread().interrupt();
+                  return;
+                }
               } else {
                 recordBuildRuleFailure(result);
               }
             }
 
-            private void recordBuildRuleSuccess(BuildResult result) {
+            private void recordBuildRuleSuccess(BuildResult result)
+                throws InterruptedException {
               // Make sure that all of the local files have the same values they would as if the
               // rule had been built locally.
               BuildRuleSuccess.Type success = result.getSuccess();
@@ -280,7 +295,7 @@ public class CachingBuildEngine implements BuildEngine {
         final BuildContext context,
         OnDiskBuildInfo onDiskBuildInfo,
         BuildInfoRecorder buildInfoRecorder,
-        boolean shouldTryToFetchFromCache) {
+        boolean shouldTryToFetchFromCache) throws InterruptedException {
     // Compute the current RuleKey and compare it to the one stored on disk.
     RuleKey ruleKey = rule.getRuleKey();
     Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey();
@@ -375,7 +390,7 @@ public class CachingBuildEngine implements BuildEngine {
       BuildInfoRecorder buildInfoRecorder,
       ArtifactCache artifactCache,
       Path projectRoot,
-      BuildContext buildContext) {
+      BuildContext buildContext) throws InterruptedException {
     // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
     // that we are creating a zip-based FileSystem.
     File zipFile;

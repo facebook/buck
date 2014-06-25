@@ -34,7 +34,8 @@ public class AuditCommandRunner implements CommandRunner {
   }
 
   @Override
-  public int runCommand(BuckConfig buckConfig, List<String> args) throws IOException {
+  public int runCommand(BuckConfig buckConfig, List<String> args)
+      throws IOException, InterruptedException {
     if (args.isEmpty()) {
       console.printBuildFailure("No audit command is given.");
       printUsage();

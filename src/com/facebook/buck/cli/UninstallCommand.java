@@ -44,7 +44,8 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
   }
 
   @Override
-  int runCommandWithOptionsInternal(UninstallCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(UninstallCommandOptions options)
+      throws IOException, InterruptedException {
     // Set the logger level based on the verbosity option.
     Verbosity verbosity = console.getVerbosity();
     Logging.setLoggingLevelForVerbosity(verbosity);

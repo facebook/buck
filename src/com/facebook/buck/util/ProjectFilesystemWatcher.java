@@ -29,6 +29,6 @@ public interface ProjectFilesystemWatcher {
    * Processes all pending file system events. These are generally posted to an EventBus passed
    * to the ProjectFilesystemWatcher constructor.
    */
-  public void postEvents() throws IOException;
+  public void postEvents() throws IOException, InterruptedException;
   public void close() throws IOException;
 }
