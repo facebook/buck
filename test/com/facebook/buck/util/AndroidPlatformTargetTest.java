@@ -127,8 +127,6 @@ public class AndroidPlatformTargetTest {
         androidPlatformTarget.getAidlExecutable());
     assertEquals(pathToAndroidSdkDir.resolve("build-tools/17.0.0/dx"),
         androidPlatformTarget.getDxExecutable());
-    assertEquals(pathToAndroidSdkDir.resolve("tools/zipalign"),
-        androidPlatformTarget.getZipalignExecutable());
   }
 
   @Test
@@ -177,8 +175,6 @@ public class AndroidPlatformTargetTest {
         androidPlatformTarget.getAidlExecutable());
     assertEquals(pathToAndroidSdkDir.resolve("build-tools/android-4.2.2/dx"),
         androidPlatformTarget.getDxExecutable());
-    assertEquals(pathToAndroidSdkDir.resolve("tools/zipalign"),
-        androidPlatformTarget.getZipalignExecutable());
   }
 
   @Test
@@ -326,6 +322,54 @@ public class AndroidPlatformTargetTest {
         ImmutableList.of(
             pathToAndroidSdkDir.resolve("platforms/android-17/android.jar")),
         androidPlatformTargetOption2.get().getBootclasspathEntries());
+  }
+
+  @Test
+  public void testPlatformTargetFindsCorrectZipAlign() throws IOException {
+    File androidSdkDir = tempDir.newFolder();
+    Path pathToAndroidSdkDir = androidSdkDir.toPath();
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new FakeAndroidDirectoryResolver(
+            Optional.of(androidSdkDir.toPath()),
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
+    File buildToolsDir = new File(androidSdkDir, "build-tools");
+    buildToolsDir.mkdir();
+    File buildToolsDirFromOldUpgradePath = new File(buildToolsDir, "17.0.0");
+    buildToolsDirFromOldUpgradePath.mkdir();
+    Files.touch(new File(buildToolsDirFromOldUpgradePath, "zipalign"));
+    File addOnsLibsDir = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
+    addOnsLibsDir.mkdirs();
+    Files.touch(new File(addOnsLibsDir, "effects.jar"));
+
+    String platformId = "Google Inc.:Google APIs:17";
+    Optional<AndroidPlatformTarget> androidPlatformTargetOption =
+        AndroidPlatformTarget.getTargetForId(
+            platformId,
+            androidDirectoryResolver,
+            /* aaptOverride */ Optional.<Path>absent());
+
+    assertTrue(androidPlatformTargetOption.isPresent());
+    AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
+    assertEquals(platformId, androidPlatformTarget.getName());
+    assertEquals(
+        pathToAndroidSdkDir.resolve("build-tools/17.0.0/zipalign"),
+        androidPlatformTarget.getZipalignExecutable());
+
+    File toolsDir = new File(androidSdkDir, "tools");
+    toolsDir.mkdirs();
+    Files.touch(new File(toolsDir, "zipalign"));
+    androidPlatformTargetOption =
+        AndroidPlatformTarget.getTargetForId(
+            platformId,
+            androidDirectoryResolver,
+            /* aaptOverride */ Optional.<Path>absent());
+    assertTrue(androidPlatformTargetOption.isPresent());
+    androidPlatformTarget = androidPlatformTargetOption.get();
+    assertEquals(platformId, androidPlatformTarget.getName());
+    assertEquals(
+        pathToAndroidSdkDir.resolve("tools/zipalign"),
+        androidPlatformTarget.getZipalignExecutable());
   }
 
   @Test
