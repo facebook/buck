@@ -22,9 +22,9 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
@@ -101,7 +101,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule,
           SourcePaths.filterInputsToCompareToOutput(Collections.singleton(manifestFile)));
     }
 
-    Buildables.addInputsToSortedSet(metaInfDirectory, builder, directoryTraverser);
+    BuildRules.addInputsToSortedSet(metaInfDirectory, builder, directoryTraverser);
 
     return builder.build();
   }

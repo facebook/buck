@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;

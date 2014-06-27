@@ -55,12 +55,6 @@ public interface OnDiskBuildInfo {
    */
   public Optional<RuleKey> getRuleKeyWithoutDeps();
 
-  /**
-   * Invokes the {@link Buildable#getPathToOutputFile()} method of the specified {@link Buildable},
-   * reads the file at the specified path, and returns the list of lines in the file.
-   */
-  public List<String> getOutputFileContentsByLine(Buildable buildable) throws IOException;
-
   public List<String> getOutputFileContentsByLine(Path path) throws IOException;
 
   /**

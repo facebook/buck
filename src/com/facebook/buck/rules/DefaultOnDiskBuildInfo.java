@@ -94,14 +94,6 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public List<String> getOutputFileContentsByLine(Buildable buildable) throws IOException {
-    Preconditions.checkNotNull(buildable);
-    Path pathToOutputFile = buildable.getPathToOutputFile();
-    Preconditions.checkNotNull(pathToOutputFile);
-    return projectFilesystem.readLines(pathToOutputFile);
-  }
-
-  @Override
   public List<String> getOutputFileContentsByLine(Path pathRelativeToProjectRoot)
       throws IOException {
     return projectFilesystem.readLines(pathRelativeToProjectRoot);

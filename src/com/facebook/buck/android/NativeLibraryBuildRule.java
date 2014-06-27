@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.Buildable;
-
 import java.nio.file.Path;
 
 /**

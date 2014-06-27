@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;

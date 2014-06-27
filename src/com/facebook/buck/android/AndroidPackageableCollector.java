@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.Buildable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;

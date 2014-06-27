@@ -39,8 +39,6 @@ import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -655,7 +653,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   /**
    * {@link AbstractBuildRule} that implements {@link AbiRule}.
    */
-  private static class TestAbstractCachingBuildRule extends AbstractBuildable
+  private static class TestAbstractCachingBuildRule extends AbstractBuildRule
       implements AbiRule, BuildRule, InitializableFromDisk<Object> {
 
     private static final String RULE_KEY_HASH = "bfcd53a794e7c732019e04e08b30b32e26e19d50";
@@ -667,7 +665,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     private final BuildOutputInitializer<Object> buildOutputInitializer;
 
     TestAbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
-      super(buildRuleParams.getBuildTarget());
+      super(buildRuleParams);
       this.buildOutputInitializer =
           new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
     }
@@ -693,36 +691,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     @Override
     public Path getPathToOutputFile() {
       return null;
-    }
-
-    @Override
-    public BuildTarget getBuildTarget() {
-      return buildTarget;
-    }
-
-    @Override
-    public String getFullyQualifiedName() {
-      return buildTarget.getFullyQualifiedName();
-    }
-
-    @Override
-    public BuildRuleType getType() {
-      throw new UnsupportedOperationException("method should not be called");
-    }
-
-    @Override
-    public ImmutableSortedSet<BuildRule> getDeps() {
-      return ImmutableSortedSet.of();
-    }
-
-    @Override
-    public ImmutableSet<BuildTargetPattern> getVisibilityPatterns() {
-      return ImmutableSet.of();
-    }
-
-    @Override
-    public boolean isVisibleTo(BuildTarget target) {
-      return false;
     }
 
     @Override
@@ -758,11 +726,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     @Override
     public Sha1HashCode getAbiKeyForDeps() {
       return new Sha1HashCode(ABI_KEY_FOR_DEPS_HASH);
-    }
-
-    @Override
-    public int compareTo(HasBuildTarget o) {
-      return 0;
     }
   }
 
