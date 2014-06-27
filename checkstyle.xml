@@ -317,5 +317,8 @@ page at http://checkstyle.sourceforge.net/config.html -->
       <property name="option" value="eol"/>
     </module>
 
+    <module name="SuppressWarningsHolder"/>
   </module>
+
+  <module name="SuppressWarningsFilter" />
 </module>
