@@ -37,6 +37,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
+import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosResourceDescription;
@@ -120,6 +121,7 @@ public class ProjectGeneratorTest {
   private IosResourceDescription iosResourceDescription;
   private MacosxFrameworkDescription macosxFrameworkDescription;
   private MacosxBinaryDescription macosxBinaryDescription;
+  private CoreDataModelDescription coreDataModelDescription;
 
   @Before
   public void setUp() throws IOException {
@@ -132,6 +134,7 @@ public class ProjectGeneratorTest {
     iosResourceDescription = new IosResourceDescription();
     macosxFrameworkDescription = new MacosxFrameworkDescription();
     macosxBinaryDescription = new MacosxBinaryDescription();
+    coreDataModelDescription = new CoreDataModelDescription();
 
     // Add support files needed by project generation to fake filesystem.
     projectFilesystem.writeContentsToPath(
@@ -489,7 +492,8 @@ public class ProjectGeneratorTest {
     arg.infoPlist = Paths.get("Info.plist");
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
+    arg.srcs = ImmutableList.of(
+        AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of(
@@ -597,7 +601,8 @@ public class ProjectGeneratorTest {
     arg.infoPlist = Paths.get("Info.plist");
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
+    arg.srcs = ImmutableList.of(
+        AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of(
@@ -769,7 +774,8 @@ public class ProjectGeneratorTest {
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
+    arg.srcs = ImmutableList.of(
+        AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of();
@@ -803,6 +809,45 @@ public class ProjectGeneratorTest {
     assertThat(
         shellScriptBuildPhase.getShellScript(),
         equalTo("/bin/bash -e -c 'echo \"hello world!\"'"));
+  }
+
+  @Test
+  public void testCoreDataModelRuleAddsReference() throws IOException {
+    BuildRule modelRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "model"),
+        ImmutableSortedSet.<BuildRule>of(),
+        coreDataModelDescription,
+        new Function<CoreDataModelDescription.Arg, CoreDataModelDescription.Arg>() {
+          @Override
+          public CoreDataModelDescription.Arg apply(CoreDataModelDescription.Arg args) {
+            args.path = new TestSourcePath("foo.xcdatamodel").asReference();
+            return args;
+          }
+        });
+
+    BuildRule libraryRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "lib"),
+        ImmutableSortedSet.of(modelRule),
+        iosLibraryDescription);
+
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryRule),
+        ImmutableSet.of(libraryRule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(libraryRule.getFullyQualifiedName());
+    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+
+    assertThat(resourcesGroup.getChildren(), hasSize(1));
+
+    PBXFileReference modelReference = (PBXFileReference) Iterables.get(
+        resourcesGroup.getChildren(),
+        0);
+    assertEquals("foo.xcdatamodel", modelReference.getName());
   }
 
   @Test

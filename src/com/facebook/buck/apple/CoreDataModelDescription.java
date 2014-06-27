@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -21,19 +21,18 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.util.Set;
 
 /**
- * Description for an apple_asset_catalog rule, which identifies an asset
- * catalog for an iOS or Mac OS X library or binary.
+ * Description for a core_data_model rule, which identifies a model file
+ * for use with Apple's Core Data.
  */
-public class AppleAssetCatalogDescription implements Description<AppleAssetCatalogDescription.Arg> {
-  public static final BuildRuleType TYPE = new BuildRuleType("apple_asset_catalog");
+public class CoreDataModelDescription implements Description<CoreDataModelDescription.Arg> {
+  public static final BuildRuleType TYPE = new BuildRuleType("core_data_model");
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -46,18 +45,19 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
   }
 
   @Override
-  public AppleAssetCatalog createBuildable(BuildRuleParams params, Arg args) {
+  public CoreDataModel createBuildable(final BuildRuleParams params, Arg args) {
     final ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
-    final Set<Path> dirs = args.dirs;
+    final Path path = args.path;
     Supplier<ImmutableCollection<Path>> inputPathsSupplier = RuleUtils.subpathsOfPathsSupplier(
         projectFilesystem,
-        dirs
-    );
-    return new AppleAssetCatalog(params.getBuildTarget(), inputPathsSupplier, args);
+        ImmutableSet.of(path));
+    return new CoreDataModel(params.getBuildTarget(), inputPathsSupplier, args);
   }
 
   public static class Arg implements ConstructorArg {
-    public Set<Path> dirs;
-    public Optional<Boolean> copyToBundles;
+    /**
+     * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
+     */
+    public Path path;
   }
 }

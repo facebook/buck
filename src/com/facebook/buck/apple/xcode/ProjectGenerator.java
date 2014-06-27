@@ -18,12 +18,16 @@ package com.facebook.buck.apple.xcode;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
+import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
+import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBuildable;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.FileExtensions;
+import com.facebook.buck.apple.CoreDataModel;
+import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.IosBinary;
@@ -61,6 +65,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
+import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.model.BuildTarget;
@@ -83,6 +88,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -106,9 +112,12 @@ import java.io.InputStream;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.FileVisitResult;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -396,6 +405,9 @@ public class ProjectGenerator {
         targetGroup,
         buildable.getSrcs(),
         buildable.getPerFileFlags());
+    addCoreDataModelBuildPhase(
+        targetGroup,
+        collectCoreDataModels(rule.getDeps()));
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -476,6 +488,9 @@ public class ProjectGenerator {
         target,
         targetGroup,
         collectRecursiveAssetCatalogs(rule));
+    addCoreDataModelBuildPhase(
+        targetGroup,
+        collectCoreDataModels(rule.getDeps()));
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -544,6 +559,9 @@ public class ProjectGenerator {
         targetGroup,
         collectRecursiveResources(rule, OsxResourceDescription.TYPE));
     addAssetCatalogBuildPhase(target, targetGroup, collectRecursiveAssetCatalogs(rule));
+    addCoreDataModelBuildPhase(
+        targetGroup,
+        collectCoreDataModels(rule.getDeps()));
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -598,9 +616,14 @@ public class ProjectGenerator {
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
         frameworksBuilder.build(),
         collectRecursiveLibraryDependencies(rule));
-    addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule,
-            resourceRuleType));
+    addResourcesBuildPhase(
+        target,
+        targetGroup,
+        collectRecursiveResources(rule, resourceRuleType));
     addAssetCatalogBuildPhase(target, targetGroup, collectRecursiveAssetCatalogs(rule));
+    addCoreDataModelBuildPhase(
+        targetGroup,
+        collectCoreDataModels(rule.getDeps()));
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -619,7 +642,11 @@ public class ProjectGenerator {
       PBXProject project, BuildRule rule, MacosxBinary buildable)
       throws IOException {
     PBXNativeTarget target =
-        generateBinaryTarget(project, rule, buildable, PBXTarget.ProductType.MACOSX_BINARY,
+        generateBinaryTarget(
+            project,
+            rule,
+            buildable,
+            PBXTarget.ProductType.MACOSX_BINARY,
             OsxResourceDescription.TYPE);
 
     // Unlike an ios target, macosx targets collect their frameworks and copy them in.
@@ -632,6 +659,9 @@ public class ProjectGenerator {
         target,
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
         frameworksBuilder.build());
+    addCoreDataModelBuildPhase(
+        project.getMainGroup(),
+        collectCoreDataModels(rule.getDeps()));
 
     project.getTargets().add(target);
     return target;
@@ -1067,6 +1097,88 @@ public class ProjectGenerator {
     target.getBuildPhases().add(phase);
   }
 
+  private void addCoreDataModelBuildPhase(
+      PBXGroup targetGroup,
+      final Iterable<CoreDataModel> dataModels) throws IOException {
+    // TODO(user): actually add a build phase
+
+    for (final CoreDataModel dataModel: dataModels) {
+      // Core data models go in the resources group also.
+      PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+
+      if (dataModel.isVersioned()) {
+        // It's safe to do I/O here to figure out the current version because we're returning all
+        // the versions and the file pointing to the current version from
+        // getInputsToCompareToOutput(), so the rule will be correctly detected as stale if any of
+        // them change.
+        final String currentVersionFileName = ".xccurrentversion";
+        final String currentVersionKey = "_XCCurrentVersionName";
+
+        final XCVersionGroup versionGroup =
+            resourcesGroup.getOrCreateChildVersionGroupsBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.SOURCE_ROOT,
+                    repoRootRelativeToOutputDirectory.resolve(dataModel.getPath())
+                    ));
+
+        projectFilesystem.walkRelativeFileTree(
+            dataModel.getPath(),
+            new SimpleFileVisitor<Path>() {
+              @Override
+              public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                if (dir.equals(dataModel.getPath())) {
+                  return FileVisitResult.CONTINUE;
+                }
+                versionGroup.getOrCreateFileReferenceBySourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SOURCE_ROOT,
+                        repoRootRelativeToOutputDirectory.resolve(dir)
+                    ));
+                return FileVisitResult.SKIP_SUBTREE;
+              }
+            });
+
+        Path currentVersionPath = dataModel.getPath().resolve(currentVersionFileName);
+        try (InputStream in = projectFilesystem.newFileInputStream(currentVersionPath)) {
+          NSObject rootObject;
+          try {
+            rootObject = PropertyListParser.parse(in);
+          } catch (IOException e) {
+            throw e;
+          } catch (Exception e) {
+            rootObject = null;
+          }
+          if (!(rootObject instanceof NSDictionary)) {
+            throw new HumanReadableException("Malformed %s file.", currentVersionFileName);
+          }
+          NSDictionary rootDictionary = (NSDictionary) rootObject;
+          NSObject currentVersionName = rootDictionary.objectForKey(currentVersionKey);
+          if (!(currentVersionName instanceof NSString)) {
+            throw new HumanReadableException("Malformed %s file.", currentVersionFileName);
+          }
+          PBXFileReference ref = versionGroup.getOrCreateFileReferenceBySourceTreePath(
+              new SourceTreePath(
+                  PBXReference.SourceTree.SOURCE_ROOT,
+                  repoRootRelativeToOutputDirectory.resolve(dataModel.getPath().resolve(
+                          currentVersionName.toString()))
+              ));
+          versionGroup.setCurrentVersion(Optional.of(ref));
+        } catch (NoSuchFileException e) {
+          if (versionGroup.getChildren().size() == 1) {
+            versionGroup.setCurrentVersion(Optional.of(Iterables.get(
+                        versionGroup.getChildren(),
+                        0)));
+          }
+        }
+      } else {
+        resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SOURCE_ROOT,
+                repoRootRelativeToOutputDirectory.resolve(dataModel.getPath())));
+      }
+    }
+  }
+
   private void addFrameworksBuildPhase(
       BuildTarget buildTarget,
       PBXNativeTarget target,
@@ -1374,6 +1486,16 @@ public class ProjectGenerator {
         : rule.getBuildTarget().getFullyQualifiedName();
   }
 
+  private Iterable<CoreDataModel> collectCoreDataModels(Iterable<BuildRule> rules) {
+    return Iterables.transform(
+        getRuleDependenciesOfType(rules, CoreDataModelDescription.TYPE),
+        new Function<BuildRule, CoreDataModel>() {
+          @Override
+          public CoreDataModel apply(BuildRule input) {
+            return (CoreDataModel) Preconditions.checkNotNull(input.getBuildable());
+          }
+        });
+  }
   /**
    * Collect resources from recursive dependencies.
    *
@@ -1407,6 +1529,19 @@ public class ProjectGenerator {
       assetCatalogs.add(assetCatalog);
     }
     return assetCatalogs.build();
+  }
+
+  private Iterable<BuildRule> getRuleDependenciesOfType(
+      final Iterable<BuildRule> rules, BuildRuleType... types) {
+    final ImmutableSet<BuildRuleType> requestedTypes = ImmutableSet.copyOf(types);
+    return Iterables.filter(
+        rules,
+        new Predicate<BuildRule>() {
+          @Override
+          public boolean apply(BuildRule input) {
+            return requestedTypes.contains(input.getType());
+          }
+        });
   }
 
   private Iterable<BuildRule> getRecursiveRuleDependenciesOfType(
