@@ -183,12 +183,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         }
         exitCode = 1;
       }
-    } catch (InterruptedException e) {
-      // This suggests an error in Buck rather than a user error.
-      // Print the entire stack trace so we can debug it.
-      console.printBuildFailureWithStacktrace(e);
-      Thread.currentThread().interrupt();
-      exitCode = 1;
     }
 
     return exitCode;
