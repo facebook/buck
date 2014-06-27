@@ -233,6 +233,11 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ExecutionContext executionContext = createExecutionContext(options,
         partialGraph.getActionGraph());
 
+    ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
+    if (options.getReadOnly()) {
+      optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
+    }
+
     if (options.getCombinedProject() != null) {
       // Generate a single project containing a target and all its dependencies and tests.
       ProjectGenerator projectGenerator = new ProjectGenerator(
@@ -242,14 +247,15 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           executionContext,
           getProjectFilesystem().getPathForRelativePath(Paths.get("_gen")),
           "GeneratedProject",
-          ProjectGenerator.COMBINED_PROJECT_OPTIONS);
+          optionsBuilder.addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS).build());
       projectGenerator.createXcodeProjects();
     } else if (options.getWorkspaceAndProjects()) {
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
           getProjectFilesystem(),
           partialGraph,
           executionContext,
-          Iterables.getOnlyElement(passedInTargetsSet));
+          Iterables.getOnlyElement(passedInTargetsSet),
+          optionsBuilder.build());
       generator.generateWorkspaceAndDependentProjects();
     } else {
       // Generate projects based on xcode_project_config rules, and place them in the same directory
@@ -272,7 +278,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getProjectFilesystem(),
           partialGraph,
           executionContext,
-          targets);
+          targets,
+          optionsBuilder.build());
       ImmutableSet<Path> generatedProjectPaths = projectGenerator.generateProjects();
       for (Path path : generatedProjectPaths) {
         console.getStdOut().println(path.toString());

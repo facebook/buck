@@ -55,16 +55,22 @@ public class WorkspaceAndProjectGenerator {
   private final PartialGraph partialGraph;
   private final ExecutionContext executionContext;
   private final BuildTarget workspaceConfigTarget;
+  private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
       PartialGraph partialGraph,
       ExecutionContext executionContext,
-      BuildTarget workspaceConfigTarget) {
+      BuildTarget workspaceConfigTarget,
+      Set<ProjectGenerator.Option> projectGeneratorOptions) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
     this.workspaceConfigTarget = Preconditions.checkNotNull(workspaceConfigTarget);
+    this.projectGeneratorOptions = ImmutableSet.<ProjectGenerator.Option>builder()
+      .addAll(projectGeneratorOptions)
+      .addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS)
+      .build();
   }
 
   public Path generateWorkspaceAndDependentProjects() throws IOException {
@@ -138,7 +144,7 @@ public class WorkspaceAndProjectGenerator {
             executionContext,
             projectFilesystem.getPathForRelativePath(Paths.get(basePath)),
             xcodeProjectConfig.getProjectName(),
-            ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
+            projectGeneratorOptions);
         generator.createXcodeProjects();
 
         String workspaceGroup = initialTargets.contains(actualTargetRule.getBuildTarget()) ?

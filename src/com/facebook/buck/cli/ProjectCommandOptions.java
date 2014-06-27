@@ -32,6 +32,7 @@ import java.util.List;
 public class ProjectCommandOptions extends AbstractCommandOptions {
 
   private static final String DEFAULT_IDE_VALUE = "intellij";
+  private static final boolean DEFAULT_READ_ONLY_VALUE = false;
 
   @Option(
       name = "--combined-project",
@@ -57,6 +58,13 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
       usage = "The type of IDE for which to generate a project. Defaults to '" +
           DEFAULT_IDE_VALUE + "' if not specified in .buckconfig.")
   private String ide = null;
+
+  @Option(
+      name = "--read-only",
+      usage = "If true, generate project files read-only. Defaults to '" +
+          DEFAULT_IDE_VALUE + "' if not specified in .buckconfig. (Only " +
+          "applies to generated Xcode projects.)")
+  private boolean readOnly = DEFAULT_READ_ONLY_VALUE;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -108,6 +116,13 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
 
   public Optional<String> getPathToPostProcessScript() {
     return getBuckConfig().getValue("project", "post_process");
+  }
+
+  public boolean getReadOnly() {
+    if (readOnly) {
+      return readOnly;
+    }
+    return getBuckConfig().getBooleanValue("project", "read_only", DEFAULT_READ_ONLY_VALUE);
   }
 
   public String getIde() {

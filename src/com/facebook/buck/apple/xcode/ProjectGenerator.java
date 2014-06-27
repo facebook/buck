@@ -167,6 +167,9 @@ public class ProjectGenerator {
 
     /** Generate headermaps for public headers of libraries */
     GENERATE_HEADER_MAPS_FOR_LIBRARY_TARGETS,
+
+    /** Generate read-only project files */
+    GENERATE_READ_ONLY_FILES,
     ;
   }
 
@@ -435,10 +438,16 @@ public class ProjectGenerator {
       Path headerMapFile = projectPath.resolve(headerMapName);
       headerMaps.add(headerMapFile);
       projectFilesystem.mkdirs(projectPath);
-      projectFilesystem.writeBytesToPath(
-          headerMap.getBytes(),
-          headerMapFile,
-          READ_ONLY_FILE_ATTRIBUTE);
+      if (shouldGenerateReadOnlyFiles()) {
+        projectFilesystem.writeBytesToPath(
+            headerMap.getBytes(),
+            headerMapFile,
+            READ_ONLY_FILE_ATTRIBUTE);
+      } else {
+        projectFilesystem.writeBytesToPath(
+            headerMap.getBytes(),
+            headerMapFile);
+      }
     }
 
     project.getTargets().add(target);
@@ -753,10 +762,16 @@ public class ProjectGenerator {
             mangledBuildTargetName(buildTarget) + "-" + configuration.getName() + ".xcconfig");
         String serializedConfiguration = serializeBuildConfiguration(
             configuration, searchPaths, extraConfigs);
-        projectFilesystem.writeContentsToPath(
-            serializedConfiguration,
-            configurationFilePath,
-            READ_ONLY_FILE_ATTRIBUTE);
+        if (shouldGenerateReadOnlyFiles()) {
+          projectFilesystem.writeContentsToPath(
+              serializedConfiguration,
+              configurationFilePath,
+              READ_ONLY_FILE_ATTRIBUTE);
+        } else {
+          projectFilesystem.writeContentsToPath(
+              serializedConfiguration,
+              configurationFilePath);
+        }
 
         PBXFileReference fileReference =
             configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
@@ -1310,10 +1325,16 @@ public class ProjectGenerator {
     } else {
       contentsToWrite = unsignedXmlProject;
     }
-    projectFilesystem.writeContentsToPath(
-        contentsToWrite,
-        serializedProject,
-        READ_ONLY_FILE_ATTRIBUTE);
+    if (shouldGenerateReadOnlyFiles()) {
+      projectFilesystem.writeContentsToPath(
+          contentsToWrite,
+          serializedProject,
+          READ_ONLY_FILE_ATTRIBUTE);
+    } else {
+      projectFilesystem.writeContentsToPath(
+          contentsToWrite,
+          serializedProject);
+    }
     return xcodeprojDir;
   }
 
@@ -1351,10 +1372,16 @@ public class ProjectGenerator {
       DOMSource source = new DOMSource(doc);
       StreamResult result = new StreamResult(outputStream);
       transformer.transform(source, result);
-      projectFilesystem.writeContentsToPath(
-          outputStream.toString(),
-          serializedWorkspace,
-          READ_ONLY_FILE_ATTRIBUTE);
+      if (shouldGenerateReadOnlyFiles()) {
+        projectFilesystem.writeContentsToPath(
+            outputStream.toString(),
+            serializedWorkspace,
+            READ_ONLY_FILE_ATTRIBUTE);
+      } else {
+        projectFilesystem.writeContentsToPath(
+            outputStream.toString(),
+            serializedWorkspace);
+      }
     } catch (TransformerException e) {
       throw new RuntimeException(e);
     }
@@ -1745,6 +1772,10 @@ public class ProjectGenerator {
               "   expected: [File, Inline settings, File, Inline settings]");
     }
     return extractedLayers;
+  }
+
+  private boolean shouldGenerateReadOnlyFiles() {
+    return options.contains(Option.GENERATE_READ_ONLY_FILES);
   }
 
   private static class ConfigInXcodeLayout {

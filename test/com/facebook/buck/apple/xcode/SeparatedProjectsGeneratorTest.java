@@ -87,7 +87,8 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         partialGraph,
         executionContext,
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.of(rule.getBuildTarget()),
+        ImmutableSet.<ProjectGenerator.Option>of());
     generator.generateProjects();
   }
 
@@ -106,7 +107,8 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         partialGraph,
         executionContext,
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.of(rule.getBuildTarget()),
+        ImmutableSet.<ProjectGenerator.Option>of());
     generator.generateProjects();
   }
 
@@ -126,7 +128,8 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         partialGraph,
         executionContext,
-        ImmutableSet.of(configRule.getBuildTarget()));
+        ImmutableSet.of(configRule.getBuildTarget()),
+        ImmutableSet.<ProjectGenerator.Option>of());
     generator.generateProjects();
 
     assertTrue(
@@ -164,7 +167,8 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         partialGraph,
         executionContext,
-        ImmutableSet.of(configRule.getBuildTarget()));
+        ImmutableSet.of(configRule.getBuildTarget()),
+        ImmutableSet.<ProjectGenerator.Option>of());
     generator.generateProjects();
 
     PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
@@ -200,7 +204,8 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         partialGraph,
         executionContext,
-        ImmutableSet.of(configRule.getBuildTarget()));
+        ImmutableSet.of(configRule.getBuildTarget()),
+        ImmutableSet.<ProjectGenerator.Option>of());
     generator.generateProjects();
 
     PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
@@ -235,7 +240,8 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)),
         executionContext,
-        ImmutableSet.of(configRule.getBuildTarget()));
+        ImmutableSet.of(configRule.getBuildTarget()),
+        ImmutableSet.<ProjectGenerator.Option>of());
     generator.generateProjects();
 
     PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
@@ -320,7 +326,8 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule1, rule2)),
         executionContext,
-        ImmutableSet.of(configRule.getBuildTarget()));
+        ImmutableSet.of(configRule.getBuildTarget()),
+        ImmutableSet.<ProjectGenerator.Option>of());
     generator.generateProjects();
 
     PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
@@ -387,7 +394,8 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)),
         executionContext,
-        ImmutableSet.of(configRule.getBuildTarget()));
+        ImmutableSet.of(configRule.getBuildTarget()),
+        ImmutableSet.<ProjectGenerator.Option>of());
     generator.generateProjects();
   }
 
@@ -423,7 +431,8 @@ public class SeparatedProjectsGeneratorTest {
         createPartialGraphFromBuildRules(
             ImmutableSet.of(configRule, libraryRule, binaryRule, testRule, nativeRule)),
         executionContext,
-        ImmutableSet.of(configRule.getBuildTarget()));
+        ImmutableSet.of(configRule.getBuildTarget()),
+        ImmutableSet.<ProjectGenerator.Option>of());
     generator.generateProjects();
 
     PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
@@ -460,7 +469,8 @@ public class SeparatedProjectsGeneratorTest {
         createPartialGraphFromBuildRules(
             ImmutableSet.of(fooRule1, barRule2, fooConfigRule, barConfigRule)),
         executionContext,
-        ImmutableSet.of(fooConfigRule.getBuildTarget(), barConfigRule.getBuildTarget()));
+        ImmutableSet.of(fooConfigRule.getBuildTarget(), barConfigRule.getBuildTarget()),
+        ImmutableSet.<ProjectGenerator.Option>of());
 
     ImmutableSet<Path> paths = generator.generateProjects();
 

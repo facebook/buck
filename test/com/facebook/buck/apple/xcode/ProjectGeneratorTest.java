@@ -1354,9 +1354,22 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testGeneratedProjectIsReadOnly() throws IOException {
+  public void testGeneratedProjectIsNotReadOnlyIfOptionNotSpecified() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<BuildRule>of(), ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<BuildTarget>of());
+
+    projectGenerator.createXcodeProjects();
+
+    assertTrue(fakeProjectFilesystem.getFileAttributesAtPath(OUTPUT_PROJECT_FILE_PATH).isEmpty());
+  }
+
+  @Test
+  public void testGeneratedProjectIsReadOnlyIfOptionSpecified() throws IOException {
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        createPartialGraphFromBuildRules(ImmutableSet.<BuildRule>of()),
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES));
 
     projectGenerator.createXcodeProjects();
 
@@ -1395,7 +1408,18 @@ public class ProjectGeneratorTest {
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       PartialGraph partialGraph, ImmutableSet<BuildTarget> initialBuildTargets) {
+    return createProjectGeneratorForCombinedProject(
+        partialGraph,
+        initialBuildTargets,
+        ImmutableSet.<ProjectGenerator.Option>of());
+  }
+
+  private ProjectGenerator createProjectGeneratorForCombinedProject(
+      PartialGraph partialGraph,
+      ImmutableSet<BuildTarget> initialBuildTargets,
+      ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     ImmutableSet<ProjectGenerator.Option> options = ImmutableSet.<ProjectGenerator.Option>builder()
+        .addAll(projectGeneratorOptions)
         .addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS)
         .add(ProjectGenerator.Option.GENERATE_HEADER_MAPS_FOR_LIBRARY_TARGETS)
         .build();
