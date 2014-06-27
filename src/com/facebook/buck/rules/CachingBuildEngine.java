@@ -87,7 +87,7 @@ public class CachingBuildEngine implements BuildEngine {
   }
 
   @Override
-  public boolean isRuleBuilt(BuildTarget buildTarget) {
+  public boolean isRuleBuilt(BuildTarget buildTarget) throws InterruptedException {
     SettableFuture<BuildRuleSuccess> resultFuture = results.get(buildTarget);
     return resultFuture != null && MoreFutures.isSuccess(resultFuture);
   }

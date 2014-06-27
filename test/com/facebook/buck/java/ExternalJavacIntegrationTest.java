@@ -110,7 +110,6 @@ public class ExternalJavacIntegrationTest {
         "build",
         "example")
         .assertSuccess();
-
   }
 
 }

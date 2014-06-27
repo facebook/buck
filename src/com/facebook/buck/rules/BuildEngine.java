@@ -42,7 +42,7 @@ public interface BuildEngine {
   /**
    * Returns whether the build rule associated with the build target has been successfully built.
    */
-  boolean isRuleBuilt(BuildTarget buildTarget);
+  boolean isRuleBuilt(BuildTarget buildTarget) throws InterruptedException;
 
   /**
    * This is a temporary hack to expose a build rule's rule key to the associated buildable.

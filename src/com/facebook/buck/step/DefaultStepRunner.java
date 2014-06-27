@@ -60,17 +60,18 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
   }
 
   @Override
-  public void runStep(Step step) throws StepFailedException {
+  public void runStep(Step step) throws StepFailedException, InterruptedException {
     runStepInternal(step, Optional.<BuildTarget>absent());
   }
 
   @Override
-  public void runStepForBuildTarget(Step step, BuildTarget buildTarget) throws StepFailedException {
+  public void runStepForBuildTarget(Step step, BuildTarget buildTarget)
+      throws StepFailedException, InterruptedException {
     runStepInternal(step, Optional.of(buildTarget));
   }
 
   protected void runStepInternal(final Step step, final Optional<BuildTarget> buildTarget)
-      throws StepFailedException {
+      throws StepFailedException, InterruptedException {
     Preconditions.checkNotNull(step);
 
     if (context.getVerbosity().shouldPrintCommand()) {
@@ -81,8 +82,8 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
     int exitCode = 1;
     try {
       exitCode = step.execute(context);
-    } catch (Throwable t) {
-      throw StepFailedException.createForFailingStepWithException(step, t, buildTarget);
+    } catch (RuntimeException e) {
+      throw StepFailedException.createForFailingStepWithException(step, e, buildTarget);
     } finally {
       context.postEvent(StepEvent.finished(step, step.getDescription(context), exitCode));
     }
@@ -121,7 +122,8 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
    * @param steps List of steps to execute.
    */
   @Override
-  public void runStepsInParallelAndWait(final List<Step> steps) throws StepFailedException {
+  public void runStepsInParallelAndWait(final List<Step> steps)
+      throws StepFailedException, InterruptedException {
     List<Callable<Void>> callables = Lists.transform(steps,
         new Function<Step, Callable<Void>>() {
       @Override
@@ -137,7 +139,7 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
     });
 
     try {
-      MoreFutures.getAllUninterruptibly(listeningExecutorService, callables);
+      MoreFutures.getAll(listeningExecutorService, callables);
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
       Throwables.propagateIfInstanceOf(cause, StepFailedException.class);
@@ -158,7 +160,6 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
   public void close() throws IOException {
     listeningExecutorService.shutdown();
     try {
-      // Allow tasks to complete.
       listeningExecutorService.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

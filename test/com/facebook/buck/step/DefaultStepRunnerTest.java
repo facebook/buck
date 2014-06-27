@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 public class DefaultStepRunnerTest {
 
   @Test
-  public void testEventsFired() throws StepFailedException {
+  public void testEventsFired() throws StepFailedException, InterruptedException {
     Step passingStep = new FakeStep("step1", "fake step 1", 0);
     Step failingStep = new FakeStep("step1", "fake step 1", 1);
 
@@ -86,7 +86,7 @@ public class DefaultStepRunnerTest {
   }
 
   @Test
-  public void testExplodingStep() {
+  public void testExplodingStep() throws InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     DefaultStepRunner runner = new DefaultStepRunner(context, 3);

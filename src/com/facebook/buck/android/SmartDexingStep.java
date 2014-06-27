@@ -127,7 +127,7 @@ public class SmartDexingStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public int execute(ExecutionContext context) throws InterruptedException {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     try {
       Multimap<Path, Path> outputToInputs = outputToInputsSupplier.get();
@@ -147,7 +147,7 @@ public class SmartDexingStep implements Step {
   }
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)
-      throws StepFailedException, IOException {
+      throws StepFailedException, IOException, InterruptedException {
     try (DefaultStepRunner stepRunner =
              new DefaultStepRunner(context, numThreads.or(determineOptimalThreadCount()))) {
       // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
