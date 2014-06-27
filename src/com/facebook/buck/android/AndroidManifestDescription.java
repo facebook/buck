@@ -69,9 +69,6 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
   static ImmutableSet<Path> findManifestFiles(Arg args) {
     AndroidTransitiveDependencyGraph transitiveDependencyGraph =
         new AndroidTransitiveDependencyGraph(args.deps.get());
-    AndroidTransitiveDependencies transitiveDependencies =
-        transitiveDependencyGraph.findDependencies();
-
-    return transitiveDependencies.manifestFiles;
+    return transitiveDependencyGraph.findManifestFiles();
   }
 }
