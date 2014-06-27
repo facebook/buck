@@ -100,17 +100,15 @@ public class AndroidPackageableCollectorTest {
         .build(ruleResolver);
 
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(libraryRule, manifestRule);
-    AndroidBinary binaryRule = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
+    AndroidBinary binaryRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
+        BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
         .setOriginalDeps(originalDeps)
         .setBuildTargetsToExcludeFromDex(
             ImmutableSet.of(BuildTargetFactory.newInstance("//third_party/guava:guava")))
         .setManifest(new TestSourcePath("java/src/com/facebook/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore((Keystore) keystore.getBuildable())
-        .build(ruleResolver)
-        .getBuildable();
-    binaryRule.getEnhancedDeps(ruleResolver, originalDeps, ImmutableSortedSet.of(keystore));
+        .setKeystore((Keystore) keystore)
+        .build(ruleResolver);
 
     // Verify that the correct transitive dependencies are found.
     AndroidPackageableCollection packageableCollection =
@@ -146,12 +144,12 @@ public class AndroidPackageableCollectorTest {
     assertEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
             "transitive dependencies.",
-        ImmutableSet.of(((NativeLibraryBuildable) ndkLibrary.getBuildable()).getLibraryPath()),
+        ImmutableSet.of(((NativeLibraryBuildRule) ndkLibrary).getLibraryPath()),
         packageableCollection.nativeLibsDirectories);
     assertEquals(
         "Because a prebuilt native library  was declared as a dependency (and asset), it should " +
             "be added to the transitive dependecies.",
-        ImmutableSet.of(((NativeLibraryBuildable) prebuiltNativeLibraryBuild.getBuildable())
+        ImmutableSet.of(((NativeLibraryBuildRule) prebuiltNativeLibraryBuild)
             .getLibraryPath()),
         packageableCollection.nativeLibAssetsDirectories);
     assertEquals(
@@ -204,7 +202,7 @@ public class AndroidPackageableCollectorTest {
             .setDeps(ImmutableSortedSet.of(c))
             .build());
 
-    BuildRule a = ruleResolver.addToIndex(
+    AndroidResource a = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
             .setRes(Paths.get("res_a"))
@@ -213,7 +211,7 @@ public class AndroidPackageableCollectorTest {
             .build());
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector();
-    collector.addPackageables(ImmutableList.of(((AndroidPackageable) a.getBuildable())));
+    collector.addPackageables(ImmutableList.<AndroidPackageable>of(a));
 
     // Note that a topological sort for a DAG is not guaranteed to be unique, but we order nodes
     // within the same depth of the search.
@@ -236,18 +234,13 @@ public class AndroidPackageableCollectorTest {
         .build(ruleResolver);
 
     ImmutableSortedSet<BuildRule> declaredDeps = ImmutableSortedSet.of(a, c);
-    BuildRule e = AndroidBinaryBuilder.newBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
+    AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//:e"))
         .setManifest(new TestSourcePath("AndroidManfiest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore((Keystore) keystore.getBuildable())
+        .setKeystore((Keystore) keystore)
         .setOriginalDeps(declaredDeps)
         .build(ruleResolver);
-    AndroidBinary androidBinary = ((AndroidBinary) e.getBuildable());
-    androidBinary.getEnhancedDeps(
-        ruleResolver,
-        declaredDeps,
-        ImmutableSortedSet.of(keystore));
 
     assertEquals(
         String.format("Android resources should be topologically sorted."),
@@ -285,18 +278,13 @@ public class AndroidPackageableCollectorTest {
         .build(ruleResolver);
 
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(androidLibrary);
-    AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder.newBuilder()
-        .setBuildTarget(new BuildTarget("//apps/sample", "app"))
+    AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
+        new BuildTarget("//apps/sample", "app"))
         .setManifest(new TestSourcePath("apps/sample/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore((Keystore) keystore.getBuildable())
         .setOriginalDeps(originalDeps)
-        .build(ruleResolver)
-        .getBuildable();
-    androidBinary.getEnhancedDeps(
-        ruleResolver,
-        originalDeps,
-        ImmutableSortedSet.of(keystore));
+        .setKeystore((Keystore) keystore)
+        .build(ruleResolver);
 
     AndroidPackageableCollection packageableCollection =
         androidBinary.getAndroidPackageableCollection();

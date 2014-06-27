@@ -22,8 +22,9 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
@@ -57,7 +58,7 @@ import java.nio.file.Paths;
  * )
  * </pre>
  */
-public class GenAidl extends AbstractBuildable {
+public class GenAidl extends AbstractBuildRule {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
 
@@ -66,10 +67,11 @@ public class GenAidl extends AbstractBuildable {
   private final Path output;
   private final Path genPath;
 
-  GenAidl(BuildTarget buildTarget, Path aidlFilePath, String importPath) {
-    super(buildTarget);
+  GenAidl(BuildRuleParams params, Path aidlFilePath, String importPath) {
+    super(params);
     this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
     this.importPath = Preconditions.checkNotNull(importPath);
+    BuildTarget buildTarget = params.getBuildTarget();
     this.genPath = BuildTargets.getGenPath(buildTarget, "%s");
     this.output = genPath.resolve(String.format("lib%s%s", buildTarget.getShortName(), SRC_ZIP));
   }
@@ -106,6 +108,7 @@ public class GenAidl extends AbstractBuildable {
 
     commands.add(new MakeCleanDirectoryStep(genPath));
 
+    BuildTarget target = getBuildTarget();
     Path outputDirectory = BuildTargets.getBinPath(target, "__%s.aidl");
     commands.add(new MakeCleanDirectoryStep(outputDirectory));
 

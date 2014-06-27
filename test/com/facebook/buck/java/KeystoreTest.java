@@ -38,9 +38,10 @@ import java.util.List;
 
 public class KeystoreTest {
 
-  private static BuildRule createKeystoreRuleForTest() {
+  private static Keystore createKeystoreRuleForTest() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    return KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//keystores:debug"))
+    return (Keystore) KeystoreBuilder.createBuilder(
+        BuildTargetFactory.newInstance("//keystores:debug"))
         .setStore(Paths.get("keystores/debug.keystore"))
         .setProperties(Paths.get("keystores/debug.keystore.properties"))
         .build(ruleResolver);
@@ -48,10 +49,9 @@ public class KeystoreTest {
 
   @Test
   public void testObservers() {
-    BuildRule rule = createKeystoreRuleForTest();
-    assertEquals(KeystoreDescription.TYPE, rule.getType());
+    Keystore keystore = createKeystoreRuleForTest();
+    assertEquals(KeystoreDescription.TYPE, keystore.getType());
 
-    Keystore keystore = (Keystore) rule.getBuildable();
     MoreAsserts.assertIterablesEquals(
         ImmutableList.of(
             Paths.get("keystores/debug.keystore"),
@@ -69,7 +69,7 @@ public class KeystoreTest {
     replay(buildContext);
 
     BuildRule keystore = createKeystoreRuleForTest();
-    List<Step> buildSteps = keystore.getBuildable().getBuildSteps(buildContext,
+    List<Step> buildSteps = keystore.getBuildSteps(buildContext,
         new FakeBuildableContext());
     assertEquals(ImmutableList.<Step>of(), buildSteps);
 

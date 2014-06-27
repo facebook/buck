@@ -16,10 +16,9 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cpp.AbstractNativeBuildable;
+import com.facebook.buck.cpp.AbstractNativeBuildRule;
 import com.facebook.buck.cpp.CompilerStep;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -31,7 +30,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.List;
 
-public class MacosxBinary extends AbstractNativeBuildable implements AppleBuildable {
+public class MacosxBinary extends AbstractNativeBuildRule implements AppleBuildRule {
 
   private final Path infoPlist;
   private final ImmutableSet<XcodeRuleConfiguration> configurations;
@@ -40,12 +39,11 @@ public class MacosxBinary extends AbstractNativeBuildable implements AppleBuilda
   private final ImmutableSortedSet<String> frameworks;
 
   public MacosxBinary(
-      BuildTarget target,
+      BuildRuleParams params,
       MacosxBinaryDescription.Arg arg,
       TargetSources targetSources) {
     super(
-        target,
-        arg.deps.or(ImmutableSortedSet.<BuildRule>of()),
+        params,
         targetSources.srcPaths,
         targetSources.headerPaths,
         targetSources.perFileFlags);

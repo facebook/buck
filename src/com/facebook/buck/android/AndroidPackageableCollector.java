@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Buildable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -66,7 +65,7 @@ public class AndroidPackageableCollector {
   /**
    * @param resourcesToExclude Only relevant to {@link AndroidInstrumentationApk} which needs to
    *     remove resources that are already included in the
-   *     {@link AndroidInstrumentationApk#apkUnderTest}
+   *     {@link AndroidInstrumentationApkDescription.Arg#apk}
    */
   public AndroidPackageableCollector(
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
@@ -104,7 +103,6 @@ public class AndroidPackageableCollector {
    */
   public static Iterable<AndroidPackageable> getPackageableRules(Iterable<BuildRule> rules) {
     return FluentIterable.from(rules)
-        .transform(BuildRules.TO_BUILDABLE)
         .filter(AndroidPackageable.class)
         .toList();
   }

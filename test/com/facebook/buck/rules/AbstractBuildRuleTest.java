@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
+import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -33,8 +34,6 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.util.Comparator;
-
-import javax.annotation.Nullable;
 
 public class AbstractBuildRuleTest {
 
@@ -203,26 +202,27 @@ public class AbstractBuildRuleTest {
         .setDeps(sortedDeps)
         .setVisibility(visibilityPatterns)
         .build();
-    return new AbstractBuildRule(buildRuleParams, null) {
-      @Override
-      public BuildRuleType getType() {
-        throw new IllegalStateException("This method should not be called");
-      }
+    return new AbstractBuildRule(buildRuleParams) {
 
-      @Nullable
       @Override
-      public Buildable getBuildable() {
+      public ImmutableList<Step> getBuildSteps(
+          BuildContext context, BuildableContext buildableContext) {
         return null;
       }
 
       @Override
-      public final Iterable<Path> getInputs() {
-        return ImmutableList.of();
+      public Path getPathToOutputFile() {
+        return null;
       }
 
       @Override
-      public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-        throw new IllegalStateException("This method should not be called");
+      protected Iterable<Path> getInputsToCompareToOutput() {
+        return null;
+      }
+
+      @Override
+      protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+        return null;
       }
     };
   }

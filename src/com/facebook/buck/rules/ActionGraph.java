@@ -46,11 +46,11 @@ public class ActionGraph extends DefaultImmutableDirectedAcyclicGraph<BuildRule>
   }
 
   public List<BuildRule> getBuildRulesOfBuildableTypeInBasePath(
-      Class<? extends Buildable> klass, String basePath) {
+      Class<? extends BuildRule> klass, String basePath) {
     ImmutableList.Builder<BuildRule> result = ImmutableList.builder();
     for (BuildRule rule : getNodes()) {
       if (rule.getBuildTarget().getBasePath().equals(basePath) &&
-          klass.isInstance(rule.getBuildable())) {
+          klass.isInstance(rule)) {
         result.add(rule);
       }
     }

@@ -24,9 +24,11 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TestSourcePath;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -88,35 +90,34 @@ public class AndroidInstrumentationApkTest {
         .build(ruleResolver);
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.
-    AndroidBinaryBuilder.Builder androidBinaryBuilder = AndroidBinaryBuilder.newBuilder();
+    AndroidBinaryBuilder androidBinaryBuilder = AndroidBinaryBuilder.createBuilder(
+        new BuildTarget("//apps", "app"));
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.<BuildRule>of(
         javaLibrary2,
         javaLibrary3);
     androidBinaryBuilder
-        .setBuildTarget(new BuildTarget("//apps", "app"))
         .setManifest(new TestSourcePath("apps/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:18")
-        .setKeystore((Keystore) keystore.getBuildable())
+        .setKeystore((Keystore) keystore)
         .setOriginalDeps(originalDeps);
-    BuildRule androidBinaryRule = androidBinaryBuilder.build(ruleResolver);
-    AndroidBinary androidBinary = (AndroidBinary) androidBinaryRule.getBuildable();
-    androidBinary.getEnhancedDeps(ruleResolver, originalDeps, ImmutableSortedSet.of(keystore));
+    AndroidBinary androidBinary = (AndroidBinary) androidBinaryBuilder.build(ruleResolver);
 
     // AndroidInstrumentationApk transitively depends on :lib1, :lib2, :lib3, and :lib4.
     ImmutableSortedSet<BuildRule> apkOriginalDeps = ImmutableSortedSet.<BuildRule>of(
         javaLibrary2,
         javaLibrary4);
-    AndroidInstrumentationApk androidInstrumentationApk = new AndroidInstrumentationApk(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//apps", "instrumentation"))
-            .setDeps(apkOriginalDeps)
-            .build(),
-        new TestSourcePath("apps/InstrumentationAndroidManifest.xml"),
-        androidBinary,
-        apkOriginalDeps);
-    androidInstrumentationApk.getEnhancedDeps(
-        ruleResolver,
-        apkOriginalDeps,
-        ImmutableSortedSet.of(androidBinaryRule));
+    AndroidInstrumentationApkDescription.Arg arg = new AndroidInstrumentationApkDescription.Arg();
+    arg.apk = androidBinary;
+    arg.deps = Optional.of(apkOriginalDeps);
+    arg.manifest = new TestSourcePath("apps/InstrumentationAndroidManifest.xml");
+
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
+        new BuildTarget("//apps", "instrumentation"))
+        .setDeps(apkOriginalDeps)
+        .setExtraDeps(ImmutableSortedSet.<BuildRule>of(androidBinary))
+        .build();
+    AndroidInstrumentationApk androidInstrumentationApk = (AndroidInstrumentationApk)
+        new AndroidInstrumentationApkDescription().createBuildRule(params, ruleResolver, arg);
 
     assertEquals(
         "//apps:app should have three JAR files to dex.",

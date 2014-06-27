@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
@@ -57,22 +56,21 @@ public class NdkLibraryTest {
 
     String basePath = "java/src/com/facebook/base";
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    BuildRule rule =
+    NdkLibrary ndkLibrary =
         NdkLibraryBuilder.createNdkLibrary(BuildTargetFactory.newInstance(
-            String.format("//%s:base", basePath)))
-        .setNdkVersion("r8b")
-        .addSrc(Paths.get(basePath + "/Application.mk"))
-        .addSrc(Paths.get(basePath + "/main.cpp"))
-        .addSrc(Paths.get(basePath + "/Android.mk"))
-        .addFlag("flag1")
-        .addFlag("flag2")
-        .setIsAsset(true).build();
+                String.format("//%s:base", basePath)))
+            .setNdkVersion("r8b")
+            .addSrc(Paths.get(basePath + "/Application.mk"))
+            .addSrc(Paths.get(basePath + "/main.cpp"))
+            .addSrc(Paths.get(basePath + "/Android.mk"))
+            .addFlag("flag1")
+            .addFlag("flag2")
+            .setIsAsset(true)
+            .build();
 
-    ruleResolver.addToIndex(rule.getBuildTarget(), rule);
+    ruleResolver.addToIndex(ndkLibrary.getBuildTarget(), ndkLibrary);
 
-    assertEquals(NdkLibraryDescription.TYPE, rule.getType());
-
-    NdkLibrary ndkLibrary = (NdkLibrary) rule.getBuildable();
+    assertEquals(NdkLibraryDescription.TYPE, ndkLibrary.getType());
 
     assertTrue(ndkLibrary.getProperties().is(ANDROID));
     assertTrue(ndkLibrary.isAsset());

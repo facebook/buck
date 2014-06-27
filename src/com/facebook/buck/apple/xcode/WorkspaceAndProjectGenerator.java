@@ -71,13 +71,13 @@ public class WorkspaceAndProjectGenerator {
     BuildRule workspaceTargetRule =
         partialGraph.getActionGraph().findBuildRuleByTarget(workspaceConfigTarget);
 
-    if (!(workspaceTargetRule.getBuildable() instanceof XcodeWorkspaceConfig)) {
+    if (!(workspaceTargetRule instanceof XcodeWorkspaceConfig)) {
       throw new HumanReadableException("%s must be a xcode_workspace_config",
           workspaceTargetRule.getFullyQualifiedName());
     }
 
     XcodeWorkspaceConfig workspaceBuildable =
-        (XcodeWorkspaceConfig) workspaceTargetRule.getBuildable();
+        (XcodeWorkspaceConfig) workspaceTargetRule;
     BuildRule actualTargetRule = workspaceBuildable.getSrcTarget();
 
     String workspaceName = workspaceBuildable.getSrcTarget().getBuildTarget().getShortName();
@@ -123,7 +123,7 @@ public class WorkspaceAndProjectGenerator {
       if (xcodeProjectConfigRule.isPresent()) {
         XcodeProjectConfig xcodeProjectConfig =
             (XcodeProjectConfig) Preconditions.checkNotNull(
-                xcodeProjectConfigRule.get().getBuildable());
+                xcodeProjectConfigRule.get());
 
         ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
         for (BuildRule memberRule : xcodeProjectConfig.getRules()) {
@@ -152,7 +152,7 @@ public class WorkspaceAndProjectGenerator {
       }
 
       for (BuildRule rule : xcodeNativeProjectRules) {
-        XcodeNative buildable = (XcodeNative) rule.getBuildable();
+        XcodeNative buildable = (XcodeNative) rule;
         Path projectPath = buildable.getProjectContainerPath().resolve();
         Path pbxprojectPath = projectPath.resolve("project.pbxproj");
         String targetName = rule.getBuildTarget().getShortName();

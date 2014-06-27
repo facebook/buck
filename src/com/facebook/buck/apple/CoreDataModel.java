@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -43,7 +43,7 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class CoreDataModel extends AbstractBuildable {
+public class CoreDataModel extends AbstractBuildRule {
   private static final String CORE_DATA_MODEL_EXTENSION = "xcdatamodel";
   private static final String VERSIONED_CORE_DATA_MODEL_EXTENSION = "xcdatamodeld";
 
@@ -52,10 +52,10 @@ public class CoreDataModel extends AbstractBuildable {
   private final String extension;
 
   CoreDataModel(
-      BuildTarget target,
+      BuildRuleParams params,
       Supplier<ImmutableCollection<Path>> inputPathsSupplier,
       CoreDataModelDescription.Arg args) {
-    super(target);
+    super(params);
     this.extension = Files.getFileExtension(args.path.getFileName().toString());
     Preconditions.checkArgument(
         CORE_DATA_MODEL_EXTENSION.equals(extension) ||

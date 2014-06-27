@@ -29,15 +29,17 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
@@ -45,6 +47,7 @@ import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -97,12 +100,6 @@ public class AuditOwnerCommandTest {
       throw new UnsupportedOperationException();
     }
 
-    @Nullable
-    @Override
-    public Buildable getBuildable() {
-      return null;
-    }
-
     @Override
     public BuildableProperties getProperties() {
       throw new UnsupportedOperationException();
@@ -131,6 +128,19 @@ public class AuditOwnerCommandTest {
     @Override
     public final RuleKey getRuleKeyWithoutDeps() {
       throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context,
+        BuildableContext buildableContext) {
+      return ImmutableList.of();
+    }
+
+    @Override
+    @Nullable
+    public Path getPathToOutputFile() {
+      return null;
     }
 
     @Override

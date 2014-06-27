@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -41,8 +42,11 @@ public class KeystoreDescription implements Description<KeystoreDescription.Arg>
   }
 
   @Override
-  public Keystore createBuildable(BuildRuleParams params, Arg args) {
-    return new Keystore(params.getBuildTarget(), args.store, args.properties);
+  public <A extends Arg> Keystore createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new Keystore(params, args.store, args.properties);
   }
 
   public static class Arg implements ConstructorArg {

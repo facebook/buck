@@ -16,10 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -44,25 +43,22 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class PrebuiltNativeLibrary extends AbstractBuildable
-    implements NativeLibraryBuildable, AndroidPackageable {
+public class PrebuiltNativeLibrary extends AbstractBuildRule
+    implements NativeLibraryBuildRule, AndroidPackageable {
 
   private final boolean isAsset;
   private final Path libraryPath;
   private final ImmutableSortedSet<Path> librarySources;
-  private final ImmutableSortedSet<BuildRule> deps;
 
   protected PrebuiltNativeLibrary(
-      BuildTarget target,
-      ImmutableSortedSet<BuildRule> deps,
+      BuildRuleParams params,
       Path nativeLibsDirectory,
       boolean isAsset,
       ImmutableSortedSet<Path> librarySources) {
-    super(target);
+    super(params);
     this.isAsset = isAsset;
     this.libraryPath = Preconditions.checkNotNull(nativeLibsDirectory);
     this.librarySources = Preconditions.checkNotNull(librarySources);
-    this.deps = Preconditions.checkNotNull(deps);
   }
 
   @Override
@@ -103,7 +99,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildable
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(deps);
+    return AndroidPackageableCollector.getPackageableRules(getDeclaredDeps());
   }
 
   @Override

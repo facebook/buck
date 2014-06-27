@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -38,8 +39,11 @@ public class ExportFileDescription implements Description<ExportFileDescription.
   }
 
   @Override
-  public ExportFile createBuildable(BuildRuleParams params, Arg args) {
-    return new ExportFile(params.getBuildTarget(), args);
+  public <A extends Arg> ExportFile createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new ExportFile(params, args);
   }
 
   public static class Arg implements ConstructorArg {

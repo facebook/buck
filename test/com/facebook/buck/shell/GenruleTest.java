@@ -139,20 +139,20 @@ public class GenruleTest {
 
     // Verify all of the observers of the Genrule.
     assertEquals(GEN_PATH.resolve("src/com/facebook/katana/AndroidManifest.xml"),
-        genrule.getBuildable().getPathToOutputFile());
+        genrule.getPathToOutputFile());
     assertEquals(
         getAbsolutePathInBase(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString(),
-        ((Genrule) genrule.getBuildable()).getAbsoluteOutputFilePath());
+        ((Genrule) genrule).getAbsoluteOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
     ImmutableSortedSet<Path> inputsToCompareToOutputs = ImmutableSortedSet.of(
         Paths.get("src/com/facebook/katana/convert_to_katana.py"),
         Paths.get("src/com/facebook/katana/AndroidManifest.xml"));
     assertEquals(
         inputsToCompareToOutputs,
-        genrule.getBuildable().getInputsToCompareToOutput());
+        ((Genrule) genrule).getInputsToCompareToOutput());
 
     // Verify that the shell commands that the genrule produces are correct.
-    List<Step> steps = genrule.getBuildable().getBuildSteps(
+    List<Step> steps = genrule.getBuildSteps(
         buildContext, new FakeBuildableContext());
     assertEquals(7, steps.size());
 
@@ -239,7 +239,7 @@ public class GenruleTest {
         .addDep(dep)
         .build();
 
-    AbstractGenruleStep genruleStep = ((Genrule) genrule.getBuildable()).createGenruleStep();
+    AbstractGenruleStep genruleStep = ((Genrule) genrule).createGenruleStep();
     ExecutionContext context = newEmptyExecutionContext(Platform.LINUX);
     Map<String, String> environmentVariables = genruleStep.getEnvironmentVariables(context);
     assertEquals(
@@ -308,7 +308,7 @@ public class GenruleTest {
         .build();
 
     try {
-      ((Genrule) genrule.getBuildable()).createGenruleStep()
+      ((Genrule) genrule).createGenruleStep()
           .replaceMatches(new FakeProjectFilesystem(), "$(location //cheese:java)");
       fail("Location was null. Expected HumanReadableException with helpful message.");
     } catch (HumanReadableException e) {
@@ -327,8 +327,7 @@ public class GenruleTest {
     String contextBasePath = "java/com/facebook/util";
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
-    Genrule buildable = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps)
-        .getBuildable();
+    Genrule buildable = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
     AbstractGenruleStep genruleStep = buildable.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
@@ -353,8 +352,7 @@ public class GenruleTest {
     String contextBasePath = "java/com/facebook/util";
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
-    Genrule buildable = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps)
-        .getBuildable();
+    Genrule buildable = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
     AbstractGenruleStep genruleStep = buildable.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
@@ -375,7 +373,7 @@ public class GenruleTest {
 
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
-    Path outputPath = javaBinary.getBuildable().getPathToOutputFile();
+    Path outputPath = javaBinary.getPathToOutputFile();
     Path absolutePath = outputPath.toAbsolutePath();
 
     String originalCmd = String.format("$(location :%s) $(location %s) $OUT",
@@ -385,8 +383,7 @@ public class GenruleTest {
     String contextBasePath = javaBinary.getBuildTarget().getBasePath();
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
-    Genrule buildable = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps)
-        .getBuildable();
+    Genrule buildable = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
     AbstractGenruleStep genruleStep = buildable.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
@@ -408,8 +405,7 @@ public class GenruleTest {
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
     String contextBasePath = "java/com/facebook/util";
 
-    Genrule rule = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps)
-        .getBuildable();
+    Genrule rule = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
     AbstractGenruleStep genruleStep = rule.createGenruleStep();
 
     String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
@@ -436,7 +432,7 @@ public class GenruleTest {
         .build();
 
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
-    ((Genrule) rule.getBuildable()).addSymlinkCommands(builder);
+    ((Genrule) rule).addSymlinkCommands(builder);
     ImmutableList<Step> commands = builder.build();
 
     String baseTmpPath = GEN_DIR + "/example__srcs/";
@@ -499,11 +495,10 @@ public class GenruleTest {
     EasyMock.replay(android);
 
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    Genrule genrule = (Genrule) GenruleBuilder.createGenrule(target)
+    Genrule genrule = GenruleBuilder.createGenrule(target)
         .setBash("true")
         .setOut("/dev/null")
-        .build()
-        .getBuildable();
+        .build();
 
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setAndroidPlatformTarget(Optional.of(android))
@@ -529,12 +524,11 @@ public class GenruleTest {
 
     // Test platform-specific
     BuildTarget target = BuildTargetFactory.newInstance(genruleName);
-    Genrule genrule = (Genrule) GenruleBuilder.createGenrule(target)
+    Genrule genrule = GenruleBuilder.createGenrule(target)
         .setBash(bash)
         .setCmdExe(cmdExe)
         .setOut("out.txt")
-        .build()
-        .getBuildable();
+        .build();
 
     ImmutableList<String> command = genrule
         .createGenruleStep()
@@ -546,11 +540,10 @@ public class GenruleTest {
 
     // Test fallback
     BuildTarget fallbackTarget = target;
-    genrule = (Genrule) GenruleBuilder.createGenrule(fallbackTarget)
+    genrule = GenruleBuilder.createGenrule(fallbackTarget)
         .setCmd(cmd)
         .setOut("out.txt")
-        .build()
-        .getBuildable();
+        .build();
     command = genrule.createGenruleStep().getShellCommand(linuxExecutionContext);
     assertEquals(ImmutableList.of("/bin/bash", "-e", "-c", cmd), command);
 
@@ -558,10 +551,9 @@ public class GenruleTest {
     assertEquals(ImmutableList.of("cmd.exe", "/c", cmd), command);
 
     // Test command absent
-    genrule = (Genrule) GenruleBuilder.createGenrule(target)
+    genrule = GenruleBuilder.createGenrule(target)
         .setOut("out.txt")
-        .build()
-        .getBuildable();
+        .build();
     try {
       genrule.createGenruleStep().getShellCommand(linuxExecutionContext);
     } catch (HumanReadableException e) {

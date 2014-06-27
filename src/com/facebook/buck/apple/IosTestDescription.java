@@ -18,8 +18,8 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.AppleSource;
@@ -45,8 +45,11 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
   }
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new IosTest(params.getBuildTarget(), args, TargetSources.ofAppleSources(args.srcs));
+  public <A extends Arg> IosTest createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new IosTest(params, args, TargetSources.ofAppleSources(args.srcs));
   }
 
   public static class Arg implements ConstructorArg {

@@ -18,8 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
@@ -57,19 +56,19 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   private final Function<Path, Path> relativeToAbsolutePathFunction;
 
   ApkGenrule(
-      BuildTarget target,
+      BuildRuleParams params,
       List<Path> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
       Function<Path, Path> relativeToAbsolutePathFunction,
       InstallableApk apk) {
-    super(target,
+    super(params,
         srcs,
         cmd,
         bash,
         cmdExe,
-        /* out */ target.getShortName() + ".apk",
+        /* out */ params.getBuildTarget().getShortName() + ".apk",
         relativeToAbsolutePathFunction);
 
     this.apk = Preconditions.checkNotNull(apk);
@@ -86,11 +85,6 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return super.appendDetailsToRuleKey(builder)
         .setInput("apk", apk.getApkPath());
-  }
-
-  @Override
-  public BuildTarget getBuildTarget() {
-    return target;
   }
 
   public InstallableApk getInstallableApk() {
@@ -115,11 +109,6 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
-  }
-
-  @Override
-  protected BuildRuleType getType() {
-    return ApkGenruleDescription.TYPE;
   }
 
   @Override

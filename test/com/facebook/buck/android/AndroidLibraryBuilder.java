@@ -25,8 +25,7 @@ import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 
-public class AndroidLibraryBuilder
-    extends AbstractBuilder<AndroidLibrary, AndroidLibraryDescription.Arg> {
+public class AndroidLibraryBuilder extends AbstractBuilder<AndroidLibraryDescription.Arg> {
 
   private AndroidLibraryBuilder(BuildTarget target) {
     super(new AndroidLibraryDescription(JavaCompilerEnvironment.DEFAULT), target);

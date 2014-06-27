@@ -24,7 +24,7 @@ import java.nio.file.Path;
  * {@link Buildable} that contains various {@code .so} files for Android, organized by target CPU
  * architecture.
  */
-public interface NativeLibraryBuildable {
+public interface NativeLibraryBuildRule {
 
   /**
    * @return A boolean indicating whether the {@code .so} files in the directory returned by

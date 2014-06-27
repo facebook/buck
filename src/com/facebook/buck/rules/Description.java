@@ -33,16 +33,19 @@ public interface Description<T extends ConstructorArg> {
   BuildRuleType getBuildRuleType();
 
   /**
-   * @return An instance of the argument that must later be passed to
-   *     {@link #createBuildable(BuildRuleParams, ConstructorArg)}.
+   * @return An instance of the argument that must later be passed to createBuildRule().
    * @see ConstructorArgMarshaller
    *
    */
   T createUnpopulatedConstructorArg();
 
   /**
+   * @param resolver For querying for build rules by their targets.
    * @param args A constructor argument, as returned by {@link #createUnpopulatedConstructorArg()}.
    * @return The {@link Buildable} that describes the default flavour of the rule being described.
    */
-  <A extends T> Buildable createBuildable(BuildRuleParams params, A args);
+  <A extends T> BuildRule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args);
 }

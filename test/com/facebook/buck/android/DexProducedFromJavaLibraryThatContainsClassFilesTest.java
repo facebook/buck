@@ -28,6 +28,8 @@ import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
@@ -74,8 +76,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     replayAll();
 
     BuildTarget buildTarget = new BuildTarget("//foo", "bar", "dex");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(buildTarget, javaLibraryRule);
+        new DexProducedFromJavaLibrary(params, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     verifyAll();
@@ -144,8 +147,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     replayAll();
 
     BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(buildTarget, javaLibrary);
+        new DexProducedFromJavaLibrary(params, javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     verifyAll();
@@ -194,8 +198,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     replayAll();
 
     BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDexWithClasses =
-        new DexProducedFromJavaLibrary(buildTarget, accumulateClassNames);
+        new DexProducedFromJavaLibrary(params, accumulateClassNames);
     assertNull(preDexWithClasses.getPathToOutputFile());
     assertTrue(Iterables.isEmpty(preDexWithClasses.getInputsToCompareToOutput()));
     assertEquals(Paths.get("buck-out/gen/foo/bar.dex.jar"), preDexWithClasses.getPathToDex());

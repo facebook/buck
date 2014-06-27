@@ -38,7 +38,7 @@ public class TargetNodeToBuildRuleTransformer<T extends ConstructorArg> {
     this.targetNode = Preconditions.checkNotNull(targetNode);
   }
 
-  public DescribedRule transform(BuildRuleResolver ruleResolver) throws NoSuchBuildTargetException {
+  public BuildRule transform(BuildRuleResolver ruleResolver) throws NoSuchBuildTargetException {
     BuildRuleFactoryParams ruleFactoryParams = targetNode.getRuleFactoryParams();
     Description<T> description = targetNode.getDescription();
     ConstructorArgMarshaller inspector =
@@ -65,47 +65,25 @@ public class TargetNodeToBuildRuleTransformer<T extends ConstructorArg> {
     BuildRuleParams params = new BuildRuleParams(
         targetNode.getBuildTarget(),
         declaredRules.build(),
+        extraRules.build(),
         getVisibilityPatterns(targetNode),
         ruleFactoryParams.getProjectFilesystem(),
-        ruleFactoryParams.getRuleKeyBuilderFactory());
-    Buildable buildable = description.createBuildable(params, arg);
-
-    // Check to see if the buildable would like a chance to monkey around with the deps
-    ImmutableSortedSet<BuildRule> finalDependencySet;
-    if (buildable instanceof DependencyEnhancer) {
-      finalDependencySet = ((DependencyEnhancer) buildable).getEnhancedDeps(
-          ruleResolver,
-          declaredRules.build(),
-          extraRules.build());
-    } else {
-      finalDependencySet = extraRules.addAll(declaredRules.build()).build();
-    }
-
-    // These are the params used by the rule, but not the buildable. Confusion will be lessened once
-    // we move to a dependency graph that's not the action graph.
-    params = new BuildRuleParams(
-        params.getBuildTarget(),
-        finalDependencySet,
-        params.getVisibilityPatterns(),
-        params.getProjectFilesystem(),
-        params.getRuleKeyBuilderFactory());
-    DescribedRule describedRule = new DescribedRule(
-        description.getBuildRuleType(),
-        buildable,
-        params);
+        ruleFactoryParams.getRuleKeyBuilderFactory(),
+        description.getBuildRuleType());
+    BuildRule buildRule = description.createBuildRule(params, ruleResolver, arg);
 
     // Note that describedRule has not been added to the BuildRuleResolver yet.
     if (description instanceof FlavorableDescription) {
       FlavorableDescription<T> flavorable = (FlavorableDescription<T>) description;
       flavorable.registerFlavors(
           arg,
-          describedRule,
+          buildRule,
           ruleFactoryParams.getProjectFilesystem(),
           ruleFactoryParams.getRuleKeyBuilderFactory(),
           ruleResolver);
     }
 
-    return describedRule;
+    return buildRule;
   }
 
   private static ImmutableSortedSet.Builder<BuildRule> expandRules(

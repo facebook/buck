@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstructorArg;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
@@ -108,11 +107,14 @@ final class ProjectGeneratorTestUtils {
         throw new RuntimeException(e);
       }
     }
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(target).setDeps(deps).build();
-    return new DescribedRule(
-        description.getBuildRuleType(),
-        description.createBuildable(buildRuleParams, overrides.apply(arg)),
-        buildRuleParams);
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(target)
+        .setDeps(deps)
+        .setType(description.getBuildRuleType())
+        .build();
+    return description.createBuildRule(
+        buildRuleParams,
+        new BuildRuleResolver(),
+        overrides.apply(arg));
   }
 
   public static PartialGraph createPartialGraphFromBuildRuleResolver(BuildRuleResolver resolver) {

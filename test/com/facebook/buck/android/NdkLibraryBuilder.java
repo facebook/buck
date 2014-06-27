@@ -16,8 +16,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -25,7 +23,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -72,21 +69,13 @@ public class NdkLibraryBuilder {
       return this;
     }
 
-    public NdkLibrary buildAsBuildable() {
+    public NdkLibrary build() {
       return new NdkLibrary(
-          buildTarget,
-          ImmutableSortedSet.<BuildRule>of(),
+          new FakeBuildRuleParamsBuilder(buildTarget).setType(NdkLibraryDescription.TYPE).build(),
           sources.build(),
           flags.build(),
           isAsset,
           ndkVersion);
-    }
-
-    public BuildRule build() {
-      return new DescribedRule(
-          NdkLibraryDescription.TYPE,
-          buildAsBuildable(),
-          new FakeBuildRuleParamsBuilder(buildTarget).build());
     }
   }
 }

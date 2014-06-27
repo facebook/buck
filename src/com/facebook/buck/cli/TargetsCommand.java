@@ -29,8 +29,6 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -155,12 +153,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         output += " " + buildRule.getRuleKey();
       }
       if (showOutput) {
-        Buildable buildable = buildRule.getBuildable();
-        if (buildable != null) {
-          Path outputPath = buildable.getPathToOutputFile();
-          if (outputPath != null) {
-            output += " " + outputPath;
-          }
+        Path outputPath = buildRule.getPathToOutputFile();
+        if (outputPath != null) {
+          output += " " + outputPath;
         }
       }
       getStdOut().println(output);
@@ -251,16 +246,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         continue;
       }
 
-      Path outputPath;
-      Buildable buildable = buildRule.getBuildable();
-      if (buildable != null) {
-        outputPath = buildable.getPathToOutputFile();
-      } else if (ProjectConfigDescription.TYPE.equals(buildRule.getType())) {
-        // We know that project_config() rules are special.
-        outputPath = null;
-      } else {
-        throw new RuntimeException("No Buildable for " + buildRule.getFullyQualifiedName());
-      }
+      Path outputPath = buildRule.getPathToOutputFile();
 
       if (outputPath != null) {
         targetRule.put("buck.output_file", outputPath.toString());

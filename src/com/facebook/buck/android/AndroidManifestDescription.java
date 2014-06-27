@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -45,10 +45,13 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
   }
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Arg args) {
+  public <A extends Arg> AndroidManifest createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     ImmutableSet<Path> manifestFiles = findManifestFiles(args);
 
-    return new AndroidManifest(params.getBuildTarget(), args.skeleton, manifestFiles);
+    return new AndroidManifest(params, args.skeleton, manifestFiles);
   }
 
   public static class Arg implements ConstructorArg {

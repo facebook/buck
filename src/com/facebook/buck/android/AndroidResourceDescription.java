@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
@@ -55,12 +55,14 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
   }
 
   @Override
-  public Buildable createBuildable(
-      BuildRuleParams params, Arg args) {
+  public <A extends Arg> BuildRule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     ProjectFilesystem filesystem = params.getProjectFilesystem();
 
     return new AndroidResource(
-        params.getBuildTarget(),
+        params,
         args.deps.get(),
         args.res.orNull(),
         collectInputFiles(filesystem, args.res),

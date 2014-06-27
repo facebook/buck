@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -75,10 +76,10 @@ public class DummyRDotJavaTest {
     setAndroidResourceBuildOutput(resourceRule2, RESOURCE_RULE2_KEY);
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule")).build(),
         ImmutableSet.of(
-            (HasAndroidResourceDeps) resourceRule1.getBuildable(),
-            (HasAndroidResourceDeps) resourceRule2.getBuildable()),
-        BuildTargetFactory.newInstance("//java/base:rule"),
+            (HasAndroidResourceDeps) resourceRule1,
+            (HasAndroidResourceDeps) resourceRule2),
         JavacOptions.DEFAULTS);
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
@@ -94,8 +95,8 @@ public class DummyRDotJavaTest {
         makeCleanDirDescription(rDotJavaSrcFolder),
         mergeAndroidResourcesDescription(
             ImmutableList.of(
-                (AndroidResource) resourceRule1.getBuildable(),
-                (AndroidResource) resourceRule2.getBuildable()),
+                (AndroidResource) resourceRule1,
+                (AndroidResource) resourceRule2),
             rDotJavaSrcFolder),
         makeCleanDirDescription(rDotJavaBinFolder),
         makeCleanDirDescription(rDotJavaAbiFolder),
@@ -113,16 +114,17 @@ public class DummyRDotJavaTest {
 
     Sha1HashCode expectedSha1 = AndroidResource.ABI_HASHER.apply(
         ImmutableList.of(
-            (HasAndroidResourceDeps) resourceRule1.getBuildable(),
-            (HasAndroidResourceDeps) resourceRule2.getBuildable()));
+            (HasAndroidResourceDeps) resourceRule1,
+            (HasAndroidResourceDeps) resourceRule2));
     assertEquals(expectedSha1, dummyRDotJava.getAbiKeyForDeps());
   }
 
   @Test
   public void testRDotJavaBinFolder() {
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/com/example:library"))
+            .build(),
         ImmutableSet.<HasAndroidResourceDeps>of(),
-        BuildTargetFactory.newInstance("//java/com/example:library"),
         JavacOptions.DEFAULTS);
     assertEquals(Paths.get("buck-out/bin/java/com/example/__library_rdotjava_bin__"),
         dummyRDotJava.getRDotJavaBinFolder());
@@ -131,8 +133,8 @@ public class DummyRDotJavaTest {
   @Test
   public void testInitializeFromDisk() {
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule")).build(),
         ImmutableSet.<HasAndroidResourceDeps>of(),
-        BuildTargetFactory.newInstance("//java/base:rule"),
         JavacOptions.DEFAULTS);
 
     FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
@@ -178,8 +180,8 @@ public class DummyRDotJavaTest {
   }
 
   private void setAndroidResourceBuildOutput(BuildRule resourceRule, String sha1HashCode) {
-    if (resourceRule.getBuildable() instanceof AndroidResource) {
-      ((AndroidResource) resourceRule.getBuildable())
+    if (resourceRule instanceof AndroidResource) {
+      ((AndroidResource) resourceRule)
           .getBuildOutputInitializer()
           .setBuildOutput(new BuildOutput(new Sha1HashCode(sha1HashCode)));
     }

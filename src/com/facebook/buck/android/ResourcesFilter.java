@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -59,7 +59,7 @@ import javax.annotation.Nullable;
  *   <li>The set of non-english {@code strings.xml} files identified by the resource filter.
  * </ul>
  */
-public class ResourcesFilter extends AbstractBuildable
+public class ResourcesFilter extends AbstractBuildRule
     implements FilteredResourcesProvider, InitializableFromDisk<ResourcesFilter.BuildOutput> {
 
   private static final String RES_DIRECTORIES_KEY = "res_directories";
@@ -97,17 +97,17 @@ public class ResourcesFilter extends AbstractBuildable
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public ResourcesFilter(
-      BuildTarget buildTarget,
+      BuildRuleParams params,
       ImmutableList<Path> resDirectories,
       ImmutableSet<Path> whitelistedStringDirs,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesStep.ResourceFilter resourceFilter) {
-    super(buildTarget);
+    super(params);
     this.resDirectories = Preconditions.checkNotNull(resDirectories);
     this.whitelistedStringDirs = Preconditions.checkNotNull(whitelistedStringDirs);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   @Override
@@ -223,7 +223,7 @@ public class ResourcesFilter extends AbstractBuildable
   }
 
   private String getResDestinationBasePath() {
-    return BuildTargets.getBinPath(target, "__filtered__%s__").toString();
+    return BuildTargets.getBinPath(getBuildTarget(), "__filtered__%s__").toString();
   }
 
   @Override

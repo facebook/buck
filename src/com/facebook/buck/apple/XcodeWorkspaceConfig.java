@@ -16,10 +16,10 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -32,12 +32,12 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-public class XcodeWorkspaceConfig extends AbstractBuildable {
+public class XcodeWorkspaceConfig extends AbstractBuildRule {
 
   private final BuildRule srcTarget;
 
-  protected XcodeWorkspaceConfig(BuildTarget target, XcodeWorkspaceConfigDescription.Arg arg) {
-    super(target);
+  protected XcodeWorkspaceConfig(BuildRuleParams params, XcodeWorkspaceConfigDescription.Arg arg) {
+    super(params);
     this.srcTarget = Preconditions.checkNotNull(arg.srcTarget);
   }
 

@@ -32,10 +32,13 @@ public class FakeBuildRuleParamsBuilder {
 
   private final BuildTarget buildTarget;
   private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
+  private ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.of();
   private ImmutableSet<BuildTargetPattern> visibilityPatterns = BuildTargetPattern.PUBLIC;
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private FileHashCache fileHashCache =
       new DefaultFileHashCache(new ProjectFilesystem(Paths.get(".")), new TestConsole());
+
+  private BuildRuleType buildRuleType = new BuildRuleType("fake_build_rule");
 
   public FakeBuildRuleParamsBuilder(BuildTarget buildTarget) {
     this.buildTarget = buildTarget;
@@ -43,6 +46,11 @@ public class FakeBuildRuleParamsBuilder {
 
   public FakeBuildRuleParamsBuilder setDeps(ImmutableSortedSet<BuildRule> deps) {
     this.deps = deps;
+    return this;
+  }
+
+  public FakeBuildRuleParamsBuilder setExtraDeps(ImmutableSortedSet<BuildRule> extraDeps) {
+    this.extraDeps = extraDeps;
     return this;
   }
 
@@ -61,12 +69,19 @@ public class FakeBuildRuleParamsBuilder {
     return this;
   }
 
+  public FakeBuildRuleParamsBuilder setType(BuildRuleType type) {
+    this.buildRuleType = type;
+    return this;
+  }
+
   public BuildRuleParams build() {
     return new BuildRuleParams(
         buildTarget,
         deps,
+        extraDeps,
         visibilityPatterns,
         filesystem,
-        new FakeRuleKeyBuilderFactory(fileHashCache));
+        new FakeRuleKeyBuilderFactory(fileHashCache),
+        buildRuleType);
   }
 }

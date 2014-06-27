@@ -41,6 +41,7 @@ java_test(
     '//src/com/facebook/buck/apple/xcode:xcode',
     '//src/com/facebook/buck/apple/clang:headermap',
     '//src/com/facebook/buck/codegen:codegen',
+    '//src/com/facebook/buck/cpp:rules',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',

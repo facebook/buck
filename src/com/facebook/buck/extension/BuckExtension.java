@@ -26,10 +26,10 @@ import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -56,7 +56,7 @@ import java.util.Collection;
  * Builds an extension for buck. This is similar to a {@code java_library}, but will automatically
  * have the classpath of buck itself added to its dependencies.
  */
-public class BuckExtension extends AbstractBuildable {
+public class BuckExtension extends AbstractBuildRule {
   private static final JavaCompilerEnvironment BUCK_ENV = new JavaCompilerEnvironment(
       /* javac path */ Optional.<Path>absent(),
       /* javac version */ Optional.<JavacVersion>absent(),
@@ -65,21 +65,19 @@ public class BuckExtension extends AbstractBuildable {
 
   private final ImmutableSortedSet<? extends SourcePath> srcs;
   private final ImmutableSortedSet<? extends SourcePath> resources;
-  private final ImmutableSortedSet<BuildRule> deps;
   private final Path output;
   private final Path abi;
   private final Path working;
 
   public BuckExtension(
-      BuildTarget target,
+      BuildRuleParams params,
       ImmutableSortedSet<? extends SourcePath> srcs,
-      ImmutableSortedSet<? extends SourcePath> resources,
-      ImmutableSortedSet<BuildRule> deps) {
-    super(target);
+      ImmutableSortedSet<? extends SourcePath> resources) {
+    super(params);
     this.srcs = Preconditions.checkNotNull(srcs);
     this.resources = Preconditions.checkNotNull(resources);
-    this.deps = Preconditions.checkNotNull(deps);
 
+    BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(target, "%s-buck.jar");
     this.abi = BuildTargets.getGenPath(target, "%s-buck.abi");
     this.working = BuildTargets.getBinPath(target, "__%s__");
@@ -99,7 +97,7 @@ public class BuckExtension extends AbstractBuildable {
         .setJavaCompilerEnviornment(BUCK_ENV)
         .build();
     ImmutableSortedSet.Builder<Path> classpath = ImmutableSortedSet.naturalOrder();
-    ImmutableCollection<Path> depPaths = Classpaths.getClasspathEntries(this.deps).values();
+    ImmutableCollection<Path> depPaths = Classpaths.getClasspathEntries(getDeclaredDeps()).values();
     classpath.addAll(depPaths);
     readBuckClasspath(classpath);
     ImmutableSortedSet<Path> declaredClasspath = classpath.build();
@@ -115,12 +113,12 @@ public class BuckExtension extends AbstractBuildable {
             declaredClasspath,
             javacOptions,
             Optional.of(abi),
-            Optional.of(target),
+            Optional.of(getBuildTarget()),
             BuildDependencies.FIRST_ORDER_ONLY,
             Optional.<JavacStep.SuggestBuildRules>absent(),
             /* path to sources list */ Optional.<Path>absent()));
     steps.add(new CopyResourcesStep(
-            target,
+            getBuildTarget(),
             resources,
             output,
             context.getJavaPackageFinder()));

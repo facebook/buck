@@ -18,21 +18,28 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.android.AndroidBinary.PackageType;
 import static com.facebook.buck.android.AndroidBinary.TargetCpuType;
+import static com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import static com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -72,14 +79,18 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
   }
 
   @Override
-  public AndroidBinary createBuildable(BuildRuleParams params, Arg args) {
-    if (!(args.keystore.getBuildable() instanceof Keystore)) {
+  public <A extends Arg> AndroidBinary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    if (!(args.keystore instanceof Keystore)) {
       throw new HumanReadableException(
           "In %s, keystore='%s' must be a keystore() but was %s().",
           params.getBuildTarget(),
           args.keystore.getFullyQualifiedName(),
           args.keystore.getType().getName());
     }
+    Keystore keystore = (Keystore) args.keystore;
 
     ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
         args.androidSdkProguardConfig.or(ProGuardObfuscateStep.SdkProguardType.DEFAULT);
@@ -92,33 +103,81 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
           "The deprecated use_android_proguard_config_with_optimizations parameter" +
               " cannot be used with android_sdk_proguard_config.");
       androidSdkProguardConfig = args.useAndroidProguardConfigWithOptimizations.or(false)
-              ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
-              : ProGuardObfuscateStep.SdkProguardType.DEFAULT;
+          ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
+          : ProGuardObfuscateStep.SdkProguardType.DEFAULT;
     }
 
     DexSplitMode dexSplitMode = createDexSplitMode(args);
-    return new AndroidBinary(
+
+    boolean allowNonExistentRule =
+          false;
+    ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = BuildRules.toBuildRulesFor(
+        params.getBuildTarget(),
+        resolver,
+        args.noDx.or(ImmutableSet.<BuildTarget>of()),
+        allowNonExistentRule);
+    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
+        FluentIterable.from(buildRulesToExcludeFromDex)
+            .filter(JavaLibrary.class)
+            .transform(
+                new Function<BuildRule, JavaLibrary>() {
+                  @Override
+                  public JavaLibrary apply(BuildRule input) {
+                    return (JavaLibrary) input;
+                  }
+                })
+            .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
+
+    PackageType packageType = getPackageType(args);
+    boolean shouldPreDex = !args.disablePreDex.or(false) &&
+        PackageType.DEBUG.equals(packageType) &&
+        !args.preprocessJavaClassesBash.isPresent();
+
+    ResourceCompressionMode compressionMode = getCompressionMode(args);
+    ImmutableSet<TargetCpuType> cpuFilters = getCpuFilters(args);
+    ResourceFilter resourceFilter =
+        new ResourceFilter(args.resourceFilter.or(ImmutableList.<String>of()));
+
+    AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         params,
+        resolver,
+        compressionMode,
+        resourceFilter,
+        args.manifest,
+        packageType,
+        cpuFilters,
+        args.buildStringSourceMap.or(false),
+        shouldPreDex,
+        AndroidBinary.getPrimaryDexPath(params.getBuildTarget()),
+        dexSplitMode,
+        ImmutableSet.copyOf(args.noDx.or(ImmutableSet.<BuildTarget>of())),
+        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         javacOptions,
+        args.exopackage.or(false),
+        keystore);
+    AndroidBinaryGraphEnhancer.EnhancementResult result =
+        graphEnhancer.createAdditionalBuildables();
+
+    return new AndroidBinary(
+        params.copyWithExtraDeps(result.getFinalDeps()),
         proguardJarOverride,
         args.manifest,
         args.target,
-        args.deps.get(),
-        (Keystore) args.keystore.getBuildable(),
-        getPackageType(args),
+        keystore,
+        packageType,
         dexSplitMode,
         args.noDx.or(ImmutableSet.<BuildTarget>of()),
         androidSdkProguardConfig,
         args.optimizationPasses,
         args.proguardConfig,
-        getCompressionMode(args),
-        getCpuFilters(args),
-        new FilterResourcesStep.ResourceFilter(args.resourceFilter.or(ImmutableList.<String>of())),
-        args.buildStringSourceMap.or(false),
-        args.disablePreDex.or(false),
+        compressionMode,
+        cpuFilters,
+        resourceFilter,
         args.exopackage.or(false),
         args.preprocessJavaClassesDeps.or(ImmutableSet.<BuildRule>of()),
-        args.preprocessJavaClassesBash);
+        args.preprocessJavaClassesBash,
+        rulesToExcludeFromDex,
+        result);
   }
 
   private DexSplitMode createDexSplitMode(Arg args) {
@@ -154,7 +213,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     return ResourceCompressionMode.valueOf(args.resourceCompression.get().toUpperCase());
   }
 
-  private Set<TargetCpuType> getCpuFilters(Arg args) {
+  private ImmutableSet<TargetCpuType> getCpuFilters(Arg args) {
     ImmutableSet.Builder<TargetCpuType> cpuFilters = ImmutableSet.builder();
     if (args.cpuFilters.isPresent()) {
       for (String cpuFilter : args.cpuFilters.get()) {

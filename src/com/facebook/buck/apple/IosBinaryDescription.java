@@ -18,8 +18,8 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.AppleSource;
@@ -35,13 +35,16 @@ public class IosBinaryDescription implements Description<IosBinaryDescription.Ar
   public static final BuildRuleType TYPE = new BuildRuleType("ios_binary");
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new IosBinary(params.getBuildTarget(), args, TargetSources.ofAppleSources(args.srcs));
+  public Arg createUnpopulatedConstructorArg() {
+    return new Arg();
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public <A extends Arg> IosBinary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new IosBinary(params, args, TargetSources.ofAppleSources(args.srcs));
   }
 
   @Override

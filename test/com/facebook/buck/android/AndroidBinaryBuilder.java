@@ -22,130 +22,83 @@ import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuilder;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DescribedRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 
-public class AndroidBinaryBuilder {
+public class AndroidBinaryBuilder extends AbstractBuilder<AndroidBinaryDescription.Arg> {
 
-  private AndroidBinaryBuilder() {
-    // Utility class.
+  private AndroidBinaryBuilder(BuildTarget target) {
+    super(new AndroidBinaryDescription(JavacOptions.DEFAULTS, Optional.<Path>absent()), target);
   }
 
-  public static Builder newBuilder() {
-    return new Builder();
+  public static AndroidBinaryBuilder createBuilder(BuildTarget buildTarget) {
+    return new AndroidBinaryBuilder(buildTarget);
   }
 
-  public static class Builder {
+  public AndroidBinaryBuilder setManifest(SourcePath manifest) {
+    arg.manifest = manifest;
+    return this;
+  }
 
-    private BuildTarget buildTarget;
-    private SourcePath manifest;
-    private String target;
-    private Optional<String> preprocessJavaClassesBash = Optional.absent();
-    private Set<BuildRule> preprocessJavaClassesDeps = ImmutableSet.of();
-    private ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of();
-    private Keystore keystore;
-    private AndroidBinary.PackageType packageType = AndroidBinary.PackageType.DEBUG;
-    private DexSplitMode dexSplitMode = DexSplitMode.NO_SPLIT;
-    private Set<BuildTarget> buildTargetsToExcludeFromDex = ImmutableSet.of();
-    private Optional<Integer> proguardOptimizationPasses = Optional.absent();
-    private Optional<SourcePath> proguardConfig = Optional.absent();
-    private ResourceCompressionMode resourceCompressionMode = ResourceCompressionMode.DISABLED;
-    private Set<AndroidBinary.TargetCpuType> cpuFilters = ImmutableSet.of();
-    private ResourceFilter resourceFilter = ResourceFilter.EMPTY_FILTER;
-    private boolean buildStringSourceMap = false;
-    private boolean disablePreDex = false;
-    private boolean exopackage = false;
+  public AndroidBinaryBuilder setTarget(String target) {
+    arg.target = target;
+    return this;
+  }
 
-    public AndroidBinary build() {
-      return new AndroidBinary(
-          new FakeBuildRuleParamsBuilder(buildTarget).setDeps(originalDeps).build(),
-          JavacOptions.DEFAULTS,
-          /* proguardJarOverride */ Optional.<Path>absent(),
-          manifest,
-          target,
-          originalDeps,
-          keystore,
-          packageType,
-          dexSplitMode,
-          buildTargetsToExcludeFromDex,
-          ProGuardObfuscateStep.SdkProguardType.DEFAULT,
-          proguardOptimizationPasses,
-          proguardConfig,
-          resourceCompressionMode,
-          cpuFilters,
-          resourceFilter,
-          buildStringSourceMap,
-          disablePreDex,
-          exopackage,
-          preprocessJavaClassesDeps,
-          preprocessJavaClassesBash);
-    }
+  public AndroidBinaryBuilder setOriginalDeps(ImmutableSortedSet<BuildRule> originalDeps) {
+    arg.deps = Optional.of(originalDeps);
+    return this;
+  }
 
-    public BuildRule build(BuildRuleResolver ruleResolver) {
-      return ruleResolver.addToIndex(
-          new DescribedRule(
-              AndroidBinaryDescription.TYPE,
-              build(),
-              new FakeBuildRuleParamsBuilder(buildTarget).setDeps(originalDeps).build()));
-    }
+  public AndroidBinaryBuilder setKeystore(Keystore keystore) {
+    arg.keystore = keystore;
+    amend(arg.deps, keystore);
+    return this;
+  }
 
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      this.buildTarget = buildTarget;
-      return this;
-    }
+  public AndroidBinaryBuilder setShouldSplitDex(boolean shouldSplitDex) {
+    arg.useSplitDex = Optional.of(shouldSplitDex);
+    return this;
+  }
 
-    public Builder setManifest(SourcePath manifest) {
-      this.manifest = manifest;
-      return this;
-    }
+  public AndroidBinaryBuilder setLinearAllocHardLimit(long limit) {
+    arg.linearAllocHardLimit = Optional.of(limit);
+    return this;
+  }
 
-    public Builder setTarget(String target) {
-      this.target = target;
-      return this;
-    }
+  public AndroidBinaryBuilder setPrimaryDexScenarioOverflowAllowed(boolean allowed) {
+    arg.primaryDexScenarioOverflowAllowed = Optional.of(allowed);
+    return this;
+  }
 
-    public Builder setOriginalDeps(ImmutableSortedSet<BuildRule> originalDeps) {
-      this.originalDeps = originalDeps;
-      return this;
-    }
+  public AndroidBinaryBuilder setBuildTargetsToExcludeFromDex(
+      Set<BuildTarget> buildTargetsToExcludeFromDex) {
+    arg.noDx = Optional.of(buildTargetsToExcludeFromDex);
+    return this;
+  }
 
-    public Builder setKeystore(Keystore keystore) {
-      this.keystore = keystore;
-      return this;
-    }
+  public AndroidBinaryBuilder setProguardConfig(Optional<SourcePath> proguardConfig) {
+    arg.proguardConfig = proguardConfig;
+    return this;
+  }
 
-    public Builder setDexSplitMode(DexSplitMode dexSplitMode) {
-      this.dexSplitMode = dexSplitMode;
-      return this;
-    }
+  public AndroidBinaryBuilder setResourceCompressionMode(
+      ResourceCompressionMode resourceCompressionMode) {
+    arg.resourceCompression = Optional.of(resourceCompressionMode.toString());
+    return this;
+  }
 
-    public Builder setBuildTargetsToExcludeFromDex(Set<BuildTarget> buildTargetsToExcludeFromDex) {
-      this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
-      return this;
-    }
-
-    public Builder setProguardConfig(Optional<SourcePath> proguardConfig) {
-      this.proguardConfig = proguardConfig;
-      return this;
-    }
-
-    public Builder setResourceCompressionMode(ResourceCompressionMode resourceCompressionMode) {
-      this.resourceCompressionMode = resourceCompressionMode;
-      return this;
-    }
-
-    public Builder setResourceFilter(ResourceFilter resourceFilter) {
-      this.resourceFilter = resourceFilter;
-      return this;
-    }
+  public AndroidBinaryBuilder setResourceFilter(ResourceFilter resourceFilter) {
+    List<String> rawFilters = ImmutableList.copyOf(resourceFilter.getFilter());
+    arg.resourceFilter = Optional.of(rawFilters);
+    return this;
   }
 }

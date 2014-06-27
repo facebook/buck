@@ -70,8 +70,6 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
     BinaryBuildRule binaryBuildRule = null;
     if (targetRule instanceof BinaryBuildRule) {
       binaryBuildRule = (BinaryBuildRule) targetRule;
-    } else if (targetRule.getBuildable() instanceof BinaryBuildRule) {
-      binaryBuildRule = (BinaryBuildRule) targetRule.getBuildable();
     }
     if (binaryBuildRule == null) {
       console.printBuildFailure(

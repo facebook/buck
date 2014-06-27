@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversers;
 import com.google.common.collect.ImmutableSortedSet;
@@ -57,24 +56,5 @@ public class Buildables {
     }
 
     inputsToConsiderForCachingPurposes.addAll(files);
-  }
-
-  public static BuildRule createRuleFromBuildable(
-      Buildable buildable,
-      BuildRuleType buildRuleType,
-      BuildTarget buildTarget,
-      ImmutableSortedSet<BuildRule> deps,
-      BuildRuleParams buildRuleParams) {
-    BuildRuleParams paramsWithDeps = new BuildRuleParams(
-        buildTarget,
-        deps,
-        buildRuleParams.getVisibilityPatterns(),
-        buildRuleParams.getProjectFilesystem(),
-        buildRuleParams.getRuleKeyBuilderFactory());
-
-    return new DescribedRule(
-        buildRuleType,
-        buildable,
-        paramsWithDeps);
   }
 }

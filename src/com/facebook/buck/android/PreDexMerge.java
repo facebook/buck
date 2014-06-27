@@ -17,11 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.PreDexMerge.BuildOutput;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -76,7 +76,7 @@ import javax.annotation.Nullable;
  * The differences in the splitting logic are too significant to make it
  * worth merging them.
  */
-public class PreDexMerge extends AbstractBuildable implements InitializableFromDisk<BuildOutput> {
+public class PreDexMerge extends AbstractBuildRule implements InitializableFromDisk<BuildOutput> {
 
   /** Options to use with {@link DxStep} when merging pre-dexed files. */
   private static final EnumSet<DxStep.Option> DX_MERGE_OPTIONS = EnumSet.of(
@@ -94,17 +94,17 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public PreDexMerge(
-      BuildTarget buildTarget,
+      BuildRuleParams params,
       Path primaryDexPath,
       DexSplitMode dexSplitMode,
       ImmutableSet<DexProducedFromJavaLibrary> preDexDeps,
       UberRDotJava uberRDotJava) {
-    super(buildTarget);
+    super(params);
     this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.preDexDeps = Preconditions.checkNotNull(preDexDeps);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   @Override
@@ -141,7 +141,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     private final Path metadataFile;
 
     private SplitDexPaths() {
-      Path workDir = BuildTargets.getBinPath(target, "_%s_output");
+      Path workDir = BuildTargets.getBinPath(getBuildTarget(), "_%s_output");
 
       metadataDir = workDir.resolve("metadata");
       jarfilesDir = workDir.resolve("jarfiles");

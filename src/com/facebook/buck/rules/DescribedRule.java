@@ -16,38 +16,41 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.step.Step;
 import com.google.common.annotations.Beta;
-import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
+import java.nio.file.Path;
 
 /**
  * A {@link BuildRule} that is constructed from a {@link Description}.
  */
 // TODO(simons): Delete once everything has migrated to using Buildables.
 @Beta
-public class DescribedRule extends AbstractBuildRule implements BuildRule {
+public class DescribedRule extends AbstractBuildRule {
 
-  private final BuildRuleType type;
-  private final Buildable buildable;
-
-  public DescribedRule(BuildRuleType type, Buildable buildable, BuildRuleParams params) {
-    super(params, buildable);
-
-    this.type = Preconditions.checkNotNull(type);
-    this.buildable = Preconditions.checkNotNull(buildable);
+  public DescribedRule(BuildRuleParams params) {
+    super(params);
   }
 
   @Override
-  public BuildRuleType getType() {
-    return type;
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
+    return null;
   }
 
   @Override
-  public Buildable getBuildable() {
-    return buildable;
+  public Path getPathToOutputFile() {
+    return null;
   }
 
   @Override
-  public BuildableProperties getProperties() {
-    return buildable.getProperties();
+  protected Iterable<Path> getInputsToCompareToOutput() {
+    return null;
+  }
+
+  @Override
+  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    return null;
   }
 }

@@ -81,7 +81,7 @@ public class SeparatedProjectsGenerator {
     for (BuildTarget target : projectConfigTargets) {
       BuildRule rule = partialGraph.getActionGraph().findBuildRuleByTarget(target);
       XcodeProjectConfig buildable =
-          (XcodeProjectConfig) Preconditions.checkNotNull(rule.getBuildable());
+          (XcodeProjectConfig) Preconditions.checkNotNull(rule);
 
       ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
       for (BuildRule memberRule : buildable.getRules()) {

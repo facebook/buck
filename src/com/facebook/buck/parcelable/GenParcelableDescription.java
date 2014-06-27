@@ -18,6 +18,7 @@ package com.facebook.buck.parcelable;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -40,8 +41,11 @@ public class GenParcelableDescription implements Description<GenParcelableDescri
   }
 
   @Override
-  public GenParcelable createBuildable(BuildRuleParams params, Arg args) {
-    return new GenParcelable(params.getBuildTarget(), args.srcs);
+  public <A extends Arg> GenParcelable createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new GenParcelable(params, args.srcs);
   }
 
   public static class Arg implements ConstructorArg {

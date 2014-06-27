@@ -115,8 +115,8 @@ public class RuleKey {
    */
   public static Builder builder(BuildRule rule, FileHashCache hashCache) {
     ImmutableSortedSet<BuildRule> exportedDeps;
-    if (rule.getBuildable() instanceof ExportDependencies) {
-      exportedDeps = ((ExportDependencies) rule.getBuildable()).getExportedDeps();
+    if (rule instanceof ExportDependencies) {
+      exportedDeps = ((ExportDependencies) rule).getExportedDeps();
     } else {
       exportedDeps = ImmutableSortedSet.of();
     }

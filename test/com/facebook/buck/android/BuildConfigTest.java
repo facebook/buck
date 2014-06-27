@@ -20,9 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.Step;
@@ -48,24 +47,22 @@ public class BuildConfigTest {
    */
   @Test
   public void testSimpleObserverMethods() {
-    BuildRule buildRule = createSimpleBuildConfigRule();
-    BuildConfig buildConfigRule = (BuildConfig) buildRule.getBuildable();
+    BuildConfig buildConfig = createSimpleBuildConfigRule();
 
     assertEquals(
         BuckConstant.GEN_PATH.resolve("java/com/example/__build_config__/BuildConfig.java"),
-        buildConfigRule.getPathToOutputFile());
+        buildConfig.getPathToOutputFile());
   }
 
   @Test
   public void testBuildInternal() throws IOException {
-    BuildRule buildRule = createSimpleBuildConfigRule();
-    BuildConfig buildConfigRule = (BuildConfig) buildRule.getBuildable();
+    BuildConfig buildConfig = createSimpleBuildConfigRule();
 
     // Mock out a BuildContext whose DependencyGraph will be traversed.
     BuildContext buildContext = EasyMock.createMock(BuildContext.class);
     EasyMock.replay(buildContext);
 
-    List<Step> steps = buildConfigRule.getBuildSteps(buildContext, new FakeBuildableContext());
+    List<Step> steps = buildConfig.getBuildSteps(buildContext, new FakeBuildableContext());
     Step generateBuildConfigStep = steps.get(1);
     GenerateBuildConfigStep expectedStep = new GenerateBuildConfigStep(
             /* appPackage */ "com.example",
@@ -79,17 +76,16 @@ public class BuildConfigTest {
     assertEquals("build_config", BuildConfigDescription.TYPE.getName());
   }
 
-  private static BuildRule createSimpleBuildConfigRule() {
+  private static BuildConfig createSimpleBuildConfigRule() {
     // First, create the BuildConfig object.
     BuildTarget buildTarget = new BuildTarget("//java/com/example", "build_config");
-    BuildConfig buildConfig = new BuildConfig(
-        buildTarget,
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
+        .setType(BuildConfigDescription.TYPE)
+        .build();
+    return new BuildConfig(
+        params,
         /* appPackage */ "com.example",
         /* debug */ true);
-    return new DescribedRule(
-        BuildConfigDescription.TYPE,
-        buildConfig,
-        new FakeBuildRuleParamsBuilder(buildTarget).build());
   }
 
   // TODO(nickpalmer): Add another unit test that passes in a non-trivial DependencyGraph and verify

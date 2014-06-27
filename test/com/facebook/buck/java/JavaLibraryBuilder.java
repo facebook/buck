@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class JavaLibraryBuilder
-    extends AbstractBuilder<DefaultJavaLibrary, JavaLibraryDescription.Arg> {
+    extends AbstractBuilder<JavaLibraryDescription.Arg> {
 
   protected JavaLibraryBuilder(BuildTarget target) {
     super(new JavaLibraryDescription(JavaCompilerEnvironment.DEFAULT), target);

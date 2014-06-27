@@ -18,8 +18,8 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -45,11 +45,12 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
   }
 
   @Override
-  public Buildable createBuildable(
-      BuildRuleParams params, Args args) {
+  public <A extends Args> JavaBinary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     return new JavaBinary(
-        params.getBuildTarget(),
-        args.deps.get(),
+        params,
         args.mainClass.orNull(),
         args.manifestFile.orNull(),
         args.mergeManifests.or(true),

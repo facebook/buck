@@ -19,13 +19,13 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.DexProducedFromJavaLibrary.BuildOutput;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -66,7 +66,7 @@ import javax.annotation.Nullable;
  * until runtime. Unfortunately, because there is no such thing as an empty {@code .dex} file, we
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
-public class DexProducedFromJavaLibrary extends AbstractBuildable
+public class DexProducedFromJavaLibrary extends AbstractBuildRule
     implements AbiRule, HasBuildTarget, InitializableFromDisk<BuildOutput> {
 
   @VisibleForTesting
@@ -76,12 +76,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildable
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   @VisibleForTesting
-  DexProducedFromJavaLibrary(
-      BuildTarget buildTarget,
-      JavaLibrary javaLibrary) {
-    super(buildTarget);
+  DexProducedFromJavaLibrary(BuildRuleParams params, JavaLibrary javaLibrary) {
+    super(params);
     this.javaLibrary = Preconditions.checkNotNull(javaLibrary);
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   @Override
@@ -176,7 +174,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildable
   }
 
   public Path getPathToDex() {
-    return BuildTargets.getGenPath(target, "%s.dex.jar");
+    return BuildTargets.getGenPath(getBuildTarget(), "%s.dex.jar");
   }
 
   public boolean hasOutput() {

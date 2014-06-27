@@ -550,7 +550,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRuleSuccess success = result.get();
     assertEquals(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, success.getType());
     assertTrue(
-        ((BuildableAbstractCachingBuildRule) buildRule.getBuildable()).isInitializedFromDisk());
+        ((BuildableAbstractCachingBuildRule) buildRule).isInitializedFromDisk());
     assertTrue(
         "The entries in the zip should be extracted as a result of building the rule.",
         new File(tmp.getRoot(), "buck-out/gen/src/com/facebook/orca/orca.jar").isFile());
@@ -579,22 +579,18 @@ public class CachingBuildEngineTest extends EasyMockSupport {
           "/dev/null", "ae8c0f860a0ecad94ecede79b69460434eddbfbc"));
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
         .setDeps(sortedDeps)
+        .setType(JavaLibraryDescription.TYPE)
         .setFileHashCache(fileHashCache)
         .build();
 
-    BuildableAbstractCachingBuildRule buildRule = new BuildableAbstractCachingBuildRule(
+    return new BuildableAbstractCachingBuildRule(
         buildRuleParams,
         inputs,
         pathToOutputFile,
         buildSteps);
-
-    return new DescribedRule(
-        JavaLibraryDescription.TYPE,
-        buildRule,
-        buildRuleParams);
   }
 
-  private static class BuildableAbstractCachingBuildRule extends AbstractBuildable
+  private static class BuildableAbstractCachingBuildRule extends AbstractBuildRule
       implements InitializableFromDisk<Object> {
 
     private final Iterable<Path> inputs;
@@ -608,7 +604,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         Iterable<Path> inputs,
         @Nullable String pathToOutputFile,
         List<Step> buildSteps) {
-      super(params.getBuildTarget());
+      super(params);
       this.inputs = inputs;
       this.pathToOutputFile = pathToOutputFile == null ? null : Paths.get(pathToOutputFile);
       this.buildSteps = buildSteps;
@@ -712,11 +708,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     @Override
     public BuildRuleType getType() {
       throw new UnsupportedOperationException("method should not be called");
-    }
-
-    @Override
-    public Buildable getBuildable() {
-      return this;
     }
 
     @Override

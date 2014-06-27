@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -46,7 +46,7 @@ import javax.annotation.Nullable;
  * parameter set to {@link com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode
  * #ENABLED_WITH_STRINGS_AS_ASSETS}.
  */
-public class PackageStringAssets extends AbstractBuildable
+public class PackageStringAssets extends AbstractBuildRule
     implements InitializableFromDisk<PackageStringAssets.BuildOutput> {
 
   private static final String STRING_ASSETS_ZIP_HASH = "STRING_ASSETS_ZIP_HASH";
@@ -56,13 +56,13 @@ public class PackageStringAssets extends AbstractBuildable
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public PackageStringAssets(
-      BuildTarget buildTarget,
+      BuildRuleParams params,
       FilteredResourcesProvider filteredResourcesProvider,
       UberRDotJava uberRDotJava) {
-    super(buildTarget);
+    super(params);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   @Override
@@ -146,6 +146,6 @@ public class PackageStringAssets extends AbstractBuildable
   }
 
   private Path getPathToStringAssetsDir() {
-    return BuildTargets.getBinPath(target, "__strings_%s__");
+    return BuildTargets.getBinPath(getBuildTarget(), "__strings_%s__");
   }
 }

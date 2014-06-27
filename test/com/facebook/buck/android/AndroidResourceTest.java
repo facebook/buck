@@ -24,15 +24,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.FileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,7 +52,7 @@ public class AndroidResourceTest {
     // these files is modified, then this rule should not be cached.
     BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
     AndroidResource androidResource = new AndroidResource(
-        buildTarget,
+        new FakeBuildRuleParamsBuilder(buildTarget).build(),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         Paths.get("java/src/com/facebook/base/res"),
         ImmutableSortedSet.of(
@@ -86,9 +85,20 @@ public class AndroidResourceTest {
 
   @Test
   public void testRuleKeyForDifferentInputFilenames() throws IOException {
+    String commonHash = Strings.repeat("a", 40);
+    FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
+            "java/src/com/facebook/base/res/drawable/A.xml", commonHash,
+            "java/src/com/facebook/base/assets/drawable/B.xml", Strings.repeat("b", 40),
+            "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
+            "java/src/com/facebook/base/AndroidManifest.xml", Strings.repeat("d", 40)));
+
     BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
+        .setFileHashCache(fakeFileHashCache)
+        .build();
+
     AndroidResource androidResource1 = AndroidResourceRuleBuilder.newBuilder()
-        .setBuildTarget(buildTarget)
+        .setBuildRuleParams(params)
         .setRes(Paths.get("java/src/com/facebook/base/res"))
         .setResSrcs(ImmutableSortedSet.of(
             Paths.get("java/src/com/facebook/base/res/drawable/A.xml")))
@@ -97,10 +107,10 @@ public class AndroidResourceTest {
         .setAssetsSrcs(ImmutableSortedSet.of(
             Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
         .setManifest(Paths.get("java/src/com/facebook/base/AndroidManifest.xml"))
-        .buildAsBuildable();
+        .build();
 
     AndroidResource androidResource2 = AndroidResourceRuleBuilder.newBuilder()
-        .setBuildTarget(buildTarget)
+        .setBuildRuleParams(params)
         .setRes(Paths.get("java/src/com/facebook/base/res"))
         .setResSrcs(ImmutableSortedSet.of(
                 Paths.get("java/src/com/facebook/base/res/drawable/C.xml")))
@@ -109,35 +119,14 @@ public class AndroidResourceTest {
         .setAssetsSrcs(ImmutableSortedSet.of(
                 Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
         .setManifest(Paths.get("java/src/com/facebook/base/AndroidManifest.xml"))
-        .buildAsBuildable();
+        .build();
 
-    String commonHash = Strings.repeat("a", 40);
-    FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.of(
-            "java/src/com/facebook/base/res/drawable/A.xml", commonHash,
-            "java/src/com/facebook/base/assets/drawable/B.xml", Strings.repeat("b", 40),
-            "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
-            "java/src/com/facebook/base/AndroidManifest.xml", Strings.repeat("d", 40)));
-
-    RuleKey ruleKey1 =
-        getRuleKeyWithoutDepsFromResource(buildTarget, androidResource1, fakeFileHashCache);
-    RuleKey ruleKey2 =
-        getRuleKeyWithoutDepsFromResource(buildTarget, androidResource2, fakeFileHashCache);
+    RuleKey ruleKey1 = androidResource1.getRuleKeyWithoutDeps();
+    RuleKey ruleKey2 = androidResource2.getRuleKeyWithoutDeps();
 
     assertNotEquals("The two android_resource rules should have different rule keys.",
         ruleKey1,
         ruleKey2);
-  }
-
-  private RuleKey getRuleKeyWithoutDepsFromResource(
-      BuildTarget buildTarget,
-      AndroidResource resource,
-      FileHashCache fileHashCache) throws IOException {
-    BuildRule rule = new DescribedRule(
-        AndroidResourceDescription.TYPE,
-        resource,
-        new FakeBuildRuleParamsBuilder(buildTarget).setFileHashCache(fileHashCache).build());
-    return rule.getRuleKeyWithoutDeps();
   }
 
   @Test
@@ -166,7 +155,6 @@ public class AndroidResourceTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     assertTrue(
         resourceRule3
-            .getBuildable()
             .getBuildSteps(
                 EasyMock.createMock(BuildContext.class),
                 buildableContext)
@@ -177,16 +165,16 @@ public class AndroidResourceTest {
     // testGetAndroidResourceDeps in this class for why this is the expected ordering.
     Sha1HashCode expectedSha1 = HasAndroidResourceDeps.ABI_HASHER.apply(
         ImmutableList.of(
-            (HasAndroidResourceDeps) resourceRule2.getBuildable(),
-            (HasAndroidResourceDeps) resourceRule1.getBuildable()));
+            (HasAndroidResourceDeps) resourceRule2,
+            (HasAndroidResourceDeps) resourceRule1));
     buildableContext.assertContainsMetadataMapping(
         AndroidResource.METADATA_KEY_FOR_ABI,
         expectedSha1.getHash());
   }
 
   private void setAndroidResourceBuildOutput(BuildRule resourceRule, String hashChar) {
-    if (resourceRule.getBuildable() instanceof AndroidResource) {
-      ((AndroidResource) resourceRule.getBuildable())
+    if (resourceRule instanceof AndroidResource) {
+      ((AndroidResource) resourceRule)
           .getBuildOutputInitializer()
           .setBuildOutput(new BuildOutput(new Sha1HashCode(Strings.repeat(hashChar, 40))));
     }

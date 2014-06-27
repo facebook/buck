@@ -16,14 +16,22 @@
 
 package com.facebook.buck.gwt;
 
+import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.nio.file.Path;
 
 public class GwtBinaryDescription implements Description<GwtBinaryDescription.Arg> {
 
@@ -90,9 +98,42 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
   }
 
   @Override
-  public <A extends Arg> GwtBinary createBuildable(BuildRuleParams params, A args) {
+  public <A extends Arg> BuildRule createBuildRule(
+      BuildRuleParams params,
+      final BuildRuleResolver resolver,
+      A args) {
+
+    final ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
+
+    // Find all of the reachable JavaLibrary rules and grab their associated GwtModules.
+    final ImmutableSortedSet.Builder<Path> gwtModuleJarsBuilder =
+        ImmutableSortedSet.naturalOrder();
+    new AbstractDependencyVisitor(args.moduleDeps.get()) {
+      @Override
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
+        if (!(rule instanceof JavaLibrary)) {
+          return ImmutableSet.of();
+        }
+
+        JavaLibrary javaLibrary = (JavaLibrary) rule;
+        BuildTarget gwtModuleTarget = BuildTargets.createFlavoredBuildTarget(
+            javaLibrary, JavaLibrary.GWT_MODULE_FLAVOR);
+        BuildRule gwtModule = resolver.get(gwtModuleTarget);
+
+        // Note that gwtModule could be null if javaLibrary is a rule with no srcs of its own,
+        // but a rule that exists only as a collection of deps.
+        if (gwtModule != null) {
+          extraDeps.add(gwtModule);
+          gwtModuleJarsBuilder.add(gwtModule.getPathToOutputFile());
+        }
+
+        // Traverse all of the deps of this rule.
+        return rule.getDeps();
+      }
+    }.start();
+
     return new GwtBinary(
-        params.getBuildTarget(),
+        params.copyWithExtraDeps(extraDeps.build()),
         args.modules.get(),
         args.vmArgs.get(),
         GwtBinary.Style.valueOf(args.style.or(DEFAULT_STYLE)),
@@ -101,7 +142,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         args.localWorkers.or(DEFAULT_NUM_LOCAL_WORKERS),
         args.strict.or(DEFAULT_STRICT),
         args.experimentalArgs.get(),
-        /* originalDeps */ args.deps.get(),
-        args.moduleDeps.get());
+        args.moduleDeps.get(),
+        gwtModuleJarsBuilder.build());
   }
 }

@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -32,7 +31,6 @@ import javax.annotation.Nullable;
 
 public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Buildable {
 
-  private final BuildRuleType type;
 
   @Nullable
   private Path outputFile;
@@ -45,32 +43,20 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     this(
-        type,
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(deps)
+            .setType(type)
             .setVisibility(visibilityPatterns)
             .build());
   }
 
-  public FakeBuildRule(BuildRuleType type, BuildRuleParams buildRuleParams) {
-    super(buildRuleParams, null);
-    this.type = Preconditions.checkNotNull(type);
+  public FakeBuildRule(BuildRuleParams buildRuleParams) {
+    super(buildRuleParams);
   }
 
   public FakeBuildRule(BuildRuleType type, BuildTarget buildTarget) {
-    this(type, new FakeBuildRuleParamsBuilder(buildTarget).build());
+    this(new FakeBuildRuleParamsBuilder(buildTarget).setType(type).build());
   }
-
-  @Override
-  public Buildable getBuildable() {
-    return this;
-  }
-
-  @Override
-  public BuildRuleType getType() {
-    return type;
-  }
-
   @Override
   public Iterable<Path> getInputs() {
     return ImmutableList.of();

@@ -22,7 +22,7 @@ import com.facebook.buck.rules.AbstractBuilder;
 
 import java.nio.file.Path;
 
-public class KeystoreBuilder extends AbstractBuilder<Keystore, KeystoreDescription.Arg> {
+public class KeystoreBuilder extends AbstractBuilder<KeystoreDescription.Arg> {
 
   private KeystoreBuilder(BuildTarget target) {
     super(new KeystoreDescription(), target);

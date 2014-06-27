@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -37,8 +38,11 @@ public class BuildConfigDescription implements Description<BuildConfigDescriptio
   }
 
   @Override
-  public BuildConfig createBuildable(BuildRuleParams params, Arg args) {
-    return new BuildConfig(params.getBuildTarget(), args.appPackage, args.debug);
+  public <A extends Arg> BuildConfig createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new BuildConfig(params, args.appPackage, args.debug);
   }
 
   public static class Arg implements ConstructorArg {

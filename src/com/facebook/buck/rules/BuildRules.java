@@ -18,20 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 
 public class BuildRules {
-
-  public static final Function<BuildRule, Buildable> TO_BUILDABLE =
-      new Function<BuildRule, Buildable>() {
-        @Override
-        public Buildable apply(BuildRule input) {
-          return input.getBuildable();
-        }
-      };
 
   private BuildRules() {
     // Utility class.

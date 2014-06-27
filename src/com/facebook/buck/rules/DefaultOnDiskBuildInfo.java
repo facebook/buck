@@ -108,8 +108,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void makeOutputFileExecutable(Buildable buildable) {
-    File file = projectFilesystem.getFileForRelativePath(buildable.getPathToOutputFile());
+  public void makeOutputFileExecutable(BuildRule buildRule) {
+    File file = projectFilesystem.getFileForRelativePath(buildRule.getPathToOutputFile());
     file.setExecutable(true /* executable */, false /* ownerOnly */);
   }
 

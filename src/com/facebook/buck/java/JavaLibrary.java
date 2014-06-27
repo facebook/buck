@@ -18,7 +18,9 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.AnnotationProcessingData;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
@@ -29,7 +31,7 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
-public interface JavaLibrary  extends Buildable, HasClasspathEntries,
+public interface JavaLibrary extends BuildRule, HasClasspathEntries,
     HasJavaAbi, HasJavaClassHashes {
 
   /**
@@ -50,6 +52,10 @@ public interface JavaLibrary  extends Buildable, HasClasspathEntries,
    * {@code .class} files.
    */
   public static final Flavor GWT_MODULE_FLAVOR = new Flavor("gwt_module");
+
+  // TODO(natthu): This can probably be avoided by using a JavaPackageable interface similar to
+  // AndroidPackageable.
+  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries();
 
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
@@ -75,6 +81,8 @@ public interface JavaLibrary  extends Buildable, HasClasspathEntries,
   public ImmutableSortedSet<SourcePath> getJavaSrcs();
 
   public AnnotationProcessingData getAnnotationProcessingData();
+
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder);
 
   /**
    * Returns a SHA-1 hash that represents the ABI for the Java files returned by

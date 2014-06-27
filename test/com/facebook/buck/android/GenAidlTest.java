@@ -27,7 +27,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -56,7 +57,8 @@ public class GenAidlTest {
     String importPath = "java/com/example/base";
 
     BuildTarget target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
-    Buildable genAidlRule = new GenAidl(target, pathToAidl, importPath);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    GenAidl genAidlRule = new GenAidl(params, pathToAidl, importPath);
 
     GenAidlDescription description = new GenAidlDescription();
     assertEquals(GenAidlDescription.TYPE, description.getBuildRuleType());

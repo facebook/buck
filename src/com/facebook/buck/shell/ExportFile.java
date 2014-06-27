@@ -17,8 +17,9 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -75,14 +76,15 @@ import java.util.Collections;
  * of the file to be saved.
  */
 // TODO(simons): Extend to also allow exporting a rule.
-public class ExportFile extends AbstractBuildable {
+public class ExportFile extends AbstractBuildRule {
 
   private final SourcePath src;
   private final Path out;
 
   @VisibleForTesting
-  ExportFile(BuildTarget target, ExportFileDescription.Arg args) {
-    super(target);
+  ExportFile(BuildRuleParams params, ExportFileDescription.Arg args) {
+    super(params);
+    BuildTarget target = params.getBuildTarget();
     if (args.src.isPresent()) {
       this.src = args.src.get();
     } else {

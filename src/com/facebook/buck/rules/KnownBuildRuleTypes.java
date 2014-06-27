@@ -75,16 +75,13 @@ import java.util.Map;
 public class KnownBuildRuleTypes {
 
   private final ImmutableMap<BuildRuleType, Description<?>> descriptions;
-  private final ImmutableMap<BuildRuleType, BuildRuleFactory<?>> factories;
   private final ImmutableMap<String, BuildRuleType> types;
   private static volatile KnownBuildRuleTypes defaultRules = null;
 
   private KnownBuildRuleTypes(
       Map<BuildRuleType, Description<?>> descriptions,
-      Map<BuildRuleType, BuildRuleFactory<?>> factories,
       Map<String, BuildRuleType> types) {
     this.descriptions = ImmutableMap.copyOf(descriptions);
-    this.factories = ImmutableMap.copyOf(factories);
     this.types = ImmutableMap.copyOf(types);
   }
 
@@ -94,15 +91,6 @@ public class KnownBuildRuleTypes {
       throw new HumanReadableException("Unable to find build rule type: " + named);
     }
     return type;
-  }
-
-  public BuildRuleFactory<?> getFactory(BuildRuleType buildRuleType) {
-    BuildRuleFactory<?> factory = factories.get(buildRuleType);
-    if (factory == null) {
-      throw new HumanReadableException(
-          "Unable to find factory for build rule type: " + buildRuleType);
-    }
-    return factory;
   }
 
   public Description<? extends ConstructorArg> getDescription(BuildRuleType buildRuleType) {
@@ -221,12 +209,10 @@ public class KnownBuildRuleTypes {
 
   public static class Builder {
     private final Map<BuildRuleType, Description<?>> descriptions;
-    private final Map<BuildRuleType, BuildRuleFactory<?>> factories;
     private final Map<String, BuildRuleType> types;
 
     protected Builder() {
       this.descriptions = Maps.newConcurrentMap();
-      this.factories = Maps.newConcurrentMap();
       this.types = Maps.newConcurrentMap();
     }
 
@@ -234,12 +220,11 @@ public class KnownBuildRuleTypes {
       Preconditions.checkNotNull(description);
       BuildRuleType type = description.getBuildRuleType();
       types.put(type.getName(), type);
-      factories.put(type, new DescribedRuleFactory<>(description));
       descriptions.put(type, description);
     }
 
     public KnownBuildRuleTypes build() {
-      return new KnownBuildRuleTypes(descriptions, factories, types);
+      return new KnownBuildRuleTypes(descriptions, types);
     }
   }
 }

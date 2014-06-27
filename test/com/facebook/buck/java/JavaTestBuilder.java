@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
@@ -52,7 +51,7 @@ public class JavaTestBuilder {
     private final ImmutableSet.Builder<Label> labels = ImmutableSet.builder();
     private final ImmutableSet.Builder<String> contacts = ImmutableSet.builder();
     private Optional<Path> proguardConfig = Optional.absent();
-    private ImmutableSet.Builder<BuildTarget> sourcesUnderTest = ImmutableSet.builder();
+    private ImmutableSet.Builder<BuildRule> sourcesUnderTest = ImmutableSet.builder();
     private List<String> vmArgs = Lists.newArrayList();
 
     public Builder(BuildTarget target) {
@@ -69,7 +68,7 @@ public class JavaTestBuilder {
       return this;
     }
 
-    public Builder setSourceUnderTest(ImmutableSet<BuildTarget> targets) {
+    public Builder setSourceUnderTest(ImmutableSet<BuildRule> targets) {
       sourcesUnderTest.addAll(targets);
       return this;
     }
@@ -80,30 +79,28 @@ public class JavaTestBuilder {
     }
 
     public JavaTest build() {
-      return new JavaTest(
-          target,
+      return build(new BuildRuleResolver());
+    }
+
+    public JavaTest build(BuildRuleResolver resolver) {
+      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
+          .setType(JavaTestDescription.TYPE)
+          .setDeps(deps.build())
+          .build();
+      JavaTest test = new JavaTest(
+          params,
           srcs.build(),
           resources.build(),
           labels.build(),
           contacts.build(),
           proguardConfig,
+          /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
           JavacOptions.DEFAULTS,
           vmArgs,
-          deps.build(),
           sourcesUnderTest.build(),
           Optional.<Path>absent());
+      resolver.addToIndex(test);
+      return test;
     }
-
-    public BuildRule build(BuildRuleResolver resolver) {
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).setDeps(deps.build()).build();
-
-      DescribedRule rule = new DescribedRule(
-          JavaTestDescription.TYPE,
-          build(),
-          params);
-      return resolver.addToIndex(rule);
-    }
-
-
   }
 }

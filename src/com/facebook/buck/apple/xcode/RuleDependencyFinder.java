@@ -116,8 +116,8 @@ final class RuleDependencyFinder {
     for (BuildTarget target : graph.getTargets()) {
       BuildRule rule = graph.getActionGraph().findBuildRuleByTarget(target);
       if (rule.getType().equals(IosTestDescription.TYPE)) {
-        IosTest testBuildable = (IosTest) Preconditions.checkNotNull(rule.getBuildable());
-        for (BuildRule sourceRule : testBuildable.getSourceUnderTest()) {
+        IosTest iosTest = (IosTest) Preconditions.checkNotNull(rule);
+        for (BuildRule sourceRule : iosTest.getSourceUnderTest()) {
           ruleToTestRulesBuilder.put(sourceRule, rule);
         }
       }

@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -46,14 +47,14 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
   }
 
   @Override
-  public AppleAssetCatalog createBuildable(BuildRuleParams params, Arg args) {
-    final ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
-    final Set<Path> dirs = args.dirs;
-    Supplier<ImmutableCollection<Path>> inputPathsSupplier = RuleUtils.subpathsOfPathsSupplier(
-        projectFilesystem,
-        dirs
-    );
-    return new AppleAssetCatalog(params.getBuildTarget(), inputPathsSupplier, args);
+  public <A extends Arg> AppleAssetCatalog createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
+    Supplier<ImmutableCollection<Path>> inputPathsSupplier =
+        RuleUtils.subpathsOfPathsSupplier(projectFilesystem, args.dirs);
+    return new AppleAssetCatalog(params, inputPathsSupplier, args);
   }
 
   public static class Arg implements ConstructorArg {

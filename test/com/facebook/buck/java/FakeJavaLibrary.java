@@ -85,6 +85,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
+  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return getDeps();
+  }
+
+  @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     return ImmutableSetMultimap.of((JavaLibrary) this, getPathToOutputFile());
   }

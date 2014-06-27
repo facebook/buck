@@ -23,7 +23,7 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
-import com.facebook.buck.apple.AppleBuildable;
+import com.facebook.buck.apple.AppleBuildRule;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.CoreDataModel;
@@ -70,7 +70,7 @@ import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
@@ -357,19 +357,19 @@ public class ProjectGenerator {
     Optional<PBXTarget> result;
     if (rule.getType().equals(IosLibraryDescription.TYPE)) {
       result = Optional.of((PBXTarget) generateIosLibraryTarget(
-          project, rule, (IosLibrary) rule.getBuildable()));
+          project, rule, (IosLibrary) rule));
     } else if (rule.getType().equals(IosTestDescription.TYPE)) {
       result = Optional.of((PBXTarget) generateIosTestTarget(
-          project, rule, (IosTest) rule.getBuildable()));
+          project, rule, (IosTest) rule));
     } else if (rule.getType().equals(IosBinaryDescription.TYPE)) {
       result = Optional.of((PBXTarget) generateIOSBinaryTarget(
-              project, rule, (IosBinary) rule.getBuildable()));
+              project, rule, (IosBinary) rule));
     } else if (rule.getType().equals(MacosxFrameworkDescription.TYPE)) {
       result = Optional.of((PBXTarget) generateMacosxFrameworkTarget(
-              project, rule, (MacosxFramework) rule.getBuildable()));
+              project, rule, (MacosxFramework) rule));
     } else if (rule.getType().equals(MacosxBinaryDescription.TYPE)) {
     result = Optional.of((PBXTarget) generateMacosxBinaryTarget(
-            project, rule, (MacosxBinary) rule.getBuildable()));
+            project, rule, (MacosxBinary) rule));
     } else {
       result = Optional.absent();
     }
@@ -575,7 +575,7 @@ public class ProjectGenerator {
     return target;
   }
 
-  private <BuildableBinary extends AbstractBuildable & AppleBuildable> PBXNativeTarget
+  private <BuildableBinary extends AbstractBuildRule & AppleBuildRule> PBXNativeTarget
       generateBinaryTarget(
           PBXProject project,
           BuildRule rule,
@@ -795,7 +795,7 @@ public class ProjectGenerator {
   private void addRunScriptBuildPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
     for (BuildRule dependency : rule.getDeps()) {
       if (dependency.getType().equals(GenruleDescription.TYPE)) {
-        addRunScriptBuildPhase(target, (Genrule) dependency.getBuildable());
+        addRunScriptBuildPhase(target, (Genrule) dependency);
       }
     }
   }
@@ -1431,7 +1431,7 @@ public class ProjectGenerator {
     for (BuildRule ruleDependency :
            getRecursiveRuleDependenciesOfType(rule, IosLibraryDescription.TYPE)) {
       IosLibrary iosLibrary =
-          (IosLibrary) Preconditions.checkNotNull(ruleDependency.getBuildable());
+          (IosLibrary) Preconditions.checkNotNull(ruleDependency);
       frameworksBuilder.addAll(iosLibrary.getFrameworks());
     }
   }
@@ -1487,14 +1487,9 @@ public class ProjectGenerator {
   }
 
   private Iterable<CoreDataModel> collectCoreDataModels(Iterable<BuildRule> rules) {
-    return Iterables.transform(
+    return Iterables.filter(
         getRuleDependenciesOfType(rules, CoreDataModelDescription.TYPE),
-        new Function<BuildRule, CoreDataModel>() {
-          @Override
-          public CoreDataModel apply(BuildRule input) {
-            return (CoreDataModel) Preconditions.checkNotNull(input.getBuildable());
-          }
-        });
+        CoreDataModel.class);
   }
   /**
    * Collect resources from recursive dependencies.
@@ -1509,7 +1504,7 @@ public class ProjectGenerator {
     ImmutableSet.Builder<AppleResource> resources = ImmutableSet.builder();
     for (BuildRule resourceRule : resourceRules) {
       AppleResource resource =
-          (AppleResource) Preconditions.checkNotNull(resourceRule.getBuildable());
+          (AppleResource) Preconditions.checkNotNull(resourceRule);
       resources.add(resource);
     }
     return resources.build();
@@ -1525,7 +1520,7 @@ public class ProjectGenerator {
     ImmutableSet.Builder<AppleAssetCatalog> assetCatalogs = ImmutableSet.builder();
     for (BuildRule assetCatalogRule : assetCatalogRules) {
       AppleAssetCatalog assetCatalog = (AppleAssetCatalog) Preconditions.checkNotNull(
-          assetCatalogRule.getBuildable());
+          assetCatalogRule);
       assetCatalogs.add(assetCatalog);
     }
     return assetCatalogs.build();

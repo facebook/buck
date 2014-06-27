@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,7 +28,7 @@ import java.nio.file.Path;
 /**
  * A buildable that has configuration ready for Xcode-like build systems.
  */
-public interface AppleBuildable extends Buildable {
+public interface AppleBuildRule extends BuildRule {
 
   /**
    * Returns a path to the info.plist to be bundled with a binary or framework.

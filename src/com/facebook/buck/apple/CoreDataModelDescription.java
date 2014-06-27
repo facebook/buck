@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -45,13 +46,15 @@ public class CoreDataModelDescription implements Description<CoreDataModelDescri
   }
 
   @Override
-  public CoreDataModel createBuildable(final BuildRuleParams params, Arg args) {
-    final ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
-    final Path path = args.path;
+  public <A extends Arg> CoreDataModel createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
     Supplier<ImmutableCollection<Path>> inputPathsSupplier = RuleUtils.subpathsOfPathsSupplier(
         projectFilesystem,
-        ImmutableSet.of(path));
-    return new CoreDataModel(params.getBuildTarget(), inputPathsSupplier, args);
+        ImmutableSet.of(args.path));
+    return new CoreDataModel(params, inputPathsSupplier, args);
   }
 
   public static class Arg implements ConstructorArg {

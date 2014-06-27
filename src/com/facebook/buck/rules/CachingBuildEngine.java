@@ -458,7 +458,7 @@ public class CachingBuildEngine implements BuildEngine {
     // Get and run all of the commands.
     BuildableContext buildableContext = new DefaultBuildableContext(onDiskBuildInfo,
         buildInfoRecorder);
-    List<Step> steps = rule.getBuildable().getBuildSteps(context, buildableContext);
+    List<Step> steps = rule.getBuildSteps(context, buildableContext);
 
     AbiRule abiRule = checkIfRuleOrBuildableIsAbiRule(rule);
     if (abiRule != null) {
@@ -497,9 +497,6 @@ public class CachingBuildEngine implements BuildEngine {
    */
    @Nullable
   private InitializableFromDisk<?> deriveInitializable(BuildRule rule) {
-    if (rule.getBuildable() instanceof InitializableFromDisk) {
-      return (InitializableFromDisk<?>) rule.getBuildable();
-    }
     if (rule instanceof InitializableFromDisk) {
       return (InitializableFromDisk<?>) rule;
     }
@@ -528,8 +525,6 @@ public class CachingBuildEngine implements BuildEngine {
   private AbiRule checkIfRuleOrBuildableIsAbiRule(BuildRule rule) {
     if (rule instanceof AbiRule) {
       return (AbiRule) rule;
-    } else if (rule.getBuildable() instanceof AbiRule) {
-      return (AbiRule) rule.getBuildable();
     }
     return null;
   }

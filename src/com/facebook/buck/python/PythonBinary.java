@@ -18,14 +18,13 @@ package com.facebook.buck.python;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
@@ -39,23 +38,17 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class PythonBinary extends AbstractBuildable implements BinaryBuildRule {
+public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
-  private final ImmutableSortedSet<BuildRule> deps;
   private final Path main;
 
-  protected PythonBinary(
-      BuildTarget target,
-      ImmutableSortedSet<BuildRule> deps,
-      Path main) {
-    super(target);
-    this.deps = Preconditions.checkNotNull(deps);
+  protected PythonBinary(BuildRuleParams params, Path main) {
+    super(params);
     this.main = Preconditions.checkNotNull(main);
   }
 
@@ -90,14 +83,12 @@ public class PythonBinary extends AbstractBuildable implements BinaryBuildRule {
 
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
-    new AbstractDependencyVisitor(deps) {
+    new AbstractDependencyVisitor(getDeclaredDeps()) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        Buildable buildable = rule.getBuildable();
-
         // We only process and recurse on instances of PythonPackagable.
-        if (buildable instanceof PythonPackagable) {
-          PythonPackagable lib = (PythonPackagable) buildable;
+        if (rule instanceof PythonPackagable) {
+          PythonPackagable lib = (PythonPackagable) rule;
 
           // Add all components from the python packable into our top-level
           // package.

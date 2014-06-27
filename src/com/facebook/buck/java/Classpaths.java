@@ -49,9 +49,7 @@ public class Classpaths {
         ImmutableSetMultimap.builder();
     for (BuildRule dep : deps) {
       JavaLibrary library = null;
-      if (dep.getBuildable() instanceof JavaLibrary) {
-        library = (JavaLibrary) dep.getBuildable();
-      } else if (dep instanceof JavaLibrary) {
+      if (dep instanceof JavaLibrary) {
         library = (JavaLibrary) dep;
       }
 

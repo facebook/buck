@@ -37,7 +37,6 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestRule;
@@ -324,7 +323,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         new Function<BuildTarget, TestRule>() {
           @Override
           public TestRule apply(BuildTarget buildTarget) {
-            Buildable test = graph.findBuildRuleByTarget(buildTarget).getBuildable();
+            BuildRule test = graph.findBuildRuleByTarget(buildTarget);
             if (test instanceof TestRule) {
               return (TestRule) test;
             }
@@ -397,8 +396,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         TestRule testRule = null;
         if (buildRule instanceof TestRule) {
           testRule = (TestRule) buildRule;
-        } else if (buildRule.getBuildable() instanceof TestRule) {
-          testRule = (TestRule) buildRule.getBuildable();
         }
         if (testRule != null) {
           results.add(testRule);
@@ -733,8 +730,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         JavaTest javaTest = (JavaTest) test;
         ImmutableSet<BuildRule> sourceUnderTest = javaTest.getSourceUnderTest();
         for (BuildRule buildRule : sourceUnderTest) {
-          if (buildRule.getBuildable() instanceof JavaLibrary) {
-            JavaLibrary javaLibrary = (JavaLibrary) buildRule.getBuildable();
+          if (buildRule instanceof JavaLibrary) {
+            JavaLibrary javaLibrary = (JavaLibrary) buildRule;
             rulesUnderTest.add(javaLibrary);
           } else {
             throw new HumanReadableException(

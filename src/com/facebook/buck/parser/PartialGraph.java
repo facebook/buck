@@ -123,7 +123,7 @@ public class PartialGraph {
     // with our build graph.
     for (BuildTarget buildTarget : testGraph.getTargets()) {
       TestRule testRule =
-          (TestRule) testActionGraph.findBuildRuleByTarget(buildTarget).getBuildable();
+          (TestRule) testActionGraph.findBuildRuleByTarget(buildTarget);
       for (BuildRule buildRuleUnderTest : testRule.getSourceUnderTest()) {
         if (buildGraph.findBuildRuleByTarget(buildRuleUnderTest.getBuildTarget()) != null) {
           buildAndTestTargetsBuilder.add(testRule.getBuildTarget());

@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -41,8 +42,11 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
   }
 
   @Override
-  public ShTest createBuildable(BuildRuleParams params, Arg args) {
-    return new ShTest(params.getBuildTarget(), args.test, args.labels.get());
+  public <A extends Arg> ShTest createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new ShTest(params, args.test, args.labels.get());
   }
 
   public static class Arg implements ConstructorArg {

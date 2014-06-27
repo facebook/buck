@@ -136,8 +136,6 @@ java_library(
     'BuildRuleBuilderParams.java',
     'DependencyEnhancer.java',
     'DescribedRule.java',
-    'DescribedRuleBuilder.java',
-    'DescribedRuleFactory.java',
     'DirArtifactCache.java',
     'FlavorableDescription.java',
     'IndividualTestEvent.java',

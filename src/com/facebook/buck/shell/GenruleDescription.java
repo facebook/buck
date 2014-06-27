@@ -20,6 +20,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -47,9 +48,12 @@ public class GenruleDescription
   }
 
   @Override
-  public Genrule createBuildable(BuildRuleParams params, Arg args) {
+  public <A extends Arg> Genrule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     return new Genrule(
-        params.getBuildTarget(),
+        params,
         args.srcs.get(),
         args.cmd,
         args.bash,

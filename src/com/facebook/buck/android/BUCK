@@ -62,7 +62,7 @@ RULES_SRCS = [
   'HasAndroidPlatformTarget.java',
   'HasAndroidResourceDeps.java',
   'MergeAndroidResourcesStep.java',
-  'NativeLibraryBuildable.java',
+  'NativeLibraryBuildRule.java',
   'NdkLibraryDescription.java',
   'NdkLibrary.java',
   'PackageStringAssets.java',

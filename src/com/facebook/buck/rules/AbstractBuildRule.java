@@ -38,21 +38,23 @@ import javax.annotation.Nullable;
 public abstract class AbstractBuildRule implements BuildRule {
 
   private final BuildTarget buildTarget;
-  private final Buildable buildable;
+  private final ImmutableSortedSet<BuildRule> declaredDeps;
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+  private final BuildRuleType buildRuleType;
   /** @see Buildable#getInputsToCompareToOutput()  */
   private Iterable<Path> inputsToCompareToOutputs;
   @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
 
-  protected AbstractBuildRule(BuildRuleParams buildRuleParams, Buildable buildable) {
+  protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
     Preconditions.checkNotNull(buildRuleParams);
     this.buildTarget = buildRuleParams.getBuildTarget();
-    this.buildable = buildable;
+    this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.deps = buildRuleParams.getDeps();
     this.visibilityPatterns = buildRuleParams.getVisibilityPatterns();
     this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
+    this.buildRuleType = buildRuleParams.getBuildRuleType();
 
     // Nodes added via graph enhancement are exempt from visibility checks.
     if (!buildTarget.isFlavored()) {
@@ -65,9 +67,6 @@ public abstract class AbstractBuildRule implements BuildRule {
       }
     }
   }
-
-  @Override
-  public abstract BuildRuleType getType();
 
   @Override
   public BuildableProperties getProperties() {
@@ -89,9 +88,18 @@ public abstract class AbstractBuildRule implements BuildRule {
     return deps;
   }
 
+  public final ImmutableSortedSet<BuildRule> getDeclaredDeps() {
+    return declaredDeps;
+  }
+
   @Override
   public final ImmutableSet<BuildTargetPattern> getVisibilityPatterns() {
     return visibilityPatterns;
+  }
+
+  @Override
+  public final BuildRuleType getType() {
+    return buildRuleType;
   }
 
   @Override
@@ -113,10 +121,12 @@ public abstract class AbstractBuildRule implements BuildRule {
   @Override
   public Iterable<Path> getInputs() {
     if (inputsToCompareToOutputs == null) {
-      inputsToCompareToOutputs = buildable.getInputsToCompareToOutput();
+      inputsToCompareToOutputs = getInputsToCompareToOutput();
     }
     return inputsToCompareToOutputs;
   }
+
+  protected abstract Iterable<Path> getInputsToCompareToOutput();
 
   @Override
   public final int compareTo(HasBuildTarget that) {
@@ -168,9 +178,10 @@ public abstract class AbstractBuildRule implements BuildRule {
         .setInputs("buck.inputs", inputs.iterator())
         .setSourcePaths("buck.sourcepaths", SourcePaths.toSourcePathsSortedByNaturalOrder(inputs));
     // TODO(simons): Rename this when no Buildables extend this class.
-    return buildable.appendDetailsToRuleKey(builder);
+    return appendDetailsToRuleKey(builder);
   }
 
+  protected abstract RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder);
 
   /**
    * This method should be overridden only for unit testing.

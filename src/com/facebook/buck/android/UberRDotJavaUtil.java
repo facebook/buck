@@ -92,7 +92,7 @@ public class UberRDotJavaUtil {
     Predicate<BuildRule> inclusionPredicate = new Predicate<BuildRule>() {
       @Override
       public boolean apply(BuildRule rule) {
-        return androidResourceDeps.contains(rule.getBuildable());
+        return androidResourceDeps.contains(rule);
       }
     };
     ImmutableList<BuildRule> sortedAndroidResourceRules = TopologicalSort.sort(mutableGraph,
@@ -110,7 +110,7 @@ public class UberRDotJavaUtil {
       new Function<BuildRule, HasAndroidResourceDeps>() {
         @Override
         public HasAndroidResourceDeps apply(BuildRule rule) {
-          return (HasAndroidResourceDeps) rule.getBuildable();
+          return (HasAndroidResourceDeps) rule;
         }
       };
 

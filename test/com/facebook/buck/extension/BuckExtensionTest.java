@@ -23,8 +23,8 @@ import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
@@ -43,10 +43,9 @@ public class BuckExtensionTest {
   public void finalStepShouldBeJarringUpExtension() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//example:extension");
     BuckExtension buildable = new BuckExtension(
-        target,
+        new FakeBuildRuleParamsBuilder(target).build(),
         ImmutableSortedSet.of(new TestSourcePath("ExampleExtension.java")),
-        ImmutableSortedSet.<SourcePath>of(),
-        ImmutableSortedSet.<BuildRule>of()); // notably empty deps, I notice....
+        ImmutableSortedSet.<SourcePath>of());
 
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     FakeBuildableContext buildableContext = new FakeBuildableContext();

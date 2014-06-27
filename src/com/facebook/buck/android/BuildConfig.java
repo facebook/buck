@@ -16,10 +16,10 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
@@ -54,20 +54,20 @@ import java.nio.file.Path;
  * )
  * </pre>
  */
-public class BuildConfig extends AbstractBuildable {
+public class BuildConfig extends AbstractBuildRule {
 
   private final String appPackage;
   private final boolean debug;
   private final Path pathToOutputFile;
 
   protected BuildConfig(
-      BuildTarget buildTarget,
+      BuildRuleParams buildRuleParams,
       String appPackage,
       boolean debug) {
-    super(buildTarget);
+    super(buildRuleParams);
     this.appPackage = Preconditions.checkNotNull(appPackage);
     this.debug = debug;
-    this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "__%s__")
+    this.pathToOutputFile = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s__")
         .resolve("BuildConfig.java");
   }
 

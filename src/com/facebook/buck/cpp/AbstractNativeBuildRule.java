@@ -16,11 +16,11 @@
 
 package com.facebook.buck.cpp;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -46,25 +46,22 @@ import java.util.Set;
 /**
  * Abstract class for building native object files and libraries.
  */
-public abstract class AbstractNativeBuildable extends AbstractBuildable {
+public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
 
   private static final String OBJECT_EXTENSION = ".o";
   protected static final String DEFAULT_CPP_COMPILER = "g++";
   protected static final String DEFAULT_C_COMPILER = "gcc";
 
-  private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> headers;
   private final ImmutableMap<SourcePath, String> perSrcFileFlags;
 
-  public AbstractNativeBuildable(
-      BuildTarget buildTarget,
-      ImmutableSortedSet<BuildRule> deps,
+  public AbstractNativeBuildRule(
+      BuildRuleParams params,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> headers,
       ImmutableMap<SourcePath, String> perSrcFileFlags) {
-    super(buildTarget);
-    this.deps = Preconditions.checkNotNull(deps);
+    super(params);
     this.headers = Preconditions.checkNotNull(headers);
     this.srcs = Preconditions.checkNotNull(srcs);
     this.perSrcFileFlags = Preconditions.checkNotNull(perSrcFileFlags);
@@ -141,10 +138,10 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
       objectFiles.add(objectFile);
     }
 
-    for (BuildRule dep : deps) {
+    for (BuildRule dep : getDeps()) {
       // Only c++ static libraries are supported for now.
-      if (dep.getBuildable() instanceof CppLibrary) {
-        objectFiles.add(dep.getBuildable().getPathToOutputFile());
+      if (dep instanceof CppLibrary) {
+        objectFiles.add(dep.getPathToOutputFile());
       }
     }
 
@@ -162,6 +159,6 @@ public abstract class AbstractNativeBuildable extends AbstractBuildable {
 
   @Override
   public Path getPathToOutputFile() {
-    return BuildTargets.getBinPath(target, getOutputFileNameFormat());
+    return BuildTargets.getBinPath(getBuildTarget(), getOutputFileNameFormat());
   }
 }

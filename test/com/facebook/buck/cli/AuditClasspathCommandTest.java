@@ -141,10 +141,8 @@ public class AuditClasspathCommandTest {
     Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreBuildTarget)
         .setStore(Paths.get("debug.keystore"))
         .setProperties(Paths.get("keystore.properties"))
-        .build(ruleResolver)
-        .getBuildable();
-    AndroidBinaryBuilder.newBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-binary"))
+        .build(ruleResolver);
+    AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:test-android-binary"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystore)
@@ -152,8 +150,7 @@ public class AuditClasspathCommandTest {
         .build(ruleResolver);
     JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//:project-tests"))
         .addDep(javaLibrary)
-        .setSourceUnderTest(
-            ImmutableSet.of(javaLibrary.getBuildTarget()))
+        .setSourceUnderTest(ImmutableSet.of(javaLibrary))
         .addSrc(Paths.get("src/com/facebook/test/ProjectTests.java"))
         .build(ruleResolver);
     PartialGraph partialGraph2 = createGraphFromBuildRules(ruleResolver, targets);

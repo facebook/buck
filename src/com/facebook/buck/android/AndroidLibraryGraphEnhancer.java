@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildables;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -58,7 +57,7 @@ public class AndroidLibraryGraphEnhancer {
         .build();
   }
 
-  public Result createBuildableForAndroidResources(
+  public Optional<DummyRDotJava> createBuildableForAndroidResources(
       BuildRuleResolver ruleResolver,
       boolean createBuildableIfEmptyDeps) {
     ImmutableSortedSet<BuildRule> originalDeps = originalBuildRuleParams.getDeps();
@@ -67,7 +66,7 @@ public class AndroidLibraryGraphEnhancer {
             .getResourceDeps();
 
     if (androidResourceDeps.isEmpty() && !createBuildableIfEmptyDeps) {
-      return new Result(originalBuildRuleParams, Optional.<DummyRDotJava>absent());
+      return Optional.absent();
     }
 
     // The androidResourceDeps may contain Buildables, but we need the actual BuildRules. Since this
@@ -79,44 +78,18 @@ public class AndroidLibraryGraphEnhancer {
       actualDeps.add(ruleResolver.get(dep.getBuildTarget()));
     }
 
-    DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        androidResourceDeps,
-        dummyRDotJavaBuildTarget,
-        javacOptions);
-    BuildRule dummyRDotJavaBuildRule = Buildables.createRuleFromBuildable(
-        dummyRDotJava,
+    BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(
         BuildRuleType.DUMMY_R_DOT_JAVA,
         dummyRDotJavaBuildTarget,
         actualDeps.build(),
-        originalBuildRuleParams);
-    ruleResolver.addToIndex(dummyRDotJavaBuildTarget, dummyRDotJavaBuildRule);
+        /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
 
-    ImmutableSortedSet<BuildRule> totalDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(originalDeps)
-        .add(dummyRDotJavaBuildRule)
-        .build();
-
-    BuildRuleParams newBuildRuleParams = originalBuildRuleParams.copyWithChangedDeps(totalDeps);
-
-    return new Result(newBuildRuleParams, Optional.of(dummyRDotJava));
+    DummyRDotJava dummyRDotJava = new DummyRDotJava(
+        dummyRDotJavaParams,
+        androidResourceDeps,
+        javacOptions);
+    ruleResolver.addToIndex(dummyRDotJavaBuildTarget, dummyRDotJava);
+    return Optional.of(dummyRDotJava);
   }
 
-  public static class Result {
-    private final BuildRuleParams buildRuleParams;
-    private final Optional<DummyRDotJava> dummyRDotJava;
-
-    private Result(BuildRuleParams buildRuleParams, Optional<DummyRDotJava> dummyRDotJava) {
-      this.buildRuleParams = Preconditions.checkNotNull(buildRuleParams);
-      this.dummyRDotJava = Preconditions.checkNotNull(dummyRDotJava);
-    }
-
-    public BuildRuleParams getBuildRuleParams() {
-      return buildRuleParams;
-    }
-
-    public Optional<DummyRDotJava> getOptionalDummyRDotJava() {
-      return dummyRDotJava;
-    }
-
-  }
 }

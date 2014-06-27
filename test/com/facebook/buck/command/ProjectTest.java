@@ -177,20 +177,16 @@ public class ProjectTest {
 
     // android_binary //foo:app
     ImmutableSortedSet<BuildRule> androidBinaryRuleDeps = ImmutableSortedSet.of(baseRule);
-    BuildRule androidBinaryRule = AndroidBinaryBuilder.newBuilder()
-            .setBuildTarget(BuildTargetFactory.newInstance("//foo:app"))
+    AndroidBinary androidBinaryRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
+            BuildTargetFactory.newInstance("//foo:app"))
             .setOriginalDeps(androidBinaryRuleDeps)
             .setManifest(new TestSourcePath("foo/AndroidManifest.xml"))
             .setTarget("Google Inc.:Google APIs:16")
-            .setKeystore((Keystore) keystore.getBuildable())
+            .setKeystore((Keystore) keystore)
             .setBuildTargetsToExcludeFromDex(
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//third_party/guava:guava")))
             .build(ruleResolver);
-    ((AndroidBinary) androidBinaryRule.getBuildable()).getEnhancedDeps(
-        ruleResolver,
-        androidBinaryRuleDeps,
-        ImmutableSortedSet.of(keystore));
 
     // project_config //foo:project_config
     BuildRule projectConfigUsingNoDx = ProjectConfigBuilder
@@ -200,17 +196,13 @@ public class ProjectTest {
 
     // android_binary //bar:app
     ImmutableSortedSet<BuildRule> barAppBuildRuleDeps = ImmutableSortedSet.of(baseRule);
-    BuildRule barAppBuildRule = AndroidBinaryBuilder.newBuilder()
-            .setBuildTarget(BuildTargetFactory.newInstance("//bar:app"))
+    AndroidBinary barAppBuildRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
+            BuildTargetFactory.newInstance("//bar:app"))
             .setOriginalDeps(barAppBuildRuleDeps)
             .setManifest(new TestSourcePath("foo/AndroidManifest.xml"))
             .setTarget("Google Inc.:Google APIs:16")
-            .setKeystore((Keystore) keystore.getBuildable())
+            .setKeystore((Keystore) keystore)
             .build(ruleResolver);
-    ((AndroidBinary) barAppBuildRule.getBuildable()).getEnhancedDeps(
-        ruleResolver,
-        barAppBuildRuleDeps,
-        ImmutableSortedSet.of(keystore));
 
     // project_config //bar:project_config
     BuildRule projectConfig = ProjectConfigBuilder
@@ -773,7 +765,7 @@ public class ProjectTest {
     // )
 
     BuildTarget fooJni = BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni");
-    BuildRule ndkLibrary = NdkLibraryBuilder.createNdkLibrary(fooJni)
+    NdkLibrary ndkLibrary = NdkLibraryBuilder.createNdkLibrary(fooJni)
         .addSrc(Paths.get("Android.mk"))
         .build();
 
@@ -798,7 +790,7 @@ public class ProjectTest {
             DependentModule.newInheritedJdk()),
         androidLibraryModule.dependencies);
     assertEquals(
-        String.format("../../../../%s", ((NdkLibrary) ndkLibrary.getBuildable()).getLibraryPath()),
+        String.format("../../../../%s", ndkLibrary.getLibraryPath()),
         androidLibraryModule.nativeLibs);
   }
 

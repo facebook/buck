@@ -17,10 +17,11 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -41,7 +42,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class ShBinary extends AbstractBuildable
+public class ShBinary extends AbstractBuildRule
     implements BinaryBuildRule, InitializableFromDisk<Object> {
 
   private final SourcePath main;
@@ -52,13 +53,15 @@ public class ShBinary extends AbstractBuildable
 
   private final BuildOutputInitializer<Object> buildOutputInitializer;
 
-  protected ShBinary(BuildTarget target,
+  protected ShBinary(
+      BuildRuleParams params,
       SourcePath main,
       ImmutableSet<SourcePath> resources) {
-    super(target);
+    super(params);
     this.main = Preconditions.checkNotNull(main);
     this.resources = Preconditions.checkNotNull(resources);
 
+    BuildTarget target = params.getBuildTarget();
     this.output = Paths.get(
         BuckConstant.GEN_DIR,
         target.getBasePath(),
@@ -87,7 +90,7 @@ public class ShBinary extends AbstractBuildable
     // Generate an .sh file that builds up an environment and invokes the user's script.
     // This generated .sh file will be returned by getExecutableCommand().
     GenerateShellScriptStep generateShellScript = new GenerateShellScriptStep(
-        Paths.get(target.getBasePath()),
+        Paths.get(getBuildTarget().getBasePath()),
         main.resolve(),
         SourcePaths.toPaths(resources),
         output);

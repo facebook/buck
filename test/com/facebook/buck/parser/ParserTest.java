@@ -44,25 +44,21 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -76,7 +72,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -102,8 +97,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
 
 public class ParserTest extends EasyMockSupport {
 
@@ -1199,31 +1192,11 @@ public class ParserTest extends EasyMockSupport {
     }
 
     @Override
-    public <A extends FakeArg> Buildable createBuildable(BuildRuleParams params, A args) {
-      return new AbstractBuildable(params.getBuildTarget()) {
-        @Nullable
-        @Override
-        public Path getPathToOutputFile() {
-          return null;
-        }
-
-        @Override
-        public ImmutableCollection<Path> getInputsToCompareToOutput() {
-          return ImmutableList.of();
-        }
-
-        @Override
-        public ImmutableList<Step> getBuildSteps(
-            BuildContext context,
-            BuildableContext buildableContext) {
-          return ImmutableList.of();
-        }
-
-        @Override
-        public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-          return builder;
-        }
-      };
+    public <A extends FakeArg> BuildRule createBuildRule(
+        BuildRuleParams params,
+        BuildRuleResolver resolver,
+        A args) {
+      return new FakeBuildRule(params);
     }
 
     public static class FakeArg implements ConstructorArg {

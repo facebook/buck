@@ -17,9 +17,9 @@
 package com.facebook.buck.extension;
 
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -30,10 +30,10 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-public class ExampleExtension extends AbstractBuildable {
+public class ExampleExtension extends AbstractBuildRule {
 
-  public ExampleExtension(BuildTarget target) {
-    super(target);
+  public ExampleExtension(BuildRuleParams params) {
+    super(params);
   }
 
   @Override

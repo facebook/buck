@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DescribedRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -36,7 +36,7 @@ public class AndroidResourceRuleBuilder {
 
   public static class Builder {
 
-    private BuildTarget buildTarget;
+    private BuildRuleParams buildRuleParams;
     private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     private Path res;
     private ImmutableSortedSet<Path> resSrcs = ImmutableSortedSet.of();
@@ -46,9 +46,9 @@ public class AndroidResourceRuleBuilder {
     private Path manifest;
     private boolean hasWhitelistedStrings = false;
 
-    public AndroidResource buildAsBuildable() {
+    public AndroidResource build() {
       return new AndroidResource(
-          buildTarget,
+          buildRuleParams,
           deps,
           res,
           resSrcs,
@@ -59,15 +59,13 @@ public class AndroidResourceRuleBuilder {
           hasWhitelistedStrings);
     }
 
-    public BuildRule build() {
-      return new DescribedRule(
-          AndroidResourceDescription.TYPE,
-          buildAsBuildable(),
-          new FakeBuildRuleParamsBuilder(buildTarget).setDeps(deps).build());
+    public Builder setBuildRuleParams(BuildRuleParams params) {
+      this.buildRuleParams = params;
+      return this;
     }
 
     public Builder setBuildTarget(BuildTarget buildTarget) {
-      this.buildTarget = buildTarget;
+      buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget).build();
       return this;
     }
 

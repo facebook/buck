@@ -386,6 +386,11 @@ public class FilterResourcesStep implements Step {
     public String getDescription() {
       return filter.toString();
     }
+
+    @VisibleForTesting
+    Set<String> getFilter() {
+      return filter;
+    }
   }
 
   public static Builder builder() {

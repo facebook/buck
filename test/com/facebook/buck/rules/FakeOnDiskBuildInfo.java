@@ -115,7 +115,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void makeOutputFileExecutable(Buildable buildable) {
+  public void makeOutputFileExecutable(BuildRule buildRule) {
     throw new UnsupportedOperationException();
   }
 

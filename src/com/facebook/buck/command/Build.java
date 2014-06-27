@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.TraversableGraph;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -31,9 +32,7 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Builder;
-import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
@@ -167,9 +166,8 @@ public class Build implements Closeable {
           isEncounteredAndroidRuleInTraversal = true;
         }
 
-        Buildable buildable = rule.getBuildable();
-        if (buildable != null && buildable instanceof HasAndroidPlatformTarget) {
-          String target = ((HasAndroidPlatformTarget) buildable).getAndroidPlatformTarget();
+        if (rule instanceof HasAndroidPlatformTarget) {
+          String target = ((HasAndroidPlatformTarget) rule).getAndroidPlatformTarget();
           if (androidPlatformTargetId == null) {
             androidPlatformTargetId = target;
           } else if (!target.equals(androidPlatformTargetId)) {

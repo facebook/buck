@@ -41,7 +41,7 @@ public interface FlavorableDescription<T extends ConstructorArg> extends Descrip
    */
   public void registerFlavors(
       T arg,
-      DescribedRule describedRule,
+      BuildRule describedRule,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleResolver ruleResolver);

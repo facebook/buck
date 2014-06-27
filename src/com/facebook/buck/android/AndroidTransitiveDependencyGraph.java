@@ -120,8 +120,8 @@ public class AndroidTransitiveDependencyGraph {
         // We need to include the transitive closure of the compiled .class files when dex'ing, as
         // well as the third-party jars that they depend on.
         // Update pathsToThirdPartyJars.
-        if (rule.getBuildable() instanceof PrebuiltJar) {
-          PrebuiltJar prebuiltJar = (PrebuiltJar) rule.getBuildable();
+        if (rule instanceof PrebuiltJar) {
+          PrebuiltJar prebuiltJar = (PrebuiltJar) rule;
           pathsToThirdPartyJarsBuilder.add(prebuiltJar.getBinaryJar().resolve());
         }
         return maybeVisitAllDeps(rule, rule.getProperties().is(LIBRARY));
@@ -178,8 +178,8 @@ public class AndroidTransitiveDependencyGraph {
         // We need to include the transitive closure of the compiled .class files when dex'ing, as
         // well as the third-party jars that they depend on.
         // Update pathsToThirdPartyJars.
-        if (rule.getBuildable() instanceof NativeLibraryBuildable) {
-          NativeLibraryBuildable nativeLibraryRule = (NativeLibraryBuildable) rule.getBuildable();
+        if (rule instanceof NativeLibraryBuildRule) {
+          NativeLibraryBuildRule nativeLibraryRule = (NativeLibraryBuildRule) rule;
           if (nativeLibraryRule.isAsset()) {
             nativeLibAssetsDirectories.add(nativeLibraryRule.getLibraryPath());
           } else {
@@ -188,11 +188,11 @@ public class AndroidTransitiveDependencyGraph {
 
           // In the rare event that a PrebuiltNativeLibraryBuildRule has deps, it is likely another
           // NativeLibraryRule that will need to be included in the final APK, so traverse the deps.
-          if (rule.getBuildable() instanceof PrebuiltNativeLibrary) {
+          if (rule instanceof PrebuiltNativeLibrary) {
             return rule.getDeps();
           }
-        } else if (rule.getBuildable() instanceof AndroidResource) {
-          AndroidResource androidRule = (AndroidResource) rule.getBuildable();
+        } else if (rule instanceof AndroidResource) {
+          AndroidResource androidRule = (AndroidResource) rule;
           Path assetsDirectory = androidRule.getAssets();
           if (assetsDirectory != null) {
             assetsDirectories.add(assetsDirectory);
@@ -201,12 +201,12 @@ public class AndroidTransitiveDependencyGraph {
           if (manifestFile != null) {
             manifestFiles.add(manifestFile);
           }
-        } else if (rule.getBuildable() instanceof DefaultJavaLibrary) {
-          DefaultJavaLibrary defaultJavaLibrary = (DefaultJavaLibrary) rule.getBuildable();
+        } else if (rule instanceof DefaultJavaLibrary) {
+          DefaultJavaLibrary defaultJavaLibrary = (DefaultJavaLibrary) rule;
           Optionals.addIfPresent(defaultJavaLibrary.getProguardConfig(), proguardConfigs);
 
-          if (rule.getBuildable() instanceof AndroidLibrary) {
-            AndroidLibrary androidLibraryRule = (AndroidLibrary) rule.getBuildable();
+          if (rule instanceof AndroidLibrary) {
+            AndroidLibrary androidLibraryRule = (AndroidLibrary) rule;
             Optionals.addIfPresent(androidLibraryRule.getManifestFile(), manifestFiles);
           }
         }

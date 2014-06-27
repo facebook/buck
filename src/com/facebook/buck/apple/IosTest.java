@@ -16,10 +16,10 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cpp.AbstractNativeBuildable;
+import com.facebook.buck.cpp.AbstractNativeBuildRule;
 import com.facebook.buck.cpp.CompilerStep;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
@@ -33,7 +33,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class IosTest extends AbstractNativeBuildable {
+public class IosTest extends AbstractNativeBuildRule {
   private final Path infoPlist;
   private final ImmutableSet<XcodeRuleConfiguration> configurations;
   private final ImmutableList<GroupedSource> srcs;
@@ -43,12 +43,11 @@ public class IosTest extends AbstractNativeBuildable {
   private final IosTestType testType;
 
   public IosTest(
-      BuildTarget target,
+      BuildRuleParams params,
       IosTestDescription.Arg arg,
       TargetSources targetSources) {
     super(
-        target,
-        arg.deps.or(ImmutableSortedSet.<BuildRule>of()),
+        params,
         targetSources.srcPaths,
         targetSources.headerPaths,
         targetSources.perFileFlags);
