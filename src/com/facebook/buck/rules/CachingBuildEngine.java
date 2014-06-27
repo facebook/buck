@@ -167,7 +167,6 @@ public class CachingBuildEngine implements BuildEngine {
             private boolean startOfBuildWasRecordedOnTheEventBus = false;
 
             @Override
-            @SuppressWarnings("PMD.EmptyCatchBlock")
             public void onSuccess(List<BuildRuleSuccess> deps) {
               // Record the start of the build.
               eventBus.post(BuildRuleEvent.started(rule));
