@@ -57,7 +57,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
-    FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(new BuildTarget("//foo", "bar")) {
+    FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(
+        BuildTarget.builder("//foo", "bar").build()) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
         return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
@@ -75,7 +76,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar", "dex");
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").setFlavor("dex").build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(params, javaLibraryRule);
@@ -146,7 +147,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(params, javaLibrary);
@@ -197,7 +198,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(params, accumulateClassNames);

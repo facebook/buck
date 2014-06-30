@@ -77,7 +77,7 @@ public class BuildConfigTest {
 
   private static BuildConfig createSimpleBuildConfigRule() {
     // First, create the BuildConfig object.
-    BuildTarget buildTarget = new BuildTarget("//java/com/example", "build_config");
+    BuildTarget buildTarget = BuildTarget.builder("//java/com/example", "build_config").build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setType(BuildConfigDescription.TYPE)
         .build();

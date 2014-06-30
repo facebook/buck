@@ -117,7 +117,7 @@ public class ApkGenruleTest {
         .andStubReturn(apkTarget);
     EasyMock.replay(parser);
 
-    BuildTarget buildTarget = new BuildTarget("//src/com/facebook", "sign_fb4a");
+    BuildTarget buildTarget = BuildTarget.builder("//src/com/facebook", "sign_fb4a").build();
     ApkGenruleDescription description = new ApkGenruleDescription();
     ApkGenruleDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.apk = new FakeInstallable(AndroidBinaryDescription.TYPE, apkTarget);

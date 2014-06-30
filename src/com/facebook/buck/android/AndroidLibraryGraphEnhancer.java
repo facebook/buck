@@ -43,10 +43,9 @@ public class AndroidLibraryGraphEnhancer {
       BuildRuleParams buildRuleParams,
       JavacOptions javacOptions) {
     Preconditions.checkNotNull(buildTarget);
-    this.dummyRDotJavaBuildTarget = new BuildTarget(
-        buildTarget.getBaseName(),
-        buildTarget.getShortName(),
-        DUMMY_R_DOT_JAVA_FLAVOR);
+    this.dummyRDotJavaBuildTarget = BuildTarget.builder(buildTarget)
+        .setFlavor(DUMMY_R_DOT_JAVA_FLAVOR)
+        .build();
     this.originalBuildRuleParams = Preconditions.checkNotNull(buildRuleParams);
     // Override javacoptions because DummyRDotJava doesn't require annotation processing
     // params data and more importantly, because javacoptions' rule key is not available when

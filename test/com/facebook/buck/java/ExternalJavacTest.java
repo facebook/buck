@@ -82,7 +82,7 @@ public class ExternalJavacTest extends EasyMockSupport {
           /* buildDependencies */ buildDependencies,
           /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
           /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST),
-          /* target */ new BuildTarget("//fake", "target"),
+          /* target */ BuildTarget.builder("//fake", "target").build(),
           Optional.of(tmpFolder.getRoot().toPath()));
   }
 

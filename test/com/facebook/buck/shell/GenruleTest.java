@@ -127,7 +127,8 @@ public class GenruleTest {
         .andStubReturn(BuildTargetFactory.newInstance("//java/com/facebook/util:util"));
     EasyMock.replay(parser);
 
-    BuildTarget buildTarget = new BuildTarget("//src/com/facebook/katana", "katana_manifest");
+    BuildTarget buildTarget =
+        BuildTarget.builder("//src/com/facebook/katana", "katana_manifest").build();
     BuildRule genrule = GenruleBuilder.createGenrule(buildTarget)
         .setRelativeToAbsolutePathFunctionForTesting(ABSOLUTIFIER)
         .setCmd("python convert_to_katana.py AndroidManifest.xml > $OUT")
@@ -225,7 +226,7 @@ public class GenruleTest {
 
   @Test
   public void testDepsEnvironmentVariableIsComplete() {
-    BuildTarget depTarget = new BuildTarget("//foo", "bar");
+    BuildTarget depTarget = BuildTarget.builder("//foo", "bar").build();
     BuildRule dep = new FakeBuildRule(JavaLibraryDescription.TYPE, depTarget) {
       @Override
       public Path getPathToOutputFile() {
@@ -233,7 +234,7 @@ public class GenruleTest {
       }
     };
 
-    BuildRule genrule = GenruleBuilder.createGenrule(new BuildTarget("//foo", "baz"))
+    BuildRule genrule = GenruleBuilder.createGenrule(BuildTarget.builder("//foo", "baz").build())
         .setBash("cat $DEPS > $OUT")
         .setOut("deps.txt")
         .addDep(dep)
@@ -298,10 +299,11 @@ public class GenruleTest {
   @Test
   public void testShouldWarnUsersWhenThereIsNoOutputForARuleButLocationRequested() {
     BuildRule ruleWithNoOutput = JavaLibraryBuilder
-        .createBuilder(new BuildTarget("//cheese", "java"))
+        .createBuilder(BuildTarget.builder("//cheese", "java").build())
         .build(new BuildRuleResolver());
 
-    BuildRule genrule = GenruleBuilder.createGenrule(new BuildTarget("//cheese", "cake"))
+    BuildRule genrule =
+        GenruleBuilder.createGenrule(BuildTarget.builder("//cheese", "cake").build())
         .setCmd("$(location //cheese:java")
         .setOut("cake")
         .addDep(ruleWithNoOutput)

@@ -37,14 +37,14 @@ class MockingDSL {
 
   static BuildRule mockLibrary(String baseName, String shortName) {
     BuildRule mock = createMock(BuildRule.class);
-    BuildTarget buildTarget = new BuildTarget(baseName, shortName);
+    BuildTarget buildTarget = BuildTarget.builder(baseName, shortName).build();
     expect(mock.getBuildTarget()).andReturn(buildTarget).anyTimes();
     return mock;
   }
 
   static TestRule mockTest(String baseName, String shortName) {
     TestRule mock = createMock(TestRule.class);
-    BuildTarget buildTarget = new BuildTarget(baseName, shortName);
+    BuildTarget buildTarget = BuildTarget.builder(baseName, shortName).build();
     expect(mock.getBuildTarget()).andReturn(buildTarget).anyTimes();
     return mock;
   }

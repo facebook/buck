@@ -102,7 +102,7 @@ public class TestCommandTest {
     assertTrue(MorePaths.isGeneratedFile(pathToGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
-    JavaLibrary javaLibrary = new FakeJavaLibrary(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibrary(BuildTarget.builder("//foo", "bar").build())
         .setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -130,7 +130,7 @@ public class TestCommandTest {
     assertFalse(MorePaths.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
-    JavaLibrary javaLibrary = new FakeJavaLibrary(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibrary(BuildTarget.builder("//foo", "bar").build())
         .setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -159,7 +159,7 @@ public class TestCommandTest {
     assertFalse(MorePaths.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
-    JavaLibrary javaLibrary = new FakeJavaLibrary(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibrary(BuildTarget.builder("//foo", "bar").build())
         .setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -197,7 +197,7 @@ public class TestCommandTest {
     expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot).times(2);
     expect(defaultJavaPackageFinder.getPathElements()).andReturn(pathElements).times(2);
 
-    JavaLibrary javaLibrary = new FakeJavaLibrary(new BuildTarget("//foo", "bar"))
+    JavaLibrary javaLibrary = new FakeJavaLibrary(BuildTarget.builder("//foo", "bar").build())
         .setJavaSrcs(javaSrcs);
 
     replay(defaultJavaPackageFinder);

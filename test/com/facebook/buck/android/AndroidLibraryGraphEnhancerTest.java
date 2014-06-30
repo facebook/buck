@@ -45,7 +45,7 @@ public class AndroidLibraryGraphEnhancerTest {
 
   @Test
   public void testEmptyResources() {
-    BuildTarget buildTarget = new BuildTarget("//java/com/example", "library");
+    BuildTarget buildTarget = BuildTarget.builder("//java/com/example", "library").build();
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         new FakeBuildRuleParamsBuilder(buildTarget).build(),

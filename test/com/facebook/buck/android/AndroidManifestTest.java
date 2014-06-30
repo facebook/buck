@@ -93,7 +93,7 @@ public class AndroidManifestTest {
   private AndroidManifest createSimpleAndroidManifestRule() {
     // First, create the AndroidManifest object.
     BuildRuleParams buildRuleParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
-        new BuildTarget("//java/com/example", "manifest"));
+        BuildTarget.builder("//java/com/example", "manifest").build());
     AndroidManifestDescription description = new AndroidManifestDescription();
     AndroidManifestDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.skeleton = new TestSourcePath("java/com/example/AndroidManifestSkeleton.xml");

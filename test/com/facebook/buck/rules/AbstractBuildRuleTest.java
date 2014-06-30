@@ -38,13 +38,13 @@ import java.util.Comparator;
 public class AbstractBuildRuleTest {
 
   private static final BuildTarget orcaTarget =
-      new BuildTarget("//src/com/facebook/orca", "orca");
+      BuildTarget.builder("//src/com/facebook/orca", "orca").build();
   private static final BuildTarget publicTarget =
-      new BuildTarget("//src/com/facebook/for", "everyone");
+      BuildTarget.builder("//src/com/facebook/for", "everyone").build();
   private static final BuildTarget nonPublicTarget1 =
-      new BuildTarget("//src/com/facebook/something1", "nonPublic");
+      BuildTarget.builder("//src/com/facebook/something1", "nonPublic").build();
   private static final BuildTarget nonPublicTarget2 =
-      new BuildTarget("//src/com/facebook/something2", "nonPublic");
+      BuildTarget.builder("//src/com/facebook/something2", "nonPublic").build();
 
   private static final ImmutableSet<BuildRule> noDeps = ImmutableSet.of();
   private static final ImmutableSet<BuildTargetPattern> noVisibilityPatterns = ImmutableSet.of();
@@ -159,11 +159,13 @@ public class AbstractBuildRuleTest {
 
   @Test
   public void testVisibilityForDirectory() {
-    BuildTarget libTarget = new BuildTarget("//lib", "lib");
-    BuildTarget targetInSpecifiedDirectory = new BuildTarget("//src/com/facebook", "test");
-    BuildTarget targetUnderSpecifiedDirectory = new BuildTarget("//src/com/facebook/buck", "test");
-    BuildTarget targetInOtherDirectory = new BuildTarget("//src/com/instagram", "test");
-    BuildTarget targetInParentDirectory = new BuildTarget("//", "test");
+    BuildTarget libTarget = BuildTarget.builder("//lib", "lib").build();
+    BuildTarget targetInSpecifiedDirectory =
+        BuildTarget.builder("//src/com/facebook", "test").build();
+    BuildTarget targetUnderSpecifiedDirectory =
+        BuildTarget.builder("//src/com/facebook/buck", "test").build();
+    BuildTarget targetInOtherDirectory = BuildTarget.builder("//src/com/instagram", "test").build();
+    BuildTarget targetInParentDirectory = BuildTarget.builder("//", "test").build();
 
     // Build rule that visible to targets in or under directory src/come/facebook
     BuildRule directoryBuildRule = createRule(libTarget,

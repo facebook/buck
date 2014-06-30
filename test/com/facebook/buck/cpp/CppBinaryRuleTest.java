@@ -87,7 +87,7 @@ public class CppBinaryRuleTest {
   @Test
   public void testCppBinary() {
     BuildRule library = makeCppLibraryBuildRule(
-        new BuildTarget("//lib", "bla"),
+        BuildTarget.builder("//lib", "bla").build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("libsource1.c"),
             new TestSourcePath("libsource2.c")),
@@ -95,7 +95,7 @@ public class CppBinaryRuleTest {
         ImmutableSortedSet.<BuildRule>of());
 
     CppBinary binary = makeCppBinaryBuildRule(
-        new BuildTarget("//foo", "bar"),
+        BuildTarget.builder("//foo", "bar").build(),
         ImmutableSortedSet.<SourcePath>of(
           new TestSourcePath("source1.c"),
           new TestSourcePath("source2.c")),
@@ -133,7 +133,7 @@ public class CppBinaryRuleTest {
   @Test
   public void testCppLibrary() {
     BuildRule library = makeCppLibraryBuildRule(
-        new BuildTarget("//lib", "bla"),
+        BuildTarget.builder("//lib", "bla").build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("libsource1.c"),
             new TestSourcePath("libsource2.c")),
@@ -141,7 +141,7 @@ public class CppBinaryRuleTest {
         ImmutableSortedSet.<BuildRule>of());
 
     CppLibrary targetLibrary = makeCppLibraryBuildRule(
-        new BuildTarget("//foo", "bar"),
+        BuildTarget.builder("//foo", "bar").build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("source1.c"),
             new TestSourcePath("source2.c")),

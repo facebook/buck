@@ -99,7 +99,7 @@ public class TargetsCommandTest {
       String name,
       String baseName) {
     SortedMap<String, BuildRule> buildRules = Maps.newTreeMap();
-    BuildTarget buildTarget = new BuildTarget(baseName, name);
+    BuildTarget buildTarget = BuildTarget.builder(baseName, name).build();
     FakeBuildRule buildRule = new FakeBuildRule(
         JavaLibraryDescription.TYPE,
         buildTarget,
@@ -229,8 +229,8 @@ public class TargetsCommandTest {
     // Set up the test buck file, parser, config, options.
     BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
     EasyMock.expect(parser.parse("//:test-library", ParseContext.fullyQualified()))
-        .andReturn(new BuildTarget(
-            "//testdata/com/facebook/buck/cli", "test-library"))
+        .andReturn(BuildTarget.builder(
+            "//testdata/com/facebook/buck/cli", "test-library").build())
         .anyTimes();
     EasyMock.expect(parser.parse("//:", ParseContext.fullyQualified()))
         .andThrow(new BuildTargetParseException(
@@ -240,8 +240,8 @@ public class TargetsCommandTest {
         .andThrow(EasyMock.createMock(NoSuchBuildTargetException.class))
         .anyTimes();
     EasyMock.expect(parser.parse("//:test-libarry", ParseContext.fullyQualified()))
-        .andReturn(new BuildTarget(
-            "//testdata/com/facebook/buck/cli", "test-libarry"))
+        .andReturn(BuildTarget.builder(
+            "//testdata/com/facebook/buck/cli", "test-libarry").build())
         .anyTimes();
     EasyMock.replay(parser);
     Reader reader = new StringReader("");

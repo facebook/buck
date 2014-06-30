@@ -289,9 +289,9 @@ public class AndroidBinaryGraphEnhancer {
       // See whether the corresponding IntermediateDexRule has already been added to the
       // ruleResolver.
       BuildTarget originalTarget = javaLibrary.getBuildTarget();
-      BuildTarget preDexTarget = new BuildTarget(originalTarget.getBaseName(),
-          originalTarget.getShortName(),
-          DEX_FLAVOR);
+      BuildTarget preDexTarget = BuildTarget.builder(originalTarget)
+          .setFlavor(DEX_FLAVOR)
+          .build();
       BuildRule preDexRule = ruleResolver.get(preDexTarget);
       if (preDexRule != null) {
         preDexDeps.add((DexProducedFromJavaLibrary) preDexRule);
@@ -385,9 +385,9 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   private BuildTarget createBuildTargetWithFlavor(Flavor flavor) {
-    return new BuildTarget(originalBuildTarget.getBaseName(),
-        originalBuildTarget.getShortName(),
-        flavor);
+    return BuildTarget.builder(originalBuildTarget)
+        .setFlavor(flavor)
+        .build();
   }
 
   private ImmutableSortedSet<BuildRule> getAdditionalAaptDeps(

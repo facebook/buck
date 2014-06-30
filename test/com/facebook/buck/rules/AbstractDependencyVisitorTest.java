@@ -138,7 +138,7 @@ public class AbstractDependencyVisitorTest {
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     FakeJavaLibrary rule = new FakeJavaLibrary(
         JavaLibraryDescription.TYPE,
-        new BuildTarget(BUILD_RULE_BASE_NAME, name),
+        BuildTarget.builder(BUILD_RULE_BASE_NAME, name).build(),
         ImmutableSortedSet.copyOf(deps),
         visibilityPatterns);
     return rule;

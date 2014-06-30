@@ -745,7 +745,7 @@ public class ProjectTest {
   private static BuildRule getRuleById(String id, PartialGraph graph) {
     String[] parts = id.split(":");
     BuildRule rule = graph.getActionGraph().findBuildRuleByTarget(
-        new BuildTarget(parts[0], parts[1]));
+        BuildTarget.builder(parts[0], parts[1]).build());
     Preconditions.checkNotNull(rule, "No rule for %s", id);
     return rule;
   }
@@ -847,7 +847,7 @@ public class ProjectTest {
     EasyMock.expect(projectFilesystem.getIgnorePaths()).andReturn(ignorePaths);
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = new BuildTarget("//", "base");
+    BuildTarget buildTarget = BuildTarget.builder("//", "base").build();
     BuildRule buildRule = new FakeBuildRule(JavaLibraryDescription.TYPE, buildTarget);
     Module module = new Module(buildRule, buildTarget);
 

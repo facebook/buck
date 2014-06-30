@@ -385,7 +385,7 @@ public class AuditOwnerCommandTest {
     ImmutableSortedSet<Path> inputs = MorePaths.asPaths(ImmutableSortedSet.copyOf(args));
 
     // Build rule that owns all inputs
-    BuildTarget target = new BuildTarget("//base/name", "name");
+    BuildTarget target = BuildTarget.builder("//base/name", "name").build();
     BuildRule ownerRule = new StubBuildRule(target, inputs);
 
     // Create graph
@@ -435,7 +435,7 @@ public class AuditOwnerCommandTest {
     ImmutableSortedSet<Path> inputs = MorePaths.asPaths(ImmutableSortedSet.copyOf(args));
 
     // Build rule that owns all inputs
-    BuildTarget target = new BuildTarget("//base/name", "name");
+    BuildTarget target = BuildTarget.builder("//base/name", "name").build();
     BuildRule ownerRule = new StubBuildRule(target, inputs);
 
     // Create graph

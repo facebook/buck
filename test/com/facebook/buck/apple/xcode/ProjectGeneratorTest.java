@@ -193,7 +193,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testLibrarySourceGroups() throws IOException {
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "lib"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
@@ -252,7 +252,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testLibraryHeaderGroups() throws IOException {
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "lib"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
@@ -362,7 +362,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testIosLibraryRule() throws IOException {
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "lib"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
@@ -421,7 +421,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testMacosxFrameworkRule() throws IOException {
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "lib"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(MacosxFrameworkDescription.TYPE)
             .build();
     MacosxFrameworkDescription.Arg arg =
@@ -483,10 +483,11 @@ public class ProjectGeneratorTest {
   @Test
   public void testMacosxBinaryRule() throws IOException {
     BuildRule depRule = createBuildRuleWithDefaults(
-        new BuildTarget("//dep", "dep"),
+        BuildTarget.builder("//dep", "dep").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription);
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "binary"))
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "binary").build())
         .setDeps(ImmutableSortedSet.of(depRule))
         .setType(MacosxBinaryDescription.TYPE)
         .build();
@@ -539,7 +540,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testIosTestRuleDefaultType() throws IOException {
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "test"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
             .setType(IosTestDescription.TYPE)
             .build();
 
@@ -595,7 +596,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testIosTestRuleXctestType() throws IOException {
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "test"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
             .setType(IosTestDescription.TYPE)
             .build();
 
@@ -652,7 +653,7 @@ public class ProjectGeneratorTest {
 
     {
       BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "lib"))
+          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
               .setType(IosLibraryDescription.TYPE)
               .build();
       IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
@@ -665,7 +666,8 @@ public class ProjectGeneratorTest {
     }
 
     {
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "test"))
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
           .setDeps(ImmutableSortedSet.of(libraryRule))
           .setType(IosTestDescription.TYPE)
           .build();
@@ -703,14 +705,14 @@ public class ProjectGeneratorTest {
   @Test
   public void testIosBinaryRule() throws IOException {
     BuildRule depRule = createBuildRuleWithDefaults(
-        new BuildTarget("//dep", "dep"),
+        BuildTarget.builder("//dep", "dep").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription);
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "binary"))
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "binary").build())
         .setDeps(ImmutableSortedSet.of(depRule))
         .setType(IosBinaryDescription.TYPE)
         .build();
-
     IosBinaryDescription.Arg arg = iosBinaryDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Paths.get("Info.plist");
     arg.configs = ImmutableMap.of(
@@ -755,7 +757,7 @@ public class ProjectGeneratorTest {
 
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
 
-    BuildRule genrule = GenruleBuilder.createGenrule(new BuildTarget("//foo", "script"))
+    BuildRule genrule = GenruleBuilder.createGenrule(BuildTarget.builder("//foo", "script").build())
         .addSrc(new TestSourcePath("script/input.png").resolve())
         .setBash("echo \"hello world!\"")
         .setOut("helloworld.txt")
@@ -763,7 +765,7 @@ public class ProjectGeneratorTest {
 
     buildRuleResolver.addToIndex(genrule.getBuildTarget(), genrule);
 
-    BuildTarget libTarget = new BuildTarget("//foo", "lib");
+    BuildTarget libTarget = BuildTarget.builder("//foo", "lib").build();
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget)
         .setDeps(ImmutableSortedSet.of(genrule))
         .setType(IosLibraryDescription.TYPE)
@@ -809,7 +811,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testCoreDataModelRuleAddsReference() throws IOException {
     BuildRule modelRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "model"),
+        BuildTarget.builder("//foo", "model").build(),
         ImmutableSortedSet.<BuildRule>of(),
         coreDataModelDescription,
         new Function<CoreDataModelDescription.Arg, CoreDataModelDescription.Arg>() {
@@ -821,7 +823,7 @@ public class ProjectGeneratorTest {
         });
 
     BuildRule libraryRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "lib"),
+        BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(modelRule),
         iosLibraryDescription);
 
@@ -848,7 +850,7 @@ public class ProjectGeneratorTest {
   @Test
   public void ruleToTargetMapContainsPBXTarget() throws IOException {
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "lib"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(iosLibraryDescription.TYPE)
             .build();
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
@@ -894,32 +896,32 @@ public class ProjectGeneratorTest {
     // Calling generate on FooBin should pull in everything except BazLibTest
 
     BuildRule barLib = createBuildRuleWithDefaults(
-        new BuildTarget("//bar", "lib"),
+        BuildTarget.builder("//bar", "lib").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription);
     BuildRule fooLib = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "lib"),
+        BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(barLib),
         iosLibraryDescription);
     BuildRule fooBin = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "bin"),
+        BuildTarget.builder("//foo", "bin").build(),
         ImmutableSortedSet.of(fooLib),
         iosBinaryDescription);
     BuildRule bazLib = createBuildRuleWithDefaults(
-        new BuildTarget("//baz", "lib"),
+        BuildTarget.builder("//baz", "lib").build(),
         ImmutableSortedSet.of(fooLib),
         iosLibraryDescription);
 
     BuildRule bazLibTest = createIosTestRule(
-        new BuildTarget("//baz", "test"),
+        BuildTarget.builder("//baz", "test").build(),
         ImmutableSortedSet.of(bazLib),
         ImmutableSortedSet.of(bazLib));
     BuildRule fooLibTest = createIosTestRule(
-        new BuildTarget("//foo", "lib-test"),
+        BuildTarget.builder("//foo", "lib-test").build(),
         ImmutableSortedSet.of(fooLib),
         ImmutableSortedSet.of(fooLib, bazLib));
     BuildRule fooBinTest = createIosTestRule(
-        new BuildTarget("//foo", "bin-test"),
+        BuildTarget.builder("//foo", "bin-test").build(),
         ImmutableSortedSet.of(fooBin),
         ImmutableSortedSet.of(fooBin));
 
@@ -951,7 +953,7 @@ public class ProjectGeneratorTest {
   @Test
   public void generatedGidsForTargetsAreStable() throws IOException {
     BuildRule fooLib = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "foo"),
+        BuildTarget.builder("//foo", "foo").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription);
 
@@ -974,7 +976,7 @@ public class ProjectGeneratorTest {
   @Test
   public void resourcesInDependenciesPropagatesToBinariesAndTests() throws IOException {
     BuildRule resourceRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "res"),
+        BuildTarget.builder("//foo", "res").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosResourceDescription,
         new Function<AppleResourceDescriptionArg, AppleResourceDescriptionArg>() {
@@ -987,17 +989,17 @@ public class ProjectGeneratorTest {
         });
 
     BuildRule libraryRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "lib"),
+        BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(resourceRule),
         iosLibraryDescription);
 
     BuildRule testRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "test"),
+        BuildTarget.builder("//foo", "test").build(),
         ImmutableSortedSet.of(libraryRule),
         iosTestDescription);
 
     BuildRule binaryRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "bin"),
+        BuildTarget.builder("//foo", "bin").build(),
         ImmutableSortedSet.of(libraryRule),
         iosBinaryDescription);
 
@@ -1020,7 +1022,7 @@ public class ProjectGeneratorTest {
   @Test
   public void assetCatalogsInDependenciesPropogatesToBinariesAndTests() throws IOException {
     BuildRule assetCatalogRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "asset_catalog"),
+        BuildTarget.builder("//foo", "asset_catalog").build(),
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
@@ -1034,17 +1036,17 @@ public class ProjectGeneratorTest {
         });
 
     BuildRule libraryRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "lib"),
+        BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(assetCatalogRule),
         iosLibraryDescription);
 
     BuildRule testRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "test"),
+        BuildTarget.builder("//foo", "test").build(),
         ImmutableSortedSet.of(libraryRule),
         iosTestDescription);
 
     BuildRule binaryRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "bin"),
+        BuildTarget.builder("//foo", "bin").build(),
         ImmutableSortedSet.of(libraryRule),
         iosBinaryDescription);
 
@@ -1067,7 +1069,7 @@ public class ProjectGeneratorTest {
   @Test
   public void assetCatalogsBuildPhaseBuildsBothCommonAndBundledAssetCatalogs() throws IOException {
     BuildRule assetCatalog1 = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "asset_catalog1"),
+        BuildTarget.builder("//foo", "asset_catalog1").build(),
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
@@ -1080,7 +1082,7 @@ public class ProjectGeneratorTest {
           }
         });
     BuildRule assetCatalog2 = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "asset_catalog2"),
+        BuildTarget.builder("//foo", "asset_catalog2").build(),
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
@@ -1095,17 +1097,17 @@ public class ProjectGeneratorTest {
         });
 
     BuildRule libraryRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "lib"),
+        BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(assetCatalog1, assetCatalog2),
         iosLibraryDescription);
 
     BuildRule testRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "test"),
+        BuildTarget.builder("//foo", "test").build(),
         ImmutableSortedSet.of(libraryRule),
         iosTestDescription);
 
     BuildRule binaryRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "bin"),
+        BuildTarget.builder("//foo", "bin").build(),
         ImmutableSortedSet.of(libraryRule),
         iosBinaryDescription);
 
@@ -1133,7 +1135,7 @@ public class ProjectGeneratorTest {
   public void generatedProjectConfigurationListIsUnionOfAllTargetConfigurations()
       throws IOException {
     BuildRule rule1 = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "rule1"),
+        BuildTarget.builder("//foo", "rule1").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription,
         new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
@@ -1147,7 +1149,7 @@ public class ProjectGeneratorTest {
         });
 
     BuildRule rule2 = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "rule2"),
+        BuildTarget.builder("//foo", "rule2").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription,
         new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
@@ -1176,7 +1178,7 @@ public class ProjectGeneratorTest {
   @Test
   public void shouldEmitFilesForBuildSettingPrefixedFrameworks() throws IOException {
     BuildRule rule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "rule"),
+        BuildTarget.builder("//foo", "rule").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosTestDescription,
         new Function<IosTestDescription.Arg, IosTestDescription.Arg>() {
@@ -1207,7 +1209,7 @@ public class ProjectGeneratorTest {
   @Test(expected = HumanReadableException.class)
   public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws IOException {
     BuildRule rule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "rule"),
+        BuildTarget.builder("//foo", "rule").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosTestDescription,
         new Function<IosTestDescription.Arg, IosTestDescription.Arg>() {
@@ -1254,7 +1256,7 @@ public class ProjectGeneratorTest {
       "}";
     projectFilesystem.writeContentsToPath(projectData, OUTPUT_PROJECT_FILE_PATH);
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "lib"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
@@ -1323,7 +1325,7 @@ public class ProjectGeneratorTest {
   public void generatedSourceTargetShouldHaveConfigsWithSameNamesAsProjectConfigs()
       throws IOException {
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "lib"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();

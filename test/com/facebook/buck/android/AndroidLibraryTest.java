@@ -89,7 +89,7 @@ public class AndroidLibraryTest {
 
   private BuildRule getAndroidLibraryRuleFoo(BuildRuleResolver ruleResolver) {
     BuildRule libraryRule = JavaLibraryBuilder
-        .createBuilder(new BuildTarget("//java/src/com/bar", "bar"))
+        .createBuilder(BuildTarget.builder("//java/src/com/bar", "bar").build())
         .build(new BuildRuleResolver());
 
     return AndroidLibraryBuilder

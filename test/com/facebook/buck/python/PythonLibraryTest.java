@@ -41,7 +41,9 @@ public class PythonLibraryTest {
     SourcePath src = new TestSourcePath("");
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of(src);
     PythonLibrary pythonLibrary = new PythonLibrary(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//scripts/python", "foo")).build(),
+        new FakeBuildRuleParamsBuilder(
+            BuildTarget.builder("//scripts/python", "foo").build())
+            .build(),
         srcs,
         ImmutableSortedSet.<SourcePath>of());
 

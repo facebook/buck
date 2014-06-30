@@ -50,7 +50,7 @@ public class AndroidResourceTest {
   public void testGetInputsToCompareToOutput() {
     // Create an android_resource rule with all sorts of input files that it depends on. If any of
     // these files is modified, then this rule should not be cached.
-    BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
+    BuildTarget buildTarget = BuildTarget.builder("//java/src/com/facebook/base", "res").build();
     AndroidResource androidResource = new AndroidResource(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
@@ -92,7 +92,8 @@ public class AndroidResourceTest {
             "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
             "java/src/com/facebook/base/AndroidManifest.xml", Strings.repeat("d", 40)));
 
-    BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
+    BuildTarget buildTarget =
+        BuildTarget.builder("//java/src/com/facebook/base", "res").build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setFileHashCache(fakeFileHashCache)
         .build();

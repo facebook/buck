@@ -756,7 +756,7 @@ public class Parser {
   private BuildTarget parseBuildTargetFromRawRule(Map<String, Object> map) {
     String basePath = (String) map.get("buck.base_path");
     String name = (String) map.get("name");
-    return new BuildTarget("//" + basePath, name);
+    return BuildTarget.builder(BuildTarget.BUILD_TARGET_PREFIX + basePath, name).build();
   }
 
   /**

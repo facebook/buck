@@ -42,7 +42,9 @@ public class ShTestTest extends EasyMockSupport {
   @Test
   public void testHasTestResultFiles() {
     ShTest shTest = new ShTest(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//test/com/example", "my_sh_test")).build(),
+        new FakeBuildRuleParamsBuilder(
+            BuildTarget.builder("//test/com/example", "my_sh_test").build())
+            .build(),
         new TestSourcePath("run_test.sh"),
         /* labels */ ImmutableSet.<Label>of());
 

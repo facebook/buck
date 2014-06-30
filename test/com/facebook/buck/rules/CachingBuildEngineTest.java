@@ -93,7 +93,8 @@ import javax.annotation.Nullable;
  */
 public class CachingBuildEngineTest extends EasyMockSupport {
 
-  private static final BuildTarget buildTarget = new BuildTarget("//src/com/facebook/orca", "orca");
+  private static final BuildTarget buildTarget =
+      BuildTarget.builder("//src/com/facebook/orca", "orca").build();
 
   @Rule
   public TemporaryFolder tmp = new DebuggableTemporaryFolder();

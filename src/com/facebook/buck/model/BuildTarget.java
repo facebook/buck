@@ -41,25 +41,18 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z_]+");
 
+  private final Optional<String> repository;
   private final String baseName;
   private final String shortName;
   private final Optional<Flavor> flavor;
   private final String fullyQualifiedName;
 
-  public BuildTarget(String baseName, String shortName) {
-    this(baseName, shortName, Optional.<Flavor>absent());
-  }
-
-  @VisibleForTesting
-  public BuildTarget(String baseName, String shortName, String flavor) {
-    this(baseName, shortName, new Flavor(flavor));
-  }
-
-  public BuildTarget(String baseName, String shortName, Flavor flavor) {
-    this(baseName, shortName, Optional.of(flavor));
-  }
-
-  private BuildTarget(String baseName, String shortName, Optional<Flavor> flavor) {
+  private BuildTarget(
+      Optional<String> repository,
+      String baseName,
+      String shortName,
+      Optional<Flavor> flavor) {
+    Preconditions.checkNotNull(repository);
     Preconditions.checkNotNull(baseName);
     // shortName may be the empty string when parsing visibility patterns.
     Preconditions.checkNotNull(shortName);
@@ -88,12 +81,15 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
       }
     }
 
+    this.repository = repository;
     // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
     this.baseName = baseName.replace("\\", "/");
     this.shortName = shortName;
     this.flavor = flavor;
     this.fullyQualifiedName =
-        baseName + ":" + shortName + (flavor.isPresent() ? "#" + flavor.get() : "");
+        (repository.isPresent() ? "@" + repository.get() : "") +
+        baseName + ":" + shortName +
+        (flavor.isPresent() ? "#" + flavor.get() : "");
   }
 
   /**
@@ -127,6 +123,11 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   public Path getBuildFilePath() {
     return Paths.get(getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME);
+  }
+
+  @JsonProperty("repository")
+  public Optional<String> getRepository() {
+    return repository;
   }
 
   /**
@@ -233,8 +234,55 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
   }
 
+  public static Builder builder(String baseName, String shortName) {
+    return new Builder(baseName, shortName);
+  }
+
+  public static Builder builder(BuildTarget buildTarget) {
+    return new Builder(buildTarget);
+  }
+
   @Override
   public BuildTarget getBuildTarget() {
     return this;
+  }
+
+  public static class Builder {
+    private Optional<String> repository = Optional.absent();
+    private String baseName;
+    private String shortName;
+    private Optional<Flavor> flavor = Optional.absent();
+
+    private Builder(String baseName, String shortName) {
+      this.baseName = baseName;
+      this.shortName = shortName;
+    }
+
+    private Builder(BuildTarget buildTarget) {
+      this.repository = buildTarget.repository;
+      this.baseName = buildTarget.baseName;
+      this.shortName = buildTarget.shortName;
+      this.flavor = buildTarget.flavor;
+    }
+
+    public Builder setRepository(String repo) {
+      this.repository = Optional.of(repo);
+      return this;
+    }
+
+    public Builder setFlavor(Flavor flavor) {
+      this.flavor = Optional.of(flavor);
+      return this;
+    }
+
+    @VisibleForTesting
+    public Builder setFlavor(String flavor) {
+      this.flavor = Optional.of(new Flavor(flavor));
+      return this;
+    }
+
+    public BuildTarget build() {
+      return new BuildTarget(repository, baseName, shortName, flavor);
+    }
   }
 }

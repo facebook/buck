@@ -259,27 +259,29 @@ public class AndroidPackageableCollectorTest {
   public void testGraphForAndroidBinaryExcludesKeystoreDeps() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
-    BuildTarget androidLibraryKeystoreTarget = new BuildTarget("//java/com/keystore/base", "base");
+    BuildTarget androidLibraryKeystoreTarget =
+        BuildTarget.builder("//java/com/keystore/base", "base").build();
     BuildRule androidLibraryKeystore = AndroidLibraryBuilder
         .createBuilder(androidLibraryKeystoreTarget)
         .addSrc(Paths.get("java/com/facebook/keystore/Base.java"))
         .build(ruleResolver);
 
-    BuildTarget keystoreTarget = new BuildTarget("//keystore", "debug");
+    BuildTarget keystoreTarget = BuildTarget.builder("//keystore", "debug").build();
     BuildRule keystore = KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
         .addDep(androidLibraryKeystore)
         .build(ruleResolver);
 
-    BuildTarget androidLibraryTarget = new BuildTarget("//java/com/facebook/base", "base");
+    BuildTarget androidLibraryTarget =
+        BuildTarget.builder("//java/com/facebook/base", "base").build();
     BuildRule androidLibrary = AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
         .addSrc(Paths.get("java/com/facebook/base/Base.java"))
         .build(ruleResolver);
 
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(androidLibrary);
     AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
-        new BuildTarget("//apps/sample", "app"))
+        BuildTarget.builder("//apps/sample", "app").build())
         .setManifest(new TestSourcePath("apps/sample/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setOriginalDeps(originalDeps)

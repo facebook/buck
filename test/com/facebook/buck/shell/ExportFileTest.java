@@ -64,7 +64,7 @@ public class ExportFileTest {
 
   @Before
   public void createFixtures() {
-    target = new BuildTarget("//", "example.html");
+    target = BuildTarget.builder("//", "example.html").build();
     File root = new File(".");
     context = getBuildContext(root);
   }

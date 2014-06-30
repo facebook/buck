@@ -45,10 +45,10 @@ public class AndroidInstrumentationApkTest {
   @Test
   public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() {
     final FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(
-        new BuildTarget("//java/com/example", "lib1"));
+        BuildTarget.builder("//java/com/example", "lib1").build());
 
     FakeJavaLibrary javaLibrary2 = new FakeJavaLibrary(
-        new BuildTarget("//java/com/example", "lib2"),
+        BuildTarget.builder("//java/com/example", "lib2").build(),
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary1)) {
       @Override
       public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
@@ -61,10 +61,10 @@ public class AndroidInstrumentationApkTest {
     };
 
     final FakeJavaLibrary javaLibrary3 = new FakeJavaLibrary(
-        new BuildTarget("//java/com/example", "lib3"));
+        BuildTarget.builder("//java/com/example", "lib3").build());
 
     FakeJavaLibrary javaLibrary4 = new FakeJavaLibrary(
-        new BuildTarget("//java/com/example", "lib4"),
+        BuildTarget.builder("//java/com/example", "lib4").build(),
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary3)) {
       @Override
       public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
@@ -84,14 +84,14 @@ public class AndroidInstrumentationApkTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver(buildRuleIndex);
 
     BuildRule keystore = KeystoreBuilder.createBuilder(
-        new BuildTarget("//keystores", "debug"))
+        BuildTarget.builder("//keystores", "debug").build())
         .setProperties(Paths.get("keystores/debug.properties"))
         .setStore(Paths.get("keystores/debug.keystore"))
         .build(ruleResolver);
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.
     AndroidBinaryBuilder androidBinaryBuilder = AndroidBinaryBuilder.createBuilder(
-        new BuildTarget("//apps", "app"));
+        BuildTarget.builder("//apps", "app").build());
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.<BuildRule>of(
         javaLibrary2,
         javaLibrary3);
@@ -112,7 +112,7 @@ public class AndroidInstrumentationApkTest {
     arg.manifest = new TestSourcePath("apps/InstrumentationAndroidManifest.xml");
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
-        new BuildTarget("//apps", "instrumentation"))
+        BuildTarget.builder("//apps", "instrumentation").build())
         .setDeps(apkOriginalDeps)
         .setExtraDeps(ImmutableSortedSet.<BuildRule>of(androidBinary))
         .build();

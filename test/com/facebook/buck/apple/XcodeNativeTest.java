@@ -32,7 +32,7 @@ public class XcodeNativeTest {
         new XcodeNativeDescription().createUnpopulatedConstructorArg();
     arg.projectContainerPath = new TestSourcePath("foo.xcodeproj");
     XcodeNative xcodeNative = new XcodeNative(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//test", "test")).build(),
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//test", "test").build()).build(),
         arg);
 
     assertEquals(new TestSourcePath("foo.xcodeproj"), xcodeNative.getProjectContainerPath());

@@ -64,7 +64,7 @@ public class ProjectConfigTest extends EasyMockSupport {
         .build(ruleResolver);
 
     return (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(new BuildTarget("//javatests", "project_config"))
+        .newProjectConfigRuleBuilder(BuildTarget.builder("//javatests", "project_config").build())
         .setSrcRule(javaRule)
         .build();
   }

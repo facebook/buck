@@ -60,7 +60,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//path/to/app", "MyApp")).build(),
+        new FakeBuildRuleParamsBuilder(
+            BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
         new FakeDirectoryTraverser(),
         args,
         Optional.<Path>absent());
@@ -82,7 +83,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//path/to/app", "MyApp")).build(),
+        new FakeBuildRuleParamsBuilder(
+            BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
         new FakeDirectoryTraverser(),
         args,
         Optional.<Path>absent());
@@ -115,7 +117,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//path/to/app", "MyApp")).build(),
+        new FakeBuildRuleParamsBuilder(
+            BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
         new FakeDirectoryTraverser(),
         args,
         Optional.of(Paths.get("Resources")));
@@ -137,7 +140,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//path/to/app", "MyApp")).build(),
+        new FakeBuildRuleParamsBuilder(
+            BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
         new FakeDirectoryTraverser(),
         args,
         Optional.of(Paths.get("Resources")));
@@ -170,7 +174,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//path/to/app", "MyApp")).build(),
+        new FakeBuildRuleParamsBuilder(
+            BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
         new FakeDirectoryTraverser(),
         args,
         Optional.<Path>absent());
@@ -209,7 +214,8 @@ public class AppleResourceTest {
     args.variants = Optional.of(variants);
 
     AppleResource appleResource = new AppleResource(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//path/to/app", "MyApp")).build(),
+        new FakeBuildRuleParamsBuilder(
+            BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
         // Pretend that MyLibrary.bundle contains two files: an image and a sound file.
         new FakeDirectoryTraverser(
             ImmutableMap.<String, Collection<FakeDirectoryTraverser.Entry>>of(
@@ -244,7 +250,8 @@ public class AppleResourceTest {
     args.variants = Optional.absent();
 
     AppleResource appleResource = new AppleResource(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//path/to/app", "MyApp")).build(),
+        new FakeBuildRuleParamsBuilder(
+            BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
         new FakeDirectoryTraverser(),
         args,
         Optional.<Path>absent());

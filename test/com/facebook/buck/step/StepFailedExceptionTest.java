@@ -57,7 +57,7 @@ public class StepFailedExceptionTest {
   public void testCreateForFailingStepForExitCodeWithBuildTarget() {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
     StepFailedException exception = StepFailedException.createForFailingStepWithExitCode(
         step, verboseContext, exitCode, Optional.of(buildTarget));
 
@@ -82,7 +82,7 @@ public class StepFailedExceptionTest {
   public void testCreateForFailingStepWithSilentConsole() {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
     StepFailedException exception = StepFailedException.createForFailingStepWithExitCode(
         step, silentContext, exitCode, Optional.of(buildTarget));
 
@@ -94,7 +94,7 @@ public class StepFailedExceptionTest {
   public void testCreateForFailingStepWithBuildTarget() {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
     StepFailedException exception = StepFailedException.createForFailingStepWithException(
         step, new IOException("Copy failed!"), Optional.of(buildTarget));
 

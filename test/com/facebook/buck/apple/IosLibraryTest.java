@@ -49,7 +49,7 @@ public class IosLibraryTest {
     arg.deps = Optional.absent();
 
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "foo")).build();
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "foo").build()).build();
     IosLibrary buildable = description.createBuildRule(params, new BuildRuleResolver(), arg);
 
     assertThat(buildable.getInputsToCompareToOutput(), containsInAnyOrder(

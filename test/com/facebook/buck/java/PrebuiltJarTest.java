@@ -64,7 +64,7 @@ public class PrebuiltJarTest {
   @Before
   public void setUp() {
     BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//lib", "junit")).build();
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//lib", "junit").build()).build();
 
     junitJarRule = new PrebuiltJar(buildRuleParams,
         new PathSourcePath(PATH_TO_JUNIT_JAR),

@@ -57,12 +57,13 @@ public class FilesystemBackedBuildFileTreeTest {
     Files.touch(new File(tempDir, "src/com/facebook/buck/notbuck/BUCK"));
 
     BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem);
-    Iterable<Path> allChildren = buildFiles.getChildPaths(new BuildTarget("src", "com/facebook"));
+    Iterable<Path> allChildren =
+        buildFiles.getChildPaths(BuildTarget.builder("src", "com/facebook").build());
     assertEquals(ImmutableSet.of(Paths.get("buck")),
         ImmutableSet.copyOf(allChildren));
 
     Iterable<Path> subChildren = buildFiles.getChildPaths(
-        new BuildTarget("//src", "/com/facebook/buck"));
+        BuildTarget.builder("//src", "/com/facebook/buck").build());
     assertEquals(ImmutableSet.of(Paths.get("command"), Paths.get("notbuck")),
         ImmutableSet.copyOf(subChildren));
   }
@@ -119,7 +120,8 @@ public class FilesystemBackedBuildFileTreeTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(tempDir.toPath(), ignoredPaths);
     BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem);
 
-    Collection<Path> children = buildFiles.getChildPaths(new BuildTarget("//foo", "foo"));
+    Collection<Path> children =
+        buildFiles.getChildPaths(BuildTarget.builder("//foo", "foo").build());
     assertEquals(ImmutableSet.of(Paths.get("baz")), children);
 
     Path ancestor = buildFiles.getBasePathOfAncestorTarget(Paths.get("foo/bar/xyzzy"));

@@ -30,9 +30,9 @@ public class ImmediateDirectoryBuildTargetPatternTest {
         new ImmediateDirectoryBuildTargetPattern("src/com/facebook/buck/");
 
     assertFalse(pattern.apply(null));
-    assertTrue(pattern.apply(new BuildTarget("//src/com/facebook/buck", "buck")));
-    assertFalse(pattern.apply(new BuildTarget("//src/com/facebook/foo/", "foo")));
-    assertFalse(pattern.apply(new BuildTarget("//src/com/facebook/buck/bar", "bar")));
+    assertTrue(pattern.apply(BuildTarget.builder("//src/com/facebook/buck", "buck").build()));
+    assertFalse(pattern.apply(BuildTarget.builder("//src/com/facebook/foo/", "foo").build()));
+    assertFalse(pattern.apply(BuildTarget.builder("//src/com/facebook/buck/bar", "bar").build()));
   }
 
   @Test

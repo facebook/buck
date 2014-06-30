@@ -113,7 +113,7 @@ public class DefaultStepRunnerTest {
           public Object call() throws Exception {
             return "Some Result";
           }
-        }, new BuildTarget("//some/base/name", "Some Short Name"));
+        }, BuildTarget.builder("//some/base/name", "Some Short Name").build());
     runner.shutdownNow();
     try {
       future.get();

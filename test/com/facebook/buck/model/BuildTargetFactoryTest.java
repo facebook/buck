@@ -25,12 +25,14 @@ public class BuildTargetFactoryTest {
   @Test
   public void testTargetWithoutFlavor() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//example/base:one");
-    assertEquals(new BuildTarget("//example/base", "one"), buildTarget);
+    assertEquals(BuildTarget.builder("//example/base", "one").build(), buildTarget);
   }
 
   @Test
   public void testTargetWithFlavor() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//example/base:one#two");
-    assertEquals(new BuildTarget("//example/base", "one", "two"), buildTarget);
+    assertEquals(
+        BuildTarget.builder("//example/base", "one").setFlavor("two").build(),
+        buildTarget);
   }
 }

@@ -42,7 +42,7 @@ public class PythonBinaryTest {
 
   @Test
   public void testPythonBinaryGetSourcesMethodReturnsTransitiveSourceMap() {
-    BuildTarget orphanPyLibraryTarget = new BuildTarget("//", "orphan_python_library");
+    BuildTarget orphanPyLibraryTarget = BuildTarget.builder("//", "orphan_python_library").build();
     PythonLibrary orphanPyLibrary = new PythonLibrary(
         new FakeBuildRuleParamsBuilder(orphanPyLibraryTarget).build(),
         ImmutableSortedSet.<SourcePath>of(
@@ -70,7 +70,7 @@ public class PythonBinaryTest {
 
     Path foo = Paths.get("foo");
     PythonBinary buildable = new PythonBinary(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//", "python_binary"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//", "python_binary").build())
             .setDeps(ImmutableSortedSet.of(javaLibrary, pyLibrary))
             .build(),
         foo);
@@ -101,7 +101,7 @@ public class PythonBinaryTest {
     // The top-level python binary that lists the above library as a dep and
     // also lists the "tasty" path as its main module, which will conflict.
     PythonBinary buildable = new PythonBinary(
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//", "python_binary"))
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//", "python_binary").build())
             .setDeps(ImmutableSortedSet.<BuildRule>of(pyLibrary))
             .build(),
         tasty);

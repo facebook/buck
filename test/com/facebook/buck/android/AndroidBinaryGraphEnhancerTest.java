@@ -62,19 +62,19 @@ public class AndroidBinaryGraphEnhancerTest {
     RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory();
 
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
-    BuildTarget javaDep1BuildTarget = new BuildTarget("//java/com/example", "dep1");
+    BuildTarget javaDep1BuildTarget = BuildTarget.builder("//java/com/example", "dep1").build();
     BuildRule javaDep1 = JavaLibraryBuilder
         .createBuilder(javaDep1BuildTarget)
         .addSrc(Paths.get("java/com/example/Dep1.java"))
         .build(ruleResolver);
 
-    BuildTarget javaDep2BuildTarget = new BuildTarget("//java/com/example", "dep2");
+    BuildTarget javaDep2BuildTarget = BuildTarget.builder("//java/com/example", "dep2").build();
     BuildRule javaDep2 = JavaLibraryBuilder
         .createBuilder(javaDep2BuildTarget)
         .addSrc(Paths.get("java/com/example/Dep2.java"))
         .build(ruleResolver);
 
-    BuildTarget javaLibBuildTarget = new BuildTarget("//java/com/example", "lib");
+    BuildTarget javaLibBuildTarget = BuildTarget.builder("//java/com/example", "lib").build();
     BuildRule javaLib = JavaLibraryBuilder
         .createBuilder(javaLibBuildTarget)
         .addSrc(Paths.get("java/com/example/Lib.java"))
@@ -86,7 +86,7 @@ public class AndroidBinaryGraphEnhancerTest {
     // is //java/com/example:lib, and that //java/com/example:dep2 is in its no_dx list.
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
     ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
-    BuildTarget apkTarget = new BuildTarget("//java/com/example", "apk");
+    BuildTarget apkTarget = BuildTarget.builder("//java/com/example", "apk").build();
     BuildRuleParams originalParams = new BuildRuleParams(
         apkTarget,
         originalDeps,
@@ -114,7 +114,7 @@ public class AndroidBinaryGraphEnhancerTest {
         createStrictMock(Keystore.class));
 
     BuildTarget uberRDotJavaTarget =
-        new BuildTarget("//java/com/example", "apk", "uber_r_dot_java");
+        BuildTarget.builder("//java/com/example", "apk").setFlavor("uber_r_dot_java").build();
     BuildRuleParams uberRDotJavaParams = new FakeBuildRuleParamsBuilder(uberRDotJavaTarget).build();
     UberRDotJava uberRDotJava = new UberRDotJava(
         uberRDotJavaParams,
@@ -142,7 +142,8 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(
         uberRDotJava,
         collection);
-    BuildTarget dexMergeTarget = new BuildTarget("//java/com/example", "apk", "dex_merge");
+    BuildTarget dexMergeTarget =
+        BuildTarget.builder("//java/com/example", "apk").setFlavor("dex_merge").build();
     BuildRule dexMergeRule = ruleResolver.get(dexMergeTarget);
 
     assertEquals(dexMergeRule, preDexMergeRule);

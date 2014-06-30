@@ -247,9 +247,9 @@ public class ParserTest extends EasyMockSupport {
     parser.parseRawRulesInternal(ruleObjects);
     RawRulePredicate predicate = alwaysTrue();
     List<BuildTarget> targets = parser.filterTargets(predicate);
-    BuildTarget expectedBuildTarget = new BuildTarget(
+    BuildTarget expectedBuildTarget = BuildTarget.builder(
         "//testdata/com/facebook/feed/model",
-        "feed");
+        "feed").build();
     assertEquals(ImmutableList.of(expectedBuildTarget), targets);
 
     try {
@@ -318,8 +318,8 @@ public class ParserTest extends EasyMockSupport {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Execute parseBuildFilesForTargets() with multiple targets that require parsing the same
     // build file.
-    BuildTarget fooTarget = new BuildTarget("//java/com/facebook", "foo");
-    BuildTarget barTarget = new BuildTarget("//java/com/facebook", "bar");
+    BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook", "foo").build();
+    BuildTarget barTarget = BuildTarget.builder("//java/com/facebook", "bar").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -351,8 +351,8 @@ public class ParserTest extends EasyMockSupport {
   public void testMissingBuildRuleInValidFile()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
-    BuildTarget fooTarget = new BuildTarget("//java/com/facebook", "foo");
-    BuildTarget razTarget = new BuildTarget("//java/com/facebook", "raz");
+    BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook", "foo").build();
+    BuildTarget razTarget = BuildTarget.builder("//java/com/facebook", "raz").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -388,7 +388,7 @@ public class ParserTest extends EasyMockSupport {
     tempDir.newFile(
         "java/com/facebook/invalid/lib/" + BuckConstant.BUILD_RULES_FILE_NAME);
 
-    BuildTarget fooTarget = new BuildTarget("//java/com/facebook/invalid", "foo");
+    BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook/invalid", "foo").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -415,8 +415,8 @@ public class ParserTest extends EasyMockSupport {
         alwaysTrue());
 
     List<BuildTarget> expectedTargets = ImmutableList.of(
-        new BuildTarget("//java/com/facebook", "foo"),
-        new BuildTarget("//java/com/facebook", "bar"));
+        BuildTarget.builder("//java/com/facebook", "foo").build(),
+        BuildTarget.builder("//java/com/facebook", "bar").build());
     assertEquals("Should have returned all rules.", expectedTargets, targets);
   }
 
@@ -1004,9 +1004,9 @@ public class ParserTest extends EasyMockSupport {
         testGeneratedDepsBuckFile,
         Charsets.UTF_8);
 
-    BuildTarget fooTarget = new BuildTarget("//java/com/facebook/generateddeps", "foo");
+    BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook/generateddeps", "foo").build();
 
-    BuildTarget barTarget = new BuildTarget("//java/com/facebook/generateddeps", "bar");
+    BuildTarget barTarget = BuildTarget.builder("//java/com/facebook/generateddeps", "bar").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -1044,7 +1044,7 @@ public class ParserTest extends EasyMockSupport {
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    BuildTarget foo = new BuildTarget("//java/com/facebook", "foo");
+    BuildTarget foo = BuildTarget.builder("//java/com/facebook", "foo").build();
     parser.parseBuildFilesForTargets(
         ImmutableList.of(foo),
         Lists.<String>newArrayList(),
@@ -1060,7 +1060,7 @@ public class ParserTest extends EasyMockSupport {
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
-    BuildTarget foo = new BuildTarget("//java/com/facebook", "foo");
+    BuildTarget foo = BuildTarget.builder("//java/com/facebook", "foo").build();
     parser.parseBuildFilesForTargets(
         ImmutableList.of(foo),
         Lists.<String>newArrayList(),

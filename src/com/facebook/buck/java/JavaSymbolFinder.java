@@ -168,7 +168,9 @@ public class JavaSymbolFinder {
                 Path buckFileDir = buckFile.getParent();
                 String baseName = "//" + (buckFileDir != null ? buckFileDir : "");
                 String shortName = (String) ruleMap.get("name");
-                sourceFileTargetsMultimap.put(sourceFile, new BuildTarget(baseName, shortName));
+                sourceFileTargetsMultimap.put(
+                    sourceFile,
+                    BuildTarget.builder(baseName, shortName).build());
               }
             }
           }
