@@ -7,8 +7,8 @@ before_install:
   # Travis is on 64bit and there will be a cryptic aapt error w/o these libs.
   - if [ `uname -m` = x86_64 ]; then sudo apt-get install -qq --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch > /dev/null; fi
   # Download the Android sdk and unzip.
-  - wget http://dl.google.com/android/android-sdk_r22.2.1-linux.tgz
-  - tar -zxf android-sdk_r22.2.1-linux.tgz
+  - wget http://dl.google.com/android/android-sdk_r23-linux.tgz
+  - tar -zxf android-sdk_r23-linux.tgz
   # Set up the sdk environment.
   - export ANDROID_HOME=`pwd`/android-sdk-linux
   - export PATH=${PATH}:${ANDROID_HOME}/tools
