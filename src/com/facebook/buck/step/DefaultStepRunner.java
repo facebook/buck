@@ -99,6 +99,7 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
   public <T> ListenableFuture<T> runStepsAndYieldResult(final List<Step> steps,
                                                         final Callable<T> interpretResults,
                                                         final BuildTarget buildTarget) {
+    Preconditions.checkState(!listeningExecutorService.isShutdown());
     Callable<T> callable = new Callable<T>() {
 
       @Override
@@ -153,7 +154,13 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
   public <T> void addCallback(
       ListenableFuture<List<T>> dependencies,
       FutureCallback<List<T>> callback) {
+    Preconditions.checkState(!listeningExecutorService.isShutdown());
     Futures.addCallback(dependencies, callback, listeningExecutorService);
+  }
+
+  @Override
+  public void shutdownNow() {
+    listeningExecutorService.shutdownNow();
   }
 
   @Override

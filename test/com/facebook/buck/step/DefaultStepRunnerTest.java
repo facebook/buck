@@ -23,13 +23,15 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 public class DefaultStepRunnerTest {
 
@@ -98,6 +100,31 @@ public class DefaultStepRunnerTest {
     }
   }
 
+  @Test(timeout = 500)
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void whenShutdownNowIsCalledThenStepProcessingIsInterrupted() throws Exception {
+    // Add a step that take longer than the test timeout to complete.
+    // If the step is not interrupted then the test will timeout.
+    ImmutableList<Step> step = ImmutableList.<Step>of(new SleepingStep(1000, 0));
+    DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance(), 1);
+    ListenableFuture future = runner.runStepsAndYieldResult(
+        step, new Callable<Object>() {
+          @Override
+          public Object call() throws Exception {
+            return "Some Result";
+          }
+        }, new BuildTarget("//some/base/name", "Some Short Name"));
+    runner.shutdownNow();
+    try {
+      future.get();
+      fail("Should throw exception due to cancellation");
+    } catch (ExecutionException e) {
+      // Caused by interruption.
+    }
+
+    // Success if the test timeout is not reached.
+  }
+
   private static class ExplosionStep implements Step {
     @Override
     public int execute(ExecutionContext context) {
@@ -125,8 +152,8 @@ public class DefaultStepRunnerTest {
     }
 
     @Override
-    public int execute(ExecutionContext context) {
-      Uninterruptibles.sleepUninterruptibly(sleepMillis, TimeUnit.MILLISECONDS);
+    public int execute(ExecutionContext context) throws InterruptedException {
+      Thread.sleep(sleepMillis);
       return exitCode;
     }
 

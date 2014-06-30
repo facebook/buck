@@ -195,6 +195,11 @@ public class ExportFileTest {
               ListenableFuture<List<T>> allBuiltDeps, FutureCallback<List<T>> futureCallback) {
             // Do nothing.
           }
+
+          @Override
+          public void shutdownNow() {
+            // Do nothing.
+          }
         })
         .build();
   }
