@@ -571,11 +571,10 @@ public final class Main {
               clientEnvironment,
               commandEvent,
               buildEventBus);
-        } catch (WatchmanWatcherException e) {
+        } catch (WatchmanWatcherException | IOException e) {
           buildEventBus.post(LogEvent.warning(
-                  "Watchman threw an exception while parsing file changes, resetting daemon.\n%s",
+                  "Watchman threw an exception while parsing file changes.\n%s",
                   e.getMessage()));
-          resetDaemon();
         }
       }
 

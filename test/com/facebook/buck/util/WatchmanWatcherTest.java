@@ -30,6 +30,7 @@ import static org.junit.Assert.fail;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.eventbus.EventBus;
 
@@ -215,19 +216,49 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenWatchmanFailsThenHumanReadableExceptionThrown()
+  public void whenWatchmanFailsThenOverflowEventGenerated()
       throws IOException, InterruptedException {
     String watchmanOutput = "";
+    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
     EventBus eventBus = createStrictMock(EventBus.class);
+    eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput, 1);
-    replay(process);
+    replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     try {
       watcher.postEvents();
-      fail("Should have thrown RuntimeException.");
-    } catch (RuntimeException e) {
-      assertTrue("Should be Watchman failure.", e.getMessage().startsWith("Watchman failed"));
+      fail("Should have thrown IOException.");
+    } catch (WatchmanWatcherException e) {
+      assertTrue("Should be watchman error", e.getMessage().startsWith("Watchman failed"));
     }
+    verify(eventBus, process);
+    assertEquals("Should be overflow event.",
+        StandardWatchEventKinds.OVERFLOW,
+        eventCapture.getValue().kind());
+  }
+
+  @Test
+  public void whenWatchmanInterruptedThenOverflowEventGenerated()
+      throws IOException, InterruptedException {
+    String watchmanOutput = "";
+    String message = "Boo!";
+    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
+    EventBus eventBus = createStrictMock(EventBus.class);
+    eventBus.post(capture(eventCapture));
+    Process process = createWaitForProcessMock(watchmanOutput, new InterruptedException(message));
+    process.destroy();
+    replay(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    try {
+      watcher.postEvents();
+    } catch (InterruptedException e) {
+      assertEquals("Should be test interruption.", e.getMessage(), message);
+    }
+    verify(eventBus, process);
+    assertTrue(Thread.currentThread().isInterrupted());
+    assertEquals("Should be overflow event.",
+        StandardWatchEventKinds.OVERFLOW,
+        eventCapture.getValue().kind());
   }
 
   @Test
@@ -281,6 +312,12 @@ public class WatchmanWatcherTest {
 
   private Process createWaitForProcessMock(String output) {
     return createWaitForProcessMock(output, 0);
+  }
+
+  private Process createWaitForProcessMock(String output, Throwable t) throws InterruptedException {
+    Process process = createProcessMock(output);
+    expect(process.waitFor()).andThrow(Preconditions.checkNotNull(t));
+    return process;
   }
 
   private Process createWaitForProcessMock(String output, int exitCode) {
