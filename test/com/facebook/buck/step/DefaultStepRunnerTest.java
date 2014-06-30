@@ -107,7 +107,7 @@ public class DefaultStepRunnerTest {
     // If the step is not interrupted then the test will timeout.
     ImmutableList<Step> step = ImmutableList.<Step>of(new SleepingStep(1000, 0));
     DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance(), 1);
-    ListenableFuture future = runner.runStepsAndYieldResult(
+    ListenableFuture<?> future = runner.runStepsAndYieldResult(
         step, new Callable<Object>() {
           @Override
           public Object call() throws Exception {
