@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.UUID;
 
 /**
  * A ProjectFilesystemWatcher implementation that uses a local watchman service.
@@ -79,7 +80,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   private static String createQuery(ProjectFilesystem filesystem) {
     return "[\"query\", \"" +
         MorePaths.absolutify(filesystem.getRootPath()).toString() +
-        "\", {\"since\": \"n:buckd\", \"fields\": [\"name\", \"exists\", \"new\"]}]";
+        "\", {\"since\": \"n:buckd" +
+        UUID.randomUUID() +
+        "\", \"empty_on_fresh_instance\": true, \"fields\": [\"name\", \"exists\", \"new\"]}]";
   }
 
   private static Supplier<Process> createProcessSupplier() {

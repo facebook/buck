@@ -38,6 +38,7 @@ java_test(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:network',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],
