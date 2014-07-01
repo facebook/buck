@@ -28,6 +28,7 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.LogConfigFilesWatcher;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.Parser;
@@ -41,7 +42,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.util.DefaultFileHashCache;
@@ -83,7 +83,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
@@ -149,6 +148,7 @@ public final class Main {
     private final BuckConfig config;
     private final Optional<WebServer> webServer;
     private final Console console;
+    private final LogConfigFilesWatcher logConfigFilesWatcher;
 
     public Daemon(
         ProjectFilesystem projectFilesystem,
@@ -173,11 +173,13 @@ public final class Main {
           config.getTempFilePatterns(),
           createRuleKeyBuilderFactory(hashCache));
       this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
+      this.logConfigFilesWatcher = new LogConfigFilesWatcher();
 
       this.fileEventBus = new EventBus("file-change-events");
       this.filesystemWatcher = createWatcher(projectFilesystem);
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
+      fileEventBus.register(logConfigFilesWatcher);
       webServer = createWebServer(config, console, projectFilesystem);
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(projectFilesystem);
     }
@@ -860,16 +862,6 @@ public final class Main {
     };
   }
 
-  private static void setupLogging() {
-    try {
-      // Bug JDK-6244047: The default FileHandler does not handle the directory not existing,
-      // so we have to create it before any log statements actually run.
-      Files.createDirectories(BuckConstant.LOG_PATH);
-    } catch (IOException e) {
-      System.err.format("Can't create log dir %s: %s\n", BuckConstant.LOG_PATH, e.toString());
-    }
-  }
-
   @VisibleForTesting
   int tryRunMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
       throws IOException, InterruptedException {
@@ -908,9 +900,6 @@ public final class Main {
   }
 
   public static void main(String[] args) {
-    // This has to happen first, or else ServiceManager can throw an exception if the
-    // log directory doesn't exist.
-    setupLogging();
     new Main(System.out, System.err).runMainThenExit(args, Optional.<NGContext>absent());
   }
 
@@ -920,9 +909,6 @@ public final class Main {
    * disconnections and interrupt command processing when they occur.
    */
   public static void nailMain(final NGContext context) throws InterruptedException {
-    // This has to happen first, or else ServiceManager can throw an exception if the
-    // log directory doesn't exist.
-    setupLogging();
     try (DaemonSlayer.ExecuteCommandHandle handle =
             DaemonSlayer.getSlayer(context).executeCommand()) {
       new Main(context.out, context.err).runMainThenExit(context.getArgs(), Optional.of(context));
