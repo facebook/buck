@@ -47,7 +47,7 @@ public class ProcessExecutor {
   }
 
   /**
-   * Convenience method for {@link #execute(Process, boolean, boolean, boolean, Optional<String>)}
+   * Convenience method for {@link #execute(Process, boolean, boolean, boolean, Optional)}
    * with boolean values set to {@code false} and optional values set to absent.
    */
   public Result execute(Process process) throws InterruptedException {
@@ -158,7 +158,7 @@ public class ProcessExecutor {
 
   /**
    * Values from the result of
-   * {@link ProcessExecutor#execute(Process, boolean, boolean, boolean, Optional<String>)}.
+   * {@link ProcessExecutor#execute(Process, boolean, boolean, boolean, Optional)}.
    */
   public static class Result {
     private final int exitCode;

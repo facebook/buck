@@ -44,8 +44,6 @@ public class ResourcesRootPackageFinder implements JavaPackageFinder {
   @Override
   public String findJavaPackageForPath(String pathRelativeToProjectRoot) {
     String folder = findJavaPackageFolderForPath(pathRelativeToProjectRoot);
-    return DefaultJavaPackageFinder.findJavaPackageWithPackageFolder(
-        pathRelativeToProjectRoot,
-        folder);
+    return DefaultJavaPackageFinder.findJavaPackageWithPackageFolder(folder);
   }
 }

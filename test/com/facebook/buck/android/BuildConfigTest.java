@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -40,7 +41,7 @@ public class BuildConfigTest {
   /**
    * Tests the following methods:
    * <ul>
-   *   <li>{@link Buildable#getInputsToCompareToOutput()}
+   *   <li>{@link AbstractBuildRule#getInputsToCompareToOutput()}
    *   <li>{@link BuildConfig#getPathToOutputFile()}
    * </ul>
    */

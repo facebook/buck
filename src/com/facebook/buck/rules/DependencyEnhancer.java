@@ -18,12 +18,12 @@ package com.facebook.buck.rules;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
- * Describes the way in which a {@link Buildable} will transform its declared dependencies.
+ * Describes the way in which a {@link BuildRule} will transform its declared dependencies.
  */
 public interface DependencyEnhancer {
 
   /**
-   * A {@link Buildable} may employ graph enhancement to alter its dependencies. If it does this, it
+   * A {@link BuildRule} may employ graph enhancement to alter its dependencies. If it does this, it
    * must return the new dependencies via this method. The {@code inferredDeps} are derived by
    * looking at a {@link ConstructorArg}'s public fields other than {@code deps} and finding any
    * that are or contain {@link BuildRule}s. The union of these and the {@code declaredDeps}
@@ -52,7 +52,7 @@ public interface DependencyEnhancer {
    * @param declaredDeps The {@link BuildRule}s declared in the {@code deps} parameter of a rule.
    * @param inferredDeps Any dependencies detected by scanning all the parameters except
    *     {@code deps} of a rule.
-   * @return The {@code deps} for the {@link BuildRule} that contains this {@link Buildable}. These
+   * @return The {@code deps} for the {@link BuildRule} that contains this {@link BuildRule}. These
    *     may differ from the {@code deps} specified in the original build file due to graph
    *     enhancement.
    */

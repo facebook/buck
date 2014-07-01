@@ -29,6 +29,7 @@ import com.google.common.eventbus.Subscribe;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class BuckEventBusTest {
@@ -57,7 +58,7 @@ public class BuckEventBusTest {
   }
 
   @Test
-  public void testShutdownFailure() throws Exception {
+  public void testShutdownFailure() throws IOException {
     BuckEventBus eb = new BuckEventBus(
         new DefaultClock(),
         MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
@@ -81,7 +82,7 @@ public class BuckEventBusTest {
   }
 
   @Test
-  public void whenEventTimestampedThenEventCannotBePosted() {
+  public void whenEventTimestampedThenEventCannotBePosted() throws IOException {
     BuckEventBus eb = new BuckEventBus(
         new DefaultClock(),
         MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
@@ -97,11 +98,13 @@ public class BuckEventBusTest {
           "Exception should be due to double configuration.",
           e.getMessage(),
           containsString("Events can only be configured once."));
+    } finally {
+      eb.close();
     }
   }
 
   @Test
-  public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() {
+  public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() throws IOException {
     BuckEventBus eb = new BuckEventBus(
         new DefaultClock(),
         MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
@@ -111,6 +114,7 @@ public class BuckEventBusTest {
     TestEvent event = new TestEvent();
     eb.timestamp(timestamp);
     eb.post(event, timestamp);
+    eb.close();
     assertEquals(timestamp.getTimestamp(), event.getTimestamp());
     assertEquals(timestamp.getNanoTime(), event.getNanoTime());
   }

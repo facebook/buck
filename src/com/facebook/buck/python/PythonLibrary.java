@@ -90,6 +90,7 @@ public class PythonLibrary extends AbstractBuildRule implements PythonPackagable
   /**
    * Return the components to contribute to the top-level python package.
    */
+  @Override
   public PythonPackageComponents getPythonPackageComponents() {
     return new PythonPackageComponents(
         getPathMapFromSourcePaths(srcs),

@@ -187,7 +187,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   /**
-   * Creates a {@link Buildable} with the {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
+   * Creates a {@link BuildRule} with the {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
    * <p>
    * If {@code arg.srcs} or {@code arg.resources} is non-empty, then the return value will not be
    * absent.

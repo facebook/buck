@@ -16,10 +16,12 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.BuildRule;
+
 import java.nio.file.Path;
 
 /**
- * {@link Buildable} that contains various {@code .so} files for Android, organized by target CPU
+ * {@link BuildRule} that contains various {@code .so} files for Android, organized by target CPU
  * architecture.
  */
 public interface NativeLibraryBuildRule {

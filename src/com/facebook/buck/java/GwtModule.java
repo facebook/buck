@@ -36,8 +36,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 /**
- * {@link Buildable} whose output file is a JAR containing the .java files and resources suitable
- * for a GWT module. (It differs slightly from a source JAR because it contains resources.)
+ * {@link com.facebook.buck.rules.BuildRule} whose output file is a JAR containing the .java files
+ * and resources suitable for a GWT module. (It differs slightly from a source JAR because it
+ * contains resources.)
  */
 public class GwtModule extends AbstractBuildRule {
 

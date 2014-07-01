@@ -138,13 +138,13 @@ public class CachingBuildEngine implements BuildEngine {
              * It is imperative that:
              * <ol>
              *   <li>The {@link BuildInfoRecorder} is not constructed until all of the
-             *       {@link Buildable}'s {@code deps} are guaranteed to be built. This ensures that
+             *       {@link BuildRule}'s {@code deps} are guaranteed to be built. This ensures that
              *       the {@link RuleKey} will be available before the {@link BuildInfoRecorder} is
              *       constructed.
              *       <p>
              *       This is why a {@link Supplier} is used.
-             *   <li>Only one {@link BuildInfoRecorder} is created per {@link Buildable}. This
-             *       ensures that all build-related information for a {@link Buildable} goes though
+             *   <li>Only one {@link BuildInfoRecorder} is created per {@link BuildRule}. This
+             *       ensures that all build-related information for a {@link BuildRule} goes though
              *       a single recorder, whose data will be persisted in {@link #onSuccess(List)}.
              *       <p>
              *       This is why {@link Suppliers#memoize(Supplier)} is used.

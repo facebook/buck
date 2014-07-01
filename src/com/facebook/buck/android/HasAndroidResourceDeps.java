@@ -77,7 +77,7 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
   Path getAssets();
 
   /**
-   * See {@link com.facebook.buck.rules.Buildable#getInputsToCompareToOutput()}
+   * See {@link com.facebook.buck.rules.AbstractBuildRule#getInputsToCompareToOutput()}
    *
    * This is used by buildables that need to be rebuilt if any of the inputs of the android
    * resource rules that they depend on change. This allows the buildables to avoid waiting for

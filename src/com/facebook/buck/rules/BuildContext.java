@@ -84,10 +84,10 @@ public class BuildContext {
 
   /**
    * By design, there is no getter for {@link ProjectFilesystem}. At the point where a
-   * {@link Buildable} is using a {@link BuildContext} to generate its
+   * {@link BuildRule} is using a {@link BuildContext} to generate its
    * {@link com.facebook.buck.step.Step}s, it should not be doing any I/O on local disk. Any reads
    * should be mediated through {@link OnDiskBuildInfo}, and {@link BuildInfoRecorder} will take
-   * care of writes after the fact. The {@link Buildable} should be working with relative file paths
+   * care of writes after the fact. The {@link BuildRule} should be working with relative file paths
    * so that builds can ultimately be distributed.
    * <p>
    * The primary reason this method exists is so that someone who blindly tries to add such a getter
@@ -116,7 +116,7 @@ public class BuildContext {
   /**
    * Creates an {@link OnDiskBuildInfo}.
    * <p>
-   * This method should be visible to {@link AbstractBuildRule}, but not {@link Buildable}s
+   * This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s
    * in general.
    */
   OnDiskBuildInfo createOnDiskBuildInfoFor(BuildTarget target) {
@@ -126,7 +126,7 @@ public class BuildContext {
   /**
    * Creates an {@link BuildInfoRecorder}.
    * <p>
-   * This method should be visible to {@link AbstractBuildRule}, but not {@link Buildable}s
+   * This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s
    * in general.
    */
   BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget,

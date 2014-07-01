@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.HasBuildTarget;
 
 /**
- * Something (usually a {@link com.facebook.buck.rules.Buildable}) that can be included in
+ * Something (usually a {@link com.facebook.buck.rules.BuildRule}) that can be included in
  * an Android package (android_binary or (hopefully soon) aar).
  */
 public interface AndroidPackageable extends HasBuildTarget {

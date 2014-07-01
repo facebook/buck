@@ -68,7 +68,7 @@ public class SourcePaths {
 
   /**
    * Takes an {@link Iterable} of {@link SourcePath} objects and filters those that are suitable to
-   * be returned by {@link Buildable#getInputsToCompareToOutput()}.
+   * be returned by {@link AbstractBuildRule#getInputsToCompareToOutput()}.
    */
   public static ImmutableCollection<Path> filterInputsToCompareToOutput(
       Iterable<? extends SourcePath> sources) {

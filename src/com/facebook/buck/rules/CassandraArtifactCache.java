@@ -212,7 +212,7 @@ public class CassandraArtifactCache implements ArtifactCache {
       keyspaceAndTtlFuture.cancel(true);
       isKilled.set(true);
     } catch (ExecutionException e) {
-      if (!(e instanceof ExecutionException) || !(e.getCause() instanceof ConnectionException)) {
+      if (!(e.getCause() instanceof ConnectionException)) {
         buckEventBus.post(
             ThrowableLogEvent.create(
                 e,

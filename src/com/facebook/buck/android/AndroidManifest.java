@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
@@ -39,7 +40,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * {@link AndroidManifest} is a {@link Buildable} that can generate an Android manifest from a
+ * {@link AndroidManifest} is a {@link BuildRule} that can generate an Android manifest from a
  * skeleton manifest and the library manifests from its dependencies.
  * <pre>
  * android_manifest(

@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -49,7 +50,7 @@ public class AndroidManifestTest {
   /**
    * Tests the following methods:
    * <ul>
-   *   <li>{@link Buildable#getInputsToCompareToOutput()}
+   *   <li>{@link AbstractBuildRule#getInputsToCompareToOutput()}
    *   <li>{@link AndroidManifest#getPathToOutputFile()}
    * </ul>
    */

@@ -851,7 +851,7 @@ public class ProjectGeneratorTest {
   public void ruleToTargetMapContainsPBXTarget() throws IOException {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(iosLibraryDescription.TYPE)
+            .setType(IosLibraryDescription.TYPE)
             .build();
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(

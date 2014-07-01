@@ -159,6 +159,7 @@ public class UberRDotJava extends AbstractBuildRule implements
         });
   }
 
+  @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
     return buildOutputInitializer.getBuildOutput().rDotJavaClassesHash;
   }

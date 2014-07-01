@@ -30,13 +30,14 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 public class DefaultStepRunnerTest {
 
   @Test
-  public void testEventsFired() throws StepFailedException, InterruptedException {
+  public void testEventsFired() throws StepFailedException, InterruptedException, IOException {
     Step passingStep = new FakeStep("step1", "fake step 1", 0);
     Step failingStep = new FakeStep("step1", "fake step 1", 1);
 
@@ -55,6 +56,8 @@ public class DefaultStepRunnerTest {
       fail("Failing step should have thrown an exception");
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
+    } finally {
+      runner.close();
     }
 
     ImmutableList<StepEvent> expected = ImmutableList.of(
@@ -72,7 +75,8 @@ public class DefaultStepRunnerTest {
   }
 
   @Test(expected = StepFailedException.class, timeout = 5000)
-  public void testParallelStepFailure() throws Exception {
+  public void testParallelStepFailure()
+      throws StepFailedException, InterruptedException, IOException {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new SleepingStep(0, 0));
     steps.add(new SleepingStep(10, 1));
@@ -83,12 +87,13 @@ public class DefaultStepRunnerTest {
 
     DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance(), 3);
     runner.runStepsInParallelAndWait(steps.build());
+    runner.close();
 
     // Success if the test timeout is not reached.
   }
 
   @Test
-  public void testExplodingStep() throws InterruptedException {
+  public void testExplodingStep() throws InterruptedException, IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     DefaultStepRunner runner = new DefaultStepRunner(context, 3);
@@ -97,12 +102,15 @@ public class DefaultStepRunnerTest {
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
       assertTrue(e.getMessage().startsWith("Failed on step explode with an exception:\n#yolo"));
+    } finally {
+      runner.close();
     }
   }
 
   @Test(timeout = 500)
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  public void whenShutdownNowIsCalledThenStepProcessingIsInterrupted() throws Exception {
+  public void whenShutdownNowIsCalledThenStepProcessingIsInterrupted()
+      throws InterruptedException, IOException {
     // Add a step that take longer than the test timeout to complete.
     // If the step is not interrupted then the test will timeout.
     ImmutableList<Step> step = ImmutableList.<Step>of(new SleepingStep(1000, 0));
@@ -120,6 +128,8 @@ public class DefaultStepRunnerTest {
       fail("Should throw exception due to cancellation");
     } catch (ExecutionException e) {
       // Caused by interruption.
+    } finally {
+      runner.close();
     }
 
     // Success if the test timeout is not reached.

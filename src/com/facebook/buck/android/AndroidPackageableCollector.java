@@ -96,7 +96,7 @@ public class AndroidPackageableCollector {
   }
 
   /**
-   * Returns all {@link Buildable}s of the given rules that are {@link AndroidPackageable}.
+   * Returns all {@link BuildRule}s of the given rules that are {@link AndroidPackageable}.
    * Helper for implementations of AndroidPackageable that just want to return all of their
    * packagable dependencies.
    */

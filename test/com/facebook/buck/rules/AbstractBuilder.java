@@ -31,7 +31,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Paths;
 
 /**
- * Support class for writing builders, which can create {@link Buildable} and {@link BuildRule} \
+ * Support class for writing builders, which can create {@link BuildRule} and {@link BuildRule} \
  * instances at test time. It does this by as closely as possible mirroring the behavior seen when
  * running the actual parser.
  *

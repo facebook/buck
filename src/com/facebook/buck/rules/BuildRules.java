@@ -65,7 +65,7 @@ public class BuildRules {
   }
 
   /**
-   * Helper function for {@link Buildable}s to create their lists of files for caching.
+   * Helper function for {@link BuildRule}s to create their lists of files for caching.
    */
   public static void addInputsToSortedSet(
       @Nullable Path pathToDirectory,

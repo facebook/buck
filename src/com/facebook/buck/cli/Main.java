@@ -30,11 +30,11 @@ import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.LogConfigFilesWatcher;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -650,7 +650,7 @@ public final class Main {
    * in preference to System.getenv() and should be the only call to System.getenv() within the
    * Buck codebase to ensure that the use of the Buck daemon is transparent.
    */
-  @SuppressWarnings("unchecked") // Safe as Property is a Map<String, String>.
+  @SuppressWarnings({"unchecked", "rawtypes"}) // Safe as Property is a Map<String, String>.
   private ImmutableMap<String, String> getClientEnvironment(Optional<NGContext> context) {
     if (context.isPresent()) {
       return ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());

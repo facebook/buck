@@ -20,10 +20,10 @@ import java.nio.file.Path;
 
 
 /**
- * Context object that is specific to an individual {@link Buildable}.
+ * Context object that is specific to an individual {@link BuildRule}.
  * This differs from {@link BuildContext} in that a {@link BuildContext} is a context that is shared
- * by all {@link Buildable}s whereas a new {@link BuildableContext} is created for each call to
- * {@link Buildable#getBuildSteps(BuildContext, BuildableContext)}.
+ * by all {@link BuildRule}s whereas a new {@link BuildableContext} is created for each call to
+ * {@link BuildRule#getBuildSteps(BuildContext, BuildableContext)}.
  */
 public interface BuildableContext {
 

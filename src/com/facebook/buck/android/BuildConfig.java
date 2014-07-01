@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
@@ -31,7 +32,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /**
- * {@link BuildConfig} is a {@link Buildable} that can generate a BuildConfig.java file.
+ * {@link BuildConfig} is a {@link BuildRule} that can generate a BuildConfig.java file.
  * <pre>
  * build_config(
  *   name = 'debug_build_config',

@@ -25,6 +25,7 @@ import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -55,12 +56,12 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * {@link DexProducedFromJavaLibrary} is a {@link Buildable} that serves a
+ * {@link DexProducedFromJavaLibrary} is a {@link BuildRule} that serves a
  * very specific purpose: it takes a {@link JavaLibrary} and dexes the output of the
  * {@link JavaLibrary} if its list of classes is non-empty. Because it is expected to be used with
  * pre-dexing, we always pass the {@code --force-jumbo} flag to {@code dx} in this buildable.
  * <p>
- * Most {@link Buildable}s can determine the (possibly null) path to their output file from their
+ * Most {@link BuildRule}s can determine the (possibly null) path to their output file from their
  * definition. This is an anomaly because we do not know whether this will write a {@code .dex} file
  * until runtime. Unfortunately, because there is no such thing as an empty {@code .dex} file, we
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.

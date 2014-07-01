@@ -20,7 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
- * Parameters that a {@link Buildable} often needs to construct itself.
+ * Parameters that a {@link BuildRule} often needs to construct itself.
  */
 public interface BuildableParams {
 
