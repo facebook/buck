@@ -40,7 +40,7 @@ public class TestCaseSummary {
           return new TestCaseSummary(summary, /* isCached */ true);
         }
       };
-  public static final int MAX_STATUS_WIDTH = 6;
+  public static final int MAX_STATUS_WIDTH = 7;
 
   private final String testCaseName;
   private final ImmutableList<TestResultSummary> testResults;
