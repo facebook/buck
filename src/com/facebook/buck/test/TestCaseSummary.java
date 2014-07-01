@@ -146,8 +146,13 @@ public class TestCaseSummary {
         severityLevel = Ansi.SeverityLevel.WARNING;
         statusText = "ASSUME";
       } else {
-        severityLevel = Ansi.SeverityLevel.OK;
-        statusText = "PASS";
+        if (testResults.isEmpty()) {
+          severityLevel = Ansi.SeverityLevel.WARNING;
+          statusText = "NOTESTS";
+        } else {
+          severityLevel = Ansi.SeverityLevel.OK;
+          statusText = "PASS";
+        }
       }
     }
 

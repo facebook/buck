@@ -57,9 +57,9 @@ public class TestSelectorsTestlessClassesTest {
         "Testless classes should not cause NoTestsRemainException, " +
         "when filtering is *NOT* used!");
     assertThat(result.getStderr(), containsString(
-        "PASS   <100ms  0 Passed   0 Skipped   0 Failed   com.example.ClassWithoutTestsA"));
+        "NOTESTS <100ms  0 Passed   0 Skipped   0 Failed   com.example.ClassWithoutTestsA"));
     assertThat(result.getStderr(), containsString(
-        "PASS   <100ms  0 Passed   0 Skipped   0 Failed   com.example.ClassWithoutTestsB"));
+        "NOTESTS <100ms  0 Passed   0 Skipped   0 Failed   com.example.ClassWithoutTestsB"));
   }
 
   @Test
