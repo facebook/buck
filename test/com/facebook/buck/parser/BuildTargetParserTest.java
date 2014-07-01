@@ -238,29 +238,23 @@ public class BuildTargetParserTest {
     assertEquals("myrepo", buildTarget.getRepository().get());
   }
 
-  @Test
+  @Test(expected = BuildTargetParseException.class)
   public void testParseFailsWithRepoNameAndRelativeTarget() throws NoSuchBuildTargetException {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildTargetParser parser = new BuildTargetParser(filesystem);
     ParseContext context = ParseContext.fullyQualified();
 
     String invalidTargetStr = "@myRepo:baz";
-    try {
-      parser.parse(invalidTargetStr, context);
-      fail("Should fail to parse.");
-    } catch (BuildTargetParseException e) { }
+    parser.parse(invalidTargetStr, context);
   }
 
-  @Test
+  @Test(expected = BuildTargetParseException.class)
   public void testParseFailsWithEmptyRepoName() throws NoSuchBuildTargetException {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildTargetParser parser = new BuildTargetParser(filesystem);
     ParseContext context = ParseContext.fullyQualified();
 
     String zeroLengthRepoTargetStr = "@//foo/bar:baz";
-    try {
-      parser.parse(zeroLengthRepoTargetStr, context);
-      fail("Should fail to parse.");
-    } catch (BuildTargetParseException e) { }
+    parser.parse(zeroLengthRepoTargetStr, context);
   }
 }
