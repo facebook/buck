@@ -504,6 +504,10 @@ public class AdbHelper {
       }
     }
 
+    if (!isDeviceTempWritable(device, name)) {
+      return false;
+    }
+
     getBuckEventBus().post(LogEvent.info("Installing apk on %s.", name));
     try {
       String reason = null;
@@ -522,6 +526,79 @@ public class AdbHelper {
       ex.printStackTrace(console.getStdErr());
       return false;
     }
+  }
+
+  @VisibleForTesting
+  protected boolean isDeviceTempWritable(IDevice device, String name) {
+    StringBuilder loggingInfo = new StringBuilder();
+    try {
+      String output = null;
+
+      try {
+        output = executeCommandWithErrorChecking(device, "ls -l -d /data/local/tmp");
+        if (!output.matches("\\Adrwx....-x +shell +shell.* tmp[\\r\\n]*\\z")) {
+          loggingInfo.append(
+              String.format(
+                  java.util.Locale.ENGLISH,
+                  "Bad ls output for /data/local/tmp: '%s'\n",
+                  output));
+        }
+
+        executeCommandWithErrorChecking(device, "echo exo > /data/local/tmp/buck-experiment");
+        output = executeCommandWithErrorChecking(device, "cat /data/local/tmp/buck-experiment");
+        if (!output.matches("\\Aexo[\\r\\n]*\\z")) {
+          loggingInfo.append(
+              String.format(
+                  java.util.Locale.ENGLISH,
+                  "Bad echo/cat output for /data/local/tmp: '%s'\n",
+                  output));
+        }
+        executeCommandWithErrorChecking(device, "rm /data/local/tmp/buck-experiment");
+
+      } catch (CommandFailedException e) {
+        loggingInfo.append(
+            String.format(
+                java.util.Locale.ENGLISH,
+                "Failed (%d) '%s':\n%s\n",
+                e.exitCode,
+                e.command,
+                e.output));
+      }
+
+      if (!loggingInfo.toString().isEmpty()) {
+        CollectingOutputReceiver receiver = new CollectingOutputReceiver();
+        device.executeShellCommand("getprop", receiver);
+        for (String line : com.google.common.base.Splitter.on('\n').split(receiver.getOutput())) {
+          if (line.contains("ro.product.model") || line.contains("ro.build.description")) {
+            loggingInfo.append(line).append('\n');
+          }
+        }
+      }
+
+    } catch (
+        AdbCommandRejectedException |
+            ShellCommandUnresponsiveException |
+            TimeoutException |
+            IOException e) {
+      console.printBuildFailure(String.format("Failed to test /data/local/tmp on %s.", name));
+      e.printStackTrace(console.getStdErr());
+      return false;
+    }
+    String logMessage = loggingInfo.toString();
+    if (!logMessage.isEmpty()) {
+      StringBuilder fullMessage = new StringBuilder();
+      fullMessage.append("============================================================\n");
+      fullMessage.append('\n');
+      fullMessage.append("HEY! LISTEN!\n");
+      fullMessage.append('\n');
+      fullMessage.append("The /data/local/tmp directory on your device isn't fully-functional.\n");
+      fullMessage.append("Here's some extra info:\n");
+      fullMessage.append(logMessage);
+      fullMessage.append("============================================================\n");
+      console.getStdErr().println(fullMessage.toString());
+    }
+
+    return true;
   }
 
   /**
