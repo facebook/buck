@@ -26,6 +26,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -62,7 +63,10 @@ public class ClasspathTraversalTest {
       public void visit(FileLike fileLike) {
         String contents;
         try {
-          contents = new FileLikeCharSource(fileLike).read();
+          contents = CharStreams.toString(
+              CharStreams.newReaderSupplier(
+                  new FileLikeInputSupplier(fileLike),
+                  Charsets.UTF_8));
         } catch (IOException e) {
           throw Throwables.propagate(e);
         }
@@ -102,13 +106,16 @@ public class ClasspathTraversalTest {
   public void testZip() throws IOException {
     String[] files = { "test/foo.txt", "bar.txt", "test/baz.txt" };
     File file = tempDir.newFile("test.zip");
-    try (ZipOutputStream zipOut = new ZipOutputStream(
-        new BufferedOutputStream(new FileOutputStream(file)))) {
+    ZipOutputStream zipOut = new ZipOutputStream(
+        new BufferedOutputStream(new FileOutputStream(file)));
+    try {
       for (String filename : files) {
         ZipEntry entry = new ZipEntry(filename);
         zipOut.putNextEntry(entry);
         zipOut.write(filename.getBytes(Charsets.UTF_8));
       }
+    } finally {
+      zipOut.close();
     }
     verifyFileLike(3, file);
   }

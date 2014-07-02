@@ -19,6 +19,7 @@ package com.facebook.buck.httpserver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
+import com.google.common.io.InputSupplier;
 import com.google.common.net.MediaType;
 
 import org.eclipse.jetty.server.Request;
@@ -91,10 +92,8 @@ class TraceDataHandler extends AbstractHandler {
       }
     }
 
-
-    try (
-        InputStream input = tracesHelper.getInputForTrace(id);
-        InputStreamReader inputStreamReader = new InputStreamReader(input)) {
+    InputSupplier<? extends InputStream> inputSupplier = tracesHelper.getInputForTrace(id);
+    try (InputStreamReader inputStreamReader = new InputStreamReader(inputSupplier.getInput())) {
       CharStreams.copy(inputStreamReader, responseWriter);
     }
 

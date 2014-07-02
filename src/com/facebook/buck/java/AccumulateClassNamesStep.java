@@ -32,7 +32,8 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.InputSupplier;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -142,13 +143,13 @@ public class AccumulateClassNamesStep implements Step {
             }
 
             String key = FileLikes.getFileNameWithoutClassSuffix(fileLike);
-            ByteSource input = new ByteSource() {
+            InputSupplier<InputStream> input = new InputSupplier<InputStream>() {
               @Override
-              public InputStream openStream() throws IOException {
+              public InputStream getInput() throws IOException {
                 return fileLike.getInput();
               }
             };
-            HashCode value = input.hash(Hashing.sha1());
+            HashCode value = ByteStreams.hash(input, Hashing.sha1());
             classNamesBuilder.put(key, value);
           }
         };

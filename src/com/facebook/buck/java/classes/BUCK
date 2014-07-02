@@ -1,6 +1,14 @@
 java_library(
   name = 'classes',
-  srcs = glob(['*.java']),
+  srcs = [
+    'AbstractFileLike.java',
+    'ClasspathTraversal.java',
+    'ClasspathTraverser.java',
+    'DefaultClasspathTraverser.java',
+    'FileLikeInputSupplier.java',
+    'FileLike.java',
+    'FileLikes.java',
+  ],
   deps = [
     '//lib:guava',
     '//src/com/facebook/buck/util:io',

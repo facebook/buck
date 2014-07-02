@@ -20,6 +20,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.io.InputSupplier;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -82,10 +83,10 @@ public class TracesHelper {
     return projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR);
   }
 
-  InputStream getInputForTrace(String id) throws IOException {
+  InputSupplier<? extends InputStream> getInputForTrace(String id) {
     Preconditions.checkNotNull(id);
     Path pathToTrace = getPathToTrace(id);
-    return projectFilesystem.getInputStreamForRelativePath(pathToTrace);
+    return projectFilesystem.getInputSupplierForRelativePath(pathToTrace);
   }
 
   TraceAttributes getTraceAttributesFor(String id) {
@@ -107,10 +108,9 @@ public class TracesHelper {
   }
 
   private Optional<String> parseCommandFrom(Path pathToTrace) {
-
-    try (
-        InputStream input = projectFilesystem.getInputStreamForRelativePath(pathToTrace);
-        JsonReader jsonReader = new JsonReader(new InputStreamReader(input))) {
+    InputSupplier<? extends InputStream> inputSupplier = projectFilesystem
+        .getInputSupplierForRelativePath(pathToTrace);
+    try (JsonReader jsonReader = new JsonReader(new InputStreamReader(inputSupplier.getInput()))) {
       jsonReader.beginArray();
       Gson gson = new Gson();
       JsonObject json = gson.fromJson(jsonReader, JsonObject.class);

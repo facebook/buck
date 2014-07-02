@@ -23,8 +23,9 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.io.ByteSource;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
 
 import org.easymock.EasyMock;
 import org.junit.Rule;
@@ -79,17 +80,17 @@ public class XzStepTest {
 
     assertEquals(0, step.execute(context));
 
-    ByteSource original = Files.asByteSource(sourceFile);
-    ByteSource decompressed = new ByteSource() {
+    InputSupplier<FileInputStream> original = Files.newInputStreamSupplier(sourceFile);
+    InputSupplier<InputStream> decompressed = new InputSupplier<InputStream>() {
       @Override
-      public InputStream openStream() throws IOException {
+      public InputStream getInput() throws IOException {
         return new XZInputStream(new FileInputStream(destinationFile));
       }
     };
 
     assertTrue(
         "Decompressed file must be identical to original.",
-        original.contentEquals(decompressed));
+        ByteStreams.equal(decompressed, original));
 
     EasyMock.verify(fs);
   }

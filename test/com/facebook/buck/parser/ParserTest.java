@@ -71,7 +71,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -81,6 +80,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
 
 import org.easymock.EasyMockSupport;
 import org.junit.Before;
@@ -201,7 +201,7 @@ public class ParserTest extends EasyMockSupport {
         new BuildTargetParser(filesystem));
   }
 
-  private Parser createParser(Supplier<BuildFileTree> buildFileTreeSupplier,
+  private Parser createParser(InputSupplier<BuildFileTree> buildFileTreeSupplier,
     Map<BuildTarget, TargetNode<?>> knownBuildTargets,
     ProjectBuildFileParserFactory buildFileParserFactory,
     BuildTargetParser buildTargetParser) {
@@ -1078,15 +1078,15 @@ public class ParserTest extends EasyMockSupport {
     expect(mockEvent.getEventName()).andReturn("CommandStarted").anyTimes();
     expect(mockEvent.getBuildId()).andReturn(new BuildId("BUILD1"));
     BuildFileTree mockBuildFileTree = createMock(BuildFileTree.class);
-    Supplier<BuildFileTree> mockSupplier = createMock(Supplier.class);
-    expect(mockSupplier.get()).andReturn(mockBuildFileTree).once();
+    InputSupplier<BuildFileTree> mockSupplier = createMock(InputSupplier.class);
+    expect(mockSupplier.getInput()).andReturn(mockBuildFileTree).once();
     replay(mockEvent, mockSupplier, mockBuildFileTree);
     Parser.BuildFileTreeCache cache = new Parser.BuildFileTreeCache(mockSupplier);
     cache.onCommandStartedEvent(mockEvent);
     cache.invalidateIfStale();
-    cache.get();
+    cache.getInput();
     cache.invalidateIfStale();
-    cache.get();
+    cache.getInput();
     verify(mockEvent, mockSupplier);
   }
 
@@ -1099,16 +1099,16 @@ public class ParserTest extends EasyMockSupport {
     expect(mockEvent.getBuildId()).andReturn(new BuildId("BUILD1"));
     expect(mockEvent.getBuildId()).andReturn(new BuildId("BUILD2"));
     BuildFileTree mockBuildFileTree = createMock(BuildFileTree.class);
-    Supplier<BuildFileTree> mockSupplier = createMock(Supplier.class);
-    expect(mockSupplier.get()).andReturn(mockBuildFileTree).times(2);
+    InputSupplier<BuildFileTree> mockSupplier = createMock(InputSupplier.class);
+    expect(mockSupplier.getInput()).andReturn(mockBuildFileTree).times(2);
     replay(mockEvent, mockSupplier, mockBuildFileTree);
     Parser.BuildFileTreeCache cache = new Parser.BuildFileTreeCache(mockSupplier);
     cache.onCommandStartedEvent(mockEvent);
     cache.invalidateIfStale();
-    cache.get();
+    cache.getInput();
     cache.onCommandStartedEvent(mockEvent);
     cache.invalidateIfStale();
-    cache.get();
+    cache.getInput();
     verify(mockEvent, mockSupplier);
   }
 
@@ -1262,10 +1262,10 @@ public class ParserTest extends EasyMockSupport {
   /**
    * Analogue to {@link Suppliers#ofInstance(Object)}.
    */
-  private static Supplier<BuildFileTree> ofInstance(final BuildFileTree buildFileTree) {
-    return new Supplier<BuildFileTree>() {
+  private static InputSupplier<BuildFileTree> ofInstance(final BuildFileTree buildFileTree) {
+    return new InputSupplier<BuildFileTree>() {
       @Override
-      public BuildFileTree get() {
+      public BuildFileTree getInput() throws IOException {
         return buildFileTree;
       }
     };

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.io.InputSupplier;
 
 import org.easymock.EasyMockSupport;
 import org.eclipse.jetty.server.Request;
@@ -29,6 +30,7 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Paths;
@@ -74,9 +76,14 @@ public class TraceDataHandlerTest extends EasyMockSupport {
 
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     expect(
-        projectFilesystem.getInputStreamForRelativePath(
+        projectFilesystem.getInputSupplierForRelativePath(
             Paths.get("buck-out/log/traces/build.abcdef.trace")))
-        .andReturn(new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes()));
+        .andReturn((InputSupplier) new InputSupplier<InputStream>() {
+          @Override
+          public InputStream getInput() throws IOException {
+            return new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes());
+          }
+        });
     TraceDataHandler traceDataHandler = new TraceDataHandler(
         new TracesHelper(projectFilesystem));
 
@@ -110,9 +117,14 @@ public class TraceDataHandlerTest extends EasyMockSupport {
 
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     expect(
-        projectFilesystem.getInputStreamForRelativePath(
+        projectFilesystem.getInputSupplierForRelativePath(
             Paths.get("buck-out/log/traces/build.abcdef.trace")))
-        .andReturn(new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes()));
+        .andReturn((InputSupplier) new InputSupplier<InputStream>() {
+          @Override
+          public InputStream getInput() throws IOException {
+            return new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes());
+          }
+        });
     TraceDataHandler traceDataHandler = new TraceDataHandler(
         new TracesHelper(projectFilesystem));
 

@@ -33,6 +33,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -48,6 +50,7 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.channels.Channels;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
@@ -55,15 +58,14 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -591,9 +593,9 @@ public class ProjectFilesystem {
    * // @deprecated Prefer operation on {@code Path}s directly, replaced by
    *  {@link java.nio.file.Files#newInputStream(java.nio.file.Path, java.nio.file.OpenOption...)}.
    */
-  public InputStream getInputStreamForRelativePath(Path path) throws IOException {
+  public InputSupplier<? extends InputStream> getInputSupplierForRelativePath(Path path) {
     Path file = getPathForRelativePath(path);
-    return java.nio.file.Files.newInputStream(file);
+    return Files.newInputStreamSupplier(file.toFile());
   }
 
   public String computeSha1(Path pathRelativeToProjectRoot) throws IOException {

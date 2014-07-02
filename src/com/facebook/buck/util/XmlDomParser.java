@@ -38,7 +38,7 @@ public class XmlDomParser {
   private XmlDomParser() {}
 
   public static Document parse(File xml) throws IOException {
-    return parse(Files.asByteSource(xml).openStream());
+    return parse(Files.newInputStreamSupplier(xml).getInput());
   }
 
   public static Document parse(String xmlContents) throws IOException {
