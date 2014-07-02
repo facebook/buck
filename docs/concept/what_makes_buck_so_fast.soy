@@ -68,8 +68,8 @@ Since out-of-date outputs are guaranteed to be overwritten, there is no reason t
 
 If you are using some sort of <a href="http://en.wikipedia.org/wiki/Continuous_integration">continuous
 integration (CI)</a> system, you will likely want your CI builds to populate a cache that can be read by your local builds.
-That way, when a developer syncs to a revision that has already been built on your CI system, running <code>buck
-build</code> should not build anything locally, as all outputs should be able to be pulled from the cache.
+That way, when a developer syncs to a revision that has already been built on your CI system, running
+{sp}{call buck.cmd_build /} should not build anything locally, as all outputs should be able to be pulled from the cache.
 This works because the cache key computed by Buck when run on the CI system should match the key computed by Buck
 on your local machine.
 
@@ -138,7 +138,7 @@ By default, Buck uses first-order dependencies when compiling Java.
 This means that compilation can only see explicitly declared dependencies,
 not other libraries that your dependencies depend on.
 This behavior can be changed at runtime with the
-{sp}<code><a href="{ROOT}command/build.html">buck build</a></code> command by specifying a
+{sp}{call buck.cmd_build /} command by specifying a
 different value for <code>--build-dependencies</code>.
 
 <p>
