@@ -153,15 +153,6 @@ public class AppendingHasher implements Hasher {
   }
 
   @Override
-  @Deprecated
-  public Hasher putString(CharSequence charSequence) {
-    for (Hasher hasher : hashers) {
-      hasher.putString(charSequence);
-    }
-    return this;
-  }
-
-  @Override
   public Hasher putString(CharSequence charSequence, Charset charset) {
     for (Hasher hasher : hashers) {
       hasher.putString(charSequence, charset);

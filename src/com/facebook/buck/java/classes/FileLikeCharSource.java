@@ -16,21 +16,24 @@
 
 package com.facebook.buck.java.classes;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Preconditions;
-import com.google.common.io.InputSupplier;
+import com.google.common.io.CharSource;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
-public class FileLikeInputSupplier implements InputSupplier<InputStream> {
+public class FileLikeCharSource extends CharSource {
   private final FileLike fileLike;
 
-  public FileLikeInputSupplier(FileLike fileLike) {
+  public FileLikeCharSource(FileLike fileLike) {
     this.fileLike = Preconditions.checkNotNull(fileLike);
   }
 
   @Override
-  public InputStream getInput() throws IOException {
-    return fileLike.getInput();
+  public Reader openStream() throws IOException {
+    return new InputStreamReader(fileLike.getInput(), UTF_8);
   }
 }

@@ -97,7 +97,6 @@ public class AppendingHasherTest {
       assertSame(hasher, hasher.putBoolean(true));
       assertSame(hasher, hasher.putChar('\n'));
       assertSame(hasher, hasher.putUnencodedChars("I like unit tests."));
-      assertSame(hasher, hasher.putString("I know: this method is deprecated."));
       assertSame(hasher, hasher.putString("abc", Charsets.US_ASCII));
       assertSame(hasher, hasher.putObject(this.getClass(), TestFunnel.instance));
     }

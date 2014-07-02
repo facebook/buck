@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMock;
@@ -105,17 +104,14 @@ public class PrebuiltJarTest {
         junitJarRule, buildResult, onDiskBuildInfo);
 
     // Make sure the ABI key is set as expected.
-    HashCode hashForJar = ByteStreams.hash(
-        Files.newInputStreamSupplier(
-            PATH_TO_JUNIT_JAR.toFile()),
-        Hashing.sha1());
+    HashCode hashForJar = Files.asByteSource(PATH_TO_JUNIT_JAR.toFile()).hash(Hashing.sha1());
     assertEquals("ABI key should be the sha1 of the file contents.",
         hashForJar.toString(),
         junitJarRule.getAbiKey().toString());
 
     assertEquals(
         "initializing from OnDiskBuildInfo should populate getClassNamesToHashes().",
-        ImmutableSortedMap.<String, HashCode>of(
+        ImmutableSortedMap.of(
             "com/example/Bar", HashCode.fromString("1b1221d71c29aacb8e0b5b9eaffcd05e914ac55b"),
             "com/example/Foo", HashCode.fromString("cea146e5aa5565a09e6a1ae9137044eb64b2cf45")
         ),
@@ -123,7 +119,7 @@ public class PrebuiltJarTest {
 
     assertEquals(
         "Executing the step should record the ABI key as metadata.",
-        ImmutableMap.of(
+        ImmutableMap.<String, Object>of(
             AbiRule.ABI_KEY_ON_DISK_METADATA,
             hashForJar.toString()),
         buildableContext.getRecordedMetadata());

@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -88,7 +87,7 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
         try (CustomZipOutputStream outputStream = ZipOutputStreams.newOutputStream(outputZipFile)) {
           for (Map.Entry<File, ZipEntry> zipEntry : zipEntries.entrySet()) {
             outputStream.putNextEntry(zipEntry.getValue());
-            ByteStreams.copy(Files.newInputStreamSupplier(zipEntry.getKey()), outputStream);
+            Files.asByteSource(zipEntry.getKey()).copyTo(outputStream);
             outputStream.closeEntry();
           }
         }
@@ -121,7 +120,7 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
           nextEntry.setMethod(ZipEntry.STORED);
           nextEntry.setCompressedSize(inputFile.length());
           nextEntry.setSize(inputFile.length());
-          HashCode crc = ByteStreams.hash(Files.newInputStreamSupplier(inputFile), Hashing.crc32());
+          HashCode crc = Files.asByteSource(inputFile).hash(Hashing.crc32());
           nextEntry.setCrc(crc.padToLong());
         }
 

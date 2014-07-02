@@ -33,7 +33,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -41,6 +40,7 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
@@ -53,6 +53,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -62,7 +63,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.io.InputSupplier;
 
 import java.io.File;
 import java.io.IOException;
@@ -167,8 +167,8 @@ public class Parser {
    * TODO(user): refactor this as a generic CachingSupplier<T> when it's needed elsewhere.
    */
   @VisibleForTesting
-  static class BuildFileTreeCache implements InputSupplier<BuildFileTree> {
-    private final InputSupplier<BuildFileTree> supplier;
+  static class BuildFileTreeCache implements Supplier<BuildFileTree> {
+    private final Supplier<BuildFileTree> supplier;
     @Nullable private BuildFileTree buildFileTree;
     private BuildId currentBuildId = new BuildId();
     private BuildId buildTreeBuildId = new BuildId();
@@ -176,7 +176,7 @@ public class Parser {
     /**
      * @param buildFileTreeSupplier each call to get() must reconstruct the tree from disk.
      */
-    public BuildFileTreeCache(InputSupplier<BuildFileTree> buildFileTreeSupplier) {
+    public BuildFileTreeCache(Supplier<BuildFileTree> buildFileTreeSupplier) {
       this.supplier = Preconditions.checkNotNull(buildFileTreeSupplier);
     }
 
@@ -195,10 +195,10 @@ public class Parser {
      * @return the cached BuildFileTree, or a new lazily constructed BuildFileTree.
      */
     @Override
-    public BuildFileTree getInput() throws IOException {
+    public BuildFileTree get() {
       if (buildFileTree == null) {
         buildTreeBuildId = currentBuildId;
-        buildFileTree = supplier.getInput();
+        buildFileTree = supplier.get();
       }
       return buildFileTree;
     }
@@ -228,9 +228,9 @@ public class Parser {
         console,
         environment,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
-        new InputSupplier<BuildFileTree>() {
+        new Supplier<BuildFileTree>() {
           @Override
-          public BuildFileTree getInput() throws IOException {
+          public BuildFileTree get() {
             return new FilesystemBackedBuildFileTree(repository.getFilesystem());
           }
         },
@@ -252,7 +252,7 @@ public class Parser {
       Repository repository,
       Console console,
       ImmutableMap<String, String> environment,
-      InputSupplier<BuildFileTree> buildFileTreeSupplier,
+      Supplier<BuildFileTree> buildFileTreeSupplier,
       BuildTargetParser buildTargetParser,
       Map<BuildTarget, TargetNode<?>> knownBuildTargets,
       ProjectBuildFileParserFactory buildFileParserFactory,
@@ -901,7 +901,7 @@ public class Parser {
    */
   private void invalidateContainingBuildFile(Path path) throws IOException {
     String packageBuildFilePath =
-        buildFileTreeCache.getInput().getBasePathOfAncestorTarget(path).toString();
+        buildFileTreeCache.get().getBasePathOfAncestorTarget(path).toString();
     invalidateDependents(
         repository.getFilesystem().getFileForRelativePath(
             packageBuildFilePath + '/' + BuckConstant.BUILD_RULES_FILE_NAME).toPath());

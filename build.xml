@@ -35,7 +35,7 @@
   <fileset dir="${lib.dir}" id="buck.jars">
     <include name="args4j-2.0.28.jar" />
     <include name="ddmlib-22.5.3.jar" />
-    <include name="guava-15.0.jar" />
+    <include name="guava-17.0.jar" />
     <include name="ini4j-0.5.2.jar" />
     <include name="jackson-annotations-2.0.5.jar" />
     <include name="jackson-core-2.0.5.jar" />
@@ -184,7 +184,7 @@
   </target>
 
   <fileset dir="${lib.dir}" id="dx.jars">
-    <include name="guava-15.0.jar" />
+    <include name="guava-17.0.jar" />
   </fileset>
 
   <path id="dx.classpath">
@@ -204,7 +204,7 @@
     </javac>
 
     <jar destfile="${build.dir}/dx.jar">
-      <zipfileset includes="**/*.class" src="${lib.dir}/guava-15.0.jar"/>
+      <zipfileset includes="**/*.class" src="${lib.dir}/guava-17.0.jar"/>
       <zipfileset includes="**/*.class" src="${lib.dir}/junit-4.11.jar" />
       <fileset dir="${dx.classes.dir}" />
       <manifest>
@@ -456,7 +456,7 @@
       <fileset dir="${javacc.gensrc.dir}">
       </fileset>
       <link href="http://docs.oracle.com/javase/7/docs/api/" />
-      <link href="http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/" />
+      <link href="http://docs.guava-libraries.googlecode.com/git-history/v17.0/javadoc/" />
       <!-- The latest version of the javadocs is only for 4.10 -->
       <link href="http://junit-team.github.io/junit/javadoc/latest/" />
     </javadoc>
