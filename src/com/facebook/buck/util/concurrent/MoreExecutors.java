@@ -77,6 +77,12 @@ public class MoreExecutors {
    * @return A multi-threaded executor.
    */
   public static ExecutorService newMultiThreadExecutor(final String threadName, int threadCount) {
-    return Executors.newFixedThreadPool(threadCount, new NamedThreadFactory(threadName));
+    return new ThreadPoolExecutor(
+        /* corePoolSize */ threadCount,
+        /* maximumPoolSize */ threadCount,
+        /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
+        /* workQueue */ new LinkedBlockingQueue<Runnable>(),
+        /* threadFactory */ new NamedThreadFactory(threadName),
+        /* handler */ new ThreadPoolExecutor.DiscardPolicy());
   }
 }
