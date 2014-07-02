@@ -22,7 +22,6 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 
@@ -76,7 +75,7 @@ public class WatchmanIntegrationTest {
   @Test
   public void whenPostEventsFirstCalledThenNoEventsArePosted()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS); // Watchman not supported on Windows.
+    assumeTrue(WatchmanWatcher.isWatchmanAvailable()); // Watchman must be installed.
     tmp.newFile("CreatedBeforeWatch");
     EventBus eventBus = createStrictMock(EventBus.class);
     replay(eventBus);

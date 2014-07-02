@@ -272,4 +272,15 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       return path != null;
     }
   }
+
+  /**
+   * @return true if "watchman --version" can be executed successfully
+   */
+  public static boolean isWatchmanAvailable() throws InterruptedException {
+    try {
+      return new ProcessBuilder("watchman", "--version").start().waitFor() == 0;
+    } catch (IOException e) {
+      return false; // Could not execute watchman.
+    }
+  }
 }
