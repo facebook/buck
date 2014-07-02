@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="**/BUCK|com/facebook/buck/cli/quickstart/**" kind="src" path="src"/>
+	<classpathentry excluding="**/BUCK|com/facebook/buck/cli/quickstart/**|com/facebook/buck/android/support/" kind="src" path="src"/>
 	<classpathentry kind="src" path="build/testjavacc"/>
 	<classpathentry kind="src" path="build/javacc"/>
 	<classpathentry excluding="**/BUCK" kind="src" path="third-party/java/aosp/src"/>

@@ -172,6 +172,7 @@
       <src path="${src.dir}" />
       <src path="${aosp.src.dir}" />
       <src path="${javacc.gensrc.dir}" />
+      <exclude name="com/facebook/buck/android/support/**" />
       <exclude name="com/facebook/buck/cli/quickstart/**" />
       <exclude name="com/facebook/buck/java/abi/**" />
       <exclude name="com/facebook/buck/junit/**" />
