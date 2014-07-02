@@ -36,6 +36,7 @@ import com.google.common.eventbus.EventBus;
 
 import org.easymock.Capture;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -46,6 +47,12 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 
 public class WatchmanWatcherTest {
+
+  @After
+  public void cleanUp() {
+    // Clear interrupted state so it doesn't affect any other test.
+    Thread.interrupted();
+  }
 
   @Test
   public void whenFilesListIsEmptyThenNoEventsAreGenerated()
