@@ -82,17 +82,19 @@ ORIGINAL_WORKING_DIRECTORY="$PWD"
 PROJECT_ROOT="$PWD"
 
 # Navigate upwards until either a .buckconfig file is found or the root directory is reached.
-while ! [ -f "$PROJECT_ROOT/.buckconfig" ] && [ "$PROJECT_ROOT" != "/" ] ; do
-  cd ..
-  PROJECT_ROOT="$PWD"
-done
+if [ "$*" != '--version' ] && [ "$*" != '-V' ]; then
+  while ! [ -f "$PROJECT_ROOT/.buckconfig" ] && [ "$PROJECT_ROOT" != "/" ] ; do
+    cd ..
+    PROJECT_ROOT="$PWD"
+  done
 
-if ! [ -f "$PROJECT_ROOT/.buckconfig" ] ; then
-  echo >&2 'This does not appear to be the root of a Buck project.'
-  echo >&2 'Please "cd" to the root of your project before running buck.'
-  echo >&2 'If this really is the root of your project, run "touch .buckconfig"'
-  echo >&2 'then re-run your buck command.'
-  exit 1
+  if ! [ -f "$PROJECT_ROOT/.buckconfig" ] ; then
+    echo >&2 'This does not appear to be the root of a Buck project.'
+    echo >&2 'Please "cd" to the root of your project before running buck.'
+    echo >&2 'If this really is the root of your project, run "touch .buckconfig"'
+    echo >&2 'then re-run your buck command.'
+    exit 1
+  fi
 fi
 
 
