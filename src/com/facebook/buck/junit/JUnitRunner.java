@@ -102,7 +102,10 @@ public final class JUnitRunner {
           String className = description.getClassName();
           TestDescription testDescription = new TestDescription(className, methodName);
           if (testSelectorList.isIncluded(testDescription)) {
-            seenDescriptions.add(testDescription);
+            boolean isIgnored = description.getAnnotation(Ignore.class) != null;
+            if (!isIgnored) {
+              seenDescriptions.add(testDescription);
+            }
             return !isDryRun;
           } else {
             return false;
