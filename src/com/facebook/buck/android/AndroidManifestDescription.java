@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -25,6 +26,8 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -51,7 +54,16 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
       A args) {
     ImmutableSet<Path> manifestFiles = findManifestFiles(args);
 
-    return new AndroidManifest(params, args.skeleton, manifestFiles);
+    // Filter out android_resource and android_library dependencies.
+    ImmutableSortedSet<BuildRule> newDeps = FluentIterable.from(args.deps.get())
+        .filter(Predicates.not(Predicates.instanceOf(AndroidResource.class)))
+        .filter(Predicates.not(Predicates.instanceOf(AndroidLibrary.class)))
+        .toSortedSet(BuildTarget.BUILD_TARGET_COMPARATOR);
+
+    return new AndroidManifest(
+        params.copyWithDeps(newDeps, params.getExtraDeps()),
+        args.skeleton,
+        manifestFiles);
   }
 
   public static class Arg implements ConstructorArg {
