@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
@@ -117,6 +118,8 @@ public class AndroidPackageableCollection {
    */
   public final ImmutableSet<Path> noDxClasspathEntries;
 
+  public final ImmutableMap<String, ImmutableMap<String, Object>> buildConfigs;
+
   /**
    * Prebuild/third-party jars to be included in the package.  For apks, their resources will
    * be placed directly in the apk.
@@ -143,6 +146,7 @@ public class AndroidPackageableCollection {
       ImmutableSet<Path> proguardConfigs,
       ImmutableSet<Path> classpathEntriesToDex,
       ImmutableSet<Path> noDxClasspathEntries,
+      ImmutableMap<String, ImmutableMap<String, Object>> buildConfigs,
       ImmutableSet<Path> pathsToThirdPartyJars,
       ImmutableSet<BuildTarget> javaLibrariesToDex,
       Supplier<Map<String, HashCode>> classNamesToHashesSupplier) {
@@ -154,6 +158,7 @@ public class AndroidPackageableCollection {
     this.proguardConfigs = Preconditions.checkNotNull(proguardConfigs);
     this.classpathEntriesToDex = Preconditions.checkNotNull(classpathEntriesToDex);
     this.noDxClasspathEntries = Preconditions.checkNotNull(noDxClasspathEntries);
+    this.buildConfigs = Preconditions.checkNotNull(buildConfigs);
     this.pathsToThirdPartyJars = Preconditions.checkNotNull(pathsToThirdPartyJars);
     this.javaLibrariesToDex = Preconditions.checkNotNull(javaLibrariesToDex);
     this.classNamesToHashesSupplier = Preconditions.checkNotNull(classNamesToHashesSupplier);

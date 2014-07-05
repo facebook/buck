@@ -17,12 +17,14 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -42,6 +44,10 @@ public class FakeBuildRuleParamsBuilder {
 
   public FakeBuildRuleParamsBuilder(BuildTarget buildTarget) {
     this.buildTarget = buildTarget;
+  }
+
+  public FakeBuildRuleParamsBuilder(String buildTarget) {
+    this(BuildTargetFactory.newInstance(Preconditions.checkNotNull(buildTarget)));
   }
 
   public FakeBuildRuleParamsBuilder setDeps(ImmutableSortedSet<BuildRule> deps) {

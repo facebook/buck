@@ -16,16 +16,16 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.AndroidPackageableCollection.ResourceDetails;
-
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
+import com.facebook.buck.android.AndroidPackageableCollection.ResourceDetails;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -41,11 +41,14 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Map;
 
 public class AndroidBinaryGraphEnhancer {
 
@@ -118,7 +121,10 @@ public class AndroidBinaryGraphEnhancer {
     enhancedDeps.addAll(originalDeps);
 
     AndroidPackageableCollector collector =
-        new AndroidPackageableCollector(buildTargetsToExcludeFromDex, resourcesToExclude);
+        new AndroidPackageableCollector(
+            originalBuildTarget,
+            buildTargetsToExcludeFromDex,
+            resourcesToExclude);
     collector.addPackageables(AndroidPackageableCollector.getPackageableRules(originalDeps));
     AndroidPackageableCollection packageableCollection = collector.build();
     ResourceDetails resourceDetails = packageableCollection.resourceDetails;
@@ -177,6 +183,45 @@ public class AndroidBinaryGraphEnhancer {
           uberRDotJava,
           uberRDotJava.getPathToCompiledRDotJavaFiles());
     }
+
+    // If the user specified any android_build_config() rules, then we must add some build rules to
+    // generate the production {@link BuildConfig.class} files and ensure that they are included in
+    // the list of classpathEntriesToDex.
+    ImmutableMap<String, Object> buildConfigConstants = ImmutableMap.<String, Object>of(
+        BuildConfigs.DEBUG_CONSTANT, packageType != AndroidBinary.PackageType.RELEASE,
+        BuildConfigs.IS_EXO_CONSTANT, exopackage);
+    for (Map.Entry<String, ImmutableMap<String, Object>> entry :
+        packageableCollection.buildConfigs.entrySet()) {
+      String javaPackage = entry.getKey();
+
+      // Merge the user-defined constants with the APK-specific overrides.
+      Map<String, Object> totalConstants = Maps.newHashMap();
+      Map<String, Object> userDefinedConstants = entry.getValue();
+      totalConstants.putAll(userDefinedConstants);
+      totalConstants.putAll(buildConfigConstants);
+
+      // Each enhanced dep needs a unique build target, so we parameterize the build target by the
+      // Java package.
+      Flavor flavor = new Flavor("buildconfig_" + javaPackage.replace('.', '_'));
+      BuildRuleParams buildConfigParams = new BuildRuleParams(
+          createBuildTargetWithFlavor(flavor),
+          /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
+          /* extraDeps */ ImmutableSortedSet.<BuildRule>of(),
+          BuildTargetPattern.PUBLIC,
+          buildRuleParams.getProjectFilesystem(),
+          buildRuleParams.getRuleKeyBuilderFactory(),
+          AndroidBuildConfigDescription.TYPE);
+      JavaLibrary finalBuildConfig = AndroidBuildConfigDescription.createBuildRule(
+          buildConfigParams,
+          javaPackage,
+          /* useConstantExpressions */ true,
+          totalConstants);
+
+      ruleResolver.addToIndex(finalBuildConfig);
+      enhancedDeps.add(finalBuildConfig);
+      collector.addClasspathEntry(finalBuildConfig, finalBuildConfig.getPathToOutputFile());
+    }
+
     packageableCollection = collector.build();
 
     Optional<PackageStringAssets> packageStringAssets = Optional.absent();

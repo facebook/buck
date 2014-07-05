@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.replay;
@@ -27,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavacOptions;
@@ -46,6 +46,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -128,6 +129,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     AndroidPackageableCollection collection =
         new AndroidPackageableCollector(
+            /* collectionRoot */ apkTarget,
             ImmutableSet.of(javaDep2BuildTarget),
             /* resourcesToExclude */ ImmutableSet.<BuildTarget>of())
             .addClasspathEntry(
@@ -170,8 +172,21 @@ public class AndroidBinaryGraphEnhancerTest {
 
   @Test
   public void testAllBuildablesExceptPreDexRule() {
+    // Create an android_build_config() as a dependency of the android_binary().
+    BuildTarget buildConfigBuildTarget = BuildTarget.builder("//java/com/example", "cfg").build();
+    BuildRuleParams buildConfigParams = new FakeBuildRuleParamsBuilder(buildConfigBuildTarget)
+        .build();
+    AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
+        .createBuildRule(
+          buildConfigParams,
+          "com.example.buck",
+          /* useConstantExpressions */ false,
+          /* constants */ ImmutableMap.<String, Object>of());
+
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
-    BuildRuleParams originalParams = new FakeBuildRuleParamsBuilder(apkTarget).build();
+    BuildRuleParams originalParams = new FakeBuildRuleParamsBuilder(apkTarget)
+        .setDeps(ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary))
+        .build();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // set it up.
@@ -195,6 +210,30 @@ public class AndroidBinaryGraphEnhancerTest {
         keystore);
     replay(keystore);
     EnhancementResult result = graphEnhancer.createAdditionalBuildables();
+
+    // Verify that android_build_config() was processed correctly.
+    AndroidPackageableCollection packageableCollection = result.getPackageableCollection();
+    String flavor = "buildconfig_com_example_buck";
+    assertEquals(
+        "The only classpath entry to dex should be the one from the AndroidBuildConfigJavaLibrary" +
+            " created via graph enhancement.",
+        ImmutableSet.of(Paths.get(
+            "buck-out/gen/java/com/example/lib__apk#" + flavor + "__output/apk#" + flavor + ".jar")
+        ),
+        packageableCollection.classpathEntriesToDex);
+    BuildTarget enhancedBuildConfigTarget = BuildTarget.builder(apkTarget).setFlavor(flavor)
+        .build();
+    BuildRule enhancedBuildConfigRule = ruleResolver.get(enhancedBuildConfigTarget);
+    assertTrue(enhancedBuildConfigRule instanceof AndroidBuildConfigJavaLibrary);
+    AndroidBuildConfigJavaLibrary enhancedBuildConfigJavaLibrary =
+        (AndroidBuildConfigJavaLibrary) enhancedBuildConfigRule;
+    AndroidBuildConfig androidBuildConfig = enhancedBuildConfigJavaLibrary.getAndroidBuildConfig();
+    assertEquals("com.example.buck", androidBuildConfig.getJavaPackage());
+    assertTrue(androidBuildConfig.isUseConstantExpressions());
+    assertEquals(
+        "IS_EXOPACKAGE defaults to false, but should now be true. DEBUG should still be true.",
+        ImmutableMap.of("DEBUG", Boolean.TRUE, "IS_EXOPACKAGE", Boolean.TRUE),
+        androidBuildConfig.getConstants());
 
     ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();
     // Verify that the only dep is computeExopackageDepsAbi

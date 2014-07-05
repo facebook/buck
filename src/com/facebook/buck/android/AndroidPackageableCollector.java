@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -27,6 +28,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 
@@ -49,16 +51,21 @@ public class AndroidPackageableCollector {
   private final ImmutableSet.Builder<Path> proguardConfigs = ImmutableSet.builder();
   private final ImmutableSet.Builder<Path> classpathEntriesToDex = ImmutableSet.builder();
   private final ImmutableSet.Builder<Path> noDxClasspathEntries = ImmutableSet.builder();
+
+  // Map is used instead of ImmutableMap.Builder for its containsKey() method.
+  private final Map<String, ImmutableMap<String, Object>> buildConfigs = Maps.newHashMap();
+
   private final ImmutableSet.Builder<Path> pathsToThirdPartyJars = ImmutableSet.builder();
   private final ImmutableSet.Builder<HasJavaClassHashes> javaClassHashesProviders =
       ImmutableSet.builder();
 
+  private final BuildTarget collectionRoot;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
 
   @VisibleForTesting
-  AndroidPackageableCollector() {
-    this(ImmutableSet.<BuildTarget>of(), ImmutableSet.<BuildTarget>of());
+  AndroidPackageableCollector(BuildTarget collectionRoot) {
+    this(collectionRoot, ImmutableSet.<BuildTarget>of(), ImmutableSet.<BuildTarget>of());
   }
 
   /**
@@ -67,8 +74,10 @@ public class AndroidPackageableCollector {
    *     {@link AndroidInstrumentationApkDescription.Arg#apk}
    */
   public AndroidPackageableCollector(
+      BuildTarget collectionRoot,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       ImmutableSet<BuildTarget> resourcesToExclude) {
+    this.collectionRoot = Preconditions.checkNotNull(collectionRoot);
     this.buildTargetsToExcludeFromDex = Preconditions.checkNotNull(buildTargetsToExcludeFromDex);
     this.resourcesToExclude = Preconditions.checkNotNull(resourcesToExclude);
   }
@@ -196,6 +205,19 @@ public class AndroidPackageableCollector {
     return this;
   }
 
+  public void addBuildConfig(String javaPackage, ImmutableMap<String, Object> constants) {
+    Preconditions.checkNotNull(javaPackage);
+    Preconditions.checkNotNull(constants);
+    if (buildConfigs.containsKey(javaPackage)) {
+      throw new HumanReadableException(
+          "Multiple android_build_config() rules with the same package %s in the " +
+              "transitive deps of %s.",
+          javaPackage,
+          collectionRoot);
+    }
+    buildConfigs.put(javaPackage, constants);
+  }
+
   public AndroidPackageableCollection build() {
     final ImmutableSet<HasJavaClassHashes> javaClassProviders = javaClassHashesProviders.build();
     Supplier<Map<String, HashCode>> classNamesToHashesSupplier = Suppliers.memoize(
@@ -236,6 +258,7 @@ public class AndroidPackageableCollector {
         proguardConfigs.build(),
         classpathEntriesToDex.build(),
         noDxClasspathEntries.build(),
+        ImmutableMap.copyOf(buildConfigs),
         pathsToThirdPartyJars.build(),
         FluentIterable.from(javaClassProviders).transform(BuildTarget.TO_TARGET).toSet(),
         classNamesToHashesSupplier);

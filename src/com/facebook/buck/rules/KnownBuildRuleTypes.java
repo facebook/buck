@@ -17,12 +17,12 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
-import com.facebook.buck.android.BuildConfigDescription;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
@@ -163,6 +163,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidBinaryDescription(
             androidBinaryOptions,
             config.getProguardJarOverride()));
+    builder.register(new AndroidBuildConfigDescription());
     builder.register(new AndroidInstrumentationApkDescription());
     builder.register(new AndroidLibraryDescription(javacEnv));
     builder.register(new AndroidManifestDescription());
@@ -170,7 +171,6 @@ public class KnownBuildRuleTypes {
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
     builder.register(new BuckExtensionDescription());
-    builder.register(new BuildConfigDescription());
     builder.register(new CoreDataModelDescription());
     builder.register(new CppBinaryDescription());
     builder.register(new CppLibraryDescription());

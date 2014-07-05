@@ -26,6 +26,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.collect.ImmutableMap;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -34,20 +35,20 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Unit test for {@link BuildConfig}.
+ * Unit test for {@link AndroidBuildConfig}.
  */
-public class BuildConfigTest {
+public class AndroidBuildConfigTest {
 
   /**
    * Tests the following methods:
    * <ul>
    *   <li>{@link AbstractBuildRule#getInputsToCompareToOutput()}
-   *   <li>{@link BuildConfig#getPathToOutputFile()}
+   *   <li>{@link AndroidBuildConfig#getPathToOutputFile()}
    * </ul>
    */
   @Test
   public void testSimpleObserverMethods() {
-    BuildConfig buildConfig = createSimpleBuildConfigRule();
+    AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
 
     assertEquals(
         BuckConstant.GEN_PATH.resolve("java/com/example/__build_config__/BuildConfig.java"),
@@ -56,7 +57,7 @@ public class BuildConfigTest {
 
   @Test
   public void testBuildInternal() throws IOException {
-    BuildConfig buildConfig = createSimpleBuildConfigRule();
+    AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
 
     // Mock out a BuildContext whose DependencyGraph will be traversed.
     BuildContext buildContext = EasyMock.createMock(BuildContext.class);
@@ -65,27 +66,29 @@ public class BuildConfigTest {
     List<Step> steps = buildConfig.getBuildSteps(buildContext, new FakeBuildableContext());
     Step generateBuildConfigStep = steps.get(1);
     GenerateBuildConfigStep expectedStep = new GenerateBuildConfigStep(
-            /* appPackage */ "com.example",
-            /* debug */ true,
+        /* javaPackage */ "com.example",
+        /* useConstantExpressions */ false,
+        /* constants */ ImmutableMap.<String, Object>of(),
         BuckConstant.GEN_PATH.resolve("java/com/example/__build_config__/BuildConfig.java"));
     assertEquals(expectedStep, generateBuildConfigStep);
   }
 
   @Test
   public void testGetTypeMethodOfBuilder() {
-    assertEquals("build_config", BuildConfigDescription.TYPE.getName());
+    assertEquals("android_build_config", AndroidBuildConfigDescription.TYPE.getName());
   }
 
-  private static BuildConfig createSimpleBuildConfigRule() {
+  private static AndroidBuildConfig createSimpleBuildConfigRule() {
     // First, create the BuildConfig object.
     BuildTarget buildTarget = BuildTarget.builder("//java/com/example", "build_config").build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setType(BuildConfigDescription.TYPE)
+        .setType(AndroidBuildConfigDescription.TYPE)
         .build();
-    return new BuildConfig(
+    return new AndroidBuildConfig(
         params,
-        /* appPackage */ "com.example",
-        /* debug */ true);
+        /* javaPackage */ "com.example",
+        /* useConstantExpressions */ false,
+        /* constants */ ImmutableMap.<String, Object>of());
   }
 
   // TODO(nickpalmer): Add another unit test that passes in a non-trivial DependencyGraph and verify
