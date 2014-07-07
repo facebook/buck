@@ -925,13 +925,9 @@ public final class Main {
 
     private static final class DaemonSlayerInstance {
       final DaemonSlayer daemonSlayer;
-      final ServiceManager manager;
 
-      private DaemonSlayerInstance(
-          DaemonSlayer daemonSlayer,
-          ServiceManager manager) {
+      private DaemonSlayerInstance(DaemonSlayer daemonSlayer) {
         this.daemonSlayer = daemonSlayer;
-        this.manager = manager;
       }
     }
 
@@ -944,7 +940,7 @@ public final class Main {
             DaemonSlayer slayer = new DaemonSlayer(context);
             ServiceManager manager = new ServiceManager(ImmutableList.of(slayer));
             manager.startAsync();
-            daemonSlayerInstance = new DaemonSlayerInstance(slayer, manager);
+            daemonSlayerInstance = new DaemonSlayerInstance(slayer);
           }
         }
       }
