@@ -89,7 +89,7 @@ public class AndroidInstrumentationApkDescription
 
     Path primaryDexPath = AndroidBinary.getPrimaryDexPath(params.getBuildTarget());
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        params.copyWithExtraDeps(ImmutableSortedSet.<BuildRule>of()),
+        params,
         resolver,
         ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
