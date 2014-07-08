@@ -22,6 +22,7 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuil
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRuleResolver;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.xml.HasXPath.hasXPath;
@@ -41,6 +42,7 @@ import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.MacosxBinaryDescription;
@@ -118,6 +120,7 @@ public class ProjectGeneratorTest {
   private IosLibraryDescription iosLibraryDescription;
   private IosTestDescription iosTestDescription;
   private IosBinaryDescription iosBinaryDescription;
+  private IosPostprocessResourcesDescription iosPostprocessResourcesDescription;
   private IosResourceDescription iosResourceDescription;
   private MacosxFrameworkDescription macosxFrameworkDescription;
   private MacosxBinaryDescription macosxBinaryDescription;
@@ -131,6 +134,7 @@ public class ProjectGeneratorTest {
     iosLibraryDescription = new IosLibraryDescription();
     iosTestDescription = new IosTestDescription();
     iosBinaryDescription = new IosBinaryDescription();
+    iosPostprocessResourcesDescription = new IosPostprocessResourcesDescription();
     iosResourceDescription = new IosResourceDescription();
     macosxFrameworkDescription = new MacosxFrameworkDescription();
     macosxBinaryDescription = new MacosxBinaryDescription();
@@ -808,6 +812,72 @@ public class ProjectGeneratorTest {
     assertThat(
         shellScriptBuildPhase.getShellScript(),
         equalTo("/bin/bash -e -c 'echo \"hello world!\"'"));
+  }
+
+  @Test
+  public void testIosBinaryRuleWithPostBuildScriptDependency() throws IOException {
+
+    BuildRule scriptRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "post_build_script").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosPostprocessResourcesDescription,
+        new Function<IosPostprocessResourcesDescription.Arg,
+                     IosPostprocessResourcesDescription.Arg>() {
+          @Override
+          public IosPostprocessResourcesDescription.Arg apply(
+            IosPostprocessResourcesDescription.Arg input) {
+
+            input.cmd = Optional.of("script.sh");
+            return input;
+          }
+        });
+
+    BuildRule resourceRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "resource").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosResourceDescription,
+        new Function<AppleResourceDescriptionArg, AppleResourceDescriptionArg>() {
+          @Override
+          public AppleResourceDescriptionArg apply(AppleResourceDescriptionArg input) {
+            input.files = ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png"));
+            return input;
+          }
+        });
+
+    BuildRule iosBinaryRule = createBuildRuleWithDefaults(
+      BuildTarget.builder("//foo", "bin").build(),
+      ImmutableSortedSet.of(scriptRule, resourceRule),
+      iosBinaryDescription);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+      ImmutableSet.of(iosBinaryRule),
+      ImmutableSet.of(iosBinaryRule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    assertThat(project.getTargets(), hasSize(2));
+    PBXTarget target = project.getTargets().get(0);
+    assertThat(target.getName(), equalTo("//foo:bin"));
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+
+    PBXShellScriptBuildPhase shellScriptBuildPhase =
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(
+            target,
+            PBXShellScriptBuildPhase.class);
+
+    assertThat(
+        shellScriptBuildPhase.getShellScript(),
+        equalTo("/bin/bash -e -c script.sh"));
+
+    // Assert that the post-build script phase comes after resources are copied.
+    assertThat(
+        target.getBuildPhases().get(1),
+        instanceOf(PBXResourcesBuildPhase.class));
+
+    assertThat(
+        target.getBuildPhases().get(2),
+        instanceOf(PBXShellScriptBuildPhase.class));
   }
 
   @Test

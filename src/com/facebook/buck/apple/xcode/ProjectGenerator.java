@@ -34,6 +34,7 @@ import com.facebook.buck.apple.IosBinary;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibrary;
 import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTest;
 import com.facebook.buck.apple.IosTestDescription;
@@ -476,6 +477,9 @@ public class ProjectGenerator {
         PBXTarget.ProductType.IOS_BINARY,
         "%s.app",
         IosResourceDescription.TYPE);
+
+    addPostBuildScriptPhasesForDependencies(rule, target);
+
     project.getTargets().add(target);
     return target;
   }
@@ -702,18 +706,20 @@ public class ProjectGenerator {
     }
   }
 
-  private void addRunScriptBuildPhase(PBXNativeTarget target, Genrule rule) {
+  private void addRunScriptBuildPhase(
+    PBXNativeTarget target,
+    ImmutableList<Path> srcs,
+    ShellStep genruleStep) {
     // TODO(user): Check and validate dependencies of the script. If it depends on libraries etc.
     // we can't handle it currently.
     PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
     target.getBuildPhases().add(shellScriptBuildPhase);
-    for (Path path : rule.getSrcs()) {
+    for (Path path : srcs) {
       shellScriptBuildPhase.getInputPaths().add(
           repoRootRelativeToOutputDirectory.resolve(path).toString());
     }
 
     StringBuilder bashCommandBuilder = new StringBuilder();
-    ShellStep genruleStep = rule.createGenruleStep();
     for (String commandElement : genruleStep.getShellCommand(executionContext)) {
       if (bashCommandBuilder.length() > 0) {
         bashCommandBuilder.append(' ');
@@ -723,12 +729,27 @@ public class ProjectGenerator {
     shellScriptBuildPhase.setShellScript(bashCommandBuilder.toString());
   }
 
-  private void addRunScriptBuildPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
+  private void addRunScriptBuildPhasesForDependenciesWithType(
+      BuildRule rule,
+      PBXNativeTarget target,
+      BuildRuleType type) {
     for (BuildRule dependency : rule.getDeps()) {
-      if (dependency.getType().equals(GenruleDescription.TYPE)) {
-        addRunScriptBuildPhase(target, (Genrule) dependency);
+      if (dependency.getType().equals(type)) {
+        Genrule genrule = (Genrule) dependency;
+        addRunScriptBuildPhase(target, genrule.getSrcs(), genrule.createGenruleStep());
       }
     }
+  }
+
+  private void addRunScriptBuildPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
+    addRunScriptBuildPhasesForDependenciesWithType(rule, target, GenruleDescription.TYPE);
+  }
+
+  private void addPostBuildScriptPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
+    addRunScriptBuildPhasesForDependenciesWithType(
+      rule,
+      target,
+      IosPostprocessResourcesDescription.TYPE);
   }
 
   /**
