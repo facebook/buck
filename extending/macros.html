@@ -1,0 +1,76 @@
+<!doctype html><html xmlns="http://www.w3.org/1999/xhtml"><head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns#"><title>Buck: Macros</title><link type="image/png" rel="shortcut icon" href="/buck/static/favicon.png" /><meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" /><meta http-equiv="content-type" content="text/html;charset=utf-8"><link type="text/css" rel="stylesheet" href="/buck/google-code-prettify/prettify.css" ><link type="text/css" rel="stylesheet" href="/buck/static/buck.css"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o), m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga'); ga('create', 'UA-40185670-1', 'github.io'); ga('send', 'pageview');</script><meta property="og:locale" content="en_US"><meta property="og:title" content="Macros"><meta property="og:site_name" content="Buck: an Android build tool"><meta property="og:image" content="http://facebook.github.io/buck/static/og.png"><meta property="og:type" content="article"><meta property="fb:admins" content="584556688222168"></head><body><div id="fb-root"></div><script>(function(d, s, id) {var js, fjs = d.getElementsByTagName(s)[0]; if (d.getElementById(id)) return; js = d.createElement(s); js.id = id; js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=584556688222168"; fjs.parentNode.insertBefore(js, fjs);}(document, 'script', 'facebook-jssdk'));</script><header class='topbar'><nav class='width'><a href='http://facebook.github.io/buck/'><h1>Buck</h1></a><ul class='menu'><li><a href='/buck/setup/quick_start.html'>Get Started</a><li><a href='https://groups.google.com/forum/#!forum/buck-build'>Group</a><li><a href='/buck/javadoc/'>API</a><li><a href='https://github.com/facebook/buck'>GitHub</a></ul></nav></header><section class='content'><div class='width'><article><h1>Macros</h1><div class="overview"><p>Because build files accept valid Python code, it is possible to define Python functions that have the side-effect of creating build rules. Such functions are called <strong>macros</strong>.<p><strong>Warning:</strong> Although build files are evaluated as Python and can therefore do anything (write files, access the network, etc.), doing so may cause Buck to fail in peculiar ways and is therefore neither supported nor encouraged.<p>For example, here is a macro named <code>java_library_using_guava</code> to create a build rule that creates a <code>java_library</code> rule that depends on Guava:<pre class="prettyprint lang-py">
+def java_library_using_guava(
+    name,
+    srcs=[],
+    resources=[],
+    deps=[],
+    visibility=[]):
+  java_library(
+    name = name,
+    srcs = srcs,
+    resources = resources,
+    deps = [
+      # This assumes this is where Guava is in your project.
+      '//third_party/java/guava:guava',
+    ] + deps,
+    visibility = visibility,
+  )
+</pre>Calling this function looks the same as defining a built-in build rule:<pre class="prettyprint lang-py">
+# Calling this function has the side-effect of creating
+# a java_library() rule named 'util' that depends on Guava.
+java_library_using_guava(
+  name = 'util',
+  # Source code that depends on Guava.
+  srcs = glob(['*.java']),
+)
+</pre>You can also create more sophisticated macros that create multiple build rules. For example, you might want to create a single build rule that produces both debug and release versions of an APK:<pre class="prettyprint lang-py">
+def create_apks(
+    name,
+    manifest,
+    debug_keystore,
+    release_keystore,
+    proguard_config,
+    deps):
+
+  # This loop will create two android_binary rules.
+  for type in [ 'debug', 'release' ]:
+    # Select the appropriate keystore.
+    if type == 'debug':
+      keystore = debug_keystore
+    else:
+      keystore = release_keystore
+
+    android_binary(
+      # Note how we must parameterize the name of the
+      # build rule so that we avoid creating two build
+      # rules with the same name.
+      name = '%s_%s' % (name, type),
+      manifest = manifest,
+      target = 'Google Inc.:Google APIs:16',
+      keystore = keystore,
+      package_type = type,
+      proguard_config = proguard_config,
+      deps = deps,
+      visibility = [
+        'PUBLIC',
+      ],
+    )
+)
+</pre>Again, using this looks the same as defining a built-in build rule:<pre class="prettyprint lang-py">
+create_apks(
+  name = 'messenger',
+  manifest = 'AndroidManifest.xml',
+  debug_keystore = '//keystores:debug',
+  release_keystore = '//keystores:prod',
+  proguard_config = 'proguard.cfg',
+  deps = [
+    # ...
+  ],
+)
+</pre>Note that if this were defined in <code>apps/messenger/BUCK</code>, then this would create the following build rules:<pre>
+//apps/messenger:messenger_debug
+//apps/messenger:messenger_release
+</pre>However, the following build rule would <strong>NOT</strong> exist:<pre>//apps/messenger:messenger</pre>This may be confusing to developers who expect the following commands to work:<pre>
+buck build //apps/messenger:messenger
+buck targets --type create_apks
+</pre>Including your company name as a prefix to the name of your macro may help enforce the idea that your macro is not a built-in rule. On the other hand, part of the beauty of macros is that they are as familiar to use as built-in rules. How you communicate this to your team is up to you.</div></article><nav><h3>Getting Started</h3><ul><li><a href="/buck/">Overview</a><li><a href="/buck/setup/quick_start.html">Quick Start</a><li><a href="/buck/setup/install.html">Downloading and Installing Buck</a></ul><h3>About</h3><ul><li><a href="/buck/concept/what_makes_buck_so_fast.html">What Makes Buck so Fast?</a><li><a href="/buck/concept/troubleshooting.html">Troubleshooting</a><li><a href="/buck/about/performance_tuning.html">Performance Tuning</a><li><a href="/buck/concept/faq.html">FAQ</a></ul><h3>Concepts</h3><ul><li><a href="/buck/concept/build_rule.html">Build Rule</a><li><a href="/buck/concept/build_target.html">Build Target</a><li><a href="/buck/concept/build_file.html">Build File</a><li><a href="/buck/concept/buckversion.html">.buckversion</a><li><a href="/buck/concept/nobuckcheck.html">.nobuckcheck</a><li><a href="/buck/concept/buckconfig.html">.buckconfig</a><li><a href="/buck/concept/build_target_pattern.html">Build Target Pattern</a><li><a href="/buck/concept/visibility.html">Visibility</a></ul><h3>Build Rules</h3><ul><li><a href="/buck/rule/android_binary.html">android_binary()</a><li><a href="/buck/rule/android_build_config.html">android_build_config()</a><li><a href="/buck/rule/android_library.html">android_library()</a><li><a href="/buck/rule/android_resource.html">android_resource()</a><li><a href="/buck/rule/apk_genrule.html">apk_genrule()</a><li><a href="/buck/rule/gen_aidl.html">gen_aidl()</a><li><a href="/buck/rule/genrule.html">genrule()</a><li><a href="/buck/rule/java_binary.html">java_binary()</a><li><a href="/buck/rule/java_library.html">java_library()</a><li><a href="/buck/rule/java_test.html">java_test()</a><li><a href="/buck/rule/keystore.html">keystore()</a><li><a href="/buck/rule/ndk_library.html">ndk_library()</a><li><a href="/buck/rule/prebuilt_jar.html">prebuilt_jar()</a><li><a href="/buck/rule/prebuilt_native_library.html">prebuilt_native_library()</a><li><a href="/buck/rule/project_config.html">project_config()</a></ul><h3>Functions</h3><ul><li><a href="/buck/function/genfile.html">genfile()</a><li><a href="/buck/function/glob.html">glob()</a><li><a href="/buck/function/include_defs.html">include_defs()</a></ul><h3>Commands</h3><ul><li><a href="/buck/command/audit.html">buck audit</a><li><a href="/buck/command/build.html">buck build</a><li><a href="/buck/command/clean.html">buck clean</a><li><a href="/buck/command/install.html">buck install</a><li><a href="/buck/command/project.html">buck project</a><li><a href="/buck/command/quickstart.html">buck quickstart</a><li><a href="/buck/command/targets.html">buck targets</a><li><a href="/buck/command/test.html">buck test</a><li><a href="/buck/command/uninstall.html">buck uninstall</a><li><a href="/buck/command/buckd.html">buckd</a></ul><h3>Extending Buck</h3><ul><li><a href="/buck/extending/macros.html">Custom Macros</a><li><a href="/buck/extending/rules.html">Custom Rules</a></ul><h3>Contributing to Buck</h3><ul><li><a href="https://groups.google.com/group/buck-build">Discussion Group</a><li><a href="https://github.com/facebook/buck/issues/new">Report a Bug</a><li><a href="/buck/contributing/development.html">Development Workflow</a><li><a href="/buck/contributing/codestyle.html">Code Style</a><li><a href="/buck/javadoc">API</a><li><a href="https://github.com/facebook/buck">Browse the Source Code</a></ul></ul></nav></div></section><footer><div class='width'>&copy; Copyright Facebook, 2013 -</div></footer><script src="/buck/google-code-prettify/prettify.js"></script><script>prettyPrint()</script></body></html>
