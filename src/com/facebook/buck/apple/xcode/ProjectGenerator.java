@@ -491,9 +491,18 @@ public class ProjectGenerator {
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
     // -- configurations
+    ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
+    Optional<Path> infoPlistOptional = buildable.getInfoPlist();
+    if (infoPlistOptional.isPresent()) {
+      Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(infoPlistOptional.get());
+      extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
+    }
     setTargetBuildConfigurations(
-        rule.getBuildTarget(), target, targetGroup,
-        buildable.getConfigurations(), ImmutableMap.<String, String>of());
+        rule.getBuildTarget(),
+        target,
+        targetGroup,
+        buildable.getConfigurations(),
+        extraSettingsBuilder.build());
 
     // -- build phases
     // TODO(Task #3772930): Go through all dependencies of the rule
