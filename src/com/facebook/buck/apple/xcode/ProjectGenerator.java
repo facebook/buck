@@ -21,13 +21,13 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
+import com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule;
 import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
-import com.facebook.buck.apple.AppleBuildRule;
 import com.facebook.buck.apple.AppleResource;
-import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.CoreDataModel;
 import com.facebook.buck.apple.CoreDataModelDescription;
+import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.IosBinary;
@@ -70,7 +70,6 @@ import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
@@ -109,15 +108,15 @@ import org.w3c.dom.Element;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.FileVisitResult;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -462,14 +461,18 @@ public class ProjectGenerator {
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
     // -- configurations
-    Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
+    ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
+    Optional<Path> infoPlistOptional = buildable.getInfoPlist();
+    if (infoPlistOptional.isPresent()) {
+      Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(infoPlistOptional.get());
+      extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
+    }
     setTargetBuildConfigurations(
         rule.getBuildTarget(),
         target,
         targetGroup,
         buildable.getConfigurations(),
-        ImmutableMap.of(
-            "INFOPLIST_FILE", infoPlistPath.toString()));
+        extraSettingsBuilder.build());
 
     // -- phases
     // TODO(Task #3772930): Go through all dependencies of the rule
@@ -584,11 +587,11 @@ public class ProjectGenerator {
     return target;
   }
 
-  private <BuildableBinary extends AbstractBuildRule & AppleBuildRule> PBXNativeTarget
+  private PBXNativeTarget
       generateBinaryTarget(
           PBXProject project,
           BuildRule rule,
-          BuildableBinary buildable,
+          AbstractAppleNativeTargetBuildRule buildable,
           PBXTarget.ProductType productType,
           BuildRuleType resourceRuleType)
           throws IOException {
@@ -598,14 +601,18 @@ public class ProjectGenerator {
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
     // -- configurations
-    Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
+    ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
+    Optional<Path> infoPlistOptional = buildable.getInfoPlist();
+    if (infoPlistOptional.isPresent()) {
+      Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(infoPlistOptional.get());
+      extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
+    }
     setTargetBuildConfigurations(
         rule.getBuildTarget(),
         target,
         targetGroup,
         buildable.getConfigurations(),
-        ImmutableMap.of(
-            "INFOPLIST_FILE", infoPlistPath.toString()));
+        extraSettingsBuilder.build());
 
     // -- phases
     // TODO(Task #3772930): Go through all dependencies of the rule

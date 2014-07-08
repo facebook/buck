@@ -31,6 +31,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosTestDescription;
@@ -221,9 +222,9 @@ public class SeparatedProjectsGeneratorTest {
         BuildTarget.builder("//foo", "rule").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription,
-        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+        new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
-          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+          public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of("Debug", ImmutableList.of(
                 Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("project.xcconfig")),
                 Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("target.xcconfig"))));
@@ -277,9 +278,9 @@ public class SeparatedProjectsGeneratorTest {
         BuildTarget.builder("//foo", "rule1").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription,
-        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+        new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
-          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+          public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of("Debug", ImmutableList.of(
                 Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("project.xcconfig")),
                 Either.<Path, ImmutableMap<String, String>>ofRight(
@@ -299,9 +300,9 @@ public class SeparatedProjectsGeneratorTest {
         BuildTarget.builder("//foo", "rule2").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription,
-        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+        new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
-          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+          public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of("Debug", ImmutableList.of(
                 Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("project.xcconfig")),
                 Either.<Path, ImmutableMap<String, String>>ofRight(
@@ -375,9 +376,9 @@ public class SeparatedProjectsGeneratorTest {
         BuildTarget.builder("//foo", "rule").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription,
-        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+        new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
-          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+          public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of("Debug", ImmutableList.of(
                 // this only has one layer, accepted layers is 2 or 4
                 Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("target.xcconfig"))));

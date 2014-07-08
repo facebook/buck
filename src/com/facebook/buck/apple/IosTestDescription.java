@@ -20,16 +20,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class IosTestDescription implements Description<IosTestDescription.Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("ios_test");
@@ -52,18 +45,8 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
     return new IosTest(params, args, TargetSources.ofAppleSources(args.srcs));
   }
 
-  public static class Arg implements ConstructorArg {
-    /**
-     * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
-     */
-    public ImmutableMap<
-        String,
-        ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs;
-    public Path infoPlist;
-    public ImmutableList<AppleSource> srcs;
-    public ImmutableSortedSet<String> frameworks;
+  public static class Arg extends AppleNativeTargetDescriptionArg {
     public ImmutableSortedSet<BuildRule> sourceUnderTest;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
     public Optional<String> testType;
   }
 }

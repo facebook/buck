@@ -17,41 +17,29 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.ConstructorArg;
+
+import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.rules.coercer.Either;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
 /**
- * A buildable that has configuration ready for Xcode-like build systems.
+ * Arguments common to {@link com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule} subclasses
  */
-public interface AppleBuildRule extends BuildRule {
-
+public class AppleNativeTargetDescriptionArg implements ConstructorArg {
+  public Optional<Path> infoPlist;
   /**
-   * Returns a path to the info.plist to be bundled with a binary or framework.
+   * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
    */
-  Path getInfoPlist();
-
-  /**
-   * Returns a set of Xcode configuration rules.
-   */
-  ImmutableSet<XcodeRuleConfiguration> getConfigurations();
-
-  /**
-   * Returns a list of sources, potentially grouped for display in Xcode.
-   */
-  ImmutableList<GroupedSource> getSrcs();
-
-  /**
-   * Returns a list of per-file build flags, e.g. -fobjc-arc.
-   */
-  ImmutableMap<SourcePath, String> getPerFileFlags();
-
-  /**
-   * Returns the set of frameworks to link with the target.
-   */
-  ImmutableSortedSet<String> getFrameworks();
+  public ImmutableMap<
+      String,
+      ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs;
+  public ImmutableList<AppleSource> srcs;
+  public ImmutableSortedSet<String> frameworks;
+  public Optional<ImmutableSortedSet<BuildRule>> deps;
 }

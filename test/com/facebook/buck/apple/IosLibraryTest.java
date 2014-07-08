@@ -40,7 +40,7 @@ public class IosLibraryTest {
 
   @Test
   public void getInputsToCompareToOutput() {
-    IosLibraryDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = description.createUnpopulatedConstructorArg();
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourcePath(new TestSourcePath("some_source.m")),
         AppleSource.ofSourcePath(new TestSourcePath("some_header.h")));

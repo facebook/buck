@@ -36,6 +36,7 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosBinaryDescription;
@@ -196,7 +197,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
-    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
@@ -255,7 +256,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
-    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
@@ -365,7 +366,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
-    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
@@ -424,8 +425,9 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(MacosxFrameworkDescription.TYPE)
             .build();
-    MacosxFrameworkDescription.Arg arg =
+    AppleNativeTargetDescriptionArg arg =
         macosxFrameworkDescription.createUnpopulatedConstructorArg();
+    arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
@@ -492,8 +494,8 @@ public class ProjectGeneratorTest {
         .setType(MacosxBinaryDescription.TYPE)
         .build();
 
-    MacosxBinaryDescription.Arg arg = macosxBinaryDescription.createUnpopulatedConstructorArg();
-    arg.infoPlist = Paths.get("Info.plist");
+    AppleNativeTargetDescriptionArg arg = macosxBinaryDescription.createUnpopulatedConstructorArg();
+    arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
@@ -545,7 +547,7 @@ public class ProjectGeneratorTest {
             .build();
 
     IosTestDescription.Arg arg = iosTestDescription.createUnpopulatedConstructorArg();
-    arg.infoPlist = Paths.get("Info.plist");
+    arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
@@ -601,7 +603,7 @@ public class ProjectGeneratorTest {
             .build();
 
     IosTestDescription.Arg arg = iosTestDescription.createUnpopulatedConstructorArg();
-    arg.infoPlist = Paths.get("Info.plist");
+    arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
@@ -656,7 +658,7 @@ public class ProjectGeneratorTest {
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
               .setType(IosLibraryDescription.TYPE)
               .build();
-      IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+      AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
       arg.configs = ImmutableMap.of(
           "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
@@ -673,7 +675,7 @@ public class ProjectGeneratorTest {
           .build();
 
       IosTestDescription.Arg arg = iosTestDescription.createUnpopulatedConstructorArg();
-      arg.infoPlist = Paths.get("Info.plist");
+      arg.infoPlist = Optional.of(Paths.get("Info.plist"));
       arg.configs = ImmutableMap.of(
           "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")));
@@ -713,8 +715,8 @@ public class ProjectGeneratorTest {
         .setDeps(ImmutableSortedSet.of(depRule))
         .setType(IosBinaryDescription.TYPE)
         .build();
-    IosBinaryDescription.Arg arg = iosBinaryDescription.createUnpopulatedConstructorArg();
-    arg.infoPlist = Paths.get("Info.plist");
+    AppleNativeTargetDescriptionArg arg = iosBinaryDescription.createUnpopulatedConstructorArg();
+    arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
@@ -770,7 +772,7 @@ public class ProjectGeneratorTest {
         .setDeps(ImmutableSortedSet.of(genrule))
         .setType(IosLibraryDescription.TYPE)
         .build();
-    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
@@ -853,7 +855,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
-    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
@@ -1138,9 +1140,9 @@ public class ProjectGeneratorTest {
         BuildTarget.builder("//foo", "rule1").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription,
-        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+        new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
-          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+          public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of(
                 "Conf1", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of(),
                 "Conf2", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
@@ -1152,9 +1154,9 @@ public class ProjectGeneratorTest {
         BuildTarget.builder("//foo", "rule2").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription,
-        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+        new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
-          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+          public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of(
                 "Conf2", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of(),
                 "Conf3", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
@@ -1259,7 +1261,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
-    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of();
     arg.srcs = ImmutableList.of();
     arg.frameworks = ImmutableSortedSet.of();
@@ -1328,7 +1330,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(IosLibraryDescription.TYPE)
             .build();
-    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of();
@@ -1454,7 +1456,7 @@ public class ProjectGeneratorTest {
         .build();
     IosTestDescription.Arg arg = iosTestDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of();
-    arg.infoPlist = Paths.get("Info.plist");
+    arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.frameworks = ImmutableSortedSet.of();
     arg.srcs = ImmutableList.of();
     arg.sourceUnderTest = sourceUnderTest;
