@@ -29,6 +29,7 @@ public class LogFormatter extends java.util.logging.Formatter {
   private static final int WARN_LEVEL = Level.WARNING.intValue();
   private static final int INFO_LEVEL = Level.INFO.intValue();
   private static final int DEBUG_LEVEL = Level.FINE.intValue();
+  private static final int VERBOSE_LEVEL = Level.FINER.intValue();
   private final ThreadLocal<SimpleDateFormat> simpleDateFormat;
 
   public LogFormatter() {
@@ -83,6 +84,8 @@ public class LogFormatter extends java.util.logging.Formatter {
       return "[info ]";
     } else if (l == DEBUG_LEVEL) {
       return "[debug]";
+    } else if (l == VERBOSE_LEVEL) {
+      return "[vrbos]";
     } else {
       // We don't expect this to happen, so meh, let's use String.format for simplicity.
       return String.format("[%-5d]", l);
