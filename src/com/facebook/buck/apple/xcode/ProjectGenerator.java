@@ -485,62 +485,13 @@ public class ProjectGenerator {
       BuildRule rule,
       MacosxFramework buildable)
       throws IOException {
-    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
-    target.setProductType(PBXTarget.ProductType.MACOSX_FRAMEWORK);
-
-    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
-
-    // -- configurations
-    ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
-    Optional<Path> infoPlistOptional = buildable.getInfoPlist();
-    if (infoPlistOptional.isPresent()) {
-      Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(infoPlistOptional.get());
-      extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
-    }
-    setTargetBuildConfigurations(
-        rule.getBuildTarget(),
-        target,
-        targetGroup,
-        buildable.getConfigurations(),
-        extraSettingsBuilder.build());
-
-    // -- build phases
-    // TODO(Task #3772930): Go through all dependencies of the rule
-    // and add any shell script rules here
-    addRunScriptBuildPhasesForDependencies(rule, target);
-    addSourcesAndHeadersBuildPhases(
-        target,
-        targetGroup,
-        buildable.getSrcs(),
-        buildable.getPerFileFlags());
-
-    // MacOSX frameworks actually link with libraries and other frameworks.
-    ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
-    frameworksBuilder.addAll(buildable.getFrameworks());
-    collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
-    addFrameworksBuildPhase(
-        rule.getBuildTarget(),
-        target,
-        project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
-        frameworksBuilder.build(),
-        collectRecursiveLibraryDependencies(rule));
-    addResourcesBuildPhase(
-        target,
-        targetGroup,
-        collectRecursiveResources(rule, OsxResourceDescription.TYPE));
-    addAssetCatalogBuildPhase(target, targetGroup, collectRecursiveAssetCatalogs(rule));
-    addCoreDataModelBuildPhase(
-        targetGroup,
-        collectCoreDataModels(rule.getDeps()));
-
-    // -- products
-    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
-    String frameworkName = getProductName(rule.getBuildTarget()) + ".framework";
-    PBXFileReference productReference = new PBXFileReference(
-        frameworkName, frameworkName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
-    productsGroup.getChildren().add(productReference);
-    target.setProductReference(productReference);
-
+    PBXNativeTarget target = generateBinaryTarget(
+        project,
+        rule,
+        buildable,
+        PBXTarget.ProductType.MACOSX_FRAMEWORK,
+        "%s.framework",
+        OsxResourceDescription.TYPE);
     project.getTargets().add(target);
     return target;
   }
