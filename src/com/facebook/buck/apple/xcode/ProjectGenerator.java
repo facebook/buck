@@ -455,67 +455,13 @@ public class ProjectGenerator {
 
   private PBXNativeTarget generateIosTestTarget(
       PBXProject project, BuildRule rule, IosTest buildable) throws IOException {
-    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
-    target.setProductType(testTypeToTargetProductType(buildable.getTestType()));
-
-    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
-
-    // -- configurations
-    ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
-    Optional<Path> infoPlistOptional = buildable.getInfoPlist();
-    if (infoPlistOptional.isPresent()) {
-      Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(infoPlistOptional.get());
-      extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
-    }
-    setTargetBuildConfigurations(
-        rule.getBuildTarget(),
-        target,
-        targetGroup,
-        buildable.getConfigurations(),
-        extraSettingsBuilder.build());
-
-    // -- phases
-    // TODO(Task #3772930): Go through all dependencies of the rule
-    // and add any shell script rules here
-    addRunScriptBuildPhasesForDependencies(rule, target);
-    addSourcesAndHeadersBuildPhases(
-        target,
-        targetGroup,
-        buildable.getSrcs(),
-        buildable.getPerFileFlags());
-    ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
-    frameworksBuilder.addAll(buildable.getFrameworks());
-    collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
-    addFrameworksBuildPhase(
-        rule.getBuildTarget(),
-        target,
-        project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
-        frameworksBuilder.build(),
-        collectRecursiveLibraryDependencies(rule));
-    addResourcesBuildPhase(
-        target,
-        targetGroup,
-        collectRecursiveResources(rule, IosResourceDescription.TYPE));
-    addAssetCatalogBuildPhase(
-        target,
-        targetGroup,
-        collectRecursiveAssetCatalogs(rule));
-    addCoreDataModelBuildPhase(
-        targetGroup,
-        collectCoreDataModels(rule.getDeps()));
-
-    // -- products
-    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
-    String productName = getProductName(rule.getBuildTarget());
-    String productOutputName = Joiner.on(".").join(
-        productName,
-        buildable.getTestType().toFileExtension());
-    PBXFileReference productReference = new PBXFileReference(
-        productOutputName, productOutputName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
-    productsGroup.getChildren().add(productReference);
-    target.setProductName(productName);
-    target.setProductReference(productReference);
-
+    PBXNativeTarget target = generateBinaryTarget(
+        project,
+        rule,
+        buildable,
+        testTypeToTargetProductType(buildable.getTestType()),
+        "%s." + buildable.getTestType().toFileExtension(),
+        IosResourceDescription.TYPE);
     project.getTargets().add(target);
     return target;
   }
@@ -523,10 +469,13 @@ public class ProjectGenerator {
   private PBXNativeTarget generateIOSBinaryTarget(
       PBXProject project, BuildRule rule, IosBinary buildable)
       throws IOException {
-    PBXNativeTarget target =
-        generateBinaryTarget(project, rule, buildable, PBXTarget.ProductType.IOS_BINARY,
-            IosResourceDescription.TYPE);
-
+    PBXNativeTarget target = generateBinaryTarget(
+        project,
+        rule,
+        buildable,
+        PBXTarget.ProductType.IOS_BINARY,
+        "%s.app",
+        IosResourceDescription.TYPE);
     project.getTargets().add(target);
     return target;
   }
@@ -587,14 +536,14 @@ public class ProjectGenerator {
     return target;
   }
 
-  private PBXNativeTarget
-      generateBinaryTarget(
-          PBXProject project,
-          BuildRule rule,
-          AbstractAppleNativeTargetBuildRule buildable,
-          PBXTarget.ProductType productType,
-          BuildRuleType resourceRuleType)
-          throws IOException {
+  private PBXNativeTarget generateBinaryTarget(
+      PBXProject project,
+      BuildRule rule,
+        AbstractAppleNativeTargetBuildRule buildable,
+      PBXTarget.ProductType productType,
+      String productOutputFormat,
+      BuildRuleType resourceRuleType)
+      throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
     target.setProductType(productType);
 
@@ -644,7 +593,7 @@ public class ProjectGenerator {
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
     String productName = getProductName(rule.getBuildTarget());
-    String productOutputName = productName + ".app";
+    String productOutputName = String.format(productOutputFormat, productName);
     PBXFileReference productReference = new PBXFileReference(
         productOutputName, productOutputName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
     productsGroup.getChildren().add(productReference);
@@ -657,13 +606,13 @@ public class ProjectGenerator {
   private PBXNativeTarget generateMacosxBinaryTarget(
       PBXProject project, BuildRule rule, MacosxBinary buildable)
       throws IOException {
-    PBXNativeTarget target =
-        generateBinaryTarget(
-            project,
-            rule,
-            buildable,
-            PBXTarget.ProductType.MACOSX_BINARY,
-            OsxResourceDescription.TYPE);
+    PBXNativeTarget target = generateBinaryTarget(
+        project,
+        rule,
+        buildable,
+        PBXTarget.ProductType.MACOSX_BINARY,
+        "%s.app",
+        OsxResourceDescription.TYPE);
 
     // Unlike an ios target, macosx targets collect their frameworks and copy them in.
     ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
