@@ -259,7 +259,12 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   }
 
   private Path getPathToTmpDirectory() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__java_test_%s_tmp__").toAbsolutePath();
+    Path base = BuildTargets.getBinPath(getBuildTarget(), "__java_test_%s_tmp__").toAbsolutePath();
+    String subdir = BuckConstant.oneTimeTestSubdirectory;
+    if (subdir != null && !subdir.isEmpty()) {
+      base = base.resolve(subdir);
+    }
+    return base;
   }
 
   @Override
