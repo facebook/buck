@@ -48,6 +48,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 /**
  * ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true.
  */
@@ -90,11 +92,13 @@ public class ExopackageInstaller {
   /**
    * Set in {@link #install}.
    */
+  @Nullable
   private IDevice device = null;
 
   /**
    * Set after the agent is installed.
    */
+  @Nullable
   private String nativeAgentPath;
 
   @VisibleForTesting
