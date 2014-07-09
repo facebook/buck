@@ -49,7 +49,13 @@ public class AndroidPackageableCollection {
     /**
      * Package names of all the transitive android resources.
      */
-    public final ImmutableSet<String> rDotJavaPackages;
+    public final Supplier<ImmutableSet<String>> rDotJavaPackagesSupplier;
+
+    /**
+     * Whether the set returned by {@link #rDotJavaPackagesSupplier} will be empty. This can be
+     * queried before the {@link #rDotJavaPackagesSupplier} is determined.
+     */
+    public final boolean hasRDotJavaPackages;
 
     /**
      * A list of build targets belonging to {@link com.facebook.buck.android.AndroidResource}s with
@@ -66,12 +72,14 @@ public class AndroidPackageableCollection {
     public ResourceDetails(
         ImmutableList<Path> resourceDirectories,
         ImmutableSet<Path> whitelistedStringDirectories,
-        ImmutableSet<String> rDotJavaPackages,
+        Supplier<ImmutableSet<String>> rDotJavaPackagesSupplier,
+        boolean hasRDotJavaPackages,
         ImmutableList<BuildTarget> resourcesWithNonEmptyResDir,
         ImmutableList<BuildTarget> resourcesWithEmptyResButNonEmptyAssetsDir) {
       this.resourceDirectories = Preconditions.checkNotNull(resourceDirectories);
       this.whitelistedStringDirectories = Preconditions.checkNotNull(whitelistedStringDirectories);
-      this.rDotJavaPackages = Preconditions.checkNotNull(rDotJavaPackages);
+      this.rDotJavaPackagesSupplier = Preconditions.checkNotNull(rDotJavaPackagesSupplier);
+      this.hasRDotJavaPackages = hasRDotJavaPackages;
       this.resourcesWithNonEmptyResDir = Preconditions.checkNotNull(resourcesWithNonEmptyResDir);
       this.resourcesWithEmptyResButNonEmptyAssetsDir =
           Preconditions.checkNotNull(resourcesWithEmptyResButNonEmptyAssetsDir);
