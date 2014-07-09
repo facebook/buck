@@ -588,9 +588,6 @@ public class ProjectGenerator {
         target,
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
         frameworksBuilder.build());
-    addCoreDataModelBuildPhase(
-        project.getMainGroup(),
-        collectCoreDataModels(rule.getDeps()));
 
     project.getTargets().add(target);
     return target;
