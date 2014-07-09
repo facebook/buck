@@ -93,7 +93,7 @@ public class ExopackageInstaller {
    * Set in {@link #install}.
    */
   @Nullable
-  private IDevice device = null;
+  private IDevice device;
 
   /**
    * Set after the agent is installed.
