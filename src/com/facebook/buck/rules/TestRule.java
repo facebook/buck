@@ -21,10 +21,10 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
@@ -58,7 +58,7 @@ public interface TestRule extends HasBuildTarget {
    *     from a run.
    * @return the commands required to run the tests
    */
-  public List<Step> runTests(
+  public ImmutableList<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
       boolean isDryRun,

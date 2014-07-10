@@ -146,7 +146,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
    * other {@code java_test()} rules, then they will be run separately.
    */
   @Override
-  public List<Step> runTests(
+  public ImmutableList<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
       boolean isDryRun,
