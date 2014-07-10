@@ -187,10 +187,12 @@ public final class Main {
     private ProjectFilesystemWatcher createWatcher(ProjectFilesystem projectFilesystem)
         throws IOException {
       if (System.getProperty("buck.buckd_watcher", "WatchService").equals("Watchman")) {
+        LOG.debug("Using watchman to watch for file changes.");
         return new WatchmanWatcher(
             projectFilesystem,
             fileEventBus);
       }
+      LOG.debug("Using java.nio.file.WatchService to watch for file changes.");
       return new WatchServiceWatcher(
           projectFilesystem,
           fileEventBus,
@@ -213,6 +215,7 @@ public final class Main {
         String rawPort = serverPort.get();
         try {
           int port = Integer.parseInt(rawPort, 10);
+          LOG.debug("Starting up web server on port %d.", port);
           webServer = Optional.of(new WebServer(port, projectFilesystem, STATIC_CONTENT_DIRECTORY));
         } catch (NumberFormatException e) {
           console.printErrorText(
@@ -248,6 +251,7 @@ public final class Main {
           // so needs to be left in a consistent state even if the current command is interrupted
           // due to a client disconnection.
           synchronized (parser) {
+            LOG.info("Client disconnected.");
             // Client should no longer be connected, but printing helps detect false disconnections.
             context.err.println("Client disconnected.");
             throw new InterruptedException("Client disconnected.");
@@ -323,6 +327,7 @@ public final class Main {
       Console console,
       ImmutableMap<String, String> environment) throws IOException {
     if (daemon == null) {
+      LOG.info("Starting up daemon for project root [%s]", filesystem.getProjectRoot());
       daemon = new Daemon(
           filesystem,
           knownBuildRuleTypes,
@@ -346,6 +351,7 @@ public final class Main {
       // create a new daemon.
       if (!daemon.getConfig().equals(config) ||
           !daemon.getAndroidDirectoryResolver().equals(androidDirectoryResolver)) {
+        LOG.info("Shutting down and restarting daemon on config or directory resolver change.");
         daemon.close();
         daemon = new Daemon(
             filesystem,
@@ -364,6 +370,7 @@ public final class Main {
   static void resetDaemon() {
     if (daemon != null) {
       try {
+        LOG.info("Closing daemon on reset request.");
         daemon.close();
       } catch (IOException e) {
         // Swallow exceptions while closing daemon.
@@ -622,6 +629,7 @@ public final class Main {
 
       buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
     } catch (InterruptedException e) {
+      LOG.debug(e, "Failing build on interruption exception.");
       closeCreatedArtifactCaches(artifactCacheFactory); // Close cache before exit on exception.
       Thread.currentThread().interrupt();
       return FAIL_EXIT_CODE;
