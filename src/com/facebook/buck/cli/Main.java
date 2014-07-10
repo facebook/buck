@@ -28,7 +28,7 @@ import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
-import com.facebook.buck.log.LogConfigFilesWatcher;
+import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
@@ -148,7 +148,6 @@ public final class Main {
     private final BuckConfig config;
     private final Optional<WebServer> webServer;
     private final Console console;
-    private final LogConfigFilesWatcher logConfigFilesWatcher;
 
     public Daemon(
         ProjectFilesystem projectFilesystem,
@@ -173,13 +172,11 @@ public final class Main {
           config.getTempFilePatterns(),
           createRuleKeyBuilderFactory(hashCache));
       this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
-      this.logConfigFilesWatcher = new LogConfigFilesWatcher();
 
       this.fileEventBus = new EventBus("file-change-events");
       this.filesystemWatcher = createWatcher(projectFilesystem);
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
-      fileEventBus.register(logConfigFilesWatcher);
       webServer = createWebServer(config, console, projectFilesystem);
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(projectFilesystem);
     }
@@ -878,6 +875,12 @@ public final class Main {
       throws IOException, InterruptedException {
     // TODO(user): enforce write command exclusion, but allow concurrent read only commands?
     try {
+      if (daemon != null) {
+        // Reset logging each time we run a command while daemonized.
+        LOG.debug("Rotating log.");
+        LogConfig.flushLogs();
+        LogConfig.setupLogging();
+      }
       LOG.debug("Starting up with args: %s", Arrays.toString(args));
       return runMainWithExitCode(projectRoot, context, args);
     } catch (HumanReadableException e) {
