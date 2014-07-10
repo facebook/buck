@@ -5,6 +5,7 @@ java_library(
     '//lib:guava',
     '//lib:jackson',
     '//lib:jsr305',
+    '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:exceptions',

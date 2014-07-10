@@ -27,8 +27,8 @@ import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.LogConfigFilesWatcher;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildRule;
@@ -52,7 +52,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.PropertyFinder;
-import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchServiceWatcher;
 import com.facebook.buck.util.WatchmanWatcher;
@@ -876,10 +875,6 @@ public final class Main {
           new Ansi(platform));
       console.printBuildFailure(e.getHumanReadableErrorMessage());
       return FAIL_EXIT_CODE;
-    } catch (ShutdownException e) {
-      stdErr.println(e);
-      e.printStackTrace(stdErr);
-      return 0;
     } finally {
       LOG.debug("Done.");
     }

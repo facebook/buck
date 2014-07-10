@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.util;
 
+import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -44,6 +45,8 @@ import java.util.concurrent.TimeUnit;
  * flight at any given point in time.
  */
 public class BlockingHttpEndpoint implements HttpEndpoint, Closeable {
+
+  private static final Logger LOG = Logger.get(BlockingHttpEndpoint.class);
 
   public static final int DEFAULT_COMMON_TIMEOUT_MS = 5000;
   private URL url;
@@ -121,7 +124,7 @@ public class BlockingHttpEndpoint implements HttpEndpoint, Closeable {
     requestService.shutdown();
     try {
       if (!requestService.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS)) {
-        throw new ShutdownException(Joiner.on(System.lineSeparator()).join(
+        LOG.warn(Joiner.on(System.lineSeparator()).join(
             "A BlockingHttpEndpoint failed to shut down within the standard timeout.",
             "Your build might have succeeded, but some requests made to ",
             this.url + " were probably lost.",

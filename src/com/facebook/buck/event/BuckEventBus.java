@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.event;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -34,6 +34,8 @@ import java.util.concurrent.TimeUnit;
  * Thin wrapper around guava event bus.
  */
 public class BuckEventBus implements Closeable {
+
+  private static final Logger LOG = Logger.get(BuckEventBus.class);
 
   public static final int DEFAULT_SHUTDOWN_TIMEOUT_MS = 15000;
 
@@ -129,12 +131,12 @@ public class BuckEventBus implements Closeable {
     executorService.shutdown();
     try {
       if (!executorService.awaitTermination(shutdownTimeoutMillis, TimeUnit.MILLISECONDS)) {
-        throw new ShutdownException(
-            Joiner.on(System.lineSeparator()).join(
-                "The BuckEventBus failed to shut down within the standard timeout.",
-                "Your build might have succeeded, but some messages were probably lost.",
-                "Here's some debugging information:",
-                executorService.toString()));
+        LOG.warn(Joiner.on(System.lineSeparator()).join(
+          "The BuckEventBus failed to shut down within the standard timeout.",
+          "Your build might have succeeded, but some messages were probably lost.",
+          "Here's some debugging information:",
+          executorService.toString()));
+        executorService.shutdownNow();
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

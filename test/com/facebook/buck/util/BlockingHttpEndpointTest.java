@@ -18,9 +18,7 @@ package com.facebook.buck.util;
 
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -47,11 +45,7 @@ public class BlockingHttpEndpointTest {
     long start = System.nanoTime();
     BlockingHttpEndpoint endpoint = createBlockingHttpEndpoint();
     endpoint.send(new TestHttpURLConnection(0), "Foo");
-    try {
-      endpoint.close();
-    } catch (ShutdownException e) {
-      fail("Endpoint should shut down successfully.");
-    }
+    endpoint.close();
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
     assertThat("Shutdown should not take a long time.",
@@ -60,18 +54,12 @@ public class BlockingHttpEndpointTest {
   }
 
   @Test
-  public void whenRequestServiceTimesOutThenExceptionThrownByClose() throws MalformedURLException {
+  public void whenRequestServiceTimesOutCloseStillWorks() throws MalformedURLException {
     long start = System.nanoTime();
     BlockingHttpEndpoint endpoint = createBlockingHttpEndpoint();
     endpoint.send(new TestHttpURLConnection(timeoutMillis), "Foo");
-    try {
-      endpoint.close();
-      fail("Endpoint should not shut down successfully.");
-    } catch (ShutdownException e) {
-      assertThat("Exception should be due to shutdown.",
-          e.getMessage(),
-          Matchers.containsString("failed to shut down"));
-    }
+    endpoint.close();
+    // We'd like to test the Logger output here, but there's not a clean way to do that.
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
     assertThat("Shutdown should not take a long time.",
