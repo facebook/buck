@@ -22,6 +22,7 @@ import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
+import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
@@ -775,7 +776,8 @@ public final class Main {
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
             .add(new ChromeTraceBuildListener(projectFilesystem, config.getMaxTraces()))
-            .add(consoleEventBusListener);
+            .add(consoleEventBusListener)
+            .add(new LoggingBuildListener());
 
     if (webServer.isPresent()) {
       eventListenersBuilder.add(webServer.get().createListener());
