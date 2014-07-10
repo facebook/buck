@@ -31,7 +31,6 @@ import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -66,10 +65,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   @SuppressWarnings("PMD.PrematureDeclaration")
   int runCommandWithOptionsInternal(BuildCommandOptions options)
       throws IOException, InterruptedException {
-    // Set the logger level based on the verbosity option.
-    Verbosity verbosity = console.getVerbosity();
-    Logging.setLoggingLevelForVerbosity(verbosity);
-
     // Create artifact cache to initialize Cassandra connection, if appropriate.
     ArtifactCache artifactCache = getArtifactCache();
 

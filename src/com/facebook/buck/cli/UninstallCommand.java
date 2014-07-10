@@ -26,7 +26,6 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -45,10 +44,6 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
   @Override
   int runCommandWithOptionsInternal(UninstallCommandOptions options)
       throws IOException, InterruptedException {
-    // Set the logger level based on the verbosity option.
-    Verbosity verbosity = console.getVerbosity();
-    Logging.setLoggingLevelForVerbosity(verbosity);
-
     // Make sure that only one build target is specified.
     if (options.getArguments().size() != 1) {
       getStdErr().println("Must specify exactly one android_binary() rule.");

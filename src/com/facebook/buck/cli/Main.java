@@ -537,7 +537,9 @@ public final class Main {
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
     // be the last resource, so that it is closed first and can deliver its queued events to the
     // other resources before they are closed.
-    try (AbstractConsoleEventBusListener consoleListener =
+    try (ConsoleLogLevelOverrider consoleLogLevelOverrider =
+             new ConsoleLogLevelOverrider(verbosity);
+         AbstractConsoleEventBusListener consoleListener =
              createConsoleEventListener(clock, console, verbosity, executionEnvironment);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
 

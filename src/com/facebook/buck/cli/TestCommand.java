@@ -290,8 +290,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
   private int runAllTests(TestCommandOptions options) throws IOException,
       BuildTargetException, BuildFileParseException, ExecutionException, InterruptedException {
-    Logging.setLoggingLevelForVerbosity(console.getVerbosity());
-
     // We won't have a list of targets until the build is already started, so BuildEvents will get
     // an empty list.
     ImmutableList<BuildTarget> emptyTargetsList = ImmutableList.of();
