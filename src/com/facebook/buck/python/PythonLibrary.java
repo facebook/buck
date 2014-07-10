@@ -25,15 +25,11 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -43,13 +39,13 @@ public class PythonLibrary extends AbstractBuildRule implements PythonPackagable
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  private final ImmutableSortedSet<SourcePath> srcs;
-  private final ImmutableSortedSet<SourcePath> resources;
+  private final ImmutableMap<Path, SourcePath> srcs;
+  private final ImmutableMap<Path, SourcePath> resources;
 
   protected PythonLibrary(
       BuildRuleParams params,
-      ImmutableSortedSet<SourcePath> srcs,
-      ImmutableSortedSet<SourcePath> resources) {
+      ImmutableMap<Path, SourcePath> srcs,
+      ImmutableMap<Path, SourcePath> resources) {
     super(params);
     this.srcs = Preconditions.checkNotNull(srcs);
     this.resources = Preconditions.checkNotNull(resources);
@@ -67,41 +63,19 @@ public class PythonLibrary extends AbstractBuildRule implements PythonPackagable
   }
 
   /**
-   * Convert a set of SourcePaths to a map of Paths mapped to themselves,
-   * appropriate for being put into a PythonPackageComponents instance.
-   * <p>
-   * TODO(#4446762): Currently, the location of sources in the top-level binary
-   * matches the repo-relative path exactly as we form this from the SourcePath
-   * objects we get for the sources list.  In the future, we should have a way
-   * to customize how these files get laid out, as this approach doesn't lend
-   * itself well to generated sources and cases where we don't want the repo layout
-   * to match the binary location.
-   */
-  private ImmutableMap<Path, Path> getPathMapFromSourcePaths(
-      ImmutableSet<SourcePath> sourcePaths) {
-    ImmutableMap.Builder<Path, Path> paths = ImmutableMap.builder();
-    for (SourcePath src : sourcePaths) {
-      Path path = src.resolve();
-      paths.put(path, path);
-    }
-    return paths.build();
-  }
-
-  /**
    * Return the components to contribute to the top-level python package.
    */
   @Override
   public PythonPackageComponents getPythonPackageComponents() {
     return new PythonPackageComponents(
-        getPathMapFromSourcePaths(srcs),
-        getPathMapFromSourcePaths(resources),
-        ImmutableMap.<Path, Path>of());
+        srcs,
+        resources,
+        ImmutableMap.<Path, SourcePath>of());
   }
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return SourcePaths.filterInputsToCompareToOutput(
-        Iterables.concat(srcs, resources));
+    return ImmutableList.of();
   }
 
   @Override

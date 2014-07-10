@@ -16,105 +16,109 @@
 
 package com.facebook.buck.python;
 
-import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.BuildRuleParamsFactory;
+import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
+import com.facebook.buck.testutil.FakeFileHashCache;
+import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class PythonBinaryTest {
 
-  @Test
-  public void testPythonBinaryGetSourcesMethodReturnsTransitiveSourceMap() {
-    BuildTarget orphanPyLibraryTarget = BuildTarget.builder("//", "orphan_python_library").build();
-    PythonLibrary orphanPyLibrary = new PythonLibrary(
-        new FakeBuildRuleParamsBuilder(orphanPyLibraryTarget).build(),
-        ImmutableSortedSet.<SourcePath>of(
-            new TestSourcePath("java/src/com/javalib/orphan/sadpanda.py")),
-        ImmutableSortedSet.<SourcePath>of());
+  @Rule
+  public final TemporaryFolder tmpDir = new TemporaryFolder();
 
-    BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
-    PythonLibrary pyLibrary = new PythonLibrary(
-        new FakeBuildRuleParamsBuilder(pyLibraryTarget).build(),
-        ImmutableSortedSet.<SourcePath>of(
-            new TestSourcePath("python/tastypy.py")),
-        ImmutableSortedSet.<SourcePath>of());
+  private RuleKey.Builder.RuleKeyPair getRuleKeyForModuleLayout(
+      RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      String main, Path mainSrc,
+      String mod1, Path src1,
+      String mod2, Path src2) throws IOException {
 
-    Map<BuildTarget, BuildRule> rules = Maps.newHashMap();
-    rules.put(orphanPyLibraryTarget, orphanPyLibrary);
-    rules.put(pyLibraryTarget, pyLibrary);
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(rules);
+    // The top-level python binary that lists the above libraries as deps.
+    PythonBinary binary = new PythonBinary(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(
+            BuildTargetFactory.newInstance("//:bin")),
+        Paths.get("dummy_path_to_pex"),
+        Paths.get("main.py"),
+        new PythonPackageComponents(
+            ImmutableMap.<Path, SourcePath>of(
+                Paths.get(main), new PathSourcePath(mainSrc),
+                Paths.get(mod1), new PathSourcePath(src1),
+                Paths.get(mod2), new PathSourcePath(src2)),
+            ImmutableMap.<Path, SourcePath>of(),
+            ImmutableMap.<Path, SourcePath>of()));
 
-    BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:javalib");
-    BuildRule javaLibrary = JavaLibraryBuilder
-        .createBuilder(javaLibraryTarget)
-        .addSrc(Paths.get("java/src/com/javalib/Bar.java"))
-        .addDep(orphanPyLibrary)
-        .build(ruleResolver);
-
-    Path foo = Paths.get("foo");
-    PythonBinary buildable = new PythonBinary(
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//", "python_binary").build())
-            .setDeps(ImmutableSortedSet.of(javaLibrary, pyLibrary))
-            .build(),
-        foo);
-
-    assertEquals(
-        new PythonPackageComponents.Builder("test")
-            .addModule(foo, foo, "")
-            .addComponent(pyLibrary.getPythonPackageComponents(), "")
-            .build(),
-        buildable.getAllComponents());
+    // Calculate and return the rule key.
+    RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(binary);
+    binary.appendToRuleKey(builder);
+    return builder.build();
   }
 
-  // Verify that we detect output path conflicts between different rules.
   @Test
-  public void testPathConflictThrowsHumanReadableError() {
+  public void testRuleKeysFromModuleLayouts() throws IOException {
 
-    // The path that conflicts.
-    Path tasty = Paths.get("python/tastypy.py");
+    // Create two different sources, which we'll swap in as different modules.
+    Path main = tmpDir.newFile().toPath();
+    Files.write(main, "main".getBytes(Charsets.UTF_8));
+    Path source1 = tmpDir.newFile().toPath();
+    Files.write(source1, "hello world".getBytes(Charsets.UTF_8));
+    Path source2 = tmpDir.newFile().toPath();
+    Files.write(source2, "goodbye world".getBytes(Charsets.UTF_8));
 
-    // A python library which specifies the above path.
-    BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
-    PythonLibrary pyLibrary = new PythonLibrary(
-        new FakeBuildRuleParamsBuilder(pyLibraryTarget).build(),
-        ImmutableSortedSet.<SourcePath>of(
-            new TestSourcePath(tasty.toString())),
-        ImmutableSortedSet.<SourcePath>of());
+    // Setup a rulekey builder factory.
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new FakeRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(
+                ImmutableMap.of(
+                    main.toString(), Strings.repeat("a", 40),
+                    source1.toString(), Strings.repeat("b", 40),
+                    source2.toString(), Strings.repeat("c", 40))));
 
-    // The top-level python binary that lists the above library as a dep and
-    // also lists the "tasty" path as its main module, which will conflict.
-    PythonBinary buildable = new PythonBinary(
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//", "python_binary").build())
-            .setDeps(ImmutableSortedSet.<BuildRule>of(pyLibrary))
-            .build(),
-        tasty);
+    // Calculate the rule keys for the various ways we can layout the source and modules
+    // across different python libraries.
+    RuleKey.Builder.RuleKeyPair pair1 = getRuleKeyForModuleLayout(
+        ruleKeyBuilderFactory,
+        "main.py", main,
+        "module/one.py", source1,
+        "module/two.py", source2);
+    RuleKey.Builder.RuleKeyPair pair2 = getRuleKeyForModuleLayout(
+        ruleKeyBuilderFactory,
+        "main.py", main,
+        "module/two.py", source2,
+        "module/one.py", source1);
+    RuleKey.Builder.RuleKeyPair pair3 = getRuleKeyForModuleLayout(
+        ruleKeyBuilderFactory,
+        "main.py", main,
+        "module/one.py", source2,
+        "module/two.py", source1);
+    RuleKey.Builder.RuleKeyPair pair4 = getRuleKeyForModuleLayout(
+        ruleKeyBuilderFactory,
+        "main.py", main,
+        "module/two.py", source1,
+        "module/one.py", source2);
 
-    // Try to grab the overall package componets for the binary, which should
-    // fail due to the conflict.
-    try {
-      buildable.getAllComponents();
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(),
-          containsString("found duplicate entries for module " + tasty.toString()));
-    }
-
+    // Make sure only cases where the actual module layouts are different result
+    // in different rules keys.
+    assertEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());
+    assertEquals(pair3.getTotalRuleKey(), pair4.getTotalRuleKey());
+    assertNotEquals(pair1.getTotalRuleKey(), pair3.getTotalRuleKey());
   }
+
 }

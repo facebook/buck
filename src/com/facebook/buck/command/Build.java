@@ -42,6 +42,7 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -96,7 +97,8 @@ public class Build implements Closeable {
       BuckEventBus eventBus,
       Platform platform,
       ImmutableMap<String, String> environment,
-      BuckConfig buckConfig) {
+      BuckConfig buckConfig,
+      ObjectMapper objectMapper) {
     this.actionGraph = Preconditions.checkNotNull(actionGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
@@ -116,6 +118,7 @@ public class Build implements Closeable {
         .setPlatform(platform)
         .setEnvironment(environment)
         .setJavaPackageFinder(javaPackageFinder)
+        .setObjectMapper(objectMapper)
         .build();
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.buildEngine = Preconditions.checkNotNull(buildEngine);

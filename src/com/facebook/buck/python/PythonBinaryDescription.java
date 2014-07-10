@@ -23,14 +23,28 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class PythonBinaryDescription implements Description<PythonBinaryDescription.Arg> {
 
-  private static final BuildRuleType TYPE = new BuildRuleType("python_binary");
+  public static final Path DEFAULT_PATH_TO_PEX =
+      Paths.get(System.getProperty("buck.buck_dir", System.getProperty("user.dir")))
+          .resolve("src/com/facebook/buck/python/pex.py");
+
+  public static final BuildRuleType TYPE = new BuildRuleType("python_binary");
+
+  private final Path pathToPex;
+
+  public PythonBinaryDescription(Path pathToPex) {
+    this.pathToPex = Preconditions.checkNotNull(pathToPex);
+  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -47,13 +61,35 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new PythonBinary(params, args.main);
+
+    String mainName = args.main.getName();
+    Path mainModule = params.getBuildTarget().getBasePath().resolve(mainName);
+
+    // Build up the list of all components going into the python binary.
+    PythonPackageComponents binaryPackageComponents = new PythonPackageComponents(
+        /* modules */ ImmutableMap.of(mainModule, args.main),
+        /* resources */ ImmutableMap.<Path, SourcePath>of(),
+        /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of());
+    PythonPackageComponents allPackageComponents = PythonUtil.getAllComponents(
+        params,
+        binaryPackageComponents);
+
+    // Return a build rule which builds the PEX, depending on everything that builds any of
+    // the components.
+    BuildRuleParams binaryParams = params.copyWithDeps(
+        PythonUtil.getDepsFromComponents(allPackageComponents),
+        ImmutableSortedSet.<BuildRule>of());
+    return new PythonBinary(
+        binaryParams,
+        pathToPex,
+        mainModule,
+        allPackageComponents);
   }
 
   @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
-    public Path main;
-
+    public SourcePath main;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }
+
 }

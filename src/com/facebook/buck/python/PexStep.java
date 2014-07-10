@@ -27,13 +27,13 @@ import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class PexStep extends ShellStep {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final Path PEX = Paths.get(Preconditions.checkNotNull(
-      System.getProperty("buck.path_to_pex")));
+
+  // Path to the tool to generate the pex file.
+  private final Path pathToPex;
 
   // The path to the executable to create.
   private final Path destination;
@@ -48,10 +48,12 @@ public class PexStep extends ShellStep {
   private final ImmutableMap<Path, Path> resources;
 
   public PexStep(
+      Path pathToPex,
       Path destination,
       String entry,
       ImmutableMap<Path, Path> modules,
       ImmutableMap<Path, Path> resources) {
+    this.pathToPex = Preconditions.checkNotNull(pathToPex);
     this.destination = Preconditions.checkNotNull(destination);
     this.entry = Preconditions.checkNotNull(entry);
     this.modules = Preconditions.checkNotNull(modules);
@@ -91,7 +93,10 @@ public class PexStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    return ImmutableList.of(PEX.toString(), "--entry-point", entry, destination.toString());
+    return ImmutableList.of(
+        pathToPex.toString(),
+        "--entry-point", entry,
+        destination.toString());
   }
 
 }

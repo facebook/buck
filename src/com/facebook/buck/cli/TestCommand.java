@@ -325,7 +325,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getBuckEventBus(),
         options.getTargetDeviceOptional(),
         getCommandRunnerParams().getPlatform(),
-        getCommandRunnerParams().getEnvironment())) {
+        getCommandRunnerParams().getEnvironment(),
+        getCommandRunnerParams().getObjectMapper())) {
 
       // Build all of the test rules.
       int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(

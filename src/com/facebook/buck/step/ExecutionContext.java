@@ -28,6 +28,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +53,7 @@ public class ExecutionContext {
   private final Platform platform;
   private final ImmutableMap<String, String> environment;
   private final JavaPackageFinder javaPackageFinder;
+  private final ObjectMapper objectMapper;
 
   private ExecutionContext(
       ProjectFilesystem projectFilesystem,
@@ -64,7 +66,8 @@ public class ExecutionContext {
       BuckEventBus eventBus,
       Platform platform,
       ImmutableMap<String, String> environment,
-      JavaPackageFinder javaPackageFinder) {
+      JavaPackageFinder javaPackageFinder,
+      ObjectMapper objectMapper) {
     this.verbosity = Preconditions.checkNotNull(console).getVerbosity();
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.console = Preconditions.checkNotNull(console);
@@ -78,6 +81,7 @@ public class ExecutionContext {
     this.platform = Preconditions.checkNotNull(platform);
     this.environment = Preconditions.checkNotNull(environment);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
+    this.objectMapper = Preconditions.checkNotNull(objectMapper);
   }
 
   /**
@@ -96,7 +100,8 @@ public class ExecutionContext {
         eventBus,
         platform,
         this.environment,
-        this.javaPackageFinder);
+        this.javaPackageFinder,
+        this.objectMapper);
   }
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
@@ -145,6 +150,10 @@ public class ExecutionContext {
 
   public JavaPackageFinder getJavaPackageFinder() {
     return javaPackageFinder;
+  }
+
+  public ObjectMapper getObjectMapper() {
+    return objectMapper;
   }
 
   /**
@@ -219,6 +228,7 @@ public class ExecutionContext {
     @Nullable private Platform platform = null;
     @Nullable private ImmutableMap<String, String> environment = null;
     @Nullable private JavaPackageFinder javaPackageFinder = null;
+    @Nullable private ObjectMapper objectMapper = null;
 
     private Builder() {}
 
@@ -234,7 +244,8 @@ public class ExecutionContext {
           eventBus,
           platform,
           environment,
-          javaPackageFinder);
+          javaPackageFinder,
+          objectMapper);
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
@@ -249,6 +260,7 @@ public class ExecutionContext {
       setPlatform(executionContext.getPlatform());
       setEnvironment(executionContext.getEnvironment());
       setJavaPackageFinder(executionContext.getJavaPackageFinder());
+      setObjectMapper(executionContext.getObjectMapper());
       return this;
     }
 
@@ -309,5 +321,11 @@ public class ExecutionContext {
       this.javaPackageFinder = javaPackageFinder;
       return this;
     }
+
+    public Builder setObjectMapper(ObjectMapper objectMapper) {
+      this.objectMapper = Preconditions.checkNotNull(objectMapper);
+      return this;
+    }
+
   }
 }

@@ -23,11 +23,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Unit test for {@link PythonLibrary}.
@@ -38,14 +41,14 @@ public class PythonLibraryTest {
 
   @Test
   public void testGetters() {
-    SourcePath src = new TestSourcePath("");
-    ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of(src);
+    ImmutableMap<Path, SourcePath> srcs = ImmutableMap.<Path, SourcePath>of(
+        Paths.get("dummy"), new TestSourcePath(""));
     PythonLibrary pythonLibrary = new PythonLibrary(
         new FakeBuildRuleParamsBuilder(
             BuildTarget.builder("//scripts/python", "foo").build())
             .build(),
         srcs,
-        ImmutableSortedSet.<SourcePath>of());
+        ImmutableMap.<Path, SourcePath>of());
 
     assertTrue(pythonLibrary.getProperties().is(LIBRARY));
   }

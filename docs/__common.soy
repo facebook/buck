@@ -183,6 +183,7 @@ ga('send', 'pageview');
         'project_config',
         'python_binary',
         'python_library',
+        'python_test',
         ]}
       <li><a href="{ROOT}rule/{$rule}.html">{$rule}()</a>
     {/foreach}
@@ -472,6 +473,11 @@ ga('send', 'pageview');
 /***/
 {template .python_library}
 {call .ruleLink}{param name : 'python_library' /}{/call}
+{/template}
+
+/***/
+{template .python_test}
+{call .ruleLink}{param name : 'python_test' /}{/call}
 {/template}
 
 /***/

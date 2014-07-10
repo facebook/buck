@@ -20,24 +20,22 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -45,11 +43,19 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
+  private final Path pathToPex;
   private final Path main;
+  private final PythonPackageComponents components;
 
-  protected PythonBinary(BuildRuleParams params, Path main) {
+  protected PythonBinary(
+      BuildRuleParams params,
+      Path pathToPex,
+      Path main,
+      PythonPackageComponents components) {
     super(params);
+    this.pathToPex = Preconditions.checkNotNull(pathToPex);
     this.main = Preconditions.checkNotNull(main);
+    this.components = Preconditions.checkNotNull(components);
   }
 
   @Override
@@ -66,6 +72,16 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
     return getBinPath();
   }
 
+  @VisibleForTesting
+  protected PythonPackageComponents getComponents() {
+    return components;
+  }
+
+  @VisibleForTesting
+  protected Path getMain() {
+    return main;
+  }
+
   @Override
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
     return ImmutableList.of(
@@ -73,65 +89,30 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
             projectFilesystem.getAbsolutifier().apply(getBinPath())).toString());
   }
 
-  @VisibleForTesting
-  protected PythonPackageComponents getAllComponents() {
-    final PythonPackageComponents.Builder components =
-        new PythonPackageComponents.Builder(getBuildTarget().toString());
+  @Override
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    builder
+        .set("packageType", "pex")
+        .set("mainModule", main.toString());
 
-    // Add our main module.
-    components.addModule(main, main, getBuildTarget().toString());
-
-    // Walk all our transitive deps to build our complete package that we'll
-    // turn into an executable.
-    new AbstractDependencyVisitor(getDeclaredDeps()) {
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        // We only process and recurse on instances of PythonPackagable.
-        if (rule instanceof PythonPackagable) {
-          PythonPackagable lib = (PythonPackagable) rule;
-
-          // Add all components from the python packable into our top-level
-          // package.
-          components.addComponent(
-              lib.getPythonPackageComponents(),
-              rule.getBuildTarget().toString());
-
-          // Return all our deps to recurse on them.
-          return rule.getDeps();
-        }
-
-        // Don't recurse on anything from other rules.
-        return ImmutableSet.of();
+    // Hash all the input components here so we can detect changes in both input file content
+    // and module name mappings.
+    for (ImmutableMap.Entry<String, ImmutableMap<Path, SourcePath>> part : ImmutableMap.of(
+        "module", components.getModules(),
+        "resource", components.getResources(),
+        "nativeLibraries", components.getNativeLibraries()).entrySet()) {
+      for (Path name : ImmutableSortedSet.copyOf(part.getValue().keySet())) {
+        Path src = part.getValue().get(name).resolve();
+        builder.setInput(part.getKey() + ":" + name, src);
       }
-    }.start();
+    }
 
-    return components.build();
+    return builder;
   }
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of(main);
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .set("packageType", "pex")
-        .setInput("mainModule", main);
-  }
-
-  /** Convert a path to a module to it's module name as referenced in import statements. */
-  private String toModuleName(Path modulePath) {
-    String name = modulePath.toString();
-    int ext = name.lastIndexOf('.');
-    if (ext == -1) {
-      throw new HumanReadableException(
-          "%s: missing extension for module path: %s",
-          getBuildTarget(),
-          modulePath);
-    }
-    name = name.substring(0, ext);
-    return MorePaths.pathWithUnixSeparators(name).replace('/', '.');
+    return ImmutableList.of();
   }
 
   @Override
@@ -146,12 +127,12 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
     steps.add(new MkdirStep(binPath.getParent()));
 
     // Generate and return the PEX build step.
-    PythonPackageComponents components = getAllComponents();
     steps.add(new PexStep(
+        pathToPex,
         binPath,
-        toModuleName(main),
-        components.getModules(),
-        components.getResources()));
+        PythonUtil.toModuleName(getBuildTarget(), main.toString()),
+        PythonUtil.getPathMapFromSourcePaths(components.getModules()),
+        PythonUtil.getPathMapFromSourcePaths(components.getResources())));
 
     // Record the executable package for caching.
     buildableContext.recordArtifact(getBinPath());

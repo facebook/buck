@@ -1,0 +1,111 @@
+{namespace python_test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'python_test()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>python_test()</code> rule is used to define a set of <code>.py</code>
+files that contain tests to run via the <a href="https://docs.python.org/2/library/unittest.html">Python unit testing framework</a>.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of <code>.py</code> files that contain tests.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  Static files to be packaged along with the python sources. These resources can be
+  accessed at runtime using the <a href="https://pythonhosted.org/setuptools/pkg_resources.html">pkg_resources</a> API.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  {call buck.python_library /} rules used by the tests in this rules sources.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'labels' /}
+  {param default: '[]' /}
+  {param desc}
+  A list of labels to be applied to these tests. These labels are
+  arbitrary text strings and have no meaning within buck itself. They
+  can, however, have meaning for you as a test author
+  (e.g., <code>smoke</code> or <code>fast</code>). A label can be
+  used to filter or include a specific <code>python_test()</code> rule
+  when executing <a href="{ROOT}command/test.html"><code>buck
+  test</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'source_under_test' /}
+  {param default : '[]' /}
+  {param desc}
+  <code>python_library()</code> rules that the <code>python_test()</code> is
+  testing. These must be among the transitive dependencies of the
+  {sp}<code>python_test()</code>.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+# A rule that includes a single .py file containing tests.
+python_test(
+  name = 'fileutil_test',
+  srcs = ['fileutil_tests.py'],
+  deps = [
+    ':fileutil',
+  ],
+  source_under_test = [
+    ':fileutil',
+  ],
+)
+
+# A rule that uses glob() to include all sources in the directory which the
+# rule is defined.  It also lists a resource file that gets packaged with
+# the sources in this rule.
+python_library(
+  name = 'fileutil',
+  srcs = glob(['fileutil/**/*.py'],
+  resources = [
+    'testdata.dat',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

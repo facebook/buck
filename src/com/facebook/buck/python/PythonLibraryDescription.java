@@ -35,8 +35,8 @@ public class PythonLibraryDescription implements Description<Arg> {
   @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
     public Optional<ImmutableSortedSet<SourcePath>> resources;
+    public Optional<ImmutableSortedSet<BuildRule>> deps;
   }
 
   @Override
@@ -56,7 +56,16 @@ public class PythonLibraryDescription implements Description<Arg> {
       A args) {
     return new PythonLibrary(
         params,
-        args.srcs.or(ImmutableSortedSet.<SourcePath>of()),
-        args.resources.or(ImmutableSortedSet.<SourcePath>of()));
+        PythonUtil.toModuleMap(
+            params.getBuildTarget(),
+            "srcs",
+            params.getBuildTarget().getBasePath(),
+            args.srcs.or(ImmutableSortedSet.<SourcePath>of())),
+        PythonUtil.toModuleMap(
+            params.getBuildTarget(),
+            "resources",
+            params.getBuildTarget().getBasePath(),
+            args.resources.or(ImmutableSortedSet.<SourcePath>of())));
   }
+
 }

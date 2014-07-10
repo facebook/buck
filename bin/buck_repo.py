@@ -551,6 +551,7 @@ class BuckRepo:
             "-Dbuck.version_uid={0}".format(version_uid),
             "-Dbuck.git_dirty={0}".format(int(self._is_dirty())),
             "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
+            "-Dbuck.buck_dir={0}".format(self._buck_dir),
             "-Dlog4j.configuration=file:{0}".format(
                 self._join_buck_dir("config/log4j.properties")),
         ])

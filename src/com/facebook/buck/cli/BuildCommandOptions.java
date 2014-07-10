@@ -29,6 +29,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -127,11 +128,13 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       BuckEventBus eventBus,
       Optional<TargetDevice> targetDevice,
       Platform platform,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      ObjectMapper objectMapper) {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
     }
-    return new Build(graph,
+    return new Build(
+        graph,
         targetDevice,
         projectFilesystem,
         androidDirectoryResolver,
@@ -147,6 +150,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         eventBus,
         platform,
         environment,
-        buckConfig);
+        buckConfig,
+        objectMapper);
   }
 }

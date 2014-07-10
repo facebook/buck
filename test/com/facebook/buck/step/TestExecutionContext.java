@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 
@@ -51,7 +52,8 @@ public class TestExecutionContext {
         .setEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(Platform.detect())
         .setEnvironment(ImmutableMap.copyOf(System.getenv()))
-        .setJavaPackageFinder(new FakeJavaPackageFinder());
+        .setJavaPackageFinder(new FakeJavaPackageFinder())
+        .setObjectMapper(new ObjectMapper());
   }
 
   public static ExecutionContext newInstance() {

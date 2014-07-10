@@ -57,6 +57,7 @@ import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.parcelable.GenParcelableDescription;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonLibraryDescription;
+import com.facebook.buck.python.PythonTestDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
@@ -167,6 +168,13 @@ public class KnownBuildRuleTypes {
     // if not found.
     Path archiver = config.getPath("tools", "ar").or(Archives.DEFAULT_ARCHIVE_PATH);
 
+    // Look up the path to the PEX builder script.
+    Optional<Path> pythonPathToPex = config.getPath("python", "path_to_pex");
+
+    // Look up the path to the main module we use for python tests.
+    Optional<Path> pythonPathToPythonTestMain =
+        config.getPath("python", "path_to_python_test_main");
+
     Builder builder = builder();
 
     JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
@@ -208,7 +216,11 @@ public class KnownBuildRuleTypes {
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());
     builder.register(new ProjectConfigDescription());
-    builder.register(new PythonBinaryDescription());
+    builder.register(new PythonTestDescription(
+        pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
+        pythonPathToPythonTestMain.or(PythonTestDescription.PYTHON_PATH_TO_PYTHON_TEST_MAIN)));
+    builder.register(new PythonBinaryDescription(
+        pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX)));
     builder.register(new PythonLibraryDescription());
     builder.register(new RobolectricTestDescription(javacEnv));
     builder.register(new ShBinaryDescription());

@@ -254,6 +254,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
         .setPlatform(platform)
         .setEnvironment(environment)
         .setJavaPackageFinder(commandRunnerParams.getJavaPackageFinder())
+        .setObjectMapper(objectMapper)
         .build();
   }
 

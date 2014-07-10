@@ -16,6 +16,8 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -30,32 +32,32 @@ import javax.annotation.concurrent.Immutable;
 public class PythonPackageComponents {
 
   // Python modules as map of their module name to location of the source.
-  private final ImmutableMap<Path, Path> modules;
+  private final ImmutableMap<Path, SourcePath> modules;
 
   // Resources to include in the package.
-  private final ImmutableMap<Path, Path> resources;
+  private final ImmutableMap<Path, SourcePath> resources;
 
   // Native libraries to include in the package.
-  private final ImmutableMap<Path, Path> nativeLibraries;
+  private final ImmutableMap<Path, SourcePath> nativeLibraries;
 
   public PythonPackageComponents(
-      ImmutableMap<Path, Path> modules,
-      ImmutableMap<Path, Path> resources,
-      ImmutableMap<Path, Path> nativeLibraries) {
+      ImmutableMap<Path, SourcePath> modules,
+      ImmutableMap<Path, SourcePath> resources,
+      ImmutableMap<Path, SourcePath> nativeLibraries) {
     this.modules = Preconditions.checkNotNull(modules);
     this.resources = Preconditions.checkNotNull(resources);
     this.nativeLibraries = Preconditions.checkNotNull(nativeLibraries);
   }
 
-  public ImmutableMap<Path, Path> getModules() {
+  public ImmutableMap<Path, SourcePath> getModules() {
     return modules;
   }
 
-  public ImmutableMap<Path, Path> getResources() {
+  public ImmutableMap<Path, SourcePath> getResources() {
     return resources;
   }
 
-  public ImmutableMap<Path, Path> getNativeLibraries() {
+  public ImmutableMap<Path, SourcePath> getNativeLibraries() {
     return nativeLibraries;
   }
 
@@ -109,29 +111,29 @@ public class PythonPackageComponents {
   public static class Builder {
 
     // A description of the entity that is building this PythonPackageComponents instance.
-    private final String owner;
+    private final BuildTarget owner;
 
     // The actual maps holding the components.
-    private final ImmutableMap.Builder<Path, Path> modules = ImmutableMap.builder();
-    private final ImmutableMap.Builder<Path, Path> resources = ImmutableMap.builder();
-    private final ImmutableMap.Builder<Path, Path> nativeLibraries = ImmutableMap.builder();
+    private final ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
+    private final ImmutableMap.Builder<Path, SourcePath> resources = ImmutableMap.builder();
+    private final ImmutableMap.Builder<Path, SourcePath> nativeLibraries = ImmutableMap.builder();
 
     // Bookkeeping used to for error handling in the presence of duplicate
     // entries.  These data structures map the components named above to the
     // entities that provided them.
-    private final Map<Path, String> moduleSources = new HashMap<>();
-    private final Map<Path, String> resourceSources = new HashMap<>();
-    private final Map<Path, String> nativeLibrarySources = new HashMap<>();
+    private final Map<Path, BuildTarget> moduleSources = new HashMap<>();
+    private final Map<Path, BuildTarget> resourceSources = new HashMap<>();
+    private final Map<Path, BuildTarget> nativeLibrarySources = new HashMap<>();
 
-    public Builder(String owner) {
+    public Builder(BuildTarget owner) {
       this.owner = Preconditions.checkNotNull(owner);
     }
 
     private HumanReadableException createDuplicateError(
         String type,
         Path destination,
-        String sourceA,
-        String sourceB) {
+        BuildTarget sourceA,
+        BuildTarget sourceB) {
       return new HumanReadableException(
           "%s: found duplicate entries for %s %s when creating python package (%s and %s)",
           owner, type, destination, sourceA, sourceB);
@@ -139,12 +141,12 @@ public class PythonPackageComponents {
 
     private Builder add(
         String type,
-        ImmutableMap.Builder<Path, Path> builder,
-        Map<Path, String> sourceDescs,
+        ImmutableMap.Builder<Path, SourcePath> builder,
+        Map<Path, BuildTarget> sourceDescs,
         Path destination,
-        Path source,
-        String sourceDesc) {
-      String existing = sourceDescs.get(destination);
+        SourcePath source,
+        BuildTarget sourceDesc) {
+      BuildTarget existing = sourceDescs.get(destination);
       if (existing != null) {
         throw createDuplicateError(type, destination, sourceDesc, existing);
       }
@@ -155,33 +157,33 @@ public class PythonPackageComponents {
 
     private Builder add(
         String type,
-        ImmutableMap.Builder<Path, Path> builder,
-        Map<Path, String> sourceDescs,
-        ImmutableMap<Path, Path> toAdd,
-        String sourceDesc) {
-      for (ImmutableMap.Entry<Path, Path> ent : toAdd.entrySet()) {
+        ImmutableMap.Builder<Path, SourcePath> builder,
+        Map<Path, BuildTarget> sourceDescs,
+        ImmutableMap<Path, SourcePath> toAdd,
+        BuildTarget sourceDesc) {
+      for (ImmutableMap.Entry<Path, SourcePath> ent : toAdd.entrySet()) {
         add(type, builder, sourceDescs, ent.getKey(), ent.getValue(), sourceDesc);
       }
       return this;
     }
 
-    public Builder addModule(Path destination, Path source, String from) {
+    public Builder addModule(Path destination, SourcePath source, BuildTarget from) {
       return add("module", modules, moduleSources, destination, source, from);
     }
 
-    public Builder addModules(ImmutableMap<Path, Path> sources, String from) {
+    public Builder addModules(ImmutableMap<Path, SourcePath> sources, BuildTarget from) {
       return add("module", modules, moduleSources, sources, from);
     }
 
-    public Builder addResource(Path destination, Path source, String from) {
+    public Builder addResource(Path destination, SourcePath source, BuildTarget from) {
       return add("resource", resources, resourceSources, destination, source, from);
     }
 
-    public Builder addResources(ImmutableMap<Path, Path> sources, String from) {
+    public Builder addResources(ImmutableMap<Path, SourcePath> sources, BuildTarget from) {
       return add("resource", resources, resourceSources, sources, from);
     }
 
-    public Builder addNativeLibrary(Path destination, Path source, String from) {
+    public Builder addNativeLibrary(Path destination, SourcePath source, BuildTarget from) {
       return add(
           "native library",
           nativeLibraries,
@@ -191,11 +193,11 @@ public class PythonPackageComponents {
           from);
     }
 
-    public Builder addNativeLibraries(ImmutableMap<Path, Path> sources, String from) {
+    public Builder addNativeLibraries(ImmutableMap<Path, SourcePath> sources, BuildTarget from) {
       return add("native library", nativeLibraries, nativeLibrarySources, sources, from);
     }
 
-    public Builder addComponent(PythonPackageComponents other, String from) {
+    public Builder addComponent(PythonPackageComponents other, BuildTarget from) {
       addModules(other.getModules(), from);
       addResources(other.getResources(), from);
       addNativeLibraries(other.getNativeLibraries(), from);

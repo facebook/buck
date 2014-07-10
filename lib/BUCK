@@ -82,6 +82,8 @@ java_library(
     visibility = [
       '//src/com/facebook/buck/event:event',
       '//src/com/facebook/buck/python:rules',
+      '//src/com/facebook/buck/step:step',
+      '//test/com/facebook/buck/step:testutil',
     ],
 )
 

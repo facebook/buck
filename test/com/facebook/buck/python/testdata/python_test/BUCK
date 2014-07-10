@@ -1,0 +1,13 @@
+python_test(
+  name='test-success',
+  srcs=[
+    'test_success.py',
+  ],
+)
+
+python_test(
+  name='test-failure',
+  srcs=[
+    'test_failure.py',
+  ],
+)
