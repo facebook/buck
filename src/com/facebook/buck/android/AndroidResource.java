@@ -34,8 +34,13 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.AndroidManifestReader;
+import com.facebook.buck.util.DefaultAndroidManifestReader;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -50,7 +55,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
@@ -78,6 +85,9 @@ public class AndroidResource extends AbstractBuildRule
   @VisibleForTesting
   static final String METADATA_KEY_FOR_ABI = "ANDROID_RESOURCE_ABI_KEY";
 
+  @VisibleForTesting
+  static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE";
+
   /** {@link Function} that invokes {@link #getRes()} on an {@link AndroidResource}. */
   private static final Function<HasAndroidResourceDeps, Path> GET_RES_FOR_RULE =
       new Function<HasAndroidResourceDeps, Path>() {
@@ -92,9 +102,6 @@ public class AndroidResource extends AbstractBuildRule
   private final Path res;
 
   private final ImmutableSortedSet<Path> resSrcs;
-
-  @Nullable
-  private final String rDotJavaPackage;
 
   @Nullable
   private final Path assets;
@@ -117,20 +124,48 @@ public class AndroidResource extends AbstractBuildRule
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
+  /**
+   * This is the original {@code package} argument passed to this rule.
+   */
+  @Nullable
+  private final String rDotJavaPackageArgument;
+
+  /**
+   * Supplier that returns the package for the Java class generated for the resources in
+   * {@link #res}, if any. The value for this supplier is determined, as follows:
+   * <ul>
+   *   <li>If the user specified a {@code package} argument, the supplier will return that value.
+   *   <li>Failing that, when the rule is built, it will parse the package from the file specified
+   *       by the {@code manifest} so that it can be returned by this supplier. (Note this also
+   *       needs to work correctly if the rule is initialized from disk.)
+   *   <li>In all other cases (e.g., both {@code package} and {@code manifest} are unspecified), the
+   *       behavior is undefined.
+   * </ul>
+   */
+  private final Supplier<String> rDotJavaPackageSupplier;
+
+  private final AtomicReference<String> rDotJavaPackage;
+
   protected AndroidResource(
       BuildRuleParams buildRuleParams,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable final Path res,
       ImmutableSortedSet<Path> resSrcs,
-      @Nullable String rDotJavaPackage,
+      @Nullable String rDotJavaPackageArgument,
       @Nullable Path assets,
       ImmutableSortedSet<Path> assetsSrcs,
       @Nullable Path manifestFile,
       boolean hasWhitelistedStrings) {
     super(buildRuleParams);
+    if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
+      throw new HumanReadableException(
+          "When the 'res' is specified for android_resource() %s, at least one of 'package' or " +
+              "'manifest' must be specified.",
+          getBuildTarget());
+    }
+
     this.res = res;
     this.resSrcs = Preconditions.checkNotNull(resSrcs);
-    this.rDotJavaPackage = rDotJavaPackage;
     this.assets = assets;
     this.assetsSrcs = Preconditions.checkNotNull(assetsSrcs);
     this.manifestFile = manifestFile;
@@ -160,6 +195,27 @@ public class AndroidResource extends AbstractBuildRule
         });
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+
+    this.rDotJavaPackageArgument = rDotJavaPackageArgument;
+    this.rDotJavaPackage = new AtomicReference<>();
+    if (rDotJavaPackageArgument != null) {
+      this.rDotJavaPackage.set(rDotJavaPackageArgument);
+    }
+
+    this.rDotJavaPackageSupplier = new Supplier<String>() {
+      @Override
+      public String get() {
+        String rDotJavaPackage = AndroidResource.this.rDotJavaPackage.get();
+        if (rDotJavaPackage != null) {
+          return rDotJavaPackage;
+        } else {
+          throw new RuntimeException(String.format(
+              "rDotJavaPackage for %s was requested before it was made available.",
+              AndroidResource.this.getBuildTarget()));
+        }
+      }
+    };
+
   }
 
   @Override
@@ -215,7 +271,38 @@ public class AndroidResource extends AbstractBuildRule
       return ImmutableList.of();
     }
 
-    MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(pathToTextSymbolsDir);
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    steps.add(new MakeCleanDirectoryStep(pathToTextSymbolsDir));
+
+    // If the 'package' was not specified for this android_resource(), then attempt to parse it
+    // from the AndroidManifest.xml.
+    if (rDotJavaPackageArgument == null) {
+      steps.add(new AbstractExecutionStep("extract_android_package") {
+        @Override
+        public int execute(ExecutionContext context) {
+          AndroidManifestReader androidManifestReader;
+          try {
+            androidManifestReader = DefaultAndroidManifestReader.forPath(
+                manifestFile, context.getProjectFilesystem());
+          } catch (IOException e) {
+            context.logError(e, "Failed to create AndroidManifestReader for %s.", manifestFile);
+            return 1;
+          }
+
+          String rDotJavaPackageFromAndroidManifest = androidManifestReader.getPackage();
+          if (rDotJavaPackageFromAndroidManifest == null) {
+            context.logError(new Throwable(), "Failed to read package from %s.", manifestFile);
+            return 1;
+          }
+
+          AndroidResource.this.rDotJavaPackage.set(rDotJavaPackageFromAndroidManifest);
+          buildableContext.addMetadata(
+              METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
+              rDotJavaPackageFromAndroidManifest);
+          return 0;
+        }
+      });
+    }
 
     // Searching through the deps, find any additional res directories to pass to aapt.
     ImmutableList<Path> resDirectories = FluentIterable.from(transitiveAndroidResourceDeps.get())
@@ -224,28 +311,28 @@ public class AndroidResource extends AbstractBuildRule
 
     Path dummyManifestFile = BuildTargets.getGenPath(
         getBuildTarget(), "__%s_dummy_manifest/AndroidManifest.xml");
-    GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
+    steps.add(new GenRDotJavaStep(
         resDirectories,
         pathToTextSymbolsDir,
-        rDotJavaPackage,
+        rDotJavaPackageSupplier,
         /* isTempRDotJava */ true,
         /* extraLibraryPackages */ ImmutableSet.<String>of(),
-        dummyManifestFile);
+        dummyManifestFile));
 
     buildableContext.recordArtifact(pathToTextSymbolsFile);
 
-    RecordFileSha1Step recordRDotTxtSha1 = new RecordFileSha1Step(
+    steps.add(new RecordFileSha1Step(
         pathToTextSymbolsFile,
         METADATA_KEY_FOR_ABI,
-        buildableContext);
+        buildableContext));
 
-    return ImmutableList.of(mkdir, genRDotJava, recordRDotTxtSha1);
+    return steps.build();
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("rDotJavaPackage", rDotJavaPackage)
+        .set("rDotJavaPackage", rDotJavaPackageArgument)
         .set("hasWhitelistedStrings", hasWhitelistedStrings);
   }
 
@@ -268,6 +355,7 @@ public class AndroidResource extends AbstractBuildRule
 
   @Override
   public String getRDotJavaPackage() {
+    String rDotJavaPackage = rDotJavaPackageSupplier.get();
     if (rDotJavaPackage == null) {
       throw new RuntimeException("No package for " + getBuildTarget());
     }
@@ -293,6 +381,11 @@ public class AndroidResource extends AbstractBuildRule
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
     Sha1HashCode sha1HashCode = onDiskBuildInfo.getHash(METADATA_KEY_FOR_ABI).get();
+    Optional<String> rDotJavaPackageFromAndroidManifest = onDiskBuildInfo.getValue(
+        METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE);
+    if (rDotJavaPackageFromAndroidManifest.isPresent()) {
+      rDotJavaPackage.set(rDotJavaPackageFromAndroidManifest.get());
+    }
     return new BuildOutput(sha1HashCode);
   }
 
@@ -310,9 +403,12 @@ public class AndroidResource extends AbstractBuildRule
   public void addToCollector(AndroidPackageableCollector collector) {
     if (res != null) {
       if (hasWhitelistedStrings) {
-        collector.addStringWhitelistedResourceDirectory(getBuildTarget(), res, rDotJavaPackage);
+        collector.addStringWhitelistedResourceDirectory(
+            getBuildTarget(),
+            res,
+            rDotJavaPackageSupplier);
       } else {
-        collector.addResourceDirectory(getBuildTarget(), res, rDotJavaPackage);
+        collector.addResourceDirectory(getBuildTarget(), res, rDotJavaPackageSupplier);
       }
     }
     if (assets != null) {

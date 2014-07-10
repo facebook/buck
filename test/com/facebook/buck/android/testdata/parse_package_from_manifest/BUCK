@@ -1,0 +1,11 @@
+android_resource(
+  name = 'res',
+  res = 'res',
+  manifest = 'AndroidManifest.xml',
+)
+
+android_library(
+  name = 'library',
+  srcs = [ 'ExampleActivity.java' ],
+  deps = [ ':res' ],
+)

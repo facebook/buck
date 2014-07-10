@@ -58,7 +58,7 @@ public class GenRDotJavaStep extends CompositeStep {
   public GenRDotJavaStep(
       ImmutableList<Path> resDirectories,
       Path genDirectoryPath,
-      final String libraryPackage,
+      final Supplier<String> libraryPackage,
       boolean isTempRDotJava,
       Set<String> extraLibraryPackages,
       Path dummyAndroidManifest) {
@@ -71,7 +71,7 @@ public class GenRDotJavaStep extends CompositeStep {
                 return String.format(
                     "<manifest xmlns:android='http://schemas.android.com/apk/res/android' " +
                         "package='%s' />",
-                    libraryPackage);
+                    libraryPackage.get());
               }
             },
             dummyAndroidManifest),

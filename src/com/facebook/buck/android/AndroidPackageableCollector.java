@@ -121,14 +121,14 @@ public class AndroidPackageableCollector {
   public AndroidPackageableCollector addStringWhitelistedResourceDirectory(
       BuildTarget owner,
       Path resourceDir,
-      String rDotJavaPackage) {
+      Supplier<String> rDotJavaPackage) {
     if (resourcesToExclude.contains(owner)) {
       return this;
     }
 
     whitelistedStringDirectories.add(resourceDir);
     doAddResourceDirectory(owner, resourceDir);
-    rDotJavaPackages.add(rDotJavaPackage);
+    rDotJavaPackageSuppliers.add(rDotJavaPackage);
     return this;
   }
 

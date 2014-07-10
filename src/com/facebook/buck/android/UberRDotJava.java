@@ -42,6 +42,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -273,7 +274,7 @@ public class UberRDotJava extends AbstractBuildRule implements
     GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
         resDirectories,
         rDotJavaSrc,
-        Iterables.get(rDotJavaPackages, 0),
+        Suppliers.ofInstance(Iterables.get(rDotJavaPackages, 0)),
         /* isTempRDotJava */ false,
         FluentIterable.from(rDotJavaPackages).skip(1).toSet(),
         dummyManifestFile);
