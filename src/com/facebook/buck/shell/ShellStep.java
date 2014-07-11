@@ -114,7 +114,6 @@ public abstract class ShellStep implements Step {
 
     endTime = System.currentTimeMillis();
 
-    onProcessFinished(exitCode);
     return exitCode;
   }
 
@@ -179,14 +178,6 @@ public abstract class ShellStep implements Step {
    */
   @VisibleForTesting
   protected abstract ImmutableList<String> getShellCommandInternal(ExecutionContext context);
-
-  /**
-   * Callback function to be run after invoking the shell command.
-   * @param exitCode exit code from invoking the shell script.
-   */
-  protected void onProcessFinished(int exitCode) {
-    // Do nothing by default.
-  }
 
   @Override
   public final String getDescription(ExecutionContext context) {

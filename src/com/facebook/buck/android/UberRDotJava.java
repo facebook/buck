@@ -268,12 +268,15 @@ public class UberRDotJava extends AbstractBuildRule implements
     steps.add(new MakeCleanDirectoryStep(rDotJavaSrc));
 
     // Generate the R.java files.
+    Path dummyManifestFile = BuildTargets.getGenPath(
+        getBuildTarget(), "__%s_dummy_manifest/AndroidManifest.xml");
     GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
         resDirectories,
         rDotJavaSrc,
         Iterables.get(rDotJavaPackages, 0),
         /* isTempRDotJava */ false,
-        FluentIterable.from(rDotJavaPackages).skip(1).toSet());
+        FluentIterable.from(rDotJavaPackages).skip(1).toSet(),
+        dummyManifestFile);
     steps.add(genRDotJava);
 
     if (shouldBuildStringSourceMap) {

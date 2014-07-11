@@ -222,12 +222,15 @@ public class AndroidResource extends AbstractBuildRule
         .transform(GET_RES_FOR_RULE)
         .toList();
 
+    Path dummyManifestFile = BuildTargets.getGenPath(
+        getBuildTarget(), "__%s_dummy_manifest/AndroidManifest.xml");
     GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
         resDirectories,
         pathToTextSymbolsDir,
         rDotJavaPackage,
         /* isTempRDotJava */ true,
-        /* extraLibraryPackages */ ImmutableSet.<String>of());
+        /* extraLibraryPackages */ ImmutableSet.<String>of(),
+        dummyManifestFile);
 
     buildableContext.recordArtifact(pathToTextSymbolsFile);
 
