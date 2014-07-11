@@ -86,6 +86,7 @@ java_library(
     '//lib:guava',
     '//lib:jackson-core',
     '//lib:jsr305',
+    '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/zip:stream',
   ],
   visibility = [
