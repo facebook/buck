@@ -52,7 +52,7 @@ p, pre, ul, ol {
 pre {
     border: 1px solid #ccc;
     padding: 0.5em 1em;
-    overflow-x: scroll;
+    overflow-x: auto;
     background: #fff;
     border-radius: 2px;
     line-height: 1.5em;
@@ -62,6 +62,29 @@ code {
     background: #fff;
     font-size: 12px;
     letter-spacing: 0.02em;
+}
+
+table {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+th {
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    background: #eee;
+}
+
+th code {
+    background: inherit;
+}
+
+td {
+    border: 1px solid #ccc;
+    padding: 0 0.5em;
 }
 
 ul, ol {

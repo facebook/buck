@@ -45,12 +45,10 @@ so here are the highlights for what we expect in Buck:
     <ul>
       <li>Guava should be used liberally.
       <li>In particular, favor Guava's immutable collections. In addition to
-          preventing aliasing bugs, they disallow <code>null</code> as an 
+          preventing aliasing bugs, they disallow <code>null</code> as an
           element, which is in line with the previous bullet point.
-      <li><code>Logger</code>, <code>log4j</code>, etc. should not be used.
-          Log messages should be printed using
-          {sp}<code>com.facebook.buck.cli.Console</code> and should respect
-          the <code>--verbosity</code> flag.
+      <li>Log only using <code>com.facebook.buck.log.Logger</code>. Do not use <code>java.util.logging.Logger</code>, <code>log4j</code>, etc.
+          See {sp}<a href="logging.html">the article on logging</a> for more details.
     </ul>
   <li>Comments
     <ul>
