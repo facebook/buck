@@ -5,16 +5,24 @@
   {call buck.page}
     {param title: 'Development Workflow' /}
     {param content}
-<p>
+
+<h2>Building Buck</h2>
 As explained in <a href="{ROOT}setup/install.html">Downloading and Installing
 Buck</a>, you can build Buck by running <code>ant</code> in the directory
 where you checked out Buck from GitHub. If you modify Buck's source code,
 running <code>ant</code> again should be sufficient to rebuild it.
 If you are concerned that Buck may have gotten in some sort of bad state,
 run <code>ant clean && ant</code> to do a clean build.
-<p>
-In practice, this is not a particularly fast development cycle. Fortunately,
-we have found development to be quite fast when developing Buck using Eclipse.
+
+<h2>Building Other Projects With a Development Version of Buck</h2>
+While you are developing Buck, you should create a
+{sp}<code>.nobuckcheck</code> file in the root of the project where you are
+using Buck. Read the articles on
+{sp}<a href="{ROOT}concept/nobuckcheck.html"><code>.nobuckcheck</code></a> and
+{sp}<a href="{ROOT}concept/buckversion.html"><code>.buckversion</code></a> for
+more details.
+
+<h2>Using the Eclipse IDE</h2>
 Buck contains the Eclipse project configuration files
 {sp}<code>.classpath</code> and <code>.project</code> so that Buck can be
 imported directly into Eclipse as a Java project.
@@ -29,15 +37,9 @@ run Buck with your most recent edits. If your Eclipse build becomes wedged for
 any reason, selecting the root folder of the Buck project and choosing
 {sp}<strong>File -> Refresh</strong> followed by
 {sp}<strong>Project -> Clean&hellip;</strong> should fix everything.
-<p>
-Note that if you are developing Buck, you should create a
-{sp}<code>.nobuckcheck</code> file in the root of the project where you are
-using Buck. Read the articles on
-{sp}<a href="{ROOT}concept/nobuckcheck.html"><code>.nobuckcheck</code></a> and
-{sp}<a href="{ROOT}concept/buckversion.html"><code>.buckversion</code></a> for
-more details.
-<p>
-<strong>Note:</strong> Buck also contains the metadata files so that it can
+
+<h2>Using the IntelliJ IDE</h2>
+Buck also contains the metadata files so that it can
 be imported as a project in IntelliJ. Developing Buck in IntelliJ works
 perfectly fine; however, it does not automatically overwrite the existing
 {sp}<code>.class</code> files as Eclipse does. (You could likely add some
