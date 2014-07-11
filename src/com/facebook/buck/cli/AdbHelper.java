@@ -648,7 +648,8 @@ public class AdbHelper {
 
     // Might need the package name and activities from the AndroidManifest.
     Path pathToManifest = installableApk.getManifestPath();
-    AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(pathToManifest);
+    AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(
+        pathToManifest, context.getProjectFilesystem());
 
     if (activity == null) {
       // Get list of activities that show up in the launcher.
@@ -828,7 +829,9 @@ public class AdbHelper {
     }
   }
 
-  public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule) {
+  public static String tryToExtractPackageNameFromManifest(
+      InstallableApk androidBinaryRule,
+      ExecutionContext context) {
     Path pathToManifest = androidBinaryRule.getManifestPath();
 
     // Note that the file may not exist if AndroidManifest.xml is a generated file
@@ -840,7 +843,8 @@ public class AdbHelper {
     }
 
     try {
-      return DefaultAndroidManifestReader.forPath(pathToManifest).getPackage();
+      return DefaultAndroidManifestReader.forPath(pathToManifest, context.getProjectFilesystem())
+          .getPackage();
     } catch (IOException e) {
       throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
     }

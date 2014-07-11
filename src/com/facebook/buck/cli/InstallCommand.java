@@ -77,7 +77,8 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
 
     // Uninstall the app first, if requested.
     if (options.shouldUninstallFirst()) {
-      String packageName = AdbHelper.tryToExtractPackageNameFromManifest(installableApk);
+      String packageName = AdbHelper.tryToExtractPackageNameFromManifest(
+          installableApk, build.getExecutionContext());
       adbHelper.uninstallApk(
           packageName,
           options.uninstallOptions());

@@ -96,7 +96,7 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
         options.getBuckConfig());
 
     // Find application package name from manifest and uninstall from matching devices.
-    String appId = AdbHelper.tryToExtractPackageNameFromManifest(installableApk);
+    String appId = AdbHelper.tryToExtractPackageNameFromManifest(installableApk, context);
     return adbHelper.uninstallApk(
         appId,
         options.uninstallOptions()

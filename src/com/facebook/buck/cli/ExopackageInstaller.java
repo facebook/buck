@@ -124,7 +124,7 @@ public class ExopackageInstaller {
     this.projectFilesystem = context.getProjectFilesystem();
     this.eventBus = context.getBuckEventBus();
     this.apkRule = Preconditions.checkNotNull(apkRule);
-    this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(apkRule);
+    this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(apkRule, context);
 
     Preconditions.checkArgument(PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
