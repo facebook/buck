@@ -23,7 +23,6 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -38,7 +37,6 @@ public class MultipleBuildConfigIntegrationTest {
    * Regression test for https://github.com/facebook/buck/issues/187.
    */
   @Test
-  @Ignore
   public void testAndroidBinarySupportsMultipleBuildConfigs() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmp);

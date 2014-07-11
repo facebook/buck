@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -38,6 +39,7 @@ public class AndroidBuildConfigJavaLibraryTest {
   public void testAddToCollector() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
         .createBuildRule(
           params,
@@ -45,7 +47,8 @@ public class AndroidBuildConfigJavaLibraryTest {
           /* values */ BuildConfigFields.fromFieldDeclarations(
               Collections.singleton("String foo = \"bar\"")),
           /* valuesFile */ Optional.<SourcePath>absent(),
-          /* useConstantExpressions */ false);
+          /* useConstantExpressions */ false,
+          buildRuleResolver);
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(collector);
@@ -63,13 +66,15 @@ public class AndroidBuildConfigJavaLibraryTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:bar").build();
     BuildConfigFields fields = BuildConfigFields.fromFieldDeclarations(
         Collections.singleton("String KEY = \"value\""));
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
         .createBuildRule(
           params,
           "com.example.buck",
           /* values */ fields,
           /* valuesFile */ Optional.<SourcePath>absent(),
-          /* useConstantExpressions */ false);
+          /* useConstantExpressions */ false,
+          buildRuleResolver);
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
     assertEquals(fields, buildConfig.getBuildConfigFields());

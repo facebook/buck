@@ -51,6 +51,10 @@ public class Flavor implements Comparable<Flavor> {
 
   @Override
   public String toString() {
+    return getName();
+  }
+
+  public String getName() {
     return flavor;
   }
 

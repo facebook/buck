@@ -148,6 +148,8 @@ public class AndroidBinaryGraphEnhancerTest {
 
     BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(
         uberRDotJava,
+        /* preDexRulesNotInThePackageableCollection */ ImmutableList
+            .<DexProducedFromJavaLibrary>of(),
         collection);
     BuildTarget dexMergeTarget =
         BuildTarget.builder("//java/com/example", "apk").setFlavor("dex_merge").build();
@@ -181,19 +183,20 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildTarget buildConfigBuildTarget = BuildTarget.builder("//java/com/example", "cfg").build();
     BuildRuleParams buildConfigParams = new FakeBuildRuleParamsBuilder(buildConfigBuildTarget)
         .build();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
         .createBuildRule(
           buildConfigParams,
           "com.example.buck",
           /* values */ BuildConfigFields.empty(),
           /* valuesFile */ Optional.<SourcePath>absent(),
-          /* useConstantExpressions */ false);
+          /* useConstantExpressions */ false,
+          ruleResolver);
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams = new FakeBuildRuleParamsBuilder(apkTarget)
         .setDeps(ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary))
         .build();
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // set it up.
     Keystore keystore = createStrictMock(Keystore.class);
@@ -220,7 +223,6 @@ public class AndroidBinaryGraphEnhancerTest {
     EnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     // Verify that android_build_config() was processed correctly.
-    AndroidPackageableCollection packageableCollection = result.getPackageableCollection();
     String flavor = "buildconfig_com_example_buck";
     assertEquals(
         "The only classpath entry to dex should be the one from the AndroidBuildConfigJavaLibrary" +
@@ -228,7 +230,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSet.of(Paths.get(
             "buck-out/gen/java/com/example/lib__apk#" + flavor + "__output/apk#" + flavor + ".jar")
         ),
-        packageableCollection.classpathEntriesToDex);
+        result.getClasspathEntriesToDex());
     BuildTarget enhancedBuildConfigTarget = BuildTarget.builder(apkTarget).setFlavor(flavor)
         .build();
     BuildRule enhancedBuildConfigRule = ruleResolver.get(enhancedBuildConfigTarget);

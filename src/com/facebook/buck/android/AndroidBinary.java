@@ -582,9 +582,9 @@ public class AndroidBinary extends AbstractBuildRule implements
       steps.add(new MakeCleanDirectoryStep(preprocessJavaClassesOutDir));
       steps.add(new SymlinkFilesIntoDirectoryStep(
           context.getProjectRoot(),
-          packageableCollection.classpathEntriesToDex,
+          enhancementResult.getClasspathEntriesToDex(),
           preprocessJavaClassesInDir));
-      classpathEntriesToDex = FluentIterable.from(packageableCollection.classpathEntriesToDex)
+      classpathEntriesToDex = FluentIterable.from(enhancementResult.getClasspathEntriesToDex())
           .transform(new Function<Path, Path>() {
             @Override
             public Path apply(Path classpathEntry) {
@@ -631,7 +631,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       });
 
     } else {
-      classpathEntriesToDex = packageableCollection.classpathEntriesToDex;
+      classpathEntriesToDex = enhancementResult.getClasspathEntriesToDex();
     }
 
     // Execute proguard if desired (transforms input classpaths).
