@@ -254,9 +254,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getProjectFilesystem(),
           partialGraph,
           executionContext,
-          Iterables.getOnlyElement(passedInTargetsSet),
+          passedInTargetsSet,
           optionsBuilder.build());
-      generator.generateWorkspaceAndDependentProjects();
+      generator.generateWorkspacesAndDependentProjects();
     } else {
       // Generate projects based on xcode_project_config rules, and place them in the same directory
       // as the Buck file.
