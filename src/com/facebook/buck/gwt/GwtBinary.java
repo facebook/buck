@@ -19,13 +19,11 @@ package com.facebook.buck.gwt;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DependencyEnhancer;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -50,7 +48,7 @@ import java.util.List;
  * Buildable that produces a GWT application as a WAR file, which is a zip of the outputs produced
  * by the GWT compiler.
  */
-public class GwtBinary extends AbstractBuildable implements DependencyEnhancer {
+public class GwtBinary extends AbstractBuildRule {
 
   /**
    * Valid values for the GWT Compiler's {@code -style} flag.
@@ -75,26 +73,15 @@ public class GwtBinary extends AbstractBuildable implements DependencyEnhancer {
   private final int localWorkers;
   private final boolean strict;
   private final ImmutableList<String> experimentalArgs;
-  private final ImmutableSortedSet<BuildRule> originalDeps;
   private final ImmutableSortedSet<BuildRule> moduleDeps;
+  private final ImmutableSortedSet<Path> gwtModuleJars;
 
   /**
-   * JAR files that contain GWT modules that must be included on the classpath when running the GWT
-   * compiler.
-   * <p>
-   * Currently, this will be instantiated as a side-effect of
-   * {@link #getEnhancedDeps(BuildRuleResolver, Iterable, Iterable)} ()}.
-   */
-  private ImmutableSortedSet<Path> gwtModuleJars;
-
-  /**
-   * @param buildTarget of the rule responsible for this Buildable.
    * @param modules The GWT modules to build with the GWT compiler.
-   * @param originalDeps The rules passed to the {@code deps} argument in the build file.
    * @param moduleDeps The rules passed to the {@code module_deps} argument in the build file.
    */
   GwtBinary(
-      BuildTarget buildTarget,
+      BuildRuleParams buildRuleParams,
       ImmutableSortedSet<String> modules,
       List<String> vmArgs,
       Style style,
@@ -103,9 +90,10 @@ public class GwtBinary extends AbstractBuildable implements DependencyEnhancer {
       int localWorkers,
       boolean strict,
       List<String> experimentalArgs,
-      ImmutableSortedSet<BuildRule> originalDeps,
-      ImmutableSortedSet<BuildRule> moduleDeps) {
-    super(buildTarget);
+      ImmutableSortedSet<BuildRule> moduleDeps,
+      ImmutableSortedSet<Path> gwtModuleJars) {
+    super(buildRuleParams);
+    BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.outputFile = BuildTargets.getGenPath(
         buildTarget,
         "__gwt_binary_%s__/" + buildTarget.getShortName() + ".zip");
@@ -128,67 +116,13 @@ public class GwtBinary extends AbstractBuildable implements DependencyEnhancer {
 
     this.strict = strict;
     this.experimentalArgs = ImmutableList.copyOf(experimentalArgs);
-    this.originalDeps = Preconditions.checkNotNull(originalDeps);
     this.moduleDeps = Preconditions.checkNotNull(moduleDeps);
+    this.gwtModuleJars = Preconditions.checkNotNull(gwtModuleJars);
   }
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of();
-  }
-
-  /**
-   * By default, the total deps for {@link GwtBinaryDescription.Arg} would be the union of
-   * {@link GwtBinaryDescription.Arg#moduleDeps} and {@link GwtBinaryDescription.Arg#deps}.
-   * <p>
-   * That is a superset of the deps that {@link GwtBinary} needs: instead of building every
-   * {@link JavaLibrary} in {@link GwtBinaryDescription.Arg#moduleDeps}, {@link GwtBinary} needs
-   * only to build the {@link JavaLibrary#GWT_MODULE_FLAVOR} for each {@link JavaLibrary} in
-   * {@link GwtBinaryDescription.Arg#moduleDeps}. Doing so avoids many calls to {@code javac}.
-   */
-  @Override
-  public ImmutableSortedSet<BuildRule> getEnhancedDeps(
-      final BuildRuleResolver ruleResolver,
-      Iterable<BuildRule> declaredDeps,
-      Iterable<BuildRule> inferredDeps) {
-
-    final ImmutableSortedSet.Builder<BuildRule> totalDeps =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(declaredDeps);
-
-    // Find all of the reachable JavaLibrary rules and grab their associated GwtModules.
-    final ImmutableSortedSet.Builder<Path> gwtModuleJarsBuilder =
-        ImmutableSortedSet.naturalOrder();
-    new AbstractDependencyVisitor(moduleDeps) {
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        if (!(rule.getBuildable() instanceof JavaLibrary)) {
-          return ImmutableSet.of();
-        }
-
-        JavaLibrary javaLibrary = (JavaLibrary) rule.getBuildable();
-        BuildTarget gwtModuleTarget = BuildTargets.createFlavoredBuildTarget(
-            javaLibrary, JavaLibrary.GWT_MODULE_FLAVOR);
-        BuildRule gwtModule = ruleResolver.get(gwtModuleTarget);
-
-        // Note that gwtModule could be null if javaLibrary is a rule with no srcs of its own,
-        // but a rule that exists only as a collection of deps.
-        if (gwtModule != null) {
-          totalDeps.add(gwtModule);
-          gwtModuleJarsBuilder.add(gwtModule.getBuildable().getPathToOutputFile());
-        }
-
-        // Traverse all of the deps of this rule.
-        return rule.getDeps();
-      }
-    }.start();
-
-    // Here, we abuse the fact that we know that iKnowWhatIAmDoingAndIWillSpecifyAllTheDepsMyself()
-    // will be invoked before this.gwtModuleJars is read. Once this work can be done in
-    // GwtBinaryDescription, we will no longer need this hack.
-    this.gwtModuleJars = gwtModuleJarsBuilder.build();
-
-    return totalDeps.build();
   }
 
   @Override
@@ -279,12 +213,12 @@ public class GwtBinary extends AbstractBuildable implements DependencyEnhancer {
   Iterable<Path> getClasspathEntries() {
     ImmutableSet.Builder<Path> classpathEntries = ImmutableSet.builder();
     classpathEntries.addAll(gwtModuleJars);
-    for (BuildRule dep : originalDeps) {
-      if (!(dep.getBuildable() instanceof JavaLibrary)) {
+    for (BuildRule dep : getDeclaredDeps()) {
+      if (!(dep instanceof JavaLibrary)) {
         continue;
       }
 
-      JavaLibrary javaLibrary = (JavaLibrary) dep.getBuildable();
+      JavaLibrary javaLibrary = (JavaLibrary) dep;
       for (Path path : javaLibrary.getOutputClasspathEntries().values()) {
         classpathEntries.add(path);
       }

@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -30,14 +31,13 @@ import java.lang.reflect.Field;
 import java.nio.file.Paths;
 
 /**
- * Support class for writing builders, which can create {@link Buildable} and {@link BuildRule} \
+ * Support class for writing builders, which can create {@link BuildRule} and {@link BuildRule} \
  * instances at test time. It does this by as closely as possible mirroring the behavior seen when
  * running the actual parser.
  *
- * @param <B> The subclass of {@link Buildable} which this builds.
  * @param <A> The type of the constructor arg returned by the Buildable's {@link Description}.
  */
-public abstract class AbstractBuilder<B extends Buildable, A extends ConstructorArg> {
+public abstract class AbstractBuilder<A extends ConstructorArg> {
 
   private final Description<A> description;
   private final BuildTarget target;
@@ -50,15 +50,8 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
     populateWithDefaultValues(this.arg, this.target);
   }
 
-  public final B build() {
-    return build(new FakeProjectFilesystem());
-  }
-
-  @SuppressWarnings("unchecked")
-  public final B build(ProjectFilesystem filesystem) {
-    BuildRuleParams params = createBuildRuleParams(filesystem);
-
-    return (B) description.createBuildable(params, arg);
+  public final BuildRule build() {
+    return build(new BuildRuleResolver());
   }
 
   public final BuildRule build(BuildRuleResolver resolver) {
@@ -69,8 +62,7 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
     // The BuildRule determines its deps by extracting them from the rule parameters.
     BuildRuleParams params = createBuildRuleParams(filesystem);
 
-    DescribedRule rule = new DescribedRule(
-        description.getBuildRuleType(), build(filesystem), params);
+    BuildRule rule = description.createBuildRule(params, resolver, arg);
     resolver.addToIndex(target, rule);
     return rule;
   }
@@ -80,6 +72,7 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
     // Not all rules have deps, but all rules call them deps. When they do, they're always optional.
     // Grab them in the unsafest way I know.
     FakeBuildRuleParamsBuilder builder = new FakeBuildRuleParamsBuilder(target)
+        .setType(description.getBuildRuleType())
         .setProjectFilesystem(filesystem);
     try {
       Field depsField = arg.getClass().getField("deps");
@@ -129,7 +122,11 @@ public abstract class AbstractBuilder<B extends Buildable, A extends Constructor
             Maps.<String, Object>newHashMap(),
             new BuildTargetParser(filesystem),
             target);
-    new ConstructorArgMarshaller(Paths.get("."))
-        .populate(resolver, filesystem, factoryParams, arg, true);
+    try {
+      new ConstructorArgMarshaller(Paths.get("."))
+          .populate(resolver, filesystem, factoryParams, arg, true);
+    } catch (ConstructorArgMarshalException error) {
+      throw Throwables.propagate(error);
+    }
   }
 }

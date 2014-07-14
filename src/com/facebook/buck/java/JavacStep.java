@@ -146,7 +146,7 @@ public abstract class JavacStep implements Step {
   }
 
   @Override
-  public final int execute(ExecutionContext context) {
+  public final int execute(ExecutionContext context) throws InterruptedException {
     try {
       return executeBuild(context);
     } finally {
@@ -154,7 +154,7 @@ public abstract class JavacStep implements Step {
     }
   }
 
-  public int executeBuild(ExecutionContext context) {
+  public int executeBuild(ExecutionContext context) throws InterruptedException {
     // Build up the compilation task.
     if (buildDependencies == BuildDependencies.FIRST_ORDER_ONLY) {
       return buildWithClasspath(context,
@@ -166,7 +166,7 @@ public abstract class JavacStep implements Step {
     }
   }
 
-  private int tryBuildWithFirstOrderDeps(ExecutionContext context) {
+  private int tryBuildWithFirstOrderDeps(ExecutionContext context) throws InterruptedException {
     CapturingPrintStream stdout = new CapturingPrintStream();
     CapturingPrintStream stderr = new CapturingPrintStream();
     ExecutionContext firstOrderContext = context.createSubContext(stdout, stderr);
@@ -210,7 +210,7 @@ public abstract class JavacStep implements Step {
 
   protected abstract int buildWithClasspath(
       ExecutionContext context,
-      Set<Path> buildClasspathEntries);
+      Set<Path> buildClasspathEntries) throws InterruptedException;
 
   @VisibleForTesting
   static ImmutableSet<String> findFailedImports(String output) {

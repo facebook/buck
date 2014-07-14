@@ -37,7 +37,6 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.ActionGraph;
@@ -48,8 +47,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -148,7 +145,7 @@ public class DefaultJavaLibraryTest {
         .createBuilder(buildTarget)
         .addSrc(src)
         .build(ruleResolver);
-    DefaultJavaLibrary javaLibrary = (DefaultJavaLibrary) libraryRule.getBuildable();
+    DefaultJavaLibrary javaLibrary = (DefaultJavaLibrary) libraryRule;
 
     String bootclasspath = "effects.jar:maps.jar:usb.jar:";
     BuildContext context = createBuildContext(libraryRule, bootclasspath, projectFilesystem);
@@ -191,8 +188,7 @@ public class DefaultJavaLibraryTest {
         .createBuilder(BuildTargetFactory.newInstance("//library:code"))
         .addResource(new BuildRuleSourcePath(genrule))
         .addResource(new TestSourcePath("library/data.txt"))
-        .build(ruleResolver, filesystem)
-        .getBuildable();
+        .build(ruleResolver, filesystem);
 
     assertEquals(
         "Generated files should not be included in getInputsToCompareToOutput() because they " +
@@ -348,7 +344,7 @@ public class DefaultJavaLibraryTest {
             Paths.get("buck-out/gen/lib__libtwo__output/libtwo.jar"),
             getJavaLibrary(parent),
             Paths.get("buck-out/gen/lib__parent__output/parent.jar")),
-        ((HasClasspathEntries) parent.getBuildable()).getTransitiveClasspathEntries());
+        ((HasClasspathEntries) parent).getTransitiveClasspathEntries());
   }
 
   @Test
@@ -401,8 +397,7 @@ public class DefaultJavaLibraryTest {
 
     replay(buildContext, javaPackageFinder);
 
-    List<Step> steps = libraryTwo.getBuildable().getBuildSteps(
-        buildContext, new FakeBuildableContext());
+    List<Step> steps = libraryTwo.getBuildSteps(buildContext, new FakeBuildableContext());
 
     EasyMock.verify(buildContext, javaPackageFinder);
 
@@ -417,7 +412,7 @@ public class DefaultJavaLibraryTest {
             " should contain only bar.jar.",
         ImmutableSet.of(Paths.get("java/src/com/libone/bar.jar")),
         ImmutableSet.copyOf(
-            ((JavaLibrary) libraryTwo.getBuildable()).getDeclaredClasspathEntries().values()));
+            ((JavaLibrary) libraryTwo).getDeclaredClasspathEntries().values()));
     assertEquals(
         "The classpath for the javac step to compile //:libtwo should contain only bar.jar.",
         ImmutableSet.of(Paths.get("java/src/com/libone/bar.jar")),
@@ -656,7 +651,7 @@ public class DefaultJavaLibraryTest {
 
     assertEquals(
         new Sha1HashCode(hasher.hash().toString()),
-        ((AbiRule) defaultJavaLibary.getBuildable()).getAbiKeyForDeps());
+        ((AbiRule) defaultJavaLibary).getAbiKeyForDeps());
   }
 
   /**
@@ -693,12 +688,12 @@ public class DefaultJavaLibraryTest {
     // Verify getAbiKeyForDeps() for the two //:common_XXX rules.
     assertEquals(
         "getAbiKeyForDeps() should be the same for both rules because they have the same deps.",
-        ((AbiRule) commonNoExport.getBuildable()).getAbiKeyForDeps(),
-        ((AbiRule) commonWithExport.getBuildable()).getAbiKeyForDeps());
+        ((AbiRule) commonNoExport).getAbiKeyForDeps(),
+        ((AbiRule) commonWithExport).getAbiKeyForDeps());
     String expectedAbiKeyForDepsHash = Hashing.sha1().newHasher()
         .putUnencodedChars(tinyLibAbiKeyHash).hash().toString();
     String observedAbiKeyForDepsHash =
-        ((AbiRule) commonNoExport.getBuildable()).getAbiKeyForDeps().getHash();
+        ((AbiRule) commonNoExport).getAbiKeyForDeps().getHash();
     assertEquals(expectedAbiKeyForDepsHash, observedAbiKeyForDepsHash);
 
     // Create a BuildRuleResolver populated with the three build rules we created thus far.
@@ -722,19 +717,19 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "The ABI of the deps of //:consumer_no_export should be the empty ABI.",
         new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY),
-        ((AbiRule) consumerNoExport.getBuildable()).getAbiKeyForDeps());
+        ((AbiRule) consumerNoExport).getAbiKeyForDeps());
     assertThat(
         "Although //:consumer_no_export and //:consumer_with_export have the same deps, " +
         "the ABIs of their deps will differ because of the use of exported_deps is non-empty",
-        ((AbiRule) consumerNoExport.getBuildable()).getAbiKeyForDeps(),
-        not(equalTo(((AbiRule) consumerWithExport.getBuildable()).getAbiKeyForDeps())));
+        ((AbiRule) consumerNoExport).getAbiKeyForDeps(),
+        not(equalTo(((AbiRule) consumerWithExport).getAbiKeyForDeps())));
     String expectedAbiKeyNoDepsHashForConsumerWithExport = Hashing.sha1().newHasher()
-        .putUnencodedChars(((HasJavaAbi) commonWithExport.getBuildable()).getAbiKey().getHash())
+        .putUnencodedChars(((HasJavaAbi) commonWithExport).getAbiKey().getHash())
         .putUnencodedChars(tinyLibAbiKeyHash)
         .hash()
         .toString();
     String observedAbiKeyNoDepsHashForConsumerWithExport =
-        ((AbiRule) consumerWithExport.getBuildable()).getAbiKeyForDeps()
+        ((AbiRule) consumerWithExport).getAbiKeyForDeps()
         .getHash();
     assertEquals(
         "By hardcoding the ABI keys for the deps, we made getAbiKeyForDeps() a predictable value.",
@@ -783,13 +778,13 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "getAbiKey() should include the dependencies' ABI keys for the rule with export_deps=true.",
         expectedLibWithExportAbiKeyHash,
-        ((HasJavaAbi) libWithExport.getBuildable()).getAbiKey().getHash());
+        ((HasJavaAbi) libWithExport).getAbiKey().getHash());
 
     assertEquals(
         "getAbiKey() should not include the dependencies' ABI keys for the rule with " +
             "export_deps=false.",
         libNoExportAbiKeyHash,
-        ((HasJavaAbi) libNoExport.getBuildable()).getAbiKey().getHash());
+        ((HasJavaAbi) libNoExport).getAbiKey().getHash());
   }
 
   /**
@@ -836,7 +831,7 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "If a rule has no dependencies its final ABI key should be the rule's own ABI key.",
         libDAbiKeyHash,
-        ((HasJavaAbi) libD.getBuildable()).getAbiKey().getHash());
+        ((HasJavaAbi) libD).getAbiKey().getHash());
 
     String expectedLibCAbiKeyHash = Hashing.sha1().newHasher()
         .putUnencodedChars(libDAbiKeyHash)
@@ -846,7 +841,7 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "The ABI key for lib_c should contain lib_d's ABI key.",
         expectedLibCAbiKeyHash,
-        ((HasJavaAbi) libC.getBuildable()).getAbiKey().getHash());
+        ((HasJavaAbi) libC).getAbiKey().getHash());
 
     String expectedLibBAbiKeyHash = Hashing.sha1().newHasher()
         .putUnencodedChars(expectedLibCAbiKeyHash)
@@ -857,7 +852,7 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "The ABI key for lib_b should contain lib_c's and lib_d's ABI keys.",
         expectedLibBAbiKeyHash,
-        ((HasJavaAbi) libB.getBuildable()).getAbiKey().getHash());
+        ((HasJavaAbi) libB).getAbiKey().getHash());
 
     String expectedLibAAbiKeyHash = Hashing.sha1().newHasher()
         .putUnencodedChars(expectedLibBAbiKeyHash)
@@ -868,7 +863,7 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "The ABI key for lib_a should contain lib_b's, lib_c's and lib_d's ABI keys.",
         expectedLibAAbiKeyHash,
-        ((HasJavaAbi) libA.getBuildable()).getAbiKey().getHash());
+        ((HasJavaAbi) libA).getAbiKey().getHash());
 
     // Test the following dependency graph:
     // a(export_deps=true) -> b(export_deps=true) -> c(export_deps=false) -> d(export_deps=false)
@@ -904,12 +899,12 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "If export_deps is false, the final ABI key should be the rule's own ABI key.",
         libDAbiKeyHash,
-        ((HasJavaAbi) libD.getBuildable()).getAbiKey().getHash());
+        ((HasJavaAbi) libD).getAbiKey().getHash());
 
     assertEquals(
         "If export_deps is false, the final ABI key should be the rule's own ABI key.",
         libCAbiKeyHash,
-        ((HasJavaAbi) libC.getBuildable()).getAbiKey().getHash());
+        ((HasJavaAbi) libC).getAbiKey().getHash());
 
     expectedLibBAbiKeyHash = Hashing.sha1().newHasher()
         .putUnencodedChars(libCAbiKeyHash)
@@ -919,7 +914,7 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "The ABI key for lib_b should contain lib_c's ABI key.",
         expectedLibBAbiKeyHash,
-        ((HasJavaAbi) libB.getBuildable()).getAbiKey().getHash());
+        ((HasJavaAbi) libB).getAbiKey().getHash());
 
     expectedLibAAbiKeyHash = Hashing.sha1().newHasher()
         .putUnencodedChars(expectedLibBAbiKeyHash)
@@ -930,7 +925,7 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "The ABI key for lib_a should contain lib_b's, lib_c's and lib_d's ABI keys.",
         expectedLibAAbiKeyHash,
-        ((HasJavaAbi) libA.getBuildable()).getAbiKey().getHash());
+        ((HasJavaAbi) libA).getAbiKey().getHash());
 
   }
 
@@ -947,17 +942,18 @@ public class DefaultJavaLibraryTest {
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
         .setDeps(ImmutableSortedSet.copyOf(deps))
+        .setType(JavaLibraryDescription.TYPE)
         .build();
 
-    Buildable buildable = new DefaultJavaLibrary(
-        buildRuleParams.getBuildTarget(),
+    return new DefaultJavaLibrary(
+        buildRuleParams,
         srcsAsPaths,
         /* resources */ ImmutableSet.<SourcePath>of(),
         /* proguardConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
-        buildRuleParams.getDeps(),
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         JavacOptions.DEFAULTS,
         /* resourcesRoot */ Optional.<Path>absent()) {
       @Override
@@ -969,11 +965,6 @@ public class DefaultJavaLibraryTest {
         }
       }
     };
-
-    return new DescribedRule(
-        JavaLibraryDescription.TYPE,
-        buildable,
-        buildRuleParams);
   }
 
   @Test
@@ -981,7 +972,7 @@ public class DefaultJavaLibraryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    JavaLibrary libraryOne = JavaLibraryBuilder
+    JavaLibrary libraryOne = (JavaLibrary) JavaLibraryBuilder
         .createBuilder(libraryOneTarget)
         .addSrc(Paths.get("java/src/com/libone/bar.java"))
         .build();
@@ -1039,18 +1030,18 @@ public class DefaultJavaLibraryTest {
         BuildDependencies.WARN_ON_TRANSITIVE);
 
     ImmutableSetMultimap<JavaLibrary, Path> transitive =
-        ((HasClasspathEntries) parent.getBuildable()).getTransitiveClasspathEntries();
+        ((HasClasspathEntries) parent).getTransitiveClasspathEntries();
 
     ImmutableMap<Path, String> classToSymbols = ImmutableMap.of(
-        Iterables.getFirst(transitive.get((JavaLibrary) parent.getBuildable()), null),
+        Iterables.getFirst(transitive.get((JavaLibrary) parent), null),
         "com.facebook.Foo",
-        Iterables.getFirst(transitive.get((JavaLibrary) libraryOne.getBuildable()), null),
+        Iterables.getFirst(transitive.get((JavaLibrary) libraryOne), null),
         "com.facebook.Bar",
-        Iterables.getFirst(transitive.get((JavaLibrary) libraryTwo.getBuildable()), null),
+        Iterables.getFirst(transitive.get((JavaLibrary) libraryTwo), null),
         "com.facebook.Foo");
 
     Optional<JavacInMemoryStep.SuggestBuildRules> suggestFn =
-        ((DefaultJavaLibrary) grandparent.getBuildable()).createSuggestBuildFunction(
+        ((DefaultJavaLibrary) grandparent).createSuggestBuildFunction(
             context,
             transitive,
             /* declaredClasspathEntries */ ImmutableSetMultimap.<JavaLibrary, Path>of(),
@@ -1077,7 +1068,7 @@ public class DefaultJavaLibraryTest {
         return false;
       }
     };
-    BuildRule rule1 = JavaLibraryBuilder
+    DefaultJavaLibrary rule1 = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("agifhbkjdec.java"))
         .addSrc(Paths.get("bdeafhkgcji.java"))
@@ -1089,7 +1080,7 @@ public class DefaultJavaLibraryTest {
         .addResource(new TestSourcePath("chkdbafijge.txt"))
         .build(new BuildRuleResolver(), filesystem);
 
-    BuildRule rule2 = JavaLibraryBuilder
+    DefaultJavaLibrary rule2 = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("cfiabkjehgd.java"))
         .addSrc(Paths.get("bdehgaifjkc.java"))
@@ -1101,8 +1092,8 @@ public class DefaultJavaLibraryTest {
         .addResource(new TestSourcePath("becgkaifhjd.txt"))
         .build(new BuildRuleResolver(), filesystem);
 
-    Collection<Path> inputs1 = rule1.getBuildable().getInputsToCompareToOutput();
-    Collection<Path> inputs2 = rule2.getBuildable().getInputsToCompareToOutput();
+    Collection<Path> inputs1 = rule1.getInputsToCompareToOutput();
+    Collection<Path> inputs2 = rule2.getInputsToCompareToOutput();
     assertEquals(ImmutableList.copyOf(inputs1), ImmutableList.copyOf(inputs2));
 
     ImmutableMap.Builder<String, String> fileHashes = ImmutableMap.builder();
@@ -1133,7 +1124,7 @@ public class DefaultJavaLibraryTest {
         .createBuilder(libraryOneTarget)
         .addSrc(Paths.get("java/src/com/libone/Bar.java"))
         .build(ruleResolver);
-    DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule.getBuildable();
+    DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     buildable.createCommandsForJavac(
@@ -1170,12 +1161,12 @@ public class DefaultJavaLibraryTest {
                 TARGETED_JAVA_VERSION,
                 TARGETED_JAVA_VERSION))
         .build();
-    ((DefaultJavaLibrary) rule.getBuildable()).createCommandsForJavac(
-        rule.getBuildable().getPathToOutputFile(),
+    ((DefaultJavaLibrary) rule).createCommandsForJavac(
+        rule.getPathToOutputFile(),
         ImmutableSet.copyOf(
-            ((HasClasspathEntries) rule.getBuildable()).getTransitiveClasspathEntries().values()),
+            ((HasClasspathEntries) rule).getTransitiveClasspathEntries().values()),
         ImmutableSet.copyOf(
-            ((JavaLibrary) rule.getBuildable()).getDeclaredClasspathEntries().values()),
+            ((JavaLibrary) rule).getDeclaredClasspathEntries().values()),
         javacOptions,
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacStep.SuggestBuildRules>absent(),
@@ -1217,7 +1208,7 @@ public class DefaultJavaLibraryTest {
 
   // Utilities
   private JavaLibrary getJavaLibrary(BuildRule rule) {
-    return (JavaLibrary) rule.getBuildable();
+    return (JavaLibrary) rule;
   }
 
   private DefaultJavaLibrary.JarResolver createJarResolver(
@@ -1358,7 +1349,7 @@ public class DefaultJavaLibraryTest {
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
       BuildRule javaLibrary = createJavaLibraryRule(projectFilesystem);
       buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null, projectFilesystem);
-      List<Step> steps = javaLibrary.getBuildable().getBuildSteps(
+      List<Step> steps = javaLibrary.getBuildSteps(
           buildContext, new FakeBuildableContext());
       JavacInMemoryStep javacCommand = lastJavacCommand(steps);
 
@@ -1387,14 +1378,12 @@ public class DefaultJavaLibraryTest {
       AnnotationProcessingParams params = annotationProcessingParamsBuilder.build();
       JavacOptions.Builder options = JavacOptions.builder().setAnnotationProcessingData(params);
 
-      BuildRuleParams buildRuleParams = new BuildRuleParams(
-          buildTarget,
-              /* deps */ ImmutableSortedSet.<BuildRule>of(),
-              /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-          projectFilesystem,
-          new FakeRuleKeyBuilderFactory());
+      BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
+          .setProjectFilesystem(projectFilesystem)
+          .setType(AndroidLibraryDescription.TYPE)
+          .build();
 
-      Buildable buildable = new AndroidLibrary(
+      return new AndroidLibrary(
           buildRuleParams,
           ImmutableSet.of(new TestSourcePath(src)),
           /* resources */ ImmutableSet.<SourcePath>of(),
@@ -1402,13 +1391,10 @@ public class DefaultJavaLibraryTest {
           /* postprocessClassesCommands */ ImmutableList.<String>of(),
           /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+          /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
           options.build(),
           /* resourcesRoot */ Optional.<Path>absent(),
           /* manifestFile */ Optional.<Path>absent());
-      return new DescribedRule(
-          AndroidLibraryDescription.TYPE,
-          buildable,
-          buildRuleParams);
     }
 
     private JavacInMemoryStep lastJavacCommand(Iterable<Step> commands) {

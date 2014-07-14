@@ -57,7 +57,8 @@ public class PartialGraph {
       ProjectFilesystem projectFilesystem,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
+      BuckEventBus eventBus)
+      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     return createPartialGraph(RawRulePredicates.alwaysTrue(),
         projectFilesystem,
         includes,
@@ -70,7 +71,8 @@ public class PartialGraph {
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
+      BuckEventBus eventBus)
+      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Preconditions.checkNotNull(predicate);
 
     List<BuildTarget> targets = parser.filterAllTargetsInProject(filesystem,
@@ -92,7 +94,8 @@ public class PartialGraph {
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
+      BuckEventBus eventBus)
+      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Preconditions.checkNotNull(predicate);
 
     Iterable<BuildTarget> buildTargets = parser.filterTargetsInProjectFromRoots(
@@ -120,7 +123,7 @@ public class PartialGraph {
     // with our build graph.
     for (BuildTarget buildTarget : testGraph.getTargets()) {
       TestRule testRule =
-          (TestRule) testActionGraph.findBuildRuleByTarget(buildTarget).getBuildable();
+          (TestRule) testActionGraph.findBuildRuleByTarget(buildTarget);
       for (BuildRule buildRuleUnderTest : testRule.getSourceUnderTest()) {
         if (buildGraph.findBuildRuleByTarget(buildRuleUnderTest.getBuildTarget()) != null) {
           buildAndTestTargetsBuilder.add(testRule.getBuildTarget());
@@ -146,7 +149,8 @@ public class PartialGraph {
 
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
+      BuckEventBus eventBus)
+      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Preconditions.checkNotNull(predicate);
 
     Iterable<BuildTarget> targets = parser.filterTargetsInProjectFromRoots(
@@ -167,7 +171,8 @@ public class PartialGraph {
       Iterable<BuildTarget> roots,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
+      BuckEventBus eventBus)
+      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     return parseAndCreateGraphFromTargets(roots, includes, parser, eventBus);
   }
 
@@ -175,7 +180,8 @@ public class PartialGraph {
       Iterable<BuildTarget> targets,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
+      BuckEventBus eventBus)
+      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
 
     Preconditions.checkNotNull(parser);
 

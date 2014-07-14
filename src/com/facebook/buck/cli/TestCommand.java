@@ -37,7 +37,6 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestRule;
@@ -117,7 +116,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   @Override
-  int runCommandWithOptionsInternal(final TestCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(final TestCommandOptions options)
+      throws IOException, InterruptedException {
     // If the user asked to run all of the tests, use a special method for that that is optimized to
     // parse all of the build files and traverse the action graph to find all of the tests to
     // run.
@@ -289,7 +289,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   private int runAllTests(TestCommandOptions options) throws IOException,
-      BuildTargetException, BuildFileParseException, ExecutionException {
+      BuildTargetException, BuildFileParseException, ExecutionException, InterruptedException {
     Logging.setLoggingLevelForVerbosity(console.getVerbosity());
 
     // We won't have a list of targets until the build is already started, so BuildEvents will get
@@ -323,7 +323,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         new Function<BuildTarget, TestRule>() {
           @Override
           public TestRule apply(BuildTarget buildTarget) {
-            Buildable test = graph.findBuildRuleByTarget(buildTarget).getBuildable();
+            BuildRule test = graph.findBuildRuleByTarget(buildTarget);
             if (test instanceof TestRule) {
               return (TestRule) test;
             }
@@ -396,8 +396,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         TestRule testRule = null;
         if (buildRule instanceof TestRule) {
           testRule = (TestRule) buildRule;
-        } else if (buildRule.getBuildable() instanceof TestRule) {
-          testRule = (TestRule) buildRule.getBuildable();
         }
         if (testRule != null) {
           results.add(testRule);
@@ -452,7 +450,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       Iterable<TestRule> tests,
       BuildContext buildContext,
       ExecutionContext executionContext,
-      TestCommandOptions options) throws IOException, ExecutionException {
+      TestCommandOptions options)
+      throws IOException, ExecutionException, InterruptedException {
 
     try (DefaultStepRunner stepRunner =
             new DefaultStepRunner(executionContext, options.getNumThreads())) {
@@ -466,7 +465,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       ExecutionContext executionContext,
       StepRunner stepRunner,
       final TestCommandOptions options)
-      throws IOException, ExecutionException {
+      throws IOException, ExecutionException, InterruptedException {
 
     if (options.isUsingOneTimeOutputDirectories()) {
       BuckConstant.setOneTimeTestSubdirectory(UUID.randomUUID().toString());
@@ -526,18 +525,14 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     for (TestRule test : tests) {
       // Determine whether the test needs to be executed.
       boolean isTestRunRequired;
-      try {
-        isTestRunRequired = isTestRunRequiredForTest(
-            test,
-            getBuildEngine(),
-            executionContext,
-            testRuleKeyFileHelper,
-            options.isResultsCacheEnabled(),
-            !options.getTestSelectorList().isEmpty());
-      } catch (InterruptedException e) {
-        e.printStackTrace(getStdErr());
-        return 1;
-      }
+      isTestRunRequired = isTestRunRequiredForTest(
+          test,
+          getBuildEngine(),
+          executionContext,
+          testRuleKeyFileHelper,
+          options.isResultsCacheEnabled(),
+          !options.getTestSelectorList().isEmpty());
+
 
       List<Step> steps;
       if (isTestRunRequired) {
@@ -581,9 +576,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     List<TestResults> completedResults;
     try {
       completedResults = uberFuture.get();
-    } catch (InterruptedException e) {
-      e.printStackTrace(getStdErr());
-      return 1;
     } catch (ExecutionException e) {
       e.printStackTrace(getStdErr());
       return 1;
@@ -738,8 +730,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         JavaTest javaTest = (JavaTest) test;
         ImmutableSet<BuildRule> sourceUnderTest = javaTest.getSourceUnderTest();
         for (BuildRule buildRule : sourceUnderTest) {
-          if (buildRule.getBuildable() instanceof JavaLibrary) {
-            JavaLibrary javaLibrary = (JavaLibrary) buildRule.getBuildable();
+          if (buildRule instanceof JavaLibrary) {
+            JavaLibrary javaLibrary = (JavaLibrary) buildRule;
             rulesUnderTest.add(javaLibrary);
           } else {
             throw new HumanReadableException(

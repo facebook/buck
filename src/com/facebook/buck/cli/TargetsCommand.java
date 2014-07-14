@@ -29,8 +29,6 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,7 +69,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   }
 
   @Override
-  int runCommandWithOptionsInternal(TargetsCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(TargetsCommandOptions options)
+      throws IOException, InterruptedException {
     // Exit early if --resolvealias is passed in: no need to parse any build files.
     if (options.isResolveAlias()) {
       return doResolveAlias(options);
@@ -154,12 +153,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         output += " " + buildRule.getRuleKey();
       }
       if (showOutput) {
-        Buildable buildable = buildRule.getBuildable();
-        if (buildable != null) {
-          Path outputPath = buildable.getPathToOutputFile();
-          if (outputPath != null) {
-            output += " " + outputPath;
-          }
+        Path outputPath = buildRule.getPathToOutputFile();
+        if (outputPath != null) {
+          output += " " + outputPath;
         }
       }
       getStdOut().println(output);
@@ -200,14 +196,16 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
   @VisibleForTesting
   void printJsonForTargets(SortedMap<String, BuildRule> buildIndex,
-      Iterable<String> defaultIncludes) throws BuildFileParseException, IOException {
+      Iterable<String> defaultIncludes)
+      throws BuildFileParseException, IOException, InterruptedException {
     ImmutableList<String> includesCopy = ImmutableList.copyOf(defaultIncludes);
     printJsonForTargetsInternal(buildIndex, includesCopy);
   }
 
   private void printJsonForTargetsInternal(
       SortedMap<String, BuildRule> buildIndex,
-      ImmutableList<String> defaultIncludes) throws BuildFileParseException, IOException {
+      ImmutableList<String> defaultIncludes)
+      throws BuildFileParseException, IOException, InterruptedException {
     // Print the JSON representation of the build rule for the specified target(s).
     getStdOut().println("[");
 
@@ -248,16 +246,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         continue;
       }
 
-      Path outputPath;
-      Buildable buildable = buildRule.getBuildable();
-      if (buildable != null) {
-        outputPath = buildable.getPathToOutputFile();
-      } else if (ProjectConfigDescription.TYPE.equals(buildRule.getType())) {
-        // We know that project_config() rules are special.
-        outputPath = null;
-      } else {
-        throw new RuntimeException("No Buildable for " + buildRule.getFullyQualifiedName());
-      }
+      Path outputPath = buildRule.getPathToOutputFile();
 
       if (outputPath != null) {
         targetRule.put("buck.output_file", outputPath.toString());
@@ -291,7 +280,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
    * or a fully qualified (non-alias) target to be verified by checking the build files.
    * Prints the build target that each alias maps to on its own line to standard out.
    */
-  private int doResolveAlias(TargetsCommandOptions options) throws IOException {
+  private int doResolveAlias(TargetsCommandOptions options)
+      throws IOException, InterruptedException {
     List<String> resolvedAliases = Lists.newArrayList();
     for (String alias : options.getArguments()) {
       String buildTarget;
@@ -322,7 +312,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   @Nullable
   @VisibleForTesting
   String validateBuildTargetForFullyQualifiedTarget(
-      String target, TargetsCommandOptions options) throws IOException {
+      String target, TargetsCommandOptions options) throws IOException, InterruptedException {
     BuildTarget buildTarget;
     try {
       buildTarget = options.getBuildTargetForFullyQualifiedTarget(target);

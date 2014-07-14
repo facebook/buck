@@ -23,9 +23,7 @@ import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.DependencyEnhancer;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -38,7 +36,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Set;
 
-public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnhancer {
+public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
@@ -47,34 +45,31 @@ public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnha
    * generation logic.
    */
   private final Optional<Path> manifestFile;
-  private final BuildRuleParams buildRuleParams;
-  // Potentially modified as we build the enhanced deps.
-  private JavacOptions javacOptions;
 
   @VisibleForTesting
   public AndroidLibrary(
-      BuildRuleParams buildRuleParams,
+      BuildRuleParams params,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
       Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
+      ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> resourcesRoot,
       Optional<Path> manifestFile) {
-    super(buildRuleParams.getBuildTarget(),
+    super(
+        params,
         srcs,
         resources,
         proguardConfig,
         postprocessClassesCommands,
-        buildRuleParams.getDeps(),
         exportedDeps,
         providedDeps,
+        additionalClasspathEntries,
         javacOptions,
         resourcesRoot);
-    this.buildRuleParams = Preconditions.checkNotNull(buildRuleParams);
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);
   }
 
@@ -88,33 +83,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnha
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getEnhancedDeps(
-      BuildRuleResolver ruleResolver,
-      Iterable<BuildRule> declaredDeps,
-      Iterable<BuildRule> inferredDeps) {
-    // The enhanced deps should be based on the combined deps and exported deps. When we stored the
-    // reference to the buildruleparams, we hadn't added the exported deps. This was done in our
-    // superclass's constructor.
-    BuildRuleParams params = buildRuleParams.copyWithChangedDeps(getDeps());
-
-    AndroidLibraryGraphEnhancer.Result result = new AndroidLibraryGraphEnhancer(
-        params.getBuildTarget(),
-        params,
-        javacOptions)
-        .createBuildableForAndroidResources(
-            ruleResolver,
-            /* createBuildableIfEmptyDeps */ false);
-
-    Optional<DummyRDotJava> uberRDotJava = result.getOptionalDummyRDotJava();
-    this.additionalClasspathEntries = uberRDotJava.isPresent()
-        ? ImmutableSet.of(uberRDotJava.get().getRDotJavaBinFolder())
-        : ImmutableSet.<Path>of();
-
-    deps = result.getBuildRuleParams().getDeps();
-    return ImmutableSortedSet.<BuildRule>naturalOrder().addAll(deps).addAll(inferredDeps).build();
-  }
-
-  @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     if (manifestFile.isPresent()) {
       return ImmutableList.<Path>builder()
@@ -123,6 +91,14 @@ public class AndroidLibrary extends DefaultJavaLibrary implements DependencyEnha
           .build();
     } else {
       return super.getInputsToCompareToOutput();
+    }
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    super.addToCollector(collector);
+    if (manifestFile.isPresent()) {
+      collector.addManifestFile(getBuildTarget(), manifestFile.get());
     }
   }
 }

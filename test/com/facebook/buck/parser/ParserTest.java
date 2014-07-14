@@ -44,25 +44,21 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -76,7 +72,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -102,8 +97,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
 
 public class ParserTest extends EasyMockSupport {
 
@@ -173,7 +166,7 @@ public class ParserTest extends EasyMockSupport {
   }
 
   private ProjectBuildFileParserFactory createDoNothingBuildFileParserFactory()
-      throws BuildFileParseException {
+      throws BuildFileParseException, InterruptedException {
     final ProjectBuildFileParser mockBuildFileParser = createMock(ProjectBuildFileParser.class);
     mockBuildFileParser.close();
     expectLastCall().anyTimes();
@@ -230,7 +223,7 @@ public class ParserTest extends EasyMockSupport {
    */
   @Test
   public void testParseRawRulesWithBadDependency()
-      throws BuildTargetException, BuildFileParseException, IOException {
+      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     String nonExistentBuildTarget = "//testdata/com/facebook/feed:util";
     Map<String, Object> rawRule = ImmutableMap.<String, Object>of(
         "type", "java_library",
@@ -254,9 +247,9 @@ public class ParserTest extends EasyMockSupport {
     parser.parseRawRulesInternal(ruleObjects);
     RawRulePredicate predicate = alwaysTrue();
     List<BuildTarget> targets = parser.filterTargets(predicate);
-    BuildTarget expectedBuildTarget = new BuildTarget(
+    BuildTarget expectedBuildTarget = BuildTarget.builder(
         "//testdata/com/facebook/feed/model",
-        "feed");
+        "feed").build();
     assertEquals(ImmutableList.of(expectedBuildTarget), targets);
 
     try {
@@ -287,7 +280,7 @@ public class ParserTest extends EasyMockSupport {
    */
   @Test
   public void testCircularDependencyDetection()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Mock out objects that are not critical to parsing.
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem) {
@@ -322,11 +315,11 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void testParseBuildFilesForTargetsWithOverlappingTargets()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Execute parseBuildFilesForTargets() with multiple targets that require parsing the same
     // build file.
-    BuildTarget fooTarget = new BuildTarget("//java/com/facebook", "foo");
-    BuildTarget barTarget = new BuildTarget("//java/com/facebook", "bar");
+    BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook", "foo").build();
+    BuildTarget barTarget = BuildTarget.builder("//java/com/facebook", "bar").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -356,10 +349,10 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void testMissingBuildRuleInValidFile()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
-    BuildTarget fooTarget = new BuildTarget("//java/com/facebook", "foo");
-    BuildTarget razTarget = new BuildTarget("//java/com/facebook", "raz");
+    BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook", "foo").build();
+    BuildTarget razTarget = BuildTarget.builder("//java/com/facebook", "raz").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -379,7 +372,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void testInvalidDepFromValidFile()
-      throws IOException, BuildFileParseException, BuildTargetException {
+      throws IOException, BuildFileParseException, BuildTargetException, InterruptedException {
     // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "invalid");
 
@@ -395,7 +388,7 @@ public class ParserTest extends EasyMockSupport {
     tempDir.newFile(
         "java/com/facebook/invalid/lib/" + BuckConstant.BUILD_RULES_FILE_NAME);
 
-    BuildTarget fooTarget = new BuildTarget("//java/com/facebook/invalid", "foo");
+    BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook/invalid", "foo").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -405,29 +398,31 @@ public class ParserTest extends EasyMockSupport {
           BuckEventBusFactory.newInstance());
       fail("HumanReadableException should be thrown");
     } catch (HumanReadableException e) {
-      assertEquals("No rule found when resolving target " +
-          "//java/com/facebook/invalid/lib:missing_rule in build file " +
-          "//java/com/facebook/invalid/lib/BUCK",
-          e.getHumanReadableErrorMessage());
+      assertEquals(
+          "No rule found when resolving target " +
+              "//java/com/facebook/invalid/lib:missing_rule in build file " +
+              "//java/com/facebook/invalid/lib/BUCK",
+          e.getHumanReadableErrorMessage()
+      );
     }
   }
 
   @Test
   public void whenAllRulesRequestedWithTrueFilterThenMultipleRulesReturned()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     List<BuildTarget> targets = testParser.filterAllTargetsInProject(filesystem,
         Lists.<String>newArrayList(),
         alwaysTrue());
 
     List<BuildTarget> expectedTargets = ImmutableList.of(
-        new BuildTarget("//java/com/facebook", "foo"),
-        new BuildTarget("//java/com/facebook", "bar"));
+        BuildTarget.builder("//java/com/facebook", "foo").build(),
+        BuildTarget.builder("//java/com/facebook", "bar").build());
     assertEquals("Should have returned all rules.", expectedTargets, targets);
   }
 
   @Test
   public void whenAllRulesRequestedWithFalseFilterThenNoRulesReturned()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     List<BuildTarget> targets = testParser.filterAllTargetsInProject(filesystem,
         Lists.<String>newArrayList(), alwaysFalse());
     Preconditions.checkNotNull(targets); // Cannot be null as filter was not null.
@@ -436,7 +431,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenAllRulesAreRequestedMultipleTimesThenRulesAreOnlyParsedOnce()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
@@ -449,7 +444,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfNonPathEventThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
@@ -470,7 +465,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenEnvironmentChangesThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
@@ -495,7 +490,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenEnvironmentNotChangedThenCacheRulesAreNotInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
@@ -517,7 +512,7 @@ public class ParserTest extends EasyMockSupport {
   // TODO(jimp/devjasta): clean up the horrible ProjectBuildFileParserFactory mess.
   private void parseBuildFile(File buildFile, Parser parser,
                               ProjectBuildFileParserFactory buildFileParserFactory)
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     try (ProjectBuildFileParser projectBuildFileParser = buildFileParserFactory.createParser(
         /* commonIncludes */ Lists.<String>newArrayList(),
         EnumSet.noneOf(ProjectBuildFileParser.Option.class),
@@ -533,7 +528,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfBuildFileAddThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -554,7 +549,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfBuildFileChangeThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -575,7 +570,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfBuildFileDeleteThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -596,7 +591,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfIncludeFileAddThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -618,7 +613,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfIncludeFileChangeThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -640,7 +635,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfIncludeFileDeleteThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -662,7 +657,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOf2ndOrderIncludeFileAddThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -684,7 +679,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOf2ndOrderIncludeFileChangeThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -706,7 +701,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOf2ndOrderIncludeFileDeleteThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -728,7 +723,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfDefaultIncludeFileAddThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -750,7 +745,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfDefaultIncludeFileChangeThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -773,7 +768,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfDefaultIncludeFileDeleteThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -796,7 +791,7 @@ public class ParserTest extends EasyMockSupport {
   @Test
   // TODO(user): avoid invalidation when arbitrary contained (possibly backup) files are added.
   public void whenNotifiedOfContainedFileAddThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -818,7 +813,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfContainedFileChangeThenCacheRulesAreNotInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -841,7 +836,7 @@ public class ParserTest extends EasyMockSupport {
   @Test
   // TODO(user): avoid invalidation when arbitrary contained (possibly backup) files are deleted.
   public void whenNotifiedOfContainedFileDeleteThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -864,7 +859,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfContainedTempFileAddThenCachedRulesAreNotInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -886,7 +881,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfContainedTempFileChangeThenCachedRulesAreNotInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -908,7 +903,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfContainedTempFileDeleteThenCachedRulesAreNotInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -930,7 +925,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfUnrelatedFileAddThenCacheRulesAreNotInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -952,7 +947,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfUnrelatedFileChangeThenCacheRulesAreNotInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -974,7 +969,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenNotifiedOfUnrelatedFileDeleteThenCacheRulesAreNotInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets());
@@ -996,7 +991,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void testGeneratedDeps()
-      throws IOException, BuildFileParseException, BuildTargetException {
+      throws IOException, BuildFileParseException, BuildTargetException, InterruptedException {
     // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "generateddeps");
 
@@ -1009,9 +1004,9 @@ public class ParserTest extends EasyMockSupport {
         testGeneratedDepsBuckFile,
         Charsets.UTF_8);
 
-    BuildTarget fooTarget = new BuildTarget("//java/com/facebook/generateddeps", "foo");
+    BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook/generateddeps", "foo").build();
 
-    BuildTarget barTarget = new BuildTarget("//java/com/facebook/generateddeps", "bar");
+    BuildTarget barTarget = BuildTarget.builder("//java/com/facebook/generateddeps", "bar").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -1030,7 +1025,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenAllRulesAreRequestedWithDifferingIncludesThenRulesAreParsedTwice()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
@@ -1043,13 +1038,13 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenAllRulesThenSingleTargetRequestedThenRulesAreParsedOnce()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    BuildTarget foo = new BuildTarget("//java/com/facebook", "foo");
+    BuildTarget foo = BuildTarget.builder("//java/com/facebook", "foo").build();
     parser.parseBuildFilesForTargets(
         ImmutableList.of(foo),
         Lists.<String>newArrayList(),
@@ -1060,12 +1055,12 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenSingleTargetThenAllRulesRequestedThenRulesAreParsedTwice()
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
-    BuildTarget foo = new BuildTarget("//java/com/facebook", "foo");
+    BuildTarget foo = BuildTarget.builder("//java/com/facebook", "foo").build();
     parser.parseBuildFilesForTargets(
         ImmutableList.of(foo),
         Lists.<String>newArrayList(),
@@ -1119,7 +1114,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test(expected = BuildFileParseException.class)
   public void whenSubprocessReturnsFailureThenProjectBuildFileParserThrowsOnClose()
-      throws IOException, BuildFileParseException {
+      throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
@@ -1134,7 +1129,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Test
   public void whenSubprocessReturnsSuccessThenProjectBuildFileParserClosesCleanly()
-      throws IOException, BuildFileParseException {
+      throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
@@ -1197,31 +1192,11 @@ public class ParserTest extends EasyMockSupport {
     }
 
     @Override
-    public <A extends FakeArg> Buildable createBuildable(BuildRuleParams params, A args) {
-      return new AbstractBuildable(params.getBuildTarget()) {
-        @Nullable
-        @Override
-        public Path getPathToOutputFile() {
-          return null;
-        }
-
-        @Override
-        public ImmutableCollection<Path> getInputsToCompareToOutput() {
-          return ImmutableList.of();
-        }
-
-        @Override
-        public ImmutableList<Step> getBuildSteps(
-            BuildContext context,
-            BuildableContext buildableContext) {
-          return ImmutableList.of();
-        }
-
-        @Override
-        public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-          return builder;
-        }
-      };
+    public <A extends FakeArg> BuildRule createBuildRule(
+        BuildRuleParams params,
+        BuildRuleResolver resolver,
+        A args) {
+      return new FakeBuildRule(params);
     }
 
     public static class FakeArg implements ConstructorArg {

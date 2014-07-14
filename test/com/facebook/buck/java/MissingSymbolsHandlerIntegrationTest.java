@@ -50,7 +50,7 @@ public class MissingSymbolsHandlerIntegrationTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void shouldFindNeededDependenciesFromSymbols() throws IOException {
+  public void shouldFindNeededDependenciesFromSymbols() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "symbol_finder", temporaryFolder);
     workspace.setUp();
@@ -78,7 +78,7 @@ public class MissingSymbolsHandlerIntegrationTest {
         environment);
 
     MissingSymbolEvent missingSymbolEvent = MissingSymbolEvent.create(
-        new BuildTarget("//java/com/example/b", "b"),
+        BuildTarget.builder("//java/com/example/b", "b").build(),
         "com.example.a.A",
         MissingSymbolEvent.SymbolType.Java);
 
@@ -89,8 +89,8 @@ public class MissingSymbolsHandlerIntegrationTest {
         "MissingSymbolsHandler failed to find the needed dependency.",
         neededDeps,
         ImmutableSetMultimap.of(
-            new BuildTarget("//java/com/example/b", "b"),
-            new BuildTarget("//java/com/example/a", "a")));
+            BuildTarget.builder("//java/com/example/b", "b").build(),
+            BuildTarget.builder("//java/com/example/a", "a").build()));
   }
 
   @Test

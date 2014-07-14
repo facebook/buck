@@ -18,6 +18,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.util.Verbosity;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,11 +30,13 @@ public class Logging {
   private Logging() {}
 
   public static void setLoggingLevelForVerbosity(Verbosity verbosity) {
-    Level loggerLevel = verbosity == Verbosity.ALL
-        ? Level.ALL
-        : (verbosity.shouldPrintOutput()) ? Level.INFO : Level.OFF;
-    // TODO(mbolin): Figure out why "com.facebook.buck" cannot be used instead of "".
-    Logger.getLogger("").setLevel(loggerLevel);
+    // We can't stop someone from mutating this array, but we can minimize the chance.
+    ImmutableList<Handler> handlers = ImmutableList.copyOf(Logger.getLogger("").getHandlers());
+    for (Handler handler : handlers) {
+      if (handler instanceof ConsoleHandler && verbosity == Verbosity.ALL) {
+        handler.setLevel(Level.ALL);
+      }
+    }
   }
 
 }

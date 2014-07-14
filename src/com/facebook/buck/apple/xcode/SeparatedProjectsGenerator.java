@@ -43,6 +43,7 @@ public class SeparatedProjectsGenerator {
   private final PartialGraph partialGraph;
   private final ExecutionContext executionContext;
   private final ImmutableSet<BuildTarget> projectConfigTargets;
+  private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
 
   /**
    * Project generators used to generate the projects, useful for testing to retrieve pre-serialized
@@ -54,12 +55,17 @@ public class SeparatedProjectsGenerator {
       ProjectFilesystem projectFilesystem,
       PartialGraph partialGraph,
       ExecutionContext executionContext,
-      ImmutableSet<BuildTarget> projectConfigTargets) {
+      ImmutableSet<BuildTarget> projectConfigTargets,
+      ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
     this.projectConfigTargets = Preconditions.checkNotNull(projectConfigTargets);
     this.projectGenerators = null;
+    this.projectGeneratorOptions = ImmutableSet.<ProjectGenerator.Option>builder()
+      .addAll(projectGeneratorOptions)
+      .addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS)
+      .build();
 
     for (BuildTarget target : projectConfigTargets) {
       BuildRule rule = partialGraph.getActionGraph().findBuildRuleByTarget(target);
@@ -81,7 +87,7 @@ public class SeparatedProjectsGenerator {
     for (BuildTarget target : projectConfigTargets) {
       BuildRule rule = partialGraph.getActionGraph().findBuildRuleByTarget(target);
       XcodeProjectConfig buildable =
-          (XcodeProjectConfig) Preconditions.checkNotNull(rule.getBuildable());
+          (XcodeProjectConfig) Preconditions.checkNotNull(rule);
 
       ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
       for (BuildRule memberRule : buildable.getRules()) {
@@ -94,7 +100,7 @@ public class SeparatedProjectsGenerator {
           executionContext,
           Paths.get(target.getBasePath()),
           buildable.getProjectName(),
-          ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
+          projectGeneratorOptions);
       generator.createXcodeProjects();
       projectGeneratorsBuilder.put(target, generator);
       generatedProjectPathsBuilder.add(generator.getProjectPath());

@@ -19,6 +19,8 @@ package com.facebook.buck.java;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
@@ -26,13 +28,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
@@ -103,13 +105,12 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibrary extends AbstractBuildable
+public class DefaultJavaLibrary extends AbstractBuildRule
     implements JavaLibrary, AbiRule, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibrary.Data> {
+    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  protected ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> resources;
   private final Optional<Path> outputJar;
@@ -118,7 +119,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
   private final ImmutableSortedSet<BuildRule> exportedDeps;
   private final ImmutableSortedSet<BuildRule> providedDeps;
   // Some classes need to override this when enhancing deps (see AndroidLibrary).
-  protected ImmutableSet<Path> additionalClasspathEntries;
+  private final ImmutableSet<Path> additionalClasspathEntries;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
@@ -169,40 +170,36 @@ public class DefaultJavaLibrary extends AbstractBuildable
   };
 
   protected DefaultJavaLibrary(
-      BuildTarget target,
+      BuildRuleParams params,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
       Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
+      ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> resourcesRoot) {
-    super(target);
+    super(params);
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
     for (BuildRule dep : exportedDeps) {
-      if (!(dep.getBuildable() instanceof JavaLibrary)) {
+      if (!(dep instanceof JavaLibrary)) {
         throw new HumanReadableException(
-            target.getBuildTarget() + ": exported dep " +
+            params.getBuildTarget() + ": exported dep " +
             dep.getBuildTarget() + " (" + dep.getType() + ") " +
             "must be a type of java library.");
       }
     }
 
-    this.deps = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(deps)
-        .addAll(exportedDeps)
-        .build();
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.postprocessClassesCommands = Preconditions.checkNotNull(postprocessClassesCommands);
     this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
-    this.additionalClasspathEntries = ImmutableSet.of();
+    this.additionalClasspathEntries = Preconditions.checkNotNull(additionalClasspathEntries);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.resourcesRoot = Preconditions.checkNotNull(resourcesRoot);
 
@@ -241,11 +238,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
           }
         });
 
-    this.buildOutputInitializer = new BuildOutputInitializer<>(target, this);
-  }
-
-  public ImmutableSortedSet<BuildRule> getDeps() {
-    return deps;
+    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   /**
@@ -386,14 +379,14 @@ public class DefaultJavaLibrary extends AbstractBuildable
    */
   private SortedSet<HasBuildTarget> getDepsForAbiKey() {
     SortedSet<HasBuildTarget> rulesWithAbiToConsider = Sets.newTreeSet(BUILD_TARGET_COMPARATOR);
-    for (BuildRule dep : Iterables.concat(deps, providedDeps)) {
+    for (BuildRule dep : Iterables.concat(getDepsForTransitiveClasspathEntries(), providedDeps)) {
       // This looks odd. DummyJavaAbiRule contains a Buildable that isn't a JavaAbiRule.
-      if (dep.getBuildable() instanceof HasJavaAbi) {
-        if (dep.getBuildable() instanceof JavaLibrary) {
-          JavaLibrary javaRule = (JavaLibrary) dep.getBuildable();
+      if (dep instanceof HasJavaAbi) {
+        if (dep instanceof JavaLibrary) {
+          JavaLibrary javaRule = (JavaLibrary) dep;
           rulesWithAbiToConsider.addAll(javaRule.getOutputClasspathEntries().keys());
         } else {
-          rulesWithAbiToConsider.add((HasJavaAbi) dep.getBuildable());
+          rulesWithAbiToConsider.add(dep);
         }
       }
     }
@@ -454,6 +447,11 @@ public class DefaultJavaLibrary extends AbstractBuildable
   @Override
   public ImmutableSortedSet<SourcePath> getJavaSrcs() {
     return srcs;
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return ImmutableSortedSet.copyOf(Sets.union(getDeclaredDeps(), exportedDeps));
   }
 
   @Override
@@ -648,14 +646,13 @@ public class DefaultJavaLibrary extends AbstractBuildable
       BuildRule transitiveNotDeclaredRule,
       Set<String> failedImports,
       JarResolver jarResolver) {
-    Buildable transitiveNotDeclaredDep = transitiveNotDeclaredRule.getBuildable();
-    if (!(transitiveNotDeclaredDep instanceof JavaLibrary)) {
+    if (!(transitiveNotDeclaredRule instanceof JavaLibrary)) {
       return false;
     }
 
     ImmutableSet<Path> classPaths =
         ImmutableSet.copyOf(
-            ((JavaLibrary) transitiveNotDeclaredDep).getOutputClasspathEntries().values());
+            ((JavaLibrary) transitiveNotDeclaredRule).getOutputClasspathEntries().values());
     boolean containsMissingBuildRule = false;
     // Open the output jar for every jar contained as the output of transitiveNotDeclaredDep.  With
     // the exception of rules that export their dependencies, this will result in a single
@@ -701,7 +698,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
             new Predicate<BuildRule>() {
               @Override
               public boolean apply(BuildRule input) {
-                return transitiveNotDeclaredDeps.contains(input.getBuildable());
+                return transitiveNotDeclaredDeps.contains(input);
               }
             })).reverse();
 
@@ -798,5 +795,23 @@ public class DefaultJavaLibrary extends AbstractBuildable
   @Nullable
   public Path getPathToOutputFile() {
     return outputJar.orNull();
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(ImmutableSortedSet.copyOf(
+            Sets.difference(
+                Sets.union(getDeclaredDeps(), exportedDeps),
+                providedDeps)));
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    if (outputJar.isPresent()) {
+      collector.addClasspathEntry(this, outputJar.get());
+    }
+    if (proguardConfig.isPresent()) {
+      collector.addProguardConfig(getBuildTarget(), proguardConfig.get());
+    }
   }
 }

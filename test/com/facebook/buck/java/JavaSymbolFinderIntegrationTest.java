@@ -49,7 +49,7 @@ public class JavaSymbolFinderIntegrationTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void shouldFindTargetDefiningSymbol() throws IOException {
+  public void shouldFindTargetDefiningSymbol() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "symbol_finder", temporaryFolder);
     workspace.setUp();
@@ -86,7 +86,9 @@ public class JavaSymbolFinderIntegrationTest {
 
     assertEquals(
         "JavaSymbolFinder failed to find the right target.",
-        ImmutableSetMultimap.of("com.example.a.A", new BuildTarget("//java/com/example/a", "a")),
+        ImmutableSetMultimap.of(
+            "com.example.a.A",
+            BuildTarget.builder("//java/com/example/a", "a").build()),
         foundTargets);
   }
 }

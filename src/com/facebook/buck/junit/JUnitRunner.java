@@ -102,7 +102,10 @@ public final class JUnitRunner {
           String className = description.getClassName();
           TestDescription testDescription = new TestDescription(className, methodName);
           if (testSelectorList.isIncluded(testDescription)) {
-            seenDescriptions.add(testDescription);
+            boolean isIgnored = description.getAnnotation(Ignore.class) != null;
+            if (!isIgnored) {
+              seenDescriptions.add(testDescription);
+            }
             return !isDryRun;
           } else {
             return false;
@@ -263,13 +266,14 @@ public final class JUnitRunner {
 
       @Override
       protected AnnotatedBuilder annotatedBuilder() {
-        // If there is no default timeout specified in .buckconfig, then use the original behavior
-        // of AllDefaultPossibilitiesBuilder.
+        // If there is no default timeout specified in .buckconfig, then use
+        // the original behavior of AllDefaultPossibilitiesBuilder.
         //
-        // Additionally, if we are using test selectors then we should use the original behavior
-        // to use our BuckBlockJUnit4ClassRunner, which provides the Descriptions needed to do
-        // test selecting properly.
-        if (defaultTestTimeoutMillis <= 0 || !testSelectorList.isEmpty()) {
+        // Additionally, if we are using test selectors or doing a dry-run then
+        // we should use the original behavior to use our
+        // BuckBlockJUnit4ClassRunner, which provides the Descriptions needed
+        // to do test selecting properly.
+        if (defaultTestTimeoutMillis <= 0 || isDryRun || !testSelectorList.isEmpty()) {
           return super.annotatedBuilder();
         }
 

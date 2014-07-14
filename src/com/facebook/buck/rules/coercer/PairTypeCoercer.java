@@ -79,7 +79,9 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
     if (object instanceof Collection) {
       Collection<?> collection = (Collection<?>) object;
       if (collection.size() != 2) {
-        throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass(),
+        throw CoerceFailedException.simple(
+            object,
+            getOutputClass(),
             "input collection should have 2 elements");
       }
       Iterator<?> iterator = collection.iterator();
@@ -89,7 +91,9 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
           buildRuleResolver, filesystem, pathRelativeToProjectRoot, iterator.next());
       return new Pair<>(first, second);
     } else {
-      throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass(),
+      throw CoerceFailedException.simple(
+          object,
+          getOutputClass(),
           "input object should be a 2-element collection");
     }
   }

@@ -86,7 +86,7 @@ public enum Command {
 
   public int execute(List<String> args,
       BuckConfig buckConfig,
-      CommandRunnerParams params) throws IOException {
+      CommandRunnerParams params) throws IOException, InterruptedException {
       CommandRunner commandRunner;
       try {
         commandRunner = commandRunnerClass

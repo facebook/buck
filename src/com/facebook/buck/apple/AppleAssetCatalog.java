@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -46,17 +46,17 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class AppleAssetCatalog extends AbstractBuildable {
+public class AppleAssetCatalog extends AbstractBuildRule {
 
   private final Supplier<ImmutableCollection<Path>> inputPathsSupplier;
   private final ImmutableSet<Path> dirs;
   private final boolean copyToBundles;
 
   AppleAssetCatalog(
-      BuildTarget target,
+      BuildRuleParams params,
       Supplier<ImmutableCollection<Path>> inputPathsSupplier,
       AppleAssetCatalogDescription.Arg args) {
-    super(target);
+    super(params);
     Preconditions.checkArgument(Iterables.all(args.dirs, new Predicate<Path>() {
               @Override
               public boolean apply(@Nullable Path input) {

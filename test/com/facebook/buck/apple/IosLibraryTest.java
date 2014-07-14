@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
@@ -39,7 +40,7 @@ public class IosLibraryTest {
 
   @Test
   public void getInputsToCompareToOutput() {
-    IosLibraryDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = description.createUnpopulatedConstructorArg();
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourcePath(new TestSourcePath("some_source.m")),
         AppleSource.ofSourcePath(new TestSourcePath("some_header.h")));
@@ -48,8 +49,8 @@ public class IosLibraryTest {
     arg.deps = Optional.absent();
 
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//foo", "foo")).build();
-    IosLibrary buildable = (IosLibrary) description.createBuildable(params, arg);
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "foo").build()).build();
+    IosLibrary buildable = description.createBuildRule(params, new BuildRuleResolver(), arg);
 
     assertThat(buildable.getInputsToCompareToOutput(), containsInAnyOrder(
         Paths.get("some_header.h"),

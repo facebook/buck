@@ -23,18 +23,21 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
 
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 public class DefaultStepRunnerTest {
 
   @Test
-  public void testEventsFired() throws StepFailedException {
+  public void testEventsFired() throws StepFailedException, InterruptedException, IOException {
     Step passingStep = new FakeStep("step1", "fake step 1", 0);
     Step failingStep = new FakeStep("step1", "fake step 1", 1);
 
@@ -53,6 +56,8 @@ public class DefaultStepRunnerTest {
       fail("Failing step should have thrown an exception");
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
+    } finally {
+      runner.close();
     }
 
     ImmutableList<StepEvent> expected = ImmutableList.of(
@@ -70,7 +75,8 @@ public class DefaultStepRunnerTest {
   }
 
   @Test(expected = StepFailedException.class, timeout = 5000)
-  public void testParallelStepFailure() throws Exception {
+  public void testParallelStepFailure()
+      throws StepFailedException, InterruptedException, IOException {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new SleepingStep(0, 0));
     steps.add(new SleepingStep(10, 1));
@@ -81,12 +87,13 @@ public class DefaultStepRunnerTest {
 
     DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance(), 3);
     runner.runStepsInParallelAndWait(steps.build());
+    runner.close();
 
     // Success if the test timeout is not reached.
   }
 
   @Test
-  public void testExplodingStep() {
+  public void testExplodingStep() throws InterruptedException, IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     DefaultStepRunner runner = new DefaultStepRunner(context, 3);
@@ -95,7 +102,37 @@ public class DefaultStepRunnerTest {
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
       assertTrue(e.getMessage().startsWith("Failed on step explode with an exception:\n#yolo"));
+    } finally {
+      runner.close();
     }
+  }
+
+  @Test(timeout = 500)
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void whenShutdownNowIsCalledThenStepProcessingIsInterrupted()
+      throws InterruptedException, IOException {
+    // Add a step that take longer than the test timeout to complete.
+    // If the step is not interrupted then the test will timeout.
+    ImmutableList<Step> step = ImmutableList.<Step>of(new SleepingStep(1000, 0));
+    DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance(), 1);
+    ListenableFuture<?> future = runner.runStepsAndYieldResult(
+        step, new Callable<Object>() {
+          @Override
+          public Object call() throws Exception {
+            return "Some Result";
+          }
+        }, BuildTarget.builder("//some/base/name", "Some Short Name").build());
+    runner.shutdownNow();
+    try {
+      future.get();
+      fail("Should throw exception due to cancellation");
+    } catch (ExecutionException e) {
+      // Caused by interruption.
+    } finally {
+      runner.close();
+    }
+
+    // Success if the test timeout is not reached.
   }
 
   private static class ExplosionStep implements Step {
@@ -125,8 +162,8 @@ public class DefaultStepRunnerTest {
     }
 
     @Override
-    public int execute(ExecutionContext context) {
-      Uninterruptibles.sleepUninterruptibly(sleepMillis, TimeUnit.MILLISECONDS);
+    public int execute(ExecutionContext context) throws InterruptedException {
+      Thread.sleep(sleepMillis);
       return exitCode;
     }
 

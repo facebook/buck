@@ -17,6 +17,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -63,7 +64,10 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
   }
 
   @Override
-  public NdkLibrary createBuildable(BuildRuleParams params, Arg args) {
+  public <A extends Arg> NdkLibrary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     final ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
 
     try {
@@ -91,7 +95,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     }
 
     return new NdkLibrary(
-        params.getBuildTarget(),
+        params,
         srcs.build(),
         args.flags.get(),
         args.isAsset.or(false),

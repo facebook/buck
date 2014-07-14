@@ -74,13 +74,13 @@ public class ConstructorArgMarshallerTest {
     try {
       marshaller.populate(
           ruleResolver, filesystem, buildRuleFactoryParams(ImmutableMap.<String, Object>of()), dto);
-    } catch (RuntimeException e) {
+    } catch (RuntimeException | ConstructorArgMarshalException e) {
       fail("Did not expect an exception to be thrown:\n" + Throwables.getStackTraceAsString(e));
     }
   }
 
   @Test
-  public void shouldPopulateAStringValue() {
+  public void shouldPopulateAStringValue() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public String name;
     }
@@ -96,7 +96,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateABooleanValue() {
+  public void shouldPopulateABooleanValue() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public boolean value;
     }
@@ -112,7 +112,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateBuildTargetValues() {
+  public void shouldPopulateBuildTargetValues() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public BuildTarget target;
       public BuildTarget local;
@@ -133,7 +133,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateANumericValue() {
+  public void shouldPopulateANumericValue() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public long number;
     }
@@ -149,7 +149,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateAPathValue() {
+  public void shouldPopulateAPathValue() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       @Hint(name = "some_path")
       public Path somePath;
@@ -166,7 +166,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateSourcePaths() {
+  public void shouldPopulateSourcePaths() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public SourcePath filePath;
       public SourcePath targetPath;
@@ -190,7 +190,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateAnImmutableSortedSet() {
+  public void shouldPopulateAnImmutableSortedSet() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public ImmutableSortedSet<BuildTarget> deps;
     }
@@ -211,7 +211,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateSets() {
+  public void shouldPopulateSets() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public Set<Path> paths;
     }
@@ -230,7 +230,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateLists() {
+  public void shouldPopulateLists() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public List<String> list;
     }
@@ -247,7 +247,9 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void collectionsCanBeOptionalAndWillBeSetToAnOptionalEmptyCollectionIfMissing() {
+  public void collectionsCanBeOptionalAndWillBeSetToAnOptionalEmptyCollectionIfMissing()
+      throws ConstructorArgMarshalException {
+
     class Dto implements ConstructorArg {
       public Optional<Set<BuildTarget>> targets;
     }
@@ -262,7 +264,9 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void optionalCollectionsWithoutAValueWillBeSetToAnEmptyOptionalCollection() {
+  public void optionalCollectionsWithoutAValueWillBeSetToAnEmptyOptionalCollection()
+      throws ConstructorArgMarshalException {
+
     class Dto implements ConstructorArg {
       public Optional<Set<String>> strings;
     }
@@ -276,8 +280,10 @@ public class ConstructorArgMarshallerTest {
     assertEquals(Optional.of(Sets.newHashSet()), dto.strings);
   }
 
-  @Test(expected = RuntimeException.class)
-  public void shouldBeAnErrorToAttemptToSetASingleValueToACollection() {
+  @Test(expected = ConstructorArgMarshalException.class)
+  public void shouldBeAnErrorToAttemptToSetASingleValueToACollection()
+      throws ConstructorArgMarshalException {
+
     class Dto implements ConstructorArg {
       public String file;
     }
@@ -290,8 +296,10 @@ public class ConstructorArgMarshallerTest {
         dto);
   }
 
-  @Test(expected = RuntimeException.class)
-  public void shouldBeAnErrorToAttemptToSetACollectionToASingleValue() {
+  @Test(expected = ConstructorArgMarshalException.class)
+  public void shouldBeAnErrorToAttemptToSetACollectionToASingleValue()
+      throws ConstructorArgMarshalException {
+
     class Dto implements ConstructorArg {
       public Set<String> strings;
     }
@@ -304,8 +312,10 @@ public class ConstructorArgMarshallerTest {
         dto);
   }
 
-  @Test(expected = RuntimeException.class)
-  public void shouldBeAnErrorToSetTheWrongTypeOfValueInACollection() {
+  @Test(expected = ConstructorArgMarshalException.class)
+  public void shouldBeAnErrorToSetTheWrongTypeOfValueInACollection()
+      throws ConstructorArgMarshalException {
+
     class Dto implements ConstructorArg {
       public Set<String> strings;
     }
@@ -320,7 +330,8 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldNormalizePaths() {
+  public void shouldNormalizePaths() throws ConstructorArgMarshalException {
+
     class Dto implements ConstructorArg {
       public Path path;
     }
@@ -335,8 +346,9 @@ public class ConstructorArgMarshallerTest {
     assertEquals(basePath.resolve("bar/fish.txt").normalize(), dto.path);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void lowerBoundGenericTypesCauseAnException() {
+  @Test(expected = RuntimeException.class)
+  public void lowerBoundGenericTypesCauseAnException() throws ConstructorArgMarshalException {
+
     class Dto implements ConstructorArg {
       public List<? super BuildTarget> nope;
     }
@@ -349,7 +361,7 @@ public class ConstructorArgMarshallerTest {
         new Dto());
   }
 
-  public void shouldSetBuildTargetParameters() {
+  public void shouldSetBuildTargetParameters() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public BuildTarget single;
       public BuildTarget sameBuildFileTarget;
@@ -376,7 +388,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldSetBuildRulesIfRequested() {
+  public void shouldSetBuildRulesIfRequested() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public BuildRule directDep;
     }
@@ -398,7 +410,9 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void upperBoundGenericTypesCauseValuesToBeSetToTheUpperBound() {
+  public void upperBoundGenericTypesCauseValuesToBeSetToTheUpperBound()
+      throws ConstructorArgMarshalException {
+
     class Dto implements ConstructorArg {
       public List<? extends SourcePath> yup;
     }
@@ -418,7 +432,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void specifyingZeroIsNotConsideredOptional() {
+  public void specifyingZeroIsNotConsideredOptional() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public Optional<Integer> number;
     }
@@ -435,7 +449,9 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void canPopulateSimpleConstructorArgFromBuildFactoryParams() {
+  public void canPopulateSimpleConstructorArgFromBuildFactoryParams()
+      throws ConstructorArgMarshalException {
+
     class Dto implements ConstructorArg {
       public String required;
       public Optional<String> notRequired;
@@ -490,7 +506,7 @@ public class ConstructorArgMarshallerTest {
    * values instead of nulls it's never possible for someone to see "Optional.absent()", but that's
    * what we want as authors of buildables. Handle that case.
    */
-  public void shouldPopulateDefaultValuesAsBeingAbsent() {
+  public void shouldPopulateDefaultValuesAsBeingAbsent() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public Optional<String> noString;
       public Optional<String> defaultString;
@@ -520,7 +536,9 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldResolveBuildRulesFromTargetsAndAssignToFields() {
+  public void shouldResolveBuildRulesFromTargetsAndAssignToFields()
+      throws ConstructorArgMarshalException {
+
     class Dto implements ConstructorArg {
       public BuildRule rule;
     }
@@ -541,7 +559,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldResolveCollectionOfSourcePaths() {
+  public void shouldResolveCollectionOfSourcePaths() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public ImmutableSortedSet<SourcePath> srcs;
     }
@@ -571,7 +589,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldBeAbleToSetGenfilesProperly() {
+  public void shouldBeAbleToSetGenfilesProperly() throws ConstructorArgMarshalException {
     class Dto implements ConstructorArg {
       public Path path;
       public SourcePath sourcePath;

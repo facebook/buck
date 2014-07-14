@@ -26,7 +26,9 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -57,9 +59,15 @@ public class AaptPackageResourcesTest {
     ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
     EasyMock.replay(resourcesFilter);
 
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
+        BuildTarget.builder("//java/src/com/facebook/base", "apk")
+            .setFlavor("aapt_package")
+            .build())
+        .build();
+
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
-        new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
+        params,
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         ImmutableSet.<Path>of(),
@@ -108,12 +116,16 @@ public class AaptPackageResourcesTest {
     EasyMock.replay(resourcesFilter);
 
     AndroidResource resourceOne = (AndroidResource) ruleResolver
-        .get(BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"))
-        .getBuildable();
+        .get(BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"));
 
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
+        BuildTarget.builder("//java/src/com/facebook/base", "apk")
+            .setFlavor("aapt_package")
+            .build())
+        .build();
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
-        new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
+        params,
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         ImmutableSet.<Path>of(),
@@ -166,9 +178,11 @@ public class AaptPackageResourcesTest {
     ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
     EasyMock.replay(resourcesFilter);
 
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
+        BuildTarget.builder("//facebook/base", "apk").setFlavor("aapt_package").build()).build();
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
-        new BuildTarget("//facebook/base", "apk", "aapt_package"),
+        params,
         /* manifest */ new TestSourcePath("facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         ImmutableSet.<Path>of(),
@@ -176,9 +190,9 @@ public class AaptPackageResourcesTest {
         ImmutableSet.<TargetCpuType>of());
 
     AndroidResource resourceOne = (AndroidResource) ruleResolver.get(
-        BuildTargetFactory.newInstance("//facebook/base:libraryOne_resources")).getBuildable();
+        BuildTargetFactory.newInstance("//facebook/base:libraryOne_resources"));
     AndroidResource resourceTwo = (AndroidResource) ruleResolver.get(
-        BuildTargetFactory.newInstance("//facebook/base:libraryTwo_resources")).getBuildable();
+        BuildTargetFactory.newInstance("//facebook/base:libraryTwo_resources"));
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     Set<Path> assetsDirectories = ImmutableSet.of(

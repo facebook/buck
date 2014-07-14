@@ -49,7 +49,7 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
       T castedNumber = (T) castNumber((Number) object);
       return castedNumber;
     }
-    throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputClass());
   }
 
   /**

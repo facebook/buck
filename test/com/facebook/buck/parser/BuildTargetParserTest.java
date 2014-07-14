@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
 
 import org.junit.Test;
@@ -224,5 +225,36 @@ public class BuildTargetParserTest {
         target.getFullyQualifiedName());
 
     verify(mockProjectFilesystem);
+  }
+
+  @Test
+  public void testParseWithRepoName() throws NoSuchBuildTargetException {
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    BuildTargetParser parser = new BuildTargetParser(filesystem);
+    ParseContext context = ParseContext.fullyQualified();
+    String targetStr = "@myrepo//foo/bar:baz";
+    BuildTarget buildTarget = parser.parse(targetStr, context);
+    assertEquals(targetStr, buildTarget.getFullyQualifiedName());
+    assertEquals("myrepo", buildTarget.getRepository().get());
+  }
+
+  @Test(expected = BuildTargetParseException.class)
+  public void testParseFailsWithRepoNameAndRelativeTarget() throws NoSuchBuildTargetException {
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    BuildTargetParser parser = new BuildTargetParser(filesystem);
+    ParseContext context = ParseContext.fullyQualified();
+
+    String invalidTargetStr = "@myRepo:baz";
+    parser.parse(invalidTargetStr, context);
+  }
+
+  @Test(expected = BuildTargetParseException.class)
+  public void testParseFailsWithEmptyRepoName() throws NoSuchBuildTargetException {
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    BuildTargetParser parser = new BuildTargetParser(filesystem);
+    ParseContext context = ParseContext.fullyQualified();
+
+    String zeroLengthRepoTargetStr = "@//foo/bar:baz";
+    parser.parse(zeroLengthRepoTargetStr, context);
   }
 }

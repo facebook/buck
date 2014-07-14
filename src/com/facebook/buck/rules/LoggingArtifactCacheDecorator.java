@@ -35,7 +35,8 @@ public class LoggingArtifactCacheDecorator {
   public final ArtifactCache decorate(final ArtifactCache delegate) {
     return new ArtifactCache() {
       @Override
-      public CacheResult fetch(RuleKey ruleKey, File output) {
+      public CacheResult fetch(RuleKey ruleKey, File output)
+          throws InterruptedException {
         eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.FETCH,
             ruleKey));
         CacheResult fetchResult = delegate.fetch(ruleKey, output);
@@ -46,7 +47,8 @@ public class LoggingArtifactCacheDecorator {
       }
 
       @Override
-      public void store(RuleKey ruleKey, File output) {
+      public void store(RuleKey ruleKey, File output)
+          throws InterruptedException {
         eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.STORE,
             ruleKey));
         delegate.store(ruleKey, output);

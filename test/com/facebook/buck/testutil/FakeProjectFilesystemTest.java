@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
@@ -38,6 +39,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 
 public class FakeProjectFilesystemTest {
@@ -137,5 +141,31 @@ public class FakeProjectFilesystemTest {
   public void testAllExistingFileSystem() throws IOException {
     AllExistingProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     assertTrue(filesystem.exists(Paths.get("somepath.txt")));
+  }
+
+  @Test
+  public void testWriteContentsWithDefaultFileAttributes() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path path = Paths.get("hello.txt");
+    filesystem.writeContentsToPath("hello world", path);
+    assertEquals(ImmutableSet.<FileAttribute<?>>of(), filesystem.getFileAttributesAtPath(path));
+  }
+
+  @Test
+  public void testWriteContentsWithSpecifiedFileAttributes() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ImmutableSet<PosixFilePermission> permissions =
+      ImmutableSet.of(
+          PosixFilePermission.OWNER_READ,
+          PosixFilePermission.GROUP_READ,
+          PosixFilePermission.OTHERS_READ);
+    FileAttribute<?> attribute = PosixFilePermissions.asFileAttribute(permissions);
+
+    Path path = Paths.get("hello.txt");
+    filesystem.writeContentsToPath(
+        "hello world",
+        Paths.get("hello.txt"),
+        attribute);
+    assertEquals(ImmutableSet.of(attribute), filesystem.getFileAttributesAtPath(path));
   }
 }

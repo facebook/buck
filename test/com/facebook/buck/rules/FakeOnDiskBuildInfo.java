@@ -32,7 +32,6 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   @Nullable private RuleKey ruleKey;
   @Nullable private RuleKey ruleKeyWithoutDeps;
   private Map<String, String> metadata = Maps.newHashMap();
-  private Map<Buildable, ImmutableList<String>> outputFileContents = Maps.newHashMap();
   private Map<Path, ImmutableList<String>> pathsToContents = Maps.newHashMap();
 
   /** @return this */
@@ -80,25 +79,6 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   /** @return this */
-  public FakeOnDiskBuildInfo setOutputFileContentsForBuildable(Buildable buildable,
-      List<String> lines) {
-    outputFileContents.put(buildable, ImmutableList.copyOf(lines));
-    return this;
-  }
-
-  @Override
-  public List<String> getOutputFileContentsByLine(Buildable buildable) throws IOException {
-    ImmutableList<String> lines = outputFileContents.get(buildable);
-    if (lines != null) {
-      return lines;
-    } else if (buildable.getPathToOutputFile() != null) {
-      return getOutputFileContentsByLine(buildable.getPathToOutputFile());
-    } else {
-      throw new RuntimeException("No lines for buildable: " + buildable);
-    }
-  }
-
-  /** @return this */
   public FakeOnDiskBuildInfo setFileContentsForPath(Path path, List<String> lines) {
     pathsToContents.put(path, ImmutableList.copyOf(lines));
     return this;
@@ -115,7 +95,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void makeOutputFileExecutable(Buildable buildable) {
+  public void makeOutputFileExecutable(BuildRule buildRule) {
     throw new UnsupportedOperationException();
   }
 

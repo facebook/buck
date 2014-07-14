@@ -25,6 +25,7 @@ public interface CommandRunner {
    * @param args the arguments passed to the command, not including the command name
    * @return the appropriate exit code for the command
    */
-  public int runCommand(BuckConfig buckConfig, List<String> args) throws IOException;
+  public int runCommand(BuckConfig buckConfig, List<String> args)
+      throws IOException, InterruptedException;
 
 }

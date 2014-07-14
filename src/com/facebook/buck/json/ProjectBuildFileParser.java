@@ -30,7 +30,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -224,7 +223,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       Iterable<String> includes,
       Console console,
       ImmutableMap<String, String> environment)
-      throws BuildFileParseException {
+      throws BuildFileParseException, InterruptedException {
     try (ProjectBuildFileParser buildFileParser =
              factory.createParser(
                  includes,
@@ -292,7 +291,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   @Override
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  public void close() throws BuildFileParseException {
+  public void close() throws BuildFileParseException, InterruptedException {
     if (isClosed) {
       return;
     }
@@ -321,14 +320,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
           }
         }
 
-        try {
-          int exitCode = buckPyProcess.waitFor();
-          if (exitCode != 0) {
-            throw BuildFileParseException.createForUnknownParseError(
-                String.format("Parser did not exit cleanly (exit code: %d)", exitCode));
-          }
-        } catch (InterruptedException e) {
-          throw Throwables.propagate(e);
+        int exitCode = buckPyProcess.waitFor();
+        if (exitCode != 0) {
+          throw BuildFileParseException.createForUnknownParseError(
+              String.format("Parser did not exit cleanly (exit code: %d)", exitCode));
         }
 
         try {

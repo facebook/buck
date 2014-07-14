@@ -99,7 +99,8 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void shouldSetJavaTargetAndSourceVersionFromConfig() throws IOException {
+  public void shouldSetJavaTargetAndSourceVersionFromConfig()
+      throws IOException, InterruptedException {
     String sourceLevel = "source-level";
     String targetLevel = "target-level";
 
@@ -118,7 +119,8 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void shouldSetJavaTargetAndSourceVersionDefaultToSaneValues() throws IOException {
+  public void shouldSetJavaTargetAndSourceVersionDefaultToSaneValues()
+      throws IOException, InterruptedException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
 
     JavaCompilerEnvironment compilerEnvironment = config.getJavaCompilerEnvironment(

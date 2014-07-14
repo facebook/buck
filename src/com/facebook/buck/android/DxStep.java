@@ -161,7 +161,7 @@ public class DxStep extends ShellStep {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public int execute(ExecutionContext context) throws InterruptedException {
     if (options.contains(Option.RUN_IN_PROCESS)) {
       return executeInProcess(context);
     } else {

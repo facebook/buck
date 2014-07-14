@@ -132,7 +132,8 @@ public class BuildInfoRecorder {
   /**
    * Creates a zip file of the metadata and recorded artifacts and stores it in the artifact cache.
    */
-  public void performUploadToArtifactCache(ArtifactCache artifactCache, BuckEventBus eventBus) {
+  public void performUploadToArtifactCache(ArtifactCache artifactCache, BuckEventBus eventBus)
+      throws InterruptedException {
     // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
     // building up the zip is wasted I/O.
     if (!artifactCache.isStoreSupported()) {
@@ -190,7 +191,8 @@ public class BuildInfoRecorder {
    * Fetches the artifact associated with the {@link #buildTarget} for this class and writes it to
    * the specified {@code outputFile}.
    */
-  public CacheResult fetchArtifactForBuildable(File outputFile, ArtifactCache artifactCache) {
+  public CacheResult fetchArtifactForBuildable(File outputFile, ArtifactCache artifactCache)
+      throws InterruptedException {
     Preconditions.checkNotNull(outputFile);
     return artifactCache.fetch(ruleKey, outputFile);
   }

@@ -18,15 +18,16 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -52,9 +53,9 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class PrebuiltJar extends AbstractBuildable
+public class PrebuiltJar extends AbstractBuildRule
     implements JavaLibrary, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibrary.Data> {
+    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -69,16 +70,14 @@ public class PrebuiltJar extends AbstractBuildable
       declaredClasspathEntriesSupplier;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
-  private final ImmutableSortedSet<BuildRule> deps;
 
   PrebuiltJar(
-      BuildableParams buildableParams,
+      BuildRuleParams params,
       SourcePath binaryJar,
       Optional<SourcePath> sourceJar,
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl) {
-    super(buildableParams.getBuildTarget());
-    this.deps = buildableParams.getDeps();
+    super(params);
     this.binaryJar = Preconditions.checkNotNull(binaryJar);
     this.sourceJar = Preconditions.checkNotNull(sourceJar);
     this.gwtJar = Preconditions.checkNotNull(gwtJar);
@@ -91,7 +90,8 @@ public class PrebuiltJar extends AbstractBuildable
             ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
                 ImmutableSetMultimap.builder();
             classpathEntries.put(PrebuiltJar.this, getBinaryJar().resolve());
-            classpathEntries.putAll(Classpaths.getClasspathEntries(deps));
+            classpathEntries.putAll(Classpaths.getClasspathEntries(
+                    PrebuiltJar.this.getDeclaredDeps()));
             return classpathEntries.build();
           }
         });
@@ -108,7 +108,7 @@ public class PrebuiltJar extends AbstractBuildable
         });
 
     buildOutputInitializer =
-        new BuildOutputInitializer<>(buildableParams.getBuildTarget(), this);
+        new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   @Override
@@ -130,11 +130,6 @@ public class PrebuiltJar extends AbstractBuildable
 
   public Optional<String> getJavadocUrl() {
     return javadocUrl;
-  }
-
-  @Override
-  public BuildTarget getBuildTarget() {
-    return target;
   }
 
   @Override
@@ -167,6 +162,11 @@ public class PrebuiltJar extends AbstractBuildable
   }
 
   @Override
+  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return getDeps();
+  }
+
+  @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     return transitiveClasspathEntriesSupplier.get();
   }
@@ -188,7 +188,7 @@ public class PrebuiltJar extends AbstractBuildable
 
   @Override
   public ImmutableSortedSet<BuildRule> getExportedDeps() {
-    return deps;
+    return getDeclaredDeps();
   }
 
   @Override
@@ -208,6 +208,17 @@ public class PrebuiltJar extends AbstractBuildable
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
 
     return steps.build();
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(getDeclaredDeps());
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    collector.addClasspathEntry(this, getBinaryJar().resolve());
+    collector.addPathToThirdPartyJar(getBuildTarget(), getBinaryJar().resolve());
   }
 
   class CalculateAbiStep implements Step {

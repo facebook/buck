@@ -87,7 +87,7 @@ public class CachingBuildEngine implements BuildEngine {
   }
 
   @Override
-  public boolean isRuleBuilt(BuildTarget buildTarget) {
+  public boolean isRuleBuilt(BuildTarget buildTarget) throws InterruptedException {
     SettableFuture<BuildRuleSuccess> resultFuture = results.get(buildTarget);
     return resultFuture != null && MoreFutures.isSuccess(resultFuture);
   }
@@ -138,13 +138,13 @@ public class CachingBuildEngine implements BuildEngine {
              * It is imperative that:
              * <ol>
              *   <li>The {@link BuildInfoRecorder} is not constructed until all of the
-             *       {@link Buildable}'s {@code deps} are guaranteed to be built. This ensures that
+             *       {@link BuildRule}'s {@code deps} are guaranteed to be built. This ensures that
              *       the {@link RuleKey} will be available before the {@link BuildInfoRecorder} is
              *       constructed.
              *       <p>
              *       This is why a {@link Supplier} is used.
-             *   <li>Only one {@link BuildInfoRecorder} is created per {@link Buildable}. This
-             *       ensures that all build-related information for a {@link Buildable} goes though
+             *   <li>Only one {@link BuildInfoRecorder} is created per {@link BuildRule}. This
+             *       ensures that all build-related information for a {@link BuildRule} goes though
              *       a single recorder, whose data will be persisted in {@link #onSuccess(List)}.
              *       <p>
              *       This is why {@link Suppliers#memoize(Supplier)} is used.
@@ -173,20 +173,34 @@ public class CachingBuildEngine implements BuildEngine {
               startOfBuildWasRecordedOnTheEventBus = true;
 
               ruleKeys.putIfAbsent(rule.getBuildTarget(), rule.getRuleKey());
-              BuildResult result = buildOnceDepsAreBuilt(
-                  rule,
-                  context,
-                  onDiskBuildInfo,
-                  buildInfoRecorder.get(),
-                  shouldTryToFetchFromCache(deps));
+              BuildResult result = null;
+              try {
+                result = buildOnceDepsAreBuilt(
+                    rule,
+                    context,
+                    onDiskBuildInfo,
+                    buildInfoRecorder.get(),
+                    shouldTryToFetchFromCache(deps));
+              } catch (InterruptedException e) {
+                e.printStackTrace();
+                Thread.currentThread().interrupt();
+                return;
+              }
               if (result.getStatus() == BuildRuleStatus.SUCCESS) {
-                recordBuildRuleSuccess(result);
+                try {
+                  recordBuildRuleSuccess(result);
+                } catch (InterruptedException e) {
+                  e.printStackTrace();
+                  Thread.currentThread().interrupt();
+                  return;
+                }
               } else {
                 recordBuildRuleFailure(result);
               }
             }
 
-            private void recordBuildRuleSuccess(BuildResult result) {
+            private void recordBuildRuleSuccess(BuildResult result)
+                throws InterruptedException {
               // Make sure that all of the local files have the same values they would as if the
               // rule had been built locally.
               BuildRuleSuccess.Type success = result.getSuccess();
@@ -280,7 +294,7 @@ public class CachingBuildEngine implements BuildEngine {
         final BuildContext context,
         OnDiskBuildInfo onDiskBuildInfo,
         BuildInfoRecorder buildInfoRecorder,
-        boolean shouldTryToFetchFromCache) {
+        boolean shouldTryToFetchFromCache) throws InterruptedException {
     // Compute the current RuleKey and compare it to the one stored on disk.
     RuleKey ruleKey = rule.getRuleKey();
     Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey();
@@ -375,7 +389,7 @@ public class CachingBuildEngine implements BuildEngine {
       BuildInfoRecorder buildInfoRecorder,
       ArtifactCache artifactCache,
       Path projectRoot,
-      BuildContext buildContext) {
+      BuildContext buildContext) throws InterruptedException {
     // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
     // that we are creating a zip-based FileSystem.
     File zipFile;
@@ -444,7 +458,7 @@ public class CachingBuildEngine implements BuildEngine {
     // Get and run all of the commands.
     BuildableContext buildableContext = new DefaultBuildableContext(onDiskBuildInfo,
         buildInfoRecorder);
-    List<Step> steps = rule.getBuildable().getBuildSteps(context, buildableContext);
+    List<Step> steps = rule.getBuildSteps(context, buildableContext);
 
     AbiRule abiRule = checkIfRuleOrBuildableIsAbiRule(rule);
     if (abiRule != null) {
@@ -483,9 +497,6 @@ public class CachingBuildEngine implements BuildEngine {
    */
    @Nullable
   private InitializableFromDisk<?> deriveInitializable(BuildRule rule) {
-    if (rule.getBuildable() instanceof InitializableFromDisk) {
-      return (InitializableFromDisk<?>) rule.getBuildable();
-    }
     if (rule instanceof InitializableFromDisk) {
       return (InitializableFromDisk<?>) rule;
     }
@@ -514,8 +525,6 @@ public class CachingBuildEngine implements BuildEngine {
   private AbiRule checkIfRuleOrBuildableIsAbiRule(BuildRule rule) {
     if (rule instanceof AbiRule) {
       return (AbiRule) rule;
-    } else if (rule.getBuildable() instanceof AbiRule) {
-      return (AbiRule) rule.getBuildable();
     }
     return null;
   }

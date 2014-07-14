@@ -28,7 +28,7 @@ public interface ArtifactCache extends Closeable {
    * @param output path to store artifact to
    * @return whether it was a {@link CacheResult#MISS} (indicating a failure) or some type of hit.
    */
-  public CacheResult fetch(RuleKey ruleKey, File output);
+  public CacheResult fetch(RuleKey ruleKey, File output) throws InterruptedException;
 
   /**
    * Store the artifact at path specified by output to cache, such that it can later be fetched
@@ -40,7 +40,7 @@ public interface ArtifactCache extends Closeable {
    * @param ruleKey cache store key
    * @param output path to read artifact from
    */
-  public void store(RuleKey ruleKey, File output);
+  public void store(RuleKey ruleKey, File output) throws InterruptedException;
 
   /**
    * This method must return the same value over the lifetime of this object.

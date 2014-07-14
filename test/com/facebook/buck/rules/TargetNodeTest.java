@@ -105,8 +105,11 @@ public class TargetNodeTest {
     }
 
     @Override
-    public <A extends Arg> Buildable createBuildable(BuildRuleParams params, A args) {
-      return new FakeBuildable(params.getBuildTarget());
+    public <A extends Arg> BuildRule createBuildRule(
+        BuildRuleParams params,
+        BuildRuleResolver resolver,
+        A args) {
+      return new FakeBuildRule(params);
     }
   }
 

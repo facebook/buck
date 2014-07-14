@@ -19,14 +19,22 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.SortedSet;
 
 public class SortedSetTypeCoercer<T extends Comparable<T>>
     extends CollectionTypeCoercer<ImmutableSortedSet<T>, T> {
+
+  private final TypeCoercer<T> elementTypeCoercer;
+
   SortedSetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
     super(elementTypeCoercer);
+    this.elementTypeCoercer = Preconditions.checkNotNull(elementTypeCoercer);
   }
 
   @SuppressWarnings("unchecked")
@@ -40,6 +48,29 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
     return Optional.of(ImmutableSortedSet.<T>of());
   }
 
+  protected void fillSortedSet(
+      BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
+      SortedSet<T> builder,
+      Object object) throws CoerceFailedException {
+
+    if (object instanceof Collection) {
+      for (Object element : (Iterable<?>) object) {
+        // if any element failed, the entire collection fails
+        T coercedElement = elementTypeCoercer.coerce(
+            buildRuleResolver, filesystem, pathRelativeToProjectRoot, element);
+        boolean alreadyExists = !builder.add(coercedElement);
+        if (alreadyExists) {
+          throw new CoerceFailedException(
+              String.format("duplicate element \"%s\"", coercedElement));
+        }
+      }
+    } else {
+      throw CoerceFailedException.simple(object, getOutputClass());
+    }
+  }
+
   @Override
   public ImmutableSortedSet<T> coerce(
       BuildRuleResolver buildRuleResolver,
@@ -47,8 +78,9 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    ImmutableSortedSet.Builder<T> builder = ImmutableSortedSet.naturalOrder();
-    fill(buildRuleResolver, filesystem, pathRelativeToProjectRoot, builder, object);
-    return builder.build();
+    final SortedSet<T> builder = Sets.newTreeSet();
+    fillSortedSet(buildRuleResolver, filesystem, pathRelativeToProjectRoot, builder, object);
+    return ImmutableSortedSet.copyOf(builder);
   }
+
 }

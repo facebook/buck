@@ -57,7 +57,8 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   }
 
   @Override
-  int runCommandWithOptionsInternal(AuditCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(AuditCommandOptions options)
+      throws IOException, InterruptedException {
     // Create a PartialGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargets.
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
@@ -173,11 +174,8 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
   @Nullable
   private HasClasspathEntries getHasClasspathEntriesFrom(BuildRule rule) {
-    // TODO(natthu): Remove this once buildables and buildrules merge.
     if (rule instanceof HasClasspathEntries) {
       return (HasClasspathEntries) rule;
-    } else if (rule.getBuildable() instanceof HasClasspathEntries) {
-      return (HasClasspathEntries) rule.getBuildable();
     }
     return null;
   }

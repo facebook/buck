@@ -49,12 +49,16 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.channels.Channels;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
+import java.nio.file.OpenOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -432,10 +436,14 @@ public class ProjectFilesystem {
    * <p>
    * The parent path of {@code pathRelativeToProjectRoot} must exist.
    */
-  public void writeLinesToPath(Iterable<String> lines, Path pathRelativeToProjectRoot)
+  public void writeLinesToPath(
+      Iterable<String> lines,
+      Path pathRelativeToProjectRoot,
+      FileAttribute<?>... attrs)
       throws IOException {
-    try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-        java.nio.file.Files.newOutputStream(getPathForRelativePath(pathRelativeToProjectRoot))))) {
+    try (Writer writer =
+         new BufferedWriter(
+             new OutputStreamWriter(newFileOutputStream(pathRelativeToProjectRoot, attrs)))) {
       for (String line : lines) {
         writer.write(line);
         writer.write('\n');
@@ -443,22 +451,45 @@ public class ProjectFilesystem {
     }
   }
 
-  public void writeContentsToPath(String contents, Path pathRelativeToProjectRoot)
+  public void writeContentsToPath(
+      String contents,
+      Path pathRelativeToProjectRoot,
+      FileAttribute<?>... attrs)
       throws IOException {
-    writeBytesToPath(contents.getBytes(Charsets.UTF_8), pathRelativeToProjectRoot);
+    writeBytesToPath(contents.getBytes(Charsets.UTF_8), pathRelativeToProjectRoot, attrs);
   }
 
-  public void writeBytesToPath(byte[] bytes, Path pathRelativeToProjectRoot) throws IOException {
-    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
-    try (OutputStream outputStream = java.nio.file.Files.newOutputStream(path)) {
+  public void writeBytesToPath(
+      byte[] bytes,
+      Path pathRelativeToProjectRoot,
+      FileAttribute<?>... attrs) throws IOException {
+    try (OutputStream outputStream = newFileOutputStream(pathRelativeToProjectRoot, attrs)) {
       outputStream.write(bytes);
     }
   }
 
-  public OutputStream newFileOutputStream(Path pathRelativeToProjectRoot)
+  public OutputStream newFileOutputStream(
+      Path pathRelativeToProjectRoot,
+      FileAttribute<?>... attrs)
     throws IOException {
     return new BufferedOutputStream(
-        java.nio.file.Files.newOutputStream(getPathForRelativePath(pathRelativeToProjectRoot)));
+        Channels.newOutputStream(
+            java.nio.file.Files.newByteChannel(
+                getPathForRelativePath(pathRelativeToProjectRoot),
+                ImmutableSet.<OpenOption>of(
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING,
+                    StandardOpenOption.WRITE),
+                attrs)));
+  }
+
+  public <A extends BasicFileAttributes> A readAttributes(
+      Path pathRelativeToProjectRoot,
+      Class<A> type,
+      LinkOption... options)
+    throws IOException {
+    return java.nio.file.Files.readAttributes(
+        getPathForRelativePath(pathRelativeToProjectRoot), type, options);
   }
 
   public InputStream newFileInputStream(Path pathRelativeToProjectRoot)

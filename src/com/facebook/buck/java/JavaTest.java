@@ -16,12 +16,10 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DependencyEnhancer;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -35,7 +33,6 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
@@ -61,14 +58,9 @@ import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, TestRule {
+public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
   private final ImmutableList<String> vmArgs;
-
-  /**
-   * Build rules for which this test rule will be testing.
-   */
-  private final ImmutableSet<BuildTarget> sourceTargetsUnderTest;
 
   private CompiledClassFileFinder compiledClassFileFinder;
 
@@ -78,70 +70,37 @@ public class JavaTest extends DefaultJavaLibrary implements DependencyEnhancer, 
 
   private ImmutableSet<BuildRule> sourceUnderTest;
 
+  private final ImmutableSet<Path> additionalClasspathEntries;
+
   protected JavaTest(
-      BuildTarget target,
+      BuildRuleParams params,
       Set<SourcePath> srcs,
       Set<SourcePath> resources,
       Set<Label> labels,
       Set<String> contacts,
       Optional<Path> proguardConfig,
+      ImmutableSet<Path> addtionalClasspathEntries,
       JavacOptions javacOptions,
       List<String> vmArgs,
-      ImmutableSortedSet<BuildRule> deps,
-      ImmutableSet<BuildTarget> sourceUnderTest,
+      ImmutableSet<BuildRule> sourceUnderTest,
       Optional<Path> resourcesRoot) {
-    super(target,
+    super(
+        params,
         srcs,
         resources,
         proguardConfig,
         ImmutableList.<String>of(),
-        deps,
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        addtionalClasspathEntries,
         javacOptions,
         resourcesRoot);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
-    this.sourceTargetsUnderTest = Preconditions.checkNotNull(sourceUnderTest);
+    this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
+    this.additionalClasspathEntries = Preconditions.checkNotNull(addtionalClasspathEntries);
   }
-
-  @Override
-  public ImmutableSortedSet<BuildRule> getEnhancedDeps(
-      BuildRuleResolver ruleResolver,
-      Iterable<BuildRule> declaredDeps,
-      Iterable<BuildRule> inferredDeps) {
-
-    ImmutableSet.Builder<BuildRule> sourcesUnderTestBuilder = ImmutableSet.builder();
-    for (BuildTarget target : sourceTargetsUnderTest) {
-      BuildRule rule = ruleResolver.get(target);
-      if (rule == null) {
-        throw new HumanReadableException(
-            "Specified source under test for %s is not among its dependencies: %s",
-            getBuildTarget().getFullyQualifiedName(),
-            target);
-      }
-      if (rule.getBuildable() instanceof JavaLibrary) {
-        sourcesUnderTestBuilder.add(rule);
-      } else {
-        // In this case, the source under test specified in the build file was not a Java library
-        // rule. Since EMMA requires the sources to be in Java, we will throw this exception and
-        // not continue with the tests.
-        throw new HumanReadableException(
-            "Specified source under test for %s is not a Java library: %s (%s).",
-            getBuildTarget().getFullyQualifiedName(),
-            rule.getFullyQualifiedName(),
-            rule.getType().getName());
-      }
-    }
-    sourceUnderTest = sourcesUnderTestBuilder.build();
-
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(deps)  // These contain the declaredDeps already.
-        .addAll(inferredDeps)
-        .build();
-  }
-
 
   @Override
   public ImmutableSet<Label> getLabels() {

@@ -22,10 +22,8 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
 import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -40,7 +38,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
@@ -54,9 +51,7 @@ public class RobolectricTest extends JavaTest {
   private static final BuildableProperties PROPERTIES = new BuildableProperties(
       ANDROID, LIBRARY, TEST);
 
-  private final BuildRuleParams buildRuleParams;
-  private final JavacOptions javacOptions;
-  private Optional<DummyRDotJava> optionalDummyRDotJava;
+  private final Optional<DummyRDotJava> optionalDummyRDotJava;
   /**
    * Used by robolectric test runner to get list of resource directories that
    * can be used for tests.
@@ -79,23 +74,25 @@ public class RobolectricTest extends JavaTest {
       Set<Label> labels,
       Set<String> contacts,
       Optional<Path> proguardConfig,
+      ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
       List<String> vmArgs,
-      ImmutableSet<BuildTarget> sourceTargetsUnderTest,
-      Optional<Path> resourcesRoot) {
-    super(buildRuleParams.getBuildTarget(),
+      ImmutableSet<BuildRule> sourceTargetsUnderTest,
+      Optional<Path> resourcesRoot,
+      Optional<DummyRDotJava> optionalDummyRDotJava) {
+    super(
+        buildRuleParams,
         srcs,
         resources,
         labels,
         contacts,
         proguardConfig,
+        additionalClasspathEntries,
         javacOptions,
         vmArgs,
-        buildRuleParams.getDeps(),
         sourceTargetsUnderTest,
         resourcesRoot);
-    this.buildRuleParams = Preconditions.checkNotNull(buildRuleParams);
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.optionalDummyRDotJava = Preconditions.checkNotNull(optionalDummyRDotJava);
   }
 
   @Override
@@ -106,32 +103,6 @@ public class RobolectricTest extends JavaTest {
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
-  }
-
-  @Override
-  public ImmutableSortedSet<BuildRule> getEnhancedDeps(
-      BuildRuleResolver ruleResolver,
-      Iterable<BuildRule> declaredDeps,
-      Iterable<BuildRule> inferredDeps) {
-    super.getEnhancedDeps(ruleResolver, declaredDeps, inferredDeps);
-    AndroidLibraryGraphEnhancer.Result result = new AndroidLibraryGraphEnhancer(
-        buildRuleParams.getBuildTarget(),
-        buildRuleParams,
-        javacOptions)
-        .createBuildableForAndroidResources(
-            ruleResolver,
-            /* createBuildableIfEmptyDeps */ true);
-
-    optionalDummyRDotJava = result.getOptionalDummyRDotJava();
-    this.additionalClasspathEntries = optionalDummyRDotJava.isPresent()
-        ? ImmutableSet.of(optionalDummyRDotJava.get().getRDotJavaBinFolder())
-        : ImmutableSet.<Path>of();
-
-    this.deps = result.getBuildRuleParams().getDeps();
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(deps)
-        .addAll(inferredDeps)
-        .build();
   }
 
   @Override

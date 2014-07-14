@@ -22,7 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class JavaBinaryRuleBuilder extends AbstractBuilder<JavaBinary, JavaBinaryDescription.Args> {
+public class JavaBinaryRuleBuilder extends AbstractBuilder<JavaBinaryDescription.Args> {
 
   public JavaBinaryRuleBuilder(BuildTarget target) {
     super(new JavaBinaryDescription(), target);

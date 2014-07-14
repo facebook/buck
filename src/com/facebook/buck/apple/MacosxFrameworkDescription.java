@@ -16,22 +16,12 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.rules.coercer.Either;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
-
-public class MacosxFrameworkDescription implements Description<MacosxFrameworkDescription.Arg> {
+public class MacosxFrameworkDescription implements Description<AppleNativeTargetDescriptionArg> {
   public static final BuildRuleType TYPE = new BuildRuleType("macosx_framework");
 
   @Override
@@ -40,35 +30,15 @@ public class MacosxFrameworkDescription implements Description<MacosxFrameworkDe
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public AppleNativeTargetDescriptionArg createUnpopulatedConstructorArg() {
+    return new AppleNativeTargetDescriptionArg();
   }
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new MacosxFramework(
-        params.getBuildTarget(),
-        args,
-        TargetSources.ofAppleSources(args.srcs));
-  }
-
-  public static class Arg implements ConstructorArg {
-    /**
-     * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
-     */
-    public ImmutableMap<
-        String,
-        ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs;
-    public ImmutableList<AppleSource> srcs;
-
-    /**
-     * List of system frameworks, may contain build settings in the path to denote its location.
-     *
-     * Examples:
-     *    {@code $SDKROOT/System/Library/Frameworks/Cocoa.framework}
-     *    {@code $DEVELOPER_DIR/Library/Frameworks/SenTestingKit.framework}
-     */
-    public ImmutableSortedSet<String> frameworks;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+  public <A extends AppleNativeTargetDescriptionArg> MacosxFramework createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new MacosxFramework(params, args, TargetSources.ofAppleSources(args.srcs));
   }
 }

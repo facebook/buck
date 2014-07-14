@@ -139,7 +139,11 @@ public final class Escaper {
     }
     builder.append('"');
     return builder.toString();
+  }
 
+  public static String escapeAsJavaString(String str) {
+    // Until we start to find special cases where Java and Python differ, just use the same logic.
+    return escapeAsPythonString(str);
   }
 
   @VisibleForTesting

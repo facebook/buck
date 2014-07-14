@@ -41,7 +41,7 @@ import java.util.Set;
 /**
  * Step responsible for hashing dex inputs to be passed to {@link SmartDexingStep}. It goes through
  * each dex input, looks at the classes that went into that jar, and uses the class hashes collected
- * in {@link AndroidDexTransitiveDependencies} to calculate the final hash of the input.
+ * in {@link AndroidPackageableCollection} to calculate the final hash of the input.
  */
 public class HashInputJarsToDexStep extends AbstractExecutionStep
     implements SmartDexingStep.DexInputHashesProvider {

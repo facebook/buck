@@ -32,9 +32,12 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
   }
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Arg args) {
+  public <A extends Arg> ProjectConfig createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     return new ProjectConfig(
-        params.getBuildTarget(),
+        params,
         args.srcTarget.orNull(),
         args.srcRoots.orNull(),
         args.testTarget.orNull(),

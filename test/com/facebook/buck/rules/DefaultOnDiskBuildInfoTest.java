@@ -38,7 +38,7 @@ public class DefaultOnDiskBuildInfoTest {
         .andReturn(Optional.of("[\"bar\",\"biz\",\"baz\"]"));
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = new BuildTarget("//foo/bar", "baz");
+    BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(buildTarget,
         projectFilesystem);
     assertEquals(Optional.of(ImmutableList.of("bar", "biz", "baz")),

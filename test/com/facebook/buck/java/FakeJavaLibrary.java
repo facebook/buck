@@ -18,6 +18,8 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
@@ -40,7 +42,7 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
-public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary {
+public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, AndroidPackageable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -83,6 +85,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary {
   }
 
   @Override
+  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return getDeps();
+  }
+
+  @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     return ImmutableSetMultimap.of((JavaLibrary) this, getPathToOutputFile());
   }
@@ -118,5 +125,15 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary {
   @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(getDeps());
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    collector.addClasspathEntry(this, getPathToOutputFile());
   }
 }

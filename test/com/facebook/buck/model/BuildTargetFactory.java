@@ -33,8 +33,8 @@ public class BuildTargetFactory {
     Preconditions.checkArgument(parts.length == 2);
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
-      return new BuildTarget(parts[0], parts[1]);
+      return BuildTarget.builder(parts[0], parts[1]).build();
     }
-    return new BuildTarget(parts[0], nameAndFlavor[0], nameAndFlavor[1]);
+    return BuildTarget.builder(parts[0], nameAndFlavor[0]).setFlavor(nameAndFlavor[1]).build();
   }
 }

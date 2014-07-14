@@ -20,11 +20,15 @@ import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -48,25 +52,48 @@ public class AndroidLibraryDescription implements Description<AndroidLibraryDesc
   }
 
   @Override
-  public AndroidLibrary createBuildable(BuildRuleParams params, Arg args) {
+  public <A extends Arg> AndroidLibrary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
 
     AnnotationProcessingParams annotationParams =
         args.buildAnnotationProcessingParams(params.getBuildTarget());
     javacOptions.setAnnotationProcessingData(annotationParams);
 
+    AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
+        params.getBuildTarget(),
+        params.copyWithExtraDeps(args.exportedDeps.get()),
+        javacOptions.build());
+    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
+        resolver,
+        /* createBuildableIfEmpty */ false);
+
+    ImmutableSet<Path> additionalClasspathEntries = ImmutableSet.of();
+    if (dummyRDotJava.isPresent()) {
+      additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getRDotJavaBinFolder());
+      ImmutableSortedSet<BuildRule> newDeclaredDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
+          .addAll(params.getDeclaredDeps())
+          .add(dummyRDotJava.get())
+          .build();
+      params = params.copyWithDeps(newDeclaredDeps, params.getExtraDeps());
+    }
+
     return new AndroidLibrary(
         params,
         args.srcs.get(),
-        JavaLibraryDescription.validateResources(args, params.getProjectFilesystem()),
+        JavaLibraryDescription.validateResources(
+            args,
+            params.getProjectFilesystem()),
         args.proguardConfig,
         args.postprocessClassesCommands.get(),
         args.exportedDeps.get(),
         args.providedDeps.get(),
+        additionalClasspathEntries,
         javacOptions.build(),
         args.resourcesRoot,
         args.manifest);
-
   }
 
   public static class Arg extends JavaLibraryDescription.Arg {

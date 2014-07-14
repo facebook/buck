@@ -69,19 +69,19 @@ public class SchemeGeneratorTest {
   @Test
   public void schemeWithMultipleTargetsBuildsInCorrectOrder() throws Exception {
     BuildRule rootRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "root"),
+        BuildTarget.builder("//foo", "root").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription);
     BuildRule leftRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "left"),
+        BuildTarget.builder("//foo", "left").build(),
         ImmutableSortedSet.of(rootRule),
         iosLibraryDescription);
     BuildRule rightRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "right"),
+        BuildTarget.builder("//foo", "right").build(),
         ImmutableSortedSet.of(rootRule),
         iosLibraryDescription);
     BuildRule childRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "child"),
+        BuildTarget.builder("//foo", "child").build(),
         ImmutableSortedSet.of(leftRule, rightRule),
         iosLibraryDescription);
 
@@ -154,11 +154,11 @@ public class SchemeGeneratorTest {
   @Test
   public void schemeIncludesAllExpectedActions() throws Exception {
     BuildRule rootRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "root"),
+        BuildTarget.builder("//foo", "root").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription);
     BuildRule testRule = createBuildRuleWithDefaults(
-        new BuildTarget("//foo", "test"),
+        BuildTarget.builder("//foo", "test").build(),
         ImmutableSortedSet.of(rootRule),
         iosTestDescription);
 

@@ -186,7 +186,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
         // TODO(simons): don't use raw strings.
         HasClasspathEntries hasClasspathEntries = getRuleAsHasClasspathEntries(rule);
         if ("java_binary".equals(type) || "prebuilt_jar".equals(type)) {
-          Path pathToOutput = rule.getBuildable().getPathToOutputFile();
+          Path pathToOutput = rule.getPathToOutputFile();
           if (pathToOutput != null) {
             searchPathElements.add(pathToOutput);
           }
@@ -213,8 +213,6 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
     private HasClasspathEntries getRuleAsHasClasspathEntries(BuildRule rule) {
       if (rule instanceof HasClasspathEntries) {
         return (HasClasspathEntries) rule;
-      } else if (rule.getBuildable() instanceof HasClasspathEntries) {
-        return (HasClasspathEntries) rule.getBuildable();
       }
       return null;
     }

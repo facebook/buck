@@ -16,22 +16,12 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.rules.coercer.Either;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
-
-public class IosLibraryDescription implements Description<IosLibraryDescription.Arg> {
+public class IosLibraryDescription implements Description<AppleNativeTargetDescriptionArg> {
   public static final BuildRuleType TYPE = new BuildRuleType("ios_library");
 
   @Override
@@ -40,35 +30,15 @@ public class IosLibraryDescription implements Description<IosLibraryDescription.
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public AppleNativeTargetDescriptionArg createUnpopulatedConstructorArg() {
+    return new AppleNativeTargetDescriptionArg();
   }
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new IosLibrary(
-        params.getBuildTarget(),
-        args,
-        TargetSources.ofAppleSources(args.srcs));
-  }
-
-  public static class Arg implements ConstructorArg {
-    /**
-     * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
-     */
-    public ImmutableMap<
-        String,
-        ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs;
-    public ImmutableList<AppleSource> srcs;
-
-    /**
-     * List of system frameworks, may contain build settings in the path to denote its location.
-     *
-     * Examples:
-     *    {@code $SDKROOT/System/Library/Frameworks/UIKit.framework}
-     *    {@code $DEVELOPER_DIR/Library/Frameworks/SenTestingKit.framework}
-     */
-    public ImmutableSortedSet<String> frameworks;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+  public <A extends AppleNativeTargetDescriptionArg> IosLibrary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new IosLibrary(params, args, TargetSources.ofAppleSources(args.srcs));
   }
 }

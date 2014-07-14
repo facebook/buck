@@ -17,10 +17,11 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
@@ -58,7 +59,7 @@ import java.util.Map;
  * )
  * </pre>
  */
-public class AppleResource extends AbstractBuildable {
+public class AppleResource extends AbstractBuildRule {
 
   private final DirectoryTraverser directoryTraverser;
   private final ImmutableSortedSet<Path> dirs;
@@ -67,11 +68,11 @@ public class AppleResource extends AbstractBuildable {
   private final Path outputDirectory;
 
   AppleResource(
-      BuildTarget target,
+      BuildRuleParams params,
       DirectoryTraverser directoryTraverser,
       AppleResourceDescriptionArg args,
       Optional<Path> outputPathSubdirectory) {
-    super(target);
+    super(params);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
     this.dirs = ImmutableSortedSet.copyOf(args.dirs);
     this.files = ImmutableSortedSet.copyOf(args.files);
@@ -89,6 +90,7 @@ public class AppleResource extends AbstractBuildable {
     }
 
     Preconditions.checkNotNull(outputPathSubdirectory);
+    BuildTarget target = params.getBuildTarget();
     Path baseOutputDirectory = Paths.get(
         BuckConstant.BIN_DIR,
         target.getBasePath(),
@@ -127,7 +129,7 @@ public class AppleResource extends AbstractBuildable {
         .naturalOrder();
 
     for (Path dir : dirs) {
-      Buildables.addInputsToSortedSet(
+      BuildRules.addInputsToSortedSet(
           dir,
           inputsToConsiderForCachingPurposes,
           directoryTraverser);

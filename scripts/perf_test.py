@@ -143,6 +143,12 @@ RULEKEY_LINE = re.compile(
     r'(?P<rule_key_debug>.*)$')
 
 
+BUCK_LOG_RULEKEY_LINE = re.compile(
+    r'.*\[debug\]\[tid:\d+\]\[com.facebook.buck.rules.RuleKey\$Builder\] '
+    r'RuleKey (?P<rule_key>[0-9a-f]+)='
+    r'(?P<rule_key_debug>.*)$')
+
+
 def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
     """Builds a target with buck and returns performance information.
     """
@@ -174,9 +180,20 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
         tmpFile.seek(0)
         build_output = tmpFile.read()
     finish = datetime.now()
+
+    java_utils_log_path = os.path.join(
+        cwd,
+        'buck-out', 'log', 'buck-0.log')
+    if os.path.exists(java_utils_log_path):
+        pattern = BUCK_LOG_RULEKEY_LINE
+        with open(java_utils_log_path) as f:
+            build_output = f.read()
+    else:
+        pattern = RULEKEY_LINE
+
     rule_debug_map = {}
     for line in build_output.splitlines():
-        match = RULEKEY_LINE.match(line)
+        match = pattern.match(line)
         if match:
             rule_debug_map[match.group('rule_key')] = match.group(
                 'rule_key_debug')
@@ -191,10 +208,16 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
             line = line.strip()
             match = BUILD_RESULT_LOG_LINE.search(line)
             if match:
+                rule_name = match.group('rule_name')
+                rule_key = match.group('rule_key')
+                if not rule_key in rule_debug_map:
+                    raise Exception('''ERROR: build.log contains an entry
+                        which was not found in buck build -v 5 output.
+                        Rule: {}, rule key: {}'''.format(rule_name, rule_key))
                 cache_results[match.group('cache_result')].append({
-                    'rule_name': match.group('rule_name'),
-                    'rule_key': match.group('rule_key'),
-                    'rule_key_debug': rule_debug_map[match.group('rule_key')]
+                    'rule_name': rule_name,
+                    'rule_key': rule_key,
+                    'rule_key_debug': rule_debug_map[rule_key]
                 })
                 rule_key_map[match.group('rule_name')] = rule_debug_map[
                     match.group('rule_key')]

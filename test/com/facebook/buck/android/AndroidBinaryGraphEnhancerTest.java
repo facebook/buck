@@ -16,10 +16,8 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
-import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
@@ -28,6 +26,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
+import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
@@ -38,8 +38,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.DescribedRule;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -47,6 +46,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -63,19 +63,19 @@ public class AndroidBinaryGraphEnhancerTest {
     RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory();
 
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
-    BuildTarget javaDep1BuildTarget = new BuildTarget("//java/com/example", "dep1");
+    BuildTarget javaDep1BuildTarget = BuildTarget.builder("//java/com/example", "dep1").build();
     BuildRule javaDep1 = JavaLibraryBuilder
         .createBuilder(javaDep1BuildTarget)
         .addSrc(Paths.get("java/com/example/Dep1.java"))
         .build(ruleResolver);
 
-    BuildTarget javaDep2BuildTarget = new BuildTarget("//java/com/example", "dep2");
+    BuildTarget javaDep2BuildTarget = BuildTarget.builder("//java/com/example", "dep2").build();
     BuildRule javaDep2 = JavaLibraryBuilder
         .createBuilder(javaDep2BuildTarget)
         .addSrc(Paths.get("java/com/example/Dep2.java"))
         .build(ruleResolver);
 
-    BuildTarget javaLibBuildTarget = new BuildTarget("//java/com/example", "lib");
+    BuildTarget javaLibBuildTarget = BuildTarget.builder("//java/com/example", "lib").build();
     BuildRule javaLib = JavaLibraryBuilder
         .createBuilder(javaLibBuildTarget)
         .addSrc(Paths.get("java/com/example/Lib.java"))
@@ -87,19 +87,20 @@ public class AndroidBinaryGraphEnhancerTest {
     // is //java/com/example:lib, and that //java/com/example:dep2 is in its no_dx list.
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
     ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
-    BuildTarget apkTarget = new BuildTarget("//java/com/example", "apk");
+    BuildTarget apkTarget = BuildTarget.builder("//java/com/example", "apk").build();
     BuildRuleParams originalParams = new BuildRuleParams(
         apkTarget,
         originalDeps,
+        originalDeps,
         /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
         new FakeProjectFilesystem(),
-        ruleKeyBuilderFactory);
+        ruleKeyBuilderFactory,
+        AndroidBinaryDescription.TYPE);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
-        createStrictMock(AndroidResourceDepsFinder.class),
         createStrictMock(PathSourcePath.class),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.< AndroidBinary.TargetCpuType>of(),
@@ -108,32 +109,46 @@ public class AndroidBinaryGraphEnhancerTest {
         BuildTargets.getBinPath(apkTarget, "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
         buildRulesToExcludeFromDex,
+        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
         /* exopackage */ false,
         createStrictMock(Keystore.class));
 
-    UberRDotJava uberRDotJava = createMock(UberRDotJava.class);
     BuildTarget uberRDotJavaTarget =
-        new BuildTarget("//java/com/example", "apk", "uber_r_dot_java");
-    expect(uberRDotJava.getBuildTarget()).andStubReturn(uberRDotJavaTarget);
-    replay(uberRDotJava);
-    BuildRule uberRDotJavaRule = new DescribedRule(
-        BuildRuleType.UBER_R_DOT_JAVA,
-        uberRDotJava,
-        new BuildRuleParams(
-            uberRDotJavaTarget,
-            ImmutableSortedSet.<BuildRule>of(),
-            ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-            new FakeProjectFilesystem(),
-            ruleKeyBuilderFactory));
-    ruleResolver.addToIndex(uberRDotJavaTarget, uberRDotJavaRule);
+        BuildTarget.builder("//java/com/example", "apk").setFlavor("uber_r_dot_java").build();
+    BuildRuleParams uberRDotJavaParams = new FakeBuildRuleParamsBuilder(uberRDotJavaTarget).build();
+    UberRDotJava uberRDotJava = new UberRDotJava(
+        uberRDotJavaParams,
+        createMock(FilteredResourcesProvider.class),
+        ImmutableList.<HasAndroidResourceDeps>of(),
+        ImmutableSet.<String>of(),
+        JavacOptions.DEFAULTS,
+        false,
+        false);
+    ruleResolver.addToIndex(uberRDotJavaTarget, uberRDotJava);
 
-    BuildRule preDexMergeRule =
-        graphEnhancer.createPreDexMergeRule(uberRDotJava);
-    BuildTarget dexMergeTarget = new BuildTarget("//java/com/example", "apk", "dex_merge");
+    AndroidPackageableCollection collection =
+        new AndroidPackageableCollector(
+            /* collectionRoot */ apkTarget,
+            ImmutableSet.of(javaDep2BuildTarget),
+            /* resourcesToExclude */ ImmutableSet.<BuildTarget>of())
+            .addClasspathEntry(
+                ((HasJavaClassHashes) javaDep1), Paths.get("ignored"))
+            .addClasspathEntry(
+                ((HasJavaClassHashes) javaDep2), Paths.get("ignored"))
+            .addClasspathEntry(
+                ((HasJavaClassHashes) javaLib), Paths.get("ignored"))
+            .build();
+
+
+    BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(
+        uberRDotJava,
+        collection);
+    BuildTarget dexMergeTarget =
+        BuildTarget.builder("//java/com/example", "apk").setFlavor("dex_merge").build();
     BuildRule dexMergeRule = ruleResolver.get(dexMergeTarget);
 
-    assertEquals(dexMergeRule.getBuildable(), preDexMergeRule.getBuildable());
+    assertEquals(dexMergeRule, preDexMergeRule);
 
     assertEquals(
         "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx " +
@@ -144,7 +159,7 @@ public class AndroidBinaryGraphEnhancerTest {
     Iterator<BuildRule> depsForPreDexingIter = dexMergeRule.getDeps().iterator();
 
     BuildRule shouldBeUberRDotJavaRule = depsForPreDexingIter.next();
-    assertEquals(uberRDotJavaRule, shouldBeUberRDotJavaRule);
+    assertEquals(uberRDotJava, shouldBeUberRDotJavaRule);
 
     BuildRule preDexRule1 = depsForPreDexingIter.next();
     assertEquals("//java/com/example:dep1#dex", preDexRule1.getBuildTarget().toString());
@@ -157,20 +172,22 @@ public class AndroidBinaryGraphEnhancerTest {
 
   @Test
   public void testAllBuildablesExceptPreDexRule() {
-    BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
-    BuildRuleParams originalParams = new BuildRuleParams(
-        apkTarget,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSortedSet.<BuildTargetPattern>of(),
-        new FakeProjectFilesystem(),
-        new FakeRuleKeyBuilderFactory());
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    // Create an android_build_config() as a dependency of the android_binary().
+    BuildTarget buildConfigBuildTarget = BuildTarget.builder("//java/com/example", "cfg").build();
+    BuildRuleParams buildConfigParams = new FakeBuildRuleParamsBuilder(buildConfigBuildTarget)
+        .build();
+    AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
+        .createBuildRule(
+          buildConfigParams,
+          "com.example.buck",
+          /* useConstantExpressions */ false,
+          /* constants */ ImmutableMap.<String, Object>of());
 
-    AndroidResourceDepsFinder depsFinder = createStrictMock(AndroidResourceDepsFinder.class);
-    expect(depsFinder.getAndroidResources()).andStubReturn(
-        ImmutableList.<HasAndroidResourceDeps>of());
-    expect(depsFinder.getAndroidTransitiveDependencies()).andStubReturn(
-        AndroidTransitiveDependencies.EMPTY);
+    BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    BuildRuleParams originalParams = new FakeBuildRuleParamsBuilder(apkTarget)
+        .setDeps(ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary))
+        .build();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // set it up.
     Keystore keystore = createStrictMock(Keystore.class);
@@ -179,7 +196,6 @@ public class AndroidBinaryGraphEnhancerTest {
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
-        depsFinder,
         new TestSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<AndroidBinary.TargetCpuType>of(),
@@ -187,39 +203,64 @@ public class AndroidBinaryGraphEnhancerTest {
         /* shouldPreDex */ false,
         BuildTargets.getBinPath(apkTarget, "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
-        ImmutableSet.<BuildTarget>of(),
+        /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
+        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
         /* exopackage */ true,
         keystore);
-    replay(depsFinder, keystore);
+    replay(keystore);
     EnhancementResult result = graphEnhancer.createAdditionalBuildables();
+
+    // Verify that android_build_config() was processed correctly.
+    AndroidPackageableCollection packageableCollection = result.getPackageableCollection();
+    String flavor = "buildconfig_com_example_buck";
+    assertEquals(
+        "The only classpath entry to dex should be the one from the AndroidBuildConfigJavaLibrary" +
+            " created via graph enhancement.",
+        ImmutableSet.of(Paths.get(
+            "buck-out/gen/java/com/example/lib__apk#" + flavor + "__output/apk#" + flavor + ".jar")
+        ),
+        packageableCollection.classpathEntriesToDex);
+    BuildTarget enhancedBuildConfigTarget = BuildTarget.builder(apkTarget).setFlavor(flavor)
+        .build();
+    BuildRule enhancedBuildConfigRule = ruleResolver.get(enhancedBuildConfigTarget);
+    assertTrue(enhancedBuildConfigRule instanceof AndroidBuildConfigJavaLibrary);
+    AndroidBuildConfigJavaLibrary enhancedBuildConfigJavaLibrary =
+        (AndroidBuildConfigJavaLibrary) enhancedBuildConfigRule;
+    AndroidBuildConfig androidBuildConfig = enhancedBuildConfigJavaLibrary.getAndroidBuildConfig();
+    assertEquals("com.example.buck", androidBuildConfig.getJavaPackage());
+    assertTrue(androidBuildConfig.isUseConstantExpressions());
+    assertEquals(
+        "IS_EXOPACKAGE defaults to false, but should now be true. DEBUG should still be true.",
+        ImmutableMap.of("DEBUG", Boolean.TRUE, "IS_EXOPACKAGE", Boolean.TRUE),
+        androidBuildConfig.getConstants());
 
     ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();
     // Verify that the only dep is computeExopackageDepsAbi
     assertEquals(1, finalDeps.size());
     BuildRule computeExopackageDepsAbiRule =
-        findRuleForBuilable(ruleResolver, ComputeExopackageDepsAbi.class);
+        findRuleOfType(ruleResolver, ComputeExopackageDepsAbi.class);
     assertEquals(computeExopackageDepsAbiRule, finalDeps.first());
 
     FilteredResourcesProvider resourcesProvider = result.getFilteredResourcesProvider();
     assertTrue(resourcesProvider instanceof ResourcesFilter);
-    BuildRule resourcesFilterRule = findRuleForBuilable(ruleResolver, ResourcesFilter.class);
+    BuildRule resourcesFilterRule = findRuleOfType(ruleResolver, ResourcesFilter.class);
 
-    BuildRule uberRDotJavaRule = findRuleForBuilable(ruleResolver, UberRDotJava.class);
+    BuildRule uberRDotJavaRule = findRuleOfType(ruleResolver, UberRDotJava.class);
     MoreAsserts.assertDepends(
         "UberRDotJava must depend on ResourcesFilter",
         uberRDotJavaRule,
         resourcesFilterRule);
 
     BuildRule packageStringAssetsRule =
-        findRuleForBuilable(ruleResolver, PackageStringAssets.class);
+        findRuleOfType(ruleResolver, PackageStringAssets.class);
     MoreAsserts.assertDepends(
         "PackageStringAssets must depend on ResourcesFilter",
         packageStringAssetsRule,
         uberRDotJavaRule);
 
     BuildRule aaptPackageResourcesRule =
-        findRuleForBuilable(ruleResolver, AaptPackageResources.class);
+        findRuleOfType(ruleResolver, AaptPackageResources.class);
     MoreAsserts.assertDepends(
         "AaptPackageResources must depend on ResourcesFilter",
         aaptPackageResourcesRule,
@@ -247,16 +288,16 @@ public class AndroidBinaryGraphEnhancerTest {
     assertTrue(result.getPackageStringAssets().isPresent());
     assertTrue(result.getComputeExopackageDepsAbi().isPresent());
 
-    verify(depsFinder, keystore);
+    verify(keystore);
   }
 
-  private BuildRule findRuleForBuilable(BuildRuleResolver ruleResolver, Class<?> buildableClass) {
+  private BuildRule findRuleOfType(BuildRuleResolver ruleResolver, Class<?> ruleClass) {
     for (BuildRule rule : ruleResolver.getBuildRules()) {
-      if (buildableClass.isAssignableFrom(rule.getBuildable().getClass())) {
+      if (ruleClass.isAssignableFrom(rule.getClass())) {
         return rule;
       }
     }
-    fail("Could not find builable of type " + buildableClass.getCanonicalName());
+    fail("Could not find build rule of type " + ruleClass.getCanonicalName());
     return null;
   }
 }

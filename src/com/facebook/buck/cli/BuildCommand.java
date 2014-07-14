@@ -64,7 +64,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   @Override
   @SuppressWarnings("PMD.PrematureDeclaration")
-  int runCommandWithOptionsInternal(BuildCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(BuildCommandOptions options)
+      throws IOException, InterruptedException {
     // Set the logger level based on the verbosity option.
     Verbosity verbosity = console.getVerbosity();
     Logging.setLoggingLevelForVerbosity(verbosity);
@@ -141,7 +142,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   static int executeBuildAndPrintAnyFailuresToConsole(
       Iterable<? extends HasBuildTarget> buildTargetsToBuild,
       Build build,
-      Console console) {
+      Console console) throws InterruptedException {
     final ActionGraph actionGraph = build.getActionGraph();
     // It is important to use this logic to determine the set of rules to build rather than
     // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
@@ -182,11 +183,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         }
         exitCode = 1;
       }
-    } catch (InterruptedException e) {
-      // This suggests an error in Buck rather than a user error.
-      // Print the entire stack trace so we can debug it.
-      console.printBuildFailureWithStacktrace(e);
-      exitCode = 1;
     }
 
     return exitCode;

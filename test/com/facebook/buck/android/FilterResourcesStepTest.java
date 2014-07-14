@@ -69,7 +69,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testFilterDrawables() throws IOException {
+  public void testFilterDrawables() throws IOException, InterruptedException {
 
     // Mock a ProjectFilesystem. This will be called into by the image downscaling step.
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);

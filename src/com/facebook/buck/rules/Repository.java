@@ -63,6 +63,7 @@ public class Repository {
     return buckConfig;
   }
 
+  @Override
   public String toString() {
     return String.format("@%s (%s)", name, filesystem.getRootPath());
   }

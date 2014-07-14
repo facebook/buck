@@ -28,6 +28,8 @@ import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
@@ -54,8 +56,9 @@ import java.util.List;
 public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMockSupport {
 
   @Test
-  public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException {
-    FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(new BuildTarget("//foo", "bar")) {
+  public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
+    FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(
+        BuildTarget.builder("//foo", "bar").build()) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
         return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
@@ -73,9 +76,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar", "dex");
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").setFlavor("dex").build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(buildTarget, javaLibraryRule);
+        new DexProducedFromJavaLibrary(params, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     verifyAll();
@@ -132,7 +136,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
   }
 
   @Test
-  public void testGetBuildStepsWhenThereAreNoClassesToDex() throws IOException {
+  public void testGetBuildStepsWhenThereAreNoClassesToDex()
+      throws IOException, InterruptedException {
     JavaLibrary javaLibrary = createMock(JavaLibrary.class);
     expect(javaLibrary.getClassNamesToHashes()).andReturn(
         ImmutableSortedMap.<String, HashCode>of());
@@ -142,9 +147,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(buildTarget, javaLibrary);
+        new DexProducedFromJavaLibrary(params, javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     verifyAll();
@@ -192,9 +198,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDexWithClasses =
-        new DexProducedFromJavaLibrary(buildTarget, accumulateClassNames);
+        new DexProducedFromJavaLibrary(params, accumulateClassNames);
     assertNull(preDexWithClasses.getPathToOutputFile());
     assertTrue(Iterables.isEmpty(preDexWithClasses.getInputsToCompareToOutput()));
     assertEquals(Paths.get("buck-out/gen/foo/bar.dex.jar"), preDexWithClasses.getPathToDex());

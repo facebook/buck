@@ -16,13 +16,12 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableParams;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
@@ -37,23 +36,23 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 /**
- * {@link Buildable} whose output file is a JAR containing the .java files and resources suitable
- * for a GWT module. (It differs slightly from a source JAR because it contains resources.)
+ * {@link com.facebook.buck.rules.BuildRule} whose output file is a JAR containing the .java files
+ * and resources suitable for a GWT module. (It differs slightly from a source JAR because it
+ * contains resources.)
  */
-public class GwtModule extends AbstractBuildable {
+public class GwtModule extends AbstractBuildRule {
 
   // TODO(mbolin): Figure out how to move this to the com.facebook.buck.gwt package.
   // To do that, we need a way to register a flavor with a Description from outside the package.
 
-  private final BuildableParams buildableParams;
   private final Path outputFile;
   private final ImmutableSortedSet<SourcePath> filesForGwtModule;
 
   GwtModule(
-      BuildableParams buildableParams,
+      BuildRuleParams params,
       ImmutableSortedSet<SourcePath> filesForGwtModule) {
-    super(buildableParams.getBuildTarget());
-    this.buildableParams = Preconditions.checkNotNull(buildableParams);
+    super(params);
+    BuildTarget target = params.getBuildTarget();
     this.outputFile = BuildTargets.getGenPath(
         target,
         "__gwt_module_%s__/" + target.getShortName() + ".jar");
@@ -63,10 +62,6 @@ public class GwtModule extends AbstractBuildable {
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     return SourcePaths.filterInputsToCompareToOutput(filesForGwtModule);
-  }
-
-  public ImmutableSortedSet<BuildRule> getDeps() {
-    return buildableParams.getDeps();
   }
 
   @Override

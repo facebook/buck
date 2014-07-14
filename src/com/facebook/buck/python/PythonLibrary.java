@@ -18,9 +18,9 @@ package com.facebook.buck.python;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
@@ -39,7 +39,7 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-public class PythonLibrary extends AbstractBuildable implements PythonPackagable {
+public class PythonLibrary extends AbstractBuildRule implements PythonPackagable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -47,10 +47,10 @@ public class PythonLibrary extends AbstractBuildable implements PythonPackagable
   private final ImmutableSortedSet<SourcePath> resources;
 
   protected PythonLibrary(
-      BuildTarget target,
+      BuildRuleParams params,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources) {
-    super(target);
+    super(params);
     this.srcs = Preconditions.checkNotNull(srcs);
     this.resources = Preconditions.checkNotNull(resources);
   }
@@ -90,6 +90,7 @@ public class PythonLibrary extends AbstractBuildable implements PythonPackagable
   /**
    * Return the components to contribute to the top-level python package.
    */
+  @Override
   public PythonPackageComponents getPythonPackageComponents() {
     return new PythonPackageComponents(
         getPathMapFromSourcePaths(srcs),

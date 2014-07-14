@@ -28,14 +28,15 @@ public interface StepRunner {
   /**
    * Note that this method blocks until the specified command terminates.
    */
-  public void runStep(Step step) throws StepFailedException;
+  public void runStep(Step step) throws StepFailedException, InterruptedException;
 
   /**
    * Runs a BuildStep for a given BuildRule.
    *
    * Note that this method blocks until the specified command terminates.
    */
-  public void runStepForBuildTarget(Step step, BuildTarget buildTarget) throws StepFailedException;
+  public void runStepForBuildTarget(Step step, BuildTarget buildTarget)
+      throws StepFailedException, InterruptedException;
 
   /**
    * In a new thread, executes of the list of commands and then invokes {@code interpretResults} to
@@ -44,7 +45,8 @@ public interface StepRunner {
   public <T> ListenableFuture<T> runStepsAndYieldResult(
       List<Step> steps, Callable<T> interpretResults, BuildTarget buildTarget);
 
-  public void runStepsInParallelAndWait(final List<Step> steps) throws StepFailedException;
+  public void runStepsInParallelAndWait(final List<Step> steps)
+      throws StepFailedException, InterruptedException;
 
   /**
    * Execute callback in a new thread, once dependencies have completed.
@@ -52,4 +54,10 @@ public interface StepRunner {
   public <T> void addCallback(
       ListenableFuture<List<T>> dependencies,
       FutureCallback<List<T>> callback);
+
+  /**
+   * Interrupt all processing immediately. New steps and futures must not be submitted to the step
+   * runner after shutdown.
+   */
+  public void shutdownNow();
 }

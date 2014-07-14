@@ -306,7 +306,7 @@ public class DirArtifactCacheTest {
     private final File file;
 
     private BuildRuleForTest(File file) {
-      super(TYPE, new BuildTarget("//foo", file.getName()));
+      super(TYPE, BuildTarget.builder("//foo", file.getName()).build());
       this.file = Preconditions.checkNotNull(file);
     }
 

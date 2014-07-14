@@ -63,7 +63,7 @@ public class JavaLibraryClasspathProvider {
     final ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
         ImmutableSetMultimap.builder();
     ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesForDeps =
-        Classpaths.getClasspathEntries(javaLibraryRule.getDeps());
+        Classpaths.getClasspathEntries(javaLibraryRule.getDepsForTransitiveClasspathEntries());
 
     ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesForExportedsDeps =
         Classpaths.getClasspathEntries(javaLibraryRule.getExportedDeps());
@@ -92,7 +92,8 @@ public class JavaLibraryClasspathProvider {
     final ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
         ImmutableSetMultimap.builder();
 
-    Iterable<JavaLibrary> javaLibraryDeps = getJavaLibraryDeps(javaLibraryRule.getDeps());
+    Iterable<JavaLibrary> javaLibraryDeps = getJavaLibraryDeps(
+        javaLibraryRule.getDepsForTransitiveClasspathEntries());
 
     for (JavaLibrary rule : javaLibraryDeps) {
       classpathEntries.putAll(rule, rule.getOutputClasspathEntries().values());
@@ -108,9 +109,6 @@ public class JavaLibraryClasspathProvider {
               @Nullable
               @Override
               public JavaLibrary apply(BuildRule input) {
-                if (input.getBuildable() instanceof JavaLibrary) {
-                  return (JavaLibrary) input.getBuildable();
-                }
                 if (input instanceof JavaLibrary) {
                   return (JavaLibrary) input;
                 }

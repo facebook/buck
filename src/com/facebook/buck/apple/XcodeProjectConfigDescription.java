@@ -18,8 +18,8 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.google.common.collect.ImmutableSet;
@@ -39,8 +39,11 @@ public class XcodeProjectConfigDescription
   }
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new XcodeProjectConfig(params.getBuildTarget(), args);
+  public <A extends Arg> XcodeProjectConfig createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new XcodeProjectConfig(params, args);
   }
 
   public static class Arg implements ConstructorArg {

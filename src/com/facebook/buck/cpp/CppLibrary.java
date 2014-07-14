@@ -16,8 +16,7 @@
 
 package com.facebook.buck.cpp;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -30,14 +29,13 @@ import java.util.List;
 /**
  * Create a c++ static library (.a file).
  */
-public class CppLibrary extends AbstractNativeBuildable {
+public class CppLibrary extends AbstractNativeBuildRule {
 
   public CppLibrary(
-      BuildTarget buildTarget,
-      ImmutableSortedSet<BuildRule> deps,
+      BuildRuleParams params,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> headers) {
-    super(buildTarget, deps, srcs, headers, ImmutableMap.<SourcePath, String>of());
+    super(params, srcs, headers, ImmutableMap.<SourcePath, String>of());
   }
 
   @Override

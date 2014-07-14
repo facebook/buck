@@ -52,17 +52,17 @@ public class AndroidLibraryTest {
         ImmutableList.of(
             Paths.get("java/src/com/foo/Foo.java"),
             Paths.get("java/src/com/foo/AndroidManifest.xml")),
-        androidLibraryBuilderFoo.getBuildable().getInputsToCompareToOutput());
+        androidLibraryBuilderFoo.getInputs());
 
     MoreAsserts.assertIterablesEquals(
         "getInputsToCompareToOutput() should include only src.",
         ImmutableList.of(Paths.get("java/src/com/bar/Bar.java")),
-        androidLibraryBuilderBar.getBuildable().getInputsToCompareToOutput());
+        androidLibraryBuilderBar.getInputs());
 
     assertEquals(
         "foo's exported deps should include bar",
         ImmutableSet.of(androidLibraryBuilderBar),
-        ((AndroidLibrary) (androidLibraryBuilderFoo.getBuildable())).getExportedDeps());
+        ((AndroidLibrary) (androidLibraryBuilderFoo)).getExportedDeps());
   }
 
   @Test
@@ -76,13 +76,11 @@ public class AndroidLibraryTest {
         .build(ruleResolver);
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
-    BuildRule rule = AndroidLibraryBuilder
+    AndroidLibrary library = (AndroidLibrary) AndroidLibraryBuilder
         .createBuilder(libTarget)
         .addProcessor("MyProcessor")
         .addProcessorBuildTarget(processorRule)
         .build(ruleResolver);
-
-    AndroidLibrary library = (AndroidLibrary) rule.getBuildable();
 
     AnnotationProcessingData processingData = library.getAnnotationProcessingData();
     assertNotNull(processingData.getGeneratedSourceFolderName());
@@ -91,7 +89,7 @@ public class AndroidLibraryTest {
 
   private BuildRule getAndroidLibraryRuleFoo(BuildRuleResolver ruleResolver) {
     BuildRule libraryRule = JavaLibraryBuilder
-        .createBuilder(new BuildTarget("//java/src/com/bar", "bar"))
+        .createBuilder(BuildTarget.builder("//java/src/com/bar", "bar").build())
         .build(new BuildRuleResolver());
 
     return AndroidLibraryBuilder

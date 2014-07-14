@@ -24,15 +24,19 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.eventbus.EventBus;
 
 import org.easymock.Capture;
+import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -44,8 +48,15 @@ import java.nio.file.WatchEvent;
 
 public class WatchmanWatcherTest {
 
+  @After
+  public void cleanUp() {
+    // Clear interrupted state so it doesn't affect any other test.
+    Thread.interrupted();
+  }
+
   @Test
-  public void whenFilesListIsEmptyThenNoEventsAreGenerated() throws IOException {
+  public void whenFilesListIsEmptyThenNoEventsAreGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{",
         "\"version\": \"2.9.2\",",
@@ -62,7 +73,7 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenNameThenModifyEventIsGenerated() throws IOException {
+  public void whenNameThenModifyEventIsGenerated() throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -86,7 +97,7 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenNewIsTrueThenCreateEventIsGenerated() throws IOException {
+  public void whenNewIsTrueThenCreateEventIsGenerated() throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -108,7 +119,8 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenExistsIsFalseThenDeleteEventIsGenerated() throws IOException {
+  public void whenExistsIsFalseThenDeleteEventIsGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -130,7 +142,8 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenNewAndNotExistsThenDeleteEventIsGenerated() throws IOException {
+  public void whenNewAndNotExistsThenDeleteEventIsGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -153,7 +166,8 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenMultipleFilesThenMultipleEventsGenerated() throws IOException {
+  public void whenMultipleFilesThenMultipleEventsGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -182,7 +196,8 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenTooManyChangesThenOverflowEventGenerated() throws IOException {
+  public void whenTooManyChangesThenOverflowEventGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
@@ -208,17 +223,71 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenWatchmanFailsThenHumanReadableExceptionThrown() throws IOException {
+  public void whenWatchmanFailsThenOverflowEventGenerated()
+      throws IOException, InterruptedException {
     String watchmanOutput = "";
+    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
     EventBus eventBus = createStrictMock(EventBus.class);
+    eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput, 1);
-    replay(process);
+    replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     try {
       watcher.postEvents();
-      fail("Should have thrown RuntimeException.");
+      fail("Should have thrown IOException.");
+    } catch (WatchmanWatcherException e) {
+      assertTrue("Should be watchman error", e.getMessage().startsWith("Watchman failed"));
+    }
+    verify(eventBus, process);
+    assertEquals("Should be overflow event.",
+        StandardWatchEventKinds.OVERFLOW,
+        eventCapture.getValue().kind());
+  }
+
+  @Test
+  public void whenWatchmanInterruptedThenOverflowEventGenerated()
+      throws IOException, InterruptedException {
+    String watchmanOutput = "";
+    String message = "Boo!";
+    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
+    EventBus eventBus = createStrictMock(EventBus.class);
+    eventBus.post(capture(eventCapture));
+    Process process = createWaitForProcessMock(watchmanOutput, new InterruptedException(message));
+    process.destroy();
+    replay(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    try {
+      watcher.postEvents();
+    } catch (InterruptedException e) {
+      assertEquals("Should be test interruption.", e.getMessage(), message);
+    }
+    verify(eventBus, process);
+    assertTrue(Thread.currentThread().isInterrupted());
+    assertEquals("Should be overflow event.",
+        StandardWatchEventKinds.OVERFLOW,
+        eventCapture.getValue().kind());
+  }
+
+  @Test
+  public void whenQueryResultContainsErrorThenHumanReadableExceptionThrown()
+      throws IOException, InterruptedException {
+    String watchmanError = "Watch does not exist.";
+    String watchmanOutput = Joiner.on('\n').join(
+        "{",
+        "\"version\": \"2.9.2\",",
+        "\"error\": \"" + watchmanError + "\"",
+        "}");
+    EventBus eventBus = createStrictMock(EventBus.class);
+    Process process = createWaitForProcessMock(watchmanOutput);
+    replay(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    try {
+      watcher.postEvents();
+      fail("Should have thrown RuntimeException");
     } catch (RuntimeException e) {
-      assertTrue("Should be Watchman failure.", e.getMessage().startsWith("Watchman failed"));
+      assertThat("Should contain watchman error.",
+          e.getMessage(),
+          Matchers.containsString(watchmanError));
     }
   }
 
@@ -250,6 +319,12 @@ public class WatchmanWatcherTest {
 
   private Process createWaitForProcessMock(String output) {
     return createWaitForProcessMock(output, 0);
+  }
+
+  private Process createWaitForProcessMock(String output, Throwable t) throws InterruptedException {
+    Process process = createProcessMock(output);
+    expect(process.waitFor()).andThrow(Preconditions.checkNotNull(t));
+    return process;
   }
 
   private Process createWaitForProcessMock(String output, int exitCode) {

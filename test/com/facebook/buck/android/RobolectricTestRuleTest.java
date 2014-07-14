@@ -95,7 +95,7 @@ public class RobolectricTestRuleTest {
     BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base/robolectricTest:robolectricTest");
 
-    RobolectricTest robolectricTest = RobolectricTestBuilder
+    RobolectricTest robolectricTest = (RobolectricTest) RobolectricTestBuilder
         .createBuilder(robolectricBuildTarget)
         .build();
 
@@ -123,7 +123,7 @@ public class RobolectricTestRuleTest {
     BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base/robolectricTest:robolectricTest");
 
-    RobolectricTest robolectricTest = RobolectricTestBuilder
+    RobolectricTest robolectricTest = (RobolectricTest) RobolectricTestBuilder
         .createBuilder(robolectricBuildTarget)
         .build();
 

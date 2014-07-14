@@ -18,8 +18,8 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.google.common.base.Optional;
@@ -42,10 +42,11 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
   }
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    // It's safe to do this, since we know that the arg marshaller fills in optional sets as empty
-    // sets. Because we're nice like that.
-    return new PythonBinary(params.getBuildTarget(), args.deps.get(), args.main);
+  public <A extends Arg> PythonBinary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new PythonBinary(params, args.main);
   }
 
   public static class Arg implements ConstructorArg {

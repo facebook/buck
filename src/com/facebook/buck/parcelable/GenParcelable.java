@@ -18,10 +18,10 @@ package com.facebook.buck.parcelable;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
@@ -43,17 +43,17 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-public class GenParcelable extends AbstractBuildable {
+public class GenParcelable extends AbstractBuildRule {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(ANDROID);
 
   private final ImmutableSortedSet<SourcePath> srcs;
   private final Path outputDirectory;
 
-  GenParcelable(BuildTarget target, Set<SourcePath> srcs) {
-    super(target);
+  GenParcelable(BuildRuleParams params, Set<SourcePath> srcs) {
+    super(params);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
-    this.outputDirectory = BuildTargets.getGenPath(target, "__%s__");
+    this.outputDirectory = BuildTargets.getGenPath(params.getBuildTarget(), "__%s__");
   }
 
   @Nullable

@@ -55,12 +55,6 @@ public interface OnDiskBuildInfo {
    */
   public Optional<RuleKey> getRuleKeyWithoutDeps();
 
-  /**
-   * Invokes the {@link Buildable#getPathToOutputFile()} method of the specified {@link Buildable},
-   * reads the file at the specified path, and returns the list of lines in the file.
-   */
-  public List<String> getOutputFileContentsByLine(Buildable buildable) throws IOException;
-
   public List<String> getOutputFileContentsByLine(Path path) throws IOException;
 
   /**
@@ -68,7 +62,7 @@ public interface OnDiskBuildInfo {
    * where executable flags aren't preserved when uploading to cache.
    */
   // TODO(task #3321496): Delete this part of the interface after zipping is fixed.
-  public void makeOutputFileExecutable(Buildable buildable) throws IOException;
+  public void makeOutputFileExecutable(BuildRule buildRule) throws IOException;
 
   public void deleteExistingMetadata() throws IOException;
 }

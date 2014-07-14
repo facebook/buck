@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.Uninterruptibles;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -44,9 +43,9 @@ public class MoreFutures {
    *     in an ExecutionException and thrown.  Access via
    *     {@link java.util.concurrent.ExecutionException#getCause()}}.
    */
-  public static <V> List<V> getAllUninterruptibly(
+  public static <V> List<V> getAll(
       ListeningExecutorService executorService,
-      Iterable<Callable<V>> callables) throws ExecutionException {
+      Iterable<Callable<V>> callables) throws ExecutionException, InterruptedException {
     // Invoke.
     ImmutableList.Builder<ListenableFuture<V>> futures = ImmutableList.builder();
     for (Callable<V> callable : callables) {
@@ -54,9 +53,8 @@ public class MoreFutures {
       futures.add(future);
     }
 
-    // Wait for completion.
-    ListenableFuture<List<V>> allAsOne = Futures.allAsList(futures.build());
-    return Uninterruptibles.getUninterruptibly(allAsOne);
+    // Wait for completion or interruption.
+    return Futures.allAsList(futures.build()).get();
   }
 
   /**
@@ -67,7 +65,7 @@ public class MoreFutures {
    * @return true if the specified future has been resolved without throwing an exception or being
    *     cancelled.
    */
-  public static boolean isSuccess(ListenableFuture<?> future) {
+  public static boolean isSuccess(ListenableFuture<?> future) throws InterruptedException {
     if (!future.isDone()) {
       return false;
     }
@@ -75,7 +73,7 @@ public class MoreFutures {
     try {
       // Try to get the future, but ignore (and preserve) the thread interrupted state.
       // This should be fast because we know the future is already complete.
-      Uninterruptibles.getUninterruptibly(future);
+      future.get();
       return true;
     } catch (ExecutionException e) {
       // The computation threw an exception, so it did not complete successfully.
@@ -90,7 +88,7 @@ public class MoreFutures {
    * Returns the failure for a {@link ListenableFuture}.
    * @param future Must have completed unsuccessfully.
    */
-  public static Throwable getFailure(ListenableFuture<?> future) {
+  public static Throwable getFailure(ListenableFuture<?> future) throws InterruptedException {
     Preconditions.checkArgument(future.isDone());
     Preconditions.checkArgument(!isSuccess(future));
     try {
@@ -98,7 +96,7 @@ public class MoreFutures {
       throw new IllegalStateException("get() should have thrown an exception");
     } catch (ExecutionException e) {
       return e.getCause();
-    } catch (CancellationException | InterruptedException e) {
+    } catch (CancellationException e) {
       throw new IllegalStateException(e);
     }
   }

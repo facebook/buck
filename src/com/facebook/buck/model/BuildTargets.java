@@ -82,6 +82,8 @@ public class BuildTargets {
         "Cannot add flavor %s to %s.",
         flavor,
         buildTarget);
-    return new BuildTarget(buildTarget.getBaseName(), buildTarget.getShortName(), flavor);
+    return BuildTarget.builder(buildTarget)
+        .setFlavor(flavor)
+        .build();
   }
 }

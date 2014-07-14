@@ -81,8 +81,8 @@ public class UnsortedAndroidResourceDeps {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
         HasAndroidResourceDeps androidResourceRule = null;
-        if (rule.getBuildable() instanceof HasAndroidResourceDeps) {
-          androidResourceRule = (HasAndroidResourceDeps) rule.getBuildable();
+        if (rule instanceof HasAndroidResourceDeps) {
+          androidResourceRule = (HasAndroidResourceDeps) rule;
         }
         if (androidResourceRule != null) {
           if (androidResourceRule.getRes() != null) {

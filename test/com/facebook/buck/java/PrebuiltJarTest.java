@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
@@ -65,7 +64,7 @@ public class PrebuiltJarTest {
   @Before
   public void setUp() {
     BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder(new BuildTarget("//lib", "junit")).build();
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//lib", "junit").build()).build();
 
     junitJarRule = new PrebuiltJar(buildRuleParams,
         new PathSourcePath(PATH_TO_JUNIT_JAR),
@@ -75,7 +74,7 @@ public class PrebuiltJarTest {
   }
 
   @Test
-  public void testAbiKeyIsHashOfFileContents() throws IOException {
+  public void testAbiKeyIsHashOfFileContents() throws IOException, InterruptedException {
     BuildContext buildContext = EasyMock.createMock(BuildContext.class);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> buildSteps = junitJarRule.getBuildSteps(buildContext, buildableContext);
@@ -103,11 +102,7 @@ public class PrebuiltJarTest {
     buildEngine.createFutureFor(junitJarRule.getBuildTarget());
     buildEngine.doHydrationAfterBuildStepsFinish(
         // I am ashamed. Temporary hack, I hope.
-        new DescribedRule(
-            PrebuiltJarDescription.TYPE,
-            junitJarRule,
-            new FakeBuildRuleParamsBuilder(junitJarRule.getBuildTarget()).build()),
-        buildResult, onDiskBuildInfo);
+        junitJarRule, buildResult, onDiskBuildInfo);
 
     // Make sure the ABI key is set as expected.
     HashCode hashForJar = ByteStreams.hash(

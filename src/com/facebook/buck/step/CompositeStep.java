@@ -37,7 +37,7 @@ public class CompositeStep implements Step, Iterable<Step> {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public int execute(ExecutionContext context) throws InterruptedException {
     for (Step step : steps) {
       int exitCode = step.execute(context);
       if (exitCode != 0) {

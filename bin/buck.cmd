@@ -77,8 +77,10 @@ set BUCK_JAVA_ARGS=^
 -XX:MaxPermSize=256m ^
 -Xmx1000m ^
 -Djava.awt.headless=true ^
+-Djava.util.logging.config.class=com.facebook.buck.log.LogConfig ^
 -Dbuck.testrunner_classes=%BUCK_DIRECTORY%\build\testrunner\classes ^
 -Dbuck.abi_processor_classes=%BUCK_DIRECTORY%\build\abi_processor\classes ^
+-Dbuck.logging_config_file=%BUCK_DIRECTORY%\config\logging.properties ^
 -Dbuck.path_to_emma_jar=%BUCK_DIRECTORY%\third-party\java\emma-2.0.5312\out\emma-2.0.5312.jar ^
 -Dbuck.test_util_no_tests_dir=true ^
 -Dbuck.path_to_python_interp=%PYTHON_INTERP_FALLBACK% ^

@@ -34,30 +34,59 @@ import java.nio.file.Path;
 public class BuildRuleParams implements BuildableParams {
 
   private final BuildTarget buildTarget;
-  private final ImmutableSortedSet<BuildRule> deps;
+  private final ImmutableSortedSet<BuildRule> declaredDeps;
+  private final ImmutableSortedSet<BuildRule> extraDeps;
+  private final ImmutableSortedSet<BuildRule> totalDeps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
   private final ProjectFilesystem projectFilesystem;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+  private final BuildRuleType buildRuleType;
 
-  public BuildRuleParams(BuildTarget buildTarget,
-      ImmutableSortedSet<BuildRule> deps,
+  public BuildRuleParams(
+      BuildTarget buildTarget,
+      ImmutableSortedSet<BuildRule> declaredDeps,
+      ImmutableSortedSet<BuildRule> extraDeps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns,
       ProjectFilesystem projectFilesystem,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      BuildRuleType buildRuleType) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
-    this.deps = Preconditions.checkNotNull(deps);
+    this.declaredDeps = Preconditions.checkNotNull(declaredDeps);
+    this.extraDeps = Preconditions.checkNotNull(extraDeps);
     this.visibilityPatterns = Preconditions.checkNotNull(visibilityPatterns);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
+    this.buildRuleType = Preconditions.checkNotNull(buildRuleType);
+
+    this.totalDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(declaredDeps)
+        .addAll(extraDeps)
+        .build();
   }
 
-  public BuildRuleParams copyWithChangedDeps(ImmutableSortedSet<BuildRule> newDeps) {
+  public BuildRuleParams copyWithExtraDeps(ImmutableSortedSet<BuildRule> extraDeps) {
+    return copyWithDeps(declaredDeps, extraDeps);
+  }
+
+  public BuildRuleParams copyWithDeps(
+      ImmutableSortedSet<BuildRule> declaredDeps,
+      ImmutableSortedSet<BuildRule> extraDeps) {
+    return copyWithChanges(buildRuleType, buildTarget, declaredDeps, extraDeps);
+  }
+
+  public BuildRuleParams copyWithChanges(
+      BuildRuleType buildRuleType,
+      BuildTarget buildTarget,
+      ImmutableSortedSet<BuildRule> declaredDeps,
+      ImmutableSortedSet<BuildRule> extraDeps) {
     return new BuildRuleParams(
         buildTarget,
-        newDeps,
+        declaredDeps,
+        extraDeps,
         visibilityPatterns,
         projectFilesystem,
-        ruleKeyBuilderFactory);
+        ruleKeyBuilderFactory,
+        buildRuleType);
   }
 
   @Override
@@ -67,7 +96,15 @@ public class BuildRuleParams implements BuildableParams {
 
   @Override
   public ImmutableSortedSet<BuildRule> getDeps() {
-    return deps;
+    return totalDeps;
+  }
+
+  public ImmutableSortedSet<BuildRule> getDeclaredDeps() {
+    return declaredDeps;
+  }
+
+  public ImmutableSortedSet<BuildRule> getExtraDeps() {
+    return extraDeps;
   }
 
   public ImmutableSet<BuildTargetPattern> getVisibilityPatterns() {
@@ -84,5 +121,9 @@ public class BuildRuleParams implements BuildableParams {
 
   public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
     return ruleKeyBuilderFactory;
+  }
+
+  public BuildRuleType getBuildRuleType() {
+    return buildRuleType;
   }
 }

@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.HumanReadableException;
@@ -45,7 +45,10 @@ public class PrebuiltNativeLibraryDescription
   }
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Args args) {
+  public <A extends Args> PrebuiltNativeLibrary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     ImmutableSortedSet<Path> librarySources;
     try {
       librarySources = ImmutableSortedSet.copyOf(
@@ -55,7 +58,7 @@ public class PrebuiltNativeLibraryDescription
     }
 
     return new PrebuiltNativeLibrary(
-        params.getBuildTarget(),
+        params,
         args.nativeLibs,
         args.isAsset.or(false),
         librarySources

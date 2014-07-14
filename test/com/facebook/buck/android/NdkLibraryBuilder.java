@@ -16,8 +16,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -71,15 +69,13 @@ public class NdkLibraryBuilder {
       return this;
     }
 
-    public NdkLibrary buildAsBuildable() {
-      return new NdkLibrary(buildTarget, sources.build(), flags.build(), isAsset, ndkVersion);
-    }
-
-    public BuildRule build() {
-      return new DescribedRule(
-          NdkLibraryDescription.TYPE,
-          buildAsBuildable(),
-          new FakeBuildRuleParamsBuilder(buildTarget).build());
+    public NdkLibrary build() {
+      return new NdkLibrary(
+          new FakeBuildRuleParamsBuilder(buildTarget).setType(NdkLibraryDescription.TYPE).build(),
+          sources.build(),
+          flags.build(),
+          isAsset,
+          ndkVersion);
     }
   }
 }

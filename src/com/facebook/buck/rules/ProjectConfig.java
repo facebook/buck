@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -31,7 +30,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 
-public class ProjectConfig extends AbstractBuildable {
+public class ProjectConfig extends AbstractBuildRule {
 
   @Nullable
   private final BuildRule srcRule;
@@ -49,16 +48,16 @@ public class ProjectConfig extends AbstractBuildable {
   private final boolean isIntelliJPlugin;
 
   protected ProjectConfig(
-      BuildTarget buildTarget,
+      BuildRuleParams params,
       @Nullable BuildRule srcRule,
       @Nullable List<String> srcRoots,
       @Nullable BuildRule testRule,
       @Nullable List<String> testRoots,
       boolean isIntelliJPlugin) {
-    super(buildTarget);
+    super(params);
     Preconditions.checkArgument(srcRule != null || testRule != null,
         "At least one of src_target or test_target must be specified in %s.",
-        buildTarget.getFullyQualifiedName());
+        params.getBuildTarget().getFullyQualifiedName());
     Preconditions.checkArgument(testRule == null || testRule.getType().isTestRule(),
         "The test_target for a project_config() must correspond to a test rule, if specified, " +
         "but was %s.",

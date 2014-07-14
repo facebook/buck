@@ -41,7 +41,8 @@ import java.io.IOException;
 public class CacheCommandTest extends EasyMockSupport {
 
   @Test
-  public void testRunCommandWithNoArguments() throws IOException {
+  public void testRunCommandWithNoArguments()
+      throws IOException, InterruptedException {
     Console console = createMock(Console.class);
     console.printErrorText("No cache keys specified.");
     CommandRunnerParamsForTesting commandRunnerParams = CommandRunnerParamsForTesting
@@ -61,7 +62,8 @@ public class CacheCommandTest extends EasyMockSupport {
   }
 
   @Test
-  public void testRunCommandWithNoCassandraCacheDefined() throws IOException {
+  public void testRunCommandWithNoCassandraCacheDefined()
+      throws IOException, InterruptedException {
     Console console = createMock(Console.class);
     console.printErrorText("No cassandra cache defined.");
     CommandRunnerParamsForTesting commandRunnerParams = CommandRunnerParamsForTesting
@@ -91,7 +93,8 @@ public class CacheCommandTest extends EasyMockSupport {
   }
 
   @Test
-  public void testRunCommandAndFetchArtifactsSuccessfully() throws IOException {
+  public void testRunCommandAndFetchArtifactsSuccessfully()
+      throws IOException, InterruptedException {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
     Console console = createMock(Console.class);
@@ -130,7 +133,8 @@ public class CacheCommandTest extends EasyMockSupport {
   }
 
   @Test
-  public void testRunCommandAndFetchArtifactsUnsuccessfully() throws IOException {
+  public void testRunCommandAndFetchArtifactsUnsuccessfully()
+      throws IOException, InterruptedException {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
     Console console = createMock(Console.class);

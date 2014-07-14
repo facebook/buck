@@ -258,6 +258,13 @@ public class AndroidPlatformTarget {
       buildToolsPath = "platform-tools";
     }
 
+    Path zipAlignExecutable = androidSdkDir.resolve("tools/zipalign").toAbsolutePath();
+    if (!zipAlignExecutable.toFile().exists()) {
+      // Android SDK Build-tools >= 19.1.0 have zipalign under the build-tools directory.
+      zipAlignExecutable =
+          androidSdkDir.resolve(buildToolsPath).resolve("zipalign").toAbsolutePath();
+    }
+
     Path androidFrameworkIdlFile = platformDirectory.resolve("framework.aidl");
     Path proguardJar = androidSdkDir.resolve("tools/proguard/lib/proguard.jar");
     Path proguardConfig = androidSdkDir.resolve("tools/proguard/proguard-android.txt");
@@ -271,7 +278,7 @@ public class AndroidPlatformTarget {
         aaptOverride.or(androidSdkDir.resolve(buildToolsPath).resolve("aapt").toAbsolutePath()),
         androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
         androidSdkDir.resolve(buildToolsPath).resolve("aidl").toAbsolutePath(),
-        androidSdkDir.resolve("tools/zipalign").toAbsolutePath(),
+        zipAlignExecutable,
         androidSdkDir.resolve(buildToolsPath).resolve("dx").toAbsolutePath(),
         androidFrameworkIdlFile,
         proguardJar,

@@ -19,6 +19,7 @@ package com.facebook.buck.extension;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -41,12 +42,11 @@ public class BuckExtensionDescription implements Description<BuckExtensionDescri
   }
 
   @Override
-  public <A extends Arg> BuckExtension createBuildable(BuildRuleParams params, A args) {
-    return new BuckExtension(
-        params.getBuildTarget(),
-        args.srcs,
-        args.resources.get(),
-        args.deps.get());
+  public <A extends Arg> BuckExtension createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new BuckExtension(params, args.srcs, args.resources.get());
   }
 
   public static class Arg implements ConstructorArg {

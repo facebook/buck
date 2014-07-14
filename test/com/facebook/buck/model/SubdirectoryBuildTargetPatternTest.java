@@ -30,9 +30,9 @@ public class SubdirectoryBuildTargetPatternTest {
         new SubdirectoryBuildTargetPattern("src/com/facebook/buck/");
 
     assertFalse(pattern.apply(null));
-    assertTrue(pattern.apply(new BuildTarget("//src/com/facebook/buck", "buck")));
-    assertTrue(pattern.apply(new BuildTarget("//src/com/facebook/buck/bar", "bar")));
-    assertFalse(pattern.apply(new BuildTarget("//src/com/facebook/foo", "foo")));
+    assertTrue(pattern.apply(BuildTarget.builder("//src/com/facebook/buck", "buck").build()));
+    assertTrue(pattern.apply(BuildTarget.builder("//src/com/facebook/buck/bar", "bar").build()));
+    assertFalse(pattern.apply(BuildTarget.builder("//src/com/facebook/foo", "foo").build()));
   }
 
   @Test

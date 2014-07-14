@@ -139,7 +139,7 @@ public class FilterResourcesStep implements Step {
     return nonEnglishStringFilesBuilder.build();
   }
 
-  private int doExecute(ExecutionContext context) throws IOException {
+  private int doExecute(ExecutionContext context) throws IOException, InterruptedException {
     List<Predicate<Path>> pathPredicates = Lists.newArrayList();
 
     final boolean canDownscale = imageScaler != null && imageScaler.isAvailable(context);
@@ -203,7 +203,8 @@ public class FilterResourcesStep implements Step {
    * Any drawables found by this step didn't have equivalents in the target density. If they are of
    * a higher density, we can replicate what Android does and downscale them at compile-time.
    */
-  private void scaleUnmatchedDrawables(ExecutionContext context) throws IOException {
+  private void scaleUnmatchedDrawables(ExecutionContext context)
+      throws IOException, InterruptedException {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
     Filters.Density targetDensity = Filters.Density.ORDERING.max(targetDensities);
 
@@ -290,8 +291,9 @@ public class FilterResourcesStep implements Step {
   }
 
   public interface ImageScaler {
-    public boolean isAvailable(ExecutionContext context);
-    public void scale(double factor, Path source, Path destination, ExecutionContext context);
+    public boolean isAvailable(ExecutionContext context) throws InterruptedException;
+    public void scale(double factor, Path source, Path destination, ExecutionContext context)
+        throws InterruptedException;
   }
 
   /**
@@ -322,12 +324,13 @@ public class FilterResourcesStep implements Step {
     }
 
     @Override
-    public boolean isAvailable(ExecutionContext context) {
+    public boolean isAvailable(ExecutionContext context) throws InterruptedException {
       return 0 == new BashStep("which convert").execute(getContextWithSilentConsole(context));
     }
 
     @Override
-    public void scale(double factor, Path source, Path destination, ExecutionContext context) {
+    public void scale(double factor, Path source, Path destination, ExecutionContext context)
+        throws InterruptedException {
       Step convertStep = new BashStep(
           "convert",
           "-adaptive-resize", (int) (factor * 100) + "%",
@@ -382,6 +385,11 @@ public class FilterResourcesStep implements Step {
 
     public String getDescription() {
       return filter.toString();
+    }
+
+    @VisibleForTesting
+    Set<String> getFilter() {
+      return filter;
     }
   }
 

@@ -22,44 +22,42 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 
 public class GenerateBuildConfigStep implements Step {
 
-  private final String configPackage;
-  private final boolean debug;
+  private final String javaPackage;
+  private final boolean useConstantExpressions;
+  private final ImmutableMap<String, Object> constants;
   private final Path outBuildConfigPath;
 
   public GenerateBuildConfigStep(
-      String configPackage,
-      boolean debug,
+      String javaPackage,
+      boolean useConstantExpressions,
+      Map<String, Object> constants,
       Path outBuildConfigPath) {
-    this.configPackage = Preconditions.checkNotNull(configPackage);
-    this.debug = debug;
+    this.javaPackage = Preconditions.checkNotNull(javaPackage);
+    this.useConstantExpressions = useConstantExpressions;
+    this.constants = ImmutableMap.copyOf(constants);
     this.outBuildConfigPath = Preconditions.checkNotNull(outBuildConfigPath);
     if (outBuildConfigPath.getNameCount() == 0) {
       throw new HumanReadableException("Output BuildConfig.java filepath is missing");
     }
-
   }
 
   @Override
   public int execute(ExecutionContext context) {
-    StringBuilder builder = new StringBuilder();
-    builder.append("package ");
-    builder.append(configPackage);
-    builder.append(";\n");
-    builder.append("public final class BuildConfig {\n");
-    builder.append("  public final static boolean DEBUG = ");
-    builder.append(String.valueOf(debug));
-    builder.append(";\n");
-    builder.append("}");
-
+    String java = BuildConfigs.generateBuildConfigDotJava(
+        javaPackage,
+        useConstantExpressions,
+        constants);
     ProjectFilesystem filesystem = context.getProjectFilesystem();
     try {
-      filesystem.writeContentsToPath(builder.toString(), outBuildConfigPath);
+      filesystem.writeContentsToPath(java, outBuildConfigPath);
     } catch (IOException e) {
       context.logError(e, "Error writing BuildConfig.java: %s", outBuildConfigPath);
       return 1;
@@ -70,7 +68,7 @@ public class GenerateBuildConfigStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("generate_build_config %s %s", configPackage, String.valueOf(debug));
+    return String.format("generate_build_config %s", javaPackage);
   }
 
   @Override
@@ -85,16 +83,18 @@ public class GenerateBuildConfigStep implements Step {
     }
 
     GenerateBuildConfigStep that = (GenerateBuildConfigStep) obj;
-    return Objects.equal(this.configPackage, that.configPackage) &&
-        Objects.equal(this.debug, that.debug) &&
+    return Objects.equal(this.javaPackage, that.javaPackage) &&
+        this.useConstantExpressions == that.useConstantExpressions &&
+        Objects.equal(this.constants, that.constants) &&
         Objects.equal(this.outBuildConfigPath, that.outBuildConfigPath);
   }
 
   @Override
   public int hashCode() {
     return Objects.hashCode(
-        configPackage,
-        debug,
+        javaPackage,
+        useConstantExpressions,
+        constants,
         outBuildConfigPath);
   }
 }

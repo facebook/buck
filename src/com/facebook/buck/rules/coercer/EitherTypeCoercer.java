@@ -89,7 +89,7 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
                 buildRuleResolver, filesystem, pathRelativeToProjectRoot, object));
       } catch (CoerceFailedException e1) {
         // Fail, but report that the current coercer failed, not the child ones.
-        throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+        throw CoerceFailedException.simple(object, getOutputClass());
       }
     }
   }

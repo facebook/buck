@@ -163,7 +163,7 @@ class DexSplitMode {
 
   /**
    * @return All {@link SourcePath}s referenced by this object, for use in
-   *     {@link com.facebook.buck.rules.Buildable#getInputsToCompareToOutput()}.
+   *     {@link com.facebook.buck.rules.AbstractBuildRule#getInputsToCompareToOutput()}.
    */
   public Collection<SourcePath> getSourcePaths() {
     ImmutableList.Builder<SourcePath> paths = ImmutableList.builder();

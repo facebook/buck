@@ -20,11 +20,19 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Common conversion functions from raw Description Arg specifications.
@@ -103,5 +111,25 @@ public class RuleUtils {
           throw new RuntimeException("Unhandled AppleSource item type: " + item.getType());
       }
     }
+  }
+
+  public static Supplier<ImmutableCollection<Path>> subpathsOfPathsSupplier(
+      final ProjectFilesystem projectFilesystem,
+      final Set<Path> dirs) {
+    return Suppliers.memoize(
+        new Supplier<ImmutableCollection<Path>>() {
+          @Override
+          public ImmutableCollection<Path> get() {
+            ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
+            for (Path dir : dirs) {
+              try {
+                paths.addAll(projectFilesystem.getFilesUnderPath(dir));
+              } catch (IOException e) {
+                throw new HumanReadableException(e, "Error traversing directory: %s.", dir);
+              }
+            }
+            return paths.build();
+          }
+        });
   }
 }

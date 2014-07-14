@@ -17,14 +17,20 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.nio.file.Path;
 
 public class JavaTestDescription implements Description<JavaTestDescription.Arg> {
 
@@ -46,7 +52,10 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
   }
 
   @Override
-  public JavaTest createBuildable(BuildRuleParams params, Arg args) {
+  public <A extends Arg> JavaTest createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
 
     AnnotationProcessingParams annotationParams =
@@ -54,17 +63,50 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     javacOptions.setAnnotationProcessingData(annotationParams);
 
     return new JavaTest(
-        params.getBuildTarget(),
+        params,
         args.srcs.get(),
-        JavaLibraryDescription.validateResources(args, params.getProjectFilesystem()),
+        JavaLibraryDescription.validateResources(
+            args,
+            params.getProjectFilesystem()),
         args.labels.get(),
         args.contacts.get(),
         args.proguardConfig,
+        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         javacOptions.build(),
         args.vmArgs.get(),
-        params.getDeps(),
-        args.sourceUnderTest.get(),
+        validateAndGetSourcesUnderTest(
+            args.sourceUnderTest.get(),
+            params.getBuildTarget(),
+            resolver),
         args.resourcesRoot);
+  }
+
+  public static ImmutableSet<BuildRule> validateAndGetSourcesUnderTest(
+      ImmutableSet<BuildTarget> sourceUnderTestTargets,
+      BuildTarget owner,
+      BuildRuleResolver resolver) {
+    ImmutableSet.Builder<BuildRule> sourceUnderTest = ImmutableSet.builder();
+    for (BuildTarget target : sourceUnderTestTargets) {
+      BuildRule rule = resolver.get(target);
+      if (rule == null) {
+        throw new HumanReadableException(
+            "Specified source under test for %s is not among its dependencies: %s",
+            owner,
+            target);
+      }
+      if (!(rule instanceof JavaLibrary)) {
+        // In this case, the source under test specified in the build file was not a Java library
+        // rule. Since EMMA requires the sources to be in Java, we will throw this exception and
+        // not continue with the tests.
+        throw new HumanReadableException(
+            "Specified source under test for %s is not a Java library: %s (%s).",
+            owner,
+            rule.getFullyQualifiedName(),
+            rule.getType().getName());
+      }
+      sourceUnderTest.add(rule);
+    }
+    return sourceUnderTest.build();
   }
 
   public static class Arg extends JavaLibraryDescription.Arg {

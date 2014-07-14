@@ -161,6 +161,7 @@ ga('send', 'pageview');
     // TODO(mbolin): document robolectric_test
     {foreach $rule in [
         'android_binary',
+        'android_build_config',
         'android_library',
         'android_resource',
         'apk_genrule',
@@ -455,6 +456,11 @@ ga('send', 'pageview');
  */
 {template .cmd_link}
 <a href="{ROOT}command/{$name}.html"><code>buck {$name}</code></a>
+{/template}
+
+/***/
+{template .cmd_build}
+{call .cmd_link}{param name : 'build' /}{/call}
 {/template}
 
 /***/

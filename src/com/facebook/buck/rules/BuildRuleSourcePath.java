@@ -34,9 +34,7 @@ public class BuildRuleSourcePath extends AbstractSourcePath {
 
   @Override
   public Path resolve() {
-    Buildable buildable = rule.getBuildable();
-
-    Path path = buildable == null ? null : buildable.getPathToOutputFile();
+    Path path = rule.getPathToOutputFile();
     if (path == null) {
       throw new HumanReadableException("No known output for: %s", rule);
     }

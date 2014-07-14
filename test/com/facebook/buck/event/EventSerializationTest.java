@@ -84,34 +84,36 @@ public class EventSerializationTest {
   @Test
   public void testParseEventFinished() throws IOException {
     ParseEvent.Finished event = ParseEvent.finished(ImmutableList.<BuildTarget>of(
-        new BuildTarget("//base", "short", "flv")), Optional.<ActionGraph>absent());
+        BuildTarget.builder("//base", "short").setFlavor("flv").build()),
+        Optional.<ActionGraph>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildTargets\":[{\"baseName\":\"//base\",\"shortName\":\"short\",\"flavor\":\"flv\"}]," +
-        "\"type\":\"ParseFinished\"}", message);
+        "\"buildTargets\":[{\"repository\":{\"present\":false},\"baseName\":\"//base\"," +
+        "\"shortName\":\"short\",\"flavor\":\"flv\"}],\"type\":\"ParseFinished\"}", message);
   }
 
   @Test
   public void testBuildEventStarted() throws IOException {
     BuildEvent.Started event = BuildEvent.started(ImmutableList.<BuildTarget>of(
-        new BuildTarget("//base", "short")));
+        BuildTarget.builder("//base", "short").build()));
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildTargets\":[{\"baseName\":\"//base\",\"shortName\":\"short\",\"flavor\":\"\"}]," +
-        "\"type\":\"BuildStarted\"}", message);
+        "\"buildTargets\":[{\"repository\":{\"present\":false},\"baseName\":\"//base\"," +
+        "\"shortName\":\"short\",\"flavor\":\"\"}],\"type\":\"BuildStarted\"}", message);
   }
 
   @Test
   public void testBuildEventFinished() throws IOException {
     BuildEvent.Finished event = BuildEvent.finished(ImmutableList.<BuildTarget>of(
-        new BuildTarget("//base", "short")), 0);
+        BuildTarget.builder("//base", "short").build()), 0);
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildTargets\":[{\"baseName\":\"//base\",\"shortName\":\"short\",\"flavor\":\"\"}]" +
-        ",\"exitCode\":0,\"type\":\"BuildFinished\"}", message);
+        "\"buildTargets\":[{\"repository\":{\"present\":false},\"baseName\":\"//base\"," +
+        "\"shortName\":\"short\",\"flavor\":\"\"}],\"exitCode\":0,\"type\":\"BuildFinished\"}",
+        message);
   }
 
   @Test

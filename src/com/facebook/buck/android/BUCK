@@ -10,12 +10,32 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
+PACKAGEABLE_SOURCES = [
+  'AndroidPackageable.java',
+  'AndroidPackageableCollection.java',
+  'AndroidPackageableCollector.java',
+]
+java_library(
+  name = 'packageable',
+  srcs = PACKAGEABLE_SOURCES,
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/java:classhash',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:exceptions',
+  ],
+  visibility = ['PUBLIC'],
+)
+
 RULES_SRCS = [
   'AaptPackageResources.java',
   'AndroidBinaryGraphEnhancer.java',
   'AndroidBinary.java',
   'AndroidBinaryDescription.java',
-  'AndroidDexTransitiveDependencies.java',
+  'AndroidBuildConfig.java',
+  'AndroidBuildConfigDescription.java',
+  'AndroidBuildConfigJavaLibrary.java',
   'AndroidInstrumentationApk.java',
   'AndroidInstrumentationApkDescription.java',
   'AndroidLibraryDescription.java',
@@ -23,16 +43,11 @@ RULES_SRCS = [
   'AndroidLibrary.java',
   'AndroidManifest.java',
   'AndroidManifestDescription.java',
-  'AndroidResourceDepsFinder.java',
-  'AndroidResourceDetails.java',
   'AndroidResource.java',
   'AndroidResourceDescription.java',
-  'AndroidTransitiveDependencies.java',
   'AndroidTransitiveDependencyGraph.java',
   'ApkGenrule.java',
   'ApkGenruleDescription.java',
-  'BuildConfig.java',
-  'BuildConfigDescription.java',
   'ComputeExopackageDepsAbi.java',
   'DexProducedFromJavaLibrary.java',
   'DexWithClasses.java',
@@ -45,7 +60,7 @@ RULES_SRCS = [
   'HasAndroidPlatformTarget.java',
   'HasAndroidResourceDeps.java',
   'MergeAndroidResourcesStep.java',
-  'NativeLibraryBuildable.java',
+  'NativeLibraryBuildRule.java',
   'NdkLibraryDescription.java',
   'NdkLibrary.java',
   'PackageStringAssets.java',
@@ -65,6 +80,7 @@ java_library(
   srcs = RULES_SRCS,
   deps = [
     ':exceptions',
+    ':packageable',
     ':split_dex',
     ':steps',
     '//lib:guava',
@@ -121,7 +137,8 @@ java_library(
 
 java_library(
   name = 'steps',
-  srcs = glob(['*.java'], excludes = EXCEPTION_SRCS + RULES_SRCS + SPLIT_DEX_SRCS),
+  srcs = glob(['*.java'],
+              excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS),
   deps = [
     ':exceptions',
     ':split_dex',
@@ -133,6 +150,7 @@ java_library(
     '//src/com/facebook/buck/dalvik/firstorder:firstorder',
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',

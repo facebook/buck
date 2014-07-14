@@ -25,9 +25,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -52,7 +51,7 @@ public class CppBinaryRuleTest {
   private BuildableContext buildableContext = new FakeBuildableContext();
   private ExecutionContext executionContext = TestExecutionContext.newInstance();
 
-  private BuildRule makeCppBinaryBuildRule(
+  private CppBinary makeCppBinaryBuildRule(
       BuildTarget buildTarget,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet< BuildRule> deps) {
@@ -60,13 +59,14 @@ public class CppBinaryRuleTest {
     CppBinaryDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.srcs = srcs;
     arg.deps = Optional.of(deps);
-    BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder(buildTarget).setDeps(deps).build();
-    CppBinary buildable = (CppBinary) description.createBuildable(buildRuleParams, arg);
-    return new DescribedRule(description.getBuildRuleType(), buildable, buildRuleParams);
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
+        .setDeps(deps)
+        .setType(description.getBuildRuleType())
+        .build();
+    return description.createBuildRule(buildRuleParams, new BuildRuleResolver(), arg);
   }
 
-  private BuildRule makeCppLibraryBuildRule(
+  private CppLibrary makeCppLibraryBuildRule(
       BuildTarget buildTarget,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> headers,
@@ -77,27 +77,29 @@ public class CppBinaryRuleTest {
     arg.deps = Optional.of(deps);
     arg.headers = headers;
     BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder(buildTarget).setDeps(deps).build();
-    CppLibrary buildable = (CppLibrary) description.createBuildable(buildRuleParams, arg);
-    return new DescribedRule(description.getBuildRuleType(), buildable, buildRuleParams);
+        new FakeBuildRuleParamsBuilder(buildTarget)
+            .setDeps(deps)
+            .setType(description.getBuildRuleType())
+            .build();
+    return description.createBuildRule(buildRuleParams, new BuildRuleResolver(), arg);
   }
 
   @Test
   public void testCppBinary() {
     BuildRule library = makeCppLibraryBuildRule(
-        new BuildTarget("//lib", "bla"),
+        BuildTarget.builder("//lib", "bla").build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("libsource1.c"),
             new TestSourcePath("libsource2.c")),
         ImmutableSortedSet.<SourcePath>of(),
         ImmutableSortedSet.<BuildRule>of());
 
-    Buildable binary = makeCppBinaryBuildRule(
-        new BuildTarget("//foo", "bar"),
+    CppBinary binary = makeCppBinaryBuildRule(
+        BuildTarget.builder("//foo", "bar").build(),
         ImmutableSortedSet.<SourcePath>of(
           new TestSourcePath("source1.c"),
           new TestSourcePath("source2.c")),
-          ImmutableSortedSet.<BuildRule>of(library)).getBuildable();
+          ImmutableSortedSet.of(library));
 
     assertThat(binary.getInputsToCompareToOutput(), hasSize(2));
     assertThat(
@@ -131,21 +133,21 @@ public class CppBinaryRuleTest {
   @Test
   public void testCppLibrary() {
     BuildRule library = makeCppLibraryBuildRule(
-        new BuildTarget("//lib", "bla"),
+        BuildTarget.builder("//lib", "bla").build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("libsource1.c"),
             new TestSourcePath("libsource2.c")),
         ImmutableSortedSet.<SourcePath>of(),
         ImmutableSortedSet.<BuildRule>of());
 
-    Buildable targetLibrary = makeCppLibraryBuildRule(
-        new BuildTarget("//foo", "bar"),
+    CppLibrary targetLibrary = makeCppLibraryBuildRule(
+        BuildTarget.builder("//foo", "bar").build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("source1.c"),
             new TestSourcePath("source2.c")),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("source.h")),
-        ImmutableSortedSet.<BuildRule>of(library)).getBuildable();
+        ImmutableSortedSet.of(library));
 
     assertThat(targetLibrary.getInputsToCompareToOutput(), hasSize(3));
     assertThat(targetLibrary.getInputsToCompareToOutput(),

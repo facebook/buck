@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.collect.ArrayIterable;
 import com.google.common.annotations.VisibleForTesting;
@@ -30,12 +31,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class DirArtifactCache implements ArtifactCache {
 
-  private static final Logger logger = Logger.getLogger(DirArtifactCache.class.getName());
+  private static final Logger logger = Logger.get(DirArtifactCache.class);
 
   private final File cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
@@ -59,16 +58,15 @@ public class DirArtifactCache implements ArtifactCache {
         Files.copy(cacheEntry.toPath(), output.toPath(), REPLACE_EXISTING);
         success = CacheResult.DIR_HIT;
       } catch (IOException e) {
-        logger.warning(String.format("Artifact fetch(%s, %s) error: %s",
+        logger.warn(e, "Artifact fetch(%s, %s) error",
             ruleKey,
-            output.getPath(),
-            e.getMessage()));
+            output.getPath());
       }
     }
-    logger.info(String.format("Artifact fetch(%s, %s) cache %s",
+    logger.info("Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output.getPath(),
-        (success.isSuccess() ? "hit" : "miss")));
+        (success.isSuccess() ? "hit" : "miss"));
     return success;
   }
 
@@ -85,18 +83,17 @@ public class DirArtifactCache implements ArtifactCache {
       // as valid artifacts during subsequent buck runs.
       tmpCacheEntry = File.createTempFile(ruleKey.toString(), ".tmp", cacheDir).toPath();
       Files.copy(output.toPath(), tmpCacheEntry, REPLACE_EXISTING);
-      Files.move(tmpCacheEntry, cacheEntry.toPath());
+      Files.move(tmpCacheEntry, cacheEntry.toPath(), REPLACE_EXISTING);
     } catch (IOException e) {
-      logger.warning(String.format("Artifact store(%s, %s) error: %s",
+      logger.warn(e, "Artifact store(%s, %s) error",
           ruleKey,
-          output.getPath(),
-          e.getMessage()));
+          output.getPath());
       if (tmpCacheEntry != null) {
         try {
           Files.deleteIfExists(tmpCacheEntry);
         } catch (IOException ignored) {
           // Unable to delete a temporary file. Nothing sane to do.
-          logger.log(Level.INFO, "Unable to delete temp cache file", ignored);
+          logger.debug(ignored, "Unable to delete temp cache file");
         }
       }
     }

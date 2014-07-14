@@ -48,7 +48,7 @@ public class BuildRuleTypeCoercer extends LeafTypeCoercer<BuildRule> {
           buildRuleResolver, filesystem, pathRelativeToProjectRoot, object);
       return buildRuleResolver.get(buildTarget);
     } catch (CoerceFailedException e) {
-      throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputClass());
     }
   }
 }

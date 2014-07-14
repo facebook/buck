@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -41,10 +42,11 @@ public class ShBinaryDescription implements Description<ShBinaryDescription.Arg>
   }
 
   @Override
-  public ShBinary createBuildable(BuildRuleParams params, Arg args) {
-    // It's safe to do this, since we know that the arg marshaller fills in optional sets as empty
-    // sets. Because we're nice like that.
-    return new ShBinary(params.getBuildTarget(), args.main, args.resources.get());
+  public <A extends Arg> ShBinary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new ShBinary(params, args.main, args.resources.get());
   }
 
   public static class Arg implements ConstructorArg {

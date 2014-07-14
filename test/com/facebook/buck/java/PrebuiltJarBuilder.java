@@ -23,7 +23,7 @@ import com.facebook.buck.rules.PathSourcePath;
 
 import java.nio.file.Path;
 
-public class PrebuiltJarBuilder extends AbstractBuilder<PrebuiltJar, PrebuiltJarDescription.Arg> {
+public class PrebuiltJarBuilder extends AbstractBuilder<PrebuiltJarDescription.Arg> {
 
   private PrebuiltJarBuilder(BuildTarget target) {
     super(new PrebuiltJarDescription(), target);

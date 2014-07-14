@@ -37,6 +37,6 @@ public class LabelTypeCoercer extends LeafTypeCoercer<Label> {
     if (object instanceof String) {
       return new Label((String) object);
     }
-    throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputClass());
   }
 }

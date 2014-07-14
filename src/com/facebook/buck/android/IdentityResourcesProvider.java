@@ -24,15 +24,15 @@ import java.nio.file.Path;
 
 public class IdentityResourcesProvider implements FilteredResourcesProvider {
 
-  private final AndroidResourceDepsFinder androidResourceDepsFinder;
+  private final ImmutableList<Path> resDirectories;
 
-  public IdentityResourcesProvider(AndroidResourceDepsFinder androidResourceDepsFinder) {
-    this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
+  public IdentityResourcesProvider(ImmutableList<Path> resDirectories) {
+    this.resDirectories = Preconditions.checkNotNull(resDirectories);
   }
 
   @Override
   public ImmutableList<Path> getResDirectories() {
-    return androidResourceDepsFinder.getAndroidResourceDetails().resDirectories;
+    return resDirectories;
   }
 
   @Override

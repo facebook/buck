@@ -23,10 +23,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
-import com.facebook.buck.rules.DefaultBuildableParams;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FlavorableDescription;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -48,7 +45,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   public static final BuildRuleType TYPE = new BuildRuleType("java_library");
   public static final String ANNOTATION_PROCESSORS = "annotation_processors";
-  private final JavaCompilerEnvironment javacEnv;
+  @VisibleForTesting
+  final JavaCompilerEnvironment javacEnv;
 
   public JavaLibraryDescription(JavaCompilerEnvironment javacEnv) {
     this.javacEnv = Preconditions.checkNotNull(javacEnv);
@@ -65,7 +63,10 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   @Override
-  public <A extends Arg> JavaLibrary createBuildable(BuildRuleParams params, A args) {
+  public <A extends Arg> DefaultJavaLibrary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
 
     AnnotationProcessingParams annotationParams =
@@ -73,14 +74,14 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     javacOptions.setAnnotationProcessingData(annotationParams);
 
     return new DefaultJavaLibrary(
-        params.getBuildTarget(),
+        params,
         args.srcs.get(),
         validateResources(args, params.getProjectFilesystem()),
         args.proguardConfig,
         args.postprocessClassesCommands.get(),
-        params.getDeps(),
         args.exportedDeps.get(),
         args.providedDeps.get(),
+        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         javacOptions.build(),
         args.resourcesRoot);
   }
@@ -167,42 +168,42 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   @Override
   public void registerFlavors(
       Arg arg,
-      DescribedRule describedRule,
+      BuildRule buildRule,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleResolver ruleResolver) {
-    BuildTarget originalBuildTarget = describedRule.getBuildTarget();
-    Optional<GwtModule> gwtModuleOptional = tryCreateGwtModule(originalBuildTarget, arg);
+    BuildTarget originalBuildTarget = buildRule.getBuildTarget();
+    Optional<GwtModule> gwtModuleOptional = tryCreateGwtModule(
+        originalBuildTarget,
+        projectFilesystem,
+        ruleKeyBuilderFactory,
+        arg);
     if (!gwtModuleOptional.isPresent()) {
       return;
     }
 
     GwtModule gwtModule = gwtModuleOptional.get();
-    BuildRule rule = new DescribedRule(
-        BuildRuleType.GWT_MODULE,
-        gwtModule,
-        new BuildRuleParams(
-            gwtModule.getBuildTarget(),
-            gwtModule.getDeps(),
-            BuildTargetPattern.PUBLIC,
-            projectFilesystem,
-            ruleKeyBuilderFactory));
-    ruleResolver.addToIndex(rule.getBuildTarget(), rule);
+    ruleResolver.addToIndex(gwtModule.getBuildTarget(), gwtModule);
   }
 
   /**
-   * Creates a {@link Buildable} with the {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
+   * Creates a {@link BuildRule} with the {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
    * <p>
    * If {@code arg.srcs} or {@code arg.resources} is non-empty, then the return value will not be
    * absent.
    */
   @VisibleForTesting
-  static Optional<GwtModule> tryCreateGwtModule(BuildTarget originalBuildTarget, Arg arg) {
+  static Optional<GwtModule> tryCreateGwtModule(
+      BuildTarget originalBuildTarget,
+      ProjectFilesystem projectFilesystem,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      Arg arg) {
     if (arg.srcs.get().isEmpty() && arg.resources.get().isEmpty()) {
       return Optional.absent();
     }
 
-    BuildTarget gwtModuleBuildTarget = BuildTargets.createFlavoredBuildTarget(originalBuildTarget,
+    BuildTarget gwtModuleBuildTarget = BuildTargets.createFlavoredBuildTarget(
+        originalBuildTarget,
         JavaLibrary.GWT_MODULE_FLAVOR);
     ImmutableSortedSet<SourcePath> filesForGwtModule = ImmutableSortedSet
         .<SourcePath>naturalOrder()
@@ -215,7 +216,14 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     ImmutableSortedSet<BuildRule> deps =
         ImmutableSortedSet.copyOf(SourcePaths.filterBuildRuleInputs(filesForGwtModule));
     GwtModule gwtModule = new GwtModule(
-        new DefaultBuildableParams(gwtModuleBuildTarget, deps),
+        new BuildRuleParams(
+            gwtModuleBuildTarget,
+            deps,
+            /* inferredDeps */ ImmutableSortedSet.<BuildRule>of(),
+            BuildTargetPattern.PUBLIC,
+            projectFilesystem,
+            ruleKeyBuilderFactory,
+            BuildRuleType.GWT_MODULE),
         filesForGwtModule);
     return Optional.of(gwtModule);
   }

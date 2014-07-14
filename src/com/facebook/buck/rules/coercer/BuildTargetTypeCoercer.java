@@ -45,15 +45,15 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
       if (param.startsWith(BuildTarget.BUILD_TARGET_PREFIX) || param.charAt(0) == ':') {
         int colon = param.indexOf(':');
         if (colon == 0 && param.length() > 1) {
-          return new BuildTarget(
+          return BuildTarget.builder(
               BuildTarget.BUILD_TARGET_PREFIX + pathRelativeToProjectRoot.toString(),
-              param.substring(1));
+              param.substring(1)).build();
         } else if (colon > 0 && param.length() > 2) {
-          return new BuildTarget(param.substring(0, colon), param.substring(colon + 1));
+          return BuildTarget.builder(param.substring(0, colon), param.substring(colon + 1)).build();
         }
       }
     }
 
-    throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputClass());
   }
 }

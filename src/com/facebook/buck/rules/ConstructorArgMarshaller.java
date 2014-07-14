@@ -91,7 +91,7 @@ public class ConstructorArgMarshaller {
       BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
-      ConstructorArg dto) {
+      ConstructorArg dto) throws ConstructorArgMarshalException {
     populate(
         ruleResolver,
         filesystem,
@@ -105,14 +105,18 @@ public class ConstructorArgMarshaller {
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       ConstructorArg dto,
-      boolean onlyOptional) {
+      boolean onlyOptional) throws ConstructorArgMarshalException {
     Set<ParamInfo> allInfo = getAllParamInfo(dto);
 
     for (ParamInfo info : allInfo) {
       if (onlyOptional && !info.isOptional()) {
         continue;
       }
-      info.setFromParams(ruleResolver, filesystem, dto, params);
+      try {
+        info.setFromParams(ruleResolver, filesystem, dto, params);
+      } catch (ParamInfoException e) {
+        throw new ConstructorArgMarshalException(e.getMessage(), e);
+      }
     }
   }
 

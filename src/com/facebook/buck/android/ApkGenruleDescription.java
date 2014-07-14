@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -44,18 +45,21 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
   }
 
   @Override
-  public ApkGenrule createBuildable(BuildRuleParams params, Arg args) {
-    if (!(args.apk.getBuildable() instanceof InstallableApk)) {
+  public <A extends Arg> ApkGenrule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    if (!(args.apk instanceof InstallableApk)) {
       throw new HumanReadableException("The 'apk' argument of %s, %s, must correspond to an " +
           "installable rule, such as android_binary() or apk_genrule().",
           params.getBuildTarget(),
           args.apk.getFullyQualifiedName());
     }
 
-    InstallableApk installableApk = (InstallableApk) args.apk.getBuildable();
+    InstallableApk installableApk = (InstallableApk) args.apk;
 
     return new ApkGenrule(
-        params.getBuildTarget(),
+        params,
         args.srcs.get(),
         args.cmd,
         args.bash,

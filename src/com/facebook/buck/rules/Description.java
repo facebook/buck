@@ -17,11 +17,11 @@
 package com.facebook.buck.rules;
 
 /**
- * The Source of Truth about a {@link Buildable}, providing mechanisms to expose the arguments that
+ * The Source of Truth about a {@link BuildRule}, providing mechanisms to expose the arguments that
  * rules derived from the Buildable take and providing a factory for those Buildables. It is
  * expected that instances of this class are stateless.
  *
- * @param <T> The object describing the parameters to be passed to the {@link Buildable}. How this
+ * @param <T> The object describing the parameters to be passed to the {@link BuildRule}. How this
  *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
  *
  */
@@ -33,16 +33,19 @@ public interface Description<T extends ConstructorArg> {
   BuildRuleType getBuildRuleType();
 
   /**
-   * @return An instance of the argument that must later be passed to
-   *     {@link #createBuildable(BuildRuleParams, ConstructorArg)}.
+   * @return An instance of the argument that must later be passed to createBuildRule().
    * @see ConstructorArgMarshaller
    *
    */
   T createUnpopulatedConstructorArg();
 
   /**
+   * @param resolver For querying for build rules by their targets.
    * @param args A constructor argument, as returned by {@link #createUnpopulatedConstructorArg()}.
-   * @return The {@link Buildable} that describes the default flavour of the rule being described.
+   * @return The {@link BuildRule} that describes the default flavour of the rule being described.
    */
-  <A extends T> Buildable createBuildable(BuildRuleParams params, A args);
+  <A extends T> BuildRule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args);
 }

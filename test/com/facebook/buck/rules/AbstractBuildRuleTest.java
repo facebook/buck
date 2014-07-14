@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
+import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -34,18 +35,16 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.util.Comparator;
 
-import javax.annotation.Nullable;
-
 public class AbstractBuildRuleTest {
 
   private static final BuildTarget orcaTarget =
-      new BuildTarget("//src/com/facebook/orca", "orca");
+      BuildTarget.builder("//src/com/facebook/orca", "orca").build();
   private static final BuildTarget publicTarget =
-      new BuildTarget("//src/com/facebook/for", "everyone");
+      BuildTarget.builder("//src/com/facebook/for", "everyone").build();
   private static final BuildTarget nonPublicTarget1 =
-      new BuildTarget("//src/com/facebook/something1", "nonPublic");
+      BuildTarget.builder("//src/com/facebook/something1", "nonPublic").build();
   private static final BuildTarget nonPublicTarget2 =
-      new BuildTarget("//src/com/facebook/something2", "nonPublic");
+      BuildTarget.builder("//src/com/facebook/something2", "nonPublic").build();
 
   private static final ImmutableSet<BuildRule> noDeps = ImmutableSet.of();
   private static final ImmutableSet<BuildTargetPattern> noVisibilityPatterns = ImmutableSet.of();
@@ -160,11 +159,13 @@ public class AbstractBuildRuleTest {
 
   @Test
   public void testVisibilityForDirectory() {
-    BuildTarget libTarget = new BuildTarget("//lib", "lib");
-    BuildTarget targetInSpecifiedDirectory = new BuildTarget("//src/com/facebook", "test");
-    BuildTarget targetUnderSpecifiedDirectory = new BuildTarget("//src/com/facebook/buck", "test");
-    BuildTarget targetInOtherDirectory = new BuildTarget("//src/com/instagram", "test");
-    BuildTarget targetInParentDirectory = new BuildTarget("//", "test");
+    BuildTarget libTarget = BuildTarget.builder("//lib", "lib").build();
+    BuildTarget targetInSpecifiedDirectory =
+        BuildTarget.builder("//src/com/facebook", "test").build();
+    BuildTarget targetUnderSpecifiedDirectory =
+        BuildTarget.builder("//src/com/facebook/buck", "test").build();
+    BuildTarget targetInOtherDirectory = BuildTarget.builder("//src/com/instagram", "test").build();
+    BuildTarget targetInParentDirectory = BuildTarget.builder("//", "test").build();
 
     // Build rule that visible to targets in or under directory src/come/facebook
     BuildRule directoryBuildRule = createRule(libTarget,
@@ -203,26 +204,27 @@ public class AbstractBuildRuleTest {
         .setDeps(sortedDeps)
         .setVisibility(visibilityPatterns)
         .build();
-    return new AbstractBuildRule(buildRuleParams, null) {
-      @Override
-      public BuildRuleType getType() {
-        throw new IllegalStateException("This method should not be called");
-      }
+    return new AbstractBuildRule(buildRuleParams) {
 
-      @Nullable
       @Override
-      public Buildable getBuildable() {
+      public ImmutableList<Step> getBuildSteps(
+          BuildContext context, BuildableContext buildableContext) {
         return null;
       }
 
       @Override
-      public final Iterable<Path> getInputs() {
-        return ImmutableList.of();
+      public Path getPathToOutputFile() {
+        return null;
       }
 
       @Override
-      public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-        throw new IllegalStateException("This method should not be called");
+      protected Iterable<Path> getInputsToCompareToOutput() {
+        return null;
+      }
+
+      @Override
+      protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+        return null;
       }
     };
   }

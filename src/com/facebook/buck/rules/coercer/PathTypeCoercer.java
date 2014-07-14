@@ -48,18 +48,28 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
             .resolve(path)
             .normalize();
       } else {
-        try {
-          Path normalizedPath = pathRelativeToProjectRoot.resolve(path).normalize();
-          // Verify that the path exists
-          filesystem.getPathForRelativeExistingPath(normalizedPath);
+        final Path normalizedPath;
 
-          return normalizedPath;
+        // Normalize the path.
+        try {
+          normalizedPath = pathRelativeToProjectRoot.resolve(path).normalize();
         } catch (RuntimeException e) {
-          throw new CoerceFailedException(e.getMessage());
+          throw new CoerceFailedException("invalid path", e);
         }
+
+        // Verify that the path exists
+        try {
+          filesystem.getPathForRelativeExistingPath(normalizedPath);
+        } catch (RuntimeException e) {
+          throw new CoerceFailedException(
+              String.format("no such file or directory '%s'", normalizedPath),
+              e);
+        }
+
+        return normalizedPath;
       }
     } else {
-      throw CoerceFailedException.simple(pathRelativeToProjectRoot, object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputClass());
     }
   }
 }

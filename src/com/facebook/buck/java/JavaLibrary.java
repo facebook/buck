@@ -18,7 +18,8 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.AnnotationProcessingData;
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
@@ -29,11 +30,11 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
-public interface JavaLibrary  extends Buildable, HasClasspathEntries,
+public interface JavaLibrary extends BuildRule, HasClasspathEntries,
     HasJavaAbi, HasJavaClassHashes {
 
   /**
-   * This Buildable is expected to support the GWT flavor, which is a {@link Buildable} whose output
+   * This Buildable is expected to support the GWT flavor, which is a {@link BuildRule} whose output
    * file is a JAR containing the files necessary to use
    * this {@link JavaLibrary} as a GWT module. Normally, this includes Java source code, a .gwt.xml
    * file, and static resources, such as stylesheets and image files.
@@ -42,14 +43,18 @@ public interface JavaLibrary  extends Buildable, HasClasspathEntries,
    * if it has no {@code srcs} or {@code resources} of its own, but only exists to export deps),
    * then the flavor will be {@link Optional#absent()}.
    * <p>
-   * Note that the output of the {@link Buildable} for this flavor may contain
+   * Note that the output of the {@link BuildRule} for this flavor may contain
    * {@code .class} files. For example, if a third-party releases its {@code .class} and
    * {@code .java} files in the same JAR, it is common for a {@code prebuilt_jar()} to declare that
    * file as both its {@code binary_jar} and its {@code source_jar}. In that case, the output of
-   * the {@link Buildable} will be the original JAR file, which is why it would contain
+   * the {@link BuildRule} will be the original JAR file, which is why it would contain
    * {@code .class} files.
    */
   public static final Flavor GWT_MODULE_FLAVOR = new Flavor("gwt_module");
+
+  // TODO(natthu): This can probably be avoided by using a JavaPackageable interface similar to
+  // AndroidPackageable.
+  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries();
 
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
@@ -75,6 +80,8 @@ public interface JavaLibrary  extends Buildable, HasClasspathEntries,
   public ImmutableSortedSet<SourcePath> getJavaSrcs();
 
   public AnnotationProcessingData getAnnotationProcessingData();
+
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder);
 
   /**
    * Returns a SHA-1 hash that represents the ABI for the Java files returned by

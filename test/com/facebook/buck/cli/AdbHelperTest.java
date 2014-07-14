@@ -102,7 +102,12 @@ public class AdbHelperTest {
         executionContext,
         console,
         eventBus,
-        buckConfig);
+        buckConfig) {
+      @Override
+      protected boolean isDeviceTempWritable(IDevice device, String name) {
+        return true;
+      }
+    };
   }
 
   /**

@@ -31,14 +31,6 @@ the nodes in the graph have gone through the queue.
 Therefore, breaking modules into finer dependencies creates opportunities for increased
 parallelism, improving throughput.
 
-<p>
-
-In light of all this, by default Buck uses first order dependencies.  First order dependencies mean
-that you need to specify the dependencies of your library, plus any libraries that your library
-happens to depend on.  This behavior can be changed at runtime with the
-{sp}<code><a href="{ROOT}command/build.html">buck build</a></code> command by specifying a
-different value for <code>--build-dependencies</code>.
-
 <h2>Buck can store the outputs it generates in a cache</h2>
 
 <p>
@@ -76,8 +68,8 @@ Since out-of-date outputs are guaranteed to be overwritten, there is no reason t
 
 If you are using some sort of <a href="http://en.wikipedia.org/wiki/Continuous_integration">continuous
 integration (CI)</a> system, you will likely want your CI builds to populate a cache that can be read by your local builds.
-That way, when a developer syncs to a revision that has already been built on your CI system, running <code>buck
-build</code> should not build anything locally, as all outputs should be able to be pulled from the cache.
+That way, when a developer syncs to a revision that has already been built on your CI system, running
+{sp}{call buck.cmd_build /} should not build anything locally, as all outputs should be able to be pulled from the cache.
 This works because the cache key computed by Buck when run on the CI system should match the key computed by Buck
 on your local machine.
 
@@ -100,6 +92,111 @@ dependencies has not changed since the previous build, then the {call buck.java_
 This is valid because we know that neither the input <code>.java</code> files nor the API against which they
 would be compiled has changed, so the result would be the same if the rule were rebuilt. This localizes how much
 Java code needs to be recompiled in response to a change, again reducing build times.
+
+<h2>Rules can calculate their own "ABI" keys</h2>
+
+<p>
+
+As a generalization of the Java library API optimization,
+every rule type has the freedom to determine whether or not to rebuild itself
+based on information about the state of its dependencies.
+For example, when editing a file in an {call buck.android_resource /} rule,
+we don't need to recompile all dependent resources and libraries
+if the set of exposed symbols doesn't change
+(for example, if we just changed a padding value).
+If we recompile an {call buck.android_library /} due to a dependency change,
+but the resulting classes are identical,
+we don't need to re-run DX.
+
+<p>
+
+This mechanism is fairly general.
+When the build engine is preparing to build a rule,
+in addition to the normal cache key,
+it generates a key that excludes the keys of the dependencies.
+This is combined with a key that the rule generates
+by hashing whatever parts of its dependencies it considers "visible".
+Usually, the dependency will help with this process
+by outputting the relevant information
+(like the Java API or hash of all classes)
+to a single small file.
+If both keys match the values from the last build,
+then there is no need to rebuild.
+
+<p>
+
+Note that this optimization is currently separate from the distributed cache.
+We'd like to combine them so that the cache can be used to fetch rules
+built by a continuous integration server as long as the source files
+and visible parts of the dependencies match.
+
+<h2>Buck prefers to use first-order dependencies</h2>
+
+<p>
+
+By default, Buck uses first-order dependencies when compiling Java.
+This means that compilation can only see explicitly declared dependencies,
+not other libraries that your dependencies depend on.
+This behavior can be changed at runtime with the
+{sp}{call buck.cmd_build /} command by specifying a
+different value for <code>--build-dependencies</code>.
+
+<p>
+
+We recommend keeping the default, however.
+First-order dependencies dramatically shrink the set of APIs
+that your library is exposed to,
+which dramatically reduces the scope of changes
+that will force your library to be rebuilt.
+
+<h2>Fast Dex merging for Android</h2>
+
+<p>
+
+Other build tools use also Android's DX merge support
+to merge your main program's dex file with third-party libraries.
+However, Buck's support for fine-grained libraries
+allows dex merging to work at a much higher granularity.
+
+<p>
+
+Buck also includes a customized version of DX
+that includes significant performance improvements.
+It uses a faster algorithm for merging many dex files.
+It also has support for running multiple copies of DX
+concurrently within a single long-lived buckd process,
+which eliminates most of DX's start-up time.
+
+<p>
+
+As a result, when editing a small module and performing an incremental build,
+we frequently see less than 1 second spent generating classes.dex.
+
+<h2>Graph enhancement for increased rule granularity</h2>
+
+<p>
+
+Frequently, the granularity at which we expect users to declare build rules
+is very different from the granularity at which
+we want the build system to model them.
+Users want coarse-grained rules for simplicity (like "android_binary"),
+but the build system wants fine-grained rules
+(like "aapt package" and "dex merge")
+to allow for parallelism and fine-grained caching.
+
+<p>
+
+Internally, Buck uses a mechanism called "graph enhancement"
+that allows its internal "action graph" (the DAG used for building)
+to be different from what the user declared (internally called the "target graph").
+Graph enhancement can add new synthetic rules
+to break a monolithic task (like {call buck.android_binary /})
+into independent subtasks
+that might only have a subset of the original dependencies,
+so dex merging does not depend on running a full <code>aapt package</code>.
+It can also move dependency edges,
+so compiling Android libraries does not depend on dexing their dependencies.
+
     {/param}
   {/call}
 {/template}

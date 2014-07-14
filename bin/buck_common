@@ -82,17 +82,19 @@ ORIGINAL_WORKING_DIRECTORY="$PWD"
 PROJECT_ROOT="$PWD"
 
 # Navigate upwards until either a .buckconfig file is found or the root directory is reached.
-while ! [ -f "$PROJECT_ROOT/.buckconfig" ] && [ "$PROJECT_ROOT" != "/" ] ; do
-  cd ..
-  PROJECT_ROOT="$PWD"
-done
+if [ "$*" != '--version' ] && [ "$*" != '-V' ]; then
+  while ! [ -f "$PROJECT_ROOT/.buckconfig" ] && [ "$PROJECT_ROOT" != "/" ] ; do
+    cd ..
+    PROJECT_ROOT="$PWD"
+  done
 
-if ! [ -f "$PROJECT_ROOT/.buckconfig" ] ; then
-  echo >&2 'This does not appear to be the root of a Buck project.'
-  echo >&2 'Please "cd" to the root of your project before running buck.'
-  echo >&2 'If this really is the root of your project, run "touch .buckconfig"'
-  echo >&2 'then re-run your buck command.'
-  exit 1
+  if ! [ -f "$PROJECT_ROOT/.buckconfig" ] ; then
+    echo >&2 'This does not appear to be the root of a Buck project.'
+    echo >&2 'Please "cd" to the root of your project before running buck.'
+    echo >&2 'If this really is the root of your project, run "touch .buckconfig"'
+    echo >&2 'then re-run your buck command.'
+    exit 1
+  fi
 fi
 
 
@@ -414,10 +416,12 @@ BUCK_JAVA_ARGS=( \
   -XX:MaxPermSize=256m \
   -Xmx1000m \
   -Djava.awt.headless=true \
+  -Djava.util.logging.config.class=com.facebook.buck.log.LogConfig \
   -Dbuck.testrunner_classes="${BUCK_DIRECTORY}"/build/testrunner/classes \
   -Dbuck.abi_processor_classes="${BUCK_DIRECTORY}"/build/abi_processor/classes \
   -Dbuck.path_to_emma_jar="${BUCK_DIRECTORY}"/third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar \
   -Dbuck.test_util_no_tests_dir=true \
+  -Dbuck.logging_config_file="${BUCK_DIRECTORY}"/config/logging.properties \
   -Dbuck.path_to_python_interp="${PYTHON_INTERP_FALLBACK}" \
   -Dbuck.path_to_buck_py="${PATH_TO_BUCK_PY}" \
   -Dbuck.path_to_compile_asset_catalogs_py="${PATH_TO_COMPILE_ASSET_CATALOGS_PY}" \

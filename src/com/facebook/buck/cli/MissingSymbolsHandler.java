@@ -114,7 +114,7 @@ public class MissingSymbolsHandler {
       }
 
       @Subscribe
-      public void onBuildFinished(BuildEvent.Finished event) {
+      public void onBuildFinished(BuildEvent.Finished event) throws InterruptedException {
         // Shortcircuit if there aren't any failures.
         if (missingSymbolEvents.get(event.getBuildId()).isEmpty()) {
           return;
@@ -132,7 +132,7 @@ public class MissingSymbolsHandler {
    * missing dependencies for each broken target.
    */
   public ImmutableSetMultimap<BuildTarget, BuildTarget> getNeededDependencies(
-      Collection<MissingSymbolEvent> missingSymbolEvents) {
+      Collection<MissingSymbolEvent> missingSymbolEvents) throws InterruptedException {
     ImmutableSetMultimap.Builder<BuildTarget, String> targetsMissingSymbolsBuilder =
         ImmutableSetMultimap.builder();
     for (MissingSymbolEvent event : missingSymbolEvents) {
@@ -164,7 +164,8 @@ public class MissingSymbolsHandler {
    * Get a list of missing dependencies from {@link #getNeededDependencies} and print it to the
    * console in a list-of-Python-strings way that's easy to copy and paste.
    */
-  private void printNeededDependencies(Collection<MissingSymbolEvent> missingSymbolEvents) {
+  private void printNeededDependencies(Collection<MissingSymbolEvent> missingSymbolEvents)
+      throws InterruptedException {
     ImmutableSetMultimap<BuildTarget, BuildTarget> neededDependencies =
         getNeededDependencies(missingSymbolEvents);
     ImmutableSortedSet.Builder<String> samePackageDeps = ImmutableSortedSet.naturalOrder();

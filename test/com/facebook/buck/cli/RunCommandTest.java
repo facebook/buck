@@ -29,7 +29,8 @@ import java.io.IOException;
 public class RunCommandTest extends EasyMockSupport {
 
   @Test
-  public void testRunCommandWithNoArguments() throws IOException {
+  public void testRunCommandWithNoArguments()
+      throws IOException, InterruptedException {
     TestConsole console = new TestConsole();
     CommandRunnerParamsForTesting commandRunnerParams = CommandRunnerParamsForTesting
         .builder()
@@ -47,7 +48,8 @@ public class RunCommandTest extends EasyMockSupport {
   }
 
   @Test
-  public void testRunCommandWithNonExistentTarget() throws IOException {
+  public void testRunCommandWithNonExistentTarget()
+      throws IOException, InterruptedException {
     TestConsole console = new TestConsole();
     CommandRunnerParamsForTesting commandRunnerParams = CommandRunnerParamsForTesting
         .builder()

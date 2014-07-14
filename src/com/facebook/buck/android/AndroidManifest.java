@@ -17,14 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DependencyEnhancer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
@@ -43,7 +40,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * {@link AndroidManifest} is a {@link Buildable} that can generate an Android manifest from a
+ * {@link AndroidManifest} is a {@link BuildRule} that can generate an Android manifest from a
  * skeleton manifest and the library manifests from its dependencies.
  * <pre>
  * android_manifest(
@@ -66,7 +63,7 @@ import java.util.Set;
  * )
  * </pre>
  */
-public class AndroidManifest extends AbstractBuildable implements DependencyEnhancer {
+public class AndroidManifest extends AbstractBuildRule {
 
   private final SourcePath skeletonFile;
 
@@ -75,12 +72,14 @@ public class AndroidManifest extends AbstractBuildable implements DependencyEnha
 
   private final Path pathToOutputFile;
 
-  protected AndroidManifest(BuildTarget buildTarget,
+  protected AndroidManifest(
+      BuildRuleParams params,
       SourcePath skeletonFile,
       Set<Path> manifestFiles) {
-    super(buildTarget);
+    super(params);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
+    BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile = Paths.get(
         BuckConstant.GEN_DIR,
         buildTarget.getBasePath(),
@@ -132,22 +131,4 @@ public class AndroidManifest extends AbstractBuildable implements DependencyEnha
   public Path getPathToOutputFile() {
     return pathToOutputFile;
   }
-
-  @Override
-  public ImmutableSortedSet<BuildRule> getEnhancedDeps(
-      BuildRuleResolver ruleResolver,
-      Iterable<BuildRule> declaredDeps,
-      Iterable<BuildRule> inferredDeps) {
-    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-    deps.addAll(inferredDeps);
-
-    SourcePath skeletonFile = getSkeletonFile();
-    if (skeletonFile instanceof BuildRuleSourcePath) {
-      BuildRule skeletonRule = ((BuildRuleSourcePath) skeletonFile).getRule();
-      deps.add(skeletonRule);
-    }
-
-    return deps.build();
-  }
-
 }

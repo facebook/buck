@@ -201,7 +201,8 @@ public class CassandraArtifactCache implements ArtifactCache {
    * @return The resulting keyspace and ttl of connecting to Cassandra if the connection succeeded,
    *    otherwise Optional.absent().  This method will block until connection finishes.
    */
-  private Optional<KeyspaceAndTtl> getKeyspaceAndTtl() {
+  private Optional<KeyspaceAndTtl> getKeyspaceAndTtl()
+      throws InterruptedException {
     if (isKilled.get()) {
       return Optional.absent();
     }
@@ -210,8 +211,8 @@ public class CassandraArtifactCache implements ArtifactCache {
     } catch (TimeoutException e) {
       keyspaceAndTtlFuture.cancel(true);
       isKilled.set(true);
-    } catch (ExecutionException | InterruptedException e) {
-      if (!(e instanceof ExecutionException) || !(e.getCause() instanceof ConnectionException)) {
+    } catch (ExecutionException e) {
+      if (!(e.getCause() instanceof ConnectionException)) {
         buckEventBus.post(
             ThrowableLogEvent.create(
                 e,
@@ -241,7 +242,8 @@ public class CassandraArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, File output) {
+  public CacheResult fetch(RuleKey ruleKey, File output)
+      throws InterruptedException {
     Optional<KeyspaceAndTtl> keyspaceAndTtl = getKeyspaceAndTtl();
     if (!keyspaceAndTtl.isPresent()) {
       // Connecting to Cassandra failed, return false
@@ -293,7 +295,7 @@ public class CassandraArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void store(RuleKey ruleKey, File output) {
+  public void store(RuleKey ruleKey, File output) throws InterruptedException {
     if (!isStoreSupported()) {
       return;
     }
@@ -350,8 +352,12 @@ public class CassandraArtifactCache implements ArtifactCache {
     ListenableFuture<List<OperationResult<Void>>> future = Futures.allAsList(futures);
     try {
       future.get();
-    } catch (InterruptedException | ExecutionException e) {
+    } catch (ExecutionException e) {
       // Swallow exception and move on.
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      Thread.currentThread().interrupt();
+      return;
     } finally {
       context.shutdown();
     }

@@ -16,12 +16,10 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.AndroidLibraryGraphEnhancer.Result;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.java.HasJavaAbi;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacVersion;
@@ -47,16 +45,15 @@ public class AndroidLibraryGraphEnhancerTest {
 
   @Test
   public void testEmptyResources() {
-    BuildTarget buildTarget = new BuildTarget("//java/com/example", "library");
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    BuildTarget buildTarget = BuildTarget.builder("//java/com/example", "library").build();
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
-        buildRuleParams,
+        new FakeBuildRuleParamsBuilder(buildTarget).build(),
         JavacOptions.DEFAULTS);
-    Result result = graphEnhancer.createBuildableForAndroidResources(new BuildRuleResolver(),
+    Optional<DummyRDotJava> result = graphEnhancer.createBuildableForAndroidResources(
+        new BuildRuleResolver(),
         /* createdBuildableIfEmptyDeps */ false);
-    assertFalse(result.getOptionalDummyRDotJava().isPresent());
-    assertEquals(buildRuleParams, result.getBuildRuleParams());
+    assertFalse(result.isPresent());
   }
 
   @Test
@@ -84,27 +81,23 @@ public class AndroidLibraryGraphEnhancerTest {
         buildTarget,
         buildRuleParams,
         JavacOptions.DEFAULTS);
-    Result result = graphEnhancer.createBuildableForAndroidResources(ruleResolver,
+    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
+        ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
 
-    assertTrue(result.getOptionalDummyRDotJava().isPresent());
+    assertTrue(dummyRDotJava.isPresent());
     assertEquals(
         "DummyRDotJava must contain these exact AndroidResourceRules.",
         // Note: these are the reverse order to which they are in the buildRuleParams.
-        ImmutableList.of(resourceRule1.getBuildable(), resourceRule2.getBuildable()),
-        result.getOptionalDummyRDotJava().get().getAndroidResourceDeps());
+        ImmutableList.of(resourceRule1, resourceRule2),
+        dummyRDotJava.get().getAndroidResourceDeps());
 
-    ImmutableSortedSet<BuildRule> newDeps = result.getBuildRuleParams().getDeps();
-    assertEquals("BuildRuleParams in the result object must have DummyRDotJava as a dependency.",
-        3, newDeps.size());
-
-    BuildRule dummyRDotJavaRule = newDeps.last();
-    assertTrue(dummyRDotJavaRule.getBuildable() instanceof HasJavaAbi);
     assertEquals("//java/com/example:library#dummy_r_dot_java",
-        dummyRDotJavaRule.getFullyQualifiedName());
-    assertEquals("DummyRDotJava must depend on the two AndroidResourceRules.",
+        dummyRDotJava.get().getFullyQualifiedName());
+    assertEquals(
+        "DummyRDotJava must depend on the two AndroidResourceRules.",
         ImmutableSet.of("//android_res/com/example:res1", "//android_res/com/example:res2"),
-        FluentIterable.from(dummyRDotJavaRule.getDeps())
+        FluentIterable.from(dummyRDotJava.get().getDeps())
             .transform(Functions.toStringFunction()).toSet());
   }
 
@@ -140,10 +133,10 @@ public class AndroidLibraryGraphEnhancerTest {
                     PopularAndroidJavaCompilerEnvironment.TARGETED_JAVA_VERSION,
                     PopularAndroidJavaCompilerEnvironment.TARGETED_JAVA_VERSION))
             .build());
-    Result result = graphEnhancer.createBuildableForAndroidResources(ruleResolver,
+    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
+        ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
 
-    Optional<DummyRDotJava> dummyRDotJava = result.getOptionalDummyRDotJava();
     assertTrue(dummyRDotJava.isPresent());
     JavacOptions javacOptions = dummyRDotJava.get().getJavacOptions();
     assertEquals(

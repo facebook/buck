@@ -28,6 +28,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 
@@ -51,7 +52,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.Set;
@@ -426,5 +429,24 @@ public class ProjectFilesystemTest {
 
   }
 
-}
+  @Test
+  public void testCreateReadOnlyFileSetsPermissions() throws IOException {
+    Path path = Paths.get("hello.txt");
+    ImmutableSet<PosixFilePermission> permissions =
+      ImmutableSet.<PosixFilePermission>of(
+          PosixFilePermission.OWNER_READ,
+          PosixFilePermission.GROUP_READ,
+          PosixFilePermission.OTHERS_READ);
 
+    filesystem.writeContentsToPath(
+        "hello world",
+        path,
+        PosixFilePermissions.asFileAttribute(permissions));
+    // The umask may restrict the actual permissions on the filesystem:
+    // https://fburl.com/26569549
+    // So the best we can do is to check that the actual permissions are a
+    // strict subset of the expected permissions.
+    PosixFileAttributes attrs = filesystem.readAttributes(path, PosixFileAttributes.class);
+    assertTrue(permissions.containsAll(attrs.permissions()));
+  }
+}

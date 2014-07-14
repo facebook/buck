@@ -19,14 +19,14 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.DexProducedFromJavaLibrary.BuildOutput;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -56,17 +56,17 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * {@link DexProducedFromJavaLibrary} is a {@link Buildable} that serves a
+ * {@link DexProducedFromJavaLibrary} is a {@link BuildRule} that serves a
  * very specific purpose: it takes a {@link JavaLibrary} and dexes the output of the
  * {@link JavaLibrary} if its list of classes is non-empty. Because it is expected to be used with
  * pre-dexing, we always pass the {@code --force-jumbo} flag to {@code dx} in this buildable.
  * <p>
- * Most {@link Buildable}s can determine the (possibly null) path to their output file from their
+ * Most {@link BuildRule}s can determine the (possibly null) path to their output file from their
  * definition. This is an anomaly because we do not know whether this will write a {@code .dex} file
  * until runtime. Unfortunately, because there is no such thing as an empty {@code .dex} file, we
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
-public class DexProducedFromJavaLibrary extends AbstractBuildable
+public class DexProducedFromJavaLibrary extends AbstractBuildRule
     implements AbiRule, HasBuildTarget, InitializableFromDisk<BuildOutput> {
 
   @VisibleForTesting
@@ -76,12 +76,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildable
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   @VisibleForTesting
-  DexProducedFromJavaLibrary(
-      BuildTarget buildTarget,
-      JavaLibrary javaLibrary) {
-    super(buildTarget);
+  DexProducedFromJavaLibrary(BuildRuleParams params, JavaLibrary javaLibrary) {
+    super(params);
     this.javaLibrary = Preconditions.checkNotNull(javaLibrary);
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   @Override
@@ -176,7 +174,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildable
   }
 
   public Path getPathToDex() {
-    return BuildTargets.getGenPath(target, "%s.dex.jar");
+    return BuildTargets.getGenPath(getBuildTarget(), "%s.dex.jar");
   }
 
   public boolean hasOutput() {

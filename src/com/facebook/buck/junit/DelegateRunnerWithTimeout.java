@@ -99,7 +99,7 @@ class DelegateRunnerWithTimeout extends Runner {
         try {
           Thread.sleep(/* milliseconds */ 250L);
         } catch (InterruptedException e) {
-          // Blargh, continue.
+          Thread.currentThread().interrupt();
         }
       }
     }

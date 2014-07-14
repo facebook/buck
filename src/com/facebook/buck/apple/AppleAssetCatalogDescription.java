@@ -17,18 +17,15 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
 
@@ -50,25 +47,14 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
   }
 
   @Override
-  public AppleAssetCatalog createBuildable(BuildRuleParams params, Arg args) {
-    final ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
-    final Set<Path> dirs = args.dirs;
-    Supplier<ImmutableCollection<Path>> inputPathsSupplier = Suppliers.memoize(
-        new Supplier<ImmutableCollection<Path>>() {
-          @Override
-          public ImmutableCollection<Path> get() {
-            ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
-            for (Path dir : dirs) {
-              try {
-                paths.addAll(projectFilesystem.getFilesUnderPath(dir));
-              } catch (IOException e) {
-                throw new HumanReadableException(e, "Error traversing directory: %s.", dir);
-              }
-            }
-            return paths.build();
-          }
-        });
-    return new AppleAssetCatalog(params.getBuildTarget(), inputPathsSupplier, args);
+  public <A extends Arg> AppleAssetCatalog createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
+    Supplier<ImmutableCollection<Path>> inputPathsSupplier =
+        RuleUtils.subpathsOfPathsSupplier(projectFilesystem, args.dirs);
+    return new AppleAssetCatalog(params, inputPathsSupplier, args);
   }
 
   public static class Arg implements ConstructorArg {

@@ -23,9 +23,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -60,7 +61,7 @@ import javax.annotation.Nullable;
  * generate a corresponding {@code R.class} file. These are called "dummy" {@code R.java} files
  * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
  */
-public class DummyRDotJava extends AbstractBuildable
+public class DummyRDotJava extends AbstractBuildRule
     implements AbiRule, HasJavaAbi, InitializableFromDisk<DummyRDotJava.BuildOutput> {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
@@ -71,15 +72,15 @@ public class DummyRDotJava extends AbstractBuildable
   static final String METADATA_KEY_FOR_ABI_KEY = "DUMMY_R_DOT_JAVA_ABI_KEY";
 
   public DummyRDotJava(
+      BuildRuleParams params,
       Set<HasAndroidResourceDeps> androidResourceDeps,
-      BuildTarget buildTarget,
       JavacOptions javacOptions) {
-    super(buildTarget);
+    super(params);
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   @Override
@@ -92,7 +93,7 @@ public class DummyRDotJava extends AbstractBuildable
       BuildContext context,
       final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(target);
+    final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget());
     steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
@@ -128,7 +129,7 @@ public class DummyRDotJava extends AbstractBuildable
     final Path rDotJavaClassesFolder = getRDotJavaBinFolder();
     steps.add(new MakeCleanDirectoryStep(rDotJavaClassesFolder));
 
-    Path pathToAbiOutputDir = getPathToAbiOutputDir(target);
+    Path pathToAbiOutputDir = getPathToAbiOutputDir(getBuildTarget());
     steps.add(new MakeCleanDirectoryStep(pathToAbiOutputDir));
     Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi");
 
@@ -139,7 +140,7 @@ public class DummyRDotJava extends AbstractBuildable
             rDotJavaClassesFolder,
             Optional.of(pathToAbiOutputFile),
             javacOptions,
-            target);
+            getBuildTarget());
     steps.add(javacStep);
 
     steps.add(new AbstractExecutionStep("record_abi_key") {
@@ -186,7 +187,7 @@ public class DummyRDotJava extends AbstractBuildable
   }
 
   public Path getRDotJavaBinFolder() {
-    return getRDotJavaBinFolder(target);
+    return getRDotJavaBinFolder(getBuildTarget());
   }
 
   public ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps() {

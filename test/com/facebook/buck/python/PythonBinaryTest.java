@@ -24,9 +24,7 @@ import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DescribedRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
@@ -44,38 +42,37 @@ public class PythonBinaryTest {
 
   @Test
   public void testPythonBinaryGetSourcesMethodReturnsTransitiveSourceMap() {
-    BuildTarget orphanPyLibraryTarget = new BuildTarget("//", "orphan_python_library");
+    BuildTarget orphanPyLibraryTarget = BuildTarget.builder("//", "orphan_python_library").build();
     PythonLibrary orphanPyLibrary = new PythonLibrary(
-        orphanPyLibraryTarget,
+        new FakeBuildRuleParamsBuilder(orphanPyLibraryTarget).build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("java/src/com/javalib/orphan/sadpanda.py")),
         ImmutableSortedSet.<SourcePath>of());
-    BuildRule orphanPyLibraryRule = createBuildRule(orphanPyLibrary, orphanPyLibraryTarget);
 
     BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
     PythonLibrary pyLibrary = new PythonLibrary(
-        pyLibraryTarget,
+        new FakeBuildRuleParamsBuilder(pyLibraryTarget).build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("python/tastypy.py")),
         ImmutableSortedSet.<SourcePath>of());
 
     Map<BuildTarget, BuildRule> rules = Maps.newHashMap();
-    rules.put(orphanPyLibraryTarget, createBuildRule(orphanPyLibrary, orphanPyLibraryTarget));
-    BuildRule pyLibraryRule = createBuildRule(pyLibrary, pyLibraryTarget);
-    rules.put(pyLibraryTarget, pyLibraryRule);
+    rules.put(orphanPyLibraryTarget, orphanPyLibrary);
+    rules.put(pyLibraryTarget, pyLibrary);
     BuildRuleResolver ruleResolver = new BuildRuleResolver(rules);
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:javalib");
     BuildRule javaLibrary = JavaLibraryBuilder
         .createBuilder(javaLibraryTarget)
         .addSrc(Paths.get("java/src/com/javalib/Bar.java"))
-        .addDep(orphanPyLibraryRule)
+        .addDep(orphanPyLibrary)
         .build(ruleResolver);
 
     Path foo = Paths.get("foo");
     PythonBinary buildable = new PythonBinary(
-        new BuildTarget("//", "python_binary"),
-        ImmutableSortedSet.<BuildRule>of(javaLibrary, pyLibraryRule),
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//", "python_binary").build())
+            .setDeps(ImmutableSortedSet.of(javaLibrary, pyLibrary))
+            .build(),
         foo);
 
     assertEquals(
@@ -96,17 +93,17 @@ public class PythonBinaryTest {
     // A python library which specifies the above path.
     BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
     PythonLibrary pyLibrary = new PythonLibrary(
-        pyLibraryTarget,
+        new FakeBuildRuleParamsBuilder(pyLibraryTarget).build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath(tasty.toString())),
         ImmutableSortedSet.<SourcePath>of());
-    BuildRule pyLibraryRule = createBuildRule(pyLibrary, pyLibraryTarget);
 
     // The top-level python binary that lists the above library as a dep and
     // also lists the "tasty" path as its main module, which will conflict.
     PythonBinary buildable = new PythonBinary(
-        new BuildTarget("//", "python_binary"),
-        ImmutableSortedSet.<BuildRule>of(pyLibraryRule),
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//", "python_binary").build())
+            .setDeps(ImmutableSortedSet.<BuildRule>of(pyLibrary))
+            .build(),
         tasty);
 
     // Try to grab the overall package componets for the binary, which should
@@ -120,12 +117,4 @@ public class PythonBinaryTest {
     }
 
   }
-
-  private static BuildRule createBuildRule(PythonLibrary pythonLibrary, BuildTarget buildTarget) {
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
-    return new DescribedRule(PythonLibraryDescription.TYPE,
-        pythonLibrary,
-        params);
-  }
-
 }

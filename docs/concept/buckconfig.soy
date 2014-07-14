@@ -62,9 +62,9 @@ is the equivalent of manually invoking <code>include_defs('//core/DEFS')</code>
 This section configures build artifact caching, which can be disabled
 (default), on the filesystem, or in a distributed cache that can be shared
 among developers. Note that the <code>mode</code> property determines which
-other properties, if any, are relevant to caching configuration. The following
-example configures buck to use directory-based caching, in which case the
-Cassandra-related settings are ignored.
+other properties, if any, are relevant to caching configuration; the irrelevant
+properties are ignored. The following example configures Buck to use both
+directory-based and Cassandra caching.
 
 {literal}<pre>
 [cache]
@@ -106,7 +106,7 @@ instructions beyond the following:
       then larger artifacts will not be cached and throughput may suffer due to
       network transport error recovery.
   <li>The <code>scripts/init_cassandra_node.cql</code> script must be run once
-      in order to create the <code>ArtifactCache</code> keyspace that buck
+      in order to create the <code>ArtifactCache</code> keyspace that Buck
       uses.
 </ul>
 
@@ -168,7 +168,7 @@ only versions r7 through r8d:
 
 <h2>[test]</h2>
 
-This section may define a <code>timeout</code> for each test that buck runs.
+This section may define a <code>timeout</code> for each test that Buck runs.
 The value given is in milliseconds.
 
 {literal}<pre>
@@ -261,7 +261,7 @@ on the generated files.
 
 <h2>[log]</h2>
 
-This section controls how buck will log information about builds for later
+This section controls how Buck will log information about builds for later
 inspection.
 
 {literal}<pre>
@@ -269,7 +269,7 @@ inspection.
   max_traces = 25
 </pre>{/literal}
 
-Will limit buck to creating, at most, 25{sp}
+Will limit Buck to creating, at most, 25{sp}
 <a href="{ROOT}about/performance_tuning.html">Chrome Traces</a>.
 
     {/param}

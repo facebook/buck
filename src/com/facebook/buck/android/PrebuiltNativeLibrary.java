@@ -16,9 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -43,18 +43,19 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLibraryBuildable {
+public class PrebuiltNativeLibrary extends AbstractBuildRule
+    implements NativeLibraryBuildRule, AndroidPackageable {
 
   private final boolean isAsset;
   private final Path libraryPath;
   private final ImmutableSortedSet<Path> librarySources;
 
   protected PrebuiltNativeLibrary(
-      BuildTarget target,
+      BuildRuleParams params,
       Path nativeLibsDirectory,
       boolean isAsset,
       ImmutableSortedSet<Path> librarySources) {
-    super(target);
+    super(params);
     this.isAsset = isAsset;
     this.libraryPath = Preconditions.checkNotNull(nativeLibsDirectory);
     this.librarySources = Preconditions.checkNotNull(librarySources);
@@ -94,5 +95,19 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
       BuildableContext buildableContext) {
     // We're checking in prebuilt libraries for now, so this is a noop.
     return ImmutableList.of();
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(getDeclaredDeps());
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    if (isAsset) {
+      collector.addNativeLibAssetsDirectory(getLibraryPath());
+    } else {
+      collector.addNativeLibsDirectory(getLibraryPath());
+    }
   }
 }

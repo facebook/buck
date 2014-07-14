@@ -22,10 +22,11 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -68,8 +69,9 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class AndroidResource extends AbstractBuildable
-    implements AbiRule, HasAndroidResourceDeps, InitializableFromDisk<AndroidResource.BuildOutput> {
+public class AndroidResource extends AbstractBuildRule
+    implements AbiRule, HasAndroidResourceDeps, InitializableFromDisk<AndroidResource.BuildOutput>,
+    AndroidPackageable {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
@@ -110,12 +112,13 @@ public class AndroidResource extends AbstractBuildable
 
   private final boolean hasWhitelistedStrings;
 
+  private final ImmutableSortedSet<BuildRule> deps;
   private final Supplier<ImmutableList<HasAndroidResourceDeps>> transitiveAndroidResourceDeps;
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   protected AndroidResource(
-      BuildTarget buildTarget,
+      BuildRuleParams buildRuleParams,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable final Path res,
       ImmutableSortedSet<Path> resSrcs,
@@ -124,7 +127,7 @@ public class AndroidResource extends AbstractBuildable
       ImmutableSortedSet<Path> assetsSrcs,
       @Nullable Path manifestFile,
       boolean hasWhitelistedStrings) {
-    super(buildTarget);
+    super(buildRuleParams);
     this.res = res;
     this.resSrcs = Preconditions.checkNotNull(resSrcs);
     this.rDotJavaPackage = rDotJavaPackage;
@@ -133,6 +136,7 @@ public class AndroidResource extends AbstractBuildable
     this.manifestFile = manifestFile;
     this.hasWhitelistedStrings = hasWhitelistedStrings;
 
+    BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     if (res == null) {
       pathToTextSymbolsDir = null;
       pathToTextSymbolsFile = null;
@@ -141,6 +145,7 @@ public class AndroidResource extends AbstractBuildable
       pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
     }
 
+    this.deps = Preconditions.checkNotNull(deps);
     this.transitiveAndroidResourceDeps = Suppliers.memoize(
         new Supplier<ImmutableList<HasAndroidResourceDeps>>() {
           @Override
@@ -261,7 +266,7 @@ public class AndroidResource extends AbstractBuildable
   @Override
   public String getRDotJavaPackage() {
     if (rDotJavaPackage == null) {
-      throw new RuntimeException("No package for " + target.getFullyQualifiedName());
+      throw new RuntimeException("No package for " + getBuildTarget());
     }
     return rDotJavaPackage;
   }
@@ -291,6 +296,28 @@ public class AndroidResource extends AbstractBuildable
   @Override
   public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
     return buildOutputInitializer;
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(deps);
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    if (res != null) {
+      if (hasWhitelistedStrings) {
+        collector.addStringWhitelistedResourceDirectory(getBuildTarget(), res, rDotJavaPackage);
+      } else {
+        collector.addResourceDirectory(getBuildTarget(), res, rDotJavaPackage);
+      }
+    }
+    if (assets != null) {
+      collector.addAssetsDirectory(getBuildTarget(), assets);
+    }
+    if (manifestFile != null) {
+      collector.addManifestFile(getBuildTarget(), manifestFile);
+    }
   }
 
   public static class BuildOutput {

@@ -22,6 +22,8 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
@@ -34,7 +36,7 @@ public class DexWithClassesTest {
 
   @Test
   public void testIntermediateDexRuleToDexWithClasses() {
-    BuildTarget javaLibraryTarget = new BuildTarget("//java/com/example", "lib");
+    BuildTarget javaLibraryTarget = BuildTarget.builder("//java/com/example", "lib").build();
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
@@ -42,9 +44,11 @@ public class DexWithClassesTest {
       }
     };
 
-    BuildTarget buildTarget = new BuildTarget("//java/com/example", "lib", "dex");
+    BuildTarget buildTarget =
+        BuildTarget.builder("//java/com/example", "lib").setFlavor("dex").build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(buildTarget, javaLibrary) {
+        new DexProducedFromJavaLibrary(params, javaLibrary) {
       @Override
       public int getLinearAllocEstimate() {
         return 1600;
@@ -60,7 +64,7 @@ public class DexWithClassesTest {
 
   @Test
   public void testIntermediateDexRuleToDexWithClassesWhenIntermediateDexHasNoClasses() {
-    BuildTarget javaLibraryTarget = new BuildTarget("//java/com/example", "lib");
+    BuildTarget javaLibraryTarget = BuildTarget.builder("//java/com/example", "lib").build();
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
@@ -68,9 +72,11 @@ public class DexWithClassesTest {
       }
     };
 
-    BuildTarget buildTarget = new BuildTarget("//java/com/example", "lib", "dex");
+    BuildTarget buildTarget =
+        BuildTarget.builder("//java/com/example", "lib").setFlavor("dex").build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(buildTarget, javaLibrary) {
+        new DexProducedFromJavaLibrary(params, javaLibrary) {
       @Override
       public int getLinearAllocEstimate() {
         return 1600;

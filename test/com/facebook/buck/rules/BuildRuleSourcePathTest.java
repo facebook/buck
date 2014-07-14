@@ -38,10 +38,7 @@ public class BuildRuleSourcePathTest {
 
   @Test
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
-    DescribedRule rule = new DescribedRule(
-        new BuildRuleType("example"),
-        new FakeBuildable(target).setPathToOutputFile((Path) null),
-        new FakeBuildRuleParamsBuilder(target).build());
+    BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target);
     BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
 
     try {
@@ -54,10 +51,12 @@ public class BuildRuleSourcePathTest {
 
   @Test
   public void mustUseProjectFilesystemToResolvePathToFile() {
-    DescribedRule rule = new DescribedRule(
-        new BuildRuleType("example"),
-        new FakeBuildable(target).setPathToOutputFile(Paths.get("cheese")),
-        new FakeBuildRuleParamsBuilder(target).build());
+    BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target) {
+      @Override
+      public Path getPathToOutputFile() {
+        return Paths.get("cheese");
+      }
+    };
 
     BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
 

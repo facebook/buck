@@ -15,6 +15,7 @@ java_library(
   deps = [
     '//lib:guava',
     '//lib:jsr305',
+    '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:support',
@@ -62,6 +63,7 @@ java_test(
     '//lib:hamcrest-library',
     '//lib:jsr305',
     '//lib:junit',
+    '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',

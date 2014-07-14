@@ -31,7 +31,7 @@ public class ConditionalStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public int execute(ExecutionContext context) throws InterruptedException {
     if (shouldRunStep.get()) {
       return step.execute(context);
     } else {

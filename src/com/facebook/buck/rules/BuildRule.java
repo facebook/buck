@@ -19,12 +19,16 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+
+import javax.annotation.Nullable;
 
 // This should be Comparable<BuildRule>, but we need to also compare with PrebuiltJar (and, later,
 // the other java library rules once they've migrated to Buildable. As such, the only sane interface
@@ -46,8 +50,6 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
   public BuildRuleType getType();
 
   public BuildableProperties getProperties();
-
-  public Buildable getBuildable();
 
   /**
    * @return the set of rules that must be built before this rule. Normally, this matches the value
@@ -94,4 +96,9 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
   /** @return the same value as {@link #getFullyQualifiedName()} */
   @Override
   public String toString();
+
+  public ImmutableList<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext);
+
+  @Nullable
+  public Path getPathToOutputFile();
 }

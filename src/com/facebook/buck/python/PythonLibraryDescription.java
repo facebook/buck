@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.python.PythonLibraryDescription.Arg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -47,9 +48,12 @@ public class PythonLibraryDescription implements Description<Arg> {
   }
 
   @Override
-  public PythonLibrary createBuildable(BuildRuleParams params, Arg args) {
+  public <A extends Arg> PythonLibrary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     return new PythonLibrary(
-        params.getBuildTarget(),
+        params,
         args.srcs.or(ImmutableSortedSet.<SourcePath>of()),
         args.resources.or(ImmutableSortedSet.<SourcePath>of()));
   }

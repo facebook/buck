@@ -31,7 +31,6 @@ import java.util.concurrent.Callable;
 
 public class FakeTestRule extends AbstractBuildRule implements TestRule {
 
-  private final BuildRuleType type;
   private final ImmutableSet<Label> labels;
 
   public FakeTestRule(BuildRuleType type,
@@ -39,35 +38,44 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
                        BuildTarget target,
                        ImmutableSortedSet<BuildRule> deps,
                        ImmutableSet<BuildTargetPattern> visibilityPatterns) {
-    this(type,
+    this(
         labels,
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(deps)
             .setVisibility(visibilityPatterns)
+            .setType(type)
             .build());
   }
 
-  public FakeTestRule(BuildRuleType type,
-                      ImmutableSet<Label> labels,
-                      BuildRuleParams buildRuleParams) {
-    super(buildRuleParams, null);
+  public FakeTestRule(ImmutableSet<Label> labels, BuildRuleParams buildRuleParams) {
+    super(buildRuleParams);
     this.labels = labels;
-    this.type = type;
-  }
-
-  @Override
-  public Buildable getBuildable() {
-    return null;
-  }
-
-  @Override
-  public BuildRuleType getType() {
-    return type;
   }
 
   @Override
   public Iterable<Path> getInputs() {
     return ImmutableList.of();
+  }
+
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public Path getPathToOutputFile() {
+    return null;
+  }
+
+  @Override
+  protected Iterable<Path> getInputsToCompareToOutput() {
+    return null;
+  }
+
+  @Override
+  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    return builder;
   }
 
   @Override

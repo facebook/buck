@@ -20,8 +20,9 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
@@ -56,11 +57,12 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuildable {
+public class NdkLibrary extends AbstractBuildRule
+    implements NativeLibraryBuildRule, AndroidPackageable {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
-  /** @see NativeLibraryBuildable#isAsset() */
+  /** @see NativeLibraryBuildRule#isAsset() */
   private final boolean isAsset;
 
   /** The directory containing the Android.mk file to use. This value includes a trailing slash. */
@@ -74,14 +76,15 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
   private final Optional<String> ndkVersion;
 
   protected NdkLibrary(
-      BuildTarget buildTarget,
+      BuildRuleParams params,
       Set<SourcePath> sources,
       List<String> flags,
       boolean isAsset,
       Optional<String> ndkVersion) {
-    super(buildTarget);
+    super(params);
     this.isAsset = isAsset;
 
+    BuildTarget buildTarget = params.getBuildTarget();
     this.makefileDirectory = buildTarget.getBasePathWithSlash();
     this.lastPathComponent = "__lib" + buildTarget.getShortName();
     this.buildArtifactsDirectory = getBuildArtifactsDirectory(buildTarget, true /* isScratchDir */);
@@ -163,5 +166,19 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     return SourcePaths.filterInputsToCompareToOutput(sources);
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(getDeps());
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    if (isAsset) {
+      collector.addNativeLibAssetsDirectory(getLibraryPath());
+    } else {
+      collector.addNativeLibsDirectory(getLibraryPath());
+    }
   }
 }

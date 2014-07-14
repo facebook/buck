@@ -25,7 +25,9 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
@@ -67,10 +69,13 @@ public class JavaBinaryTest {
         .addDep(guava)
         .build(ruleResolver);
 
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
+        BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
+        .setDeps(ImmutableSortedSet.of(libraryRule))
+        .build();
     // java_binary //java/com/facebook/base:Main
     JavaBinary javaBinary = new JavaBinary(
-        BuildTargetFactory.newInstance("//java/com/facebook/base:Main"),
-        ImmutableSortedSet.of(libraryRule),
+        params,
         "com.facebook.base.Main",
         null,
         /* merge manifests */ true,

@@ -20,6 +20,7 @@ import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -32,6 +33,7 @@ public class BuildTargetParser {
 
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String BUILD_RULE_SEPARATOR = ":";
+  private static final String REPOSITORY_STARTER = "@";
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
   private static final List<String> INVALID_BUILD_RULE_SUBSTRINGS = ImmutableList.of("..", "./");
 
@@ -69,7 +71,26 @@ public class BuildTargetParser {
           String.format("%s cannot end with a colon", buildTargetName));
     }
 
-    List<String> parts = ImmutableList.copyOf(BUILD_RULE_SEPARATOR_SPLITTER.split(buildTargetName));
+    Optional<String> repoName = Optional.absent();
+    String targetAfterRepo = buildTargetName;
+    if (buildTargetName.startsWith(REPOSITORY_STARTER)) {
+      if (!buildTargetName.contains(BUILD_RULE_PREFIX)) {
+        throw new BuildTargetParseException(
+            String.format(
+                "Cross-repo paths must contain %s (found %s)",
+                BUILD_RULE_PREFIX,
+                buildTargetName));
+      }
+      int slashIndex = buildTargetName.indexOf(BUILD_RULE_PREFIX);
+      repoName = Optional.of(buildTargetName.substring(REPOSITORY_STARTER.length(), slashIndex));
+      targetAfterRepo = buildTargetName.substring(slashIndex);
+    }
+
+    if (repoName.isPresent() && repoName.get().isEmpty()) {
+      throw new BuildTargetParseException("Repo name must not be empty.");
+    }
+
+    List<String> parts = BUILD_RULE_SEPARATOR_SPLITTER.splitToList(targetAfterRepo);
     if (parts.size() != 2) {
       throw new BuildTargetParseException(String.format(
           "%s must contain exactly one colon (found %d)", buildTargetName, parts.size() - 1));
@@ -116,6 +137,10 @@ public class BuildTargetParser {
       }
     }
 
-    return new BuildTarget(baseName, shortName);
+    BuildTarget.Builder builder = BuildTarget.builder(baseName, shortName);
+    if (repoName.isPresent()) {
+      builder.setRepository(repoName.get()).build();
+    }
+    return builder.build();
   }
 }

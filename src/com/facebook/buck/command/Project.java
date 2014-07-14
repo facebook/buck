@@ -21,12 +21,13 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.android.AndroidBinary;
-import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibrary;
+import com.facebook.buck.android.AndroidPackageableCollection;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -36,9 +37,7 @@ import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ExportDependencies;
-import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.shell.ShellStep;
@@ -168,7 +167,7 @@ public class Project {
       ProcessExecutor processExecutor,
       boolean generateMinimalProject,
       PrintStream stdOut,
-      PrintStream stdErr) throws IOException {
+      PrintStream stdErr) throws IOException, InterruptedException {
     List<Module> modules = createModulesForProjectConfigs();
     writeJsonConfig(jsonTempFile, modules);
 
@@ -354,17 +353,14 @@ public class Project {
     ImmutableSet.Builder<Path> noDxJarsBuilder = ImmutableSet.builder();
     for (BuildTarget target : partialGraph.getTargets()) {
       BuildRule buildRule = actionGraph.findBuildRuleByTarget(target);
-      ProjectConfig projectConfig = (ProjectConfig) buildRule.getBuildable();
+      ProjectConfig projectConfig = (ProjectConfig) buildRule;
 
       BuildRule srcRule = projectConfig.getSrcRule();
-      if (srcRule != null) {
-        Buildable buildable = srcRule.getBuildable();
-        if (buildable instanceof AndroidBinary) {
-          AndroidBinary androidBinary = (AndroidBinary) buildable;
-          AndroidDexTransitiveDependencies binaryDexTransitiveDependencies =
-              androidBinary.findDexTransitiveDependencies();
-          noDxJarsBuilder.addAll(binaryDexTransitiveDependencies.noDxClasspathEntries);
-        }
+      if (srcRule instanceof AndroidBinary) {
+        AndroidBinary androidBinary = (AndroidBinary) srcRule;
+        AndroidPackageableCollection packageableCollection =
+            androidBinary.getAndroidPackageableCollection();
+        noDxJarsBuilder.addAll(packageableCollection.noDxClasspathEntries);
       }
 
       Module module = createModuleForProjectConfig(projectConfig);
@@ -380,14 +376,13 @@ public class Project {
 
   private Module createModuleForProjectConfig(ProjectConfig projectConfig) throws IOException {
     BuildRule projectRule = projectConfig.getProjectRule();
-    Buildable buildable = projectRule.getBuildable();
     Preconditions.checkState(projectRule instanceof JavaLibrary ||
-        buildable instanceof JavaLibrary ||
-        buildable instanceof JavaBinary ||
-        buildable instanceof AndroidLibrary ||
-        buildable instanceof AndroidResource ||
-        buildable instanceof AndroidBinary ||
-        buildable instanceof NdkLibrary,
+        projectRule instanceof JavaLibrary ||
+        projectRule instanceof JavaBinary ||
+        projectRule instanceof AndroidLibrary ||
+        projectRule instanceof AndroidResource ||
+        projectRule instanceof AndroidBinary ||
+        projectRule instanceof NdkLibrary,
         "project_config() does not know how to process a src_target of type %s.",
         projectRule.getType().getName());
 
@@ -458,19 +453,19 @@ public class Project {
     DependentModule jdkDependency;
     if (isAndroidRule) {
       // android details
-      if (projectRule.getBuildable() instanceof NdkLibrary) {
-        NdkLibrary ndkLibrary = (NdkLibrary) projectRule.getBuildable();
+      if (projectRule instanceof NdkLibrary) {
+        NdkLibrary ndkLibrary = (NdkLibrary) projectRule;
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
         module.nativeLibs =
             Paths.get(relativePath).relativize(ndkLibrary.getLibraryPath()).toString();
-      } else if (projectRule.getBuildable() instanceof AndroidResource) {
-        AndroidResource androidResource = (AndroidResource) projectRule.getBuildable();
+      } else if (projectRule instanceof AndroidResource) {
+        AndroidResource androidResource = (AndroidResource) projectRule;
         module.resFolder = createRelativePath(androidResource.getRes(), target);
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
-      } else if (projectRule.getBuildable() instanceof AndroidBinary) {
-        AndroidBinary androidBinary = (AndroidBinary) projectRule.getBuildable();
+      } else if (projectRule instanceof AndroidBinary) {
+        AndroidBinary androidBinary = (AndroidBinary) projectRule;
         module.resFolder = null;
         module.isAndroidLibraryProject = false;
         KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
@@ -529,9 +524,7 @@ public class Project {
     // Annotation processing generates sources for IntelliJ to consume, but does so outside
     // the module directory to avoid messing up globbing.
     JavaLibrary javaLibrary = null;
-    if (projectRule.getBuildable() instanceof JavaLibrary) {
-      javaLibrary = (JavaLibrary) projectRule.getBuildable();
-    } else if (projectRule instanceof JavaLibrary) {
+    if (projectRule instanceof JavaLibrary) {
       javaLibrary = (JavaLibrary) projectRule;
     }
     if (javaLibrary != null) {
@@ -728,12 +721,12 @@ public class Project {
       // is in this set for this android_binary rule, then it should be scope="COMPILE" rather than
       // scope="PROVIDED".
       Set<Path> classpathEntriesToDex;
-      if (module.srcRule.getBuildable() instanceof AndroidBinary) {
-        AndroidBinary androidBinary = (AndroidBinary) module.srcRule.getBuildable();
-        AndroidDexTransitiveDependencies dexTransitiveDependencies =
-            androidBinary.findDexTransitiveDependencies();
+      if (module.srcRule instanceof AndroidBinary) {
+        AndroidBinary androidBinary = (AndroidBinary) module.srcRule;
+        AndroidPackageableCollection packageableCollection =
+            androidBinary.getAndroidPackageableCollection();
         classpathEntriesToDex = Sets.newHashSet(Sets.intersection(noDxJars,
-            dexTransitiveDependencies.classpathEntriesToDex));
+            packageableCollection.classpathEntriesToDex));
       } else {
         classpathEntriesToDex = ImmutableSet.of();
       }
@@ -791,14 +784,14 @@ public class Project {
       public ImmutableSet<BuildRule> visit(BuildRule dep) {
         ImmutableSet<BuildRule> depsToVisit;
         if (rule.getProperties().is(PACKAGING) ||
-            dep.getBuildable() instanceof AndroidResource ||
+            dep instanceof AndroidResource ||
             dep == rule) {
           depsToVisit = dep.getDeps();
         } else if (dep.getProperties().is(LIBRARY) && dep instanceof ExportDependencies) {
             depsToVisit = ((ExportDependencies) dep).getExportedDeps();
         } else if (dep.getProperties().is(LIBRARY) &&
-            dep.getBuildable() instanceof ExportDependencies) {
-            depsToVisit = ((ExportDependencies) dep.getBuildable()).getExportedDeps();
+            dep instanceof ExportDependencies) {
+            depsToVisit = ((ExportDependencies) dep).getExportedDeps();
         } else {
           depsToVisit = ImmutableSet.of();
         }
@@ -839,7 +832,7 @@ public class Project {
         }
 
         DependentModule dependentModule;
-        if (dep.getBuildable() instanceof PrebuiltJar) {
+        if (dep instanceof PrebuiltJar) {
           libraryJars.add(dep);
           String libraryName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
@@ -848,8 +841,8 @@ public class Project {
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
           return depsToVisit;
-        } else if ((dep.getBuildable() instanceof JavaLibrary) ||
-                   dep.getBuildable() instanceof AndroidResource) {
+        } else if ((dep instanceof JavaLibrary) ||
+                   dep instanceof AndroidResource) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else {
@@ -903,8 +896,8 @@ public class Project {
       @Nullable Map<String, String> basePathToAliasMap) {
     // Get basis for the library/module name.
     String name;
-    if (rule.getBuildable() instanceof PrebuiltJar) {
-      PrebuiltJar prebuiltJar = (PrebuiltJar) rule.getBuildable();
+    if (rule instanceof PrebuiltJar) {
+      PrebuiltJar prebuiltJar = (PrebuiltJar) rule;
       String binaryJar = prebuiltJar.getBinaryJar().toString();
       return getIntellijNameForBinaryJar(binaryJar);
     } else {
@@ -974,7 +967,7 @@ public class Project {
   }
 
   private ExitCodeAndOutput processJsonConfig(File jsonTempFile, boolean generateMinimalProject)
-      throws IOException {
+      throws IOException, InterruptedException {
     ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
         .add(pythonInterpreter)
         .add(PATH_TO_INTELLIJ_PY)
@@ -1091,10 +1084,10 @@ public class Project {
     @JsonProperty private final String javadocUrl;
 
     private SerializablePrebuiltJarRule(BuildRule rule) {
-      Preconditions.checkState(rule.getBuildable() instanceof PrebuiltJar);
+      Preconditions.checkState(rule instanceof PrebuiltJar);
       this.name = getIntellijNameForRule(rule, null /* basePathToAliasMap */);
 
-      PrebuiltJar prebuiltJar = (PrebuiltJar) rule.getBuildable();
+      PrebuiltJar prebuiltJar = (PrebuiltJar) rule;
 
       this.binaryJar = prebuiltJar.getBinaryJar().toString();
       if (prebuiltJar.getSourceJar().isPresent()) {

@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 import javax.annotation.Nullable;
 
@@ -60,7 +61,7 @@ public class MultiArtifactCacheTest {
   }
 
   @Test
-  public void testCacheFetch() {
+  public void testCacheFetch() throws InterruptedException, IOException {
     DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache();
     DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
     MultiArtifactCache multiArtifactCache = new MultiArtifactCache(ImmutableList.of(
@@ -82,10 +83,12 @@ public class MultiArtifactCacheTest {
     assertEquals("Fetch should succeed after store",
         CacheResult.LOCAL_KEY_UNCHANGED_HIT,
         multiArtifactCache.fetch(dummyRuleKey, dummyFile));
+
+    multiArtifactCache.close();
   }
 
   @Test
-  public void testCacheStore() {
+  public void testCacheStore() throws InterruptedException, IOException {
     DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache();
     DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
     MultiArtifactCache multiArtifactCache = new MultiArtifactCache(ImmutableList.<ArtifactCache>of(
@@ -100,5 +103,7 @@ public class MultiArtifactCacheTest {
     assertEquals("MultiArtifactCache.store() should store to all contained ArtifactCaches",
         dummyArtifactCache2.storeKey,
         dummyRuleKey);
+
+    multiArtifactCache.close();
   }
 }

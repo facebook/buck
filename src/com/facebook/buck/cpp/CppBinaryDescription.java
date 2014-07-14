@@ -18,8 +18,8 @@ package com.facebook.buck.cpp;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -30,13 +30,16 @@ public class CppBinaryDescription implements Description<CppBinaryDescription.Ar
   public static final BuildRuleType TYPE = new BuildRuleType("cpp_binary");
 
   @Override
-  public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new CppBinary(params.getBuildTarget(), params.getDeps(), args.srcs);
+  public Arg createUnpopulatedConstructorArg() {
+    return new Arg();
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public <A extends Arg> CppBinary createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return new CppBinary(params, args.srcs);
   }
 
   @Override

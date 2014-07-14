@@ -29,9 +29,9 @@ public interface FlavorableDescription<T extends ConstructorArg> extends Descrip
   // for the same flavor.
 
   /**
-   * Creates a {@link Buildable} for each flavor for this {@link Description}. Each
-   * {@link Buildable} must be registered via the {@code ruleResolver}. Note that the
-   * {@link Buildable} for a flavor will not be built unless it ends up in the transitive deps of
+   * Creates a {@link BuildRule} for each flavor for this {@link Description}. Each
+   * {@link BuildRule} must be registered via the {@code ruleResolver}. Note that the
+   * {@link BuildRule} for a flavor will not be built unless it ends up in the transitive deps of
    * the rules to be built.
    * @param arg used to create the described rule.
    * @param describedRule rule being flavored: has not been registered with ruleResolver yet.
@@ -41,7 +41,7 @@ public interface FlavorableDescription<T extends ConstructorArg> extends Descrip
    */
   public void registerFlavors(
       T arg,
-      DescribedRule describedRule,
+      BuildRule describedRule,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleResolver ruleResolver);

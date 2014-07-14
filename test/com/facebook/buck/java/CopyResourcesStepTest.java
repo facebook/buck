@@ -38,7 +38,7 @@ public class CopyResourcesStepTest {
     // android/java/BUILD
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
-    BuildTarget buildTarget = new BuildTarget("//android/java", "resources");
+    BuildTarget buildTarget = BuildTarget.builder("//android/java", "resources").build();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
 
     CopyResourcesStep step = new CopyResourcesStep(
@@ -66,7 +66,7 @@ public class CopyResourcesStepTest {
     // android/java/src/BUILD
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
-    BuildTarget buildTarget = new BuildTarget("//android/java/src", "resources");
+    BuildTarget buildTarget = BuildTarget.builder("//android/java/src", "resources").build();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
 
     CopyResourcesStep step = new CopyResourcesStep(
@@ -95,7 +95,8 @@ public class CopyResourcesStepTest {
     // android/java/src/com/facebook/BUILD
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
-    BuildTarget buildTarget = new BuildTarget("//android/java/src/com/facebook", "resources");
+    BuildTarget buildTarget =
+        BuildTarget.builder("//android/java/src/com/facebook", "resources").build();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
 
     CopyResourcesStep step = new CopyResourcesStep(

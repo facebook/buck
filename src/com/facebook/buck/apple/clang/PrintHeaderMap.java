@@ -29,15 +29,16 @@ public final class PrintHeaderMap {
   }
 
   private static void process(File file) throws IOException {
-    FileInputStream inputStream = new FileInputStream(file);
-    FileChannel fileChannel = inputStream.getChannel();
-    ByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, file.length());
+    try (FileInputStream inputStream = new FileInputStream(file)) {
+      FileChannel fileChannel = inputStream.getChannel();
+      ByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, file.length());
 
-    HeaderMap map = HeaderMap.deserialize(buffer);
-    if (map == null) {
-      throw new IOException("Error while parsing header map " + file.toString());
+      HeaderMap map = HeaderMap.deserialize(buffer);
+      if (map == null) {
+        throw new IOException("Error while parsing header map " + file.toString());
+      }
+      map.print(System.out);
     }
-    map.print(System.out);
   }
 
   public static void main(String[] args) {

@@ -1,0 +1,20 @@
+android_build_config(
+  name = 'build_config',
+  package = 'com.example.buck',
+)
+
+java_library(
+  name = 'lib',
+  srcs = [ 'Main.java' ],
+  deps = [
+    ':build_config',
+  ],
+)
+
+java_binary(
+  name = 'main',
+  main_class = 'com.example.buck.Main',
+  deps = [
+    ':lib',
+  ],
+)

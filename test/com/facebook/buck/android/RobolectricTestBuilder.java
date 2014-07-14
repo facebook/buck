@@ -23,8 +23,7 @@ import com.facebook.buck.rules.PathSourcePath;
 
 import java.nio.file.Path;
 
-public class RobolectricTestBuilder
-    extends AbstractBuilder<RobolectricTest, RobolectricTestDescription.Arg> {
+public class RobolectricTestBuilder extends AbstractBuilder<RobolectricTestDescription.Arg> {
 
   private RobolectricTestBuilder(BuildTarget target) {
     super(new RobolectricTestDescription(JavaCompilerEnvironment.DEFAULT), target);

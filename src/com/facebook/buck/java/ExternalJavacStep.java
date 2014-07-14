@@ -99,7 +99,8 @@ public class ExternalJavacStep extends JavacStep {
   }
 
   @Override
-  protected int buildWithClasspath(ExecutionContext context, Set<Path> buildClasspathEntries) {
+  protected int buildWithClasspath(ExecutionContext context, Set<Path> buildClasspathEntries)
+      throws InterruptedException {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.add(pathToJavac.toString());
     command.addAll(getOptions(context, buildClasspathEntries));

@@ -113,7 +113,8 @@ public class ProjectCommandTest {
   }
 
   @Test
-  public void testProjectCommandWithAnnotations() throws IOException {
+  public void testProjectCommandWithAnnotations()
+      throws IOException, InterruptedException {
     List<String> processorNames = ImmutableList.of("com.facebook.AnnotationProcessor");
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 

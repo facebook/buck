@@ -19,7 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.DescribedRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -63,13 +63,14 @@ public class GenruleBuilder {
       this.args.cmdExe = Optional.absent();
     }
 
-    public BuildRule build() {
+    public Genrule build() {
       final ImmutableSortedSet<BuildRule> depRules = ImmutableSortedSet.copyOf(deps);
       args.deps = Optional.of(depRules);
       args.srcs = Optional.of(srcs.build());
 
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
           .setDeps(depRules)
+          .setType(GenruleDescription.TYPE)
           .setProjectFilesystem(
               new ProjectFilesystem(Paths.get(".")) {
                 @Override
@@ -79,12 +80,7 @@ public class GenruleBuilder {
                 }
               })
           .build();
-      Genrule buildable = description.createBuildable(params, args);
-      buildable.setDeps(depRules);
-      return new DescribedRule(
-          description.getBuildRuleType(),
-          buildable,
-          params);
+      return description.createBuildRule(params, new BuildRuleResolver(), args);
     }
 
     public Builder setRelativeToAbsolutePathFunctionForTesting(Function<Path, Path> absolutifier) {

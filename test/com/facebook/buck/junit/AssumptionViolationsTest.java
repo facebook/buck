@@ -52,7 +52,7 @@ public class AssumptionViolationsTest {
     result.assertSuccess();
     String output = result.getStderr();
     assertThat(output, containsString(
-        "PASS   <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest"));
+        "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest"));
     assertThat(output, containsString(
         "TESTS PASSED"));
   }
@@ -67,10 +67,10 @@ public class AssumptionViolationsTest {
     result.assertSuccess();
     String output = result.getStderr();
     assertThat(output, containsString(
-        "ASSUME <100ms  1 Passed   2 Skipped   0 Failed   " +
+        "ASSUME  <100ms  1 Passed   2 Skipped   0 Failed   " +
         "com.example.SomeAssumptionViolationsTest"));
     assertThat(output, containsString(
-        "PASS   <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest"));
+        "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest"));
     assertThat(output, containsString(
         "TESTS PASSED (with some assumption violations)"));
   }
@@ -85,9 +85,11 @@ public class AssumptionViolationsTest {
     result.assertTestFailure();
     String output = result.getStderr();
     assertThat(output,
-        containsString("FAIL   <100ms  0 Passed   1 Skipped   1 Failed   com.example.FailingTest"));
+        containsString(
+            "FAIL    <100ms  0 Passed   1 Skipped   1 Failed   com.example.FailingTest"));
     assertThat(output,
-        containsString("PASS   <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest"));
+        containsString(
+            "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest"));
     assertThat(output,
         containsString("TESTS FAILED"));
   }

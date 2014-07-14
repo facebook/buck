@@ -80,7 +80,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   }
 
   @Override
-  int runCommandWithOptionsInternal(ProjectCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(ProjectCommandOptions options)
+      throws IOException, InterruptedException {
     switch (options.getIde()) {
       case "intellij":
         return runIntellijProjectGenerator(options);
@@ -95,7 +96,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   /**
    * Run intellij specific project generation actions.
    */
-  int runIntellijProjectGenerator(ProjectCommandOptions options) throws IOException {
+  int runIntellijProjectGenerator(ProjectCommandOptions options)
+      throws IOException, InterruptedException {
     // Create a PartialGraph that only contains targets that can be represented as IDE
     // configuration files.
     PartialGraph partialGraph;
@@ -169,7 +171,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   }
 
   List<String> getAnnotationProcessingTargets(ProjectCommandOptions options)
-      throws BuildTargetException, BuildFileParseException, IOException {
+      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     return ImmutableList.copyOf(
         Iterables.transform(
             createPartialGraph(annotationPredicate, options).getTargets(),
@@ -193,7 +195,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       boolean generateMinimalProject,
       PrintStream stdOut,
       PrintStream stdErr)
-      throws IOException {
+      throws IOException, InterruptedException {
     return project.createIntellijProject(
         jsonTemplate,
         processExecutor,
@@ -206,7 +208,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    * Run xcode specific project generation actions.
    */
   int runXcodeProjectGenerator(ProjectCommandOptions options)
-      throws IOException {
+      throws IOException, InterruptedException {
 
 
     PartialGraph partialGraph;
@@ -231,6 +233,11 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ExecutionContext executionContext = createExecutionContext(options,
         partialGraph.getActionGraph());
 
+    ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
+    if (options.getReadOnly()) {
+      optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
+    }
+
     if (options.getCombinedProject() != null) {
       // Generate a single project containing a target and all its dependencies and tests.
       ProjectGenerator projectGenerator = new ProjectGenerator(
@@ -240,14 +247,15 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           executionContext,
           getProjectFilesystem().getPathForRelativePath(Paths.get("_gen")),
           "GeneratedProject",
-          ProjectGenerator.COMBINED_PROJECT_OPTIONS);
+          optionsBuilder.addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS).build());
       projectGenerator.createXcodeProjects();
     } else if (options.getWorkspaceAndProjects()) {
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
           getProjectFilesystem(),
           partialGraph,
           executionContext,
-          Iterables.getOnlyElement(passedInTargetsSet));
+          Iterables.getOnlyElement(passedInTargetsSet),
+          optionsBuilder.build());
       generator.generateWorkspaceAndDependentProjects();
     } else {
       // Generate projects based on xcode_project_config rules, and place them in the same directory
@@ -270,7 +278,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getProjectFilesystem(),
           partialGraph,
           executionContext,
-          targets);
+          targets,
+          optionsBuilder.build());
       ImmutableSet<Path> generatedProjectPaths = projectGenerator.generateProjects();
       for (Path path : generatedProjectPaths) {
         console.getStdOut().println(path.toString());
@@ -287,13 +296,13 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    */
   @VisibleForTesting
   int runBuildCommand(BuildCommand buildCommand, BuildCommandOptions options)
-      throws IOException {
+      throws IOException, InterruptedException {
     return buildCommand.runCommandWithOptions(options);
   }
 
   @VisibleForTesting
   PartialGraph createPartialGraph(RawRulePredicate rulePredicate, ProjectCommandOptions options)
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     List<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
 
     if (argumentsAsBuildTargets.isEmpty()) {

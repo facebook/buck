@@ -42,7 +42,8 @@ public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
   }
 
   @Override
-  int runCommandWithOptionsInternal(CacheCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(CacheCommandOptions options)
+      throws IOException, InterruptedException {
     List<String> arguments = options.getArguments();
     if (arguments.isEmpty()) {
       console.printErrorText("No cache keys specified.");

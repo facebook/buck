@@ -50,7 +50,8 @@ public class LoggingArtifactCacheFactory implements ArtifactCacheFactory {
   }
 
   @Override
-  public ArtifactCache newInstance(AbstractCommandOptions options) {
+  public ArtifactCache newInstance(AbstractCommandOptions options)
+      throws InterruptedException {
     if (options.isNoCache()) {
       return new NoopArtifactCache();
     } else {
@@ -66,8 +67,7 @@ public class LoggingArtifactCacheFactory implements ArtifactCacheFactory {
   }
 
   @Override
-  @SuppressWarnings("PMD.EmptyCatchBlock")
-  public void closeCreatedArtifactCaches(int timeoutInSeconds) {
+  public void closeCreatedArtifactCaches(int timeoutInSeconds) throws InterruptedException {
     ExecutorService cachesTerminationService =
         MoreExecutors.newSingleThreadExecutor("close_artifact_caches");
     for (final ArtifactCache cache : createdArtifactCaches) {
@@ -81,10 +81,6 @@ public class LoggingArtifactCacheFactory implements ArtifactCacheFactory {
     }
 
     cachesTerminationService.shutdown();
-    try {
-      cachesTerminationService.awaitTermination(timeoutInSeconds, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      // Ignore the exception and move on.
-    }
+    cachesTerminationService.awaitTermination(timeoutInSeconds, TimeUnit.SECONDS);
   }
 }

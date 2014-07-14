@@ -56,6 +56,7 @@ public class PBXGroup extends PBXReference {
   private final LoadingCache<String, PBXGroup> childGroupsByName;
   private final LoadingCache<String, PBXVariantGroup> childVariantGroupsByName;
   private final LoadingCache<SourceTreePath, PBXFileReference> fileReferencesBySourceTreePath;
+  private final LoadingCache<SourceTreePath, XCVersionGroup> childVersionGroupsBySourceTreePath;
 
   public PBXGroup(String name, String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
@@ -95,6 +96,19 @@ public class PBXGroup extends PBXReference {
             return ref;
           }
         });
+
+    childVersionGroupsBySourceTreePath = CacheBuilder.newBuilder().build(
+        new CacheLoader<SourceTreePath, XCVersionGroup>() {
+          @Override
+          public XCVersionGroup load(SourceTreePath key) throws Exception {
+            XCVersionGroup ref = new XCVersionGroup(
+                key.getPath().getFileName().toString(),
+                key.getPath().toString(),
+                key.getSourceTree());
+            children.add(ref);
+            return ref;
+          }
+        });
   }
 
   public PBXGroup getOrCreateChildGroupByName(String name) {
@@ -107,6 +121,11 @@ public class PBXGroup extends PBXReference {
 
   public PBXFileReference getOrCreateFileReferenceBySourceTreePath(SourceTreePath sourceTreePath) {
     return fileReferencesBySourceTreePath.getUnchecked(sourceTreePath);
+  }
+
+  public XCVersionGroup getOrCreateChildVersionGroupsBySourceTreePath(
+      SourceTreePath sourceTreePath) {
+    return childVersionGroupsBySourceTreePath.getUnchecked(sourceTreePath);
   }
 
   public List<PBXReference> getChildren() {

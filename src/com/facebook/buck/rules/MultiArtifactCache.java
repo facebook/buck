@@ -50,7 +50,8 @@ public class MultiArtifactCache implements ArtifactCache {
    * artifact to one or more of the other encapsulated ArtifactCaches as a side effect.
    */
   @Override
-  public CacheResult fetch(RuleKey ruleKey, File output) {
+  public CacheResult fetch(RuleKey ruleKey, File output)
+      throws InterruptedException {
     for (ArtifactCache artifactCache : artifactCaches) {
       CacheResult cacheResult = artifactCache.fetch(ruleKey, output);
       if (cacheResult.isSuccess()) {
@@ -72,7 +73,7 @@ public class MultiArtifactCache implements ArtifactCache {
    * Store the artifact to all encapsulated ArtifactCaches.
    */
   @Override
-  public void store(RuleKey ruleKey, File output) {
+  public void store(RuleKey ruleKey, File output) throws InterruptedException {
     for (ArtifactCache artifactCache : artifactCaches) {
       artifactCache.store(ruleKey, output);
     }

@@ -87,7 +87,8 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
 
   /** Prints the expanded build rules from the specified build files to the console. */
   @Override
-  int runCommandWithOptionsInternal(AuditRulesOptions options) throws IOException {
+  int runCommandWithOptionsInternal(AuditRulesOptions options)
+      throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
 
     ProjectBuildFileParserFactory factory = new DefaultProjectBuildFileParserFactory(

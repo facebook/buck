@@ -18,10 +18,10 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.ComputeExopackageDepsAbi.BuildOutput;
 import com.facebook.buck.java.Keystore;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -49,13 +49,11 @@ import javax.annotation.Nullable;
  * A buildable that hashes all of the files that go into an exopackage APK.
  * This is used by AndroidBinaryRule to compute the ABI hash of its deps.
  */
-public class ComputeExopackageDepsAbi
-    extends AbstractBuildable
+public class ComputeExopackageDepsAbi extends AbstractBuildRule
     implements InitializableFromDisk<BuildOutput> {
   private static final String METADATA_KEY = "EXOPACKAGE_ABI_OF_DEPS";
 
-  private final AndroidResourceDepsFinder androidResourceDepsFinder;
-  private final UberRDotJava uberRDotJava;
+  private final AndroidPackageableCollection packageableCollection;
   private final AaptPackageResources aaptPackageResources;
   private final Optional<PackageStringAssets> packageStringAssets;
   private final Optional<PreDexMerge> preDexMerge;
@@ -63,21 +61,19 @@ public class ComputeExopackageDepsAbi
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public ComputeExopackageDepsAbi(
-      BuildTarget buildTarget,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
-      UberRDotJava uberRDotJava,
+      BuildRuleParams params,
+      AndroidPackageableCollection packageableCollection,
       AaptPackageResources aaptPackageResources,
       Optional<PackageStringAssets> packageStringAssets,
       Optional<PreDexMerge> preDexMerge,
       Keystore keystore) {
-    super(buildTarget);
-    this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
-    this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
+    super(params);
+    this.packageableCollection = Preconditions.checkNotNull(packageableCollection);
     this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);
     this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
     this.keystore = Preconditions.checkNotNull(keystore);
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   @Override
@@ -94,11 +90,6 @@ public class ComputeExopackageDepsAbi
           public int execute(ExecutionContext context) {
             try {
               ProjectFilesystem filesystem = context.getProjectFilesystem();
-
-              AndroidTransitiveDependencies transitiveDependencies =
-                  androidResourceDepsFinder.getAndroidTransitiveDependencies();
-              AndroidDexTransitiveDependencies dexTransitiveDependencies =
-                  androidResourceDepsFinder.getAndroidDexTransitiveDependencies(uberRDotJava);
 
               // For exopackages, the only significant thing android_binary does is apkbuilder,
               // so we need to include all of the apkbuilder inputs in the ABI key.
@@ -128,21 +119,21 @@ public class ComputeExopackageDepsAbi
               // AndroidTransitiveDependencies doesn't provide BuildRules, only paths.
               // We could augment it, but our current native libraries are small enough that
               // we can just hash them all without too much of a perf hit.
-              for (final Path libDir : transitiveDependencies.nativeLibsDirectories) {
+              for (final Path libDir : packageableCollection.nativeLibsDirectories) {
                 for (Path nativeFile : filesystem.getFilesUnderPath(libDir)) {
                   filesToHash.put(nativeFile, "native_lib");
                 }
               }
 
               // Same deal for native libs as assets.
-              for (final Path libDir : transitiveDependencies.nativeLibAssetsDirectories) {
+              for (final Path libDir : packageableCollection.nativeLibAssetsDirectories) {
                 for (Path nativeFile : filesystem.getFilesUnderPath(libDir)) {
                   filesToHash.put(nativeFile, "native_lib_as_asset");
                 }
               }
 
               // Resources get copied from third-party JARs, so hash them.
-              for (Path jar : dexTransitiveDependencies.pathsToThirdPartyJars) {
+              for (Path jar : packageableCollection.pathsToThirdPartyJars) {
                 filesToHash.put(jar, "third-party jar");
               }
 

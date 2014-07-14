@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,7 +41,9 @@ public class PythonLibraryTest {
     SourcePath src = new TestSourcePath("");
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of(src);
     PythonLibrary pythonLibrary = new PythonLibrary(
-        new BuildTarget("//scripts/python", "foo"),
+        new FakeBuildRuleParamsBuilder(
+            BuildTarget.builder("//scripts/python", "foo").build())
+            .build(),
         srcs,
         ImmutableSortedSet.<SourcePath>of());
 

@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.rules.TestSourcePath;
@@ -63,7 +64,7 @@ public class ExportFileTest {
 
   @Before
   public void createFixtures() {
-    target = new BuildTarget("//", "example.html");
+    target = BuildTarget.builder("//", "example.html").build();
     File root = new File(".");
     context = getBuildContext(root);
   }
@@ -73,7 +74,7 @@ public class ExportFileTest {
     ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
     args.out = Optional.absent();
     args.src = Optional.absent();
-    ExportFile exportFile = new ExportFile(target, args);
+    ExportFile exportFile = new ExportFile(new FakeBuildRuleParamsBuilder(target).build(), args);
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -92,7 +93,7 @@ public class ExportFileTest {
     ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
     args.out = Optional.of("fish");
     args.src = Optional.absent();
-    ExportFile exportFile = new ExportFile(target, args);
+    ExportFile exportFile = new ExportFile(new FakeBuildRuleParamsBuilder(target).build(), args);
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -111,7 +112,7 @@ public class ExportFileTest {
     ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
     args.src = Optional.of(new TestSourcePath("chips"));
     args.out = Optional.of("fish");
-    ExportFile exportFile = new ExportFile(target, args);
+    ExportFile exportFile = new ExportFile(new FakeBuildRuleParamsBuilder(target).build(), args);
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -130,7 +131,7 @@ public class ExportFileTest {
     ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
     args.src = Optional.of(new TestSourcePath("chips"));
     args.out = Optional.of("cake");
-    ExportFile exportFile = new ExportFile(target, args);
+    ExportFile exportFile = new ExportFile(new FakeBuildRuleParamsBuilder(target).build(), args);
 
     assertIterablesEquals(singleton(Paths.get("chips")), exportFile.getInputsToCompareToOutput());
 
@@ -139,11 +140,11 @@ public class ExportFileTest {
         BuildTargetFactory.newInstance("//example:one"));
     args.src = Optional.of(
         new BuildRuleSourcePath(rule));
-    exportFile = new ExportFile(target, args);
+    exportFile = new ExportFile(new FakeBuildRuleParamsBuilder(target).build(), args);
     assertTrue(Iterables.isEmpty(exportFile.getInputsToCompareToOutput()));
 
     args.src = Optional.absent();
-    exportFile = new ExportFile(target, args);
+    exportFile = new ExportFile(new FakeBuildRuleParamsBuilder(target).build(), args);
     assertIterablesEquals(
         singleton(Paths.get("example.html")), exportFile.getInputsToCompareToOutput());
   }
@@ -192,6 +193,11 @@ public class ExportFileTest {
           @Override
           public <T> void addCallback(
               ListenableFuture<List<T>> allBuiltDeps, FutureCallback<List<T>> futureCallback) {
+            // Do nothing.
+          }
+
+          @Override
+          public void shutdownNow() {
             // Do nothing.
           }
         })

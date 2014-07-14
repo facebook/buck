@@ -9,7 +9,7 @@ do
  done) | android update sdk --force --no-ui --all --filter \
 tools,\
 platform-tools,\
-build-tools-19.0.3,\
+build-tools-19.1.0,\
 android-16,\
 addon-google_apis-google-16,\
 android-18,\

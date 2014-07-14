@@ -136,7 +136,7 @@ public class ExopackageInstaller {
   /**
    * Installs the app specified in the constructor.  This object should be discarded afterward.
    */
-  public synchronized boolean install() {
+  public synchronized boolean install() throws InterruptedException {
     Preconditions.checkState(
         device == null,
         "ExopackageInstaller.install called twice.");

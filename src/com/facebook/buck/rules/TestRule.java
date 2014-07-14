@@ -37,7 +37,7 @@ public interface TestRule extends HasBuildTarget {
    * present.
    * <p>
    * If this method returns {@code true}, then
-   * {@link #interpretTestResults(ExecutionContext, boolean)}
+   * {@link #interpretTestResults(ExecutionContext, boolean, boolean)}
    * should be able to be called directly.
    */
   public boolean hasTestResultFiles(ExecutionContext executionContext);

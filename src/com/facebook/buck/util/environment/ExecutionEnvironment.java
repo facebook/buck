@@ -47,5 +47,5 @@ public interface ExecutionEnvironment {
   /**
    * @return The SSID of the current wifi network if it can be determined.
    */
-  public Optional<String> getWifiSsid();
+  public Optional<String> getWifiSsid() throws InterruptedException;
 }
