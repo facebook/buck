@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Exit on error.
 set -e
 
 # $BUCK_BIN_DIRECTORY is the directory that hosts this script. Solution taken from:
@@ -13,54 +12,6 @@ do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
   DIR="$( cd -P "$( dirname "$SOURCE"  )" && pwd )"
 done
-DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-BUCK_BIN_DIRECTORY=$DIR
+BUCK_BIN_DIRECTORY="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-# Set environment and update buck if required.
-# TODO(user): refactor buck_common in to functions rather than sourcing
-source "${BUCK_BIN_DIRECTORY}/buck_common"
-
-if [ -z "$NO_BUCKD" ]; then
-  startBuckdIfStopped
-fi
-
-# If a buck daemon is running, use it.
-BUCK_CLIENT="${BUCK_DIRECTORY}/build/ng"
-if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCK_CLIENT" ]; then
-
-  echo >&2 "Using buckd."
-
-  BUCKD_PORT=`cat "${BUCKD_DIR}"/buckd.port`
-
-  # Tell buckd whether the client is talking to a tty.
-  if [ -t 1 ]; then
-    export BUCKD_COLOR_DEFAULT="always"
-  else
-    export BUCKD_COLOR_DEFAULT="never"
-  fi
-
-  if [[ ! $BUCKD_PORT =~ ^[0-9]+$ ]]; then
-    echo >&2 "Daemon port file is corrupt, starting new buck process."
-    killBuckd
-  else
-    # Disable exit on error as exit code 2 is used to indicate the daemon is busy.
-    set +e
-    "$BUCK_CLIENT" --nailgun-port $BUCKD_PORT com.facebook.buck.cli.Main "$@"
-    BUCKD_STATUS=$?
-    set -e
-    # If buck daemon is not busy, return exit code.
-    if [ $BUCKD_STATUS -ne 2 ]; then
-        exit $BUCKD_STATUS
-    fi
-
-    echo >&2 "Daemon is busy, starting new buck process."
-  fi
-fi
-
-# Daemon is not running, or is busy so start buck process.
-java \
-"${BUCK_JAVA_ARGS[@]}" \
--Djava.io.tmpdir="$BUCK_TMPDIR" \
--classpath \
-"$BUCK_JAVA_CLASSPATH" \
-com.facebook.buck.cli.Main "$@"
+python "$BUCK_BIN_DIRECTORY"/buck.py "$@"
