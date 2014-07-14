@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
-import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
@@ -241,7 +241,7 @@ public class CachingBuildEngine implements BuildEngine {
               try {
                 onDiskBuildInfo.deleteExistingMetadata();
               } catch (IOException e) {
-                eventBus.post(ThrowableLogEvent.create(
+                eventBus.post(ThrowableConsoleEvent.create(
                     e,
                     "Error when deleting metadata for %s.",
                     rule));
@@ -427,7 +427,7 @@ public class CachingBuildEngine implements BuildEngine {
       // In the wild, we have seen some inexplicable failures during this step. For now, we try to
       // give the user as much information as we can to debug the issue, but return CacheResult.MISS
       // so that Buck will fall back on doing a local build.
-      buildContext.getEventBus().post(LogEvent.warning(
+      buildContext.getEventBus().post(ConsoleEvent.warning(
               "Failed to unzip the artifact for %s at %s.\n" +
                   "The rule will be built locally, " +
                   "but here is the stacktrace of the failed unzip call:\n" +

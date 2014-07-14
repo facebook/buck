@@ -17,7 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversal;
@@ -164,7 +164,7 @@ public class BuildInfoRecorder {
       zip = File.createTempFile(buildTarget.getFullyQualifiedName().replace('/', '_'), ".zip");
       projectFilesystem.createZip(pathsToIncludeInZip, zip);
     } catch (IOException e) {
-      eventBus.post(LogEvent.info("Failed to create zip for %s containing:\n%s",
+      eventBus.post(ConsoleEvent.info("Failed to create zip for %s containing:\n%s",
           buildTarget,
           Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInZip))));
       e.printStackTrace();

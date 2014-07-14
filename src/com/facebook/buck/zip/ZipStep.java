@@ -18,7 +18,7 @@ package com.facebook.buck.zip;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_EXISTING;
 
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -88,7 +88,7 @@ public class ZipStep implements Step {
     final ProjectFilesystem filesystem = context.getProjectFilesystem();
     if (filesystem.exists(pathToZipFile)) {
       context.postEvent(
-          LogEvent.severe("Attempting to overwrite an existing zip: %s", pathToZipFile));
+          ConsoleEvent.severe("Attempting to overwrite an existing zip: %s", pathToZipFile));
       return 1;
     }
 

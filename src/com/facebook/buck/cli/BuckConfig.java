@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -658,7 +658,7 @@ public class BuckConfig {
     try {
       return new CassandraArtifactCache(cacheHosts, port, timeoutSeconds, doStore, buckEventBus);
     } catch (ConnectionException e) {
-      buckEventBus.post(ThrowableLogEvent.create(e, "Cassandra cache connection failure."));
+      buckEventBus.post(ThrowableConsoleEvent.create(e, "Cassandra cache connection failure."));
       return null;
     }
   }

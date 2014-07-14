@@ -20,7 +20,7 @@ import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
@@ -337,7 +337,7 @@ public class ExopackageInstaller {
   private boolean shouldAppBeInstalled() throws Exception {
     Optional<PackageInfo> appPackageInfo = getPackageInfo(packageName);
     if (!appPackageInfo.isPresent()) {
-      eventBus.post(LogEvent.info("App not installed.  Installing now."));
+      eventBus.post(ConsoleEvent.info("App not installed.  Installing now."));
       return true;
     }
 
@@ -627,11 +627,11 @@ public class ExopackageInstaller {
   }
 
   private void logFine(String message, Object... args) {
-    eventBus.post(LogEvent.fine(message, args));
+    eventBus.post(ConsoleEvent.fine(message, args));
   }
 
   private void logFiner(String message, Object... args) {
-    eventBus.post(LogEvent.finer(message, args));
+    eventBus.post(ConsoleEvent.finer(message, args));
   }
 
   /**

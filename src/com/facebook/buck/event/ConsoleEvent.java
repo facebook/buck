@@ -21,16 +21,16 @@ import com.google.common.base.Preconditions;
 import java.util.logging.Level;
 
 /**
- * Event for messages.  Post LogEvents to the event bus where you would normally use
+ * Event for messages.  Post ConsoleEvents to the event bus where you would normally use
  * {@link java.util.logging}.
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public class LogEvent extends AbstractBuckEvent {
+public class ConsoleEvent extends AbstractBuckEvent {
 
   private final Level level;
   private final String message;
 
-  protected LogEvent(Level level, String message) {
+  protected ConsoleEvent(Level level, String message) {
     this.level = Preconditions.checkNotNull(level);
     this.message = Preconditions.checkNotNull(message);
   }
@@ -43,33 +43,33 @@ public class LogEvent extends AbstractBuckEvent {
     return message;
   }
 
-  public static LogEvent create(Level level, String message, Object... args) {
-    return new LogEvent(level, String.format(message, args));
+  public static ConsoleEvent create(Level level, String message, Object... args) {
+    return new ConsoleEvent(level, String.format(message, args));
   }
 
-  public static LogEvent finer(String message, Object... args) {
-    return LogEvent.create(Level.FINER, message, args);
+  public static ConsoleEvent finer(String message, Object... args) {
+    return ConsoleEvent.create(Level.FINER, message, args);
   }
 
-  public static LogEvent fine(String message, Object... args) {
-    return LogEvent.create(Level.FINE, message, args);
+  public static ConsoleEvent fine(String message, Object... args) {
+    return ConsoleEvent.create(Level.FINE, message, args);
   }
 
-  public static LogEvent info(String message, Object... args) {
-    return LogEvent.create(Level.INFO, message, args);
+  public static ConsoleEvent info(String message, Object... args) {
+    return ConsoleEvent.create(Level.INFO, message, args);
   }
 
-  public static LogEvent warning(String message, Object... args) {
-    return LogEvent.create(Level.WARNING, message, args);
+  public static ConsoleEvent warning(String message, Object... args) {
+    return ConsoleEvent.create(Level.WARNING, message, args);
   }
 
-  public static LogEvent severe(String message, Object... args) {
-    return LogEvent.create(Level.SEVERE, message, args);
+  public static ConsoleEvent severe(String message, Object... args) {
+    return ConsoleEvent.create(Level.SEVERE, message, args);
   }
 
   @Override
   public String getEventName() {
-    return "LogEvent";
+    return "ConsoleEvent";
   }
 
   @Override
@@ -84,11 +84,11 @@ public class LogEvent extends AbstractBuckEvent {
 
   @Override
   public boolean eventsArePair(BuckEvent event) {
-    if (!(event instanceof LogEvent)) {
+    if (!(event instanceof ConsoleEvent)) {
       return false;
     }
 
-    LogEvent that = (LogEvent) event;
+    ConsoleEvent that = (ConsoleEvent) event;
 
     return Objects.equal(getLevel(), that.getLevel()) &&
         Objects.equal(getMessage(), that.getMessage());

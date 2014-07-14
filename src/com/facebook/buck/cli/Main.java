@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
@@ -585,7 +585,7 @@ public final class Main {
               commandEvent,
               buildEventBus);
         } catch (WatchmanWatcherException | IOException e) {
-          buildEventBus.post(LogEvent.warning(
+          buildEventBus.post(ConsoleEvent.warning(
                   "Watchman threw an exception while parsing file changes.\n%s",
                   e.getMessage()));
         }
@@ -622,7 +622,7 @@ public final class Main {
       // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
       if (webServer.isPresent()) {
         int port = webServer.get().getPort();
-        buildEventBus.post(LogEvent.info(
+        buildEventBus.post(ConsoleEvent.info(
             "See trace at http://localhost:%s/trace/%s", port, buildId));
       }
 

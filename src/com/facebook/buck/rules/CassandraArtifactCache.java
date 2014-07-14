@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
-import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -214,7 +214,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     } catch (ExecutionException e) {
       if (!(e.getCause() instanceof ConnectionException)) {
         buckEventBus.post(
-            ThrowableLogEvent.create(
+            ThrowableConsoleEvent.create(
                 e,
                 "Unexpected error when fetching keyspace and ttl: %s.",
                 e.getMessage()));
@@ -281,13 +281,13 @@ public class CassandraArtifactCache implements ArtifactCache {
         success = CacheResult.CASSANDRA_HIT;
       }
     } catch (IOException e) {
-      buckEventBus.post(ThrowableLogEvent.create(e,
+      buckEventBus.post(ThrowableConsoleEvent.create(e,
           "Artifact was fetched but could not be written: %s at %s.",
           ruleKey,
           output.getPath()));
     }
 
-    buckEventBus.post(LogEvent.fine("Artifact fetch(%s, %s) cache %s",
+    buckEventBus.post(ConsoleEvent.fine("Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output.getPath(),
         (success.isSuccess() ? "hit" : "miss")));
@@ -317,7 +317,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     } catch (ConnectionException e) {
       reportConnectionFailure("Attempting to store " + ruleKey + ".", e);
     } catch (IOException | OutOfMemoryError e) {
-      buckEventBus.post(ThrowableLogEvent.create(e,
+      buckEventBus.post(ThrowableConsoleEvent.create(e,
           "Artifact store(%s, %s) error: %s",
           ruleKey,
           output.getPath()));
@@ -379,7 +379,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     }
   }
 
-  public static class CassandraConnectionExceptionEvent extends ThrowableLogEvent {
+  public static class CassandraConnectionExceptionEvent extends ThrowableConsoleEvent {
 
     public CassandraConnectionExceptionEvent(Throwable throwable, String message) {
       super(throwable, message);

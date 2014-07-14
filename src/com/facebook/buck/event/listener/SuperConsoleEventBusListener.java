@@ -17,7 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.IndividualTestEvent;
@@ -61,7 +61,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>> threadsToRunningEvent;
   private final ConcurrentMap<Long, Optional<? extends LeafEvent>> threadsToRunningStep;
 
-  private final ConcurrentLinkedQueue<LogEvent> logEvents;
+  private final ConcurrentLinkedQueue<ConsoleEvent> logEvents;
 
   private final ScheduledExecutorService renderScheduler;
 
@@ -169,8 +169,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
 
     lines.add("Log:");
-    for (LogEvent logEvent : logEvents) {
-      formatLogEvent(logEvent, lines);
+    for (ConsoleEvent logEvent : logEvents) {
+      formatConsoleEvent(logEvent, lines);
     }
   }
 
@@ -282,7 +282,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         event.getTestSelectorList(),
         event.shouldExplainTestSelectorList(),
         event.getTargetNames());
-    logEvents.add(LogEvent.info(Joiner.on('\n').join(builder.build())));
+    logEvents.add(ConsoleEvent.info(Joiner.on('\n').join(builder.build())));
   }
 
   @Subscribe
@@ -309,7 +309,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  public void logEvent(LogEvent event) {
+  public void logEvent(ConsoleEvent event) {
     logEvents.add(event);
   }
 

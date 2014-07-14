@@ -24,11 +24,11 @@ import java.util.logging.Level;
  * Event for tracking {@link Throwable}
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public class ThrowableLogEvent extends LogEvent {
+public class ThrowableConsoleEvent extends ConsoleEvent {
 
   private final Throwable throwable;
 
-  protected ThrowableLogEvent(Throwable throwable, String message) {
+  protected ThrowableConsoleEvent(Throwable throwable, String message) {
     super(Level.SEVERE, combineThrowableAndMessage(throwable, message));
     this.throwable = throwable;
   }
@@ -44,17 +44,17 @@ public class ThrowableLogEvent extends LogEvent {
     return throwable;
   }
 
-  public static ThrowableLogEvent create(Throwable throwable, String message, Object... args) {
-    return new ThrowableLogEvent(throwable, String.format(message, args));
+  public static ThrowableConsoleEvent create(Throwable throwable, String message, Object... args) {
+    return new ThrowableConsoleEvent(throwable, String.format(message, args));
   }
 
   @Override
   public boolean eventsArePair(BuckEvent event) {
-    if (!(event instanceof ThrowableLogEvent)) {
+    if (!(event instanceof ThrowableConsoleEvent)) {
       return false;
     }
 
-    ThrowableLogEvent that = (ThrowableLogEvent) event;
+    ThrowableConsoleEvent that = (ThrowableConsoleEvent) event;
 
     return super.eventsArePair(that) &&
         Objects.equal(getThrowable(), that.getThrowable());

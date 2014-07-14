@@ -19,7 +19,7 @@ package com.facebook.buck.step;
 import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
@@ -104,7 +104,7 @@ public class ExecutionContext {
   }
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
-    eventBus.post(ThrowableLogEvent.create(error, msg, formatArgs));
+    eventBus.post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }
 
   public void postEvent(BuckEvent event) {

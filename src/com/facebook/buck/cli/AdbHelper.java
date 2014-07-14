@@ -28,7 +28,7 @@ import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
@@ -508,7 +508,7 @@ public class AdbHelper {
       return false;
     }
 
-    getBuckEventBus().post(LogEvent.info("Installing apk on %s.", name));
+    getBuckEventBus().post(ConsoleEvent.info("Installing apk on %s.", name));
     try {
       String reason = null;
       if (installViaSd) {

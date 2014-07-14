@@ -18,8 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
-import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.StepRunner;
@@ -136,15 +136,15 @@ public class BuildContext {
   }
 
   public void logBuildInfo(String format, Object... args) {
-    events.post(LogEvent.fine(format, args));
+    events.post(ConsoleEvent.fine(format, args));
   }
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
-    events.post(ThrowableLogEvent.create(error, msg, formatArgs));
+    events.post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }
 
   public void logError(String msg, Object... formatArgs) {
-    events.post(LogEvent.severe(msg, formatArgs));
+    events.post(ConsoleEvent.severe(msg, formatArgs));
   }
 
   public static Builder builder() {

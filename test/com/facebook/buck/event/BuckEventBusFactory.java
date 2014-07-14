@@ -80,7 +80,7 @@ public class BuckEventBusFactory {
    */
   private static class ErrorListener {
     @Subscribe
-    public void logEvent(LogEvent event) {
+    public void logEvent(ConsoleEvent event) {
       Level level = event.getLevel();
       if (level.intValue() >= Level.WARNING.intValue()) {
         System.err.println(event.getMessage());
@@ -88,11 +88,11 @@ public class BuckEventBusFactory {
     }
   }
 
-  public static class CapturingLogEventListener {
-    private final List<LogEvent> logEvents = Lists.newArrayList();
+  public static class CapturingConsoleEventListener {
+    private final List<ConsoleEvent> logEvents = Lists.newArrayList();
 
     @Subscribe
-    public void logEvent(LogEvent event) {
+    public void logEvent(ConsoleEvent event) {
       logEvents.add(event);
     }
 

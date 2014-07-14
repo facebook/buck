@@ -17,7 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
@@ -43,7 +43,7 @@ public class LoggingBuildListener implements BuckEventListener {
   private static final ImmutableSet<Class<? extends AbstractBuckEvent>>
       EXPLICITLY_HANDLED_EVENT_TYPES =
           ImmutableSet.of(
-              LogEvent.class,
+              ConsoleEvent.class,
               BuildEvent.Started.class,
               BuildEvent.Finished.class,
               BuildRuleEvent.Started.class,
@@ -58,7 +58,7 @@ public class LoggingBuildListener implements BuckEventListener {
     };
 
   @Subscribe
-  public void handleLogEvent(LogEvent logEvent) {
+  public void handleConsoleEvent(ConsoleEvent logEvent) {
     LogRecord record = new LogRecord(logEvent.getLevel(), logEvent.getMessage());
     record.setLoggerName(getClass().getName());
     LOG.log(record);

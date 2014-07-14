@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -184,7 +184,7 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(console, listener, 1300L, ImmutableList.of(parsingLine, buildingLine));
 
     rawEventBus.post(configureTestEventAtTime(
-        LogEvent.severe("I've made a huge mistake."),
+        ConsoleEvent.severe("I've made a huge mistake."),
         1500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 1600L, ImmutableList.of(parsingLine,
