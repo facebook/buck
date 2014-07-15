@@ -16,6 +16,8 @@
 
 package com.facebook.buck.junit;
 
+import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
+import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -51,8 +53,8 @@ public class AssumptionViolationsTest {
         "--filter", "com.example.PassingTest");
     result.assertSuccess();
     String output = result.getStderr();
-    assertThat(output, containsString(
-        "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest"));
+    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
+        "PASS", 1, 0, 0, "com.example.PassingTest")));
     assertThat(output, containsString(
         "TESTS PASSED"));
   }
@@ -66,11 +68,11 @@ public class AssumptionViolationsTest {
         "--filter", "com.example.PassingTest");
     result.assertSuccess();
     String output = result.getStderr();
-    assertThat(output, containsString(
-        "ASSUME  <100ms  1 Passed   2 Skipped   0 Failed   " +
-        "com.example.SomeAssumptionViolationsTest"));
-    assertThat(output, containsString(
-        "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest"));
+    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
+        "ASSUME", 1, 2, 0, "com.example.SomeAssumptionViolationsTest")));
+    assertThat(output, containsRegex(
+        createBuckTestOutputLineRegex(
+            "PASS", 1, 0, 0, "com.example.PassingTest")));
     assertThat(output, containsString(
         "TESTS PASSED (with some assumption violations)"));
   }
@@ -84,12 +86,11 @@ public class AssumptionViolationsTest {
         "--filter", "com.example.PassingTest");
     result.assertTestFailure();
     String output = result.getStderr();
-    assertThat(output,
-        containsString(
-            "FAIL    <100ms  0 Passed   1 Skipped   1 Failed   com.example.FailingTest"));
-    assertThat(output,
-        containsString(
-            "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest"));
+    assertThat(output, containsRegex(
+        createBuckTestOutputLineRegex(
+            "FAIL", 0, 1, 1, "com.example.FailingTest")));
+    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
+        "PASS", 1, 0, 0, "com.example.PassingTest")));
     assertThat(output,
         containsString("TESTS FAILED"));
   }
