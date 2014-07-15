@@ -25,6 +25,7 @@ import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.MultiLineReceiver;
+import com.android.ddmlib.NullOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.event.BuckEventBus;
@@ -66,6 +67,10 @@ public class AdbHelper {
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
+  /**
+   * Pattern that matches safe package names.  (Must be a full string match).
+   */
+  static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("[\\w.-]+");
 
   /**
    * If this environment variable is set, the device with the specified serial
@@ -731,14 +736,19 @@ public class AdbHelper {
    *
    * @see #installApk(com.facebook.buck.rules.InstallableApk, InstallCommandOptions)
    */
-  public boolean uninstallApk(
+  public boolean uninstallApp(
       final String packageName,
       final UninstallCommandOptions.UninstallOptions uninstallOptions) throws InterruptedException {
+    Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
+
     getBuckEventBus().post(UninstallEvent.started(packageName));
     boolean success = adbCall(
         new AdbHelper.AdbCallable() {
       @Override
       public boolean call(IDevice device) throws Exception {
+        // Remove any exopackage data as well.  GB doesn't support "rm -f", so just ignore output.
+        device.executeShellCommand("rm -r /data/local/tmp/exopackage/" + packageName,
+            NullOutputReceiver.getReceiver());
         return uninstallApkFromDevice(device, packageName, uninstallOptions.shouldKeepUserData());
       }
 

@@ -28,12 +28,10 @@ import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -50,23 +48,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
-
 /**
  * ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true.
  */
 public class ExopackageInstaller {
-
-  /**
-   * Pattern that matches safe package names.  (Must be a full string match).
-   */
-  private static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("[\\w.-]+");
-
-  /**
-   * Pattern that matches the output of Android's id command.
-   * Subgroup one is the user ID.
-   */
-  private static final Pattern ID_PATTERN = Pattern.compile("^uid=([0-9]{1,7})\\(");
 
   /**
    * Prefix of the path to the agent apk on the device.
@@ -98,6 +83,8 @@ public class ExopackageInstaller {
   private final AdbHelper adbHelper;
   private final InstallableApk apkRule;
   private final String packageName;
+  private final String dataRoot;
+
   private final InstallableApk.ExopackageInfo exopackageInfo;
 
   /**
@@ -131,8 +118,9 @@ public class ExopackageInstaller {
     this.eventBus = context.getBuckEventBus();
     this.apkRule = Preconditions.checkNotNull(apkRule);
     this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(apkRule, context);
+    this.dataRoot = "/data/local/tmp/exopackage/" + packageName;
 
-    Preconditions.checkArgument(PACKAGE_NAME_PATTERN.matcher(packageName).matches());
+    Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
     Optional<InstallableApk.ExopackageInfo> exopackageInfo = apkRule.getExopackageInfo();
     Preconditions.checkArgument(exopackageInfo.isPresent());
@@ -389,23 +377,17 @@ public class ExopackageInstaller {
       final ImmutableSet.Builder<String> foundHashes = ImmutableSet.builder();
 
       AdbHelper.executeCommandWithErrorChecking(
-          device, "run-as " + packageName + " mkdir -p app_exopackage/secondary-dex");
+          device, "umask 022 && mkdir -p " + dataRoot + "/secondary-dex");
       String output = AdbHelper.executeCommandWithErrorChecking(
-          device, "run-as " + packageName + " ls app_exopackage/secondary-dex");
+          device, "ls " + dataRoot + "/secondary-dex");
 
       ImmutableSet.Builder<String> toDeleteBuilder = ImmutableSet.builder();
 
       scanSecondaryDexDir(output, requiredHashes, foundHashes, toDeleteBuilder);
 
-      ImmutableList<String> filesToDelete = FluentIterable.from(toDeleteBuilder.build())
-          .transform(new Function<String, String>() {
-            @Override
-            public String apply(@Nullable String input) {
-              return "app_exopackage/secondary-dex/" + input;
-            }
-          }).toList();
+      Iterable<String> filesToDelete = toDeleteBuilder.build();
 
-      String commandPrefix = "run-as " + packageName + " rm ";
+      String commandPrefix = "cd " + dataRoot + "/secondary-dex && rm ";
       // Add a fudge factor for separators and error checking.
       final int overhead = commandPrefix.length() + 100;
       for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
@@ -513,23 +495,6 @@ public class ExopackageInstaller {
     installFile(device, port, "secondary-" + hash + ".dex.jar", source);
   }
 
-  /**
-   * Guess what UID the remote shell is running under.
-   *
-   * @param device Device
-   * @return Remote UID or -1 if we don't know.
-   */
-  private int getShellUid(IDevice device) throws Exception {
-    CollectingOutputReceiver rc = new CollectingOutputReceiver();
-    device.executeShellCommand("id", rc);
-    Matcher m = ID_PATTERN.matcher(rc.getOutput());
-    if (!m.lookingAt()) {
-      return -1;
-    }
-
-    return Integer.parseInt(m.group(1));
-  }
-
   private void installFile(
       IDevice device,
       final int port,
@@ -563,31 +528,10 @@ public class ExopackageInstaller {
       }
     };
 
-    //
-    // On devices that run adb as root, socket(2) in a process run via
-    // run-as may return EACCES due to a combination of OS bugs in
-    // adbd and run-as, the overall result of which being that the
-    // processes' supplementary group list lacks "inet" (as well as
-    // any other supplementary group).
-    //
-    // So, if we already have root, don't bother with run-as.
-    //
-
-    String runAsPrefix;
-    String dataDirPrefix;
-    int shellUid = getShellUid(device);
-    if (shellUid != 0) {
-      logFine("shellUid is %d: using run-as", shellUid);
-      runAsPrefix = "run-as " + packageName + " ";
-      dataDirPrefix = "";
-    } else {
-      logFine("remote adb appears to be root: not using run-as");
-      runAsPrefix = "";
-      dataDirPrefix = "/data/data/" + packageName + "/";
-    }
-    String targetFileName = dataDirPrefix + "app_exopackage/secondary-dex/" + basename;
+    String targetFileName = dataRoot + "/secondary-dex/" + basename;
     String command =
-        runAsPrefix + getAgentCommand() +
+        "umask 022 && " +
+            getAgentCommand() +
             "receive-file " + port + " " + Files.size(source) + " " +
             targetFileName +
             " ; echo -n :$?";
@@ -615,15 +559,12 @@ public class ExopackageInstaller {
       throw shellException;
     }
 
-    if (shellUid == 0) {
-      // The standard Java libraries on Android always create new
-      // files un-readable by other users.  If we used root to create
-      // these files, we need to explicitly set the mode to allow the
-      // app (which, regrettably, is not root) to read them.  Ideally,
-      // the agent would do this automatically, but there's no easy
-      // way to do this in Java.
-      AdbHelper.executeCommandWithErrorChecking(device, "chmod 644 " + targetFileName);
-    }
+    // The standard Java libraries on Android always create new files un-readable by other users.
+    // We use the shell user or root to create these files, so we need to explicitly set the mode
+    // to allow the app to read them.  Ideally, the agent would do this automatically, but
+    // there's no easy way to do this in Java.  We can drop this if we drop support for the
+    // Java agent.
+    AdbHelper.executeCommandWithErrorChecking(device, "chmod 644 " + targetFileName);
   }
 
   private void logFine(String message, Object... args) {
