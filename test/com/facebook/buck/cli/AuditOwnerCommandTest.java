@@ -25,7 +25,6 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
@@ -107,16 +106,6 @@ public class AuditOwnerCommandTest {
 
     @Override
     public ImmutableSortedSet<BuildRule> getDeps() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ImmutableSet<BuildTargetPattern> getVisibilityPatterns() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isVisibleTo(BuildTarget target) {
       throw new UnsupportedOperationException();
     }
 

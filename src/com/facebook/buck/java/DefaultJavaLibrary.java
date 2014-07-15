@@ -25,6 +25,7 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
@@ -58,10 +59,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -128,6 +129,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       declaredClasspathEntriesSupplier;
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final Optional<Path> resourcesRoot;
+  private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
 
   // TODO(jacko): This really should be final, but we need to refactor how we get the
   // AndroidPlatformTarget first before it can be.
@@ -202,6 +204,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.additionalClasspathEntries = Preconditions.checkNotNull(additionalClasspathEntries);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.resourcesRoot = Preconditions.checkNotNull(resourcesRoot);
+    this.visibilityPatterns = Preconditions.checkNotNull(params.getVisibilityPatterns());
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
@@ -693,14 +696,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         Sets.union(ImmutableSet.of(this), declaredClasspathEntries.keySet()));
 
     TraversableGraph<BuildRule> graph = context.getActionGraph();
-    final ImmutableList<BuildRule> sortedTransitiveNotDeclaredDeps = ImmutableList.copyOf(
-        TopologicalSort.sort(graph,
-            new Predicate<BuildRule>() {
-              @Override
-              public boolean apply(BuildRule input) {
-                return transitiveNotDeclaredDeps.contains(input);
-              }
-            })).reverse();
+    final ImmutableList<JavaLibrary> sortedTransitiveNotDeclaredDeps = FluentIterable
+        .from(TopologicalSort.sort(graph, Predicates.<BuildRule>alwaysTrue()))
+        .filter(JavaLibrary.class)
+        .filter(Predicates.in(transitiveNotDeclaredDeps))
+        .toList()
+        .reverse();
 
     JavacInMemoryStep.SuggestBuildRules suggestBuildRuleFn =
         new JavacInMemoryStep.SuggestBuildRules() {
@@ -711,9 +712,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
         Set<String> remainingImports = Sets.newHashSet(failedImports);
 
-        for (BuildRule transitiveNotDeclaredDep : sortedTransitiveNotDeclaredDeps) {
-          boolean ruleCanSeeDep = transitiveNotDeclaredDep.isVisibleTo(
-              DefaultJavaLibrary.this.getBuildTarget());
+        for (JavaLibrary transitiveNotDeclaredDep : sortedTransitiveNotDeclaredDeps) {
+          boolean ruleCanSeeDep = transitiveNotDeclaredDep.isVisibleTo(DefaultJavaLibrary.this);
           if (ruleCanSeeDep &&
               isMissingBuildRule(filesystem,
                   transitiveNotDeclaredDep,
@@ -814,4 +814,13 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       collector.addProguardConfig(getBuildTarget(), proguardConfig.get());
     }
   }
+
+  @Override
+  public boolean isVisibleTo(JavaLibrary other) {
+    return BuildTargets.isVisibleTo(
+        getBuildTarget(),
+        visibilityPatterns,
+        other.getBuildTarget());
+  }
+
 }

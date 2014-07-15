@@ -83,6 +83,8 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
 
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder);
 
+  public boolean isVisibleTo(JavaLibrary other);
+
   /**
    * Returns a SHA-1 hash that represents the ABI for the Java files returned by
    * {@link #getJavaSrcs()}. If {@link #getJavaSrcs()} returns an empty collection, then this will
