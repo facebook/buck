@@ -150,7 +150,7 @@ def well_formed_tokens(tokens):
 
 
 def path_join(path, element):
-    """Add a new path element to a path
+    """Add a new path element to a path.
 
     This method assumes None encodes the empty path.
     """
@@ -243,7 +243,7 @@ def glob_walk(pattern, root, include_dotfiles=False):
         for p in glob_module.iglob(os.path.join(root, pattern)):
             yield p[root_len:]
         # Additional pass for dots.
-        # Note that there is at most one occurrence of one problematic pattern
+        # Note that there is at most one occurrence of one problematic pattern.
         for rule in special_rules_for_dots:
             special = re.sub(rule[0], rule[1], pattern, count=1)
             # Using pointer equality for speed:
