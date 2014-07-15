@@ -23,6 +23,8 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 @Beta
 public class XcodeWorkspaceConfigDescription
@@ -49,5 +51,6 @@ public class XcodeWorkspaceConfigDescription
 
   public static class Arg implements ConstructorArg {
     public BuildRule srcTarget;
+    public Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames;
   }
 }

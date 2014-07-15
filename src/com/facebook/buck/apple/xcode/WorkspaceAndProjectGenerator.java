@@ -125,7 +125,8 @@ public class WorkspaceAndProjectGenerator {
         actualTargetRule,
         ImmutableSet.copyOf(allRules),
         workspaceName,
-        outputDirectory.resolve(workspaceName + ".xcworkspace"));
+        outputDirectory.resolve(workspaceName + ".xcworkspace"),
+        workspaceBuildable.getActionConfigNames());
 
     Multimap<String, BuildRule> buildRulesByTargetBasePath =
         BuildRules.buildRulesByTargetBasePath(allRules);
