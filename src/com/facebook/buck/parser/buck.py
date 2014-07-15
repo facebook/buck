@@ -189,6 +189,7 @@ def glob_walk_internal(
         return
     token = tokens[0]
     next_tokens = tokens[1:]
+    path_and_sep_len = len(path) + 1 if path is not None else 0
 
     # Special glob token, equivalent to zero or more consecutive '*'
     if token == '**':
@@ -199,7 +200,7 @@ def glob_walk_internal(
         for child in iglob(path_join(path, '*')):
             for x in glob_walk_internal(
                     normpath_join, iglob, isresult, visited, tokens, child,
-                    normpath_join(normpath, child)):
+                    normpath_join(normpath, child[path_and_sep_len:])):
                 yield x
 
     # Usual glob pattern.
@@ -207,7 +208,7 @@ def glob_walk_internal(
         for child in iglob(path_join(path, token)):
             for x in glob_walk_internal(
                     normpath_join, iglob, isresult, visited, next_tokens,
-                    child, normpath_join(normpath, child)):
+                    child, normpath_join(normpath, child[path_and_sep_len:])):
                 yield x
 
 

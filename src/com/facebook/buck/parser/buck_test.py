@@ -1,11 +1,13 @@
 from buck import LazyBuildEnvPartial
 from buck import split_path
 from buck import glob_walk_internal
+from buck import glob_walk
 from buck import glob_match
 from buck import relpath
 from buck import path_join
 from buck import strip_none_entries
 from buck import symlink_aware_walk
+from buck import glob_module
 import fnmatch
 import unittest
 import re
@@ -184,6 +186,74 @@ class TestBuck(unittest.TestCase):
             all_java_tests,
             './path/to/MyJavaTest.java',
             include_dotfiles=True)
+
+    def test_symlink_aware_glob_walk(self):
+        real_iglob = glob_module.iglob
+        real_islink = os.path.islink
+        real_isfile = os.path.isfile
+        real_realpath = os.path.realpath
+
+        # a/
+        #  b/
+        #   c/
+        #    file
+        #    file2 -> file
+        #    .file
+        #   sibling -> c
+        #   ancestor -> ../..
+        all_paths = [
+            'a',
+            'a/b',
+            'a/b/c',
+            'a/b/c/file',
+            'a/b/c/file2',
+            'a/b/c/.file',
+            'a/b/sibling',
+            'a/b/ancestor',
+        ]
+
+        def mock_iglob(pattern):
+            for path in all_paths:
+                if glob_match(pattern, path):
+                    yield path
+
+        def mock_realpath(path):
+            if path == 'a/b/sibling':
+                return 'a/b/c'
+            if path == 'a/b/ancestor':
+                return 'a'
+            if path == 'a/b/c/file2':
+                return 'a/b/c/file'
+            if path == 'a':
+                return path
+            self.fail('glob_walk should only call realpath on the root'
+                      ' or on symlinks (was called on "%s").' % path)
+
+        def mock_islink(path):
+            return (path == 'a/b/sibling' or path == 'a/b/ancestor'
+                    or path == 'a/b/c/file2')
+
+        def mock_isfile(path):
+            return (path == 'a/b/c/file' or path == 'a/b/c/file2'
+                    or path == 'a/b/c/.file')
+
+        try:
+            glob_module.iglob = mock_iglob
+            os.path.islink = mock_islink
+            os.path.isfile = mock_isfile
+            os.path.realpath = mock_realpath
+            result = [p for p in glob_walk('**', 'a')]
+
+            # Symlinked directories do not cause loop or duplicated results.
+            # Symlinked files do not cause duplicated results.
+            # By default, dot files are ignored.
+            self.assertEqual(['b/c/file'], result)
+
+        finally:
+            glob_module.iglob = real_iglob
+            os.path.islink = real_islink
+            os.path.isfile = real_isfile
+            os.path.realpath = real_realpath
 
     def test_lazy_build_env_partial(self):
         def cobol_binary(
