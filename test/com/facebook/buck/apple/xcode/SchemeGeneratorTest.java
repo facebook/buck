@@ -18,8 +18,10 @@ package com.facebook.buck.apple.xcode;
 
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.IosLibraryDescription;
@@ -39,6 +41,7 @@ import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import java.io.IOException;
@@ -231,5 +234,55 @@ public class SchemeGeneratorTest {
     String profileActionBlueprintIdentifier =
         (String) profileActionExpr.evaluate(scheme, XPathConstants.STRING);
     assertThat(profileActionBlueprintIdentifier, equalTo("rootGID"));
+  }
+
+  @Test
+  public void buildableReferenceShouldHaveExpectedProperties() throws Exception {
+    BuildRule rootRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "root").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+
+    PartialGraph partialGraph = createPartialGraphFromBuildRules(
+        ImmutableSet.<BuildRule>of(rootRule));
+
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        partialGraph,
+        rootRule,
+        ImmutableSet.of(rootRule),
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"));
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    rootTarget.setGlobalID("rootGID");
+    schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    schemeGenerator.addTargetToProjectPathMap(rootTarget, pbxprojectPath);
+
+    Path schemePath = schemeGenerator.writeScheme();
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+
+    XPath buildableReferenceXPath = xpathFactory.newXPath();
+    XPathExpression buildableReferenceExpr =
+        buildableReferenceXPath.compile("//BuildableReference");
+    NodeList buildableReferences = (NodeList) buildableReferenceExpr.evaluate(
+        scheme, XPathConstants.NODESET);
+
+    assertThat(buildableReferences.getLength(), greaterThan(0));
+
+    for (int i = 0; i < buildableReferences.getLength(); i++) {
+      NamedNodeMap attributes = buildableReferences.item(i).getAttributes();
+      assertThat(attributes, notNullValue());
+      assertThat(attributes.getNamedItem("BlueprintIdentifier"), notNullValue());
+      assertThat(attributes.getNamedItem("BuildableIdentifier"), notNullValue());
+      assertThat(attributes.getNamedItem("ReferencedContainer"), notNullValue());
+    }
   }
 }

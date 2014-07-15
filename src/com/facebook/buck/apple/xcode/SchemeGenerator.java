@@ -198,7 +198,7 @@ class SchemeGenerator {
     refElem.setAttribute("BuildableIdentifier", "primary");
     refElem.setAttribute("BlueprintIdentifier", buildableReference.getBlueprintIdentifier());
     String referencedContainer = "container:" + buildableReference.getContainerRelativePath();
-    refElem.setAttribute("referencedContainer", referencedContainer);
+    refElem.setAttribute("ReferencedContainer", referencedContainer);
     return refElem;
   }
 
