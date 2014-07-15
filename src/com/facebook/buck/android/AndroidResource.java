@@ -189,7 +189,7 @@ public class AndroidResource extends AbstractBuildRule
             if (res != null) {
               resDeps.add(AndroidResource.this);
             }
-            resDeps.addAll(UberRDotJavaUtil.getAndroidResourceDeps(deps));
+            resDeps.addAll(UberRDotJavaUtil.getAndroidResourceDeps(getDeps()));
             return resDeps.build();
           }
         });

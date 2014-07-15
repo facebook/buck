@@ -58,6 +58,16 @@ android_binary(
   resource_filter = ['xhdpi']
 )
 
+android_binary(
+  name = 'app_res_lib_dep',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:16',
+  keystore = '//keystores:debug',
+  deps = [
+      '//res/com/sample/base:base_with_lib_dep',
+  ],
+)
+
 project_config(
   src_target = ':app',
 )

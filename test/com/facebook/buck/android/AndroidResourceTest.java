@@ -150,10 +150,16 @@ public class AndroidResourceTest {
             .setRes(Paths.get("android_res/com/example/res2"))
             .build());
     setAndroidResourceBuildOutput(resourceRule2, "b");
+    BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/example:res3");
+    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of(resourceRule1, resourceRule2);
     BuildRule resourceRule3 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res3"))
-            .setDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
+            .setDeps(deps)
+            .setBuildRuleParams(
+                new FakeBuildRuleParamsBuilder(target)
+                    .setDeps(deps)
+                    .build())
             .build());
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
