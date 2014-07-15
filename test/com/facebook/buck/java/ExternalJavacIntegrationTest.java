@@ -26,6 +26,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -55,6 +56,7 @@ public class ExternalJavacIntegrationTest {
   }
 
   @Test
+  @Ignore("Disabled due to badness t4689997")
   public void whenExternalSrcZipUsedCompilationSucceeds()
       throws IOException, InterruptedException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
