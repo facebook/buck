@@ -16,10 +16,11 @@
 
 package com.facebook.buck.junit;
 
+import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
+import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -51,16 +52,15 @@ public class ClassStatementsTest {
     String stderr = result.getStderr();
     assertThat("Explanatory exception output is present", stderr, containsString("BOOM!"));
 
-    String passString = "PASS    <100ms  3 Passed   0 Skipped   0 Failed   " +
-        "com.example.EverythingOKTest";
-    assertThat("Some tests still pass", stderr, containsString(passString));
+    assertThat("Some tests still pass", stderr, containsRegex(createBuckTestOutputLineRegex(
+        "PASS", 3, 0, 0, "com.example.EverythingOKTest")));
 
-    Pattern failPattern = Pattern.compile("^FAIL +(\\d+)ms.+com.example.HasBeforeClassFailure$",
-        Pattern.MULTILINE);
+    assertThat(stderr, containsRegex(createBuckTestOutputLineRegex(
+        "FAIL", 0, 0, 1, "com.example.HasBeforeClassFailure")));
+
+    Pattern failPattern = Pattern.compile("^FAIL +(\\d+)ms", Pattern.MULTILINE);
     Matcher matcher = failPattern.matcher(stderr);
-    String reason = String.format("Stderr matches '%s':\n%s", failPattern, stderr);
-    assertTrue(reason, matcher.find());
-
+    matcher.find();
     int actualRuntime = Integer.parseInt(matcher.group(1));
     assertThat("Reasonable runtime was guessed",
         actualRuntime,

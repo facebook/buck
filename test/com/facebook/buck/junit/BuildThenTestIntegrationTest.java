@@ -16,8 +16,10 @@
 
 package com.facebook.buck.junit;
 
+import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
+import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -28,6 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 public class BuildThenTestIntegrationTest {
 
@@ -50,12 +53,13 @@ public class BuildThenTestIntegrationTest {
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:example");
     assertEquals("", testResult.getStdout());
-    assertTrue(
-      "Test output is incorrect:\n=====\n" + testResult.getStderr() + "=====\n",
-      testResult.getStderr().contains(
-        "TESTING //:example\n" +
-        "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.MyTest\n" +
-        "TESTS PASSED\n"));
+    assertThat(
+        "Test output is incorrect:\n=====\n" + testResult.getStderr() + "=====\n",
+        testResult.getStderr(),
+        containsRegex(
+            Pattern.quote("TESTING //:example\n") +
+                createBuckTestOutputLineRegex("PASS", 1, 0, 0, "com.example.MyTest\n") +
+                Pattern.quote("TESTS PASSED\n")));
     testResult.assertSuccess("Passing tests should exit with 0.");
     workspace.verify();
   }
