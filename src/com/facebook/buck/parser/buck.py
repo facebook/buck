@@ -197,17 +197,19 @@ def glob_walk_internal(
                 next_tokens, path, normpath):
             yield x
         for child in iglob(path_join(path, '*')):
+            head, tail = os.path.split(child)
             for x in glob_walk_internal(
                     normpath_join, iglob, isresult, visited, tokens, child,
-                    normpath_join(normpath, child)):
+                    normpath_join(normpath, tail)):
                 yield x
 
     # Usual glob pattern.
     else:
         for child in iglob(path_join(path, token)):
+            head, tail = os.path.split(child)
             for x in glob_walk_internal(
                     normpath_join, iglob, isresult, visited, next_tokens,
-                    child, normpath_join(normpath, child)):
+                    child, normpath_join(normpath, tail)):
                 yield x
 
 
