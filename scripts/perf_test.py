@@ -173,7 +173,7 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
     if log_as_perftest:
         env.update({
             'BUCK_EXTRA_JAVA_ARGS':
-            '-Dbuck.perftest_id=%s,-Dbuck.perftest_side=%s' % (
+            '-Dbuck.perftest_id=%s, -Dbuck.perftest_side=%s' % (
             args.perftest_id, perftest_side)
         })
     start = datetime.now()
