@@ -536,6 +536,8 @@ public final class Main {
     // other resources before they are closed.
     try (ConsoleLogLevelOverrider consoleLogLevelOverrider =
              new ConsoleLogLevelOverrider(verbosity);
+         ConsoleHandlerRedirector consoleHandlerRedirector =
+           new ConsoleHandlerRedirector(console.getStdErr(), stdErr);
          AbstractConsoleEventBusListener consoleListener =
              createConsoleEventListener(clock, console, verbosity, executionEnvironment);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
@@ -903,6 +905,7 @@ public final class Main {
     } catch (Throwable t) {
       LOG.error(t, "Uncaught exception at top level");
     } finally {
+      LogConfig.flushLogs();
       // Exit explicitly so that non-daemon threads (of which we use many) don't
       // keep the VM alive.
       System.exit(exitCode);

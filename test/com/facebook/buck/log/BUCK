@@ -1,0 +1,16 @@
+java_test(
+  name = 'log',
+  srcs = glob(['**/*Test.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/log:log',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
+    '//lib:jsr305',
+    '//lib:junit',
+    '//src/com/facebook/buck/log:log',
+    '//test/com/facebook/buck/testutil:testutil',
+  ],
+)

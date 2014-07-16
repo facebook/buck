@@ -16,15 +16,12 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.log.ConsoleHandler;
 import com.facebook.buck.util.Verbosity;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Temporarily overrides the console log level to match a verbosity
@@ -32,12 +29,12 @@ import java.util.logging.Logger;
  */
 public class ConsoleLogLevelOverrider implements AutoCloseable {
 
-  private final Optional<Handler> consoleHandler;
+  private final Optional<ConsoleHandler> consoleHandler;
   private final Optional<Level> originalConsoleLevel;
 
   public ConsoleLogLevelOverrider(Verbosity verbosity) {
 
-    consoleHandler = getConsoleHandler();
+    consoleHandler = JavaUtilLogHandlers.getConsoleHandler();
     if (consoleHandler.isPresent() &&
         verbosity == Verbosity.ALL &&
         !consoleHandler.get().getLevel().equals(Level.ALL)) {
@@ -53,16 +50,5 @@ public class ConsoleLogLevelOverrider implements AutoCloseable {
     if (consoleHandler.isPresent() && originalConsoleLevel.isPresent()) {
       consoleHandler.get().setLevel(originalConsoleLevel.get());
     }
-  }
-
-  private static Optional<Handler> getConsoleHandler() {
-    // We can't stop someone from mutating this array, but we can minimize the chance.
-    ImmutableList<Handler> handlers = ImmutableList.copyOf(Logger.getLogger("").getHandlers());
-    for (Handler handler : handlers) {
-      if (handler instanceof ConsoleHandler) {
-        return Optional.of(handler);
-      }
-    }
-    return Optional.absent();
   }
 }
