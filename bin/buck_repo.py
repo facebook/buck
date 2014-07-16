@@ -134,7 +134,7 @@ class BuckRepo:
                 self.kill_buckd()
                 new_buckd_run_count = 0
 
-            if new_buckd_run_count == 0:
+            if new_buckd_run_count == 0 or not self._is_buckd_running():
                 self.launch_buckd()
             else:
                 self._buck_project.update_buckd_run_count(new_buckd_run_count)
@@ -259,7 +259,7 @@ class BuckRepo:
                   file=sys.stderr)
             for count in range(100):
                 time.sleep(0.1)
-                os.kill(buckd_pid, signal.SIG_DFL)
+                os.kill(buckd_pid, 0)
             else:
                 raise BuckRepoException(
                     "Could not kill existing buck process after 10 seconds!")
@@ -285,7 +285,16 @@ class BuckRepo:
             stderr=DEV_NULL)
 
     def _is_buckd_running(self):
-        return self._buck_project.get_buckd_pid() is not None
+        buckd_pid = self._buck_project.get_buckd_pid()
+        if not buckd_pid or not buckd_pid.isdigit():
+            return False
+
+        try:
+            os.kill(int(buckd_pid), 0)
+        except OSError:
+            return False
+
+        return True
 
     def _checkout_and_clean(self, revision, branch):
         if not self._revision_exists(revision):
