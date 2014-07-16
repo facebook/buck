@@ -28,7 +28,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.SchemeActionType;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
@@ -109,15 +111,27 @@ public class SchemeGeneratorTest {
 
     PBXTarget rootTarget = new PBXNativeTarget("rootRule");
     rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
     PBXTarget leftTarget = new PBXNativeTarget("leftRule");
     leftTarget.setGlobalID("leftGID");
+    leftTarget.setProductReference(
+        new PBXFileReference(
+            "left.a", "left.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(leftRule, leftTarget);
     PBXTarget rightTarget = new PBXNativeTarget("rightRule");
     rightTarget.setGlobalID("rightGID");
+    rightTarget.setProductReference(
+        new PBXFileReference(
+            "right.a", "right.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(rightRule, rightTarget);
     PBXTarget childTarget = new PBXNativeTarget("childRule");
     childTarget.setGlobalID("childGID");
+    childTarget.setProductReference(
+        new PBXFileReference(
+            "child.a", "child.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(childRule, childTarget);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -185,9 +199,15 @@ public class SchemeGeneratorTest {
 
     PBXTarget rootTarget = new PBXNativeTarget("rootRule");
     rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
     PBXTarget testTarget = new PBXNativeTarget("testRule");
     testTarget.setGlobalID("testGID");
+    testTarget.setProductReference(
+        new PBXFileReference(
+            "test.a", "test.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(testRule, testTarget);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -262,6 +282,9 @@ public class SchemeGeneratorTest {
 
     PBXTarget rootTarget = new PBXNativeTarget("rootRule");
     rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -289,6 +312,8 @@ public class SchemeGeneratorTest {
       assertThat(attributes.getNamedItem("BlueprintIdentifier"), notNullValue());
       assertThat(attributes.getNamedItem("BuildableIdentifier"), notNullValue());
       assertThat(attributes.getNamedItem("ReferencedContainer"), notNullValue());
+      assertThat(attributes.getNamedItem("BlueprintName"), notNullValue());
+      assertThat(attributes.getNamedItem("BuildableName"), notNullValue());
     }
   }
 
@@ -313,6 +338,9 @@ public class SchemeGeneratorTest {
 
     PBXTarget rootTarget = new PBXNativeTarget("rootRule");
     rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");

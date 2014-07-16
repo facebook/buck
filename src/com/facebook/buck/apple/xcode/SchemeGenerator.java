@@ -138,12 +138,20 @@ class SchemeGenerator {
         nonTestRules.add(rule);
       }
 
+      PBXTarget target = buildRuleToTargetMap.get(rule);
+
+      String blueprintName = target.getProductName();
+      if (blueprintName == null) {
+        blueprintName = target.getName();
+      }
       XCScheme.BuildableReference buildableReference = new XCScheme.BuildableReference(
           outputDirectory.getParent().relativize(
-              targetToProjectPathMap.get(
-                  buildRuleToTargetMap.get(rule))
+              targetToProjectPathMap.get(target)
           ).toString(),
-          buildRuleToTargetMap.get(rule).getGlobalID());
+          target.getGlobalID(),
+          target.getProductReference().getName(),
+          blueprintName
+      );
       buildRuleToBuildableReferenceMap.put(rule, buildableReference);
     }
 
@@ -212,6 +220,8 @@ class SchemeGenerator {
     Element refElem = doc.createElement("BuildableReference");
     refElem.setAttribute("BuildableIdentifier", "primary");
     refElem.setAttribute("BlueprintIdentifier", buildableReference.getBlueprintIdentifier());
+    refElem.setAttribute("BuildableName", buildableReference.getBuildableName());
+    refElem.setAttribute("BlueprintName", buildableReference.getBlueprintName());
     String referencedContainer = "container:" + buildableReference.getContainerRelativePath();
     refElem.setAttribute("ReferencedContainer", referencedContainer);
     return refElem;

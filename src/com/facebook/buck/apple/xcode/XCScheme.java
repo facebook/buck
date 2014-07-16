@@ -79,12 +79,18 @@ public class XCScheme {
   public static class BuildableReference {
     private String containerRelativePath;
     private String blueprintIdentifier;
+    public final String buildableName;
+    public final String blueprintName;
 
     public BuildableReference(
         String containerRelativePath,
-        String blueprintIdentifier) {
+        String blueprintIdentifier,
+        String buildableName,
+        String blueprintName) {
       this.containerRelativePath = containerRelativePath;
       this.blueprintIdentifier = blueprintIdentifier;
+      this.buildableName = Preconditions.checkNotNull(buildableName);
+      this.blueprintName = Preconditions.checkNotNull(blueprintName);
     }
 
     public String getContainerRelativePath() {
@@ -93,6 +99,14 @@ public class XCScheme {
 
     public String getBlueprintIdentifier() {
       return blueprintIdentifier;
+    }
+
+    public String getBuildableName() {
+      return buildableName;
+    }
+
+    public String getBlueprintName() {
+      return blueprintName;
     }
   }
 
