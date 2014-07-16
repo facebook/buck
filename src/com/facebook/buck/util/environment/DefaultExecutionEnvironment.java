@@ -61,7 +61,7 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
 
   @Override
   public String getUsername() {
-    return Optional.fromNullable(environment.get("USER")).or("unknown");
+    return getProperty("USER", "unknown");
   }
 
   @Override
@@ -106,6 +106,14 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
       }
     }
     return Optional.absent();
+  }
+
+  @Override
+  public String getProperty(String key, String defaultValue) {
+    if (environment.containsKey(key)) {
+      return environment.get(key);
+    }
+    return defaultValue;
   }
 
   @VisibleForTesting
