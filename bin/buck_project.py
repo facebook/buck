@@ -1,4 +1,5 @@
 from __future__ import print_function
+import json
 import os
 import subprocess
 import tempfile
@@ -79,9 +80,13 @@ class BuckProject:
         if os.path.exists(self.buckd_dir):
             shutil.rmtree(self.buckd_dir)
         if which('watchman'):
-            subprocess.call(
-                ['watchman', 'watch-del', self.root],
-                stdout=open(os.devnull, 'w'))
+            trigger_list_output = subprocess.check_output(
+                ['watchman', 'trigger-list', self.root])
+            trigger_list = json.loads(trigger_list_output)
+            if not trigger_list.get('triggers'):
+                subprocess.call(
+                    ['watchman', 'watch-del', self.root],
+                    stdout=open(os.devnull, 'w'))
 
     def create_buckd_tmp_dir(self):
         tmp_dir_parent = os.path.join(self.buckd_dir, "tmp")
