@@ -254,7 +254,7 @@ class BuckRepo:
     def _kill_buckd_process_and_wait(self, buckd_pid):
         try:
             print("Killing existing buckd process.", file=sys.stderr)
-            os.kill(buckd_pid, signal.SIGKILL)
+            os.kill(buckd_pid, signal.SIGTERM)
             print("Waiting for existing buckd process to exit.",
                   file=sys.stderr)
             for count in range(100):
