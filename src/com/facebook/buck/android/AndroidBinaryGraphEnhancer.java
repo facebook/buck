@@ -263,6 +263,8 @@ public class AndroidBinaryGraphEnhancer {
     if (shouldPreDex) {
       preDexMerge = Optional.of(createPreDexMergeRule(uberRDotJava, packageableCollection));
       enhancedDeps.add(preDexMerge.get());
+    } else {
+      enhancedDeps.addAll(getTargetsAsRules(packageableCollection.javaLibrariesToDex));
     }
 
     ImmutableSortedSet<BuildRule> finalDeps;
