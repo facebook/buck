@@ -1,4 +1,6 @@
 #!/bin/bash
+
+# Exit on error.
 set -e
 
 # $BUCK_BIN_DIRECTORY is the directory that hosts this script. Solution taken from:
@@ -11,6 +13,89 @@ do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
   DIR="$( cd -P "$( dirname "$SOURCE"  )" && pwd )"
 done
-BUCK_BIN_DIRECTORY="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+BUCK_BIN_DIRECTORY="$DIR"
 
-python "$BUCK_BIN_DIRECTORY"/buckd.py "$@"
+# Set environment and update buck if required.
+# TODO(user): refactor buck_common in to functions that can be called
+source "${BUCK_BIN_DIRECTORY}/buck_common"
+
+# Parse flags.
+for arg in "$@"
+do
+case $arg in
+  --help)
+  echo "Specify --kill to kill buckd."
+  exit 0
+  ;;
+
+  --kill)
+  killBuckd
+  exit 0
+  ;;
+esac
+done
+
+killBuckd
+
+# Use watchman if available.
+if command -v watchman &> /dev/null; then
+    echo >&2 "Using watchman."
+    BUCK_JAVA_ARGS+=("-Dbuck.buckd_watcher=Watchman")
+    watchman watch "$PROJECT_ROOT" &> /dev/null
+else
+    echo >&2 "Watchman not found, please install when using buckd."
+    echo >&2 "See https://github.com/facebook/watchman for details."
+    if [[ "$OSTYPE" =~ ^darwin ]]; then
+      echo >&2 "(brew install --HEAD watchman on OS X)"
+    fi
+    # Bail if watchman isn't installed as we know java's
+    # FileSystemWatcher will take too long to process events.
+    exit 0
+fi
+
+# Create .buckd and .buckd/tmp directory if required.
+mkdir -p "$BUCKD_DIR/tmp" &> /dev/null || true
+
+# Override $BUCK_TMPDIR to point to a long lived directory
+BUCKD_TMPDIR=$(mktemp -d "${BUCKD_DIR}/tmp/buck_run.XXXXXXXXXX")
+
+# Run buckd. Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
+# Set timeout to 60s (longer than the biggest GC pause seen for a 2GB heap)
+# and GC target to 15s. This means that the GC has to miss its target by 100%
+# or many 500ms heartbeats must be missed before a client disconnection occurs.
+# Specify port 0 to allow Nailgun to find an available port, then parse the
+# port number out of the first log entry.
+BUCKD_CLIENT_TIMEOUT_MILLIS=60000
+GC_MAX_PAUSE_TARGET=15000
+java \
+"${BUCK_JAVA_ARGS[@]}" \
+-XX:MaxGCPauseMillis="${GC_MAX_PAUSE_TARGET}" \
+-XX:SoftRefLRUPolicyMSPerMB=0 \
+-Djava.io.tmpdir="$BUCKD_TMPDIR" \
+-classpath \
+"$BUCK_JAVA_CLASSPATH" \
+com.martiansoftware.nailgun.NGServer \
+localhost:0 "$BUCKD_CLIENT_TIMEOUT_MILLIS" &> \
+"$BUCKD_LOG_FILE" &
+echo $! > "$BUCKD_PID_FILE"
+# Block until we read the port number from the buckd log file.
+
+LOG_WAIT_COUNT=1
+while [ ! -f "$BUCKD_LOG_FILE" ]; do
+  sleep 0.1
+  LOG_WAIT_COUNT=$((LOG_WAIT_COUNT + 1))
+  if [ $LOG_WAIT_COUNT -gt 100 ]; then
+    echo >&2 "buckd log didn't get created after 10s.  Aborting buckd."
+    kill -9 $(cat "$BUCKD_PID_FILE") || true
+    rm -rf "$BUCKD_DIR"
+    # Since buckd is considered to be an optimization, don't fail builds.
+    exit 0
+  fi
+done
+
+sed -n '/NGServer/{;s/.*port \([0-9]*\)\.$/\1/p;q;}' > "$BUCKD_PORT_FILE" \
+<(tail -n +1 -f "$BUCKD_LOG_FILE")
+
+echo 0 > "$BUCKD_RUN_COUNT_FILE"
+echo "$BUCK_VERSION_UID" > "$BUCKD_VERSION_FILE"
