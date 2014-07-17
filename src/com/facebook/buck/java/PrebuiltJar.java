@@ -75,7 +75,7 @@ public class PrebuiltJar extends AbstractBuildRule
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
 
-  PrebuiltJar(
+  public PrebuiltJar(
       BuildRuleParams params,
       SourcePath binaryJar,
       Optional<SourcePath> sourceJar,

@@ -72,6 +72,7 @@ java_library(
     'ExportDependencies.java',
     'Hint.java',
     'ImplicitDepsInferringDescription.java',
+    'InternalSourcePath.java',
     'Label.java',
     'OnDiskBuildInfo.java',
     'ParamInfo.java',

@@ -1,0 +1,37 @@
+genrule(
+  name = 'gen_aar',
+  srcs = [
+    'gen_aar.sh',
+  ],
+  bash = './gen_aar.sh $TMP $OUT',
+  out = 'the.aar',
+)
+
+android_prebuilt_aar(
+  name = 'aar',
+  aar = ':gen_aar',
+)
+
+android_library(
+  name = 'lib',
+  srcs = [ 'ExampleActivity.java' ],
+  deps = [ ':aar' ],
+)
+
+keystore(
+  name = 'debug',
+  store = 'debug.keystore',
+  properties = 'debug.keystore.properties',
+  visibility = ['PUBLIC'],
+)
+
+android_binary(
+  name = 'app',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:16',
+  keystore = ':debug',
+  package_type = 'DEBUG',
+  deps = [
+    ':lib',
+  ],
+)
