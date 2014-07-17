@@ -348,6 +348,10 @@ class BuckRepo:
         return os.path.join(self._buck_dir, *(relative_path.split('/')))
 
     def _is_dirty(self):
+        buck_repo_dirty = os.environ.get('BUCK_REPOSITORY_DIRTY')
+        if buck_repo_dirty:
+            return buck_repo_dirty == "1"
+
         output = subprocess.check_output(
             ['git', 'status', '-s'],
             cwd=self._buck_dir)
@@ -512,7 +516,7 @@ class BuckRepo:
             "-Dbuck.git_commit_timestamp={}".format(
                 self._get_git_commit_timestamp()),
             "-Dbuck.version_uid={}".format(version_uid),
-            "-Dbuck.git_dirty={}".format(self._is_dirty()),
+            "-Dbuck.git_dirty={}".format(int(self._is_dirty())),
             "-Dbuck.buckd_dir={}".format(self._buck_project.buckd_dir),
             "-Dlog4j.configuration=file:{}".format(
                 self._join_buck_dir("config/log4j.properties")),
