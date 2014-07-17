@@ -417,8 +417,6 @@ class BuckRepo:
             sys.exit(exitcode)
 
     def _compute_local_hash(self):
-        # TODO(natthu): Simplify this method by using 'git read-tree --empty'
-        # and 'git add -A .'.
         git_tree_in = subprocess.check_output(
             ['git', 'log', '-n1', '--pretty=format:%T', 'HEAD', '--'],
             cwd=self._buck_dir).strip()
@@ -432,15 +430,8 @@ class BuckRepo:
                 cwd=self._buck_dir,
                 env=new_environ)
 
-            files_changed = subprocess.check_output(
-                ['git', 'diff', '--name-only', 'HEAD', '--'],
-                cwd=self._buck_dir,
-                env=new_environ).strip().split(' ')
-
-            command = ['git', 'update-index', '--add', '--remove']
-            command.extend(files_changed)
             subprocess.check_call(
-                command,
+                ['git', 'add', '-u'],
                 cwd=self._buck_dir,
                 stderr=DEV_NULL,
                 env=new_environ)
