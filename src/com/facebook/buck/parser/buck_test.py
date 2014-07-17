@@ -242,12 +242,18 @@ class TestBuck(unittest.TestCase):
             os.path.islink = mock_islink
             os.path.isfile = mock_isfile
             os.path.realpath = mock_realpath
-            result = [p for p in glob_walk('**', 'a')]
 
             # Symlinked directories do not cause loop or duplicated results.
-            # Symlinked files do not cause duplicated results.
+            # Symlinked files are allowed to duplicate results.
             # By default, dot files are ignored.
-            self.assertEqual(['b/c/file'], result)
+            result = [p for p in glob_walk('**', 'a')]
+            self.assertEqual(['b/c/file', 'b/c/file2'], result)
+
+            result = [p for p in glob_walk('**/*', 'a')]
+            self.assertEqual(['b/c/file', 'b/c/file2'], result)
+
+            result = [p for p in glob_walk('*/*/*', 'a')]
+            self.assertEqual(['b/c/file', 'b/c/file2'], result)
 
         finally:
             glob_module.iglob = real_iglob

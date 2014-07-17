@@ -176,39 +176,61 @@ def glob_walk_internal(
     'isresult(path)' should verify that path is valid as a result (typically
         calls os.path.isfile)
     """
-    # Force halting despite symlinks.
-    key = (tuple(tokens), normpath)
-    if key in visited:
-        return
-    visited.add(key)
-
     # Base case.
     if not tokens:
         if isresult(path):
             yield path
         return
+
     token = tokens[0]
     next_tokens = tokens[1:]
+
+    # Special base case of ['**'].
+    if token == '**' and not next_tokens:
+        if isresult(path):
+            yield path
+        # Continue for the non-base case.
+
+    # Except for the base cases above, refuse to visit twice the same
+    # normalized path with the same tokens.
+    # This is necessary for termination in case of symlinks.
+    key = (tuple(tokens), normpath)
+    if key in visited:
+        return
+    visited.add(key)
+
     path_and_sep_len = len(path) + 1 if path is not None else 0
 
     # Special glob token, equivalent to zero or more consecutive '*'
     if token == '**':
-        for x in glob_walk_internal(
-                normpath_join, iglob, isresult, visited,
-                next_tokens, path, normpath):
-            yield x
+        # The base case of ['**'] was handled above.
+        if next_tokens:
+            for x in glob_walk_internal(
+                    normpath_join, iglob, isresult,
+                    visited, next_tokens, path,
+                    normpath):
+                yield x
         for child in iglob(path_join(path, '*')):
             for x in glob_walk_internal(
-                    normpath_join, iglob, isresult, visited, tokens, child,
+                    normpath_join, iglob, isresult,
+                    visited, tokens, child,
                     normpath_join(normpath, child[path_and_sep_len:])):
                 yield x
 
-    # Usual glob pattern.
+    # Usual glob pattern (normal case).
+    elif next_tokens:
+        for child in iglob(path_join(path, token)):
+            for x in glob_walk_internal(
+                    normpath_join, iglob, isresult,
+                    visited, next_tokens, child,
+                    normpath_join(normpath, child[path_and_sep_len:])):
+                yield x
+    # Usual glob pattern (optimized when there are no next tokens).
     else:
         for child in iglob(path_join(path, token)):
             for x in glob_walk_internal(
-                    normpath_join, iglob, isresult, visited, next_tokens,
-                    child, normpath_join(normpath, child[path_and_sep_len:])):
+                    normpath_join, iglob, isresult,
+                    visited, None, child, None):
                 yield x
 
 
