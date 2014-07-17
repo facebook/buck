@@ -69,6 +69,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -82,6 +83,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -139,6 +141,8 @@ import javax.xml.transform.stream.StreamResult;
  * Generator for xcode project and associated files from a set of xcode/ios rules.
  */
 public class ProjectGenerator {
+  private static final Logger LOG = Logger.get(ProjectGenerator.class);
+
   public enum Option {
     /**
      * generate native xcode targets for dependent build targets.
@@ -251,8 +255,15 @@ public class ProjectGenerator {
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.repoRootRelativeToOutputDirectory =
-        this.outputDirectory.normalize().toAbsolutePath().relativize(
-            projectFilesystem.getRootPath().toAbsolutePath());
+      MorePaths.relativize(
+          this.outputDirectory.toAbsolutePath(),
+          projectFilesystem.getRootPath().toAbsolutePath());
+
+    LOG.debug(
+        "Output directory %s, profile fs root path %s, repo root relative to output dir %s",
+        this.outputDirectory,
+        projectFilesystem.getRootPath(),
+        this.repoRootRelativeToOutputDirectory);
 
     this.placedAssetCatalogBuildPhaseScript = this.projectFilesystem.getPathForRelativePath(
         BuckConstant.BIN_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh"));
@@ -298,17 +309,22 @@ public class ProjectGenerator {
   }
 
   public void createXcodeProjects() throws IOException {
+    LOG.debug("Creating projects for targets %s", initialTargets);
+
     try {
       targetNameToGIDMap = buildTargetNameToGIDMap();
       Iterable<BuildRule> allRules = RuleDependencyFinder.getAllRules(partialGraph, initialTargets);
 
       for (BuildRule rule : allRules) {
         if (isBuiltByCurrentProject(rule)) {
+          LOG.debug("Including rule %s in project", rule);
           // Trigger the loading cache to call the generateTargetForBuildRule function.
           Optional<PBXTarget> target = buildRuleToXcodeTarget.getUnchecked(rule);
           if (target.isPresent()) {
             buildRuleToGeneratedTargetBuilder.put(rule, target.get());
           }
+        } else {
+          LOG.verbose("Excluding rule %s (not built by current project)", rule);
         }
       }
 
@@ -331,6 +347,7 @@ public class ProjectGenerator {
         Path placedAssetCatalogCompilerPath = projectFilesystem.getPathForRelativePath(
             BuckConstant.BIN_PATH.resolve(
                 "xcode-scripts/compile_asset_catalogs.py"));
+        LOG.debug("Ensuring asset catalog is copied to path [%s]", placedAssetCatalogCompilerPath);
         projectFilesystem.createParentDirs(placedAssetCatalogCompilerPath);
         projectFilesystem.createParentDirs(placedAssetCatalogBuildPhaseScript);
         projectFilesystem.copyFile(
@@ -451,6 +468,7 @@ public class ProjectGenerator {
     }
 
     project.getTargets().add(target);
+    LOG.debug("Generated iOS library target %s", target);
     return target;
   }
 
@@ -464,6 +482,7 @@ public class ProjectGenerator {
         "%s." + buildable.getTestType().toFileExtension(),
         IosResourceDescription.TYPE);
     project.getTargets().add(target);
+    LOG.debug("Generated iOS test target %s", target);
     return target;
   }
 
@@ -481,6 +500,7 @@ public class ProjectGenerator {
     addPostBuildScriptPhasesForDependencies(rule, target);
 
     project.getTargets().add(target);
+    LOG.debug("Generated iOS binary target %s", target);
     return target;
   }
 
@@ -497,6 +517,7 @@ public class ProjectGenerator {
         "%s.framework",
         OsxResourceDescription.TYPE);
     project.getTargets().add(target);
+    LOG.debug("Generated OS X framework target %s", target);
     return target;
   }
 
@@ -590,6 +611,7 @@ public class ProjectGenerator {
         frameworksBuilder.build());
 
     project.getTargets().add(target);
+    LOG.debug("Generated OS X binary target %s", target);
     return target;
   }
 
@@ -963,11 +985,13 @@ public class ProjectGenerator {
         }
       }
     }
+    LOG.debug("Added resources build phase %s", phase);
   }
 
   private void addAssetCatalogBuildPhase(
       PBXNativeTarget target, PBXGroup targetGroup,
       final Iterable<AppleAssetCatalog> assetCatalogs) {
+
     // Asset catalogs go in the resources group also.
     PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
 
@@ -987,7 +1011,10 @@ public class ProjectGenerator {
                 PBXReference.SourceTree.SOURCE_ROOT,
                 repoRootRelativeToOutputDirectory.resolve(dir)));
 
-        Path pathRelativeToProjectRoot = outputDirectory.relativize(dir);
+        Path pathRelativeToProjectRoot = MorePaths.relativize(outputDirectory, dir);
+        LOG.debug(
+            "Resolved asset catalog path %s, output directory %s, result %s",
+            dir, outputDirectory, pathRelativeToProjectRoot);
         scriptArguments.add("$PROJECT_DIR/" + pathRelativeToProjectRoot.toString());
       }
 
@@ -1020,7 +1047,7 @@ public class ProjectGenerator {
       shouldPlaceAssetCatalogCompiler = true;
 
       assetCatalogBuildPhaseScriptRelativeToProjectRoot =
-          outputDirectory.relativize(placedAssetCatalogBuildPhaseScript);
+        MorePaths.relativize(outputDirectory, placedAssetCatalogBuildPhaseScript);
     }
 
     // Map asset catalog paths to their shell script arguments relative to the project's root
@@ -1043,6 +1070,7 @@ public class ProjectGenerator {
               combinedAssetCatalogsToBeSplitIntoBundlesScriptArguments);
     }
     phase.setShellScript(scriptBuilder.toString());
+    LOG.debug("Added asset catalog build phase %s", phase);
     target.getBuildPhases().add(phase);
   }
 
@@ -1383,7 +1411,7 @@ public class ProjectGenerator {
   private Path relativizeBuckRelativePathToGeneratedProject(BuildTarget buildTarget, String path) {
     Path originalProjectPath = projectFilesystem.getPathForRelativePath(
         Paths.get(buildTarget.getBasePathWithSlash()));
-    return repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path);
+    return repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path).normalize();
   }
 
   private void collectRecursiveFrameworkDependencies(

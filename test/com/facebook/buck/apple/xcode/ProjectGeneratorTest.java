@@ -807,7 +807,7 @@ public class ProjectGeneratorTest {
 
     assertThat(
         Iterables.getOnlyElement(shellScriptBuildPhase.getInputPaths()),
-        equalTo(".././script/input.png"));
+        equalTo("../script/input.png"));
 
     assertThat(
         shellScriptBuildPhase.getShellScript(),

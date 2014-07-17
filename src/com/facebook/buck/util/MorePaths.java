@@ -98,6 +98,14 @@ public class MorePaths {
     Preconditions.checkNotNull(path2);
     Path emptyPath = Paths.get("");
 
+    Preconditions.checkArgument(
+        path1.isAbsolute() == path2.isAbsolute(),
+        "Both paths must be absolute or both paths must be relative. (%s is %s, %s is %s)",
+        path1,
+        path1.isAbsolute() ? "absolute" : "relative",
+        path2,
+        path2.isAbsolute() ? "absolute" : "relative");
+
     // Work around JDK-8037945 (Paths.get("").normalize() throws ArrayIndexOutOfBoundsException).
     if (!path1.equals(emptyPath)) {
       path1 = path1.normalize();
