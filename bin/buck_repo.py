@@ -116,8 +116,9 @@ class BuckRepo:
             branch = buck_version[1] if len(buck_version) > 1 else None
             self._checkout_and_clean(revision, branch)
 
+        self._buck_version_uid = self._get_buck_version_uid()
+
     def launch_buck(self):
-        version_uid = self._get_buck_version_uid()
         self.kill_autobuild()
         if 'clean' in sys.argv or os.environ.get('NO_BUCKD'):
             self.kill_buckd()
@@ -131,7 +132,7 @@ class BuckRepo:
             new_buckd_run_count = buckd_run_count + 1
 
             if (buckd_run_count == MAX_BUCKD_RUN_COUNT or
-                    running_version != version_uid):
+                    running_version != self._buck_version_uid):
                 self.kill_buckd()
                 new_buckd_run_count = 0
 
@@ -165,7 +166,7 @@ class BuckRepo:
                 return exit_code
 
         command = ["java"]
-        command.extend(self._get_java_args(version_uid))
+        command.extend(self._get_java_args(self._buck_version_uid))
         command.append("-Djava.io.tmpdir={}".format(self._tmp_dir))
         command.append("-classpath")
         command.append(self._get_java_classpath())
@@ -174,7 +175,6 @@ class BuckRepo:
         return subprocess.call(command)
 
     def launch_buckd(self):
-        version_uid = self._get_buck_version_uid()
         self._build()
         self._setup_watchman_watch()
         self._buck_project.create_buckd_tmp_dir()
@@ -190,7 +190,7 @@ class BuckRepo:
         available port, then parse the port number out of the first log entry.
         '''
         command = ["java"]
-        command.extend(self._get_java_args(version_uid))
+        command.extend(self._get_java_args(self._buck_version_uid))
         command.append("-Dbuck.buckd_watcher=Watchman")
         command.append("-XX:MaxGCPauseMillis={}".format(GC_MAX_PAUSE_TARGET))
         command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
@@ -239,7 +239,7 @@ class BuckRepo:
             return
 
         self._buck_project.save_buckd_port(buckd_port)
-        self._buck_project.save_buckd_version(version_uid)
+        self._buck_project.save_buckd_version(self._buck_version_uid)
         self._buck_project.update_buckd_run_count(0)
 
     def kill_autobuild(self):
