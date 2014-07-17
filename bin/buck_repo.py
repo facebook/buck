@@ -262,7 +262,7 @@ class BuckRepo:
                 os.kill(buckd_pid, 0)
             else:
                 raise BuckRepoException(
-                    "Could not kill existing buck process after 10 seconds!")
+                    "Could not kill existing buckd process after 10 seconds!")
         except OSError as e:
             if e.errno != errno.ESRCH:
                 raise
