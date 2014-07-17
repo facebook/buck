@@ -487,7 +487,7 @@ class BuckRepo:
                 ['git', 'ls-files', '-m'],
                 stdout=sys.stderr,
                 cwd=self._buck_dir)
-        else:
+        elif os.environ.get('BUCK_CLEAN_REPO_IF_DIRTY') != 'NO':
             print(textwrap.dedent("""\
             ::: Your local buck directory is dirty, and therefore builds will
             ::: not be able to use a distributed cache."""), file=sys.stderr)
