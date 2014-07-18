@@ -44,6 +44,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -116,6 +117,15 @@ public class ProjectWorkspace {
     DefaultKnownBuildRuleTypes.resetInstance();
 
     MoreFiles.copyRecursively(templatePath, destPath, BUILD_FILE_RENAME);
+
+    // Copy local.properties, if it exists
+    Path localProperties = FileSystems.getDefault().getPath("local.properties");
+    try {
+      java.nio.file.Files.copy(localProperties, destPath.resolve(localProperties.getFileName()));
+    } catch (SecurityException|IOException e) {
+      // Probably not a fatal error, just log the details and continue
+      System.err.println("Error on attempting to copy local.properties: " + e);
+    }
 
     if (Platform.detect() == Platform.WINDOWS) {
       // Hack for symlinks on Windows.

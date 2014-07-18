@@ -47,6 +47,12 @@ public class DirectoryTraversalTest {
         workspace.resolve(java.nio.file.Paths.get("loop/1/upwards")),
         java.nio.file.Paths.get("../"));
 
+    // If the user has a local.properties file, it'll get copied into the root of
+    // `workspace`. We can't ignore it below (DirectoryTraversal()'s ignorePaths arg
+    // is a set of *directory* paths) so we'll delete it here instead; we don't need
+    // it for this test.
+    Files.deleteIfExists(workspace.resolve(java.nio.file.Paths.get("local.properties")));
+
     // The workspace contains the following:
     //
     //   | path
