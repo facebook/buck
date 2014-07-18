@@ -725,4 +725,17 @@ public class ProjectFilesystem {
     return Objects.hash(projectRoot, ignorePaths);
   }
 
+  /**
+   * @param path the path to check.
+   * @return whether ignoredPaths contains path or any of its ancestors.
+   */
+  public boolean isIgnored(Path path) {
+    for (Path ignoredPath : getIgnorePaths()) {
+      if (path.startsWith(ignoredPath)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 }

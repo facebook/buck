@@ -94,7 +94,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
       // If filePath names a directory with a build file, filePath is a base path.
       // If filePath or any of its parents are in ignoredPaths, we should keep looking.
       if (projectFilesystem.isFile(filePath.resolve(BuckConstant.BUILD_RULES_FILE_NAME)) &&
-          !isIgnored(filePath)) {
+          !projectFilesystem.isIgnored(filePath)) {
         return filePath;
       }
 
@@ -109,18 +109,5 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
 
     // filePath does not fall under any build file; return empty Path.
     return Paths.get("");
-  }
-
-  /**
-   * @param path the path to check.
-   * @return whether ignoredPaths contains path or any of its ancestors.
-   */
-  private boolean isIgnored(Path path) {
-    for (Path ignoredPath : projectFilesystem.getIgnorePaths()) {
-      if (path.startsWith(ignoredPath)) {
-        return true;
-      }
-    }
-    return false;
   }
 }

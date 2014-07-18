@@ -193,7 +193,6 @@ public final class Main {
       return new WatchServiceWatcher(
           projectFilesystem,
           fileEventBus,
-          config.getIgnorePaths(),
           FileSystems.getDefault().newWatchService());
     }
 

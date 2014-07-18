@@ -23,16 +23,25 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import com.google.common.io.Files;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 
-public class ConcurrentMapFileHashCacheTest {
+public class DefaultFileHashCacheTest {
+
+  @Rule
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
   public void whenPathIsPutCacheContainsPath() {
@@ -98,5 +107,21 @@ public class ConcurrentMapFileHashCacheTest {
     cache.loadingCache.put(path, hash);
     cache.onFileSystemChange(createPathEvent(file, StandardWatchEventKinds.ENTRY_DELETE));
     assertFalse("Cache should not contain path", cache.contains(path));
+  }
+
+  @Test
+  public void whenPathIsIgnoredThenCacheDoesNotContainPath() throws IOException {
+    String ignoredFolder = "buck-out";
+    String ignoredFile = ignoredFolder + "/SomeClass.java";
+    DefaultFileHashCache cache =
+        new DefaultFileHashCache(
+            new ProjectFilesystem(
+                tmp.getRoot().toPath(),
+                ImmutableSet.of(tmp.newFolder(ignoredFolder).toPath())),
+            new TestConsole());
+    File inputFile = tmp.newFile(ignoredFile);
+    Files.write("class SomeClass {}".getBytes(Charsets.US_ASCII), inputFile);
+    cache.get(Paths.get(ignoredFile));
+    assertFalse("Cache should not contain path.", cache.contains(inputFile.toPath()));
   }
 }

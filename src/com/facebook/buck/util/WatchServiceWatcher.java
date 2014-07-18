@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 
@@ -42,14 +41,12 @@ public class WatchServiceWatcher implements ProjectFilesystemWatcher {
   private final Map<WatchKey, Path> keys;
   private final EventBus eventBus;
   private final ProjectFilesystem filesystem;
-  private final ImmutableSet<Path> ignoredPrefixes;
 
-  public WatchServiceWatcher(ProjectFilesystem filesystem,
-                             EventBus fileChangeEventBus,
-                             ImmutableSet<Path> excludeDirectories,
-                             WatchService watchService) throws IOException {
+  public WatchServiceWatcher(
+      ProjectFilesystem filesystem,
+      EventBus fileChangeEventBus,
+      WatchService watchService) throws IOException {
     this.filesystem = Preconditions.checkNotNull(filesystem);
-    this.ignoredPrefixes = Preconditions.checkNotNull(excludeDirectories);
     this.eventBus = Preconditions.checkNotNull(fileChangeEventBus);
     this.watchService = Preconditions.checkNotNull(watchService);
     this.keys = Maps.newHashMap();
@@ -72,7 +69,7 @@ public class WatchServiceWatcher implements ProjectFilesystemWatcher {
           Path name = (Path) event.context();
           Path absolutePath = dir.resolve(name);
           final Path projectRelativePath = filesystem.getRootPath().relativize(absolutePath);
-          if (shouldIgnore(projectRelativePath)) {
+          if (filesystem.isIgnored(projectRelativePath)) {
             continue;
           }
 
@@ -117,16 +114,6 @@ public class WatchServiceWatcher implements ProjectFilesystemWatcher {
     }
   }
 
-  private boolean shouldIgnore(Path path) {
-    Path normalizedPath = path.normalize();
-    for (Path prefix : ignoredPrefixes) {
-      if (normalizedPath.startsWith(prefix)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /**
    * Register the given directory with the WatchService.
    */
@@ -147,7 +134,7 @@ public class WatchServiceWatcher implements ProjectFilesystemWatcher {
       @Override
       public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes)
           throws IOException {
-        if (shouldIgnore(dir)) {
+        if (filesystem.isIgnored(dir)) {
           return FileVisitResult.SKIP_SUBTREE;
         }
         register(dir);
