@@ -26,13 +26,20 @@ import com.google.common.io.Files;
  */
 public class PBXFileReference extends PBXReference {
   private Optional<String> explicitFileType;
+  private Optional<String> lastKnownFileType;
 
   public PBXFileReference(String name, String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
 
     // this is necessary to prevent O(n^2) behavior in xcode project loading
     String fileType = FileTypes.FILE_EXTENSION_TO_UTI.get(Files.getFileExtension(name));
-    explicitFileType = Optional.fromNullable(fileType);
+    if (FileTypes.EXPLICIT_FILE_TYPE_BROKEN_UTIS.contains(fileType)) {
+      explicitFileType = Optional.absent();
+      lastKnownFileType = Optional.of(fileType);
+    } else {
+      explicitFileType = Optional.fromNullable(fileType);
+      lastKnownFileType = Optional.absent();
+    }
   }
 
   public Optional<String> getExplicitFileType() {
@@ -54,6 +61,10 @@ public class PBXFileReference extends PBXReference {
 
     if (explicitFileType.isPresent()) {
       s.addField("explicitFileType", explicitFileType.get());
+    }
+
+    if (lastKnownFileType.isPresent()) {
+      s.addField("lastKnownFileType", lastKnownFileType.get());
     }
   }
 }
