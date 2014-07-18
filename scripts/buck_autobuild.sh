@@ -87,7 +87,7 @@ function createTrigger() {
     echo >&2 "=== Creating Watchman Trigger ==="
 
     if [ ! -d ${sourceDirectory}/.git ]; then
-        echo >&2 "Sorry, speculative builds only work in git repos for now!"
+        echo >&2 "Sorry, autobuilds only work in git repos for now!"
     fi
 
     onChange ${sourceDirectory} ${destinationDirectory} ${target}

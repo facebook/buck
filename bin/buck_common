@@ -61,7 +61,13 @@ function killBuckd() {
     done
   fi
   rm -rf "${BUCKD_DIR}"
-  watchman watch-del "$PROJECT_ROOT" > /dev/null || true
+  HAS_TRIGGERS=$(python <<-EOT
+import json
+print bool(json.loads("""$(watchman trigger-list $PWD)""").get("triggers", None))
+EOT)
+  if [ "${HAS_TRIGGERS}" != "True" ]; then
+    watchman watch-del "$PROJECT_ROOT" > /dev/null || true
+  fi
   setBuckdRunning
 }
 
