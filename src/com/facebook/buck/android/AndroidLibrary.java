@@ -46,6 +46,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
    */
   private final Optional<Path> manifestFile;
 
+  private final boolean isPrebuiltAar;
+
   @VisibleForTesting
   public AndroidLibrary(
       BuildRuleParams params,
@@ -58,7 +60,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> resourcesRoot,
-      Optional<Path> manifestFile) {
+      Optional<Path> manifestFile,
+      boolean isPrebuiltAar) {
     super(
         params,
         srcs,
@@ -71,6 +74,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         javacOptions,
         resourcesRoot);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);
+    this.isPrebuiltAar = isPrebuiltAar;
   }
 
   @Override
@@ -100,5 +104,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     if (manifestFile.isPresent()) {
       collector.addManifestFile(getBuildTarget(), manifestFile.get());
     }
+  }
+
+  /** @return whether this library was generated from an {@link AndroidPrebuiltAarDescription}. */
+  public boolean isPrebuiltAar() {
+    return isPrebuiltAar;
   }
 }

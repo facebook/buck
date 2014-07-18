@@ -26,6 +26,7 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -39,6 +40,8 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+
+import javax.annotation.Nullable;
 
 public class AndroidResourceDescription implements Description<AndroidResourceDescription.Arg> {
 
@@ -57,10 +60,40 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     return new Arg();
   }
 
-  private ImmutableSortedSet<BuildRule> androidResOnly(ImmutableSortedSet<BuildRule> deps) {
+  /**
+   * Filters out the set of {@code android_resource()} dependencies from {@code deps}. As a special
+   * case, if an {@code android_prebuilt_aar()} appears in the deps, the {@code android_resource()}
+   * that corresponds to the AAR will also be included in the output.
+   * <p>
+   * Note that if we allowed developers to depend on a flavored build target (in this case, the
+   * {@link AndroidPrebuiltAarGraphEnhancer#AAR_ANDROID_RESOURCE_FLAVOR} flavor), then we could
+   * require them to depend on the flavored dep explicitly in their build files. Then we could
+   * eliminate this special case, though it would be more burdensome for developers to have to
+   * keep track of when they could depend on an ordinary build rule vs. a flavored one.
+   */
+  private static ImmutableSortedSet<BuildRule> androidResOnly(ImmutableSortedSet<BuildRule> deps) {
     return FluentIterable
         .from(deps)
-        .filter(Predicates.instanceOf(AndroidResource.class))
+        .transform(new Function<BuildRule, BuildRule>() {
+          @Override
+          @Nullable
+          public BuildRule apply(BuildRule buildRule) {
+            if (buildRule instanceof AndroidResource) {
+              return buildRule;
+            } else if (buildRule instanceof AndroidLibrary &&
+                ((AndroidLibrary) buildRule).isPrebuiltAar()) {
+              // An AndroidLibrary that is created via graph enhancement from an
+              // android_prebuilt_aar() should always have exactly one dependency that is an
+              // AndroidResource.
+              return Iterables.getOnlyElement(
+                  FluentIterable.from(buildRule.getDeps())
+                      .filter(Predicates.instanceOf(AndroidResource.class))
+                      .toList());
+            }
+            return null;
+          }
+        })
+        .filter(Predicates.notNull())
         .toSortedSet(deps.comparator());
   }
 

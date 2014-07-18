@@ -1394,7 +1394,8 @@ public class DefaultJavaLibraryTest {
           /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
           options.build(),
           /* resourcesRoot */ Optional.<Path>absent(),
-          /* manifestFile */ Optional.<Path>absent());
+          /* manifestFile */ Optional.<Path>absent(),
+          /* isPrebuiltAar */ false);
     }
 
     private JavacInMemoryStep lastJavacCommand(Iterable<Step> commands) {

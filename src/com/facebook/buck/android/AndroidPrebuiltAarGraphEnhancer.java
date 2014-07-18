@@ -146,7 +146,8 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         /* javacOptions */ JavacOptions.DEFAULTS,
         /* resourcesRoot */ Optional.<Path>absent(),
-        /* manifestFile */ Optional.<Path>absent());
+        /* manifestFile */ Optional.<Path>absent(),
+        /* isPrebuiltAar */ true);
   }
 
   private static class UnzipAar extends AbstractBuildRule {

@@ -93,7 +93,8 @@ public class AndroidLibraryDescription implements Description<AndroidLibraryDesc
         additionalClasspathEntries,
         javacOptions.build(),
         args.resourcesRoot,
-        args.manifest);
+        args.manifest,
+        /* isPrebuiltAar */ false);
   }
 
   public static class Arg extends JavaLibraryDescription.Arg {
