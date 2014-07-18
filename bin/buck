@@ -49,11 +49,10 @@ if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCK_CLIENT" ]; then
     BUCKD_STATUS=$?
     set -e
     # If buck daemon is not busy, return exit code.
-    if [ $BUCKD_STATUS -ne 2 ]; then
-        exit $BUCKD_STATUS
+    if [ $BUCKD_STATUS -eq 2 ]; then
+	echo >&2 "Daemon is busy, please wait or run \"buckd --kill\" to terminate it."
     fi
-
-    echo >&2 "Daemon is busy, starting new buck process."
+    exit $BUCKD_STATUS
   fi
 fi
 

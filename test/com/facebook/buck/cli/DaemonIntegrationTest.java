@@ -86,12 +86,13 @@ public class DaemonIntegrationTest {
   }
 
   /**
-   * This verifies that when the user tries to run the Buck Main method, while it is already
+   * This verifies that when the user tries to run a read/write command, while another is already
    * running, the second call will fail. Serializing command execution in this way avoids
-   * multiple threads accessing and corrupting the static state used by the Buck daemon.
+   * multiple threads accessing and corrupting the static state used by the Buck daemon and
+   * trampling over each others output.
    */
   @Test
-  public void testExclusiveExecution()
+  public void whenConcurrentCommandExecutedThenSecondCommandFails()
       throws IOException, InterruptedException, ExecutionException {
     final CapturingPrintStream stdOut = new CapturingPrintStream();
     final CapturingPrintStream firstThreadStdErr = new CapturingPrintStream();
@@ -101,43 +102,105 @@ public class DaemonIntegrationTest {
         this, "exclusive_execution", tmp);
     workspace.setUp();
 
-    Future<?> firstThread = executorService.schedule(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          Main main = new Main(stdOut, firstThreadStdErr);
-          int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(),
-              Optional.<NGContext>absent(),
-              "build",
-              "//:sleep");
-          assertEquals("Should return 0 when no command running.", SUCCESS_EXIT_CODE, exitCode);
-        } catch (IOException e) {
-          fail("Should not throw exception.");
-          throw Throwables.propagate(e);
-        } catch (InterruptedException e) {
-          fail("Should not throw exception.");
-          Thread.currentThread().interrupt();
-        }
-      }
-    }, 0, TimeUnit.MILLISECONDS);
-    Future<?> secondThread = executorService.schedule(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          Main main = new Main(stdOut, secondThreadStdErr);
-          int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(),
-              Optional.<NGContext>absent(),
-              "targets");
-          assertEquals("Should return 2 when command running.", Main.BUSY_EXIT_CODE, exitCode);
-        } catch (IOException e) {
-          fail("Should not throw exception.");
-          throw Throwables.propagate(e);
-        } catch (InterruptedException e) {
-          fail("Should not throw exception.");
-          Thread.currentThread().interrupt();
-        }
-      }
-    }, 500L, TimeUnit.MILLISECONDS);
+    Future<?> firstThread = executorService.schedule(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              Main main = new Main(stdOut, firstThreadStdErr);
+              int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(),
+                  Optional.<NGContext>absent(),
+                  "build",
+                  "//:sleep");
+              assertEquals("Should return 0 when no command running.", SUCCESS_EXIT_CODE, exitCode);
+            } catch (IOException e) {
+              fail("Should not throw exception.");
+              throw Throwables.propagate(e);
+            } catch (InterruptedException e) {
+              fail("Should not throw exception.");
+              Thread.currentThread().interrupt();
+            }
+          }
+        }, 0, TimeUnit.MILLISECONDS);
+    Future<?> secondThread = executorService.schedule(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              Main main = new Main(stdOut, secondThreadStdErr);
+              int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(),
+                  Optional.<NGContext>absent(),
+                  "build",
+                  "//:sleep");
+              assertEquals("Should return 2 when command running.", Main.BUSY_EXIT_CODE, exitCode);
+            } catch (IOException e) {
+              fail("Should not throw exception.");
+              throw Throwables.propagate(e);
+            } catch (InterruptedException e) {
+              fail("Should not throw exception.");
+              Thread.currentThread().interrupt();
+            }
+          }
+        }, 500L, TimeUnit.MILLISECONDS);
+    firstThread.get();
+    secondThread.get();
+  }
+
+  /**
+   * This verifies that when the user tries to run a read only command, while a read/write
+   * command is executing, then second call succeeds. Allowing read only commands to
+   * execute concurrently is safe as they don't trample each others output.
+   */
+  @Test
+  public void whenConcurrentReadOnlyCommandExecutedThenReadOnlyCommandSucceeds()
+      throws IOException, InterruptedException, ExecutionException {
+    final CapturingPrintStream stdOut = new CapturingPrintStream();
+    final CapturingPrintStream firstThreadStdErr = new CapturingPrintStream();
+    final CapturingPrintStream secondThreadStdErr = new CapturingPrintStream();
+
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "exclusive_execution", tmp);
+    workspace.setUp();
+
+    Future<?> firstThread = executorService.schedule(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              Main main = new Main(stdOut, firstThreadStdErr);
+              int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(),
+                  Optional.<NGContext>absent(),
+                  "build",
+                  "//:sleep");
+              assertEquals("Should return 0 when no command running.", SUCCESS_EXIT_CODE, exitCode);
+            } catch (IOException e) {
+              fail("Should not throw exception.");
+              throw Throwables.propagate(e);
+            } catch (InterruptedException e) {
+              fail("Should not throw exception.");
+              Thread.currentThread().interrupt();
+            }
+          }
+        }, 0, TimeUnit.MILLISECONDS);
+    Future<?> secondThread = executorService.schedule(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              Main main = new Main(stdOut, secondThreadStdErr);
+              int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(),
+                  Optional.<NGContext>absent(),
+                  "targets");
+              assertEquals("Should return 0 when command running.", SUCCESS_EXIT_CODE, exitCode);
+            } catch (IOException e) {
+              fail("Should not throw exception.");
+              throw Throwables.propagate(e);
+            } catch (InterruptedException e) {
+              fail("Should not throw exception.");
+              Thread.currentThread().interrupt();
+            }
+          }
+        }, 500L, TimeUnit.MILLISECONDS);
     firstThread.get();
     secondThread.get();
   }
