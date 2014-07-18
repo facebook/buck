@@ -18,6 +18,7 @@ package com.facebook.buck.step.fs;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -71,7 +72,10 @@ public class WriteFileStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("echo %s > %s", content.get(), outputPath);
+    return String.format(
+        "echo %s > %s",
+        Escaper.escapeAsBashString(content.get()),
+        Escaper.escapeAsBashString(outputPath));
   }
 
 }

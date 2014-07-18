@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.Escaper;
 import com.google.common.base.Preconditions;
 
 public class EchoStep implements Step {
@@ -37,7 +38,7 @@ public class EchoStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("echo \"%s\"", message);
+    return String.format("echo %s", Escaper.escapeAsBashString(message));
   }
 
   @Override
