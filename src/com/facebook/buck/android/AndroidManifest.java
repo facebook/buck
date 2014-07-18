@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -68,14 +69,14 @@ public class AndroidManifest extends AbstractBuildRule {
   private final SourcePath skeletonFile;
 
   /** These must be sorted so {@link #getInputsToCompareToOutput} returns a consistent value. */
-  private final ImmutableSortedSet<Path> manifestFiles;
+  private final ImmutableSortedSet<SourcePath> manifestFiles;
 
   private final Path pathToOutputFile;
 
   protected AndroidManifest(
       BuildRuleParams params,
       SourcePath skeletonFile,
-      Set<Path> manifestFiles) {
+      Set<SourcePath> manifestFiles) {
     super(params);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
@@ -88,10 +89,10 @@ public class AndroidManifest extends AbstractBuildRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.<Path>builder()
-        .addAll(SourcePaths.filterInputsToCompareToOutput(Collections.singleton(skeletonFile)))
-        .addAll(manifestFiles)
-        .build();
+    return SourcePaths.filterInputsToCompareToOutput(
+        Iterables.concat(
+            Collections.singleton(skeletonFile),
+            manifestFiles));
   }
 
   @Override

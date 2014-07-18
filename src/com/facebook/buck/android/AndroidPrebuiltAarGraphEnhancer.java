@@ -59,6 +59,7 @@ class AndroidPrebuiltAarGraphEnhancer {
 
   private static final Flavor AAR_UNZIP_FLAVOR = new Flavor("aar_unzip");
   private static final Flavor AAR_CLASSES_JAR_FLAVOR = new Flavor("aar_classes_jar");
+  private static final Flavor AAR_MANIFEST = new Flavor("aar_manifest");
   private static final Flavor AAR_PREBUILT_JAR_FLAVOR = new Flavor("aar_prebuilt_jar");
   private static final Flavor AAR_ANDROID_RESOURCE_FLAVOR = new Flavor("aar_android_resource");
   private static final Flavor AAR_ANDROID_LIBRARY_FLAVOR = new Flavor("aar_android_library");
@@ -91,7 +92,7 @@ class AndroidPrebuiltAarGraphEnhancer {
     UnzipAar unzipAar = new UnzipAar(unzipAarParams, aarFile);
     ruleResolver.addToIndex(unzipAar);
 
-    // unzip_aar#classes
+    // unzip_aar#aar_classes_jar
     BuildRuleParams classesJarParams = originalBuildRuleParams.copyWithChanges(
         OutputOnlyBuildRule.TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_CLASSES_JAR_FLAVOR),
@@ -115,11 +116,21 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* javadocUrl */ Optional.<String>absent());
     ruleResolver.addToIndex(prebuiltJar);
 
+    // unzip_aar#aar_manifest
+    BuildRuleParams manifestParams = originalBuildRuleParams.copyWithChanges(
+        OutputOnlyBuildRule.TYPE,
+        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_MANIFEST),
+        /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(unzipAar),
+        /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
+    OutputOnlyBuildRule manifest = new OutputOnlyBuildRule(
+        manifestParams, unzipAar.getAndroidManifest());
+    ruleResolver.addToIndex(manifest);
+
     // android_resource
     BuildRuleParams androidResourceParams = originalBuildRuleParams.copyWithChanges(
         AndroidResourceDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_RESOURCE_FLAVOR),
-        /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(unzipAar),
+        /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(manifest),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
 
     // Because all resources and assets are generated files, we specify them as empty collections.
@@ -134,7 +145,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* rDotJavaPackage */ null,
         /* assets */ unzipAar.getAssetsDirectory(),
         assetsSrcs,
-        unzipAar.getAndroidManifest(),
+        new BuildRuleSourcePath(manifest),
         /* hasWhitelistedStrings */ false);
     ruleResolver.addToIndex(androidResource);
 
@@ -158,7 +169,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         /* javacOptions */ JavacOptions.DEFAULTS,
         /* resourcesRoot */ Optional.<Path>absent(),
-        /* manifestFile */ Optional.<Path>absent(),
+        /* manifestFile */ Optional.<SourcePath>absent(),
         /* isPrebuiltAar */ true);
   }
 

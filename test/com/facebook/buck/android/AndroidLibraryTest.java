@@ -28,6 +28,7 @@ import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -95,7 +96,7 @@ public class AndroidLibraryTest {
     return AndroidLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/foo:foo"))
         .addSrc(Paths.get("java/src/com/foo/Foo.java"))
-        .setManifestFile(Paths.get("java/src/com/foo/AndroidManifest.xml"))
+        .setManifestFile(new PathSourcePath(Paths.get("java/src/com/foo/AndroidManifest.xml")))
         .addExportedDep(libraryRule)
         .addDep(libraryRule)
         .build(ruleResolver);

@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Charsets;
@@ -40,8 +42,8 @@ public class GenerateManifestStepTest {
 
   @Before
   public void setUp() {
-    manifestPath = testDataPath("AndroidManifest.xml");
-    skeletonPath = testDataPath("AndroidManifestSkeleton.xml");
+    manifestPath = testDataPath("AndroidManifest.xml").resolve();
+    skeletonPath = testDataPath("AndroidManifestSkeleton.xml").resolve();
   }
 
   @After
@@ -52,10 +54,10 @@ public class GenerateManifestStepTest {
   @Test
   public void testManifestGeneration() throws IOException {
     String expectedOutputPath = testDataPath("AndroidManifest.expected.xml").toString();
-    Path libraryManifestA = testDataPath("AndroidManifestA.xml");
-    Path libraryManifestB = testDataPath("AndroidManifestB.xml");
-    Path libraryManifestC = testDataPath("AndroidManifestC.xml");
-    ImmutableSet.Builder<Path> libraryManifestFiles = ImmutableSet.builder();
+    SourcePath libraryManifestA = testDataPath("AndroidManifestA.xml");
+    SourcePath libraryManifestB = testDataPath("AndroidManifestB.xml");
+    SourcePath libraryManifestC = testDataPath("AndroidManifestC.xml");
+    ImmutableSet.Builder<SourcePath> libraryManifestFiles = ImmutableSet.builder();
     libraryManifestFiles.add(libraryManifestA);
     libraryManifestFiles.add(libraryManifestB);
     libraryManifestFiles.add(libraryManifestC);
@@ -76,7 +78,7 @@ public class GenerateManifestStepTest {
     assertEquals(expected, output);
   }
 
-  private Path testDataPath(String fileName) {
-    return Paths.get("testdata/com/facebook/buck/shell", fileName);
+  private SourcePath testDataPath(String fileName) {
+    return new PathSourcePath(Paths.get("testdata/com/facebook/buck/shell", fileName));
   }
 }

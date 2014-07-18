@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -193,7 +194,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     public Optional<Boolean> hasWhitelistedStrings;
     @Hint(name = "package")
     public Optional<String> rDotJavaPackage;
-    public Optional<Path> manifest;
+    public Optional<SourcePath> manifest;
 
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }

@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -98,6 +99,6 @@ public class AndroidLibraryDescription implements Description<AndroidLibraryDesc
   }
 
   public static class Arg extends JavaLibraryDescription.Arg {
-    public Optional<Path> manifest;
+    public Optional<SourcePath> manifest;
   }
 }

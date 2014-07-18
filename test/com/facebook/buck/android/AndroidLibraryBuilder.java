@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -45,7 +46,7 @@ public class AndroidLibraryBuilder extends AbstractBuilder<AndroidLibraryDescrip
     return this;
   }
 
-  public AndroidLibraryBuilder setManifestFile(Path manifestFile) {
+  public AndroidLibraryBuilder setManifestFile(SourcePath manifestFile) {
     arg.manifest = Optional.of(manifestFile);
     return this;
   }

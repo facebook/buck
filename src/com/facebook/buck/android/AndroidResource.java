@@ -34,6 +34,8 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -57,6 +59,7 @@ import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
@@ -117,7 +120,7 @@ public class AndroidResource extends AbstractBuildRule
   private final Path pathToTextSymbolsFile;
 
   @Nullable
-  private final Path manifestFile;
+  private final SourcePath manifestFile;
 
   private final boolean hasWhitelistedStrings;
 
@@ -156,7 +159,7 @@ public class AndroidResource extends AbstractBuildRule
       @Nullable String rDotJavaPackageArgument,
       @Nullable Path assets,
       ImmutableSortedSet<Path> assetsSrcs,
-      @Nullable Path manifestFile,
+      @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings) {
     super(buildRuleParams);
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
@@ -230,7 +233,8 @@ public class AndroidResource extends AbstractBuildRule
 
     // manifest file is optional.
     if (manifestFile != null) {
-      inputs.add(manifestFile);
+      inputs.addAll(
+          SourcePaths.filterInputsToCompareToOutput(Collections.singleton(manifestFile)));
     }
 
     return inputs.build();
@@ -254,7 +258,7 @@ public class AndroidResource extends AbstractBuildRule
   }
 
   @Nullable
-  public Path getManifestFile() {
+  public SourcePath getManifestFile() {
     return manifestFile;
   }
 
@@ -282,10 +286,15 @@ public class AndroidResource extends AbstractBuildRule
       steps.add(new AbstractExecutionStep("extract_android_package") {
         @Override
         public int execute(ExecutionContext context) {
+          Preconditions.checkNotNull(
+              manifestFile,
+              "manifestFile cannot be null when res is non-null and rDotJavaPackageArgument is " +
+                  "null. This should already be enforced by the constructor.");
+
           AndroidManifestReader androidManifestReader;
           try {
             androidManifestReader = DefaultAndroidManifestReader.forPath(
-                manifestFile, context.getProjectFilesystem());
+                manifestFile.resolve(), context.getProjectFilesystem());
           } catch (IOException e) {
             context.logError(e, "Failed to create AndroidManifestReader for %s.", manifestFile);
             return 1;
@@ -417,7 +426,7 @@ public class AndroidResource extends AbstractBuildRule
       collector.addAssetsDirectory(getBuildTarget(), assets);
     }
     if (manifestFile != null) {
-      collector.addManifestFile(getBuildTarget(), manifestFile);
+      collector.addManifestFile(getBuildTarget(), manifestFile.resolve());
     }
   }
 

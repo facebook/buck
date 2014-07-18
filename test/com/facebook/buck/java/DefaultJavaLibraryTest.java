@@ -1394,7 +1394,7 @@ public class DefaultJavaLibraryTest {
           /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
           options.build(),
           /* resourcesRoot */ Optional.<Path>absent(),
-          /* manifestFile */ Optional.<Path>absent(),
+          /* manifestFile */ Optional.<SourcePath>absent(),
           /* isPrebuiltAar */ false);
     }
 

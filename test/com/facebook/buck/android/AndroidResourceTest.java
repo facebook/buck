@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -68,7 +69,7 @@ public class AndroidResourceTest {
             Paths.get("java/src/com/facebook/base/assets/drawable/F.xml"),
             Paths.get("java/src/com/facebook/base/assets/drawable/B.xml"),
             Paths.get("java/src/com/facebook/base/assets/drawable/D.xml")),
-        Paths.get("java/src/com/facebook/base/AndroidManifest.xml"),
+        new PathSourcePath(Paths.get("java/src/com/facebook/base/AndroidManifest.xml")),
         /* hasWhitelisted */ false);
 
     // Test getInputsToCompareToOutput().
@@ -110,7 +111,8 @@ public class AndroidResourceTest {
         .setAssets(Paths.get("java/src/com/facebook/base/assets"))
         .setAssetsSrcs(ImmutableSortedSet.of(
             Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
-        .setManifest(Paths.get("java/src/com/facebook/base/AndroidManifest.xml"))
+        .setManifest(
+            new PathSourcePath(Paths.get("java/src/com/facebook/base/AndroidManifest.xml")))
         .build();
 
     AndroidResource androidResource2 = AndroidResourceRuleBuilder.newBuilder()
@@ -122,7 +124,8 @@ public class AndroidResourceTest {
         .setAssets(Paths.get("java/src/com/facebook/base/assets"))
         .setAssetsSrcs(ImmutableSortedSet.of(
                 Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
-        .setManifest(Paths.get("java/src/com/facebook/base/AndroidManifest.xml"))
+        .setManifest(
+            new PathSourcePath(Paths.get("java/src/com/facebook/base/AndroidManifest.xml")))
         .build();
 
     RuleKey ruleKey1 = androidResource1.getRuleKeyWithoutDeps();
@@ -207,7 +210,7 @@ public class AndroidResourceTest {
         /* rDotJavaPackage */ null,
         /* assets */ null,
         /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
-        /* manifestFile */ Paths.get("foo/AndroidManifest.xml"),
+        /* manifestFile */ new PathSourcePath(Paths.get("foo/AndroidManifest.xml")),
         /* hasWhitelistedStrings */ false);
     FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
     onDiskBuildInfo.putMetadata(AndroidResource.METADATA_KEY_FOR_ABI, Strings.repeat("a", 40));

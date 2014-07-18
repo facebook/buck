@@ -20,12 +20,11 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class AndroidTransitiveDependencyGraph {
 
@@ -39,16 +38,16 @@ public class AndroidTransitiveDependencyGraph {
   AndroidTransitiveDependencyGraph(ImmutableSortedSet<BuildRule> deps) {
     this.rulesToTraverseForTransitiveDeps = Preconditions.checkNotNull(deps);
   }
-  public ImmutableSet<Path> findManifestFiles() {
+  public ImmutableSet<SourcePath> findManifestFiles() {
 
-    final ImmutableSet.Builder<Path> manifestFiles = ImmutableSet.builder();
+    final ImmutableSet.Builder<SourcePath> manifestFiles = ImmutableSet.builder();
 
     new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
         if (rule instanceof AndroidResource) {
           AndroidResource androidRule = (AndroidResource) rule;
-          Path manifestFile = androidRule.getManifestFile();
+          SourcePath manifestFile = androidRule.getManifestFile();
           if (manifestFile != null) {
             manifestFiles.add(manifestFile);
           }

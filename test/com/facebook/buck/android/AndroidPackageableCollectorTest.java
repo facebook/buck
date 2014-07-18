@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.FluentIterable;
@@ -89,7 +90,8 @@ public class AndroidPackageableCollectorTest {
     BuildRule manifestRule = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:res"))
-            .setManifest(Paths.get("java/src/com/facebook/module/AndroidManifest.xml"))
+            .setManifest(
+                new PathSourcePath(Paths.get("java/src/com/facebook/module/AndroidManifest.xml")))
             .setAssets(Paths.get("assets"))
             .build());
 
