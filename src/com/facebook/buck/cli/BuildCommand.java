@@ -26,6 +26,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.Console;
@@ -39,8 +40,10 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -155,7 +158,14 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     int exitCode;
     try {
       // Get the Future representing the build and then block until everything is built.
-      build.executeBuild(rulesToBuild).get();
+      ListenableFuture<List<BuildRuleSuccess>> buildFuture = build.executeBuild(rulesToBuild);
+      try {
+        buildFuture.get();
+      } catch (InterruptedException e) {
+        buildFuture.cancel(true);
+        Thread.currentThread().interrupt();
+        return 1;
+      }
       exitCode = 0;
     } catch (IOException e) {
       console.printBuildFailureWithoutStacktrace(e);

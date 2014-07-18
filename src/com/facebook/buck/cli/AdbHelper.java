@@ -37,7 +37,9 @@ import com.facebook.buck.util.AndroidManifestReader;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.TriState;
+import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -289,8 +291,16 @@ public class AdbHelper {
       console.printBuildFailure("Failed: " + adbCallable);
       ex.printStackTrace(console.getStdErr());
       return false;
+    } catch (InterruptedException e) {
+      Futures.allAsList(futures).cancel(true);
+      Thread.currentThread().interrupt();
+      return false;
     } finally {
-      executorService.shutdownNow();
+      MoreExecutors.shutdownOrThrow(
+          executorService,
+          10,
+          TimeUnit.MINUTES,
+          new InterruptionFailedException("Failed to shutdown ExecutorService."));
     }
 
     int successCount = 0;

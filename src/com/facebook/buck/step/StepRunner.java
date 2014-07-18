@@ -54,10 +54,4 @@ public interface StepRunner {
   public <T> void addCallback(
       ListenableFuture<List<T>> dependencies,
       FutureCallback<List<T>> callback);
-
-  /**
-   * Interrupt all processing immediately. New steps and futures must not be submitted to the step
-   * runner after shutdown.
-   */
-  public void shutdownNow();
 }

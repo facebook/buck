@@ -49,6 +49,7 @@ import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
@@ -628,11 +629,10 @@ public final class Main {
       }
 
       buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
-    } catch (InterruptedException e) {
-      LOG.debug(e, "Failing build on interruption exception.");
+    } catch (Throwable t) {
+      LOG.debug(t, "Failing build on exception.");
       closeCreatedArtifactCaches(artifactCacheFactory); // Close cache before exit on exception.
-      Thread.currentThread().interrupt();
-      return FAIL_EXIT_CODE;
+      throw t;
     } finally {
       commandSemaphore.release(); // Allow another command to execute while outputting traces.
     }
@@ -890,6 +890,11 @@ public final class Main {
           stdErr,
           new Ansi(platform));
       console.printBuildFailure(e.getHumanReadableErrorMessage());
+      return FAIL_EXIT_CODE;
+    } catch (InterruptionFailedException e) { // Command could not be interrupted.
+      if (context.isPresent()) {
+        context.get().getNGServer().shutdown(true); // Exit process to halt command execution.
+      }
       return FAIL_EXIT_CODE;
     } finally {
       LOG.debug("Done.");

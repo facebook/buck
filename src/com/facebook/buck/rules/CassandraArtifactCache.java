@@ -355,7 +355,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     } catch (ExecutionException e) {
       // Swallow exception and move on.
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      future.cancel(true);
       Thread.currentThread().interrupt();
       return;
     } finally {

@@ -54,7 +54,14 @@ public class MoreFutures {
     }
 
     // Wait for completion or interruption.
-    return Futures.allAsList(futures.build()).get();
+    ListenableFuture<List<V>> future = Futures.allAsList(futures.build());
+    try {
+      return future.get();
+    } catch (InterruptedException e) {
+      future.cancel(true);
+      Thread.currentThread().interrupt();
+      throw e;
+    }
   }
 
   /**

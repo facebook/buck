@@ -577,6 +577,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     } catch (ExecutionException e) {
       e.printStackTrace(getStdErr());
       return 1;
+    } catch (InterruptedException e) {
+      uberFuture.cancel(true);
+      Thread.currentThread().interrupt();
+      return 1;
     }
 
     getBuckEventBus().post(TestRunEvent.finished(
