@@ -16,13 +16,12 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.HasBuildTarget;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
-public interface InstallableApk extends HasBuildTarget {
+public interface InstallableApk extends BuildRule {
 
   /**
    * @return the path to the AndroidManifest.xml. Note that this file might be a symlink,

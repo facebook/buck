@@ -21,11 +21,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -66,7 +68,10 @@ public class GenruleBuilder {
     public Genrule build() {
       final ImmutableSortedSet<BuildRule> depRules = ImmutableSortedSet.copyOf(deps);
       args.deps = Optional.of(depRules);
-      args.srcs = Optional.of(srcs.build());
+      args.srcs = Optional.of(FluentIterable
+          .from(srcs.build())
+          .transform(SourcePaths.TO_SOURCE_PATH)
+          .toList());
 
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
           .setDeps(depRules)

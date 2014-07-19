@@ -21,10 +21,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
-import java.nio.file.Path;
 
 /**
  * Description for an ios_postprocess_resources rule which runs a shell script
@@ -52,7 +51,7 @@ public class IosPostprocessResourcesDescription
     A args) {
     return new IosPostprocessResources(
       params,
-      /* srcs */ ImmutableList.<Path>of(),
+      /* srcs */ ImmutableList.<SourcePath>of(),
       args.cmd,
       /* bash */ Optional.<String>absent(),
       /* cmdExe */ Optional.<String>absent(),

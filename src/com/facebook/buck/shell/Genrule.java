@@ -23,6 +23,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -42,7 +44,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -104,7 +105,7 @@ public class Genrule extends AbstractBuildRule {
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
    */
-  protected final ImmutableList<Path> srcs;
+  protected final ImmutableList<SourcePath> srcs;
 
   protected final Optional<String> cmd;
   protected final Optional<String> bash;
@@ -122,7 +123,7 @@ public class Genrule extends AbstractBuildRule {
 
   protected Genrule(
       BuildRuleParams params,
-      List<Path> srcs,
+      List<SourcePath> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
@@ -133,12 +134,15 @@ public class Genrule extends AbstractBuildRule {
     this.cmd = Preconditions.checkNotNull(cmd);
     this.bash = Preconditions.checkNotNull(bash);
     this.cmdExe = Preconditions.checkNotNull(cmdExe);
-    this.srcsToAbsolutePaths = FluentIterable.from(srcs).toMap(new Function<Path, Path>() {
-      @Override
-      public Path apply(Path src) {
-        return relativeToAbsolutePathFunction.apply(src);
-      }
-    });
+    this.srcsToAbsolutePaths = FluentIterable
+        .from(srcs)
+        .transform(SourcePaths.TO_PATH)
+        .toMap(new Function<Path, Path>() {
+          @Override
+          public Path apply(Path src) {
+            return relativeToAbsolutePathFunction.apply(src);
+          }
+        });
 
     Preconditions.checkNotNull(out);
     BuildTarget target = params.getBuildTarget();
@@ -171,7 +175,7 @@ public class Genrule extends AbstractBuildRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSortedSet.copyOf(srcs);
+    return SourcePaths.filterInputsToCompareToOutput(srcs);
   }
 
   @Override
@@ -188,7 +192,7 @@ public class Genrule extends AbstractBuildRule {
   }
 
   public ImmutableList<Path> getSrcs() {
-    return srcs;
+    return SourcePaths.toPaths(srcs);
   }
 
   protected void addEnvironmentVariables(ExecutionContext context,

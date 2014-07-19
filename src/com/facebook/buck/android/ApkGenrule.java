@@ -22,12 +22,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -57,7 +57,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
 
   ApkGenrule(
       BuildRuleParams params,
-      List<Path> srcs,
+      List<SourcePath> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
@@ -104,11 +104,6 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   @Override
   public Optional<ExopackageInfo> getExopackageInfo() {
     return apk.getExopackageInfo();
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return super.getInputsToCompareToOutput();
   }
 
   @Override

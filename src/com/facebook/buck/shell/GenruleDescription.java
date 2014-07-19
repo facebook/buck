@@ -25,11 +25,12 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.util.regex.Matcher;
 
 public class GenruleDescription
@@ -52,9 +53,14 @@ public class GenruleDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    ImmutableList<SourcePath> srcs = args.srcs.get();
+    ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(SourcePaths.filterBuildRuleInputs(srcs))
+        .build();
+
     return new Genrule(
-        params,
-        args.srcs.get(),
+        params.copyWithExtraDeps(extraDeps),
+        srcs,
         args.cmd,
         args.bash,
         args.cmdExe,
@@ -81,7 +87,7 @@ public class GenruleDescription
     public Optional<String> bash;
     public Optional<String> cmd;
     public Optional<String> cmdExe;
-    public Optional<ImmutableList<Path>> srcs;
+    public Optional<ImmutableList<SourcePath>> srcs;
 
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }
