@@ -118,13 +118,12 @@ public class ProjectWorkspace {
 
     MoreFiles.copyRecursively(templatePath, destPath, BUILD_FILE_RENAME);
 
-    // Copy local.properties, if it exists
+    // If there's a local.properties in the host project but not in the destination, make a copy.
     Path localProperties = FileSystems.getDefault().getPath("local.properties");
-    try {
-      java.nio.file.Files.copy(localProperties, destPath.resolve(localProperties.getFileName()));
-    } catch (SecurityException|IOException e) {
-      // Probably not a fatal error, just log the details and continue
-      System.err.println("Error on attempting to copy local.properties: " + e);
+    Path destLocalProperties = destPath.resolve(localProperties.getFileName());
+
+    if (localProperties.toFile().exists() && !destLocalProperties.toFile().exists()) {
+      java.nio.file.Files.copy(localProperties, destLocalProperties);
     }
 
     if (Platform.detect() == Platform.WINDOWS) {
