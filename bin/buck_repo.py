@@ -118,6 +118,7 @@ class BuckRepo:
 
     def launch_buck(self):
         version_uid = self._get_buck_version_uid()
+        self.kill_autobuild()
         if 'clean' in sys.argv or os.environ.get('NO_BUCKD'):
             self.kill_buckd()
         self._build()
@@ -240,6 +241,15 @@ class BuckRepo:
         self._buck_project.save_buckd_port(buckd_port)
         self._buck_project.save_buckd_version(version_uid)
         self._buck_project.update_buckd_run_count(0)
+
+    def kill_autobuild(self):
+        autobuild_pid = self._buck_project.get_autobuild_pid()
+        if autobuild_pid:
+            if autobuild_pid.isdigit():
+                try:
+                    os.kill(autobuild_pid, signal.SIGTERM)
+                except OSError:
+                    pass
 
     def kill_buckd(self):
         buckd_pid = self._buck_project.get_buckd_pid()

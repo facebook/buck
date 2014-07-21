@@ -74,9 +74,14 @@ function onChange() {
     dir = ${sourceDirectory}/buck-cache
     dir_mode = readwrite
 EOF
-        echo >&2 "=== Fetching from master to slave ==="
-        nice buck build ${target}
+        echo >&2 "=== Building ${target} ==="
+        mkdir -p ${sourceDirectory}/.buckd
+        BUCK_EXTRA_JAVA_ARGS=-Dbuck.autobuild=1 nice buck build ${target} &
+        local buckd_pid=$!
+        echo ${buckd_pid} > ${sourceDirectory}/.buckd/autobuild.pid
+        wait ${buckd_pid}
         notifyIfPossible
+        rm -rf ${sourceDirectory}/.buckd/autobuild.pid
     )
 }
 
@@ -96,6 +101,7 @@ function createTrigger() {
     watchman -j <<-EOT
 ["trigger", "${sourceDirectory}", {
   "name": "buck_speculate",
+  "append_files": true,
   "expression": ["allof", ["type", "f"], ["not", ["pcre", "(^.git|pyc\$|swp\$|swo\$)", "wholename"]]],
   "command": ["$(getScript)", "change", "${sourceDirectory}", "${destinationDirectory}", "${target}"]
 }]
@@ -114,7 +120,7 @@ EOF
 }
 
 function main() {
-    if [ $# -ne 4 ]; then
+    if [ $# -lt 4 ]; then
         usage
         exit 1
     fi

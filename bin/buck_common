@@ -274,6 +274,10 @@ if [ -z "${MAX_BUCKD_RUNS}" ]; then
   MAX_BUCKD_RUNS=64
 fi
 
+function killAutoBuildIfRunning() {
+  (cat "${BUCKD_DIR}"/autobuild.pid | xargs kill || true) &> /dev/null
+}
+
 # Test for running buck daemon.
 BUCKD_DIR="${PROJECT_ROOT}/.buckd"
 BUCKD_LOG_FILE="${BUCKD_DIR}/buckd.log"
@@ -282,6 +286,7 @@ BUCKD_PORT_FILE="${BUCKD_DIR}/buckd.port"
 BUCKD_RUN_COUNT_FILE="${BUCKD_DIR}/buckd.runcount"
 BUCKD_VERSION_FILE="${BUCKD_DIR}/buckd.version"
 
+killAutoBuildIfRunning
 setBuckdRunning
 
 for ARG in $@; do
