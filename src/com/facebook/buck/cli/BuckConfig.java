@@ -431,7 +431,7 @@ public class BuckConfig {
    * Create a map of {@link BuildTarget} base paths to aliases. Note that there may be more than
    * one alias to a base path, so the first one listed in the .buckconfig will be chosen.
    */
-  public ImmutableMap<String, String> getBasePathToAliasMap() {
+  public ImmutableMap<Path, String> getBasePathToAliasMap() {
     ImmutableMap<String, String> aliases = sectionsToEntries.get(ALIAS_SECTION_HEADER);
     if (aliases == null) {
       return ImmutableMap.of();
@@ -439,12 +439,12 @@ public class BuckConfig {
 
     // Build up the Map with an ordinary HashMap because we need to be able to check whether the Map
     // already contains the key before inserting.
-    Map<String, String> basePathToAlias = Maps.newHashMap();
+    Map<Path, String> basePathToAlias = Maps.newHashMap();
     for (Map.Entry<String, BuildTarget> entry : aliasToBuildTargetMap.entrySet()) {
       String alias = entry.getKey();
       BuildTarget buildTarget = entry.getValue();
 
-      String basePath = buildTarget.getBasePath();
+      Path basePath = buildTarget.getBasePath();
       if (!basePathToAlias.containsKey(basePath)) {
         basePathToAlias.put(basePath, alias);
       }

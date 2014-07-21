@@ -56,7 +56,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
     // Crawl the subdirectories of target's base path, looking for build files.
     // When we find one, we can stop crawling anything under the directory it's in.
     final ImmutableSet.Builder<Path> childPaths = ImmutableSet.builder();
-    final Path basePath = Paths.get(target.getBasePath());
+    final Path basePath = target.getBasePath();
     final Set<Path> ignoredPaths = projectFilesystem.getIgnorePaths();
     try {
       projectFilesystem.walkRelativeFileTree(basePath, new SimpleFileVisitor<Path>() {

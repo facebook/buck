@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -64,7 +65,7 @@ public class InMemoryBuildFileTreeTest {
   }
 
   private void assertGetChildPaths(String parent, Set<String> expectedChildren) {
-    Collection<Path> children = ImmutableSet.copyOf(buildFileTree.getChildPaths(parent));
+    Collection<Path> children = ImmutableSet.copyOf(buildFileTree.getChildPaths(Paths.get(parent)));
 
     assertEquals(
         expectedChildren,

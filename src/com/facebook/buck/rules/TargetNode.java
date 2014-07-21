@@ -31,7 +31,6 @@ import com.google.common.collect.Sets;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
 
 /**
@@ -84,7 +83,7 @@ public class TargetNode<T extends ConstructorArg> {
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
       ParamInfo info =
-          new ParamInfo(typeCoercerFactory, Paths.get(params.target.getBasePath()), field);
+          new ParamInfo(typeCoercerFactory, params.target.getBasePath(), field);
       if (info.hasElementTypes(BuildRule.class, SourcePath.class, Path.class)) {
         detectBuildTargetsAndPathsForParameter(extraDeps, paths, info, params);
       }

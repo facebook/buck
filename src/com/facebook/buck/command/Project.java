@@ -133,7 +133,7 @@ public class Project {
 
   private final PartialGraph partialGraph;
   private final BuildFileTree buildFileTree;
-  private final ImmutableMap<String, String> basePathToAliasMap;
+  private final ImmutableMap<Path, String> basePathToAliasMap;
   private final JavaPackageFinder javaPackageFinder;
   private final ExecutionContext executionContext;
   private final ProjectFilesystem projectFilesystem;
@@ -143,7 +143,7 @@ public class Project {
   private final String pythonInterpreter;
 
   public Project(PartialGraph partialGraph,
-      Map<String, String> basePathToAliasMap,
+      Map<Path, String> basePathToAliasMap,
       JavaPackageFinder javaPackageFinder,
       ExecutionContext executionContext,
       ProjectFilesystem projectFilesystem,
@@ -774,7 +774,7 @@ public class Project {
       final LinkedHashSet<DependentModule> dependencies,
       @Nullable final BuildRule srcTarget) {
 
-    final String basePathForRule = rule.getBuildTarget().getBasePath();
+    final Path basePathForRule = rule.getBuildTarget().getBasePath();
     new AbstractDependencyVisitor(rule, true /* excludeRoot */) {
 
       private final LinkedHashSet<DependentModule> librariesToAdd = Sets.newLinkedHashSet();
@@ -893,7 +893,7 @@ public class Project {
    * @param basePathToAliasMap may be null if rule is a {@link PrebuiltJar}
    */
   private static String getIntellijNameForRule(BuildRule rule,
-      @Nullable Map<String, String> basePathToAliasMap) {
+      @Nullable Map<Path, String> basePathToAliasMap) {
     // Get basis for the library/module name.
     String name;
     if (rule instanceof PrebuiltJar) {
@@ -901,11 +901,11 @@ public class Project {
       String binaryJar = prebuiltJar.getBinaryJar().toString();
       return getIntellijNameForBinaryJar(binaryJar);
     } else {
-      String basePath = rule.getBuildTarget().getBasePath();
-      if (basePathToAliasMap.containsKey(basePath)) {
+      Path basePath = rule.getBuildTarget().getBasePath();
+      if (basePathToAliasMap != null && basePathToAliasMap.containsKey(basePath)) {
         name = basePathToAliasMap.get(basePath);
       } else {
-        name = rule.getBuildTarget().getBasePath();
+        name = rule.getBuildTarget().getBasePath().toString();
         name = name.replace('/', '_');
         // Must add a prefix to ensure that name is non-empty.
         name = "module_" + name;
@@ -930,16 +930,19 @@ public class Project {
 
   /**
    * @param pathRelativeToProjectRoot if {@code null}, then this method returns {@code null}
-   * @param target
    */
+  @Nullable
   private static String createRelativePath(@Nullable Path pathRelativeToProjectRoot,
       BuildTarget target) {
     if (pathRelativeToProjectRoot == null) {
       return null;
     }
-    String directoryPath = target.getBasePath();
-    Preconditions.checkArgument(pathRelativeToProjectRoot.toString().startsWith(directoryPath));
-    return pathRelativeToProjectRoot.toString().substring(directoryPath.length());
+    Path directoryPath = target.getBasePath();
+    Preconditions.checkArgument(pathRelativeToProjectRoot.startsWith(directoryPath));
+    // TODO(simons): Hey, this is crazy, here's a toString(), fix it maybe?
+    // Path.relativize doesn't cut the mustard, since we need a leading slash. Not sure if that's
+    // always the case, though.
+    return pathRelativeToProjectRoot.toString().substring(directoryPath.toString().length());
   }
 
   private void writeJsonConfig(File jsonTempFile, List<Module> modules) throws IOException {

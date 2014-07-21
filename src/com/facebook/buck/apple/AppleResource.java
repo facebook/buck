@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -27,7 +28,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 /**
@@ -91,10 +90,8 @@ public class AppleResource extends AbstractBuildRule {
 
     Preconditions.checkNotNull(outputPathSubdirectory);
     BuildTarget target = params.getBuildTarget();
-    Path baseOutputDirectory = Paths.get(
-        BuckConstant.BIN_DIR,
-        target.getBasePath(),
-        target.getShortName() + ".app"); // TODO(user): This is hokey, just a hack to get started.
+    // TODO(user): This is hokey, just a hack to get started.
+    Path baseOutputDirectory = BuildTargets.getBinPath(target, "%s.app");
     if (outputPathSubdirectory.isPresent()) {
       this.outputDirectory = baseOutputDirectory.resolve(outputPathSubdirectory.get());
     } else {

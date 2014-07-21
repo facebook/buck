@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
@@ -98,7 +97,7 @@ public class SeparatedProjectsGenerator {
           initialTargetsBuilder.build(),
           projectFilesystem,
           executionContext,
-          Paths.get(target.getBasePath()),
+          target.getBasePath(),
           buildable.getProjectName(),
           projectGeneratorOptions);
       generator.createXcodeProjects();

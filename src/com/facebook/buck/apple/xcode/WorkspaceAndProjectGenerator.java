@@ -45,7 +45,6 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -106,7 +105,7 @@ public class WorkspaceAndProjectGenerator {
 
     String workspaceName = workspaceBuildable.getSrcTarget().getBuildTarget().getShortName();
 
-    Path outputDirectory = Paths.get(workspaceBuildable.getBuildTarget().getBasePath());
+    Path outputDirectory = workspaceBuildable.getBuildTarget().getBasePath();
 
     WorkspaceGenerator workspaceGenerator = new WorkspaceGenerator(
         projectFilesystem,
@@ -128,10 +127,10 @@ public class WorkspaceAndProjectGenerator {
         outputDirectory.resolve(workspaceName + ".xcworkspace"),
         workspaceBuildable.getActionConfigNames());
 
-    Multimap<String, BuildRule> buildRulesByTargetBasePath =
+    Multimap<Path, BuildRule> buildRulesByTargetBasePath =
         BuildRules.buildRulesByTargetBasePath(allRules);
 
-    for (String basePath : buildRulesByTargetBasePath.keySet()) {
+    for (Path basePath : buildRulesByTargetBasePath.keySet()) {
       // From each target we find that package's xcode_project_config rule and generate it if
       // it hasn't already been generated.
       Optional<BuildRule> xcodeProjectConfigRule = Optional.fromNullable(Iterables.getOnlyElement(
@@ -156,7 +155,7 @@ public class WorkspaceAndProjectGenerator {
             initialTargets,
             projectFilesystem,
             executionContext,
-            projectFilesystem.getPathForRelativePath(Paths.get(basePath)),
+            projectFilesystem.getPathForRelativePath(basePath),
             xcodeProjectConfig.getProjectName(),
             projectGeneratorOptions);
           generator.createXcodeProjects();

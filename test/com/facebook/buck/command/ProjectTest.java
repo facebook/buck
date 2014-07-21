@@ -723,7 +723,7 @@ public class ProjectTest {
         Paths.get("keystore/debug.keystore.properties")))
         .andReturn(keystoreProperties).anyTimes();
 
-    ImmutableMap<String, String> basePathToAliasMap = ImmutableMap.of();
+    ImmutableMap<Path, String> basePathToAliasMap = ImmutableMap.of();
     Project project = new Project(
         partialGraph,
         basePathToAliasMap,

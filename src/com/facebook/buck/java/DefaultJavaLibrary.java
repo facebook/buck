@@ -269,9 +269,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
-      Path pathToSrcsList = Paths.get(BuckConstant.GEN_DIR,
-          getBuildTarget().getBasePath(),
-          "__" + getBuildTarget().getShortName() + "__srcs");
+      Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
       commands.add(new MkdirStep(pathToSrcsList.getParent()));
 
       final JavacStep javacStep;

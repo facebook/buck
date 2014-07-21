@@ -181,8 +181,8 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
    * "third_party/java/guava". This does not contain the "//" prefix so that it can be appended to
    * a file path.
    */
-  public String getBasePath() {
-    return baseName.substring(BUILD_TARGET_PREFIX.length());
+  public Path getBasePath() {
+    return Paths.get(baseName.substring(BUILD_TARGET_PREFIX.length()));
   }
 
   /**
@@ -191,7 +191,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
    *     string
    */
   public String getBasePathWithSlash() {
-    String basePath = getBasePath();
+    String basePath = getBasePath().toString();
     return basePath.isEmpty() ? "" : basePath + "/";
   }
 
@@ -206,6 +206,11 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   @JsonIgnore
   public boolean isFlavored() {
     return flavor.isPresent();
+  }
+
+  @JsonIgnore
+  public boolean isInProjectRoot() {
+    return BUILD_TARGET_PREFIX.equals(baseName);
   }
 
   @Override

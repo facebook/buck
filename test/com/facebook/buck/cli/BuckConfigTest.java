@@ -132,7 +132,9 @@ public class BuckConfigTest {
         "fb4a   =   //java/com/example:fbandroid",
         "katana =   //java/com/example:fbandroid"));
     BuckConfig config1 = createWithDefaultFilesystem(reader1, parser);
-    assertEquals(ImmutableMap.of("java/com/example", "fb4a"), config1.getBasePathToAliasMap());
+    assertEquals(
+        ImmutableMap.of(Paths.get("java/com/example"), "fb4a"),
+        config1.getBasePathToAliasMap());
     assertEquals(
         ImmutableMap.of(
             "fb4a", "//java/com/example:fbandroid",
@@ -144,7 +146,9 @@ public class BuckConfigTest {
         "katana =   //java/com/example:fbandroid",
         "fb4a   =   //java/com/example:fbandroid"));
     BuckConfig config2 = createWithDefaultFilesystem(reader2, parser);
-    assertEquals(ImmutableMap.of("java/com/example", "katana"), config2.getBasePathToAliasMap());
+    assertEquals(
+        ImmutableMap.of(Paths.get("java/com/example"), "katana"),
+        config2.getBasePathToAliasMap());
     assertEquals(
         ImmutableMap.of(
             "fb4a", "//java/com/example:fbandroid",

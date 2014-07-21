@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class ProjectCommandOptions extends AbstractCommandOptions {
@@ -102,7 +103,7 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     processAnnotations = value;
   }
 
-  public ImmutableMap<String, String> getBasePathToAliasMap() {
+  public ImmutableMap<Path, String> getBasePathToAliasMap() {
     return getBuckConfig().getBasePathToAliasMap();
   }
 
