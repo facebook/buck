@@ -131,6 +131,6 @@ public class BuildFileToJsonParserTest {
     expected.put("proguard_config", null);
     expected.put("source", 6L);
     expected.put("deps", ImmutableList.of("//foo:bar", "//foo:baz", "//foo:biz"));
-    assertEquals(expected, BuildFileToJsonParser.toRawTypes(ruleJson));
+    assertEquals(expected, RawParser.toRawTypes(ruleJson));
   }
 }
