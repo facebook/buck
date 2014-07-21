@@ -469,6 +469,89 @@ public class TypeCoercerTest {
     }
   }
 
+  private CoerceFailedException getCoerceException(Type type, Object object) {
+    // First just coerce the raw type and save the coercion exception that gets thrown.
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    try {
+      coercer.coerce(buildRuleResolver, filesystem, Paths.get(""), object);
+      fail("should throw");
+      throw new RuntimeException();  // Suppress "missing return statement" errors
+    } catch (CoerceFailedException e) {
+      return e;
+    }
+  }
+
+  private void assertSameMessage(Exception e1, Exception e2) {
+    assertEquals(e1.getMessage(), e2.getMessage());
+  }
+
+  @Test
+  public void coerceToContainerTypesShouldNotHideInnerCoerceExceptions()
+      throws NoSuchFieldException {
+
+    // A string representation of an invalid path, which throws an error when
+    // coercing to a `Path` type.
+    String invalidPath = "";
+    CoerceFailedException pathCoerceException = getCoerceException(Path.class, invalidPath);
+
+    // Verify that the various collection and map types don't mask inner coercion errors.
+    assertSameMessage(
+        pathCoerceException,
+        getCoerceException(
+            TestFields.class.getField("stringMapOfPaths").getGenericType(),
+            ImmutableMap.of("test", invalidPath)));
+    assertSameMessage(
+        pathCoerceException,
+        getCoerceException(
+            TestFields.class.getField("listOfPaths").getGenericType(),
+            ImmutableList.of(invalidPath)));
+    assertSameMessage(
+        pathCoerceException,
+        getCoerceException(
+            TestFields.class.getField("sortedSetOfPaths").getGenericType(),
+            ImmutableList.of(invalidPath)));
+    assertSameMessage(
+        pathCoerceException,
+        getCoerceException(
+            TestFields.class.getField("setOfPaths").getGenericType(),
+            ImmutableList.of(invalidPath)));
+
+    // Test that `SourcePath` coercion doesn't change the error from `Path` cercion.
+    assertSameMessage(
+        pathCoerceException,
+        getCoerceException(SourcePath.class, invalidPath));
+
+    // Test that regardless of order, we get the same invalid path coercion error
+    // when trying to coerce a path-y object.
+    assertSameMessage(
+        pathCoerceException,
+        getCoerceException(
+            TestFields.class.getField("eitherListOfStringsOrPath").getGenericType(),
+            invalidPath));
+    assertSameMessage(
+        pathCoerceException,
+        getCoerceException(
+            TestFields.class.getField("eitherPathOrListOfStrings").getGenericType(),
+            invalidPath));
+
+    // Test that regardless of order, we get the same invalid list-of-strings
+    // coercion error when trying to coerce a list object.
+    ImmutableList<Integer> invalidListOfStrings = ImmutableList.of(1, 4, 5);
+    CoerceFailedException listOfStringsException = getCoerceException(
+        TestFields.class.getField("listOfStrings").getGenericType(),
+        invalidListOfStrings);
+    assertSameMessage(
+        listOfStringsException,
+        getCoerceException(
+            TestFields.class.getField("eitherListOfStringsOrPath").getGenericType(),
+            invalidListOfStrings));
+    assertSameMessage(
+        listOfStringsException,
+        getCoerceException(
+            TestFields.class.getField("eitherPathOrListOfStrings").getGenericType(),
+            invalidListOfStrings));
+  }
+
   @SuppressWarnings("unused")
   static class TestFields {
     public ImmutableMap<String, ImmutableList<Integer>> stringMapOfLists;
@@ -487,6 +570,13 @@ public class TypeCoercerTest {
     public ImmutableList<AppleSource> listOfAppleSources;
     public ImmutableSortedSet<Label> labels;
     public ImmutableList<TestEnum> listOfTestEnums;
+    public ImmutableMap<String, Path> stringMapOfPaths;
+    public ImmutableList<Path> listOfPaths;
+    public ImmutableSortedSet<Path> sortedSetOfPaths;
+    public ImmutableSet<Path> setOfPaths;
+    public ImmutableList<String> listOfStrings;
+    public Either<Path, ImmutableList<String>> eitherPathOrListOfStrings;
+    public Either<ImmutableList<String>, Path> eitherListOfStringsOrPath;
   }
 
   private static enum TestEnum { RED, PURPLE, yellow, grey, PINK, white }
