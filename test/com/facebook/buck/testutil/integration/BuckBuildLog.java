@@ -28,6 +28,7 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,10 @@ public class BuckBuildLog {
   public Sha1HashCode getRuleKey(String buildTargetRaw) {
     BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
     return logEntry.ruleKey;
+  }
+
+  public ImmutableSet<BuildTarget> getAllTargets() {
+    return ImmutableSet.copyOf(buildLogEntries.keySet());
   }
 
   public static BuckBuildLog fromLogContents(List<String> logContents) {

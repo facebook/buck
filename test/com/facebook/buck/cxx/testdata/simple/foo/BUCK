@@ -1,0 +1,73 @@
+cxx_binary(
+    name='simple',
+    srcs=[
+        'simple.cpp',
+    ],
+)
+
+cxx_binary(
+    name='simple_with_header',
+    srcs=[
+        'simple_with_header.cpp',
+    ],
+    headers=[
+        'simple_with_header.h',
+    ],
+)
+
+cxx_binary(
+    name='simple_without_header',
+    srcs=[
+        'simple_with_header.cpp',
+    ],
+)
+
+cxx_binary(
+    name='binary_without_dep',
+    srcs=[
+        'foo.cpp',
+    ],
+)
+
+cxx_binary(
+    name='binary_with_dep',
+    srcs=[
+        'foo.cpp',
+    ],
+    deps=[
+        ':library_with_header',
+    ],
+)
+
+cxx_library(
+    name='library_with_header',
+    srcs=[
+        'bar.cpp',
+    ],
+    headers=[
+        'bar.h',
+    ],
+)
+
+genrule(
+    name='genheader',
+    cmd='echo "int blob(int x);" > $OUT',
+    out='blob.h',
+)
+
+genrule(
+    name='gensource',
+    cmd='echo "int blob(int x) { return x + 5; }" > $OUT',
+    out='blob.cpp',
+)
+
+cxx_binary(
+    name='binary_with_genrules',
+    srcs=[
+        'blob_main.cpp',
+        '//:gensource',
+    ],
+    headers=[
+        '//:genheader',
+    ],
+)

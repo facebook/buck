@@ -16,47 +16,50 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
+import javax.annotation.Nullable;
+
 /**
- * Create a c++ static library (.a file).
+ * An action graph representation of a C/C++ library from the target graph, providing the
+ * various interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
-public class CxxLibrary extends AbstractNativeBuildRule {
+public abstract class CxxLibrary extends AbstractBuildRule
+    implements CxxPreprocessorDep, NativeLinkable {
 
-  private final Path archiver;
-
-  public CxxLibrary(
-      BuildRuleParams params,
-      ImmutableSortedSet<SourcePath> srcs,
-      ImmutableSortedSet<SourcePath> headers,
-      Path archiver) {
-    super(params, srcs, headers, ImmutableMap.<SourcePath, String>of());
-    this.archiver = Preconditions.checkNotNull(archiver);
+  public CxxLibrary(BuildRuleParams params) {
+    super(params);
   }
 
   @Override
-  protected String getCompiler() {
-    return DEFAULT_CPP_COMPILER;
+  protected Iterable<Path> getInputsToCompareToOutput() {
+    return ImmutableList.of();
   }
 
   @Override
-  protected ImmutableList<Step> getFinalBuildSteps(
-      ImmutableSortedSet<Path> files,
-      Path outputFile) {
-    return ImmutableList.<Step>of(
-        new ArchiveStep(archiver, outputFile, ImmutableList.copyOf(files)));
+  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    return builder;
   }
 
   @Override
-  protected String getOutputFileNameFormat() {
-    return "lib%s.a";
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    return ImmutableList.of();
   }
+
+  @Nullable
+  @Override
+  public Path getPathToOutputFile() {
+    return null;
+  }
+
 }

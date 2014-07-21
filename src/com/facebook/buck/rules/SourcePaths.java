@@ -47,6 +47,13 @@ public class SourcePaths {
           return new PathSourcePath(input);
         }
       };
+  public static final Function<BuildRule, SourcePath> TO_BUILD_RULE_SOURCE_PATH =
+      new Function<BuildRule, SourcePath>() {
+        @Override
+        public SourcePath apply(BuildRule input) {
+          return new BuildRuleSourcePath(input);
+        }
+      };
   public static final Function<PathSourcePath, Path> TO_PATH_SOURCEPATH_REFERENCES =
       new Function<PathSourcePath, Path>() {
         @Override

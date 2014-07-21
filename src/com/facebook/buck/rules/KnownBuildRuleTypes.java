@@ -47,6 +47,7 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
@@ -164,6 +165,9 @@ public class KnownBuildRuleTypes {
       ndkVersion = androidDirectoryResolver.getNdkVersion();
     }
 
+    // Construct the C/C++ config wrapping the buck config.
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
+
     // Look up the path to the "ar" tool in the buck config, falling back to the default
     // if not found.
     Path archiver = config.getPath("tools", "ar").or(Archives.DEFAULT_ARCHIVE_PATH);
@@ -189,8 +193,8 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleTestDescription());
     builder.register(new BuckExtensionDescription());
     builder.register(new CoreDataModelDescription());
-    builder.register(new CxxBinaryDescription());
-    builder.register(new CxxLibraryDescription(archiver));
+    builder.register(new CxxBinaryDescription(cxxBuckConfig));
+    builder.register(new CxxLibraryDescription(cxxBuckConfig));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());

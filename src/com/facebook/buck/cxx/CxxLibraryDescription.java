@@ -26,17 +26,20 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
 public class CxxLibraryDescription implements Description<CxxLibraryDescription.Arg> {
+
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_library");
 
-  private final Path archiver;
+  private final CxxBuckConfig cxxBuckConfig;
 
-  public CxxLibraryDescription(Path archiver) {
-    this.archiver = Preconditions.checkNotNull(archiver);
+  public CxxLibraryDescription(CxxBuckConfig cxxBuckConfig) {
+    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
   }
 
   @Override
@@ -49,7 +52,28 @@ public class CxxLibraryDescription implements Description<CxxLibraryDescription.
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new CxxLibrary(params, args.srcs, args.headers, archiver);
+
+    // Extract the C/C++ sources from the constructor arg.
+    ImmutableList<CxxSource> srcs =
+        CxxDescriptionEnhancer.parseCxxSources(
+            params.getBuildTarget(),
+            args.srcs.or(ImmutableList.<SourcePath>of()));
+
+    // Extract the header map from the our constructor arg.
+    ImmutableMap<Path, SourcePath> headers =
+        CxxDescriptionEnhancer.parseHeaders(
+            params.getBuildTarget(),
+            args.headers.or((ImmutableList.<SourcePath>of())));
+
+    return CxxDescriptionEnhancer.createCxxLibraryBuildRules(
+        params,
+        resolver,
+        cxxBuckConfig,
+        args.preprocessorFlags.or(ImmutableList.<String>of()),
+        args.propagatedPpFlags.or(ImmutableList.<String>of()),
+        headers,
+        args.compilerFlags.or(ImmutableList.<String>of()),
+        srcs);
   }
 
   @Override
@@ -59,8 +83,12 @@ public class CxxLibraryDescription implements Description<CxxLibraryDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
-    public ImmutableSortedSet<SourcePath> srcs;
-    public ImmutableSortedSet<SourcePath> headers;
+    public Optional<ImmutableList<SourcePath>> srcs;
+    public Optional<ImmutableList<SourcePath>> headers;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableList<String>> compilerFlags;
+    public Optional<ImmutableList<String>> preprocessorFlags;
+    public Optional<ImmutableList<String>> propagatedPpFlags;
   }
+
 }
