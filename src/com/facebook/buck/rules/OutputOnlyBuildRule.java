@@ -40,8 +40,11 @@ public class OutputOnlyBuildRule extends AbstractBuildRule {
   }
 
   @Override
-  public ImmutableList<Step> getBuildSteps(BuildContext context,
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
       BuildableContext buildableContext) {
+    buildableContext.recordArtifact(pathToOutputFile);
+
     return ImmutableList.of();
   }
 
