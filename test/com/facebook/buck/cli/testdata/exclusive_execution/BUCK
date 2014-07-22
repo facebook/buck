@@ -6,3 +6,9 @@ genrule(
   out = 'sleep',
   deps = [],
 )
+
+java_test(
+  name = 'test',
+  srcs = ['SleepTest.java'],
+  deps = ['//lib:junit'],
+)
