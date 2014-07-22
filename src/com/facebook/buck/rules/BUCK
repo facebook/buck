@@ -145,6 +145,7 @@ java_library(
     'OutputOnlyBuildRule.java',
     'ProjectConfig.java',
     'ProjectConfigDescription.java',
+    'SymlinkTree.java',
     'TargetNodeToBuildRuleTransformer.java',
     'TestRule.java',
     'TestRunEvent.java',
