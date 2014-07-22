@@ -24,6 +24,7 @@ import com.facebook.buck.apple.xcode.WorkspaceAndProjectGenerator;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -53,6 +54,7 @@ import java.util.Map;
 
 public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions> {
 
+  private static final Logger LOG = Logger.get(ProjectCommand.class);
 
   /**
    * Include java library targets (and android library targets) that use annotation
@@ -214,10 +216,28 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     PartialGraph partialGraph;
     try {
-      partialGraph = PartialGraph.createFullGraph(getProjectFilesystem(),
-          options.getDefaultIncludes(),
-          getParser(),
-          getBuckEventBus());
+      final ImmutableSet<String> defaultExcludePaths = options.getDefaultExcludePaths();
+      partialGraph = createPartialGraph(
+          new RawRulePredicate() {
+            @Override
+            public boolean isMatch(
+                Map<String, Object> rawParseData,
+                BuildRuleType buildRuleType,
+                BuildTarget buildTarget) {
+              String targetName = buildTarget.getFullyQualifiedName();
+              for (String prefix : defaultExcludePaths) {
+                if (targetName.startsWith("//" + prefix)) {
+                  LOG.debug(
+                      "Ignoring build target %s (exclude_paths contains %s)",
+                      buildTarget,
+                      prefix);
+                  return false;
+                }
+              }
+              return true;
+            }
+          },
+          options);
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }

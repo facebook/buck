@@ -22,6 +22,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
+import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
@@ -40,11 +43,14 @@ import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
@@ -53,11 +59,14 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
-import org.easymock.EasyMock;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -72,6 +81,12 @@ public class ProjectCommandTest {
 
   private static final ImmutableMap<String, Object> EMPTY_PARSE_DATA = ImmutableMap.of();
   private static final ArtifactCache artifactCache = new NoopArtifactCache();
+  private FakeProjectFilesystem projectFilesystem;
+
+  @Before
+  public void setUp() {
+    projectFilesystem = new FakeProjectFilesystem();
+  }
 
   @Test
   public void testBasicProjectCommand() throws Exception {
@@ -94,7 +109,7 @@ public class ProjectCommandTest {
             "[project]",
             "initial_targets = " + javaLibraryTargetName));
 
-    ProjectCommandForTest command = new ProjectCommandForTest(buckConfig);
+    ProjectCommandForTest command = new ProjectCommandForTest(buckConfig, projectFilesystem);
     command.createPartialGraphCallReturnValues.push(
         createGraphFromBuildRules(ImmutableList.of(ruleConfig)));
 
@@ -144,7 +159,7 @@ public class ProjectCommandTest {
         .setSrcRule(ruleWith)
         .build(ruleResolver);
 
-    ProjectCommandForTest command = new ProjectCommandForTest(buckConfig);
+    ProjectCommandForTest command = new ProjectCommandForTest(buckConfig, projectFilesystem);
     command.createPartialGraphCallReturnValues.addLast(
         createGraphFromBuildRules(ImmutableList.<BuildRule>of(ruleConfig)));
     command.createPartialGraphCallReturnValues.addLast(
@@ -172,14 +187,94 @@ public class ProjectCommandTest {
     MoreAsserts.assertContainsOne(buildOptions.getArguments(), ruleWith.getFullyQualifiedName());
   }
 
+  @Test
+  public void testXcodeProjectExcludesProjectsInPath() throws Exception {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    IosLibraryDescription iosLibraryDescription = new IosLibraryDescription();
+    XcodeProjectConfigDescription xcodeProjectConfigDescription =
+      new XcodeProjectConfigDescription();
+
+    // ios_library //foo:lib
+    BuildRuleParams fooParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg libFooArg =
+      iosLibraryDescription.createUnpopulatedConstructorArg();
+    libFooArg.configs = ImmutableMap.of();
+    libFooArg.srcs = ImmutableList.of();
+    libFooArg.frameworks = ImmutableSortedSet.of();
+    libFooArg.deps = Optional.absent();
+    BuildRule fooLibRule = iosLibraryDescription.createBuildRule(
+        fooParams, ruleResolver, libFooArg);
+
+    // ios_library //bar:lib
+    BuildRuleParams barParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//bar", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg libBarArg =
+      iosLibraryDescription.createUnpopulatedConstructorArg();
+    libBarArg.configs = ImmutableMap.of();
+    libBarArg.srcs = ImmutableList.of();
+    libBarArg.frameworks = ImmutableSortedSet.of();
+    libBarArg.deps = Optional.absent();
+    BuildRule barLibRule = iosLibraryDescription.createBuildRule(
+        barParams, ruleResolver, libBarArg);
+
+    // xcode_project_config //foo:project
+    BuildRuleParams fooProjectParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "project").build())
+            .setType(XcodeProjectConfigDescription.TYPE)
+            .build();
+    XcodeProjectConfigDescription.Arg fooProjectArg =
+      xcodeProjectConfigDescription.createUnpopulatedConstructorArg();
+    fooProjectArg.projectName = "foo";
+    fooProjectArg.rules = ImmutableSet.of(fooLibRule);
+    BuildRule fooProjectRule = xcodeProjectConfigDescription.createBuildRule(
+        fooProjectParams, ruleResolver, fooProjectArg);
+
+    // xcode_project_config //bar:project
+    BuildRuleParams barProjectParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//bar", "project").build())
+            .setType(XcodeProjectConfigDescription.TYPE)
+            .build();
+    XcodeProjectConfigDescription.Arg barProjectArg =
+      xcodeProjectConfigDescription.createUnpopulatedConstructorArg();
+    barProjectArg.projectName = "bar";
+    barProjectArg.rules = ImmutableSet.of(barLibRule);
+    BuildRule barProjectRule = xcodeProjectConfigDescription.createBuildRule(
+        barProjectParams, ruleResolver, barProjectArg);
+
+    BuckConfig buckConfig = createBuckConfig(
+        Joiner.on("\n").join(
+            "[project]",
+            "ide = xcode",
+            "default_exclude_paths = foo"));
+
+    ProjectCommandForTest command = new ProjectCommandForTest(buckConfig, projectFilesystem);
+    command.createPartialGraphCallReturnValues.push(
+        createGraphFromBuildRules(ImmutableList.of(barProjectRule)));
+
+    command.runCommandWithOptions(createOptions(buckConfig));
+
+    assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
+
+    RawRulePredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
+
+    // Ensure //foo:project is ignored when we specify default_exclude_paths = //foo.
+    checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, fooProjectRule, false);
+
+    // Ensure //bar:project is not ignored when we specify default_exclude_paths = //foo.
+    checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, barProjectRule, true);
+  }
+
   BuckConfig createBuckConfig(String contents)
       throws IOException, NoSuchBuildTargetException {
-    ProjectFilesystem dummyProjectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.replay(dummyProjectFilesystem);
     return BuckConfig.createFromReader(
         new StringReader(contents),
-        dummyProjectFilesystem,
-        new BuildTargetParser(dummyProjectFilesystem),
+        projectFilesystem,
+        new BuildTargetParser(projectFilesystem),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
   }
@@ -230,11 +325,11 @@ public class ProjectCommandTest {
     private LinkedList<PartialGraph> createPartialGraphCallReturnValues = Lists.newLinkedList();
     private BuildCommandOptions buildCommandOptions;
 
-    ProjectCommandForTest(BuckConfig buckConfig) {
+    ProjectCommandForTest(BuckConfig buckConfig, ProjectFilesystem projectFilesystem) {
       super(
           new CommandRunnerParams(
               new TestConsole(),
-              getTestRepository(buckConfig),
+              getTestRepository(buckConfig, projectFilesystem),
               new FakeAndroidDirectoryResolver(),
               new InstanceArtifactCacheFactory(artifactCache),
               BuckEventBusFactory.newInstance(),
@@ -279,10 +374,11 @@ public class ProjectCommandTest {
       return 0;
     }
 
-    private static Repository getTestRepository(BuckConfig buckConfig) {
-      ProjectFilesystem filesystem = new ProjectFilesystem(new File(".").toPath());
-      KnownBuildRuleTypes buildRuleTypes = getDefaultKnownBuildRuleTypes(filesystem);
-      return new Repository("test", filesystem, buildRuleTypes, buckConfig);
+    private static Repository getTestRepository(
+        BuckConfig buckConfig,
+        ProjectFilesystem projectFilesystem) {
+      KnownBuildRuleTypes buildRuleTypes = getDefaultKnownBuildRuleTypes(projectFilesystem);
+      return new Repository("test", projectFilesystem, buildRuleTypes, buckConfig);
     }
   }
 }
