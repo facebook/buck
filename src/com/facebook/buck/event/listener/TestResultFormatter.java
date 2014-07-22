@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Joiner;
@@ -61,12 +62,17 @@ public class TestResultFormatter {
     for (TestCaseSummary testCase : results.getTestCases()) {
       addTo.add(testCase.getOneLineSummary(results.getDependenciesPassTheirTests(), ansi));
 
-      if (testCase.isSuccess()) {
+      if (testCase.isSuccess() && !testCase.hasAssumptionViolations()) {
         continue;
       }
 
       for (TestResultSummary testResult : testCase.getTestResults()) {
-        if (results.getDependenciesPassTheirTests() && !testResult.isSuccess()) {
+        if (!results.getDependenciesPassTheirTests()) {
+          continue;
+        }
+
+        if (!testResult.isSuccess() ||
+            testResult.getType().equals(ResultType.ASSUMPTION_VIOLATION)) {
           reportResultSummary(addTo, testResult);
         }
       }
@@ -75,7 +81,8 @@ public class TestResultFormatter {
 
   public void reportResultSummary(ImmutableList.Builder<String> addTo,
                                   TestResultSummary testResult) {
-    addTo.add(String.format("FAILURE %s: %s",
+    addTo.add(String.format("%s %s: %s",
+        testResult.getType().toString(),
         testResult.getTestName(),
         testResult.getMessage()));
 
