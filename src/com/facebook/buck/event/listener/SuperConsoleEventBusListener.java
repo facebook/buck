@@ -16,8 +16,8 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.IndividualTestEvent;
@@ -69,9 +69,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private int lastNumLinesPrinted;
 
-  public SuperConsoleEventBusListener(Console console,
+  public SuperConsoleEventBusListener(
+      Console console,
       Clock clock,
-      ExecutionEnvironment executionEnvironment) {
+      ExecutionEnvironment executionEnvironment,
+      boolean isTreatingAssumptionsAsErrors) {
     super(console, clock);
 
     this.threadsToRunningEvent = new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
@@ -81,7 +83,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     this.renderScheduler = Executors.newScheduledThreadPool(1,
         new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
-    this.testFormatter = new TestResultFormatter(console.getAnsi());
+    this.testFormatter = new TestResultFormatter(console.getAnsi(), isTreatingAssumptionsAsErrors);
   }
 
   /**

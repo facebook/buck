@@ -43,7 +43,9 @@ public class TestResultFormatterTest {
 
   @Before
   public void createFormatter() {
-    formatter = new TestResultFormatter(new Ansi(Platform.LINUX));
+    formatter = new TestResultFormatter(
+        new Ansi(Platform.LINUX),
+        /* isAnAssumptionViolationAnError) */ false);
   }
 
   @Before

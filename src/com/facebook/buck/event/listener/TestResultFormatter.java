@@ -34,8 +34,10 @@ import java.util.List;
 public class TestResultFormatter {
 
   private final Ansi ansi;
+  private final boolean isTreatingAssumptionsAsErrors;
 
-  public TestResultFormatter(Ansi ansi) {
+  public TestResultFormatter(Ansi ansi, boolean isTreatingAssumptionsAsErrors) {
+    this.isTreatingAssumptionsAsErrors = isTreatingAssumptionsAsErrors;
     this.ansi = Preconditions.checkNotNull(ansi);
   }
 
@@ -62,7 +64,10 @@ public class TestResultFormatter {
     for (TestCaseSummary testCase : results.getTestCases()) {
       addTo.add(testCase.getOneLineSummary(results.getDependenciesPassTheirTests(), ansi));
 
-      if (testCase.isSuccess() && !testCase.hasAssumptionViolations()) {
+      // Don't print the full error if success and either (a) we aren't treating assumptions as
+      // errors, or (b) we *are*, and there were no assumption-violations...
+      if (testCase.isSuccess() &&
+          (!isTreatingAssumptionsAsErrors || !testCase.hasAssumptionViolations())) {
         continue;
       }
 
@@ -71,8 +76,11 @@ public class TestResultFormatter {
           continue;
         }
 
-        if (!testResult.isSuccess() ||
-            testResult.getType().equals(ResultType.ASSUMPTION_VIOLATION)) {
+        // Report on either (a) explicit failure or (b) assumption-violation, if we are treating
+        // assumptions as errors.
+        if (!testResult.isSuccess() || (
+            isTreatingAssumptionsAsErrors &&
+            testResult.getType().equals(ResultType.ASSUMPTION_VIOLATION))) {
           reportResultSummary(addTo, testResult);
         }
       }

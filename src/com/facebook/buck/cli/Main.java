@@ -541,7 +541,7 @@ public final class Main {
          ConsoleHandlerRedirector consoleHandlerRedirector =
            new ConsoleHandlerRedirector(console.getStdErr(), stdErr);
          AbstractConsoleEventBusListener consoleListener =
-             createConsoleEventListener(clock, console, verbosity, executionEnvironment);
+             createConsoleEventListener(clock, console, verbosity, executionEnvironment, config);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
 
       // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
@@ -820,17 +820,24 @@ public final class Main {
       Clock clock,
       Console console,
       Verbosity verbosity,
-      ExecutionEnvironment executionEnvironment) {
+      ExecutionEnvironment executionEnvironment,
+      BuckConfig config) {
     if (console.getAnsi().isAnsiTerminal() &&
         !verbosity.shouldPrintCommand() &&
         verbosity.shouldPrintStandardInformation()) {
-      SuperConsoleEventBusListener superConsole =
-          new SuperConsoleEventBusListener(console, clock, executionEnvironment);
+      SuperConsoleEventBusListener superConsole = new SuperConsoleEventBusListener(
+          console,
+          clock,
+          executionEnvironment,
+          config.isTreatingAssumptionsAsErrors());
       superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
           SUPER_CONSOLE_REFRESH_RATE.getUnit());
       return superConsole;
     }
-    return new SimpleConsoleEventBusListener(console, clock);
+    return new SimpleConsoleEventBusListener(
+        console,
+        clock,
+        config.isTreatingAssumptionsAsErrors());
   }
 
 
