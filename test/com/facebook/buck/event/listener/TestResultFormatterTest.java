@@ -116,7 +116,7 @@ public class TestResultFormatterTest {
     formatter.runStarted(builder, false, testSelectorList, shouldExplain, targetNames);
 
     String expected = "TESTING SELECTED TESTS\n" +
-        "include class:com.example.clown.Car method:<any>\n" +
+        "include class:com.example.clown.Car$ method:<any>\n" +
         "exclude everything else";
 
     assertEquals(

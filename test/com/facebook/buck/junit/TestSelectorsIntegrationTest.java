@@ -109,8 +109,18 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
+  public void shouldNotMatchMethodsUsingPrefixAlone() throws IOException {
+    String[] command = {"test", "--all", "--test-selectors", "#test"};
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(command);
+    assertThat(
+        "No tests should have run",
+        result.getStderr(),
+        containsString("TESTING SELECTED TESTS\nTESTS PASSED"));
+  }
+
+  @Test
   public void shouldReportRegularExpressionErrors() throws IOException {
-    String error = "Regular expression error in 'Clown(': Unclosed group near index 6";
+    String error = "Regular expression error in 'Clown(': Unclosed group near index 7";
     try {
       workspace.runBuckCommand("test", "--all", "--filter", "Clown(");
       fail("Did not catch expected exception!");

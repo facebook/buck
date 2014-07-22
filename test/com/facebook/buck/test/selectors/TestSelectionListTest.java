@@ -110,9 +110,9 @@ public class TestSelectionListTest {
     assertFalse(testSelectorList.defaultIsInclusive);
 
     ImmutableList<String> expected = ImmutableList.of(
-        "exclude class:ClownTest method:<any>",
-        "include class:ShoesTest method:testLaces",
-        "include class:<any> method:testTalent",
+        "exclude class:ClownTest$ method:<any>",
+        "include class:ShoesTest$ method:testLaces$",
+        "include class:<any> method:testTalent$",
         "exclude everything else");
 
     assertEquals(expected, testSelectorList.getExplanation());
@@ -125,9 +125,9 @@ public class TestSelectionListTest {
         .build();
 
     ImmutableList<String> expected = ImmutableList.of(
-        "exclude class:A method:<any>",
-        "include class:B method:c",
-        "include class:<any> method:d",
+        "exclude class:A$ method:<any>",
+        "include class:B$ method:c$",
+        "include class:<any> method:d$",
         "include everything else");
 
     assertEquals(expected, testSelectorList.getExplanation());

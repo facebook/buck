@@ -81,7 +81,7 @@ public class TestSelectorsTestlessClassesTest {
   @Test
   public void shouldNotFailWhenUsingAFilterThatIncludesSomething() throws IOException {
     ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "--all", "--filter", "com.example");
+        workspace.runBuckCommand("test", "--all", "--filter", "com.example.+");
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, " +
         "even when filtering *IS* used, and it includes real tests!");
