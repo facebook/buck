@@ -33,6 +33,11 @@ h1 {
   font-size: 1.6em;
 }
 
+.subtitle {
+  font-size: 80%;
+  padding-top: 10px;
+}
+
 h2 {
   font-size: 1.4em;
 }
@@ -60,8 +65,11 @@ pre {
 
 code {
     background: #fff;
-    font-size: 12px;
     letter-spacing: 0.02em;
+}
+
+pre, code {
+    font-size: 14px;
 }
 
 table {
@@ -216,6 +224,11 @@ section.content article ol li {
   margin: 1em 0;
 }
 
+section.content article ul.tight-list li,
+section.content article ol.tight-list li {
+  margin: 0;
+}
+
 section.content article blockquote {
   padding: 0px 20px;
   margin: 0 0 20px;
@@ -289,6 +302,10 @@ footer {
   font-weight: bold;
 }
 
+/* For use in a <td> */
+.measurement {
+  text-align: right;
+}
 
 /* tabletish */
 
