@@ -523,11 +523,9 @@ public final class Main {
             androidDirectoryResolver,
             javacEnv);
 
-    // No more early outs: if this command is not read only, acquire the command semaphore to
-    // become the only executing read/write command.
+    // No more early outs: acquire the command semaphore and become the only executing command.
     // This must happen immediately before the try block to ensure that the semaphore is released.
-    boolean commandSemaphoreAcquired = commandSemaphore.tryAcquire();
-    if (!commandSemaphoreAcquired && !commandParseResult.getCommand().get().isReadOnly()) {
+    if (!commandSemaphore.tryAcquire()) {
       return BUSY_EXIT_CODE;
     }
 
@@ -636,9 +634,7 @@ public final class Main {
       closeCreatedArtifactCaches(artifactCacheFactory); // Close cache before exit on exception.
       throw t;
     } finally {
-      if (commandSemaphoreAcquired) {
-        commandSemaphore.release(); // Allow another command to execute while outputting traces.
-      }
+      commandSemaphore.release(); // Allow another command to execute while outputting traces.
     }
     if (isDaemon && !config.getFlushEventsBeforeExit()) {
       context.get().in.close(); // Avoid client exit triggering client disconnection handling.
@@ -885,6 +881,7 @@ public final class Main {
   @VisibleForTesting
   int tryRunMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
       throws IOException, InterruptedException {
+    // TODO(user): enforce write command exclusion, but allow concurrent read only commands?
     try {
       if (daemon != null) {
         // Reset logging each time we run a command while daemonized.

@@ -29,48 +29,37 @@ public enum Command {
 
   AUDIT(
       "lists the inputs for the specified target",
-      AuditCommandRunner.class,
-      true),
+      AuditCommandRunner.class),
   BUILD(
       "builds the specified target",
-      BuildCommand.class,
-      false),
+      BuildCommand.class),
   CACHE(
       "makes calls to the artifact cache",
-      CacheCommand.class,
-      false),
+      CacheCommand.class),
   CLEAN(
       "deletes any generated files",
-      CleanCommand.class,
-      false),
+      CleanCommand.class),
   INSTALL(
       "builds and installs an APK",
-      InstallCommand.class,
-      false),
+      InstallCommand.class),
   PROJECT(
       "generates project configuration files for an IDE",
-      ProjectCommand.class,
-      false),
+      ProjectCommand.class),
   QUICKSTART(
       "generates a default project directory",
-      QuickstartCommand.class,
-      false),
+      QuickstartCommand.class),
   RUN(
       "runs a target as a command",
-      RunCommand.class,
-      false),
+      RunCommand.class),
   TARGETS(
       "prints the list of buildable targets",
-      TargetsCommand.class,
-      true),
+      TargetsCommand.class),
   TEST(
       "builds and runs the tests for the specified target",
-      TestCommand.class,
-      false),
+      TestCommand.class),
   UNINSTALL(
       "uninstalls an APK",
-      UninstallCommand.class,
-      false),
+      UninstallCommand.class),
   ;
 
   /**
@@ -84,22 +73,16 @@ public enum Command {
   private final String shortDescription;
   private final Class<? extends CommandRunner> commandRunnerClass;
 
-  private final boolean readOnly; // True if command does not write output files.
-
   private Command(
       String shortDescription,
-      Class<? extends CommandRunner> commandRunnerClass,
-      boolean readOnly) {
+      Class<? extends CommandRunner> commandRunnerClass) {
     this.shortDescription = shortDescription;
     this.commandRunnerClass = commandRunnerClass;
-    this.readOnly = readOnly;
   }
 
   public String getShortDescription() {
     return shortDescription;
   }
-
-  public boolean isReadOnly() { return readOnly; }
 
   public int execute(List<String> args,
       BuckConfig buckConfig,

@@ -160,10 +160,10 @@ class BuckRepo:
                 command.extend(sys.argv[1:])
                 exit_code = subprocess.call(command)
                 if exit_code == 2:
-                    print('Daemon is busy, please wait',
-                          'or run "buckd --kill" to terminate it.',
+                    print("Daemon is busy, starting new buck process.",
                           file=sys.stderr)
-                return exit_code
+                else:
+                    return exit_code
 
         command = ["java"]
         command.extend(self._get_java_args(self._buck_version_uid))
