@@ -16,32 +16,34 @@
 
 package com.facebook.buck.android.support.exopackage;
 
+import android.app.Application;
+
 /**
  * This interface is used to delegate calls from main Application object.
  *
  * Implementations of this interface must have a one-argument constructor that takes
- * an argument of type {@link android.app.Application}.
+ * an argument of type {@link Application}.
  */
 public interface ApplicationLike {
 
   /**
-   * Same as {@code Application.onCreate()}.
+   * Same as {@link Application#onCreate()}.
    */
   void onCreate();
 
   /**
-   * Same as {@code Application.onLowMemory()}.
+   * Same as {@link Application#onLowMemory()}.
    */
   void onLowMemory();
 
   /**
-   * Same as {@code Application.onTrimMemory(int level)}.
+   * Same as {@link Application#onTrimMemory(int level)}.
    * @param level
    */
   void onTrimMemory(int level);
 
   /**
-   * Same as {@code Application.onTerminate()}.
+   * Same as {@link Application#onTerminate()}.
    */
   void onTerminate();
 
