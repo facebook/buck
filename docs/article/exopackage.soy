@@ -37,21 +37,21 @@ in a real world Android application,{sp}
   </tr>
   <tr>
     <th>clean build</th>
-    <td class="measurement">33s</td>
+    <td class="measurement">31s</td>
     <td class="measurement">6s</td>
-    <td class="measurement">5.5x</td>
+    <td class="measurement">5x</td>
   </tr>
   <tr>
     <th>incremental build</th>
-    <td class="measurement">17s</td>
+    <td class="measurement">13s</td>
     <td class="measurement">1.7s</td>
-    <td class="measurement">10x</td>
+    <td class="measurement">7.5x</td>
   </tr>
   <tr>
     <th>no-op build</th>
-    <td class="measurement">6s</td>
+    <td class="measurement">3s</td>
     <td class="measurement">0.2s</td>
-    <td class="measurement">30x</td>
+    <td class="measurement">15x</td>
   </tr>
   <tr>
     <th>clean install</th>
@@ -66,6 +66,17 @@ in a real world Android application,{sp}
     <td class="measurement">4.8x</td>
   </tr>
 </table>
+
+<p>
+
+(Note: These measurements were done on a MacBook Pro with a i7-3740QM CPU,
+with HyperThreading enabled, using Oracle Java 1.7.0_45 for Linux.
+We used 8 threads by running "./gradlew --parallel-threads 8".
+Gradle's daemon, parallel, and configureondemand options were enabled,
+as was Buck's daemon (which is enabled by default).
+In all cases, the builds were run multiple times to allow
+Java's JIT to warm up fully.
+The incremental build was adding a single blank line to a Java file.)
 
 <p>
 
