@@ -33,7 +33,7 @@ enum DexStore {
     public String fileNameForSecondary(int index) {
       // Google expects secondary dex files to start at 2.
       // I guess classes.dex is number 1.
-      return String.format("classes%d.dex", index + 2);
+      return String.format("classes%s.dex", index + 2);
     }
 
     @Override
@@ -49,7 +49,7 @@ enum DexStore {
     @Override
     public String fileNameForSecondary(int index) {
       // Start at one for easier comprehension by humans.
-      return String.format("secondary-%d.dex.jar", index + 1);
+      return String.format("secondary-%s.dex.jar", index + 1);
     }
 
     @Override
@@ -65,7 +65,7 @@ enum DexStore {
     @Override
     public String fileNameForSecondary(int index) {
       // Start at one for easier comprehension by humans.
-      return String.format("secondary-%d.dex.jar.xz", index + 1);
+      return String.format("secondary-%s.dex.jar.xz", index + 1);
     }
 
     @Override
