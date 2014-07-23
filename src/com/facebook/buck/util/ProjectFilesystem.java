@@ -501,9 +501,13 @@ public class ProjectFilesystem {
   /**
    * @param inputStream Source of the bytes. This method does not close this stream.
    */
-  public void copyToPath(final InputStream inputStream, Path pathRelativeToProjectRoot)
+  public void copyToPath(
+      InputStream inputStream,
+      Path pathRelativeToProjectRoot,
+      CopyOption... options)
       throws IOException {
-    java.nio.file.Files.copy(inputStream, getPathForRelativePath(pathRelativeToProjectRoot));
+    java.nio.file.Files.copy(inputStream, getPathForRelativePath(pathRelativeToProjectRoot),
+        options);
   }
 
   public Optional<String> readFileIfItExists(Path pathRelativeToProjectRoot) {

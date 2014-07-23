@@ -73,6 +73,7 @@ directory-based and Cassandra caching.
     # mode is a comma-separated set of caching mechanisms to use:
     #   dir       : Use a directory-based cache.
     #   cassandra : Use a distributed Cassandra cache.
+    #   http      : Use an http cache.
     #
     # The default set is empty.
     mode = dir, cassandra
@@ -95,6 +96,15 @@ directory-based and Cassandra caching.
     # Treat the Cassandra cache as readonly or readwrite.  The default mode is
     # readwrite.
     cassandra_mode = readwrite
+
+    # Host for http cache. The default is localhost.
+    http_host = localhost
+
+    # Port on which to connect to the http cache. The default is 5551.
+    http_port = 5551
+
+    # Whether the http cache is readonly or readwrite. The default is readwrite.
+    http_mode = readwrite
 </pre>{/literal}
 
 Initial Cassandra setup is generally straightforward, and warrants no special
@@ -109,6 +119,9 @@ instructions beyond the following:
       in order to create the <code>ArtifactCache</code> keyspace that Buck
       uses.
 </ul>
+
+Buck communicates with the http cache using a
+{sp}<a href="{ROOT}concept/http_cache_api.html">simple API</a>.
 
 <h2>[adb]</h2>
 

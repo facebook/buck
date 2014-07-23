@@ -136,6 +136,7 @@ java_library(
     'DescribedRule.java',
     'DirArtifactCache.java',
     'FlavorableDescription.java',
+    'HttpArtifactCache.java',
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',
     'InstallableApk.java',

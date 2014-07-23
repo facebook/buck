@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.DirArtifactCache;
+import com.facebook.buck.rules.HttpArtifactCache;
 import com.facebook.buck.rules.MultiArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
@@ -94,6 +95,9 @@ public class BuckConfig {
   private static final String DEFAULT_CASSANDRA_PORT = "9160";
   private static final String DEFAULT_CASSANDRA_MODE = CacheMode.readwrite.name();
   private static final String DEFAULT_CASSANDRA_TIMEOUT_SECONDS = "10";
+  private static final String DEFAULT_HTTP_CACHE_MODE = CacheMode.readwrite.name();
+  private static final String DEFAULT_HTTP_CACHE_PORT = "5551";
+  private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
 
   // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
@@ -114,7 +118,8 @@ public class BuckConfig {
 
   private enum ArtifactCacheNames {
     dir,
-    cassandra
+    cassandra,
+    http
   }
 
   private enum CacheMode {
@@ -582,6 +587,10 @@ public class BuckConfig {
             builder.add(cassandraArtifactCache);
           }
           break;
+        case http:
+          ArtifactCache httpArtifactCache = createHttpArtifactCache(buckEventBus);
+          builder.add(httpArtifactCache);
+          break;
         }
       }
     } catch (IllegalArgumentException e) {
@@ -665,6 +674,21 @@ public class BuckConfig {
       buckEventBus.post(ThrowableConsoleEvent.create(e, "Cassandra cache connection failure."));
       return null;
     }
+  }
+
+  private ArtifactCache createHttpArtifactCache(BuckEventBus buckEventBus) {
+    String host = getValue("cache", "http_host").or("localhost");
+    int port = Integer.parseInt(getValue("cache", "http_port").or(DEFAULT_HTTP_CACHE_PORT));
+    int timeoutSeconds = Integer.parseInt(
+        getValue("cache", "connection_timeout_seconds").or(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS));
+    boolean doStore = readCacheMode("http_mode", DEFAULT_HTTP_CACHE_MODE);
+    return new HttpArtifactCache(
+        host,
+        port,
+        timeoutSeconds,
+        doStore,
+        projectFilesystem,
+        buckEventBus);
   }
 
   private boolean readCacheMode(String fieldName, String defaultValue) {

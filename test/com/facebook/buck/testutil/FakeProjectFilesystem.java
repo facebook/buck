@@ -39,6 +39,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.CopyOption;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
@@ -252,7 +253,8 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public void copyToPath(final InputStream inputStream, Path path) throws IOException {
+  public void copyToPath(final InputStream inputStream, Path path, CopyOption... options)
+      throws IOException {
     writeBytesToPath(ByteStreams.toByteArray(inputStream), path);
   }
 
