@@ -169,8 +169,7 @@ public class UberRDotJava extends AbstractBuildRule implements
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
-      final BuildableContext buildableContext
-  ) {
+      final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     ImmutableList<Path> resDirectories = filteredResourcesProvider.getResDirectories();
