@@ -70,6 +70,7 @@ RULES_SRCS = [
   'PreDexMerge.java',
   'PrebuiltNativeLibrary.java',
   'PrebuiltNativeLibraryDescription.java',
+  'RDotTxtEntry.java',
   'ResourcesFilter.java',
   'RobolectricTestDescription.java',
   'RobolectricTest.java',
