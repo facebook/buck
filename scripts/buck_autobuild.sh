@@ -101,7 +101,6 @@ function createTrigger() {
     watchman -j <<-EOT
 ["trigger", "${sourceDirectory}", {
   "name": "buck_speculate",
-  "append_files": true,
   "expression": ["allof", ["type", "f"], ["not", ["pcre", "(^.git|pyc\$|swp\$|swo\$)", "wholename"]]],
   "command": ["$(getScript)", "change", "${sourceDirectory}", "${destinationDirectory}", "${target}"]
 }]
