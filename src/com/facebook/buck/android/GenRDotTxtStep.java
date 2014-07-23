@@ -19,25 +19,20 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.util.Set;
 
-public class GenRDotJavaStep extends CompositeStep {
+public class GenRDotTxtStep extends CompositeStep {
 
   /**
-   * Creates a command that will run {@code aapt} for the purpose of generating {@code R.java}.
-   * Additionally, this command will generate the corresponding {@code R.txt} file.
+   * Creates a command that will run {@code aapt} for the purpose of generating {@code R.txt}.
    * @param resDirectories Directories of resource files. Will be specified with {@code -S} to
    *     {@code aapt}
    * @param genDirectoryPath Directory where {@code R.java} and potentially {@code R.txt} will be
@@ -48,21 +43,19 @@ public class GenRDotJavaStep extends CompositeStep {
    *     rather than the path to {@code AndroidManifest.xml}. This precludes the need to keep a
    *     number of dummy {@code AndroidManifest.xml} files in the codebase.
    * @param isTempRDotJava If true, the values of the resource values in the generated
-   *     {@code R.java} will be meaningless.
+   *     {@code R.txt} will be meaningless.
    *     <p>
-   *     If false, this command will produce an {@code R.java} file with resource values designed to
+   *     If false, this command will produce an {@code R.txt} file with resource values designed to
    *     match those in an .apk that includes the resources.
-   * @param extraLibraryPackages
    * @param dummyAndroidManifest Where the a dummy {@code AndroidManifest.xml} file can be written.
    */
-  public GenRDotJavaStep(
+  public GenRDotTxtStep(
       ImmutableList<Path> resDirectories,
       Path genDirectoryPath,
       final Supplier<String> libraryPackage,
       boolean isTempRDotJava,
-      Set<String> extraLibraryPackages,
       Path dummyAndroidManifest) {
-    super(ImmutableList.<Step>of(
+    super(ImmutableList.of(
         new MkdirStep(dummyAndroidManifest.getParent()),
         new WriteFileStep(
             new Supplier<String>() {
@@ -75,32 +68,28 @@ public class GenRDotJavaStep extends CompositeStep {
               }
             },
             dummyAndroidManifest),
-        new GenRDotJavaStepInternal(
+        new GenRDotTxtStepInternal(
             resDirectories,
             genDirectoryPath,
             isTempRDotJava,
-            extraLibraryPackages,
             dummyAndroidManifest)));
   }
 
-  private static class GenRDotJavaStepInternal extends ShellStep {
+  private static class GenRDotTxtStepInternal extends ShellStep {
     private final ImmutableList<Path> resDirectories;
     private final Path genDirectoryPath;
     private final boolean isTempRDotJava;
-    private final ImmutableSet<String> extraLibraryPackages;
     private final Path androidManifest;
 
-    public GenRDotJavaStepInternal(
+    public GenRDotTxtStepInternal(
         ImmutableList<Path> resDirectories,
         Path genDirectoryPath,
         boolean isTempRDotJava,
-        Set<String> extraLibraryPackages,
         Path dummyAndroidManifest) {
       this.resDirectories = Preconditions.checkNotNull(resDirectories);
       this.androidManifest = Preconditions.checkNotNull(dummyAndroidManifest);
       this.genDirectoryPath = Preconditions.checkNotNull(genDirectoryPath);
       this.isTempRDotJava = isTempRDotJava;
-      this.extraLibraryPackages = ImmutableSet.copyOf(extraLibraryPackages);
     }
 
     @Override
@@ -126,13 +115,11 @@ public class GenRDotJavaStep extends CompositeStep {
         builder.add("--non-constant-id");
       }
 
-      if (!extraLibraryPackages.isEmpty()) {
-        builder.add("--extra-packages").add(Joiner.on(':').join(extraLibraryPackages));
-      }
+      // aapt generates the R.txt file iff the "-J" flag is passed.
+      builder.add("-J").add(genDirectoryPath.toString());
 
       // Add the remaining flags.
       builder.add("-M").add(context.getProjectFilesystem().resolve(androidManifest).toString());
-      builder.add("-m").add("-J").add(genDirectoryPath.toString());
       builder.add("--auto-add-overlay");
       builder.add("-I").add(androidPlatformTarget.getAndroidJar().toString());
 

@@ -49,6 +49,14 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
         }
       };
 
+  public static final Function<HasAndroidResourceDeps, String> TO_R_DOT_JAVA_PACKAGE =
+      new Function<HasAndroidResourceDeps, String>() {
+        @Override
+        public String apply(HasAndroidResourceDeps input) {
+          return input.getRDotJavaPackage();
+        }
+      };
+
   /**
    * @return the package name in which to generate the R.java representing these resources.
    */

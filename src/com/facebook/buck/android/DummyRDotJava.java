@@ -46,11 +46,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -97,7 +94,7 @@ public class DummyRDotJava extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
-    Set<SourcePath> javaSourceFilePaths = Sets.newHashSet();
+    Set<SourcePath> javaSourceFilePaths;
     if (androidResourceDeps.isEmpty()) {
       // In this case, the user is likely running a Robolectric test that does not happen to
       // depend on any resources. However, if Robolectric doesn't find an R.java file, it flips
@@ -105,24 +102,19 @@ public class DummyRDotJava extends AbstractBuildRule
 
       // TODO(mbolin): Stop hardcoding com.facebook. This should match the package in the
       // associated TestAndroidManifest.xml file.
-      String rDotJavaPackage = "com.facebook";
-      String javaCode = MergeAndroidResourcesStep.generateJavaCodeForPackageWithoutResources(
-          rDotJavaPackage);
-      steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder.resolve("com/facebook")));
-      Path rDotJavaFile = rDotJavaSrcFolder.resolve("com/facebook/R.java");
-      steps.add(new WriteFileStep(javaCode, rDotJavaFile));
-      javaSourceFilePaths.add(new PathSourcePath(rDotJavaFile));
+      Path emptyRDotJava = rDotJavaSrcFolder.resolve("com/facebook/R.java");
+      steps.add(new MakeCleanDirectoryStep(emptyRDotJava.getParent()));
+      steps.add(new WriteFileStep(
+          "package com.facebook;\n public class R {}\n",
+          emptyRDotJava));
+      javaSourceFilePaths = ImmutableSet.<SourcePath>of(new PathSourcePath(emptyRDotJava));
     } else {
-      Map<Path, String> symbolsFileToRDotJavaPackage = Maps.newHashMap();
-      for (HasAndroidResourceDeps res : androidResourceDeps) {
-        String rDotJavaPackage = res.getRDotJavaPackage();
-        symbolsFileToRDotJavaPackage.put(res.getPathToTextSymbolsFile(), rDotJavaPackage);
-        Path rDotJavaFilePath = MergeAndroidResourcesStep.getOutputFilePath(
-            rDotJavaSrcFolder, rDotJavaPackage);
-        javaSourceFilePaths.add(new PathSourcePath(rDotJavaFilePath));
-      }
-      steps.add(new MergeAndroidResourcesStep(symbolsFileToRDotJavaPackage,
-          rDotJavaSrcFolder));
+      MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
+              androidResourceDeps,
+              /* uberRDotTxt */ Optional.<Path>absent(),
+              rDotJavaSrcFolder);
+      steps.add(mergeStep);
+      javaSourceFilePaths = mergeStep.getRDotJavaFiles();
     }
 
     // Clear out the directory where the .class files will be generated.

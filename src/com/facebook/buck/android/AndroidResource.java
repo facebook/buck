@@ -53,7 +53,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -322,12 +321,11 @@ public class AndroidResource extends AbstractBuildRule
 
     Path dummyManifestFile = BuildTargets.getGenPath(
         getBuildTarget(), "__%s_dummy_manifest/AndroidManifest.xml");
-    steps.add(new GenRDotJavaStep(
+    steps.add(new GenRDotTxtStep(
         resDirectories,
         pathToTextSymbolsDir,
         rDotJavaPackageSupplier,
         /* isTempRDotJava */ true,
-        /* extraLibraryPackages */ ImmutableSet.<String>of(),
         dummyManifestFile));
 
     buildableContext.recordArtifact(pathToTextSymbolsFile);

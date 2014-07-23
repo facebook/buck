@@ -22,6 +22,7 @@ import com.facebook.buck.java.AccumulateClassNamesStep;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -31,25 +32,22 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
@@ -262,22 +260,29 @@ public class UberRDotJava extends AbstractBuildRule implements
       ImmutableList<Path> resDirectories,
       Set<String> rDotJavaPackages,
       ImmutableList.Builder<Step> steps,
-      final BuildableContext buildableContext) {
-    // Create the path where the R.java files will be generated.
-    Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
-    steps.add(new MakeCleanDirectoryStep(rDotJavaSrc));
+      BuildableContext buildableContext) {
+    // Create the path where the R.txt files will be generated.
+    Path rDotTxtDir = getPathToRDotTxtDir();
+    steps.add(new MakeCleanDirectoryStep(rDotTxtDir));
 
-    // Generate the R.java files.
+    // Generate the real R.txt file.
     Path dummyManifestFile = BuildTargets.getGenPath(
         getBuildTarget(), "__%s_dummy_manifest/AndroidManifest.xml");
-    GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
+    steps.add(new GenRDotTxtStep(
         resDirectories,
-        rDotJavaSrc,
+        rDotTxtDir,
         Suppliers.ofInstance(Iterables.get(rDotJavaPackages, 0)),
         /* isTempRDotJava */ false,
-        FluentIterable.from(rDotJavaPackages).skip(1).toSet(),
-        dummyManifestFile);
-    steps.add(genRDotJava);
+        dummyManifestFile));
+
+    // Merge R.txt of HasAndroidRes and generate the resulting R.java files per package.
+    Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
+    steps.add(new MakeCleanDirectoryStep(rDotJavaSrc));
+    MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
+        resourceDeps,
+        Optional.of(rDotTxtDir.resolve("R.txt")),
+        rDotJavaSrc);
+    steps.add(mergeStep);
 
     if (shouldBuildStringSourceMap) {
       // Make sure we have an output directory
@@ -287,7 +292,7 @@ public class UberRDotJava extends AbstractBuildRule implements
       // Add the step that parses R.txt and all the strings.xml files, and
       // produces a JSON with android resource id's and xml paths for each string resource.
       GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
-          rDotJavaSrc,
+          rDotTxtDir,
           resDirectories,
           outputDirPath);
       steps.add(genNativeStringInfo);
@@ -296,19 +301,12 @@ public class UberRDotJava extends AbstractBuildRule implements
       buildableContext.recordArtifactsInDirectory(outputDirPath);
     }
 
-    // Compile the R.java files.
-    Set<SourcePath> javaSourceFilePaths = Sets.newHashSet();
-    for (String rDotJavaPackage : rDotJavaPackages) {
-      Path path = rDotJavaSrc.resolve(rDotJavaPackage.replace('.', '/')).resolve("R.java");
-      javaSourceFilePaths.add(new PathSourcePath(path));
-    }
-
     // Create the path where the R.java files will be compiled.
     Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
     steps.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
     JavacStep javac = UberRDotJavaUtil.createJavacStepForUberRDotJavaFiles(
-        javaSourceFilePaths,
+        mergeStep.getRDotJavaFiles(),
         rDotJavaBin,
         javacOptions,
         getBuildTarget());
@@ -319,6 +317,7 @@ public class UberRDotJava extends AbstractBuildRule implements
     steps.add(new AccumulateClassNamesStep(Optional.of(rDotJavaBin), rDotJavaClassesTxt));
 
     // Ensure the generated R.txt, R.java, and R.class files are also recorded.
+    buildableContext.recordArtifactsInDirectory(rDotTxtDir);
     buildableContext.recordArtifactsInDirectory(rDotJavaSrc);
     buildableContext.recordArtifactsInDirectory(rDotJavaBin);
     buildableContext.recordArtifact(rDotJavaClassesTxt);
@@ -336,13 +335,16 @@ public class UberRDotJava extends AbstractBuildRule implements
     return BuildTargets.getBinPath(getBuildTarget(), "__%s_uber_rdotjava_bin__");
   }
 
+  public Path getPathToRDotTxtDir() {
+    return BuildTargets.getBinPath(getBuildTarget(), "__%s_res_symbols__");
+  }
+
   /**
-   * This directory contains both the generated {@code R.java} and {@code R.txt} files.
-   * The {@code R.txt} file will be in the root of the directory whereas the {@code R.java} files
-   * will be under a directory path that matches the corresponding package structure.
+   * This directory contains both the generated {@code R.java} files under a directory path that
+   * matches the corresponding package structure.
    */
   Path getPathToGeneratedRDotJavaSrcFiles() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__%s_uber_rdotjava_src__");
+    return getPathToGeneratedRDotJavaSrcFiles(getBuildTarget());
   }
 
   Path getPathToRDotJavaDexFiles() {
@@ -356,5 +358,10 @@ public class UberRDotJava extends AbstractBuildRule implements
   Path getPathToRDotJavaClassesTxt() {
     return BuildTargets.getBinPath(getBuildTarget(), "__%s_uber_rdotjava_classes__")
         .resolve("classes.txt");
+  }
+
+  @VisibleForTesting
+  static Path getPathToGeneratedRDotJavaSrcFiles(BuildTarget buildTarget) {
+    return BuildTargets.getBinPath(buildTarget, "__%s_uber_rdotjava_src__");
   }
 }

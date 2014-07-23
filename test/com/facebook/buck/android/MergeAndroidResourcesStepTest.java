@@ -19,9 +19,12 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -32,7 +35,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -65,7 +67,7 @@ public class MergeAndroidResourcesStepTest {
         MergeAndroidResourcesStep.sortSymbols(
             entriesBuilder.buildFilePathToPackageNameSet(),
             entriesBuilder.getProjectFilesystem(),
-            true /* reenumerate */);
+            Optional.<ImmutableMap<RDotTxtEntry, String>>absent());
 
     assertEquals(1, packageNameToResources.keySet().size());
     SortedSet<RDotTxtEntry> resources = packageNameToResources.get(sharedPackageName);
@@ -75,8 +77,8 @@ public class MergeAndroidResourcesStepTest {
     for (RDotTxtEntry resource : resources) {
       if (!resource.type.equals("styleable")) {
         assertFalse("Duplicate ids should be fixed by renumerate=true; duplicate was: " +
-            resource.idValueToWrite, uniqueEntries.contains(resource.idValueToWrite));
-        uniqueEntries.add(resource.idValueToWrite);
+            resource.idValue, uniqueEntries.contains(resource.idValue));
+        uniqueEntries.add(resource.idValue);
       }
     }
 
@@ -86,9 +88,9 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
-  public void testGenerateRDotJavaForOneSymbolsFile() {
-    String symbolsFile = BuckConstant.BIN_DIR +
-        "/android_res/com/facebook/http/__res_resources_text_symbols__/R.txt";
+  public void testGenerateRDotJavaForOneSymbolsFile() throws IOException {
+    String symbolsFile = BuckConstant.GEN_DIR +
+        "/android_res/com/facebook/http/__res_text_symbols__/R.txt";
     String rDotJavaPackage = "com.facebook";
     final ImmutableList<String> outputTextSymbols = ImmutableList.<String>builder()
         .add("int id placeholder 0x7f020000")
@@ -104,92 +106,56 @@ public class MergeAndroidResourcesStepTest {
         .build();
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
     entriesBuilder.add(new RDotTxtFile(rDotJavaPackage, symbolsFile, outputTextSymbols));
-    SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToResources =
-        MergeAndroidResourcesStep.sortSymbols(
-            entriesBuilder.buildFilePathToPackageNameSet(),
-            entriesBuilder.getProjectFilesystem(),
-            false /* reenumerate */);
 
-    assertEquals(1, rDotJavaPackageToResources.keySet().size());
+    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
-    // Verify all of the values in the resources collection.
-    SortedSet<RDotTxtEntry> resources = rDotJavaPackageToResources.get(rDotJavaPackage);
-    assertEquals(9, resources.size());
-    Iterator<RDotTxtEntry> iter = resources.iterator();
-    assertResource("int", "id", "placeholder", "0x7f020000", iter.next());
-    assertResource("int", "string", "debug_http_proxy_dialog_title", "0x7f030004", iter.next());
-    assertResource("int", "string", "debug_http_proxy_hint", "0x7f030005", iter.next());
-    assertResource("int", "string", "debug_http_proxy_summary", "0x7f030003", iter.next());
-    assertResource("int", "string", "debug_http_proxy_title", "0x7f030002", iter.next());
-    assertResource("int", "string", "debug_ssl_cert_check_summary", "0x7f030001", iter.next());
-    assertResource("int", "string", "debug_ssl_cert_check_title", "0x7f030000", iter.next());
-    assertResource("int", "styleable", "SherlockMenuItem_android_visible", "4", iter.next());
-    assertResource("int[]",
-        "styleable",
-        "SherlockMenuView",
-        "{ 0x7f010026, 0x7f010027, 0x7f010028, 0x7f010029, 0x7f01002a, 0x7f01002b, 0x7f01002c, " +
-            "0x7f01002d }",
-        iter.next());
+    Path uberRDotTxt = Paths.get("R.txt");
+    filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
+
+    HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/facebook/http:res"))
+        .setRes(Paths.get("res"))
+        .setRDotJavaPackage("com.facebook")
+        .build();
+
+    MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
+        ImmutableList.of(resource),
+        Optional.of(uberRDotTxt),
+        Paths.get("output"));
+
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(filesystem)
+        .build();
+
+    assertEquals(0, mergeStep.execute(executionContext));
 
     // Verify that the correct Java code is generated.
-    String javaCode = MergeAndroidResourcesStep.generateJavaCodeForPackageAndResources(
-        rDotJavaPackage, resources);
     assertEquals(
         "package com.facebook;\n" +
         "\n" +
         "public class R {\n" +
         "\n" +
         "  public static class id {\n" +
-        "    public static int placeholder=0x7f020000;\n" +
+        "    public static final int placeholder=0x7f020000;\n" +
         "  }\n" +
         "\n" +
         "  public static class string {\n" +
-        "    public static int debug_http_proxy_dialog_title=0x7f030004;\n" +
-        "    public static int debug_http_proxy_hint=0x7f030005;\n" +
-        "    public static int debug_http_proxy_summary=0x7f030003;\n" +
-        "    public static int debug_http_proxy_title=0x7f030002;\n" +
-        "    public static int debug_ssl_cert_check_summary=0x7f030001;\n" +
-        "    public static int debug_ssl_cert_check_title=0x7f030000;\n" +
+        "    public static final int debug_http_proxy_dialog_title=0x7f030004;\n" +
+        "    public static final int debug_http_proxy_hint=0x7f030005;\n" +
+        "    public static final int debug_http_proxy_summary=0x7f030003;\n" +
+        "    public static final int debug_http_proxy_title=0x7f030002;\n" +
+        "    public static final int debug_ssl_cert_check_summary=0x7f030001;\n" +
+        "    public static final int debug_ssl_cert_check_title=0x7f030000;\n" +
         "  }\n" +
         "\n" +
         "  public static class styleable {\n" +
-        "    public static int SherlockMenuItem_android_visible=4;\n" +
-        "    public static int[] SherlockMenuView={ 0x7f010026, 0x7f010027, 0x7f010028, " +
+        "    public static final int SherlockMenuItem_android_visible=4;\n" +
+        "    public static final int[] SherlockMenuView={ 0x7f010026, 0x7f010027, 0x7f010028, " +
                 "0x7f010029, 0x7f01002a, 0x7f01002b, 0x7f01002c, 0x7f01002d };\n" +
         "  }\n" +
         "\n" +
         "}\n",
-        javaCode);
-  }
-
-  @Test
-  public void testGenerateRDotJavaForEmptyResources() {
-    String packageName = "com.facebook";
-    String rDotJava = MergeAndroidResourcesStep.generateJavaCodeForPackageWithoutResources(
-        packageName);
-    assertEquals(
-        "package com.facebook;\n" +
-        "\n" +
-        "public class R {\n" +
-        "\n" +
-        "}\n",
-        rDotJava);
-  }
-
-  /**
-   * A special comparison for two {@link RDotTxtEntry} objects because
-   * {@link RDotTxtEntry#equals(Object)} does not compare all of the fields.
-   */
-  private void assertResource(
-      String expectedIdType,
-      String expectedType,
-      String expectedName,
-      String expectedIdValue,
-      RDotTxtEntry observedResource) {
-    assertEquals(expectedIdType, observedResource.idType);
-    assertEquals(expectedType, observedResource.type);
-    assertEquals(expectedName, observedResource.name);
-    assertEquals(expectedIdValue, observedResource.originalIdValue);
+        filesystem.readFileIfItExists(Paths.get("output/com/facebook/R.java")).get());
   }
 
   // sortSymbols has a goofy API.  This will help.
@@ -210,7 +176,7 @@ public class MergeAndroidResourcesStepTest {
       return filePathToPackageName.build();
     }
 
-    public ProjectFilesystem getProjectFilesystem() {
+    public FakeProjectFilesystem getProjectFilesystem() {
       return filesystem;
     }
   }

@@ -33,7 +33,6 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -47,7 +46,6 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
@@ -96,8 +94,7 @@ public class DummyRDotJavaTest {
         mergeAndroidResourcesDescription(
             ImmutableList.of(
                 (AndroidResource) resourceRule1,
-                (AndroidResource) resourceRule2),
-            rDotJavaSrcFolder),
+                (AndroidResource) resourceRule2)),
         makeCleanDirDescription(rDotJavaBinFolder),
         makeCleanDirDescription(rDotJavaAbiFolder),
         javacInMemoryDescription(rDotJavaBinFolder, rDotJavaAbiFolder + "/abi"),
@@ -153,7 +150,7 @@ public class DummyRDotJavaTest {
   private static String javacInMemoryDescription(String rDotJavaClassesFolder,
                                                  String pathToAbiOutputFile) {
     Set<SourcePath> javaSourceFiles = ImmutableSet.<SourcePath>of(
-        new TestSourcePath("buck-out/bin/java/base/__rule_rdotjava_src__/com.facebook/R.java"));
+        new TestSourcePath("buck-out/bin/java/base/__rule_rdotjava_src__/com/facebook/R.java"));
     return UberRDotJavaUtil.createJavacStepForDummyRDotJavaFiles(
         javaSourceFiles,
         Paths.get(rDotJavaClassesFolder),
@@ -163,20 +160,11 @@ public class DummyRDotJavaTest {
         .getDescription(TestExecutionContext.newInstance());
   }
 
-  private static String mergeAndroidResourcesDescription(
-      List<AndroidResource> resourceRules,
-      String rDotJavaSourceFolder) {
+  private static String mergeAndroidResourcesDescription(List<AndroidResource> resourceRules) {
     List<String> sortedSymbolsFiles = FluentIterable.from(resourceRules)
-        .transform(new Function<AndroidResource, Path>() {
-          @Override
-          public Path apply(AndroidResource input) {
-            return input.getPathToTextSymbolsFile();
-          }
-        })
         .transform(Functions.toStringFunction())
         .toList();
-    return "android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles) +
-        " -o " + rDotJavaSourceFolder;
+    return "android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles);
   }
 
   private void setAndroidResourceBuildOutput(BuildRule resourceRule, String sha1HashCode) {

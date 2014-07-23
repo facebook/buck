@@ -94,7 +94,7 @@ public class PackageStringAssets extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(pathToStrings));
     steps.add(new CompileStringsStep(
             filteredResourcesProvider.getNonEnglishStringFiles(),
-            uberRDotJava.getPathToGeneratedRDotJavaSrcFiles(),
+            uberRDotJava.getPathToRDotTxtDir(),
             pathToStrings));
     steps.add(new ZipStep(
             pathToStringAssetsZip,

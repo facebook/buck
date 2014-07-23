@@ -93,7 +93,7 @@ public class CompileStringsStep implements Step {
       "^int (string|plurals|array) (\\w+) 0x([0-9a-f]+)$");
 
   private final ImmutableSet<Path> filteredStringFiles;
-  private final Path rDotJavaSrcDir;
+  private final Path rDotTxtDir;
   private final Path destinationDir;
   private final Map<String, String> regionSpecificToBaseLocaleMap;
   private final Map<String, Integer> resourceNameToIdMap;
@@ -105,16 +105,16 @@ public class CompileStringsStep implements Step {
    *
    * @param filteredStringFiles Set containing paths to non-english
    *     string files, matching {@link FilterResourcesStep#NON_ENGLISH_STRING_PATH} regex.
-   * @param rDotJavaSrcDir Path to the directory where aapt generates R.txt file along with the
+   * @param rDotTxtDir Path to the directory where aapt generates R.txt file along with the
    *     final R.java files per package.
    * @param destinationDir Output directory for the generated json files.
    */
   public CompileStringsStep(
       ImmutableSet<Path> filteredStringFiles,
-      Path rDotJavaSrcDir,
+      Path rDotTxtDir,
       Path destinationDir) {
     this.filteredStringFiles = Preconditions.checkNotNull(filteredStringFiles);
-    this.rDotJavaSrcDir = Preconditions.checkNotNull(rDotJavaSrcDir);
+    this.rDotTxtDir = Preconditions.checkNotNull(rDotTxtDir);
     this.destinationDir = Preconditions.checkNotNull(destinationDir);
     this.regionSpecificToBaseLocaleMap = Maps.newHashMap();
     this.resourceNameToIdMap = Maps.newHashMap();
@@ -124,7 +124,7 @@ public class CompileStringsStep implements Step {
   public int execute(ExecutionContext context) {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
     try {
-      buildResourceNameToIdMap(filesystem, rDotJavaSrcDir.resolve("R.txt"), resourceNameToIdMap);
+      buildResourceNameToIdMap(filesystem, rDotTxtDir.resolve("R.txt"), resourceNameToIdMap);
     } catch (IOException e) {
       context.logError(e, "Failure parsing R.txt file.");
       return 1;
