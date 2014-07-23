@@ -27,20 +27,36 @@ import android.content.Context;
  * instance. This is used in conjunction with secondary dex files so that the logic that would
  * normally live in the Application class is loaded after the secondary dexes are loaded.
  */
-public abstract class DelegatingApplication<T extends ApplicationLike> extends Application {
+public abstract class ExopackageApplication<T extends ApplicationLike> extends Application {
 
   private final String delegateClassName;
+  private final boolean isExopackage;
   private T delegate;
+
+  /**
+   * @param isExopackage True iff this is an exopackage build.  This should usually be
+   * {@code BuildConfig.IS_EXOPACKAGE}.
+   */
+  protected ExopackageApplication(boolean isExopackage) {
+    this(DefaultApplicationLike.class.getName(), isExopackage);
+  }
 
   /**
    * @param delegateClassName The fully-qualified name of the {@link ApplicationLike} class
    * that will act as the delegate for application lifecycle callbacks.
+   * @param isExopackage True iff this is an exopackage build.  This should usually be
+   * {@code BuildConfig.IS_EXOPACKAGE}.
    */
-  protected DelegatingApplication(String delegateClassName) {
+  protected ExopackageApplication(String delegateClassName, boolean isExopackage) {
     this.delegateClassName = delegateClassName;
+    this.isExopackage = isExopackage;
   }
 
   private T createDelegate() {
+    if (isExopackage) {
+      ExopackageDexLoader.loadExopackageJars(this);
+    }
+
     try {
       // Use reflection to create the delegate so it doesn't need to go into the primary dex.
       Class<T> implClass = (Class<T>) Class.forName(delegateClassName);
@@ -63,16 +79,6 @@ public abstract class DelegatingApplication<T extends ApplicationLike> extends A
    * here since {@link android.app.Application#onCreate} will not have yet been called.
    */
   protected void onBaseContextAttached() {
-  }
-
-  /**
-   * Gets {@link ApplicationLike} delegate to forward calls to, creating it if needed.
-   *
-   * @return the instance to delegate to
-   */
-  protected final T getDelegate() {
-    ensureDelegate();
-    return delegate;
   }
 
   /**
