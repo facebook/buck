@@ -16,6 +16,8 @@
 
 package com.facebook.buck.junit;
 
+import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
+import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
@@ -107,8 +109,18 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
+  public void shouldNotMatchMethodsUsingPrefixAlone() throws IOException {
+    String[] command = {"test", "--all", "--test-selectors", "#test"};
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(command);
+    assertThat(
+        "No tests should have run",
+        result.getStderr(),
+        containsString("TESTING SELECTED TESTS\nTESTS PASSED"));
+  }
+
+  @Test
   public void shouldReportRegularExpressionErrors() throws IOException {
-    String error = "Regular expression error in 'Clown(': Unclosed group near index 6";
+    String error = "Regular expression error in 'Clown(': Unclosed group near index 7";
     try {
       workspace.runBuckCommand("test", "--all", "--filter", "Clown(");
       fail("Did not catch expected exception!");
@@ -149,28 +161,34 @@ public class TestSelectorsIntegrationTest {
 
   private void assertOutputWithSelectors(ProjectWorkspace.ProcessResult result) {
     String stderr = result.getStderr();
-    assertThat(stderr, containsString(
-        "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.clown.CarTest"));
-    assertThat(stderr, containsString(
-        "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.clown.FlowerTest"));
-    assertThat(stderr, containsString(
-        "PASS    <100ms  1 Passed   0 Skipped   0 Failed   " +
-        "com.example.clown.PrimeMinisterialDecreeTest"));
-    assertThat(stderr, containsString(
-        "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.clown.ShoesTest"));
+    assertThat(stderr, containsRegex(
+        createBuckTestOutputLineRegex(
+            "PASS", 1, 0, 0, "com.example.clown.CarTest")));
+    assertThat(stderr, containsRegex(
+        createBuckTestOutputLineRegex(
+            "PASS", 1, 0, 0, "com.example.clown.FlowerTest")));
+    assertThat(stderr, containsRegex(
+        createBuckTestOutputLineRegex(
+            "PASS", 1, 0, 0, "com.example.clown.PrimeMinisterialDecreeTest")));
+    assertThat(stderr, containsRegex(
+        createBuckTestOutputLineRegex(
+            "PASS", 1, 0, 0, "com.example.clown.ShoesTest")));
   }
 
   private void assertOutputWithoutSelectors(ProjectWorkspace.ProcessResult result) {
     String stderr = result.getStderr();
-    assertThat(stderr, containsString(
-        "PASS    <100ms  3 Passed   0 Skipped   0 Failed   com.example.clown.CarTest"));
-    assertThat(stderr, containsString(
-        "PASS    <100ms  3 Passed   0 Skipped   0 Failed   com.example.clown.FlowerTest"));
-    assertThat(stderr, containsString(
-        "FAIL    <100ms  5 Passed   0 Skipped   1 Failed   " +
-        "com.example.clown.PrimeMinisterialDecreeTest"));
-    assertThat(stderr, containsString(
-        "PASS    <100ms  2 Passed   0 Skipped   0 Failed   com.example.clown.ShoesTest"));
+    assertThat(stderr, containsRegex(
+        createBuckTestOutputLineRegex(
+            "PASS", 3, 0, 0, "com.example.clown.CarTest")));
+    assertThat(stderr, containsRegex(
+        createBuckTestOutputLineRegex(
+            "PASS", 3, 0, 0, "com.example.clown.FlowerTest")));
+    assertThat(stderr, containsRegex(
+        createBuckTestOutputLineRegex(
+            "FAIL", 5, 0, 1, "com.example.clown.PrimeMinisterialDecreeTest")));
+    assertThat(stderr, containsRegex(
+        createBuckTestOutputLineRegex(
+            "PASS", 2, 0, 0, "com.example.clown.ShoesTest")));
   }
 
   private void assertCached(ProjectWorkspace.ProcessResult result) {

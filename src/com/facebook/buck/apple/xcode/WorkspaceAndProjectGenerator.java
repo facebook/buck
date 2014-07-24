@@ -23,6 +23,7 @@ import com.facebook.buck.apple.XcodeProjectConfig;
 import com.facebook.buck.apple.XcodeWorkspaceConfig;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -44,36 +45,51 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class WorkspaceAndProjectGenerator {
-  static final String DEPENDENCIES_GROUP = "Dependencies";
+  private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
+  private static final String DEPENDENCIES_GROUP = "Dependencies";
 
   private final ProjectFilesystem projectFilesystem;
   private final PartialGraph partialGraph;
   private final ExecutionContext executionContext;
-  private final BuildTarget workspaceConfigTarget;
+  private final ImmutableSet<BuildTarget> workspaceConfigTargets;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
       PartialGraph partialGraph,
       ExecutionContext executionContext,
-      BuildTarget workspaceConfigTarget,
+      Set<BuildTarget> workspaceConfigTargets,
       Set<ProjectGenerator.Option> projectGeneratorOptions) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
-    this.workspaceConfigTarget = Preconditions.checkNotNull(workspaceConfigTarget);
+    this.workspaceConfigTargets = ImmutableSet.copyOf(workspaceConfigTargets);
     this.projectGeneratorOptions = ImmutableSet.<ProjectGenerator.Option>builder()
       .addAll(projectGeneratorOptions)
       .addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS)
       .build();
   }
 
-  public Path generateWorkspaceAndDependentProjects() throws IOException {
+  public ImmutableSet<Path> generateWorkspacesAndDependentProjects() throws IOException {
+    LOG.debug("Generating workspaces for config targets %s", workspaceConfigTargets);
+    ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
+    Map<BuildRule, ProjectGenerator> projectGenerators = new HashMap<>();
+    for (BuildTarget workspaceConfigTarget : workspaceConfigTargets) {
+      pathsBuilder.add(
+          generateWorkspaceAndDependentProjects(workspaceConfigTarget, projectGenerators));
+    }
+    return pathsBuilder.build();
+  }
+
+  private Path generateWorkspaceAndDependentProjects(
+        BuildTarget workspaceConfigTarget,
+        Map<BuildRule, ProjectGenerator> projectGenerators)
+      throws IOException {
     BuildRule workspaceTargetRule =
         partialGraph.getActionGraph().findBuildRuleByTarget(workspaceConfigTarget);
 
@@ -82,13 +98,14 @@ public class WorkspaceAndProjectGenerator {
           workspaceTargetRule.getFullyQualifiedName());
     }
 
+    LOG.debug("Generating workspace for config target %s", workspaceConfigTarget);
     XcodeWorkspaceConfig workspaceBuildable =
         (XcodeWorkspaceConfig) workspaceTargetRule;
     BuildRule actualTargetRule = workspaceBuildable.getSrcTarget();
 
     String workspaceName = workspaceBuildable.getSrcTarget().getBuildTarget().getShortName();
 
-    Path outputDirectory = Paths.get(workspaceBuildable.getBuildTarget().getBasePath());
+    Path outputDirectory = workspaceBuildable.getBuildTarget().getBasePath();
 
     WorkspaceGenerator workspaceGenerator = new WorkspaceGenerator(
         projectFilesystem,
@@ -107,29 +124,22 @@ public class WorkspaceAndProjectGenerator {
         actualTargetRule,
         ImmutableSet.copyOf(allRules),
         workspaceName,
-        outputDirectory.resolve(workspaceName + ".xcworkspace"));
+        outputDirectory.resolve(workspaceName + ".xcworkspace"),
+        workspaceBuildable.getActionConfigNames());
 
-    Multimap<String, BuildRule> buildRulesByTargetBasePath =
+    Multimap<Path, BuildRule> buildRulesByTargetBasePath =
         BuildRules.buildRulesByTargetBasePath(allRules);
 
-    for (String basePath : buildRulesByTargetBasePath.keySet()) {
-      // From each target we find that package's xcode_project_config rule and generate it.
+    for (Path basePath : buildRulesByTargetBasePath.keySet()) {
+      // From each target we find that package's xcode_project_config rule and generate it if
+      // it hasn't already been generated.
       Optional<BuildRule> xcodeProjectConfigRule = Optional.fromNullable(Iterables.getOnlyElement(
           partialGraph.getActionGraph().getBuildRulesOfBuildableTypeInBasePath(
               XcodeProjectConfig.class, basePath), null));
 
-      Set<BuildRule> xcodeNativeProjectRules = Sets.newHashSet(Collections2.filter(
-          buildRulesByTargetBasePath.get(basePath), new Predicate<BuildRule>() {
-            @Override
-            public boolean apply(BuildRule rule) {
-              return rule.getType() == XcodeNativeDescription.TYPE;
-            }
-          }));
-
+      ProjectGenerator generator;
       if (xcodeProjectConfigRule.isPresent()) {
-        XcodeProjectConfig xcodeProjectConfig =
-            (XcodeProjectConfig) Preconditions.checkNotNull(
-                xcodeProjectConfigRule.get());
+        XcodeProjectConfig xcodeProjectConfig = (XcodeProjectConfig) xcodeProjectConfigRule.get();
 
         ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
         for (BuildRule memberRule : xcodeProjectConfig.getRules()) {
@@ -137,15 +147,22 @@ public class WorkspaceAndProjectGenerator {
         }
         Set<BuildTarget> initialTargets = initialTargetsBuilder.build();
 
-        ProjectGenerator generator = new ProjectGenerator(
+        generator = projectGenerators.get(xcodeProjectConfig);
+        if (generator == null) {
+          LOG.debug("Generating project for rule %s", xcodeProjectConfig);
+          generator = new ProjectGenerator(
             partialGraph,
             initialTargets,
             projectFilesystem,
             executionContext,
-            projectFilesystem.getPathForRelativePath(Paths.get(basePath)),
+            projectFilesystem.getPathForRelativePath(basePath),
             xcodeProjectConfig.getProjectName(),
             projectGeneratorOptions);
-        generator.createXcodeProjects();
+          generator.createXcodeProjects();
+          projectGenerators.put(xcodeProjectConfig, generator);
+        } else {
+          LOG.debug("Already generated project for rule %s, skipping", xcodeProjectConfig);
+        }
 
         String workspaceGroup = initialTargets.contains(actualTargetRule.getBuildTarget()) ?
             "" : DEPENDENCIES_GROUP;
@@ -156,6 +173,14 @@ public class WorkspaceAndProjectGenerator {
           schemeGenerator.addTargetToProjectPathMap(target, generator.getProjectPath());
         }
       }
+
+      Set<BuildRule> xcodeNativeProjectRules = Sets.newHashSet(Collections2.filter(
+          buildRulesByTargetBasePath.get(basePath), new Predicate<BuildRule>() {
+            @Override
+            public boolean apply(BuildRule rule) {
+              return rule.getType() == XcodeNativeDescription.TYPE;
+            }
+          }));
 
       for (BuildRule rule : xcodeNativeProjectRules) {
         XcodeNative buildable = (XcodeNative) rule;

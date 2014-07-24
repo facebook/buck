@@ -33,6 +33,11 @@ h1 {
   font-size: 1.6em;
 }
 
+.subtitle {
+  font-size: 80%;
+  padding-top: 10px;
+}
+
 h2 {
   font-size: 1.4em;
 }
@@ -52,7 +57,7 @@ p, pre, ul, ol {
 pre {
     border: 1px solid #ccc;
     padding: 0.5em 1em;
-    overflow-x: scroll;
+    overflow-x: auto;
     background: #fff;
     border-radius: 2px;
     line-height: 1.5em;
@@ -60,8 +65,34 @@ pre {
 
 code {
     background: #fff;
-    font-size: 12px;
     letter-spacing: 0.02em;
+}
+
+pre, code {
+    font-size: 14px;
+}
+
+table {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+th {
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    background: #eee;
+}
+
+th code {
+    background: inherit;
+}
+
+td {
+    border: 1px solid #ccc;
+    padding: 0 0.5em;
 }
 
 ul, ol {
@@ -193,6 +224,11 @@ section.content article ol li {
   margin: 1em 0;
 }
 
+section.content article ul.tight-list li,
+section.content article ol.tight-list li {
+  margin: 0;
+}
+
 section.content article blockquote {
   padding: 0px 20px;
   margin: 0 0 20px;
@@ -266,6 +302,10 @@ footer {
   font-weight: bold;
 }
 
+/* For use in a <td> */
+.measurement {
+  text-align: right;
+}
 
 /* tabletish */
 

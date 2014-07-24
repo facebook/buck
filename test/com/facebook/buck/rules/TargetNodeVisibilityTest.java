@@ -25,17 +25,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
-import com.facebook.buck.step.Step;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
-import java.nio.file.Path;
-import java.util.Comparator;
-
-public class AbstractBuildRuleTest {
+public class TargetNodeVisibilityTest {
 
   private static final BuildTarget orcaTarget =
       BuildTarget.builder("//src/com/facebook/orca", "orca").build();
@@ -46,87 +43,87 @@ public class AbstractBuildRuleTest {
   private static final BuildTarget nonPublicTarget2 =
       BuildTarget.builder("//src/com/facebook/something2", "nonPublic").build();
 
-  private static final ImmutableSet<BuildRule> noDeps = ImmutableSet.of();
   private static final ImmutableSet<BuildTargetPattern> noVisibilityPatterns = ImmutableSet.of();
 
   @Test
   public void testVisibilityPublic() {
-    BuildRule publicBuildRule = createRule(publicTarget, noDeps,
+    TargetNode<?> publicTargetNode = createTargetNode(
+        publicTarget,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
-    AbstractBuildRule orcaRule = createRule(orcaTarget, ImmutableSet.of(publicBuildRule),
+    TargetNode<?> orcaRule = createTargetNode(
+        orcaTarget,
         noVisibilityPatterns);
-    assertTrue(publicBuildRule.isVisibleTo(orcaTarget));
+    assertTrue(publicTargetNode.isVisibleTo(orcaTarget));
     assertFalse(orcaRule.isVisibleTo(publicTarget));
   }
 
   @Test
   public void testVisibilityNonPublic() {
-    BuildRule nonPublicBuildRule1 = createRule(nonPublicTarget1, noDeps,
+    TargetNode<?> nonPublicTargetNode1 = createTargetNode(
+        nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
             new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
-    BuildRule nonPublicBuildRule2 = createRule(nonPublicTarget2, noDeps,
+    TargetNode<?> nonPublicTargetNode2 = createTargetNode(
+        nonPublicTarget2,
         ImmutableSet.<BuildTargetPattern>of(
             new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
-    AbstractBuildRule orcaRule = createRule(orcaTarget,
-        ImmutableSet.of(nonPublicBuildRule1, nonPublicBuildRule2),
-        noVisibilityPatterns);
+    TargetNode<?> orcaRule = createTargetNode(
+        orcaTarget,        noVisibilityPatterns);
 
-    assertTrue(shouldBeVisibleMessage(nonPublicBuildRule1, orcaTarget),
-        nonPublicBuildRule1.isVisibleTo(orcaTarget));
-    assertTrue(shouldBeVisibleMessage(nonPublicBuildRule2, orcaTarget),
-        nonPublicBuildRule2.isVisibleTo(orcaTarget));
+    assertTrue(shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
+        nonPublicTargetNode1.isVisibleTo(orcaTarget));
+    assertTrue(shouldBeVisibleMessage(nonPublicTargetNode2, orcaTarget),
+        nonPublicTargetNode2.isVisibleTo(orcaTarget));
     assertFalse(orcaRule.isVisibleTo(nonPublicTarget1));
     assertFalse(orcaRule.isVisibleTo(nonPublicTarget2));
 
-    BuildRule publicBuildRule = createRule(publicTarget,
-        noDeps,
+    TargetNode<?> publicTargetNode = createTargetNode(
+        publicTarget,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
-    assertTrue(publicBuildRule.isVisibleTo(nonPublicTarget1));
-    assertFalse(nonPublicBuildRule1.isVisibleTo(publicTarget));
+    assertTrue(publicTargetNode.isVisibleTo(nonPublicTarget1));
+    assertFalse(nonPublicTargetNode1.isVisibleTo(publicTarget));
   }
 
   @Test
   public void testVisibilityNonPublicFailure() {
-    BuildRule nonPublicBuildRule1 = createRule(nonPublicTarget1,
-        noDeps,
+    TargetNode<?> nonPublicTargetNode1 = createTargetNode(
+        nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
             new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
     try {
-     createRule(publicTarget,
-         ImmutableSet.of(nonPublicBuildRule1),
-         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
-      fail("createRule() should throw an exception");
+      nonPublicTargetNode1.checkVisibility(publicTarget);
+      fail("checkVisibility() should throw an exception");
     } catch (RuntimeException e) {
       assertEquals(
           String.format("%s depends on %s, which is not visible",
               publicTarget,
-              nonPublicBuildRule1),
+              nonPublicTargetNode1.getBuildTarget()),
           e.getMessage());
     }
   }
 
   @Test
   public void testVisibilityMix() {
-    BuildRule nonPublicBuildRule1 = createRule(nonPublicTarget1,
-        noDeps,
+    TargetNode<?> nonPublicTargetNode1 = createTargetNode(
+        nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
             new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
-    BuildRule nonPublicBuildRule2 = createRule(nonPublicTarget2,
-        noDeps,
+    TargetNode<?> nonPublicTargetNode2 = createTargetNode(
+        nonPublicTarget2,
         ImmutableSet.<BuildTargetPattern>of(
             new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
-    BuildRule publicBuildRule = createRule(publicTarget,
-        noDeps,
+    TargetNode<?> publicTargetNode = createTargetNode(
+        publicTarget,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
-    AbstractBuildRule orcaRule = createRule(orcaTarget,
-        ImmutableSet.of(publicBuildRule, nonPublicBuildRule1, nonPublicBuildRule2),
+    TargetNode<?> orcaRule = createTargetNode(
+        orcaTarget,
         noVisibilityPatterns);
 
-    assertTrue(shouldBeVisibleMessage(nonPublicBuildRule1, orcaTarget),
-        nonPublicBuildRule1.isVisibleTo(orcaTarget));
-    assertTrue(shouldBeVisibleMessage(nonPublicBuildRule2, orcaTarget),
-        nonPublicBuildRule2.isVisibleTo(orcaTarget));
-    assertTrue(publicBuildRule.isVisibleTo(orcaTarget));
+    assertTrue(shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
+        nonPublicTargetNode1.isVisibleTo(orcaTarget));
+    assertTrue(shouldBeVisibleMessage(nonPublicTargetNode2, orcaTarget),
+        nonPublicTargetNode2.isVisibleTo(orcaTarget));
+    assertTrue(publicTargetNode.isVisibleTo(orcaTarget));
     assertFalse(orcaRule.isVisibleTo(nonPublicTarget1));
     assertFalse(orcaRule.isVisibleTo(nonPublicTarget2));
     assertFalse(orcaRule.isVisibleTo(publicTarget));
@@ -134,25 +131,30 @@ public class AbstractBuildRuleTest {
 
   @Test
   public void testVisibilityMixFailure() {
-    BuildRule nonPublicBuildRule1 = createRule(nonPublicTarget1,
-        noDeps,
+    TargetNode<?> nonPublicTargetNode1 = createTargetNode(
+        nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
             new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
-    BuildRule nonPublicBuildRule2 = createRule(nonPublicTarget2,
-        noDeps,
+    TargetNode<?> nonPublicTargetNode2 = createTargetNode(
+        nonPublicTarget2,
         ImmutableSet.<BuildTargetPattern>of(
             new SingletonBuildTargetPattern("//some/other:target")));
-    BuildRule publicBuildRule = createRule(publicTarget,
-        noDeps,
+    TargetNode<?> publicTargetNode = createTargetNode(
+        publicTarget,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+
+    publicTargetNode.checkVisibility(orcaTarget);
+    nonPublicTargetNode1.checkVisibility(orcaTarget);
+
     try {
-      createRule(orcaTarget,
-          ImmutableSet.of(publicBuildRule, nonPublicBuildRule1, nonPublicBuildRule2),
-          noVisibilityPatterns);
-      fail("createRule() should throw an exception");
+      nonPublicTargetNode2.checkVisibility(orcaTarget);
+      fail("checkVisibility() should throw an exception");
     } catch (RuntimeException e) {
       assertEquals(
-          String.format("%s depends on %s, which is not visible", orcaTarget, nonPublicBuildRule2),
+          String.format(
+              "%s depends on %s, which is not visible",
+              orcaTarget,
+              nonPublicTargetNode2.getBuildTarget()),
           e.getMessage());
     }
   }
@@ -168,64 +170,70 @@ public class AbstractBuildRuleTest {
     BuildTarget targetInParentDirectory = BuildTarget.builder("//", "test").build();
 
     // Build rule that visible to targets in or under directory src/come/facebook
-    BuildRule directoryBuildRule = createRule(libTarget,
-        noDeps,
+    TargetNode<?> directoryTargetNode = createTargetNode(
+        libTarget,
         ImmutableSet.<BuildTargetPattern>of(
             new SubdirectoryBuildTargetPattern("src/com/facebook/")));
-    assertTrue(directoryBuildRule.isVisibleTo(targetInSpecifiedDirectory));
-    assertTrue(directoryBuildRule.isVisibleTo(targetUnderSpecifiedDirectory));
-    assertFalse(directoryBuildRule.isVisibleTo(targetInOtherDirectory));
-    assertFalse(directoryBuildRule.isVisibleTo(targetInParentDirectory));
+    assertTrue(directoryTargetNode.isVisibleTo(targetInSpecifiedDirectory));
+    assertTrue(directoryTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
+    assertFalse(directoryTargetNode.isVisibleTo(targetInOtherDirectory));
+    assertFalse(directoryTargetNode.isVisibleTo(targetInParentDirectory));
 
     // Build rule that visible to all targets, equals to PUBLIC.
-    BuildRule pubicBuildRule = createRule(libTarget,
-        noDeps,
+    TargetNode<?> pubicTargetNode = createTargetNode(
+        libTarget,
         ImmutableSet.<BuildTargetPattern>of(new SubdirectoryBuildTargetPattern("")));
-    assertTrue(pubicBuildRule.isVisibleTo(targetInSpecifiedDirectory));
-    assertTrue(pubicBuildRule.isVisibleTo(targetUnderSpecifiedDirectory));
-    assertTrue(pubicBuildRule.isVisibleTo(targetInOtherDirectory));
-    assertTrue(pubicBuildRule.isVisibleTo(targetInParentDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(targetInSpecifiedDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(targetInOtherDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(targetInParentDirectory));
   }
 
-  private String shouldBeVisibleMessage(BuildRule rule, BuildTarget target) {
+  private String shouldBeVisibleMessage(TargetNode<?> rule, BuildTarget target) {
     return String.format(
         "%1$s should be visible to %2$s because the visibility list of %1$s contains %2$s",
-        rule,
+        rule.getBuildTarget(),
         target);
   }
 
-  private static AbstractBuildRule createRule(BuildTarget buildTarget,
-      ImmutableSet<BuildRule> deps,
+  public static class FakeDescription implements Description<FakeDescription.FakeArg> {
+
+    @Override
+    public BuildRuleType getBuildRuleType() {
+      return new BuildRuleType("fake_rule");
+    }
+
+    @Override
+    public FakeArg createUnpopulatedConstructorArg() {
+      return new FakeArg();
+    }
+
+    @Override
+    public <A extends FakeArg> BuildRule createBuildRule(
+        BuildRuleParams params,
+        BuildRuleResolver resolver,
+        A args) {
+      return new FakeBuildRule(params);
+    }
+
+    public static class FakeArg implements ConstructorArg {
+
+    }
+  }
+
+  private static TargetNode<?> createTargetNode(
+      BuildTarget buildTarget,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
-    Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
-    ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
-
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setDeps(sortedDeps)
-        .setVisibility(visibilityPatterns)
-        .build();
-    return new AbstractBuildRule(buildRuleParams) {
-
-      @Override
-      public ImmutableList<Step> getBuildSteps(
-          BuildContext context, BuildableContext buildableContext) {
-        return null;
-      }
-
-      @Override
-      public Path getPathToOutputFile() {
-        return null;
-      }
-
-      @Override
-      protected Iterable<Path> getInputsToCompareToOutput() {
-        return null;
-      }
-
-      @Override
-      protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-        return null;
-      }
-    };
+    Description<FakeDescription.FakeArg> description = new FakeDescription();
+    BuildRuleFactoryParams params =
+        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
+            Maps.<String, Object>newHashMap(),
+            new BuildTargetParser(new FakeProjectFilesystem()),
+            buildTarget);
+    return new TargetNode<>(
+        description,
+        params,
+        ImmutableSet.<BuildTarget>of(),
+        visibilityPatterns);
   }
 }

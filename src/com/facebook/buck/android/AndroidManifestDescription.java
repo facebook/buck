@@ -20,18 +20,20 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
-import java.nio.file.Path;
+import java.util.Collections;
 
 public class AndroidManifestDescription implements Description<AndroidManifestDescription.Arg> {
 
@@ -52,12 +54,20 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    ImmutableSet<Path> manifestFiles = findManifestFiles(args);
+    ImmutableSet<SourcePath> manifestFiles = findManifestFiles(args);
 
-    // Filter out android_resource and android_library dependencies.
-    ImmutableSortedSet<BuildRule> newDeps = FluentIterable.from(args.deps.get())
-        .filter(Predicates.not(Predicates.instanceOf(AndroidResource.class)))
-        .filter(Predicates.not(Predicates.instanceOf(AndroidLibrary.class)))
+    // The only rules that need to be built before this AndroidManifest are those
+    // responsible for generating the AndroidManifest.xml files in the manifestFiles set (and
+    // possibly the skeleton).
+    //
+    // If the skeleton is a BuildRuleSourcePath, then its build rule must also be in the deps.
+    // The skeleton does not appear to be in either params.getDeclaredDeps() or
+    // params.getExtraDeps(), even though the type of Arg.skeleton is SourcePath.
+    // TODO(simons): t4744625 This should happen automagically.
+    ImmutableSortedSet<BuildRule> newDeps = FluentIterable
+        .from(Sets.union(manifestFiles, Collections.singleton(args.skeleton)))
+        .filter(BuildRuleSourcePath.class)
+        .transform(SourcePaths.TO_BUILD_RULE_REFERENCES)
         .toSortedSet(BuildTarget.BUILD_TARGET_COMPARATOR);
 
     return new AndroidManifest(
@@ -78,7 +88,7 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
   }
 
   @VisibleForTesting
-  static ImmutableSet<Path> findManifestFiles(Arg args) {
+  static ImmutableSet<SourcePath> findManifestFiles(Arg args) {
     AndroidTransitiveDependencyGraph transitiveDependencyGraph =
         new AndroidTransitiveDependencyGraph(args.deps.get());
     return transitiveDependencyGraph.findManifestFiles();

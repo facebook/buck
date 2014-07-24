@@ -25,10 +25,11 @@ import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.MultiLineReceiver;
+import com.android.ddmlib.NullOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
@@ -36,7 +37,9 @@ import com.facebook.buck.util.AndroidManifestReader;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.TriState;
+import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -66,6 +69,10 @@ public class AdbHelper {
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
+  /**
+   * Pattern that matches safe package names.  (Must be a full string match).
+   */
+  static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("[\\w.-]+");
 
   /**
    * If this environment variable is set, the device with the specified serial
@@ -284,8 +291,16 @@ public class AdbHelper {
       console.printBuildFailure("Failed: " + adbCallable);
       ex.printStackTrace(console.getStdErr());
       return false;
+    } catch (InterruptedException e) {
+      Futures.allAsList(futures).cancel(true);
+      Thread.currentThread().interrupt();
+      return false;
     } finally {
-      executorService.shutdownNow();
+      MoreExecutors.shutdownOrThrow(
+          executorService,
+          10,
+          TimeUnit.MINUTES,
+          new InterruptionFailedException("Failed to shutdown ExecutorService."));
     }
 
     int successCount = 0;
@@ -508,7 +523,7 @@ public class AdbHelper {
       return false;
     }
 
-    getBuckEventBus().post(LogEvent.info("Installing apk on %s.", name));
+    getBuckEventBus().post(ConsoleEvent.info("Installing apk on %s.", name));
     try {
       String reason = null;
       if (installViaSd) {
@@ -648,7 +663,8 @@ public class AdbHelper {
 
     // Might need the package name and activities from the AndroidManifest.
     Path pathToManifest = installableApk.getManifestPath();
-    AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(pathToManifest);
+    AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(
+        pathToManifest, context.getProjectFilesystem());
 
     if (activity == null) {
       // Get list of activities that show up in the launcher.
@@ -730,14 +746,19 @@ public class AdbHelper {
    *
    * @see #installApk(com.facebook.buck.rules.InstallableApk, InstallCommandOptions)
    */
-  public boolean uninstallApk(
+  public boolean uninstallApp(
       final String packageName,
       final UninstallCommandOptions.UninstallOptions uninstallOptions) throws InterruptedException {
+    Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
+
     getBuckEventBus().post(UninstallEvent.started(packageName));
     boolean success = adbCall(
         new AdbHelper.AdbCallable() {
       @Override
       public boolean call(IDevice device) throws Exception {
+        // Remove any exopackage data as well.  GB doesn't support "rm -f", so just ignore output.
+        device.executeShellCommand("rm -r /data/local/tmp/exopackage/" + packageName,
+            NullOutputReceiver.getReceiver());
         return uninstallApkFromDevice(device, packageName, uninstallOptions.shouldKeepUserData());
       }
 
@@ -828,7 +849,9 @@ public class AdbHelper {
     }
   }
 
-  public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule) {
+  public static String tryToExtractPackageNameFromManifest(
+      InstallableApk androidBinaryRule,
+      ExecutionContext context) {
     Path pathToManifest = androidBinaryRule.getManifestPath();
 
     // Note that the file may not exist if AndroidManifest.xml is a generated file
@@ -840,7 +863,8 @@ public class AdbHelper {
     }
 
     try {
-      return DefaultAndroidManifestReader.forPath(pathToManifest).getPackage();
+      return DefaultAndroidManifestReader.forPath(pathToManifest, context.getProjectFilesystem())
+          .getPackage();
     } catch (IOException e) {
       throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
     }

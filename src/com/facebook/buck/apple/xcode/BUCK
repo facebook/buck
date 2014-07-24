@@ -20,6 +20,7 @@ java_library(
     '//src/com/facebook/buck/cpp:rules',
     '//src/com/facebook/buck/codegen:codegen',
     '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/shell:steps',

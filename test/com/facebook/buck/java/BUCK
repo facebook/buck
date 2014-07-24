@@ -64,6 +64,7 @@ java_test(
     '//lib:jsr305',
     '//lib:junit',
     '//src/com/facebook/buck/android:packageable',
+    '//lib:nailgun',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',

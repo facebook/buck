@@ -85,4 +85,34 @@ public class MoreExecutors {
         /* threadFactory */ new NamedThreadFactory(threadName),
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
   }
+
+  /**
+   * Cancel the processing being carried out by the given service and waits for the processing to
+   * complete. If processing has still not terminated the method throws the given exception.
+   */
+  public static void shutdownOrThrow(
+      ExecutorService service,
+      long timeout,
+      TimeUnit unit,
+      RuntimeException exception) {
+    boolean terminated = false;
+    service.shutdown();
+    try {
+      terminated = service.awaitTermination(timeout, unit);
+    } catch (InterruptedException e) {
+      terminated = false;
+    } finally {
+      if (!terminated) {
+        service.shutdownNow();
+        try {
+          terminated = service.awaitTermination(timeout, unit);
+        } catch (InterruptedException e) {
+          terminated = false;
+        }
+      }
+    }
+    if (!terminated) {
+      throw exception;
+    }
+  }
 }

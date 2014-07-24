@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.eventbus.Subscribe;
 
@@ -46,11 +45,7 @@ public class BuckEventBusTest {
     eb.register(new SleepSubscriber());
     eb.post(new SleepEvent(1));
     long start = System.nanoTime();
-    try {
-      eb.close();
-    } catch (ShutdownException e) {
-      fail("Bus should shut down successfully.");
-    }
+    eb.close();
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
     assertThat("Shutdown should not take a long time.",
@@ -67,14 +62,8 @@ public class BuckEventBusTest {
     eb.register(new SleepSubscriber());
     eb.post(new SleepEvent(timeoutMillis * 3));
     long start = System.nanoTime();
-    try {
-      eb.close();
-      fail("Bus should not shut down successfully.");
-    } catch (ShutdownException e) {
-      assertThat("Exception should be due to shutdown.",
-          e.getMessage(),
-          containsString("failed to shut down"));
-    }
+    eb.close();
+    // We'd like to test the Logger output here, but there's not a clean way to do that.
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
     assertThat("Shutdown should not take a long time.",

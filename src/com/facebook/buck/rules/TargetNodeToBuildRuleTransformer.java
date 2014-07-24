@@ -25,8 +25,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Paths;
-
 /**
  * Takes in an {@link TargetNode} from the target graph and builds a {@link DescribedRule}.
  */
@@ -42,7 +40,7 @@ public class TargetNodeToBuildRuleTransformer<T extends ConstructorArg> {
     BuildRuleFactoryParams ruleFactoryParams = targetNode.getRuleFactoryParams();
     Description<T> description = targetNode.getDescription();
     ConstructorArgMarshaller inspector =
-        new ConstructorArgMarshaller(Paths.get(targetNode.getBuildTarget().getBasePath()));
+        new ConstructorArgMarshaller(targetNode.getBuildTarget().getBasePath());
     T arg = description.createUnpopulatedConstructorArg();
     try {
       inspector.populate(

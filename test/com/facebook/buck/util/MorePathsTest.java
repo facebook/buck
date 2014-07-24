@@ -16,7 +16,9 @@
 
 package com.facebook.buck.util;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -192,5 +194,21 @@ public class MorePathsTest {
         "Must only expand home paths starting with ~/",
         funnyHomePath,
         MorePaths.expandHomeDir(funnyHomePath));
+  }
+
+  @Test
+  public void relativizeWithDotPathDoesNotAddExtraDotDotPath() {
+    // Ensure workaround for bug JDK-6925169 for "." case.
+    Path p1 = Paths.get("./a/b");
+    Path p2 = Paths.get("c/d/e");
+    assertThat(MorePaths.relativize(p1, p2), equalTo(Paths.get("../../c/d/e")));
+  }
+
+  @Test
+  public void relativizeWithDotDotPathDoesNotAddExtraDotDotPath() {
+    // Ensure workaround for bug JDK-6925169 for ".." case.
+    Path p1 = Paths.get("a/../b");
+    Path p2 = Paths.get("c/d/e");
+    assertThat(MorePaths.relativize(p1, p2), equalTo(Paths.get("../c/d/e")));
   }
 }

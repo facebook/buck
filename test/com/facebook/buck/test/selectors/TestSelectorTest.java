@@ -98,9 +98,9 @@ public class TestSelectorTest {
     assertMatchesTestDescription(desc, "Flower#");
     assertMatchesTestDescription(desc, "#Squirt");
     assertMatchesTestDescription(desc, "Flower#Squirt");
-    assertMatchesTestDescription(desc, "Flow+#testSq...t");
-    assertMatchesTestDescription(desc, "Flow+#Sq...t");
-    assertMatchesTestDescription(desc, "^com#^test");
+    assertMatchesTestDescription(desc, "Flow.+#testSq...t.+");
+    assertMatchesTestDescription(desc, "Flow.+#Sq...t.+");
+    assertMatchesTestDescription(desc, "^com.+#^test.+");
     assertMatchesTestDescription(desc, "com.example.clown.Flower");
     assertMatchesTestDescription(desc, "com.example.clown.Flower#");
     assertMatchesTestDescription(desc, "com.example.clown.Flower#testSquirtySquirt");

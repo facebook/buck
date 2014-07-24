@@ -18,6 +18,7 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -86,4 +87,28 @@ public class BuildTargets {
         .setFlavor(flavor)
         .build();
   }
+
+  /**
+   * Returns whether the {@link BuildTarget} `target` is visible to the {@link BuildTarget} `other`
+   * using the given visibility patterns.
+   */
+  public static boolean isVisibleTo(
+      BuildTarget target,
+      ImmutableSet<BuildTargetPattern> visibilityPatterns,
+      BuildTarget other) {
+
+    // Targets in the same build file are always visible to each other.
+    if (target.getBaseName().equals(other.getBaseName())) {
+      return true;
+    }
+
+    for (BuildTargetPattern pattern : visibilityPatterns) {
+      if (pattern.apply(other)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
 }

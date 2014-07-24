@@ -326,7 +326,7 @@ public class GenruleTest {
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
     String originalCmd = "$(exe //java/com/facebook/util:ManifestGenerator) $OUT";
-    String contextBasePath = "java/com/facebook/util";
+    Path contextBasePath = Paths.get("java/com/facebook/util");
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
     Genrule buildable = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
@@ -351,7 +351,7 @@ public class GenruleTest {
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
     String originalCmd = "$(exe :ManifestGenerator) $OUT";
-    String contextBasePath = "java/com/facebook/util";
+    Path contextBasePath = Paths.get("java/com/facebook/util");
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
     Genrule buildable = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
@@ -382,7 +382,7 @@ public class GenruleTest {
         javaBinary.getBuildTarget().getShortName(),
         javaBinary.getBuildTarget().getFullyQualifiedName());
 
-    String contextBasePath = javaBinary.getBuildTarget().getBasePath();
+    Path contextBasePath = javaBinary.getBuildTarget().getBasePath();
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
     Genrule buildable = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
@@ -405,7 +405,7 @@ public class GenruleTest {
     // Interpolate the build target in the genrule cmd string.
     String originalCmd = "$(exe :ManifestGenerator) $OUT";
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
-    String contextBasePath = "java/com/facebook/util";
+    Path contextBasePath = Paths.get("java/com/facebook/util");
 
     Genrule rule = (Genrule) createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
     AbstractGenruleStep genruleStep = rule.createGenruleStep();
@@ -471,7 +471,7 @@ public class GenruleTest {
 
   private BuildRule createGenrule(BuildRuleResolver ruleResolver,
                                 String originalCmd,
-                                String contextBasePath,
+                                Path contextBasePath,
                                 Set<? extends BuildRule> deps) {
     BuildTarget target = BuildTargetFactory.newInstance(
         String.format("//%s:genrule", contextBasePath));

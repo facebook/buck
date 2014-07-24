@@ -43,15 +43,12 @@ public class TestSelectorList {
    * it means that if the input is an "@/tmp/long-list-of-tests.txt" then re-using that terse
    * argument keeps the "JUnitSteps" Junit java command line nice and short.
    */
-  private final List<String> rawSelectors;
   private final List<TestSelector> testSelectors;
   final boolean defaultIsInclusive;
 
   private TestSelectorList(
-      List<String> rawSelectors,
       List<TestSelector> testSelectors,
       boolean defaultIsInclusive) {
-    this.rawSelectors = rawSelectors;
     this.testSelectors = testSelectors;
     this.defaultIsInclusive = defaultIsInclusive;
   }
@@ -91,11 +88,16 @@ public class TestSelectorList {
   }
 
   public List<String> getRawSelectors() {
+    List<String> rawSelectors = new ArrayList<>();
+    for (TestSelector testSelector : testSelectors) {
+      String rawSelector = testSelector.getRawSelector();
+      rawSelectors.add(rawSelector);
+    }
     return rawSelectors;
   }
 
   public boolean isEmpty() {
-    return rawSelectors.isEmpty();
+    return testSelectors.isEmpty();
   }
 
   public static TestSelectorList empty() {
@@ -117,16 +119,13 @@ public class TestSelectorList {
    */
   public static class Builder {
 
-    private final List<String> rawSelectors;
     private final List<TestSelector> testSelectors;
 
     protected Builder() {
-      rawSelectors = new ArrayList<>();
       testSelectors = new ArrayList<>();
     }
 
     private Builder addRawSelector(String rawSelector) {
-      this.rawSelectors.add(rawSelector);
       if (rawSelector.charAt(0) == '@') {
         try {
           String pathString = rawSelector.substring(1);
@@ -192,7 +191,9 @@ public class TestSelectorList {
           break;
         }
       }
-      return new TestSelectorList(rawSelectors, testSelectors, defaultIsInclusive);
+      return new TestSelectorList(
+          testSelectors,
+          defaultIsInclusive);
     }
   }
 }

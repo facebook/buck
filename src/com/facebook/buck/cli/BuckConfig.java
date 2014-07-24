@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.DirArtifactCache;
+import com.facebook.buck.rules.HttpArtifactCache;
 import com.facebook.buck.rules.MultiArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
@@ -94,6 +95,9 @@ public class BuckConfig {
   private static final String DEFAULT_CASSANDRA_PORT = "9160";
   private static final String DEFAULT_CASSANDRA_MODE = CacheMode.readwrite.name();
   private static final String DEFAULT_CASSANDRA_TIMEOUT_SECONDS = "10";
+  private static final String DEFAULT_HTTP_CACHE_MODE = CacheMode.readwrite.name();
+  private static final String DEFAULT_HTTP_CACHE_PORT = "5551";
+  private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
 
   // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
@@ -114,7 +118,8 @@ public class BuckConfig {
 
   private enum ArtifactCacheNames {
     dir,
-    cassandra
+    cassandra,
+    http
   }
 
   private enum CacheMode {
@@ -431,7 +436,7 @@ public class BuckConfig {
    * Create a map of {@link BuildTarget} base paths to aliases. Note that there may be more than
    * one alias to a base path, so the first one listed in the .buckconfig will be chosen.
    */
-  public ImmutableMap<String, String> getBasePathToAliasMap() {
+  public ImmutableMap<Path, String> getBasePathToAliasMap() {
     ImmutableMap<String, String> aliases = sectionsToEntries.get(ALIAS_SECTION_HEADER);
     if (aliases == null) {
       return ImmutableMap.of();
@@ -439,12 +444,12 @@ public class BuckConfig {
 
     // Build up the Map with an ordinary HashMap because we need to be able to check whether the Map
     // already contains the key before inserting.
-    Map<String, String> basePathToAlias = Maps.newHashMap();
+    Map<Path, String> basePathToAlias = Maps.newHashMap();
     for (Map.Entry<String, BuildTarget> entry : aliasToBuildTargetMap.entrySet()) {
       String alias = entry.getKey();
       BuildTarget buildTarget = entry.getValue();
 
-      String basePath = buildTarget.getBasePath();
+      Path basePath = buildTarget.getBasePath();
       if (!basePathToAlias.containsKey(basePath)) {
         basePathToAlias.put(basePath, alias);
       }
@@ -458,6 +463,10 @@ public class BuckConfig {
 
   public long getDefaultTestTimeoutMillis() {
     return Long.parseLong(getValue("test", "timeout").or("0"));
+  }
+
+  public boolean isTreatingAssumptionsAsErrors() {
+    return getBooleanValue("test", "assumptions-are-errors", false);
   }
 
   public int getMaxTraces() {
@@ -578,6 +587,10 @@ public class BuckConfig {
             builder.add(cassandraArtifactCache);
           }
           break;
+        case http:
+          ArtifactCache httpArtifactCache = createHttpArtifactCache(buckEventBus);
+          builder.add(httpArtifactCache);
+          break;
         }
       }
     } catch (IllegalArgumentException e) {
@@ -658,9 +671,24 @@ public class BuckConfig {
     try {
       return new CassandraArtifactCache(cacheHosts, port, timeoutSeconds, doStore, buckEventBus);
     } catch (ConnectionException e) {
-      buckEventBus.post(ThrowableLogEvent.create(e, "Cassandra cache connection failure."));
+      buckEventBus.post(ThrowableConsoleEvent.create(e, "Cassandra cache connection failure."));
       return null;
     }
+  }
+
+  private ArtifactCache createHttpArtifactCache(BuckEventBus buckEventBus) {
+    String host = getValue("cache", "http_host").or("localhost");
+    int port = Integer.parseInt(getValue("cache", "http_port").or(DEFAULT_HTTP_CACHE_PORT));
+    int timeoutSeconds = Integer.parseInt(
+        getValue("cache", "connection_timeout_seconds").or(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS));
+    boolean doStore = readCacheMode("http_mode", DEFAULT_HTTP_CACHE_MODE);
+    return new HttpArtifactCache(
+        host,
+        port,
+        timeoutSeconds,
+        doStore,
+        projectFilesystem,
+        buckEventBus);
   }
 
   private boolean readCacheMode(String fieldName, String defaultValue) {

@@ -22,11 +22,13 @@ import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class ProjectCommandOptions extends AbstractCommandOptions {
@@ -102,7 +104,7 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     processAnnotations = value;
   }
 
-  public ImmutableMap<String, String> getBasePathToAliasMap() {
+  public ImmutableMap<Path, String> getBasePathToAliasMap() {
     return getBuckConfig().getBasePathToAliasMap();
   }
 
@@ -116,6 +118,15 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
 
   public Optional<String> getPathToPostProcessScript() {
     return getBuckConfig().getValue("project", "post_process");
+  }
+
+  public ImmutableSet<String> getDefaultExcludePaths() {
+    Optional<String> defaultExcludePathsPaths = getBuckConfig().getValue(
+        "project", "default_exclude_paths");
+    return defaultExcludePathsPaths.isPresent()
+        ? ImmutableSet.<String>copyOf(
+            Splitter.on(',').omitEmptyStrings().trimResults().split(defaultExcludePathsPaths.get()))
+        : ImmutableSet.<String>of();
   }
 
   public boolean getReadOnly() {

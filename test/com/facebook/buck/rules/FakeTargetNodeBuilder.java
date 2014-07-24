@@ -17,6 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
 
@@ -26,6 +28,10 @@ public class FakeTargetNodeBuilder<T extends ConstructorArg> {
       Description<T> description,
       BuildRuleFactoryParams params,
       Set<BuildTarget> declaredDeps) {
-    return new TargetNode<>(description, params, declaredDeps);
+    return new TargetNode<>(
+        description,
+        params,
+        declaredDeps,
+        ImmutableSet.<BuildTargetPattern>of());
   }
 }

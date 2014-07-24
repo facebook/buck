@@ -56,8 +56,8 @@ public class BuildRules {
     return buildRules.build();
   }
 
-  public static Multimap<String, BuildRule> buildRulesByTargetBasePath(Iterable<BuildRule> rules) {
-    ImmutableMultimap.Builder<String, BuildRule> result = ImmutableMultimap.builder();
+  public static Multimap<Path, BuildRule> buildRulesByTargetBasePath(Iterable<BuildRule> rules) {
+    ImmutableMultimap.Builder<Path, BuildRule> result = ImmutableMultimap.builder();
     for (BuildRule rule : rules) {
       result.put(rule.getBuildTarget().getBasePath(), rule);
     }

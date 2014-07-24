@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 
 /**
@@ -66,7 +65,7 @@ public abstract class BuildFileTree {
         new Function<BuildTarget, Path>() {
           @Override
           public Path apply(BuildTarget input) {
-            return Paths.get(input.getBasePath());
+            return input.getBasePath();
           }
         })
         .toSet();

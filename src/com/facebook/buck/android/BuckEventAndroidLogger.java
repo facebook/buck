@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import com.android.common.utils.ILogger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
-import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.google.common.base.Strings;
 
 import javax.annotation.Nullable;
@@ -39,24 +39,24 @@ public class BuckEventAndroidLogger implements ILogger {
   public void error(@Nullable Throwable throwable, @Nullable String errorFormat, Object... args) {
     String message = Strings.nullToEmpty(errorFormat);
     if (throwable == null) {
-      eventBus.post(LogEvent.severe(message, args));
+      eventBus.post(ConsoleEvent.severe(message, args));
     } else {
-      eventBus.post(ThrowableLogEvent.create(throwable, message, args));
+      eventBus.post(ThrowableConsoleEvent.create(throwable, message, args));
     }
   }
 
   @Override
   public void warning(String msgFormat, Object... args) {
-    eventBus.post(LogEvent.warning(msgFormat, args));
+    eventBus.post(ConsoleEvent.warning(msgFormat, args));
   }
 
   @Override
   public void info(String msgFormat, Object... args) {
-    eventBus.post(LogEvent.info(msgFormat, args));
+    eventBus.post(ConsoleEvent.info(msgFormat, args));
   }
 
   @Override
   public void verbose(String msgFormat, Object... args) {
-    eventBus.post(LogEvent.info(msgFormat, args));
+    eventBus.post(ConsoleEvent.info(msgFormat, args));
   }
 }

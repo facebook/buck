@@ -88,7 +88,6 @@ public class TestResults {
     return testCases;
   }
 
-  @JsonIgnore
   public ImmutableSet<String> getContacts() {
     return contacts;
   }

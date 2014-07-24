@@ -16,6 +16,8 @@
 
 package com.facebook.buck.junit;
 
+import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
+import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
@@ -56,10 +58,12 @@ public class TestSelectorsTestlessClassesTest {
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, " +
         "when filtering is *NOT* used!");
-    assertThat(result.getStderr(), containsString(
-        "NOTESTS <100ms  0 Passed   0 Skipped   0 Failed   com.example.ClassWithoutTestsA"));
-    assertThat(result.getStderr(), containsString(
-        "NOTESTS <100ms  0 Passed   0 Skipped   0 Failed   com.example.ClassWithoutTestsB"));
+    assertThat(result.getStderr(), containsRegex(
+        createBuckTestOutputLineRegex(
+            "NOTESTS", 0, 0, 0, "com.example.ClassWithoutTestsA")));
+    assertThat(result.getStderr(), containsRegex(
+        createBuckTestOutputLineRegex(
+            "NOTESTS", 0, 0, 0, "com.example.ClassWithoutTestsB")));
   }
 
   @Test
@@ -77,7 +81,7 @@ public class TestSelectorsTestlessClassesTest {
   @Test
   public void shouldNotFailWhenUsingAFilterThatIncludesSomething() throws IOException {
     ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "--all", "--filter", "com.example");
+        workspace.runBuckCommand("test", "--all", "--filter", "com.example.+");
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, " +
         "even when filtering *IS* used, and it includes real tests!");

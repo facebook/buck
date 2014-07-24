@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,6 +45,8 @@ public class AndroidPackageableCollector {
   private final ImmutableList.Builder<Path> resourceDirectories = ImmutableList.builder();
   private final ImmutableSet.Builder<Path> whitelistedStringDirectories = ImmutableSet.builder();
   private final ImmutableSet.Builder<String> rDotJavaPackages = ImmutableSet.builder();
+  private final ImmutableCollection.Builder<Supplier<String>> rDotJavaPackageSuppliers =
+      ImmutableList.builder();
   private final ImmutableSet.Builder<Path> nativeLibsDirectories = ImmutableSet.builder();
   private final ImmutableSet.Builder<Path> nativeLibAssetsDirectories = ImmutableSet.builder();
   private final ImmutableSet.Builder<Path> assetsDirectories = ImmutableSet.builder();
@@ -118,12 +121,15 @@ public class AndroidPackageableCollector {
   public AndroidPackageableCollector addStringWhitelistedResourceDirectory(
       BuildTarget owner,
       Path resourceDir,
-      String rDotJavaPackage) {
+      Supplier<String> rDotJavaPackage) {
     if (resourcesToExclude.contains(owner)) {
       return this;
     }
+
     whitelistedStringDirectories.add(resourceDir);
-    return doAddResourceDirectory(owner, resourceDir, rDotJavaPackage);
+    doAddResourceDirectory(owner, resourceDir);
+    rDotJavaPackageSuppliers.add(rDotJavaPackage);
+    return this;
   }
 
   public AndroidPackageableCollector addResourceDirectory(
@@ -134,17 +140,27 @@ public class AndroidPackageableCollector {
       return this;
     }
 
-    return doAddResourceDirectory(owner, resourceDir, rDotJavaPackage);
-  }
-
-  private AndroidPackageableCollector doAddResourceDirectory(
-      BuildTarget owner,
-      Path resourceDir,
-      String rDotJavaPackage) {
-    resourcesWithNonEmptyResDir.add(owner);
-    resourceDirectories.add(resourceDir);
+    doAddResourceDirectory(owner, resourceDir);
     rDotJavaPackages.add(rDotJavaPackage);
     return this;
+  }
+
+  public AndroidPackageableCollector addResourceDirectory(
+      BuildTarget owner,
+      Path resourceDir,
+      Supplier<String> rDotJavaPackageSupplier) {
+    if (resourcesToExclude.contains(owner)) {
+      return this;
+    }
+
+    doAddResourceDirectory(owner, resourceDir);
+    rDotJavaPackageSuppliers.add(rDotJavaPackageSupplier);
+    return this;
+  }
+
+  private void doAddResourceDirectory(BuildTarget owner, Path resourceDir) {
+    resourcesWithNonEmptyResDir.add(owner);
+    resourceDirectories.add(resourceDir);
   }
 
   public AndroidPackageableCollector addNativeLibsDirectory(Path nativeLibDir) {
@@ -241,6 +257,24 @@ public class AndroidPackageableCollector {
       }
     }
 
+    final ImmutableSet<String> knownRDotJavaPackages = rDotJavaPackages.build();
+    final ImmutableCollection<Supplier<String>> knownRDotJavaPackageSuppliers =
+        rDotJavaPackageSuppliers.build();
+    boolean hasRDotJavaPackages = !knownRDotJavaPackages.isEmpty() ||
+        !knownRDotJavaPackageSuppliers.isEmpty();
+    Supplier<ImmutableSet<String>> rDotJavaPackagesSupplier = Suppliers.memoize(
+        new Supplier<ImmutableSet<String>>() {
+          @Override
+          public ImmutableSet<String> get() {
+            ImmutableSet.Builder<String> allRDotJavaPackages = ImmutableSet.builder();
+            allRDotJavaPackages.addAll(knownRDotJavaPackages);
+            for (Supplier<String> supplier : knownRDotJavaPackageSuppliers) {
+              allRDotJavaPackages.add(supplier.get());
+            }
+            return allRDotJavaPackages.build();
+          }
+    });
+
     return new AndroidPackageableCollection(
         // Reverse the resource directories/targets collections because we perform a post-order
         // traversal of the action graph, and we need to return these collections topologically
@@ -248,7 +282,8 @@ public class AndroidPackageableCollector {
         new AndroidPackageableCollection.ResourceDetails(
             resourceDirectories.build().reverse(),
             whitelistedStringDirectories.build(),
-            rDotJavaPackages.build(),
+            rDotJavaPackagesSupplier,
+            hasRDotJavaPackages,
             resourcesWithNonEmptyResDir.build().reverse(),
             resourcesWithEmptyResButNonEmptyAssetsDir.build().reverse()),
         nativeLibsDirectories.build(),

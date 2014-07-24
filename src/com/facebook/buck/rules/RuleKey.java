@@ -159,7 +159,7 @@ public class RuleKey {
       this.exportedDeps = Preconditions.checkNotNull(exportedDeps);
       this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
       this.hashCache = Preconditions.checkNotNull(hashCache);
-      if (logger.isDebugEnabled()) {
+      if (logger.isVerboseEnabled()) {
         this.logElms = Lists.newArrayList();
       }
     }
@@ -446,7 +446,7 @@ public class RuleKey {
       RuleKey totalRuleKey = new RuleKey(hasher.hash());
 
       if (logElms != null) {
-        logger.debug("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms));
+        logger.verbose("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms));
       }
 
       return new RuleKeyPair(totalRuleKey, ruleKeyWithoutDeps);

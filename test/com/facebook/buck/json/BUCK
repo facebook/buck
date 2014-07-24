@@ -3,11 +3,13 @@ java_test(
   srcs = glob(['*.java']),
   source_under_test = [
     '//src/com/facebook/buck/json:json',
+    '//src/com/facebook/buck/json:raw_parser',
   ],
   deps = [
     '//lib:guava',
     '//lib:junit',
     '//src/com/facebook/buck/json:json',
+    '//src/com/facebook/buck/json:raw_parser',
     '//third-party/java/gson:gson',
   ],
 )

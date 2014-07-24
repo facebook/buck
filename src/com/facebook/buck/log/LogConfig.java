@@ -29,6 +29,9 @@ import java.io.IOException;
 import java.io.SequenceInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
 import java.util.logging.LogManager;
 
 /**
@@ -86,6 +89,20 @@ public class LogConfig {
     try (InputStream is =
          new SequenceInputStream(Iterators.asEnumeration(inputStreamsBuilder.build().iterator()))) {
         LogManager.getLogManager().readConfiguration(is);
+    }
+  }
+
+  public static void flushLogs() {
+    Logger rootLogger = LogManager.getLogManager().getLogger("");
+    if (rootLogger == null) {
+      return;
+    }
+    Handler[] handlers = rootLogger.getHandlers();
+    if (handlers == null) {
+      return;
+    }
+    for (Handler h : Arrays.asList(handlers)) {
+      h.flush();
     }
   }
 

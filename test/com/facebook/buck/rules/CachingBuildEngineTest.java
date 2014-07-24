@@ -122,7 +122,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     // Create a dep for the build rule.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//src/com/facebook/orca:lib");
     BuildRule dep = createMock(BuildRule.class);
-    expect(dep.isVisibleTo(buildTarget)).andReturn(true);
 
     // The EventBus should be updated with events indicating how the rule was built.
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();

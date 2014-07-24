@@ -22,6 +22,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Coerces a type to either type, trying the left type before the right.
@@ -71,26 +73,98 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     }
   }
 
+  // Classifications for the "type" of object/coercer.  We use this to unambiguously
+  // choose which "side" of the coercion fork we want to choose, rather than relying
+  // on catching `CoerceFailedException` exceptions, which can lead to really unhelpful
+  // error messages hitting the user.
+  private enum Type {
+    DEFAULT,
+    COLLECTION,
+    MAP,
+  }
+
+  private static <T> Type getCoercerType(TypeCoercer<T> coercer) {
+    if (coercer instanceof MapTypeCoercer) {
+      return Type.MAP;
+    } else if (coercer instanceof CollectionTypeCoercer) {
+      return Type.COLLECTION;
+    } else {
+      return Type.DEFAULT;
+    }
+  }
+
+  private static Type getObjectType(Object object) {
+    if (object instanceof Map) {
+      return Type.MAP;
+    } else if (object instanceof Collection) {
+      return Type.COLLECTION;
+    } else {
+      return Type.DEFAULT;
+    }
+  }
+
   @Override
   public Either<Left, Right> coerce(
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
-    // Try to coerce as left type.
-    try {
-      return Either.ofLeft(
-          leftTypeCoercer.coerce(buildRuleResolver, filesystem, pathRelativeToProjectRoot, object));
-    } catch (CoerceFailedException e) {
-      // Try to coerce as right type.
+
+    // Determine the "type" of the object we're coercing and our left and right coercers.
+    Type objectType = getObjectType(object);
+    Type leftCoercerType = getCoercerType(leftTypeCoercer);
+    Type rightCoercerType = getCoercerType(rightTypeCoercer);
+
+    // If both coercers match, try the left one first, and if it fails try the right
+    // side.  If neither work, throw an exception combining the two errors.  Long term,
+    // we probably should require some way to "choose" a side without relying on failures,
+    // as this would make errors reported to the user much more clear.
+    if (leftCoercerType == objectType && rightCoercerType == objectType) {
       try {
-        return Either.ofRight(
-            rightTypeCoercer.coerce(
-                buildRuleResolver, filesystem, pathRelativeToProjectRoot, object));
-      } catch (CoerceFailedException e1) {
-        // Fail, but report that the current coercer failed, not the child ones.
-        throw CoerceFailedException.simple(object, getOutputClass());
+        return Either.ofLeft(leftTypeCoercer.coerce(
+            buildRuleResolver,
+            filesystem,
+            pathRelativeToProjectRoot,
+            object));
+      } catch (CoerceFailedException eLeft) {
+        try {
+          return Either.ofRight(rightTypeCoercer.coerce(
+              buildRuleResolver,
+              filesystem,
+              pathRelativeToProjectRoot,
+              object));
+        } catch (CoerceFailedException eRight) {
+          throw new CoerceFailedException(String.format(
+              "%s, or %s",
+              eLeft.getMessage(),
+              eRight.getMessage()));
+        }
       }
+
     }
+
+    // Only the left coercer matches, so use that to parse the input and let any inner
+    // exceptions propagate up.
+    if (leftCoercerType == objectType) {
+      return Either.ofLeft(leftTypeCoercer.coerce(
+          buildRuleResolver,
+          filesystem,
+          pathRelativeToProjectRoot,
+          object));
+    }
+
+    // Only the right coercer matches, so use that to parse the input and let any inner
+    // exceptions propagate up.
+    if (rightCoercerType == objectType) {
+      return Either.ofRight(rightTypeCoercer.coerce(
+          buildRuleResolver,
+          filesystem,
+          pathRelativeToProjectRoot,
+          object));
+    }
+
+    // None of our coercers matched the "type" of the object, so throw the generic
+    // error message.
+    throw new CoerceFailedException(String.format("cannot parse %s", object));
   }
 }

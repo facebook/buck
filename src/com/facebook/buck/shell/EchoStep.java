@@ -16,9 +16,10 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.Escaper;
 import com.google.common.base.Preconditions;
 
 public class EchoStep implements Step {
@@ -31,13 +32,13 @@ public class EchoStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    context.getBuckEventBus().post(LogEvent.info(message));
+    context.getBuckEventBus().post(ConsoleEvent.info(message));
     return 0;
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("echo \"%s\"", message);
+    return String.format("echo %s", Escaper.escapeAsBashString(message));
   }
 
   @Override

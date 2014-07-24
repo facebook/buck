@@ -17,13 +17,11 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -62,16 +60,6 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
    *     custom getter provided by the build rule.
    */
   public ImmutableSortedSet<BuildRule> getDeps();
-
-  /**
-   * @return the value of the "visibility" attribute for this build rule
-   */
-  public ImmutableSet<BuildTargetPattern> getVisibilityPatterns();
-
-  /**
-   * @return whether this build rule is visible to the build target or not
-   */
-  public boolean isVisibleTo(BuildTarget target);
 
   /**
    * @return the inputs needed to build this build rule

@@ -41,6 +41,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -81,7 +83,7 @@ public class UberRDotJava extends AbstractBuildRule implements
 
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
-  private final ImmutableSet<String> rDotJavaPackages;
+  private final Supplier<ImmutableSet<String>> rDotJavaPackages;
   private final JavacOptions javacOptions;
   private final boolean rDotJavaNeedsDexing;
   private final boolean shouldBuildStringSourceMap;
@@ -91,7 +93,7 @@ public class UberRDotJava extends AbstractBuildRule implements
       BuildRuleParams params,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
-      ImmutableSet<String> rDotJavaPackages,
+      Supplier<ImmutableSet<String>> rDotJavaPackages,
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap) {
@@ -167,14 +169,17 @@ public class UberRDotJava extends AbstractBuildRule implements
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
-      final BuildableContext buildableContext
-  ) {
+      final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     ImmutableList<Path> resDirectories = filteredResourcesProvider.getResDirectories();
 
     if (!resDirectories.isEmpty()) {
-      generateAndCompileRDotJavaFiles(resDirectories, rDotJavaPackages, steps, buildableContext);
+      generateAndCompileRDotJavaFiles(
+          resDirectories,
+          rDotJavaPackages.get(),
+          steps,
+          buildableContext);
     }
 
     if (rDotJavaNeedsDexing && !resDirectories.isEmpty()) {
@@ -263,12 +268,15 @@ public class UberRDotJava extends AbstractBuildRule implements
     steps.add(new MakeCleanDirectoryStep(rDotJavaSrc));
 
     // Generate the R.java files.
+    Path dummyManifestFile = BuildTargets.getGenPath(
+        getBuildTarget(), "__%s_dummy_manifest/AndroidManifest.xml");
     GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
         resDirectories,
         rDotJavaSrc,
-        Iterables.get(rDotJavaPackages, 0),
+        Suppliers.ofInstance(Iterables.get(rDotJavaPackages, 0)),
         /* isTempRDotJava */ false,
-        FluentIterable.from(rDotJavaPackages).skip(1).toSet());
+        FluentIterable.from(rDotJavaPackages).skip(1).toSet(),
+        dummyManifestFile);
     steps.add(genRDotJava);
 
     if (shouldBuildStringSourceMap) {

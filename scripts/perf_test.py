@@ -144,7 +144,7 @@ RULEKEY_LINE = re.compile(
 
 
 BUCK_LOG_RULEKEY_LINE = re.compile(
-    r'.*\[debug\]\[tid:\d+\]\[com.facebook.buck.rules.RuleKey\$Builder\] '
+    r'.*\[\w+\]\[tid:\d+\]\[com.facebook.buck.rules.RuleKey\$Builder\] '
     r'RuleKey (?P<rule_key>[0-9a-f]+)='
     r'(?P<rule_key_debug>.*)$')
 
@@ -153,6 +153,18 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
     """Builds a target with buck and returns performance information.
     """
     log('Running buck build %s.' % target)
+    bucklogging_properties_path = os.path.join(
+        cwd, '.bucklogging.local.properties')
+    with open(bucklogging_properties_path, 'w') as bucklogging_properties:
+        # The default configuration has the root logger and FileHandler
+        # discard anything below FINE level.
+        #
+        # We need RuleKey logging, which uses FINER (verbose), so the
+        # root logger and file handler both need to be reconfigured
+        # to enable verbose logging.
+        bucklogging_properties.write(
+            '''.level=FINER
+            java.util.logging.FileHandler.level=FINER''')
     env = os.environ.copy()
     # Force buck to pretend it's repo is clean.
     env.update({
@@ -161,7 +173,7 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
     if log_as_perftest:
         env.update({
             'BUCK_EXTRA_JAVA_ARGS':
-            '-Dbuck.perftest_id=%s,-Dbuck.perftest_side=%s' % (
+            '-Dbuck.perftest_id=%s, -Dbuck.perftest_side=%s' % (
             args.perftest_id, perftest_side)
         })
     start = datetime.now()
@@ -253,7 +265,6 @@ def set_perftest_side(
         else:
             buckversion.write(args.new_buck_revision + os.linesep)
         buckversion.truncate()
-
 
 def build_all_targets(
         args,

@@ -163,7 +163,8 @@ public class EventSerializationTest {
         "null,\"type\":\"FAILURE\",\"time\":0,\"message\":null," +
         "\"stacktrace\":null,\"stdOut\":null," +
         "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
-        "\"failureCount\":1,\"dependenciesPassTheirTests\":true,\"success\":false}]," +
+        "\"failureCount\":1,\"contacts\":[]," +
+        "\"dependenciesPassTheirTests\":true,\"success\":false}]," +
         "\"type\":\"RunComplete\"}", message);
   }
 
@@ -187,7 +188,8 @@ public class EventSerializationTest {
         ":null,\"type\":\"FAILURE\",\"time\":0,\"message\":null," +
         "\"stacktrace\":null,\"stdOut\":null," +
         "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
-        "\"failureCount\":1,\"dependenciesPassTheirTests\":true,\"success\":false}," +
+        "\"failureCount\":1,\"contacts\":[]," +
+        "\"dependenciesPassTheirTests\":true,\"success\":false}," +
         "\"type\":\"ResultsAvailable\"}", message);
   }
 

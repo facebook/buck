@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -30,7 +31,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class ShBinary extends AbstractBuildRule
     implements BinaryBuildRule, InitializableFromDisk<Object> {
@@ -62,11 +61,9 @@ public class ShBinary extends AbstractBuildRule
     this.resources = Preconditions.checkNotNull(resources);
 
     BuildTarget target = params.getBuildTarget();
-    this.output = Paths.get(
-        BuckConstant.GEN_DIR,
-        target.getBasePath(),
-        "__" + target.getShortName() + "__",
-        target.getShortName() + ".sh");
+    this.output = BuildTargets.getGenPath(
+        target,
+        String.format("__%%s__/%s.sh", target.getShortName()));
     this.buildOutputInitializer = new BuildOutputInitializer<>(target, this);
   }
 
@@ -90,7 +87,7 @@ public class ShBinary extends AbstractBuildRule
     // Generate an .sh file that builds up an environment and invokes the user's script.
     // This generated .sh file will be returned by getExecutableCommand().
     GenerateShellScriptStep generateShellScript = new GenerateShellScriptStep(
-        Paths.get(getBuildTarget().getBasePath()),
+        getBuildTarget().getBasePath(),
         main.resolve(),
         SourcePaths.toPaths(resources),
         output);

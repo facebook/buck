@@ -1,0 +1,62 @@
+{namespace buck.logging}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Logging' /}
+    {param prettify: true /}
+    {param content}
+
+<p>Buck logs debugging information to <code>buck-out/log/buck-0.log</code>. (Older logs are rotated to <code>buck-out/log/buck-1.log</code> etc.)</p>
+
+<p>To add more logs to your code, import <code>com.facebook.buck.log.Logger</code>, create a <code>static</code> instance,  and add your logs:</p>
+
+{literal}<pre class="prettyprint lang-java">
+import com.facebook.buck.log.Logger;
+
+public class MyClass {
+  private static final Logger LOG = Logger.get(MyClass.class);
+
+  public doStuff(MyData data) {
+    // Supports String.format() formatters.
+    LOG.debug("Doing stuff: %s", data);
+    try {
+      doSomethingThatThrows();
+    } catch (IOException e) {
+      // Logs a stack trace with a message.
+      LOG.error(e, "Couldn't do stuff!");
+      throw e;
+    }
+  }
+}
+</pre>
+{/literal}
+
+<p>Buck's <code>Logger</code> exposes five log levels:</p>
+
+<table>
+<thead><tr><th><code>com.facebook.buck.log.Logger</code></th><th><code>java.util.logging.Level</code> equivalent</th></tr></thead>
+<tr><td><code>error()</code></td><td><code>SEVERE</code></td>
+<tr><td><code>warn()</code></td><td><code>WARNING</code></td>
+<tr><td><code>info()</code></td><td><code>INFO</code></td>
+<tr><td><code>debug()</code></td><td><code>FINE</code></td>
+<tr><td><code>verbose()</code></td><td><code>FINER</code></td>
+</table>
+
+<p>By default, Buck only logs to disk messages at <code>debug()</code> level and higher. Feel free to pepper your code with <code>verbose()</code> logs and even check them in&mdash;they won't have any impact on performance and won't clutter up the logs.</p>
+
+<p>If you want to change the global logging level, edit <code>config/logging.properties</code> (in the buck repo), <code>.bucklogging.properties</code> (in the root of the repo in which you're running <code>buck</code>), or <code>.bucklogging.local.properties</code> (same) and specify a <code>java.util.logging.Level</code> equivalent to the level you want to log (see the table above):</p>
+
+{literal}
+<pre>.level=FINER</pre>
+{/literal}
+
+<p>You can also control the level of individual loggers, identified by package or class name:</p>
+
+{literal}
+<pre>com.facebook.buck.stuff.MyClass.level=FINER</pre>
+{/literal}
+
+    {/param}
+  {/call}
+{/template}

@@ -23,6 +23,9 @@ public enum CacheResult {
   /** Artifact was successfully fetched from disk. */
   DIR_HIT(/* success */ true),
 
+  /** Artifact was successfully fetched from HTTP service. */
+  HTTP_HIT(/* success */ true),
+
   /** Artifact cache not queried because the local cache key was unchanged. */
   LOCAL_KEY_UNCHANGED_HIT(/* success */ true),
 

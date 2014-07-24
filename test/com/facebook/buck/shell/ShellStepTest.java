@@ -23,7 +23,7 @@ import static org.easymock.EasyMock.getCurrentArguments;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEvent;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
@@ -94,7 +94,7 @@ public class ShellStepTest extends EasyMockSupport {
         new IAnswer<Void>() {
           @Override
           public Void answer() throws Throwable {
-            LogEvent event = (LogEvent) getCurrentArguments()[0];
+            ConsoleEvent event = (ConsoleEvent) getCurrentArguments()[0];
             if (event.getLevel().equals(Level.SEVERE)) {
               console.getStdErr().write(event.getMessage().getBytes(Charsets.US_ASCII));
             }

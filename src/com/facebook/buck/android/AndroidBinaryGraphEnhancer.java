@@ -170,7 +170,7 @@ public class AndroidBinaryGraphEnhancer {
         paramsForUberRDotJava,
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.resourcesWithNonEmptyResDir),
-        resourceDetails.rDotJavaPackages,
+        resourceDetails.rDotJavaPackagesSupplier,
         javacOptions,
         shouldPreDex,
         shouldBuildStringSourceMap);
@@ -178,7 +178,7 @@ public class AndroidBinaryGraphEnhancer {
     enhancedDeps.add(uberRDotJava);
 
     // TODO(natthu): Try to avoid re-building the collection by passing UberRDotJava directly.
-    if (!packageableCollection.resourceDetails.rDotJavaPackages.isEmpty()) {
+    if (packageableCollection.resourceDetails.hasRDotJavaPackages) {
       collector.addClasspathEntry(
           uberRDotJava,
           uberRDotJava.getPathToCompiledRDotJavaFiles());
@@ -263,6 +263,8 @@ public class AndroidBinaryGraphEnhancer {
     if (shouldPreDex) {
       preDexMerge = Optional.of(createPreDexMergeRule(uberRDotJava, packageableCollection));
       enhancedDeps.add(preDexMerge.get());
+    } else {
+      enhancedDeps.addAll(getTargetsAsRules(packageableCollection.javaLibrariesToDex));
     }
 
     ImmutableSortedSet<BuildRule> finalDeps;

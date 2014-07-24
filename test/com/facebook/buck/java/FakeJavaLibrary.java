@@ -47,6 +47,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+  private ImmutableSet<BuildTargetPattern> visibilityPatterns;
 
   public FakeJavaLibrary(
       BuildTarget target,
@@ -63,6 +64,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     super(type, target, deps, visibilityPatterns);
+    this.visibilityPatterns = visibilityPatterns;
   }
 
   public FakeJavaLibrary(BuildTarget target) {
@@ -136,4 +138,13 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   public void addToCollector(AndroidPackageableCollector collector) {
     collector.addClasspathEntry(this, getPathToOutputFile());
   }
+
+  @Override
+  public boolean isVisibleTo(JavaLibrary other) {
+    return BuildTargets.isVisibleTo(
+        getBuildTarget(),
+        visibilityPatterns,
+        other.getBuildTarget());
+  }
+
 }

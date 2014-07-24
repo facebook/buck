@@ -37,6 +37,7 @@ import java.util.IllegalFormatException;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINER;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
@@ -74,6 +75,84 @@ public class Logger
     {
         java.util.logging.Logger logger = java.util.logging.Logger.getLogger(name);
         return new Logger(logger);
+    }
+
+    /**
+     * Logs a message at VERBOSE level.
+     *
+     * @param exception an exception associated with the verbose message being logged
+     * @param message a literal message to log
+     */
+    public void verbose(Throwable exception, String message)
+    {
+        logger.log(FINER, message, exception);
+    }
+
+    /**
+     * Logs a message at VERBOSE level.
+     *
+     * @param message a literal message to log
+     */
+    public void verbose(String message)
+    {
+        logger.finer(message);
+    }
+
+    /**
+     * Logs a message at VERBOSE level.
+     * <br/>
+     * Usage example:
+     * <pre>
+     *    logger.verbose("value is %s (%d ms)", value, time);
+     * </pre>
+     * If the format string is invalid or the arguments are insufficient, an error will be logged and execution
+     * will continue.
+     *
+     * @param format a format string compatible with String.format()
+     * @param args arguments for the format string
+     */
+    public void verbose(String format, Object... args)
+    {
+        if (logger.isLoggable(FINER)) {
+            String message;
+            try {
+                message = format(format, args);
+            }
+            catch (IllegalFormatException e) {
+                logger.log(SEVERE, illegalFormatMessageFor("VERBOSE", format, args), e);
+                message = rawMessageFor(format, args);
+            }
+            logger.finer(message);
+        }
+    }
+
+    /**
+     * Logs a message at VERBOSE level.
+     * <br/>
+     * Usage example:
+     * <pre>
+     *    logger.verbose(e, "value is %s (%d ms)", value, time);
+     * </pre>
+     * If the format string is invalid or the arguments are insufficient, an error will be logged and execution
+     * will continue.
+     *
+     * @param exception an exception associated with the verbose message being logged
+     * @param format a format string compatible with String.format()
+     * @param args arguments for the format string
+     */
+    public void verbose(Throwable exception, String format, Object... args)
+    {
+        if (logger.isLoggable(FINER)) {
+            String message;
+            try {
+                message = format(format, args);
+            }
+            catch (IllegalFormatException e) {
+                logger.log(SEVERE, illegalFormatMessageFor("VERBOSE", format, args), e);
+                message = rawMessageFor(format, args);
+            }
+            logger.log(FINER, message, exception);
+        }
     }
 
     /**
@@ -343,6 +422,11 @@ public class Logger
     public void error(String format, Object... args)
     {
         error(null, format, args);
+    }
+
+    public boolean isVerboseEnabled()
+    {
+        return logger.isLoggable(FINER);
     }
 
     public boolean isDebugEnabled()

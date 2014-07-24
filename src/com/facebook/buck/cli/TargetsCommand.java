@@ -46,7 +46,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -391,7 +390,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         // Any referenced file, only those with the nearest BuildTarget can
         // directly depend on that file.
         if (!isDependent &&
-            basePathOfTargets.contains(Paths.get(rule.getBuildTarget().getBasePath()))) {
+            basePathOfTargets.contains(rule.getBuildTarget().getBasePath())) {
           for (Path input : rule.getInputs()) {
             if (referencedInputs.contains(input)) {
               isDependent = true;

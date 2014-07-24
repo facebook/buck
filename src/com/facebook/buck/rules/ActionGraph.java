@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.List;
+import java.nio.file.Path;
 import java.util.Map;
 
 public class ActionGraph extends DefaultImmutableDirectedAcyclicGraph<BuildRule> {
@@ -45,8 +45,8 @@ public class ActionGraph extends DefaultImmutableDirectedAcyclicGraph<BuildRule>
     return index.get(buildTarget);
   }
 
-  public List<BuildRule> getBuildRulesOfBuildableTypeInBasePath(
-      Class<? extends BuildRule> klass, String basePath) {
+  public ImmutableList<BuildRule> getBuildRulesOfBuildableTypeInBasePath(
+      Class<? extends BuildRule> klass, Path basePath) {
     ImmutableList.Builder<BuildRule> result = ImmutableList.builder();
     for (BuildRule rule : getNodes()) {
       if (rule.getBuildTarget().getBasePath().equals(basePath) &&

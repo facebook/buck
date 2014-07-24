@@ -18,12 +18,8 @@ package com.facebook.buck.json;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
@@ -97,67 +93,19 @@ public class BuildFileToJsonParser implements AutoCloseable {
 
         while (reader.hasNext()) {
           JsonObject json = gson.fromJson(reader, JsonObject.class);
-          items.add((Map<String, Object>) toRawTypes(json));
+          items.add((Map<String, Object>) RawParser.toRawTypes(json));
         }
 
         reader.endArray();
       } else {
         while (reader.peek() != JsonToken.END_DOCUMENT) {
           JsonObject json = gson.fromJson(reader, JsonObject.class);
-          items.add((Map<String, Object>) toRawTypes(json));
+          items.add((Map<String, Object>) RawParser.toRawTypes(json));
         }
       }
       return items;
     } catch (IllegalStateException e) {
       throw new IOException(e); // Rethrow Gson exceptions as IO (non-runtime) exceptions.
-    }
-  }
-
-  /**
-   * @return One of: String, Boolean, Long, Number, List<Object>, Map<String, Object>.
-   */
-  @VisibleForTesting
-  static Object toRawTypes(JsonElement json) {
-    // Cases are ordered from most common to least common.
-    if (json.isJsonPrimitive()) {
-      JsonPrimitive primitive = json.getAsJsonPrimitive();
-      if (primitive.isString()) {
-        return primitive.getAsString();
-      } else if (primitive.isBoolean()) {
-        return primitive.getAsBoolean();
-      } else if (primitive.isNumber()) {
-        Number number = primitive.getAsNumber();
-        // Number is likely an instance of class com.google.gson.internal.LazilyParsedNumber.
-        if (number.longValue() == number.doubleValue()) {
-          return number.longValue();
-        } else {
-          return number;
-        }
-      } else {
-        throw new IllegalStateException("Unknown primitive type: " + primitive);
-      }
-    } else if (json.isJsonArray()) {
-      JsonArray array = json.getAsJsonArray();
-      List<Object> out = Lists.newArrayListWithCapacity(array.size());
-      for (JsonElement item : array) {
-        out.add(toRawTypes(item));
-      }
-      return out;
-    } else if (json.isJsonObject()) {
-      Map<String, Object> out = Maps.newHashMap();
-      for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject().entrySet()) {
-        // On a large project, without invoking intern(), we have seen `buck targets` OOM. When this
-        // happened, according to the .hprof file generated using -XX:+HeapDumpOnOutOfMemoryError,
-        // 39.6% of the memory was spent on char[] objects while 14.5% was spent on Strings.
-        // (Another 10.5% was spent on java.util.HashMap$Entry.) Introducing intern() stopped the
-        // OOM from happening.
-        out.put(entry.getKey().intern(), toRawTypes(entry.getValue()));
-      }
-      return out;
-    } else if (json.isJsonNull()) {
-      return null;
-    } else {
-      throw new IllegalStateException("Unknown type: " + json);
     }
   }
 

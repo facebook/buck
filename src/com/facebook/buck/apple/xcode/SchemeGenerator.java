@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.xcode;
 
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.parser.PartialGraph;
@@ -71,6 +72,7 @@ class SchemeGenerator {
   private final ImmutableSet<BuildRule> includedRules;
   private final String schemeName;
   private final Path outputDirectory;
+  private final ImmutableMap<SchemeActionType, String> actionConfigNames;
   private final ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder;
   private final ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder;
 
@@ -80,13 +82,15 @@ class SchemeGenerator {
       BuildRule primaryRule,
       ImmutableSet<BuildRule> includedRules,
       String schemeName,
-      Path outputDirectory) {
+      Path outputDirectory,
+      Map<SchemeActionType, String> actionConfigNames) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.primaryRule = Preconditions.checkNotNull(primaryRule);
     this.includedRules = Preconditions.checkNotNull(includedRules);
     this.schemeName = Preconditions.checkNotNull(schemeName);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
+    this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
     buildRuleToTargetMapBuilder = ImmutableMap.builder();
     targetToProjectPathMapBuilder = ImmutableMap.builder();
   }
@@ -134,12 +138,20 @@ class SchemeGenerator {
         nonTestRules.add(rule);
       }
 
+      PBXTarget target = buildRuleToTargetMap.get(rule);
+
+      String blueprintName = target.getProductName();
+      if (blueprintName == null) {
+        blueprintName = target.getName();
+      }
       XCScheme.BuildableReference buildableReference = new XCScheme.BuildableReference(
           outputDirectory.getParent().relativize(
-              targetToProjectPathMap.get(
-                  buildRuleToTargetMap.get(rule))
+              targetToProjectPathMap.get(target)
           ).toString(),
-          buildRuleToTargetMap.get(rule).getGlobalID());
+          target.getGlobalID(),
+          target.getProductReference().getName(),
+          blueprintName
+      );
       buildRuleToBuildableReferenceMap.put(rule, buildableReference);
     }
 
@@ -161,7 +173,8 @@ class SchemeGenerator {
       buildAction.addBuildAction(entry);
     }
 
-    XCScheme.TestAction testAction = new XCScheme.TestAction();
+    XCScheme.TestAction testAction = new XCScheme.TestAction(
+        actionConfigNames.get(SchemeActionType.TEST));
     for (BuildRule rule : testRules) {
       XCScheme.BuildableReference buildableReference = buildRuleToBuildableReferenceMap.get(rule);
       XCScheme.TestableReference testableReference =
@@ -171,15 +184,25 @@ class SchemeGenerator {
 
     XCScheme.BuildableReference primaryBuildableReference =
         buildRuleToBuildableReferenceMap.get(primaryRule);
-    XCScheme.LaunchAction launchAction = new XCScheme.LaunchAction(primaryBuildableReference);
-    XCScheme.ProfileAction profileAction = new XCScheme.ProfileAction(primaryBuildableReference);
+    XCScheme.LaunchAction launchAction = new XCScheme.LaunchAction(
+        primaryBuildableReference,
+        actionConfigNames.get(SchemeActionType.LAUNCH));
+    XCScheme.ProfileAction profileAction = new XCScheme.ProfileAction(
+        primaryBuildableReference,
+        actionConfigNames.get(SchemeActionType.PROFILE));
+    XCScheme.AnalyzeAction analyzeAction = new XCScheme.AnalyzeAction(
+        actionConfigNames.get(SchemeActionType.ANALYZE));
+    XCScheme.ArchiveAction archiveAction = new XCScheme.ArchiveAction(
+        actionConfigNames.get(SchemeActionType.ARCHIVE));
 
     XCScheme scheme = new XCScheme(
         schemeName,
         buildAction,
         testAction,
         launchAction,
-        profileAction);
+        profileAction,
+        analyzeAction,
+        archiveAction);
 
     Path schemeDirectory = outputDirectory.resolve("xcshareddata/xcschemes");
     projectFilesystem.mkdirs(schemeDirectory);
@@ -197,8 +220,10 @@ class SchemeGenerator {
     Element refElem = doc.createElement("BuildableReference");
     refElem.setAttribute("BuildableIdentifier", "primary");
     refElem.setAttribute("BlueprintIdentifier", buildableReference.getBlueprintIdentifier());
+    refElem.setAttribute("BuildableName", buildableReference.getBuildableName());
+    refElem.setAttribute("BlueprintName", buildableReference.getBlueprintName());
     String referencedContainer = "container:" + buildableReference.getContainerRelativePath();
-    refElem.setAttribute("referencedContainer", referencedContainer);
+    refElem.setAttribute("ReferencedContainer", referencedContainer);
     return refElem;
   }
 
@@ -298,13 +323,30 @@ class SchemeGenerator {
     rootElem.appendChild(buildActionElem);
 
     Element testActionElem = serializeTestAction(doc, scheme.getTestAction());
+    testActionElem.setAttribute(
+        "buildConfiguration", scheme.getTestAction().getBuildConfiguration());
     rootElem.appendChild(testActionElem);
 
     Element launchActionElem = serializeLaunchAction(doc, scheme.getLaunchAction());
+    launchActionElem.setAttribute(
+        "buildConfiguration", scheme.getLaunchAction().getBuildConfiguration());
     rootElem.appendChild(launchActionElem);
 
     Element profileActionElem = serializeProfileAction(doc, scheme.getProfileAction());
+    profileActionElem.setAttribute(
+        "buildConfiguration", scheme.getProfileAction().getBuildConfiguration());
     rootElem.appendChild(profileActionElem);
+
+    Element analyzeActionElem = doc.createElement("AnalyzeAction");
+    analyzeActionElem.setAttribute(
+        "buildConfiguration", scheme.getAnalyzeAction().getBuildConfiguration());
+    rootElem.appendChild(analyzeActionElem);
+
+    Element archiveActionElem = doc.createElement("ArchiveAction");
+    archiveActionElem.setAttribute(
+        "buildConfiguration", scheme.getArchiveAction().getBuildConfiguration());
+    archiveActionElem.setAttribute("revealArchiveInOrganizer", "YES");
+    rootElem.appendChild(archiveActionElem);
 
     // write out
 

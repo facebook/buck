@@ -19,7 +19,7 @@ package com.facebook.buck.java;
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.DirectoryTraversal;
@@ -234,7 +234,7 @@ public class JarDirectoryStep implements Step {
         // duplicate class files.
         if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
           // Duplicate entries. Skip.
-          eventBus.post(LogEvent.create(
+          eventBus.post(ConsoleEvent.create(
               determineSeverity(entry), "Duplicate found when adding file to jar: %s", entryName));
           continue;
         }
@@ -298,7 +298,7 @@ public class JarDirectoryStep implements Step {
           // those repeatedly would be lame, so don't do that.
           if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
             if (!entryName.endsWith("/")) {
-              eventBus.post(LogEvent.create(
+              eventBus.post(ConsoleEvent.create(
                   determineSeverity(entry),
                   "Duplicate found when adding directory to jar: %s", relativePath));
             }

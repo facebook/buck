@@ -17,8 +17,12 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -27,7 +31,6 @@ import com.google.common.collect.Sets;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
 
 /**
@@ -44,17 +47,20 @@ public class TargetNode<T extends ConstructorArg> {
   private final Set<Path> pathsReferenced;
   private final ImmutableSortedSet<BuildTarget> declaredDeps;
   private final ImmutableSortedSet<BuildTarget> extraDeps;
+  private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
 
   @VisibleForTesting
   TargetNode(
       Description<T> description,
       BuildRuleFactoryParams params,
-      Set<BuildTarget> declaredDeps) {
+      Set<BuildTarget> declaredDeps,
+      ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     this.description = Preconditions.checkNotNull(description);
     this.ruleFactoryParams = Preconditions.checkNotNull(params);
     this.pathsReferenced = ImmutableSet.of();
     this.declaredDeps = ImmutableSortedSet.copyOf(declaredDeps);
     this.extraDeps = ImmutableSortedSet.of();
+    this.visibilityPatterns = Preconditions.checkNotNull(visibilityPatterns);
   }
 
   public TargetNode(Description<T> description, BuildRuleFactoryParams params)
@@ -77,7 +83,7 @@ public class TargetNode<T extends ConstructorArg> {
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
       ParamInfo info =
-          new ParamInfo(typeCoercerFactory, Paths.get(params.target.getBasePath()), field);
+          new ParamInfo(typeCoercerFactory, params.target.getBasePath(), field);
       if (info.hasElementTypes(BuildRule.class, SourcePath.class, Path.class)) {
         detectBuildTargetsAndPathsForParameter(extraDeps, paths, info, params);
       }
@@ -96,6 +102,15 @@ public class TargetNode<T extends ConstructorArg> {
     this.extraDeps = ImmutableSortedSet.copyOf(
         Sets.difference(extraDeps.build(), this.declaredDeps));
     this.pathsReferenced = paths.build();
+
+    ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns = ImmutableSet.builder();
+    for (String visibility : params.getOptionalListAttribute("visibility")) {
+      visibilityPatterns.add(
+          params.buildTargetPatternParser.parse(
+              visibility,
+              ParseContext.forVisibilityArgument()));
+    }
+    this.visibilityPatterns = visibilityPatterns.build();
   }
 
   public Description<T> getDescription() {
@@ -124,6 +139,29 @@ public class TargetNode<T extends ConstructorArg> {
 
   public BuildRuleFactoryParams getRuleFactoryParams() {
     return ruleFactoryParams;
+  }
+
+  /**
+   * TODO(agallagher): It'd be nice to eventually move this implementation to an
+   * `AbstractDescription` base class, so that the various types of descriptions
+   * can install their own implementations.  However, we'll probably want to move
+   * most of what is now `BuildRuleParams` to `DescriptionParams` and set them up
+   * while building the target graph.
+   */
+  public boolean isVisibleTo(BuildTarget other) {
+    return BuildTargets.isVisibleTo(
+        getBuildTarget(),
+        visibilityPatterns,
+        other);
+  }
+
+  public void checkVisibility(BuildTarget other) {
+    if (!isVisibleTo(other)) {
+      throw new HumanReadableException(
+          "%s depends on %s, which is not visible",
+          other,
+          getBuildTarget());
+    }
   }
 
   private void detectBuildTargetsAndPathsForParameter(

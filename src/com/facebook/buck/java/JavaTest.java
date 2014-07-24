@@ -146,7 +146,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
    * other {@code java_test()} rules, then they will be run separately.
    */
   @Override
-  public List<Step> runTests(
+  public ImmutableList<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
       boolean isDryRun,
@@ -259,7 +259,12 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   }
 
   private Path getPathToTmpDirectory() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__java_test_%s_tmp__").toAbsolutePath();
+    Path base = BuildTargets.getBinPath(getBuildTarget(), "__java_test_%s_tmp__").toAbsolutePath();
+    String subdir = BuckConstant.oneTimeTestSubdirectory;
+    if (subdir != null && !subdir.isEmpty()) {
+      base = base.resolve(subdir);
+    }
+    return base;
   }
 
   @Override

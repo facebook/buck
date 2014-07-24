@@ -42,7 +42,8 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
     if (object instanceof String) {
       String param = (String) object;
-      if (param.startsWith(BuildTarget.BUILD_TARGET_PREFIX) || param.charAt(0) == ':') {
+      if (param.startsWith(BuildTarget.BUILD_TARGET_PREFIX) ||
+          (!param.isEmpty() && param.charAt(0) == ':')) {
         int colon = param.indexOf(':');
         if (colon == 0 && param.length() > 1) {
           return BuildTarget.builder(

@@ -12,6 +12,7 @@ java_test(
     '//lib:junit',
     '//src/com/facebook/buck/junit:junit',
     '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],
 )

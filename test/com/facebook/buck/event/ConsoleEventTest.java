@@ -25,14 +25,14 @@ import org.junit.Test;
 import java.util.logging.Level;
 
 
-public class LogEventTest {
+public class ConsoleEventTest {
 
   @Test
   public void testEquals() {
-    LogEvent event1 = configureTestEvent(LogEvent.create(Level.INFO, "HELLO"));
-    LogEvent event2 = configureTestEvent(LogEvent.info("HELLO"));
-    LogEvent event3 = configureTestEvent(LogEvent.create(Level.SEVERE, "HELLO"));
-    LogEvent event4 = configureTestEvent(LogEvent.severe("FOO"));
+    ConsoleEvent event1 = configureTestEvent(ConsoleEvent.create(Level.INFO, "HELLO"));
+    ConsoleEvent event2 = configureTestEvent(ConsoleEvent.info("HELLO"));
+    ConsoleEvent event3 = configureTestEvent(ConsoleEvent.create(Level.SEVERE, "HELLO"));
+    ConsoleEvent event4 = configureTestEvent(ConsoleEvent.severe("FOO"));
 
     assertEquals(event1, event2);
     assertNotEquals(event1, event3);

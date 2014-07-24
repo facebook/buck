@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 public class FakeTestRule extends AbstractBuildRule implements TestRule {
@@ -84,7 +83,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public List<Step> runTests(
+  public ImmutableList<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
       boolean isDryRun,

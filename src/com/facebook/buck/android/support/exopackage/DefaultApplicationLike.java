@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,17 +14,28 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.android.support.exopackage;
+
+import android.app.Application;
 
 /**
- * An exception raised during shutdown processing that does not indicate failure, but provides
- * useful information about shutdown processing failures.
- * This exception is meant only to be caught at the top level of the application.
+ * Empty implementation of {@link ApplicationLike}.
  */
-@SuppressWarnings("serial")
-public class ShutdownException extends RuntimeException {
+public class DefaultApplicationLike implements ApplicationLike {
+  public DefaultApplicationLike() {}
 
-  public ShutdownException(String message) {
-    super(message);
-  }
+  @SuppressWarnings("unused")
+  public DefaultApplicationLike(Application application) {}
+
+  @Override
+  public void onCreate() {}
+
+  @Override
+  public void onLowMemory() {}
+
+  @Override
+  public void onTrimMemory(int level) {}
+
+  @Override
+  public void onTerminate() {}
 }

@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -43,7 +44,7 @@ public class AndroidResourceRuleBuilder {
     private String rDotJavaPackage;
     private Path assets;
     private ImmutableSortedSet<Path> assetsSrcs = ImmutableSortedSet.of();
-    private Path manifest;
+    private SourcePath manifest;
     private boolean hasWhitelistedStrings = false;
 
     public AndroidResource build() {
@@ -99,7 +100,7 @@ public class AndroidResourceRuleBuilder {
       return this;
     }
 
-    public Builder setManifest(Path manifest) {
+    public Builder setManifest(SourcePath manifest) {
       this.manifest = manifest;
       return this;
     }

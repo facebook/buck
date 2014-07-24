@@ -21,6 +21,7 @@ import com.android.manifmerger.ICallback;
 import com.android.manifmerger.IMergerLog;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
@@ -43,12 +44,12 @@ public class GenerateManifestStep implements Step {
   private static final int BASE_SDK_LEVEL = 1;
 
   private Path skeletonManifestPath;
-  private ImmutableSet<Path> libraryManifestPaths;
+  private ImmutableSet<SourcePath> libraryManifestPaths;
   private Path outManifestPath;
 
   public GenerateManifestStep(
       Path skeletonManifestPath,
-      ImmutableSet<Path> libraryManifestPaths,
+      ImmutableSet<SourcePath> libraryManifestPaths,
       Path outManifestPath) {
     this.skeletonManifestPath = Preconditions.checkNotNull(skeletonManifestPath);
     this.libraryManifestPaths = ImmutableSet.copyOf(libraryManifestPaths);
@@ -80,8 +81,8 @@ public class GenerateManifestStep implements Step {
 
     List<File> libraryManifestFiles = Lists.newArrayList();
 
-    for (Path path : libraryManifestPaths) {
-      libraryManifestFiles.add(path.toFile());
+    for (SourcePath path : libraryManifestPaths) {
+      libraryManifestFiles.add(path.resolve().toFile());
     }
 
     File skeletonManifestFile = skeletonManifestPath.toFile();

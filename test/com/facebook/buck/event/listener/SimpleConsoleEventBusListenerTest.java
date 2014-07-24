@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -64,7 +64,10 @@ public class SimpleConsoleEventBusListenerTest {
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
-    SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(console, fakeClock);
+    SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(
+        console,
+        fakeClock,
+        /* isAnAssumptionViolationAnError */ false);
     eventBus.register(listener);
 
     final long threadId = 0;
@@ -109,7 +112,7 @@ public class SimpleConsoleEventBusListenerTest {
         console.getTextWrittenToStdErr());
 
     rawEventBus.post(configureTestEventAtTime(
-        LogEvent.severe("I've made a huge mistake."), 1500L, TimeUnit.MILLISECONDS, threadId));
+        ConsoleEvent.severe("I've made a huge mistake."), 1500L, TimeUnit.MILLISECONDS, threadId));
 
     final String logLine = "I've made a huge mistake.\n";
 

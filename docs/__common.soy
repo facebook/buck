@@ -2,6 +2,7 @@
 
 /**
  * @param title
+ * @param? subtitle
  * @param content
  * @param? ishome
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
@@ -11,6 +12,7 @@
   {call .header}
     {param ishome: $ishome /}
     {param title: $title /}
+    {param subtitle: $subtitle /}
     {param prettify: $prettify /}
   {/call}
 
@@ -25,6 +27,7 @@
 
 /**
  * @param title
+ * @param? subtitle
  * @param? ishome
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
@@ -121,7 +124,7 @@ ga('send', 'pageview');
   <article>
 
   {if not $ishome}
-    <h1>{$title}</h1>
+    <h1>{$title}{if $subtitle}:<div class="subtitle">{$subtitle}</div>{/if}</h1>
   {/if}
 
 {/template}
@@ -136,6 +139,7 @@ ga('send', 'pageview');
     <li><a href="{ROOT}">Overview</a>
     <li><a href="{ROOT}setup/quick_start.html">Quick Start</a>
     <li><a href="{ROOT}setup/install.html">Downloading and Installing Buck</a>
+    <li><a href="{ROOT}article/exopackage.html">Exopackage</a>
   </ul>
   <h3>About</h3>
   <ul>
@@ -154,6 +158,7 @@ ga('send', 'pageview');
     <li><a href="{ROOT}concept/buckconfig.html">.buckconfig</a>
     <li><a href="{ROOT}concept/build_target_pattern.html">Build Target Pattern</a>
     <li><a href="{ROOT}concept/visibility.html">Visibility</a>
+    <li><a href="{ROOT}concept/http_cache_api.html">HTTP Cache API</a>
   </ul>
   <h3>Build Rules</h3>
   <ul>
@@ -163,6 +168,7 @@ ga('send', 'pageview');
         'android_binary',
         'android_build_config',
         'android_library',
+        'android_prebuilt_aar',
         'android_resource',
         'apk_genrule',
         'gen_aidl',
@@ -217,6 +223,7 @@ ga('send', 'pageview');
     <li><a href="https://github.com/facebook/buck/issues/new">Report a Bug</a>
     <li><a href="{ROOT}contributing/development.html">Development Workflow</a>
     <li><a href="{ROOT}contributing/codestyle.html">Code Style</a>
+    <li><a href="{ROOT}contributing/logging.html">Logging</a>
     <li><a href="{ROOT}javadoc">API</a>
     <li><a href="https://github.com/facebook/buck">Browse the Source Code</a>
   </ul>
@@ -406,34 +413,39 @@ ga('send', 'pageview');
 {call .ruleLink}{param name : 'android_binary' /}{/call}
 {/template}
 
+/***/
+{template .android_build_config}
+{call .ruleLink}{param name : 'android_build_config' /}{/call}
+{/template}
 
 /***/
 {template .android_library}
 {call .ruleLink}{param name : 'android_library' /}{/call}
 {/template}
 
+/***/
+{template .android_prebuilt_aar}
+{call .ruleLink}{param name : 'android_prebuilt_aar' /}{/call}
+{/template}
 
 /***/
 {template .android_resource}
 {call .ruleLink}{param name : 'android_resource' /}{/call}
 {/template}
 
-
-/***/
-{template .keystore}
-{call .ruleLink}{param name : 'keystore' /}{/call}
-{/template}
-
-
 /***/
 {template .genrule}
 {call .ruleLink}{param name : 'genrule' /}{/call}
 {/template}
 
-
 /***/
 {template .java_library}
 {call .ruleLink}{param name : 'java_library' /}{/call}
+{/template}
+
+/***/
+{template .keystore}
+{call .ruleLink}{param name : 'keystore' /}{/call}
 {/template}
 
 /***/
@@ -449,6 +461,11 @@ ga('send', 'pageview');
 /***/
 {template .project_config}
 {call .ruleLink}{param name : 'project_config' /}{/call}
+{/template}
+
+/***/
+{template .fn_glob}
+<a href="{ROOT}function/glob.html"><code>glob()</code></a>
 {/template}
 
 /**
@@ -469,6 +486,11 @@ ga('send', 'pageview');
 {/template}
 
 /***/
+{template .cmd_install}
+{call .cmd_link}{param name : 'install' /}{/call}
+{/template}
+
+/***/
 {template .cmd_project}
 {call .cmd_link}{param name : 'project' /}{/call}
 {/template}
@@ -476,6 +498,11 @@ ga('send', 'pageview');
 /***/
 {template .cmd_quickstart}
 {call .cmd_link}{param name : 'quickstart' /}{/call}
+{/template}
+
+/***/
+{template .cmd_uninstall}
+{call .cmd_link}{param name : 'uninstall' /}{/call}
 {/template}
 
 /***/

@@ -18,12 +18,14 @@ package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class BuildTargetTest {
 
@@ -33,7 +35,7 @@ public class BuildTargetTest {
     assertEquals("fb4a", rootTarget.getShortName());
     assertEquals("//", rootTarget.getBaseName());
     assertEquals("//", rootTarget.getBaseNameWithSlash());
-    assertEquals("", rootTarget.getBasePath());
+    assertEquals(Paths.get(""), rootTarget.getBasePath());
     assertEquals("", rootTarget.getBasePathWithSlash());
     assertEquals("//:fb4a", rootTarget.getFullyQualifiedName());
     assertEquals("//:fb4a", rootTarget.toString());
@@ -45,7 +47,7 @@ public class BuildTargetTest {
     assertEquals("fb4a", rootTarget.getShortName());
     assertEquals("//java/com/facebook", rootTarget.getBaseName());
     assertEquals("//java/com/facebook/", rootTarget.getBaseNameWithSlash());
-    assertEquals("java/com/facebook", rootTarget.getBasePath());
+    assertEquals(Paths.get("java/com/facebook"), rootTarget.getBasePath());
     assertEquals("java/com/facebook/", rootTarget.getBasePathWithSlash());
     assertEquals("//java/com/facebook:fb4a", rootTarget.getFullyQualifiedName());
     assertEquals("//java/com/facebook:fb4a", rootTarget.toString());
@@ -62,7 +64,7 @@ public class BuildTargetTest {
   @Test
   public void testEqualsNullReturnsFalse() {
     BuildTarget utilTarget = BuildTarget.builder("//src/com/facebook/buck/util", "util").build();
-    assertFalse(utilTarget.equals(null));
+    assertNotNull(utilTarget);
   }
 
   @Test

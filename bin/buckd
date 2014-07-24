@@ -61,12 +61,12 @@ mkdir -p "$BUCKD_DIR/tmp" &> /dev/null || true
 BUCKD_TMPDIR=$(mktemp -d "${BUCKD_DIR}/tmp/buck_run.XXXXXXXXXX")
 
 # Run buckd. Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
-# Set timeout to 30s (longer than the biggest GC pause seen for a 2GB heap)
+# Set timeout to 60s (longer than the biggest GC pause seen for a 2GB heap)
 # and GC target to 15s. This means that the GC has to miss its target by 100%
 # or many 500ms heartbeats must be missed before a client disconnection occurs.
 # Specify port 0 to allow Nailgun to find an available port, then parse the
 # port number out of the first log entry.
-BUCKD_CLIENT_TIMEOUT_MILLIS=30000
+BUCKD_CLIENT_TIMEOUT_MILLIS=60000
 GC_MAX_PAUSE_TARGET=15000
 java \
 "${BUCK_JAVA_ARGS[@]}" \

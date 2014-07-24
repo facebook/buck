@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -144,10 +143,8 @@ public class NdkLibrary extends AbstractBuildRule
    *     can be referenced via the genfile() function.
    */
   private Path getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
-    return Paths.get(
-        isScratchDir ? BuckConstant.BIN_DIR : BuckConstant.GEN_DIR,
-        target.getBasePath(),
-        lastPathComponent);
+    Path base = isScratchDir ? BuckConstant.BIN_PATH : BuckConstant.GEN_PATH;
+    return base.resolve(target.getBasePath()).resolve(lastPathComponent);
   }
 
   @Override

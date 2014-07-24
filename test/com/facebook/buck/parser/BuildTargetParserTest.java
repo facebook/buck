@@ -46,7 +46,7 @@ public class BuildTargetParserTest {
     BuildTarget buildTarget = parser.parse("//:fb4a", ParseContext.fullyQualified());
     assertEquals("fb4a", buildTarget.getShortName());
     assertEquals("//", buildTarget.getBaseName());
-    assertEquals("", buildTarget.getBasePath());
+    assertEquals(Paths.get(""), buildTarget.getBasePath());
     assertEquals("", buildTarget.getBasePathWithSlash());
     assertEquals("//:fb4a", buildTarget.getFullyQualifiedName());
 

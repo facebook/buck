@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -28,14 +29,13 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Set;
 
@@ -68,30 +68,27 @@ public class AndroidManifest extends AbstractBuildRule {
   private final SourcePath skeletonFile;
 
   /** These must be sorted so {@link #getInputsToCompareToOutput} returns a consistent value. */
-  private final ImmutableSortedSet<Path> manifestFiles;
+  private final ImmutableSortedSet<SourcePath> manifestFiles;
 
   private final Path pathToOutputFile;
 
   protected AndroidManifest(
       BuildRuleParams params,
       SourcePath skeletonFile,
-      Set<Path> manifestFiles) {
+      Set<SourcePath> manifestFiles) {
     super(params);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     BuildTarget buildTarget = params.getBuildTarget();
-    this.pathToOutputFile = Paths.get(
-        BuckConstant.GEN_DIR,
-        buildTarget.getBasePath(),
-        "AndroidManifest__" + buildTarget.getShortName() + "__.xml");
+    this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "AndroidManifest__%s__.xml");
   }
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.<Path>builder()
-        .addAll(SourcePaths.filterInputsToCompareToOutput(Collections.singleton(skeletonFile)))
-        .addAll(manifestFiles)
-        .build();
+    return SourcePaths.filterInputsToCompareToOutput(
+        Iterables.concat(
+            Collections.singleton(skeletonFile),
+            manifestFiles));
   }
 
   @Override

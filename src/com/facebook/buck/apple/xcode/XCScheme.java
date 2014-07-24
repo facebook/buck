@@ -28,18 +28,24 @@ public class XCScheme {
   private TestAction testAction;
   private LaunchAction launchAction;
   private ProfileAction profileAction;
+  private AnalyzeAction analyzeAction;
+  private ArchiveAction archiveAction;
 
   public XCScheme(
       String name,
       BuildAction buildAction,
       TestAction testAction,
       LaunchAction launchAction,
-      ProfileAction profileAction) {
+      ProfileAction profileAction,
+      AnalyzeAction analyzeAction,
+      ArchiveAction archiveAction) {
     this.name = name;
     this.buildAction = buildAction;
     this.testAction = testAction;
     this.launchAction = launchAction;
     this.profileAction = profileAction;
+    this.analyzeAction = Preconditions.checkNotNull(analyzeAction);
+    this.archiveAction = Preconditions.checkNotNull(archiveAction);
   }
 
   public String getName() {
@@ -62,15 +68,29 @@ public class XCScheme {
     return profileAction;
   }
 
+  public AnalyzeAction getAnalyzeAction() {
+    return analyzeAction;
+  }
+
+  public ArchiveAction getArchiveAction() {
+    return archiveAction;
+  }
+
   public static class BuildableReference {
     private String containerRelativePath;
     private String blueprintIdentifier;
+    public final String buildableName;
+    public final String blueprintName;
 
     public BuildableReference(
         String containerRelativePath,
-        String blueprintIdentifier) {
+        String blueprintIdentifier,
+        String buildableName,
+        String blueprintName) {
       this.containerRelativePath = containerRelativePath;
       this.blueprintIdentifier = blueprintIdentifier;
+      this.buildableName = Preconditions.checkNotNull(buildableName);
+      this.blueprintName = Preconditions.checkNotNull(blueprintName);
     }
 
     public String getContainerRelativePath() {
@@ -79,6 +99,14 @@ public class XCScheme {
 
     public String getBlueprintIdentifier() {
       return blueprintIdentifier;
+    }
+
+    public String getBuildableName() {
+      return buildableName;
+    }
+
+    public String getBlueprintName() {
+      return blueprintName;
     }
   }
 
@@ -132,33 +160,47 @@ public class XCScheme {
 
   public static class LaunchAction {
     BuildableReference buildableReference;
+    private final String buildConfiguration;
 
-    public LaunchAction(BuildableReference buildableReference) {
+    public LaunchAction(BuildableReference buildableReference, String buildConfiguration) {
       this.buildableReference = buildableReference;
+      this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
     }
 
     public BuildableReference getBuildableReference() {
       return buildableReference;
+    }
+
+    public String getBuildConfiguration() {
+      return buildConfiguration;
     }
   }
 
   public static class ProfileAction {
     BuildableReference buildableReference;
+    private final String buildConfiguration;
 
-    public ProfileAction(BuildableReference buildableReference) {
+    public ProfileAction(BuildableReference buildableReference, String buildConfiguration) {
       this.buildableReference = buildableReference;
+      this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
     }
 
     public BuildableReference getBuildableReference() {
       return buildableReference;
     }
+
+    public String getBuildConfiguration() {
+      return buildConfiguration;
+    }
   }
 
   public static class TestAction {
     List<TestableReference> testables;
+    private final String buildConfiguration;
 
-    public TestAction() {
+    public TestAction(String buildConfiguration) {
       this.testables = Lists.newArrayList();
+      this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
     }
 
     public void addTestableReference(TestableReference testable) {
@@ -167,6 +209,10 @@ public class XCScheme {
 
     public List<TestableReference> getTestables() {
       return testables;
+    }
+
+    public String getBuildConfiguration() {
+      return buildConfiguration;
     }
   }
 
@@ -179,6 +225,30 @@ public class XCScheme {
 
     public BuildableReference getBuildableReference() {
       return buildableReference;
+    }
+  }
+
+  public static class AnalyzeAction {
+    public final String buildConfiguration;
+
+    public AnalyzeAction(String buildConfiguration) {
+      this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
+    }
+
+    public String getBuildConfiguration() {
+      return buildConfiguration;
+    }
+  }
+
+  public static class ArchiveAction {
+    public final String buildConfiguration;
+
+    public ArchiveAction(String buildConfiguration) {
+      this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
+    }
+
+    public String getBuildConfiguration() {
+      return buildConfiguration;
     }
   }
 }

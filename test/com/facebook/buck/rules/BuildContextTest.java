@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.event.BuckEventBusFactory.CapturingLogEventListener;
+import com.facebook.buck.event.BuckEventBusFactory.CapturingConsoleEventListener;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
@@ -131,7 +131,7 @@ public class BuildContextTest {
   @Test
   public void testLogBuildInfo() {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    CapturingLogEventListener listener = new CapturingLogEventListener();
+    CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
     eventBus.register(listener);
     BuildContext buildContext = BuildContext.builder()
         .setActionGraph(createMock(ActionGraph.class))
@@ -150,7 +150,7 @@ public class BuildContextTest {
   @Test
   public void testLogError() {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    CapturingLogEventListener listener = new CapturingLogEventListener();
+    CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
     eventBus.register(listener);
     BuildContext buildContext = BuildContext.builder()
         .setActionGraph(createMock(ActionGraph.class))

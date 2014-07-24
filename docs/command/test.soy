@@ -98,6 +98,9 @@ Builds and runs the tests for one or more specified targets:
     and the class part (or method) part can be omitted to match all classes (or
     methods).
 
+    Selectors are anchored to the end of each class and/or method name (i.e.
+    a <code>$</code> at the end of your regular expressions is implied.)
+
     <pre>buck test --all --filter 'Foo.*'  # ...every class starting Foo</pre>
     <pre>buck test --all --filter '#testX' # ...run testX in every class</pre>
 

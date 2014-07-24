@@ -25,7 +25,6 @@ import org.junit.runner.notification.RunListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -75,7 +74,7 @@ final class TestResult {
       private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
       private Result result;
       private RunListener resultListener;
-      private final List<Failure> assumptionFailures = new ArrayList<>();
+      private Failure assumptionFailure;
 
       // To help give a reasonable (though imprecise) guess at the runtime for unpaired failures
       private long startTime = System.currentTimeMillis();
@@ -134,9 +133,11 @@ final class TestResult {
 
         Failure failure;
         ResultType type;
-        if (assumptionFailures.size() > 0) {
-          failure = assumptionFailures.get(0);
+        if (assumptionFailure != null) {
+          failure = assumptionFailure;
           type = ResultType.ASSUMPTION_VIOLATION;
+          // Clear the assumption-failure field before the next test result appears.
+          assumptionFailure = null;
         } else if (numFailures == 0) {
           failure = null;
           type = ResultType.SUCCESS;
@@ -161,10 +162,13 @@ final class TestResult {
        * The regular listener we created from the singular result, in this class, will not by
        * default treat assumption failures as regular failures, and will not store them.  As a
        * consequence, we store them ourselves!
+       *
+       * We store the assumption-failure in a temporary field, which we'll make sure we clear each
+       * time we write results.
        */
       @Override
       public void testAssumptionFailure(Failure failure) {
-        assumptionFailures.add(failure);
+        assumptionFailure = failure;
         if (resultListener != null) {
           // Left in only to help catch future bugs -- right now this does nothing.
           resultListener.testAssumptionFailure(failure);

@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
-import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
@@ -174,28 +174,26 @@ public class CachingBuildEngine implements BuildEngine {
 
               ruleKeys.putIfAbsent(rule.getBuildTarget(), rule.getRuleKey());
               BuildResult result = null;
-              try {
-                result = buildOnceDepsAreBuilt(
-                    rule,
-                    context,
-                    onDiskBuildInfo,
-                    buildInfoRecorder.get(),
-                    shouldTryToFetchFromCache(deps));
-              } catch (InterruptedException e) {
-                e.printStackTrace();
-                Thread.currentThread().interrupt();
-                return;
-              }
+              result = buildOnceDepsAreBuilt(
+                  rule,
+                  context,
+                  onDiskBuildInfo,
+                  buildInfoRecorder.get(),
+                  shouldTryToFetchFromCache(deps));
               if (result.getStatus() == BuildRuleStatus.SUCCESS) {
                 try {
                   recordBuildRuleSuccess(result);
                 } catch (InterruptedException e) {
-                  e.printStackTrace();
-                  Thread.currentThread().interrupt();
-                  return;
+                  result = new BuildResult(e);
                 }
-              } else {
+              }
+              if (result.getStatus() == BuildRuleStatus.FAIL) {
                 recordBuildRuleFailure(result);
+
+                // Reset interrupted flag once failure has been recorded.
+                if (result.getFailure() instanceof InterruptedException) {
+                  Thread.currentThread().interrupt();
+                }
               }
             }
 
@@ -241,7 +239,7 @@ public class CachingBuildEngine implements BuildEngine {
               try {
                 onDiskBuildInfo.deleteExistingMetadata();
               } catch (IOException e) {
-                eventBus.post(ThrowableLogEvent.create(
+                eventBus.post(ThrowableConsoleEvent.create(
                     e,
                     "Error when deleting metadata for %s.",
                     rule));
@@ -294,7 +292,7 @@ public class CachingBuildEngine implements BuildEngine {
         final BuildContext context,
         OnDiskBuildInfo onDiskBuildInfo,
         BuildInfoRecorder buildInfoRecorder,
-        boolean shouldTryToFetchFromCache) throws InterruptedException {
+        boolean shouldTryToFetchFromCache) {
     // Compute the current RuleKey and compare it to the one stored on disk.
     RuleKey ruleKey = rule.getRuleKey();
     Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey();
@@ -346,12 +344,16 @@ public class CachingBuildEngine implements BuildEngine {
     if (shouldTryToFetchFromCache) {
       // Before deciding to build, check the ArtifactCache.
       // The fetched file is now a ZIP file, so it needs to be unzipped.
-      cacheResult = tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-          rule,
-          buildInfoRecorder,
-          context.getArtifactCache(),
-          context.getProjectRoot(),
-          context);
+      try {
+        cacheResult = tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+            rule,
+            buildInfoRecorder,
+            context.getArtifactCache(),
+            context.getProjectRoot(),
+            context);
+      } catch (InterruptedException e) {
+        return new BuildResult(e);
+      }
     } else {
       cacheResult = CacheResult.SKIP;
     }
@@ -427,7 +429,7 @@ public class CachingBuildEngine implements BuildEngine {
       // In the wild, we have seen some inexplicable failures during this step. For now, we try to
       // give the user as much information as we can to debug the issue, but return CacheResult.MISS
       // so that Buck will fall back on doing a local build.
-      buildContext.getEventBus().post(LogEvent.warning(
+      buildContext.getEventBus().post(ConsoleEvent.warning(
               "Failed to unzip the artifact for %s at %s.\n" +
                   "The rule will be built locally, " +
                   "but here is the stacktrace of the failed unzip call:\n" +
@@ -470,6 +472,12 @@ public class CachingBuildEngine implements BuildEngine {
     StepRunner stepRunner = context.getStepRunner();
     for (Step step : steps) {
       stepRunner.runStepForBuildTarget(step, rule.getBuildTarget());
+
+      // Check for interruptions that may have been ignored by step.
+      if (Thread.interrupted()) {
+        Thread.currentThread().interrupt();
+        throw new InterruptedException();
+      }
     }
   }
 

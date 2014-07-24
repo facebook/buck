@@ -19,7 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
@@ -104,7 +104,7 @@ public class JavaSymbolFinder {
     try {
       srcRoots = srcRootsFinder.getAllSrcRootPaths(config.getSrcRoots());
     } catch (IOException e) {
-      buckEventBus.post(ThrowableLogEvent.create(e, "Error while searching for source roots."));
+      buckEventBus.post(ThrowableConsoleEvent.create(e, "Error while searching for source roots."));
       return ImmutableSetMultimap.of();
     }
 
@@ -177,7 +177,7 @@ public class JavaSymbolFinder {
         }
       }
     } catch (BuildFileParseException e) {
-      buckEventBus.post(ThrowableLogEvent.create(e, "Error while searching for targets."));
+      buckEventBus.post(ThrowableConsoleEvent.create(e, "Error while searching for targets."));
     }
     return sourceFileTargetsMultimap.build();
   }
@@ -247,7 +247,8 @@ public class JavaSymbolFinder {
           definingPaths.add(candidatePath);
         }
       } catch (IOException e) {
-        buckEventBus.post(ThrowableLogEvent.create(e, "Error while searching for source files."));
+        buckEventBus.post(
+            ThrowableConsoleEvent.create(e, "Error while searching for source files."));
       }
     }
     return definingPaths.build();

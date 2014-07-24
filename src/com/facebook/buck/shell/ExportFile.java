@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 
 /**
@@ -88,11 +87,11 @@ public class ExportFile extends AbstractBuildRule {
     if (args.src.isPresent()) {
       this.src = args.src.get();
     } else {
-      this.src = new PathSourcePath(Paths.get(target.getBasePath(), target.getShortName()));
+      this.src = new PathSourcePath(target.getBasePath().resolve(target.getShortName()));
     }
 
     final String outName = args.out.or(target.getShortName());
-    this.out = Paths.get(BuckConstant.GEN_DIR, target.getBasePath(), outName);
+    this.out = BuckConstant.GEN_PATH.resolve(target.getBasePath()).resolve(outName);
   }
 
   @Override

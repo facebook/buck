@@ -15,7 +15,6 @@ java_library(
 EXCEPTION_SRCS = [
   'ExceptionWithHumanReadableMessage.java',
   'HumanReadableException.java',
-  'ShutdownException.java',
   'WatchmanWatcherException.java',
 ]
 java_library(
@@ -70,6 +69,7 @@ java_library(
   deps = [
     ':exceptions',
     '//lib:guava',
+    '//src/com/facebook/buck/log:log',
   ],
   visibility = [ 'PUBLIC' ],
 )
@@ -86,6 +86,7 @@ java_library(
     '//lib:guava',
     '//lib:jackson-core',
     '//lib:jsr305',
+    '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/zip:stream',
   ],
   visibility = [

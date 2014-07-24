@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * File types used in Apple targets.
@@ -92,6 +93,15 @@ public final class FileTypes {
           .put("y", "sourcecode.yacc")
           .put("zip", "archive.zip")
           .build();
+
+  /**
+   * Set of UTIs which only work as "lastKnownFileType" and not "explicitFileType"
+   * in a PBXFileReference.
+   *
+   * Yes, really. Because Xcode.
+   */
+  public static final ImmutableSet<String> EXPLICIT_FILE_TYPE_BROKEN_UTIS =
+    ImmutableSet.of("file.xib");
 
   /**
    * Multimap of Apple UTI (Uniform Type Identifier) to file extension(s).

@@ -16,7 +16,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.cli.InstallEvent;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.IndividualTestEvent;
@@ -36,11 +36,14 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   private final AtomicLong parseTime;
   private final TestResultFormatter testFormatter;
 
-  public SimpleConsoleEventBusListener(Console console, Clock clock) {
+  public SimpleConsoleEventBusListener(
+      Console console,
+      Clock clock,
+      boolean isTreatingAssumptionsAsErrors) {
     super(console, clock);
 
     this.parseTime = new AtomicLong(0);
-    this.testFormatter = new TestResultFormatter(console.getAnsi());
+    this.testFormatter = new TestResultFormatter(console.getAnsi(), isTreatingAssumptionsAsErrors);
   }
 
   @Override
@@ -86,9 +89,9 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   }
 
   @Subscribe
-  public void logEvent(LogEvent event) {
+  public void logEvent(ConsoleEvent event) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    formatLogEvent(event, lines);
+    formatConsoleEvent(event, lines);
     printLines(lines);
   }
 

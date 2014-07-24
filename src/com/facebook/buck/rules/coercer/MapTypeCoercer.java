@@ -75,18 +75,11 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
       ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
 
       for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
-        try {
-          K key = keyTypeCoercer.coerce(
-              buildRuleResolver, filesystem, pathRelativeToProjectRoot, entry.getKey());
-          V value = valueTypeCoercer.coerce(
-              buildRuleResolver, filesystem, pathRelativeToProjectRoot, entry.getValue());
-          builder.put(key, value);
-        } catch (CoerceFailedException e) {
-          CoerceFailedException wrappedException =
-              CoerceFailedException.simple(object, getOutputClass());
-          wrappedException.initCause(e);
-          throw wrappedException;
-        }
+        K key = keyTypeCoercer.coerce(
+            buildRuleResolver, filesystem, pathRelativeToProjectRoot, entry.getKey());
+        V value = valueTypeCoercer.coerce(
+            buildRuleResolver, filesystem, pathRelativeToProjectRoot, entry.getValue());
+        builder.put(key, value);
       }
 
       return builder.build();

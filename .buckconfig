@@ -4,6 +4,7 @@
     src_roots = src, test
 [alias]
     buck = //src/com/facebook/buck/cli:cli
+    buck-android-support = //src/com/facebook/buck/android/support:buck-android-support
 [buildfile]
     includes = //DEFS
 [project]

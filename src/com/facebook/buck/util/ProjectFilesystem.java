@@ -501,9 +501,13 @@ public class ProjectFilesystem {
   /**
    * @param inputStream Source of the bytes. This method does not close this stream.
    */
-  public void copyToPath(final InputStream inputStream, Path pathRelativeToProjectRoot)
+  public void copyToPath(
+      InputStream inputStream,
+      Path pathRelativeToProjectRoot,
+      CopyOption... options)
       throws IOException {
-    java.nio.file.Files.copy(inputStream, getPathForRelativePath(pathRelativeToProjectRoot));
+    java.nio.file.Files.copy(inputStream, getPathForRelativePath(pathRelativeToProjectRoot),
+        options);
   }
 
   public Optional<String> readFileIfItExists(Path pathRelativeToProjectRoot) {
@@ -723,6 +727,19 @@ public class ProjectFilesystem {
   @Override
   public int hashCode() {
     return Objects.hash(projectRoot, ignorePaths);
+  }
+
+  /**
+   * @param path the path to check.
+   * @return whether ignoredPaths contains path or any of its ancestors.
+   */
+  public boolean isIgnored(Path path) {
+    for (Path ignoredPath : getIgnorePaths()) {
+      if (path.startsWith(ignoredPath)) {
+        return true;
+      }
+    }
+    return false;
   }
 
 }

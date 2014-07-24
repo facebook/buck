@@ -7,9 +7,9 @@ from buck import glob
 
 def main():
     parser = argparse.ArgumentParser(
-        description=("Walk the path hierarchy from the given path origin(s), "
-                     "including and excluding certain patterns (example: "
-                     "'src/**/foo/*.java)")
+        description="Walk the path hierarchy from the given path origin(s), "
+                    "including and excluding certain patterns (example: "
+                    "'src/**/foo/*.java)")
     parser.add_argument(
         "-i",
         "--include",

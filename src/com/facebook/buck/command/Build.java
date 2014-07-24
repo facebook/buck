@@ -21,7 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import com.facebook.buck.android.HasAndroidPlatformTarget;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.JavaPackageFinder;
@@ -199,8 +199,9 @@ public class Build implements Closeable {
         } else if (isEncounteredAndroidRuleInTraversal) {
           AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
               .getDefaultPlatformTarget(androidDirectoryResolver, buckConfig.getAaptOverride());
-          eventBus.post(LogEvent.warning("No Android platform target specified. Using default: %s",
-              androidPlatformTarget.getName()));
+          eventBus.post(
+              ConsoleEvent.warning("No Android platform target specified. Using default: %s",
+                  androidPlatformTarget.getName()));
           result = Optional.of(androidPlatformTarget);
         } else {
           result = Optional.absent();

@@ -18,13 +18,19 @@ package com.facebook.buck.apple.xcode;
 
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosTestDescription;
+import com.facebook.buck.apple.SchemeActionType;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
@@ -39,6 +45,8 @@ import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.IOException;
@@ -98,19 +106,32 @@ public class SchemeGeneratorTest {
         rootRule,
         ImmutableSet.of(rootRule, leftRule, rightRule, childRule),
         "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"));
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        SchemeActionType.DEFAULT_CONFIG_NAMES);
 
     PBXTarget rootTarget = new PBXNativeTarget("rootRule");
     rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
     PBXTarget leftTarget = new PBXNativeTarget("leftRule");
     leftTarget.setGlobalID("leftGID");
+    leftTarget.setProductReference(
+        new PBXFileReference(
+            "left.a", "left.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(leftRule, leftTarget);
     PBXTarget rightTarget = new PBXNativeTarget("rightRule");
     rightTarget.setGlobalID("rightGID");
+    rightTarget.setProductReference(
+        new PBXFileReference(
+            "right.a", "right.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(rightRule, rightTarget);
     PBXTarget childTarget = new PBXNativeTarget("childRule");
     childTarget.setGlobalID("childGID");
+    childTarget.setProductReference(
+        new PBXFileReference(
+            "child.a", "child.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(childRule, childTarget);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -173,13 +194,20 @@ public class SchemeGeneratorTest {
         rootRule,
         ImmutableSet.of(rootRule, testRule),
         "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"));
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        SchemeActionType.DEFAULT_CONFIG_NAMES);
 
     PBXTarget rootTarget = new PBXNativeTarget("rootRule");
     rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
     PBXTarget testTarget = new PBXNativeTarget("testRule");
     testTarget.setGlobalID("testGID");
+    testTarget.setProductReference(
+        new PBXFileReference(
+            "test.a", "test.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     schemeGenerator.addRuleToTargetMap(testRule, testTarget);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -231,5 +259,142 @@ public class SchemeGeneratorTest {
     String profileActionBlueprintIdentifier =
         (String) profileActionExpr.evaluate(scheme, XPathConstants.STRING);
     assertThat(profileActionBlueprintIdentifier, equalTo("rootGID"));
+  }
+
+  @Test
+  public void buildableReferenceShouldHaveExpectedProperties() throws Exception {
+    BuildRule rootRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "root").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+
+    PartialGraph partialGraph = createPartialGraphFromBuildRules(
+        ImmutableSet.<BuildRule>of(rootRule));
+
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        partialGraph,
+        rootRule,
+        ImmutableSet.of(rootRule),
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        SchemeActionType.DEFAULT_CONFIG_NAMES);
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+    schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    schemeGenerator.addTargetToProjectPathMap(rootTarget, pbxprojectPath);
+
+    Path schemePath = schemeGenerator.writeScheme();
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+
+    XPath buildableReferenceXPath = xpathFactory.newXPath();
+    XPathExpression buildableReferenceExpr =
+        buildableReferenceXPath.compile("//BuildableReference");
+    NodeList buildableReferences = (NodeList) buildableReferenceExpr.evaluate(
+        scheme, XPathConstants.NODESET);
+
+    assertThat(buildableReferences.getLength(), greaterThan(0));
+
+    for (int i = 0; i < buildableReferences.getLength(); i++) {
+      NamedNodeMap attributes = buildableReferences.item(i).getAttributes();
+      assertThat(attributes, notNullValue());
+      assertThat(attributes.getNamedItem("BlueprintIdentifier"), notNullValue());
+      assertThat(attributes.getNamedItem("BuildableIdentifier"), notNullValue());
+      assertThat(attributes.getNamedItem("ReferencedContainer"), notNullValue());
+      assertThat(attributes.getNamedItem("BlueprintName"), notNullValue());
+      assertThat(attributes.getNamedItem("BuildableName"), notNullValue());
+    }
+  }
+
+  @Test
+  public void allActionsShouldBePresentInSchemeWithDefaultBuildConfigurations() throws Exception {
+    BuildRule rootRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "root").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+
+    PartialGraph partialGraph = createPartialGraphFromBuildRules(
+        ImmutableSet.<BuildRule>of(rootRule));
+
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        partialGraph,
+        rootRule,
+        ImmutableSet.of(rootRule),
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        SchemeActionType.DEFAULT_CONFIG_NAMES);
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+    schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    schemeGenerator.addTargetToProjectPathMap(rootTarget, pbxprojectPath);
+
+    Path schemePath = schemeGenerator.writeScheme();
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+
+    XPath schemeChildrenXPath = xpathFactory.newXPath();
+    XPathExpression schemeChildrenExpr =
+        schemeChildrenXPath.compile("/Scheme/node()");
+    NodeList actions = (NodeList) schemeChildrenExpr.evaluate(scheme, XPathConstants.NODESET);
+
+    assertThat(actions.getLength(), equalTo(6));
+
+    Node buildAction = actions.item(0);
+    assertThat(buildAction.getNodeName(), equalTo("BuildAction"));
+    assertThat(
+        buildAction.getAttributes().getNamedItem("buildConfiguration"),
+        nullValue());
+
+    Node testAction = actions.item(1);
+    assertThat(testAction.getNodeName(), equalTo("TestAction"));
+    assertThat(
+        testAction.getAttributes().getNamedItem("buildConfiguration").getNodeValue(),
+        equalTo("Debug"));
+
+    Node launchAction = actions.item(2);
+    assertThat(launchAction.getNodeName(), equalTo("LaunchAction"));
+    assertThat(
+        launchAction.getAttributes().getNamedItem("buildConfiguration").getNodeValue(),
+        equalTo("Debug"));
+
+    Node profileAction = actions.item(3);
+    assertThat(profileAction.getNodeName(), equalTo("ProfileAction"));
+    assertThat(
+        profileAction.getAttributes().getNamedItem("buildConfiguration").getNodeValue(),
+        equalTo("Release"));
+
+    Node analyzeAction = actions.item(4);
+    assertThat(analyzeAction.getNodeName(), equalTo("AnalyzeAction"));
+    assertThat(
+        analyzeAction.getAttributes().getNamedItem("buildConfiguration").getNodeValue(),
+        equalTo("Debug"));
+
+    Node archiveAction = actions.item(5);
+    assertThat(archiveAction.getNodeName(), equalTo("ArchiveAction"));
+    assertThat(
+        archiveAction.getAttributes().getNamedItem("buildConfiguration").getNodeValue(),
+        equalTo("Release"));
   }
 }

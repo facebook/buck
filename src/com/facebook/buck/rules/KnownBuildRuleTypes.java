@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidManifestDescription;
+import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
@@ -168,6 +169,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidInstrumentationApkDescription());
     builder.register(new AndroidLibraryDescription(javacEnv));
     builder.register(new AndroidManifestDescription());
+    builder.register(new AndroidPrebuiltAarDescription());
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());

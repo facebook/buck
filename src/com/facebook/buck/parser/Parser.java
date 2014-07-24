@@ -425,13 +425,22 @@ public class Parser {
             Set<BuildTarget> deps = Sets.newHashSet();
             for (BuildTarget buildTargetForDep : targetNode.getDeps()) {
               try {
-                if (!knownBuildTargets.containsKey(buildTargetForDep)) {
+                TargetNode<?> depTargetNode = knownBuildTargets.get(buildTargetForDep);
+                if (depTargetNode == null) {
                   parseBuildFileContainingTarget(
                       buildTarget,
                       buildTargetForDep,
                       defaultIncludes,
                       buildFileParser);
+                  depTargetNode = knownBuildTargets.get(buildTargetForDep);
+                  if (depTargetNode == null) {
+                    throw new HumanReadableException(
+                        NoSuchBuildTargetException.createForMissingBuildRule(
+                            buildTargetForDep,
+                            ParseContext.forBaseName(buildTargetForDep.getBaseName())));
+                  }
                 }
+                depTargetNode.checkVisibility(buildTarget);
                 deps.add(buildTargetForDep);
               } catch (BuildTargetException | BuildFileParseException e) {
                 throw new HumanReadableException(e);

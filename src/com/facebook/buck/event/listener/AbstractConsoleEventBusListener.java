@@ -18,7 +18,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
@@ -128,9 +128,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   /**
-   * Formats a {@link LogEvent} and adds it to {@code lines}.
+   * Formats a {@link ConsoleEvent} and adds it to {@code lines}.
    */
-  protected void formatLogEvent(LogEvent logEvent, ImmutableList.Builder<String> lines) {
+  protected void formatConsoleEvent(ConsoleEvent logEvent, ImmutableList.Builder<String> lines) {
     String formattedLine = "";
     if (logEvent.getLevel().equals(Level.INFO)) {
       formattedLine = logEvent.getMessage();

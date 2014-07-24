@@ -290,8 +290,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
   private int runAllTests(TestCommandOptions options) throws IOException,
       BuildTargetException, BuildFileParseException, ExecutionException, InterruptedException {
-    Logging.setLoggingLevelForVerbosity(console.getVerbosity());
-
     // We won't have a list of targets until the build is already started, so BuildEvents will get
     // an empty list.
     ImmutableList<BuildTarget> emptyTargetsList = ImmutableList.of();
@@ -578,6 +576,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       completedResults = uberFuture.get();
     } catch (ExecutionException e) {
       e.printStackTrace(getStdErr());
+      return 1;
+    } catch (InterruptedException e) {
+      uberFuture.cancel(true);
+      Thread.currentThread().interrupt();
       return 1;
     }
 

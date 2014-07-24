@@ -84,7 +84,7 @@ public final class BuildRuleFactoryParams {
   }
 
   private String resolvePathAgainstBuildTargetBase(String path) {
-    if (target.getBasePath().isEmpty()) {
+    if (target.isInProjectRoot()) {
       return path;
     } else {
       return String.format("%s/%s", target.getBasePath(), path);

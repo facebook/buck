@@ -16,7 +16,7 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.event.ThrowableLogEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.java.classes.FileLike;
@@ -101,7 +101,7 @@ public class AccumulateClassNamesStep implements Step {
           }),
           whereClassNamesShouldBeWritten);
     } catch (IOException e) {
-      context.getBuckEventBus().post(ThrowableLogEvent.create(e,
+      context.getBuckEventBus().post(ThrowableConsoleEvent.create(e,
           "There was an error writing the list of .class files to %s.",
           whereClassNamesShouldBeWritten));
       return 1;

@@ -45,6 +45,7 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -121,7 +122,7 @@ public class AndroidBinaryGraphEnhancerTest {
         uberRDotJavaParams,
         createMock(FilteredResourcesProvider.class),
         ImmutableList.<HasAndroidResourceDeps>of(),
-        ImmutableSet.<String>of(),
+        Suppliers.ofInstance(ImmutableSet.<String>of()),
         JavacOptions.DEFAULTS,
         false,
         false);

@@ -84,7 +84,36 @@ public class MorePaths {
         "Path must be relative: %s.", path);
     Preconditions.checkArgument(!baseDir.isAbsolute(),
         "Path must be relative: %s.", baseDir);
-    return baseDir.relativize(path);
+    return relativize(baseDir, path);
+  }
+
+  /**
+   * Get a relative path from path1 to path2, first normalizing each path.
+   *
+   * This method is a workaround for JDK-6925169 (Path.relativize
+   * returns incorrect result if path contains "." or "..").
+   */
+  public static Path relativize(Path path1, Path path2) {
+    Preconditions.checkNotNull(path1);
+    Preconditions.checkNotNull(path2);
+    Path emptyPath = Paths.get("");
+
+    Preconditions.checkArgument(
+        path1.isAbsolute() == path2.isAbsolute(),
+        "Both paths must be absolute or both paths must be relative. (%s is %s, %s is %s)",
+        path1,
+        path1.isAbsolute() ? "absolute" : "relative",
+        path2,
+        path2.isAbsolute() ? "absolute" : "relative");
+
+    // Work around JDK-8037945 (Paths.get("").normalize() throws ArrayIndexOutOfBoundsException).
+    if (!path1.equals(emptyPath)) {
+      path1 = path1.normalize();
+    }
+    if (!path2.equals(emptyPath)) {
+      path2 = path2.normalize();
+    }
+    return path1.relativize(path2);
   }
 
   /**
@@ -158,7 +187,7 @@ public class MorePaths {
           @Override
           public Path apply(Path input) {
             if (input.isAbsolute()) {
-              return normalizedRoot.relativize(input.normalize());
+              return relativize(normalizedRoot, input);
             } else {
               return input;
             }

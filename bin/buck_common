@@ -61,7 +61,14 @@ function killBuckd() {
     done
   fi
   rm -rf "${BUCKD_DIR}"
-  watchman watch-del "$PROJECT_ROOT" > /dev/null || true
+  HAS_TRIGGERS=$(python <<-EOT
+import json
+print bool(json.loads("""$(watchman trigger-list $PWD)""").get("triggers", None))
+EOT
+)
+  if [ "${HAS_TRIGGERS}" != "True" ]; then
+    watchman watch-del "$PROJECT_ROOT" > /dev/null || true
+  fi
   setBuckdRunning
 }
 
@@ -268,6 +275,10 @@ if [ -z "${MAX_BUCKD_RUNS}" ]; then
   MAX_BUCKD_RUNS=64
 fi
 
+function killAutoBuildIfRunning() {
+  (cat "${BUCKD_DIR}"/autobuild.pid | xargs kill || true) &> /dev/null
+}
+
 # Test for running buck daemon.
 BUCKD_DIR="${PROJECT_ROOT}/.buckd"
 BUCKD_LOG_FILE="${BUCKD_DIR}/buckd.log"
@@ -276,6 +287,7 @@ BUCKD_PORT_FILE="${BUCKD_DIR}/buckd.port"
 BUCKD_RUN_COUNT_FILE="${BUCKD_DIR}/buckd.runcount"
 BUCKD_VERSION_FILE="${BUCKD_DIR}/buckd.version"
 
+killAutoBuildIfRunning
 setBuckdRunning
 
 for ARG in $@; do

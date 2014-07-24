@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.log.Logger;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -40,6 +41,7 @@ import java.util.UUID;
  */
 public class WatchmanWatcher implements ProjectFilesystemWatcher {
 
+  private static final Logger LOG = Logger.get(WatchmanWatcher.class);
   private static final int DEFAULT_OVERFLOW_THRESHOLD = 200;
 
   private final Supplier<Process> watchmanProcessSupplier;
@@ -96,6 +98,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       @Override
       public Process get() {
         try {
+          LOG.debug("Starting watchman command: %s", processBuilder.command());
           return processBuilder.start();
         } catch (IOException e) {
           throw Throwables.propagate(e);
@@ -115,8 +118,10 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   public void postEvents() throws IOException, InterruptedException {
     Process watchmanProcess = watchmanProcessSupplier.get();
     try {
+      LOG.debug("Writing query to Watchman: %s", query);
       watchmanProcess.getOutputStream().write(query.getBytes(Charsets.US_ASCII));
       watchmanProcess.getOutputStream().close();
+      LOG.debug("Parsing JSON output from Watchman");
       JsonParser jsonParser = jsonFactory.createJsonParser(watchmanProcess.getInputStream());
       PathEventBuilder builder = new PathEventBuilder();
       JsonToken token = jsonParser.nextToken();
@@ -165,7 +170,10 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
                 }
                 break;
               case "error":
-                throw new WatchmanWatcherException(jsonParser.nextTextValue());
+                WatchmanWatcherException e = new WatchmanWatcherException(
+                    jsonParser.nextTextValue());
+                LOG.error(e, "Error in Watchman output");
+                throw e;
             }
             break;
           case END_OBJECT:
@@ -182,19 +190,25 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         token = jsonParser.nextToken();
       }
       int watchmanExitCode;
+      LOG.debug("Posted %d Watchman events. Waiting for subprocess to exit...", eventCount);
       watchmanExitCode = watchmanProcess.waitFor();
       if (watchmanExitCode != 0) {
+        LOG.error("Watchman exited with error code %d", watchmanExitCode);
         eventBus.post(createOverflowEvent()); // Events may have been lost, signal overflow.
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         ByteStreams.copy(watchmanProcess.getErrorStream(), buffer);
         throw new WatchmanWatcherException(
             "Watchman failed with exit code " + watchmanExitCode + ": " + buffer.toString());
+      } else {
+        LOG.debug("Watchman exited cleanly.");
       }
     } catch (InterruptedException e) {
+      LOG.warn(e, "Killing Watchman process on interrupted exception");
       eventBus.post(createOverflowEvent()); // Events may have been lost, signal overflow.
       watchmanProcess.destroy();
       Thread.currentThread().interrupt();
     } catch (IOException e) {
+      LOG.error(e, "Killing Watchman process on I/O exception");
       eventBus.post(createOverflowEvent()); // Events may have been lost, signal overflow.
       watchmanProcess.destroy();
       throw e;
@@ -278,8 +292,12 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
    */
   public static boolean isWatchmanAvailable() throws InterruptedException {
     try {
-      return new ProcessBuilder("watchman", "--version").start().waitFor() == 0;
+      LOG.debug("Checking if Watchman is available..");
+      boolean available = new ProcessBuilder("watchman", "--version").start().waitFor() == 0;
+      LOG.debug("Watchman available: %d", available);
+      return available;
     } catch (IOException e) {
+      LOG.error(e, "Could not check if Watchman is available");
       return false; // Could not execute watchman.
     }
   }

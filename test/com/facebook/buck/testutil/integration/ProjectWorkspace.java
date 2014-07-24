@@ -36,21 +36,19 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 
 import org.junit.rules.TemporaryFolder;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
-import java.util.Properties;
 
 import javax.annotation.Nullable;
 
@@ -116,6 +114,14 @@ public class ProjectWorkspace {
     DefaultKnownBuildRuleTypes.resetInstance();
 
     MoreFiles.copyRecursively(templatePath, destPath, BUILD_FILE_RENAME);
+
+    // If there's a local.properties in the host project but not in the destination, make a copy.
+    Path localProperties = FileSystems.getDefault().getPath("local.properties");
+    Path destLocalProperties = destPath.resolve(localProperties.getFileName());
+
+    if (localProperties.toFile().exists() && !destLocalProperties.toFile().exists()) {
+      java.nio.file.Files.copy(localProperties, destLocalProperties);
+    }
 
     if (Platform.detect() == Platform.WINDOWS) {
       // Hack for symlinks on Windows.
@@ -202,7 +208,6 @@ public class ProjectWorkspace {
     try {
       exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>absent(), args);
     } catch (InterruptedException e) {
-      e.printStackTrace();
       Thread.currentThread().interrupt();
       exitCode = Main.FAIL_EXIT_CODE;
     }
@@ -213,24 +218,30 @@ public class ProjectWorkspace {
   }
 
   public ProcessResult runBuckdCommand(String... args) throws IOException {
-    return runBuckdCommand(ImmutableMap.copyOf(System.getenv()), args);
+    try (TestContext context = new TestContext()) {
+      return runBuckdCommand(context, args);
+    }
   }
 
   public ProcessResult runBuckdCommand(ImmutableMap<String, String> environment, String... args)
+      throws IOException {
+    try (TestContext context = new TestContext(environment)) {
+      return runBuckdCommand(context, args);
+    }
+  }
+
+  public ProcessResult runBuckdCommand(NGContext context, String... args)
       throws IOException {
 
     assertTrue("setUp() must be run before this method is invoked", isSetUp);
     CapturingPrintStream stdout = new CapturingPrintStream();
     CapturingPrintStream stderr = new CapturingPrintStream();
 
-    NGContext context = new TestContext(environment);
-
     Main main = new Main(stdout, stderr);
     int exitCode = 0;
     try {
       exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>of(context), args);
     } catch (InterruptedException e) {
-      e.printStackTrace();
       Thread.currentThread().interrupt();
       exitCode = Main.FAIL_EXIT_CODE;
     }
@@ -407,29 +418,4 @@ public class ProjectWorkspace {
     java.nio.file.Files.walkFileTree(templatePath, copyDirVisitor);
   }
 
-  /**
-   * NGContext test double.
-   */
-  private class TestContext extends NGContext {
-
-    Properties properties;
-
-    public TestContext(ImmutableMap<String, String> environment) {
-      in = new ByteArrayInputStream(new byte[0]);
-      setExitStream(new CapturingPrintStream());
-      properties = new Properties();
-      for (String key : environment.keySet()) {
-        properties.setProperty(key, environment.get(key));
-      }
-    }
-
-    @Override
-    public void addClientListener(NGClientListener listener) {
-    }
-
-    @Override
-    public Properties getEnv() {
-      return properties;
-    }
-  }
 }

@@ -26,23 +26,41 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
 public class XcodeWorkspaceConfig extends AbstractBuildRule {
 
   private final BuildRule srcTarget;
+  private final ImmutableMap<SchemeActionType, String> actionConfigNames;
 
   protected XcodeWorkspaceConfig(BuildRuleParams params, XcodeWorkspaceConfigDescription.Arg arg) {
     super(params);
     this.srcTarget = Preconditions.checkNotNull(arg.srcTarget);
+
+    // Start out with the default action config names..
+    Map<SchemeActionType, String> newActionConfigNames = new HashMap<>(
+        SchemeActionType.DEFAULT_CONFIG_NAMES);
+    if (Preconditions.checkNotNull(arg.actionConfigNames).isPresent()) {
+      // And override them with any provided in the "action_config_names" map.
+      newActionConfigNames.putAll(arg.actionConfigNames.get());
+    }
+
+    this.actionConfigNames = ImmutableMap.copyOf(newActionConfigNames);
   }
 
   public BuildRule getSrcTarget() {
     return srcTarget;
+  }
+
+  public ImmutableMap<SchemeActionType, String> getActionConfigNames() {
+    return actionConfigNames;
   }
 
   @Override

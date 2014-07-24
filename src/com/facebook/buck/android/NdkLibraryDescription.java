@@ -34,7 +34,6 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
@@ -71,7 +70,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     final ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
 
     try {
-      final Path buildRulePath = Paths.get(params.getBuildTarget().getBasePath());
+      final Path buildRulePath = params.getBuildTarget().getBasePath();
       final Path rootDirectory = params.getPathAbsolutifier().apply(buildRulePath);
       Files.walkFileTree(
           rootDirectory,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,27 +16,26 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.log.ConsoleHandler;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Logging {
+public class JavaUtilLogHandlers {
+  // Utility class. Do not instantiate.
+  private JavaUtilLogHandlers() { }
 
-  private Logging() {}
-
-  public static void setLoggingLevelForVerbosity(Verbosity verbosity) {
+  public static Optional<ConsoleHandler> getConsoleHandler() {
     // We can't stop someone from mutating this array, but we can minimize the chance.
     ImmutableList<Handler> handlers = ImmutableList.copyOf(Logger.getLogger("").getHandlers());
     for (Handler handler : handlers) {
-      if (handler instanceof ConsoleHandler && verbosity == Verbosity.ALL) {
-        handler.setLevel(Level.ALL);
+      if (handler instanceof ConsoleHandler) {
+        return Optional.of((ConsoleHandler) handler);
       }
     }
+    return Optional.absent();
   }
-
 }

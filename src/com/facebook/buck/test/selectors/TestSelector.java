@@ -80,7 +80,7 @@ public class TestSelector {
       switch (parts.length) {
         // "com.example.Test", "com.example.Test#"
         case 1:
-          classPattern = Pattern.compile(parts[0]);
+          classPattern = getPatternOrNull(parts[0]);
           break;
 
         // "com.example.Test#testX", "#testX", "#"
@@ -105,8 +105,30 @@ public class TestSelector {
     return new TestSelector(isInclusive, classPattern, methodPattern);
   }
 
+  String getRawSelector() {
+    StringBuilder builder = new StringBuilder();
+    if (!inclusive) {
+      builder.append('!');
+    }
+    if (classPattern != null) {
+      builder.append(classPattern.toString());
+    }
+    builder.append('#');
+    if (methodPattern != null) {
+      builder.append(methodPattern.toString());
+    }
+    return builder.toString();
+  }
+
   private static Pattern getPatternOrNull(String string) {
-    return string.isEmpty() ? null : Pattern.compile(string);
+    if (string.isEmpty()) {
+      return null;
+    } else {
+      if (!string.endsWith("$")) {
+        string = string + "$";
+      }
+      return Pattern.compile(string);
+    }
   }
 
   String getExplanation() {

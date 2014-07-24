@@ -10,3 +10,15 @@ android_resource(
   deps = [
   ],
 )
+
+android_resource(
+  name = 'base_with_lib_dep',
+  res = 'res',
+  package = 'com.sample',
+  visibility = [
+    'PUBLIC',
+  ],
+  deps = [
+    '//java/com/sample/small:small',
+  ],
+)
