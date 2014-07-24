@@ -3,6 +3,7 @@
 #include <string.h>
 
 int do_get_signature(int, char**);
+int do_mkdir_p(int, char**);
 int do_receive_file(int, char**);
 
 int main(int argc, char *argv[]) {
@@ -20,6 +21,8 @@ int main(int argc, char *argv[]) {
     retcode = do_get_signature(count_user_args, user_args);
   } else if (strcmp(command, "receive-file") == 0) {
     retcode = do_receive_file(count_user_args, user_args);
+  } else if (strcmp(command, "mkdir-p") == 0) {
+    retcode = do_mkdir_p(count_user_args, user_args);
   } else {
     fprintf(stderr, "Unknown command: %s", command);
     retcode = 1;
