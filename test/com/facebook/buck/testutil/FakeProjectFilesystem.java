@@ -32,6 +32,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -234,13 +235,25 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public OutputStream newFileOutputStream(
-      Path pathRelativeToProjectRoot,
-      FileAttribute<?>... attrs)
-    throws IOException {
-    // This is a hard API to make testable. We need a hook for when
-    // the OutputStream is closed in order to update fileContents.  Do
-    // we have to subclass ByteArrayOutputStream to override close()?
-    throw new UnsupportedOperationException();
+      final Path pathRelativeToProjectRoot,
+      final FileAttribute<?>... attrs) throws IOException {
+    return new ByteArrayOutputStream() {
+      @Override
+      public void close() throws IOException {
+        super.close();
+        writeToMap();
+      }
+
+      @Override
+      public void flush() throws IOException {
+        super.flush();
+        writeToMap();
+      }
+
+      private void writeToMap() {
+        writeBytesToPath(toByteArray(), pathRelativeToProjectRoot, attrs);
+      }
+    };
   }
 
   @Override
