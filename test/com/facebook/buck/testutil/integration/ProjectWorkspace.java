@@ -22,6 +22,9 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestCommand;
+import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -35,6 +38,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGContext;
 
@@ -199,22 +203,9 @@ public class ProjectWorkspace {
    */
   public ProcessResult runBuckCommand(String... args)
       throws IOException {
-    assertTrue("setUp() must be run before this method is invoked", isSetUp);
-    CapturingPrintStream stdout = new CapturingPrintStream();
-    CapturingPrintStream stderr = new CapturingPrintStream();
-
-    Main main = new Main(stdout, stderr);
-    int exitCode = 0;
-    try {
-      exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>absent(), args);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      exitCode = Main.FAIL_EXIT_CODE;
-    }
-
-    return new ProcessResult(exitCode,
-        stdout.getContentsAsString(Charsets.UTF_8),
-        stderr.getContentsAsString(Charsets.UTF_8));
+    return runBuckCommandWithEnvironmentAndContext(
+        Optional.<NGContext>absent(),
+        args);
   }
 
   public ProcessResult runBuckdCommand(String... args) throws IOException {
@@ -232,15 +223,35 @@ public class ProjectWorkspace {
 
   public ProcessResult runBuckdCommand(NGContext context, String... args)
       throws IOException {
+    return runBuckCommandWithEnvironmentAndContext(Optional.of(context), args);
+  }
 
+  private ProcessResult runBuckCommandWithEnvironmentAndContext(
+        Optional<NGContext> context,
+        String... args)
+    throws IOException {
     assertTrue("setUp() must be run before this method is invoked", isSetUp);
     CapturingPrintStream stdout = new CapturingPrintStream();
     CapturingPrintStream stderr = new CapturingPrintStream();
 
-    Main main = new Main(stdout, stderr);
+    final ImmutableList.Builder<BuckEvent> capturedEventsListBuilder =
+        new ImmutableList.Builder<>();
+    BuckEventListener capturingEventListener = new BuckEventListener() {
+      @Subscribe
+      public void captureEvent(BuckEvent event) {
+        capturedEventsListBuilder.add(event);
+      }
+
+      @Override
+      public void outputTrace(BuildId buildId) throws InterruptedException {
+        // empty
+      }
+    };
+
+    Main main = new Main(stdout, stderr, Optional.of(capturingEventListener));
     int exitCode = 0;
     try {
-      exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>of(context), args);
+      exitCode = main.runMainWithExitCode(destDir, context, args);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       exitCode = Main.FAIL_EXIT_CODE;
@@ -248,8 +259,8 @@ public class ProjectWorkspace {
 
     return new ProcessResult(exitCode,
         stdout.getContentsAsString(Charsets.UTF_8),
-        stderr.getContentsAsString(Charsets.UTF_8));
-
+        stderr.getContentsAsString(Charsets.UTF_8),
+        capturedEventsListBuilder.build());
   }
 
   /**
@@ -303,13 +314,19 @@ public class ProjectWorkspace {
   /** The result of running {@code buck} from the command line. */
   public static class ProcessResult {
     private final int exitCode;
+    private final List<BuckEvent> capturedEvents;
     private final String stdout;
     private final String stderr;
 
-    private ProcessResult(int exitCode, String stdout, String stderr) {
+    private ProcessResult(
+        int exitCode,
+        String stdout,
+        String stderr,
+        List<BuckEvent> capturedEvents) {
       this.exitCode = exitCode;
       this.stdout = Preconditions.checkNotNull(stdout);
       this.stderr = Preconditions.checkNotNull(stderr);
+      this.capturedEvents = capturedEvents;
     }
 
     /**
@@ -330,6 +347,10 @@ public class ProjectWorkspace {
 
     public String getStderr() {
       return stderr;
+    }
+
+    public List<BuckEvent> getCapturedEvents() {
+      return capturedEvents;
     }
 
     public void assertSuccess() {

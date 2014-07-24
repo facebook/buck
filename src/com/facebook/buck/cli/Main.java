@@ -127,6 +127,7 @@ public final class Main {
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
+  private final Optional<BuckEventListener> externalEventsListener;
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
 
@@ -390,9 +391,18 @@ public final class Main {
 
   @VisibleForTesting
   public Main(PrintStream stdOut, PrintStream stdErr) {
+    this(stdOut, stdErr, Optional.<BuckEventListener>absent());
+  }
+
+  @VisibleForTesting
+  public Main(
+      PrintStream stdOut,
+      PrintStream stdErr,
+      Optional<BuckEventListener> externalEventsListener) {
     this.stdOut = Preconditions.checkNotNull(stdOut);
     this.stdErr = Preconditions.checkNotNull(stdErr);
     this.platform = Platform.detect();
+    this.externalEventsListener = externalEventsListener;
   }
 
   /** Prints the usage message to standard error. */
@@ -807,6 +817,10 @@ public final class Main {
 
     for (BuckEventListener eventListener : eventListeners) {
       buckEvents.register(eventListener);
+    }
+
+    if (externalEventsListener.isPresent()) {
+      buckEvents.register(externalEventsListener.get());
     }
 
     return eventListeners;
