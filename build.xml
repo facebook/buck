@@ -306,7 +306,8 @@
           >
     <junit failureproperty="hasFailingTests"
            showoutput="true"
-           forkmode="perBatch">
+           forkmode="perBatch"
+           haltonerror="on">
       <sysproperty key="buck.path_to_emma_jar" value="${buck.path_to_emma_jar}" />
       <sysproperty key="buck.path_to_buck_py" value="${buck.path_to_buck_py}" />
       <sysproperty key="buck.path_to_compile_asset_catalogs_py" value="${buck.path_to_compile_asset_catalogs_py}" />
