@@ -55,6 +55,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -243,6 +244,7 @@ public class AdbHelper {
    *  mode is enabled (-x). This flag is used as a marker that user understands that multiple
    *  devices will be used to install the apk if needed.
    */
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   public boolean adbCall(AdbCallable adbCallable) throws InterruptedException {
     List<IDevice> devices;
 
@@ -292,9 +294,13 @@ public class AdbHelper {
       ex.printStackTrace(console.getStdErr());
       return false;
     } catch (InterruptedException e) {
-      Futures.allAsList(futures).cancel(true);
+      try {
+        Futures.allAsList(futures).cancel(true);
+      } catch (CancellationException ignored) {
+        // Rethrow original InterruptedException instead.
+      }
       Thread.currentThread().interrupt();
-      return false;
+      throw e;
     } finally {
       MoreExecutors.shutdownOrThrow(
           executorService,

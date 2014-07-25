@@ -355,7 +355,11 @@ public class CassandraArtifactCache implements ArtifactCache {
     } catch (ExecutionException e) {
       // Swallow exception and move on.
     } catch (InterruptedException e) {
-      future.cancel(true);
+      try {
+        future.cancel(true);
+      } catch (CancellationException ignored) {
+        // ListenableFuture may throw when its future is cancelled.
+      }
       Thread.currentThread().interrupt();
       return;
     } finally {

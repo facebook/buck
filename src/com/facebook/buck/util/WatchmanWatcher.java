@@ -207,6 +207,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       eventBus.post(createOverflowEvent()); // Events may have been lost, signal overflow.
       watchmanProcess.destroy();
       Thread.currentThread().interrupt();
+      throw e;
     } catch (IOException e) {
       LOG.error(e, "Killing Watchman process on I/O exception");
       eventBus.post(createOverflowEvent()); // Events may have been lost, signal overflow.

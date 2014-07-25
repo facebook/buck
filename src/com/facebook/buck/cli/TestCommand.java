@@ -90,6 +90,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
@@ -457,6 +458,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     }
   }
 
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   private int runTests(
       Iterable<TestRule> tests,
       BuildContext buildContext,
@@ -578,9 +580,13 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       e.printStackTrace(getStdErr());
       return 1;
     } catch (InterruptedException e) {
-      uberFuture.cancel(true);
+      try {
+        uberFuture.cancel(true);
+      } catch (CancellationException ignored) {
+        // Rethrow original InterruptedException instead.
+      }
       Thread.currentThread().interrupt();
-      return 1;
+      throw e;
     }
 
     getBuckEventBus().post(TestRunEvent.finished(

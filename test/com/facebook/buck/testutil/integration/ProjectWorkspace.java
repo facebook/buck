@@ -253,8 +253,9 @@ public class ProjectWorkspace {
     try {
       exitCode = main.runMainWithExitCode(destDir, context, args);
     } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+      e.printStackTrace(stderr);
       exitCode = Main.FAIL_EXIT_CODE;
+      Thread.currentThread().interrupt();
     }
 
     return new ProcessResult(exitCode,
@@ -438,5 +439,4 @@ public class ProjectWorkspace {
     };
     java.nio.file.Files.walkFileTree(templatePath, copyDirVisitor);
   }
-
 }

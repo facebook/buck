@@ -49,9 +49,9 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -74,6 +74,7 @@ public class DaemonIntegrationTest {
 
   @After
   public void tearDown() {
+    Thread.interrupted(); // Clear interrupted flag, if set.
     executorService.shutdown();
     Main.resetDaemon();
   }
@@ -139,7 +140,7 @@ public class DaemonIntegrationTest {
    * Verifies that a client timeout will be detected by a Nailgun
    * NGInputStream reading from a blocking heartbeat stream.
    */
-  @Test(expected = InterruptedException.class, timeout = 500) // Test should be interrupted.
+  @Test(expected = InterruptedException.class)
   public void whenClientTimeoutDetectedThenMainThreadIsInterrupted()
       throws InterruptedException, IOException {
     final long timeoutMillis = 100;
@@ -172,7 +173,7 @@ public class DaemonIntegrationTest {
    * NGInputStream reading from an empty heartbeat stream and that the generated
    * InterruptedException will cause command execution to fail after timeout.
    */
-  @Test(timeout = 500) // Test should be interrupted.
+  @Test
   public void whenClientTimeoutDetectedThenBuildIsInterrupted()
       throws InterruptedException, IOException {
 
@@ -190,7 +191,9 @@ public class DaemonIntegrationTest {
         ImmutableMap.copyOf(System.getenv()),
         TestContext.createHeartBeatStream(intervalMillis),
         timeoutMillis)) {
-      workspace.runBuckdCommand(context, "build", "//:sleep").assertFailure();
+      ProcessResult result = workspace.runBuckdCommand(context, "build", "//:sleep");
+      result.assertFailure();
+      assertThat(result.getStderr(), containsString("InterruptedException"));
     }
   }
 
@@ -199,7 +202,7 @@ public class DaemonIntegrationTest {
    * NGInputStream reading from an empty heartbeat stream and that the generated
    * InterruptedException will interrupt command execution causing it to fail.
    */
-  @Test(timeout = 500)
+  @Test
   public void whenClientTimeoutDetectedThenTestIsInterrupted()
       throws InterruptedException, IOException {
 
@@ -217,26 +220,10 @@ public class DaemonIntegrationTest {
         ImmutableMap.copyOf(System.getenv()),
         TestContext.createHeartBeatStream(intervalMillis),
         timeoutMillis)) {
-      workspace.runBuckdCommand(context, "test", "//:test").assertFailure();
+      ProcessResult result = workspace.runBuckdCommand(context, "test", "//:test");
+      result.assertFailure();
+      assertThat(result.getStderr(), containsString("InterruptedException"));
     }
-  }
-
-  /**
-   * @param disconnectMillis duration to wait before generating IOException.
-   * @return an InputStream which will wait and then simulate a client disconnection.
-   */
-  private static InputStream createDisconnectionStream(final long disconnectMillis) {
-    return new InputStream() {
-      @Override
-      public int read() throws IOException {
-        try {
-          Thread.sleep(disconnectMillis);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        }
-        throw new IOException("Fake client disconnection.");
-      }
-    };
   }
 
   /**
@@ -244,7 +231,7 @@ public class DaemonIntegrationTest {
    * NGInputStream reading from an empty heartbeat stream and that the generated
    * InterruptedException will cause command execution to fail after timeout.
    */
-  @Test(timeout = 500) // Test should be interrupted.
+  @Test
   public void whenClientDisconnectionDetectedThenBuildIsInterrupted()
       throws InterruptedException, IOException {
 
@@ -260,9 +247,11 @@ public class DaemonIntegrationTest {
     // Build an NGContext connected to an NGInputStream reading from stream that will timeout.
     try (TestContext context = new TestContext(
         ImmutableMap.copyOf(System.getenv()),
-        createDisconnectionStream(disconnectMillis),
+        TestContext.createDisconnectionStream(disconnectMillis),
         timeoutMillis)) {
-      workspace.runBuckdCommand(context, "build", "//:sleep").assertFailure();
+      ProcessResult result = workspace.runBuckdCommand(context, "build", "//:sleep");
+      result.assertFailure();
+      assertThat(result.getStderr(), containsString("InterruptedException"));
     }
   }
 
@@ -271,7 +260,7 @@ public class DaemonIntegrationTest {
    * NGInputStream reading from an empty heartbeat stream and that the generated
    * InterruptedException will interrupt command execution causing it to fail.
    */
-  @Test(timeout = 500)
+  @Test
   public void whenClientDisconnectionDetectedThenTestIsInterrupted()
       throws InterruptedException, IOException {
 
@@ -287,9 +276,11 @@ public class DaemonIntegrationTest {
     // Build an NGContext connected to an NGInputStream reading from stream that will timeout.
     try (TestContext context = new TestContext(
         ImmutableMap.copyOf(System.getenv()),
-        createDisconnectionStream(disconnectMillis),
+        TestContext.createDisconnectionStream(disconnectMillis),
         timeoutMillis)) {
-      workspace.runBuckdCommand(context, "test", "//:test").assertFailure();
+      ProcessResult result = workspace.runBuckdCommand(context, "test", "//:test");
+      result.assertFailure();
+      assertThat(result.getStderr(), containsString("InterruptedException"));
     }
   }
 
@@ -464,7 +455,7 @@ public class DaemonIntegrationTest {
 
       @Subscribe
       public synchronized void onEvent(WatchEvent<?> event) throws IOException {
-        if (path.equals(event.context())) {
+        if (path.equals(event.context()) || event.kind() == StandardWatchEventKinds.OVERFLOW) {
           watchedChange = true;
         }
       }
