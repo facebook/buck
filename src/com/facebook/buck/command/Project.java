@@ -376,7 +376,7 @@ public class Project {
 
   private Module createModuleForProjectConfig(ProjectConfig projectConfig) throws IOException {
     BuildRule projectRule = projectConfig.getProjectRule();
-    Preconditions.checkState(projectRule instanceof JavaLibrary ||
+    Preconditions.checkState(
         projectRule instanceof JavaLibrary ||
         projectRule instanceof JavaBinary ||
         projectRule instanceof AndroidLibrary ||
@@ -1092,7 +1092,7 @@ public class Project {
 
       PrebuiltJar prebuiltJar = (PrebuiltJar) rule;
 
-      this.binaryJar = prebuiltJar.getBinaryJar().toString();
+      this.binaryJar = prebuiltJar.getBinaryJar().resolve().toString();
       if (prebuiltJar.getSourceJar().isPresent()) {
         this.sourceJar = prebuiltJar.getSourceJar().get().toString();
       } else {

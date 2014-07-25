@@ -21,3 +21,17 @@ prebuilt_jar(
     'PUBLIC',
   ],
 )
+
+genrule(
+  name = 'generated_jar',
+  cmd = 'echo foo > $OUT',
+  out = 'generated.jar',
+)
+
+prebuilt_jar(
+  name = 'generated',
+  binary_jar = ':generated_jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)

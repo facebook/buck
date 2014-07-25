@@ -13,6 +13,7 @@ java_test(
   srcs = glob(['test/**/*Test.java']),
   deps = [
     ':tip',
+    '//libs:generated',
     '//libs:guava',
     '//libs:jsr305',
     '//libs:junit',
