@@ -22,11 +22,15 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
-import java.util.Map;
+import java.util.Collections;
 
 public class AndroidBuildConfigJavaLibraryTest {
 
@@ -38,29 +42,36 @@ public class AndroidBuildConfigJavaLibraryTest {
         .createBuildRule(
           params,
           "com.example.buck",
-          /* useConstantExpressions */ false,
-          /* constants */ ImmutableMap.<String, Object>of("foo", "bar"));
+          /* values */ BuildConfigFields.fromFieldDeclarations(
+              Collections.singleton("String foo = \"bar\"")),
+          /* valuesFile */ Optional.<SourcePath>absent(),
+          /* useConstantExpressions */ false);
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(collector);
     AndroidPackageableCollection collection = collector.build();
     assertEquals(
-        ImmutableMap.of("com.example.buck", ImmutableMap.<String, Object>of("foo", "bar")),
+        ImmutableMap.of(
+            "com.example.buck",
+            BuildConfigFields.fromFields(ImmutableList.of(
+                new BuildConfigFields.Field("String", "foo", "\"bar\"")))),
         collection.buildConfigs);
   }
 
   @Test
   public void testBuildConfigHasCorrectProperties() {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:bar").build();
-    Map<String, Object> constants = ImmutableMap.<String, Object>of("KEY", "value");
+    BuildConfigFields fields = BuildConfigFields.fromFieldDeclarations(
+        Collections.singleton("String KEY = \"value\""));
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
         .createBuildRule(
           params,
           "com.example.buck",
-          /* useConstantExpressions */ false,
-          constants);
+          /* values */ fields,
+          /* valuesFile */ Optional.<SourcePath>absent(),
+          /* useConstantExpressions */ false);
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
-    assertEquals(constants, buildConfig.getConstants());
+    assertEquals(fields, buildConfig.getBuildConfigFields());
   }
 }

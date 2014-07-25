@@ -1,20 +1,47 @@
 android_build_config(
-  name = 'build_config',
+  name = 'build_config_with_values',
   package = 'com.example.buck',
+  values = [
+    'int VERSION = 1234',
+    'boolean IS_A_GOOD_FIELD = true',
+    'String APP_ID = "vcebelutvgnvljrnnvuurudbbknrbfij"',
+  ],
 )
 
 java_library(
-  name = 'lib',
+  name = 'main_values',
   srcs = [ 'Main.java' ],
   deps = [
-    ':build_config',
+    ':build_config_with_values',
   ],
 )
 
 java_binary(
-  name = 'main',
+  name = 'main_values_test',
   main_class = 'com.example.buck.Main',
   deps = [
-    ':lib',
+    ':main_values',
+  ],
+)
+
+android_build_config(
+  name = 'build_config_with_values_file',
+  package = 'com.example.buck',
+  values_file = 'values_file.txt',
+)
+
+java_library(
+  name = 'main_values_file',
+  srcs = [ 'Main.java' ],
+  deps = [
+    ':build_config_with_values_file',
+  ],
+)
+
+java_binary(
+  name = 'main_values_file_test',
+  main_class = 'com.example.buck.Main',
+  deps = [
+    ':main_values_file',
   ],
 )

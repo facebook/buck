@@ -35,16 +35,15 @@ import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -78,6 +77,8 @@ public class AndroidBinaryGraphEnhancer {
   private final JavacOptions javacOptions;
   private final boolean exopackage;
   private final Keystore keystore;
+  private final BuildConfigFields buildConfigValues;
+  private final Optional<SourcePath> buildConfigValuesFile;
 
   AndroidBinaryGraphEnhancer(
       BuildRuleParams originalParams,
@@ -95,7 +96,9 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<BuildTarget> resourcesToExclude,
       JavacOptions javacOptions,
       boolean exopackage,
-      Keystore keystore) {
+      Keystore keystore,
+      BuildConfigFields buildConfigValues,
+      Optional<SourcePath> buildConfigValuesFile) {
     this.buildRuleParams = Preconditions.checkNotNull(originalParams);
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
@@ -114,6 +117,8 @@ public class AndroidBinaryGraphEnhancer {
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.exopackage = exopackage;
     this.keystore = Preconditions.checkNotNull(keystore);
+    this.buildConfigValues = Preconditions.checkNotNull(buildConfigValues);
+    this.buildConfigValuesFile = Preconditions.checkNotNull(buildConfigValuesFile);
   }
 
   EnhancementResult createAdditionalBuildables() {
@@ -184,42 +189,10 @@ public class AndroidBinaryGraphEnhancer {
           uberRDotJava.getPathToCompiledRDotJavaFiles());
     }
 
-    // If the user specified any android_build_config() rules, then we must add some build rules to
-    // generate the production {@link BuildConfig.class} files and ensure that they are included in
-    // the list of classpathEntriesToDex.
-    ImmutableMap<String, Object> buildConfigConstants = ImmutableMap.<String, Object>of(
-        BuildConfigs.DEBUG_CONSTANT, packageType != AndroidBinary.PackageType.RELEASE,
-        BuildConfigs.IS_EXO_CONSTANT, exopackage);
-    for (Map.Entry<String, ImmutableMap<String, Object>> entry :
-        packageableCollection.buildConfigs.entrySet()) {
-      String javaPackage = entry.getKey();
-
-      // Merge the user-defined constants with the APK-specific overrides.
-      Map<String, Object> totalConstants = Maps.newHashMap();
-      Map<String, Object> userDefinedConstants = entry.getValue();
-      totalConstants.putAll(userDefinedConstants);
-      totalConstants.putAll(buildConfigConstants);
-
-      // Each enhanced dep needs a unique build target, so we parameterize the build target by the
-      // Java package.
-      Flavor flavor = new Flavor("buildconfig_" + javaPackage.replace('.', '_'));
-      BuildRuleParams buildConfigParams = new BuildRuleParams(
-          createBuildTargetWithFlavor(flavor),
-          /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
-          /* extraDeps */ ImmutableSortedSet.<BuildRule>of(),
-          BuildTargetPattern.PUBLIC,
-          buildRuleParams.getProjectFilesystem(),
-          buildRuleParams.getRuleKeyBuilderFactory(),
-          AndroidBuildConfigDescription.TYPE);
-      JavaLibrary finalBuildConfig = AndroidBuildConfigDescription.createBuildRule(
-          buildConfigParams,
-          javaPackage,
-          /* useConstantExpressions */ true,
-          totalConstants);
-
-      ruleResolver.addToIndex(finalBuildConfig);
-      enhancedDeps.add(finalBuildConfig);
-      collector.addClasspathEntry(finalBuildConfig, finalBuildConfig.getPathToOutputFile());
+    // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
+    // already been added to the APK under test.
+    if (packageType != PackageType.INSTRUMENTED) {
+      addBuildConfigDeps(enhancedDeps, collector, packageableCollection);
     }
 
     packageableCollection = collector.build();
@@ -298,6 +271,57 @@ public class AndroidBinaryGraphEnhancer {
         preDexMerge,
         computeExopackageDepsAbi,
         finalDeps);
+  }
+
+  /**
+   * If the user specified any android_build_config() rules, then we must add some build rules to
+   * generate the production {@code BuildConfig.class} files and ensure that they are included in
+   * the list of {@link AndroidPackageableCollection#classpathEntriesToDex}.
+   */
+  private void addBuildConfigDeps(
+      ImmutableSortedSet.Builder<BuildRule> enhancedDeps,
+      AndroidPackageableCollector collector,
+      AndroidPackageableCollection packageableCollection) {
+    BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(ImmutableList.of(
+        new BuildConfigFields.Field(
+            "boolean",
+            BuildConfigs.DEBUG_CONSTANT,
+            String.valueOf(packageType != AndroidBinary.PackageType.RELEASE)),
+        new BuildConfigFields.Field(
+            "boolean",
+            BuildConfigs.IS_EXO_CONSTANT,
+            String.valueOf(exopackage))));
+    for (Map.Entry<String, BuildConfigFields> entry :
+        packageableCollection.buildConfigs.entrySet()) {
+      // Merge the user-defined constants with the APK-specific overrides.
+      BuildConfigFields totalBuildConfigValues = BuildConfigFields.empty()
+          .putAll(entry.getValue())
+          .putAll(buildConfigValues)
+          .putAll(buildConfigConstants);
+
+      // Each enhanced dep needs a unique build target, so we parameterize the build target by the
+      // Java package.
+      String javaPackage = entry.getKey();
+      Flavor flavor = new Flavor("buildconfig_" + javaPackage.replace('.', '_'));
+      BuildRuleParams buildConfigParams = new BuildRuleParams(
+          createBuildTargetWithFlavor(flavor),
+          /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
+          /* extraDeps */ ImmutableSortedSet.<BuildRule>of(),
+          BuildTargetPattern.PUBLIC,
+          buildRuleParams.getProjectFilesystem(),
+          buildRuleParams.getRuleKeyBuilderFactory(),
+          AndroidBuildConfigDescription.TYPE);
+      JavaLibrary finalBuildConfig = AndroidBuildConfigDescription.createBuildRule(
+          buildConfigParams,
+          javaPackage,
+          totalBuildConfigValues,
+          buildConfigValuesFile,
+          /* useConstantExpressions */ true);
+
+      ruleResolver.addToIndex(finalBuildConfig);
+      enhancedDeps.add(finalBuildConfig);
+      collector.addClasspathEntry(finalBuildConfig, finalBuildConfig.getPathToOutputFile());
+    }
   }
 
   /**

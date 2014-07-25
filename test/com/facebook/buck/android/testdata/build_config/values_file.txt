@@ -1,0 +1,3 @@
+int VERSION = 1234
+boolean IS_A_GOOD_FIELD = true
+String APP_ID = "vcebelutvgnvljrnnvuurudbbknrbfij"

@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -56,7 +57,7 @@ public class AndroidPackageableCollector {
   private final ImmutableSet.Builder<Path> noDxClasspathEntries = ImmutableSet.builder();
 
   // Map is used instead of ImmutableMap.Builder for its containsKey() method.
-  private final Map<String, ImmutableMap<String, Object>> buildConfigs = Maps.newHashMap();
+  private final Map<String, BuildConfigFields> buildConfigs = Maps.newHashMap();
 
   private final ImmutableSet.Builder<Path> pathsToThirdPartyJars = ImmutableSet.builder();
   private final ImmutableSet.Builder<HasJavaClassHashes> javaClassHashesProviders =
@@ -221,7 +222,7 @@ public class AndroidPackageableCollector {
     return this;
   }
 
-  public void addBuildConfig(String javaPackage, ImmutableMap<String, Object> constants) {
+  public void addBuildConfig(String javaPackage, BuildConfigFields constants) {
     Preconditions.checkNotNull(javaPackage);
     Preconditions.checkNotNull(constants);
     if (buildConfigs.containsKey(javaPackage)) {

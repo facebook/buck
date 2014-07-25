@@ -18,11 +18,10 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
-
-import java.util.Map;
 
 /**
  * Unit test for {@link BuildConfigs}.
@@ -48,27 +47,27 @@ public class BuildConfigsTest {
 
   @Test
   public void testCustomGenerateBuildConfigDotJavaWithoutConstantExpressions() {
-    Map<String, Object> customValues = ImmutableMap.<String, Object>of(
-        "KEYSTORE_TYPE", "release",
-        "BUILD_NUMBER", 42,
-        "BUILD_DATE", 1404321113076000L,
-        "THREE", 3.0F,
-        "DEBUG", Boolean.FALSE
-        );
+    BuildConfigFields customValues = BuildConfigFields.fromFieldDeclarations(ImmutableList.of(
+        "String KEYSTORE_TYPE = \"release\"",
+        "int BUILD_NUMBER = 42",
+        "long BUILD_DATE = 1404321113076000L",
+        "float THREE = 3.0F",
+        "boolean DEBUG = false",
+        "boolean IS_EXOPACKAGE = true"));
     String expectedJavaCode =
         "package com.example;\n" +
         "public class BuildConfig {\n" +
         "  private BuildConfig() {}\n" +
-        "  public static final boolean DEBUG = Boolean.parseBoolean(null);\n" +
-        "  public static final boolean IS_EXOPACKAGE = Boolean.parseBoolean(null);\n" +
         "  public static final String KEYSTORE_TYPE = " +
-               "!Boolean.parseBoolean(null) ? \"release\" : null;\n" +
+            "!Boolean.parseBoolean(null) ? \"release\" : null;\n" +
         "  public static final int BUILD_NUMBER = " +
-               "!Boolean.parseBoolean(null) ? 42 : 0;\n" +
+            "!Boolean.parseBoolean(null) ? 42 : 0;\n" +
         "  public static final long BUILD_DATE = " +
-               "!Boolean.parseBoolean(null) ? 1404321113076000L : 0L;\n" +
-        "  public static final double THREE = " +
-               "!Boolean.parseBoolean(null) ? 3.0 : 0.;\n" +
+            "!Boolean.parseBoolean(null) ? 1404321113076000L : 0;\n" +
+        "  public static final float THREE = " +
+            "!Boolean.parseBoolean(null) ? 3.0F : 0;\n" +
+        "  public static final boolean DEBUG = Boolean.parseBoolean(null);\n" +
+        "  public static final boolean IS_EXOPACKAGE = !Boolean.parseBoolean(null);\n" +
         "}\n";
     String observedJavaCode = BuildConfigs.generateBuildConfigDotJava(
         "com.example",
@@ -79,23 +78,22 @@ public class BuildConfigsTest {
 
   @Test
   public void testCustomGenerateBuildConfigDotJavaWithConstantExpressions() {
-    Map<String, Object> customValues = ImmutableMap.<String, Object>of(
-        "KEYSTORE_TYPE", "release",
-        "BUILD_NUMBER", 42,
-        "BUILD_DATE", 1404321113076000L,
-        "THREE", 3.0F,
-        "DEBUG", Boolean.FALSE
-        );
+    BuildConfigFields customValues = BuildConfigFields.fromFieldDeclarations(ImmutableList.of(
+        "String KEYSTORE_TYPE = \"release\"",
+        "int BUILD_NUMBER = 42",
+        "long BUILD_DATE = 1404321113076000L",
+        "float THREE = 3.0F",
+        "boolean DEBUG = false"));
     String expectedJavaCode =
         "package com.example;\n" +
         "public class BuildConfig {\n" +
         "  private BuildConfig() {}\n" +
-        "  public static final boolean DEBUG = false;\n" +
-        "  public static final boolean IS_EXOPACKAGE = false;\n" +
         "  public static final String KEYSTORE_TYPE = \"release\";\n" +
         "  public static final int BUILD_NUMBER = 42;\n" +
         "  public static final long BUILD_DATE = 1404321113076000L;\n" +
-        "  public static final double THREE = 3.0;\n" +
+        "  public static final float THREE = 3.0F;\n" +
+        "  public static final boolean DEBUG = false;\n" +
+        "  public static final boolean IS_EXOPACKAGE = false;\n" +
         "}\n";
     String observedJavaCode = BuildConfigs.generateBuildConfigDotJava(
         "com.example",

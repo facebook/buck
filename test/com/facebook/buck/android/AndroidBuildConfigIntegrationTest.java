@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Rule;
@@ -31,15 +30,20 @@ public class AndroidBuildConfigIntegrationTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
-  public void testThatBuildConfigDotJavaIsGeneratedAndCanBeCompiledAgainst() throws IOException {
+  public void testBuildConfigWithValues() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "build_config", tmp);
     workspace.setUp();
 
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//:lib");
-    // TODO(mbolin): Land D1247481 and then do the following, stronger assertions.
-    // ProcessResult buildResult = workspace.runBuckCommand("run", "//:main");
-    // assertEquals("The value of BuildConfig.DEBUG is: true.", buildResult.getStdout());
-    buildResult.assertSuccess();
+    workspace.runBuckCommand("run", "//:main_values_test").assertSuccess();
+  }
+
+  @Test
+  public void testBuildConfigWithValuesFile() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "build_config", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("run", "//:main_values_file_test").assertSuccess();
   }
 }
