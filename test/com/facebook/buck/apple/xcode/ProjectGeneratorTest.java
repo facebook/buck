@@ -1667,7 +1667,7 @@ public class ProjectGeneratorTest {
       "  classes = {};\n" +
       "  objectVersion = 46;\n" +
       "  objects = {\n" +
-      "    12345 /* libFoo.a */ = {isa = PBXFileReference; explicitFileType = " +
+      "    \"12345\" /* libFoo.a */ = {isa = PBXFileReference; explicitFileType = " +
       "      archive.ar; path = libFoo.a; sourceTree = BUILT_PRODUCTS_DIR; };\n" +
       "    ABCDE /* //foo:lib */ = {\n" +
       "      isa = PBXNativeTarget;\n" +
@@ -1681,7 +1681,7 @@ public class ProjectGeneratorTest {
       "      );\n" +
       "      name = \"//foo:lib\";\n" +
       "      productName = Foo;\n" +
-      "      productReference = 12345 /* libFoo.a */;\n" +
+      "      productReference = \"12345\" /* libFoo.a */;\n" +
       "      productType = \"com.apple.product-type.library.static\";\n" +
       "    };\n" +
       "  };\n" +
