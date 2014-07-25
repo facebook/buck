@@ -21,6 +21,7 @@ import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfig;
 import com.facebook.buck.apple.XcodeWorkspaceConfig;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.log.Logger;
@@ -192,18 +193,40 @@ public class WorkspaceAndProjectGenerator {
             projectFilesystem.getPathForRelativePath(projectPath));
 
         ImmutableMap.Builder<String, String> targetNameToGIDMapBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, String> targetNameToFileNameBuilder = ImmutableMap.builder();
         try (InputStream projectInputStream =
             projectFilesystem.newFileInputStream(pbxprojectPath)) {
           NSDictionary projectObjects =
               ProjectParser.extractObjectsFromXcodeProject(projectInputStream);
-          ProjectParser.extractTargetNameToGIDMap(
+          ProjectParser.extractTargetNameToGIDAndFileNameMaps(
               projectObjects,
-              targetNameToGIDMapBuilder);
+              targetNameToGIDMapBuilder,
+              targetNameToFileNameBuilder);
           Map<String, String> targetNameToGIDMap = targetNameToGIDMapBuilder.build();
           String targetGid = targetNameToGIDMap.get(targetName);
 
+          Map<String, String> targetNameToFileNameMap = targetNameToFileNameBuilder.build();
+          String targetFileName = targetNameToFileNameMap.get(targetName);
+
+          if (targetGid == null || targetFileName == null) {
+            LOG.error(
+                "Looked up target %s, could not find GID (%s) or filename (%s)",
+                targetName,
+                targetGid,
+                targetFileName);
+            throw new HumanReadableException(
+                "xcode_native target %s not found in Xcode project %s",
+                targetName,
+                pbxprojectPath);
+          }
+
           PBXTarget fakeTarget = new PBXNativeTarget(targetName);
           fakeTarget.setGlobalID(targetGid);
+          PBXFileReference fakeProductReference = new PBXFileReference(
+              targetFileName,
+              targetFileName,
+              PBXFileReference.SourceTree.BUILT_PRODUCTS_DIR);
+          fakeTarget.setProductReference(fakeProductReference);
           schemeGenerator.addRuleToTargetMap(ImmutableMap.of(rule, fakeTarget));
           schemeGenerator.addTargetToProjectPathMap(fakeTarget,
               projectFilesystem.getPathForRelativePath(projectPath));
