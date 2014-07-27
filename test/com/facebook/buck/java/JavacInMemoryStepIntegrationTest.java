@@ -63,7 +63,7 @@ public class JavacInMemoryStepIntegrationTest {
     String pathToOutputDir = new File(tmp.getRoot(), "out").getAbsolutePath();
     String pathToAbiFile = new File(tmp.getRoot(), "abi").getAbsolutePath();
     assertEquals(
-        String.format("javac -target %s -source %s -g " +
+        String.format("javac -source %s -target %s -g " +
             "-processorpath %s " +
             "-processor %s " +
             "-A%s=%s " +

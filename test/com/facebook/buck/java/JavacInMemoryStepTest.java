@@ -65,15 +65,15 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
     JavacInMemoryStep transitive = createTestStep(BuildDependencies.TRANSITIVE);
 
     assertEquals(
-        String.format("javac -target %s -source %s -g -d . -classpath foo.jar @%s",
+        String.format("javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
         firstOrder.getDescription(context));
     assertEquals(
-        String.format("javac -target %s -source %s -g -d . -classpath foo.jar @%s",
+        String.format("javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
         warn.getDescription(context));
     assertEquals(
-        String.format("javac -target %s -source %s -g -d . -classpath bar.jar%sfoo.jar @%s",
+        String.format("javac -source %s -target %s -g -d . -classpath bar.jar%sfoo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, File.pathSeparator, PATH_TO_SRCS_LIST),
         transitive.getDescription(context));
   }
