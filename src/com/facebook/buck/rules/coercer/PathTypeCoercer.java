@@ -16,13 +16,10 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class PathTypeCoercer extends LeafTypeCoercer<Path> {
 
@@ -39,35 +36,25 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
       Object object) throws CoerceFailedException {
     if (object instanceof String) {
       String path = (String) object;
-      if (path.startsWith(BuildRuleFactoryParams.GENFILE_PREFIX)) {
-        path = path.substring(BuildRuleFactoryParams.GENFILE_PREFIX.length());
+      final Path normalizedPath;
 
-        // A genfile is created during the build, so it's legit that it might not exist.
-        return Paths.get(BuckConstant.GEN_DIR)
-            .resolve(pathRelativeToProjectRoot)
-            .resolve(path)
-            .normalize();
-      } else {
-        final Path normalizedPath;
-
-        // Normalize the path.
-        try {
-          normalizedPath = pathRelativeToProjectRoot.resolve(path).normalize();
-        } catch (RuntimeException e) {
-          throw new CoerceFailedException("invalid path", e);
-        }
-
-        // Verify that the path exists
-        try {
-          filesystem.getPathForRelativeExistingPath(normalizedPath);
-        } catch (RuntimeException e) {
-          throw new CoerceFailedException(
-              String.format("no such file or directory '%s'", normalizedPath),
-              e);
-        }
-
-        return normalizedPath;
+      // Normalize the path.
+      try {
+        normalizedPath = pathRelativeToProjectRoot.resolve(path).normalize();
+      } catch (RuntimeException e) {
+        throw new CoerceFailedException("invalid path", e);
       }
+
+      // Verify that the path exists
+      try {
+        filesystem.getPathForRelativeExistingPath(normalizedPath);
+      } catch (RuntimeException e) {
+        throw new CoerceFailedException(
+            String.format("no such file or directory '%s'", normalizedPath),
+            e);
+      }
+
+      return normalizedPath;
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());
     }

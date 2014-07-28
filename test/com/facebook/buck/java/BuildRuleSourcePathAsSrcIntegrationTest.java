@@ -33,7 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-public class GenfileAsSrcIntegrationTest {
+public class BuildRuleSourcePathAsSrcIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -42,7 +42,7 @@ public class GenfileAsSrcIntegrationTest {
   public void testNewGenfileIsIncludedInJar() throws IOException {
     final Charset charsetForTest = Charsets.UTF_8;
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genfile_as_src_test", tmp);
+        this, "build_rule_source_path_as_src_test", tmp);
     workspace.setUp();
 
     // The test should pass out of the box.

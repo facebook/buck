@@ -21,7 +21,6 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -38,7 +37,6 @@ import javax.annotation.Nullable;
  * A set of parameters passed to a {@link BuildRuleFactory}.
  */
 public final class BuildRuleFactoryParams {
-  public static final String GENFILE_PREFIX = "BUCKGEN:";
 
   private final Map<String, ?> instance;
   private final ProjectFilesystem filesystem;
@@ -69,18 +67,9 @@ public final class BuildRuleFactoryParams {
    * For the specified string, return a corresponding file path that is relative to the project
    * root. It is expected that {@code path} is a path relative to the directory containing the build
    * file in which it was declared. This method will also assert that the file exists.
-   * <p>
-   * However, if {@code path} corresponds to a generated file, then {@code path} is treated as a
-   * path relative to the parallel build file directory in the generated files directory. In that
-   * case, its existence will not be verified.
    */
   public Path resolveFilePathRelativeToBuildFileDirectory(String path) {
-    if (path.startsWith(GENFILE_PREFIX)) {
-      path = path.substring(GENFILE_PREFIX.length());
-      return Paths.get(BuckConstant.GEN_DIR, resolvePathAgainstBuildTargetBase(path));
-    } else {
-      return Paths.get(resolvePathAgainstBuildTargetBase(path));
-    }
+    return Paths.get(resolvePathAgainstBuildTargetBase(path));
   }
 
   private String resolvePathAgainstBuildTargetBase(String path) {

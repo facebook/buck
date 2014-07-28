@@ -20,6 +20,8 @@ public class LameGenfile {
 
   private static final String TEST_STRING = "REPLACEME";
 
+  private LameGenfile() {}
+
   public static String getTestString() {
     return TEST_STRING;
   }

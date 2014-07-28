@@ -379,11 +379,6 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
 
 
 @provide_for_build
-def genfile(src, build_env=None):
-    return 'BUCKGEN:' + src
-
-
-@provide_for_build
 def include_defs(name, build_env=None):
     """Loads a file in the context of the current build file.
 
