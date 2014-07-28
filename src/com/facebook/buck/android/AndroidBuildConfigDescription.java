@@ -26,6 +26,7 @@ import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
@@ -79,7 +80,10 @@ public class AndroidBuildConfigDescription
         GEN_JAVA_TYPE,
         BuildTarget.builder(params.getBuildTarget()).setFlavor(GEN_JAVA_FLAVOR).build(),
         params.getDeclaredDeps(),
-        params.getExtraDeps());
+        /* extraDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(params.getExtraDeps())
+            .addAll(SourcePaths.filterBuildRuleInputs(valuesFile.asSet()))
+            .build());
     AndroidBuildConfig androidBuildConfig = new AndroidBuildConfig(
         buildConfigParams,
         javaPackage,
