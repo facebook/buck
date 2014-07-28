@@ -102,6 +102,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import org.w3c.dom.DOMImplementation;
@@ -121,6 +122,7 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -413,8 +415,17 @@ public class ProjectGenerator {
 
     // -- configurations
     setTargetBuildConfigurations(
-        rule.getBuildTarget(), target, targetGroup,
-        buildable.getConfigurations(), ImmutableMap.<String, String>of());
+        rule,
+        target,
+        targetGroup,
+        buildable.getConfigurations(),
+        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(
+            "PUBLIC_HEADERS_FOLDER_PATH",
+            getHeaderOutputPathForRule(),
+            "CONFIGURATION_BUILD_DIR",
+            getObjectOutputPathForRule(rule)),
+        ImmutableMap.<String, String>of());
 
     // -- build phases
     // TODO(Task #3772930): Go through all dependencies of the rule
@@ -542,11 +553,13 @@ public class ProjectGenerator {
       extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
     }
     setTargetBuildConfigurations(
-        rule.getBuildTarget(),
+        rule,
         target,
         targetGroup,
         buildable.getConfigurations(),
-        extraSettingsBuilder.build());
+        extraSettingsBuilder.build(),
+        ImmutableMap.<String, String>of(),
+        ImmutableMap.<String, String>of());
 
     // -- phases
     // TODO(Task #3772930): Go through all dependencies of the rule
@@ -623,19 +636,42 @@ public class ProjectGenerator {
    * effectively laid out in layers.
    */
   private void setTargetBuildConfigurations(
-      BuildTarget buildTarget,
+      BuildRule buildRule,
       PBXTarget target,
       PBXGroup targetGroup,
       ImmutableSet<XcodeRuleConfiguration> configurations,
-      ImmutableMap<String, String> extraBuildSettings)
+      ImmutableMap<String, String> overrideBuildSettings,
+      ImmutableMap<String, String> defaultBuildSettings,
+      ImmutableMap<String, String> appendBuildSettings)
       throws IOException {
+    BuildTarget buildTarget = buildRule.getBuildTarget();
 
-    ImmutableMap.Builder<String, String> extraConfigsBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, String> overrideConfigsBuilder = ImmutableMap.builder();
 
-    extraConfigsBuilder
-        .putAll(extraBuildSettings)
+    overrideConfigsBuilder
+        .putAll(overrideBuildSettings)
         .put("TARGET_NAME", getProductName(buildTarget))
         .put("SRCROOT", relativizeBuckRelativePathToGeneratedProject(buildTarget, "").toString());
+
+    ImmutableMap.Builder<String, String> defaultConfigsBuilder = ImmutableMap.builder();
+
+    defaultConfigsBuilder.putAll(
+        defaultBuildSettings);
+
+    ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
+
+    appendConfigsBuilder
+        .putAll(
+            appendBuildSettings)
+        .put(
+            "HEADER_SEARCH_PATHS",
+            Joiner.on(' ').join(collectRecursiveHeaderSearchPaths(buildRule)))
+        .put(
+            "LIBRARY_SEARCH_PATHS",
+            Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(buildRule)))
+        .put(
+            "FRAMEWORK_SEARCH_PATHS",
+            Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(buildRule)));
 
     // HACK: GCC_PREFIX_HEADER needs to be modified because the path is referenced relative to
     // project root, so if the project is generated in a different place from the BUCK file, it
@@ -648,10 +684,12 @@ public class ProjectGenerator {
     // In the long run, setting should be written relative to SRCROOT everywhere, and this entire
     // hack can be deleted.
     if (!options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
-      extraConfigsBuilder.put("GCC_PREFIX_HEADER", "$(SRCROOT)/$(inherited)");
+      overrideConfigsBuilder.put("GCC_PREFIX_HEADER", "$(SRCROOT)/$(inherited)");
     }
 
-    ImmutableMap<String, String> extraConfigs = extraConfigsBuilder.build();
+    ImmutableMap<String, String> overrideConfigs = overrideConfigsBuilder.build();
+    ImmutableMap<String, String> defaultConfigs = defaultConfigsBuilder.build();
+    ImmutableMap<String, String> appendConfigs = appendConfigsBuilder.build();
 
     PBXGroup configurationsGroup = targetGroup.getOrCreateChildGroupByName("Configurations");
 
@@ -664,6 +702,28 @@ public class ProjectGenerator {
             target.getBuildConfigurationList().getBuildConfigurationsByName()
                 .getUnchecked(configuration.getName());
         if (layers.targetLevelConfigFile.isPresent()) {
+          {
+            Map<String, String> mutableOverrideConfigs = new HashMap<>(overrideConfigs);
+            for (Map.Entry<String, String> entry: defaultConfigs.entrySet()) {
+              String existingSetting = layers.targetLevelInlineSettings.get(entry.getKey());
+              if (existingSetting == null) {
+                mutableOverrideConfigs.put(entry.getKey(), entry.getValue());
+              }
+            }
+
+            for (Map.Entry<String, String> entry : appendConfigs.entrySet()) {
+              String existingSetting = layers.targetLevelInlineSettings.get(entry.getKey());
+              String settingPrefix;
+              if (existingSetting != null) {
+                settingPrefix = existingSetting + ' ';
+              } else {
+                settingPrefix = "$(inherited) ";
+              }
+              mutableOverrideConfigs.put(entry.getKey(), settingPrefix + entry.getValue());
+            }
+            overrideConfigs = ImmutableMap.copyOf(mutableOverrideConfigs);
+          }
+
           PBXFileReference fileReference =
               configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
                   new SourceTreePath(
@@ -675,13 +735,21 @@ public class ProjectGenerator {
           NSDictionary inlineSettings = new NSDictionary();
           Iterable<Map.Entry<String, String>> entries = Iterables.concat(
               layers.targetLevelInlineSettings.entrySet(),
-              extraConfigs.entrySet());
+              overrideConfigs.entrySet());
           for (Map.Entry<String, String> entry : entries) {
             inlineSettings.put(entry.getKey(), entry.getValue());
           }
           outputConfiguration.setBuildSettings(inlineSettings);
         }
       } else {
+        // Add search paths for dependencies
+        Map<String, String> mutableExtraConfigs = new HashMap<>(overrideConfigs);
+        for (Map.Entry<String, String> entry : appendBuildSettings.entrySet()) {
+          String setting = "$(inherited) " + entry.getValue();
+          mutableExtraConfigs.put(entry.getKey(), setting);
+        }
+        overrideConfigs = ImmutableMap.copyOf(mutableExtraConfigs);
+
         Path outputConfigurationDirectory = outputDirectory.resolve("Configurations");
         projectFilesystem.mkdirs(outputConfigurationDirectory);
 
@@ -700,7 +768,7 @@ public class ProjectGenerator {
         Path configurationFilePath = outputConfigurationDirectory.resolve(
             mangledBuildTargetName(buildTarget) + "-" + configuration.getName() + ".xcconfig");
         String serializedConfiguration = serializeBuildConfiguration(
-            configuration, searchPaths, extraConfigs);
+            configuration, searchPaths, overrideConfigs);
         if (shouldGenerateReadOnlyFiles()) {
           projectFilesystem.writeContentsToPath(
               serializedConfiguration,
@@ -1412,6 +1480,83 @@ public class ProjectGenerator {
     Path originalProjectPath = projectFilesystem.getPathForRelativePath(
         Paths.get(buildTarget.getBasePathWithSlash()));
     return repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path).normalize();
+  }
+
+  private String getHeaderOutputPathForRule() {
+    // This is appended to $(CONFIGURATION_BUILD_DIR), so we need to get reference the parent
+    // directory to get $(SYMROOT)
+    return Joiner.on('/').join(
+        "..",
+        "Headers",
+        "$TARGET_NAME");
+  }
+
+  private String getHeaderSearchPathForRule(BuildRule rule) {
+    return Joiner.on('/').join(
+        "$SYMROOT",
+        BaseEncoding
+            .base32()
+            .omitPadding()
+            .encode(rule.getFullyQualifiedName().getBytes()),
+        "Headers");
+  }
+
+  private String getObjectOutputPathForRule(BuildRule rule) {
+    return Joiner.on('/').join(
+        "$SYMROOT",
+        BaseEncoding
+            .base32()
+            .omitPadding()
+            .encode(rule.getFullyQualifiedName().getBytes()),
+        "$CONFIGURATION");
+  }
+
+  private ImmutableSet<String> collectRecursiveHeaderSearchPaths(BuildRule rule) {
+    return FluentIterable
+        .from(
+            getRecursiveRuleDependenciesOfType(
+                rule,
+                IosLibraryDescription.TYPE))
+        .transform(
+            new Function<BuildRule, String>() {
+              @Override
+              public String apply(BuildRule input) {
+                return getHeaderSearchPathForRule(input);
+              }
+            })
+        .toSet();
+  }
+
+  private ImmutableSet<String> collectRecursiveLibrarySearchPaths(BuildRule rule) {
+    return FluentIterable
+        .from(
+            getRecursiveRuleDependenciesOfType(
+                rule,
+                IosLibraryDescription.TYPE))
+        .transform(
+            new Function<BuildRule, String>() {
+              @Override
+              public String apply(BuildRule input) {
+                return getObjectOutputPathForRule(input);
+              }
+            })
+        .toSet();
+  }
+
+  private ImmutableSet<String> collectRecursiveFrameworkSearchPaths(BuildRule rule) {
+    return FluentIterable
+        .from(
+            getRecursiveRuleDependenciesOfType(
+                rule,
+                IosLibraryDescription.TYPE))
+        .transform(
+            new Function<BuildRule, String>() {
+              @Override
+              public String apply(BuildRule input) {
+                return getObjectOutputPathForRule(input);
+              }
+            })
+        .toSet();
   }
 
   private void collectRecursiveFrameworkDependencies(

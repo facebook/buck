@@ -424,6 +424,366 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testIosLibraryConfiguresOutputPaths() throws IOException {
+    Path xcconfigFile = Paths.get("Test.xcconfig");
+    projectFilesystem.writeContentsToPath("", xcconfigFile);
+
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+        ImmutableMap.<String, String>of());
+    arg.configs = ImmutableMap.of("Debug", ImmutableList.of(
+            argConfig,
+            argSettings,
+            argConfig,
+            argSettings));
+    arg.srcs = ImmutableList.of();
+    arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
+    BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        createPartialGraphFromBuildRules(ImmutableSet.of(rule)),
+        ImmutableSet.of(rule.getBuildTarget()),
+        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.IOS_LIBRARY));
+
+    assertHasConfigurations(target, "Debug");
+    XCBuildConfiguration configuration = target
+        .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+    NSDictionary settings = configuration.getBuildSettings();
+    assertEquals(
+        new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+        settings.get("CONFIGURATION_BUILD_DIR"));
+    assertEquals(
+        new NSString("../Headers/$TARGET_NAME"),
+        settings.get("PUBLIC_HEADERS_FOLDER_PATH"));
+  }
+
+  @Test
+  public void testIosLibraryDoesntOverrideHeaderOutputPath() throws IOException {
+    Path xcconfigFile = Paths.get("Test.xcconfig");
+    projectFilesystem.writeContentsToPath("", xcconfigFile);
+
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+        ImmutableMap.of(
+            "PUBLIC_HEADERS_FOLDER_PATH",
+            "FooHeaders"
+            ));
+    arg.configs = ImmutableMap.of("Debug", ImmutableList.of(
+            argConfig,
+            argSettings,
+            argConfig,
+            argSettings));
+    arg.srcs = ImmutableList.of();
+    arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
+    BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        createPartialGraphFromBuildRules(ImmutableSet.of(rule)),
+        ImmutableSet.of(rule.getBuildTarget()),
+        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.IOS_LIBRARY));
+
+    assertHasConfigurations(target, "Debug");
+    XCBuildConfiguration configuration = target
+        .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+    NSDictionary settings = configuration.getBuildSettings();
+    assertEquals(
+        new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+        settings.get("CONFIGURATION_BUILD_DIR"));
+    assertEquals(
+        new NSString("FooHeaders"),
+        settings.get("PUBLIC_HEADERS_FOLDER_PATH"));
+  }
+
+  @Test
+  public void testIosLibraryDependentsSearchHeadersAndLibraries() throws IOException {
+    Path xcconfigFile = Paths.get("Test.xcconfig");
+    projectFilesystem.writeContentsToPath("", xcconfigFile);
+
+    BuildRule libraryRule;
+    BuildRule testRule;
+
+    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+        ImmutableMap.<String, String>of());
+    ImmutableMap<String, ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs =
+        ImmutableMap.of("Debug", ImmutableList.of(
+            argConfig,
+            argSettings,
+            argConfig,
+            argSettings));
+
+    {
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+              .setType(IosLibraryDescription.TYPE)
+              .build();
+      AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+      arg.configs = configs;
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
+      arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
+      arg.deps = Optional.absent();
+      libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    }
+
+    {
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
+              .setDeps(ImmutableSortedSet.of(libraryRule))
+              .setType(IosTestDescription.TYPE)
+              .build();
+
+      IosTestDescription.Arg arg = iosTestDescription.createUnpopulatedConstructorArg();
+      arg.infoPlist = Optional.of(Paths.get("Info.plist"));
+      arg.configs = configs;
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")));
+      arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
+      arg.sourceUnderTest = ImmutableSortedSet.of();
+      arg.testType = Optional.absent();
+      arg.deps = Optional.absent();
+
+      testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    }
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        createPartialGraphFromBuildRules(ImmutableSet.of(libraryRule, testRule)),
+        ImmutableSet.of(testRule.getBuildTarget()),
+        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:test");
+
+    assertHasConfigurations(target, "Debug");
+    XCBuildConfiguration configuration = target
+        .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+    NSDictionary settings = configuration.getBuildSettings();
+    assertEquals(
+        new NSString("$(inherited) " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
+        settings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        new NSString("$(inherited) " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+        settings.get("LIBRARY_SEARCH_PATHS"));
+    assertEquals(
+        new NSString("$(inherited) " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+        settings.get("FRAMEWORK_SEARCH_PATHS"));
+  }
+
+  @Test
+  public void testIosLibraryDependentsInheritSearchPaths() throws IOException {
+    Path xcconfigFile = Paths.get("Test.xcconfig");
+    projectFilesystem.writeContentsToPath("", xcconfigFile);
+
+    BuildRule libraryRule;
+    BuildRule testRule;
+
+    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+        ImmutableMap.of(
+            "HEADER_SEARCH_PATHS",
+            "headers",
+            "LIBRARY_SEARCH_PATHS",
+            "libraries",
+            "FRAMEWORK_SEARCH_PATHS",
+            "frameworks"));
+    ImmutableMap<String, ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs =
+        ImmutableMap.of("Debug", ImmutableList.of(
+            argConfig,
+            argSettings,
+            argConfig,
+            argSettings));
+
+    {
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+              .setType(IosLibraryDescription.TYPE)
+              .build();
+      AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+      arg.configs = configs;
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
+      arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
+      arg.deps = Optional.absent();
+      libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    }
+
+    {
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
+              .setDeps(ImmutableSortedSet.of(libraryRule))
+              .setType(IosTestDescription.TYPE)
+              .build();
+
+      IosTestDescription.Arg arg = iosTestDescription.createUnpopulatedConstructorArg();
+      arg.infoPlist = Optional.of(Paths.get("Info.plist"));
+      arg.configs = configs;
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")));
+      arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
+      arg.sourceUnderTest = ImmutableSortedSet.of();
+      arg.testType = Optional.absent();
+      arg.deps = Optional.absent();
+
+      testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    }
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        createPartialGraphFromBuildRules(ImmutableSet.of(libraryRule, testRule)),
+        ImmutableSet.of(testRule.getBuildTarget()),
+        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:test");
+
+    assertHasConfigurations(target, "Debug");
+    XCBuildConfiguration configuration = target
+        .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+    NSDictionary settings = configuration.getBuildSettings();
+    assertEquals(
+        new NSString("headers " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
+        settings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        new NSString("libraries " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+        settings.get("LIBRARY_SEARCH_PATHS"));
+    assertEquals(
+        new NSString("frameworks " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+        settings.get("FRAMEWORK_SEARCH_PATHS"));
+  }
+
+  @Test
+  public void testIosLibraryTransitiveDependentsSearchHeadersAndLibraries() throws IOException {
+    Path xcconfigFile = Paths.get("Test.xcconfig");
+    projectFilesystem.writeContentsToPath("", xcconfigFile);
+
+    BuildRule libraryDepRule;
+    BuildRule libraryRule;
+    BuildRule testRule;
+
+    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+        ImmutableMap.<String, String>of());
+    ImmutableMap<String, ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs =
+        ImmutableMap.of("Debug", ImmutableList.of(
+                argConfig,
+                argSettings,
+                argConfig,
+                argSettings));
+
+    {
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//bar", "lib").build())
+              .setType(IosLibraryDescription.TYPE)
+              .build();
+      AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+      arg.configs = configs;
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
+      arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
+      arg.deps = Optional.absent();
+      libraryDepRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    }
+
+    {
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+              .setDeps(ImmutableSortedSet.of(libraryDepRule))
+              .setType(IosLibraryDescription.TYPE)
+              .build();
+      AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+      arg.configs = configs;
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
+      arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
+      arg.deps = Optional.absent();
+      libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    }
+
+    {
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
+              .setDeps(ImmutableSortedSet.of(libraryRule))
+              .setType(IosTestDescription.TYPE)
+              .build();
+
+      IosTestDescription.Arg arg = iosTestDescription.createUnpopulatedConstructorArg();
+      arg.infoPlist = Optional.of(Paths.get("Info.plist"));
+      arg.configs = configs;
+      arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")));
+      arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
+      arg.sourceUnderTest = ImmutableSortedSet.of();
+      arg.testType = Optional.absent();
+      arg.deps = Optional.absent();
+
+      testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    }
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        createPartialGraphFromBuildRules(ImmutableSet.of(libraryRule, testRule)),
+        ImmutableSet.of(testRule.getBuildTarget()),
+        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:test");
+
+    assertHasConfigurations(target, "Debug");
+    XCBuildConfiguration configuration = target
+        .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+    NSDictionary settings = configuration.getBuildSettings();
+    assertEquals(
+        new NSString("$(inherited) " +
+            "$SYMROOT/F4XWEYLSHJWGSYQ/Headers " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
+        settings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        new NSString("$(inherited) " +
+            "$SYMROOT/F4XWEYLSHJWGSYQ/$CONFIGURATION " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+        settings.get("LIBRARY_SEARCH_PATHS"));
+    assertEquals(
+        new NSString("$(inherited) " +
+            "$SYMROOT/F4XWEYLSHJWGSYQ/$CONFIGURATION " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+        settings.get("FRAMEWORK_SEARCH_PATHS"));
+  }
+
+  @Test
   public void testMacosxFrameworkRule() throws IOException {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
