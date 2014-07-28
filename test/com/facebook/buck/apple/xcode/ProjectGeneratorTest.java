@@ -222,6 +222,7 @@ public class ProjectGeneratorTest {
                             new TestSourcePath("blech.m"), "-fobjc-arc"))))));
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -280,6 +281,7 @@ public class ProjectGeneratorTest {
                         new Pair<SourcePath, String>(new TestSourcePath("blech.h"), "private"))))));
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -380,6 +382,7 @@ public class ProjectGeneratorTest {
         AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -444,6 +447,7 @@ public class ProjectGeneratorTest {
     arg.srcs = ImmutableList.of();
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -495,6 +499,7 @@ public class ProjectGeneratorTest {
     arg.srcs = ImmutableList.of();
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -550,6 +555,7 @@ public class ProjectGeneratorTest {
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       arg.deps = Optional.absent();
+      arg.gid = Optional.absent();
       libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
 
@@ -568,6 +574,7 @@ public class ProjectGeneratorTest {
       arg.sourceUnderTest = ImmutableSortedSet.of();
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
+      arg.gid = Optional.absent();
 
       testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
@@ -635,6 +642,7 @@ public class ProjectGeneratorTest {
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       arg.deps = Optional.absent();
+      arg.gid = Optional.absent();
       libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
 
@@ -653,6 +661,7 @@ public class ProjectGeneratorTest {
       arg.sourceUnderTest = ImmutableSortedSet.of();
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
+      arg.gid = Optional.absent();
 
       testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
@@ -715,6 +724,7 @@ public class ProjectGeneratorTest {
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       arg.deps = Optional.absent();
+      arg.gid = Optional.absent();
       libraryDepRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
 
@@ -729,6 +739,7 @@ public class ProjectGeneratorTest {
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       arg.deps = Optional.absent();
+      arg.gid = Optional.absent();
       libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
 
@@ -747,6 +758,7 @@ public class ProjectGeneratorTest {
       arg.sourceUnderTest = ImmutableSortedSet.of();
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
+      arg.gid = Optional.absent();
 
       testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
@@ -801,6 +813,7 @@ public class ProjectGeneratorTest {
         AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
     BuildRule rule = macosxFrameworkDescription.createBuildRule(
         params,
         new BuildRuleResolver(),
@@ -870,6 +883,7 @@ public class ProjectGeneratorTest {
         "$SDKROOT/SystemFramework.framework",
         "$BUILT_PRODUCTS_DIR/LocalFramework.framework");
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
 
     BuildRule rule = macosxBinaryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -923,6 +937,7 @@ public class ProjectGeneratorTest {
     arg.sourceUnderTest = ImmutableSortedSet.of();
     arg.testType = Optional.absent();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
 
     BuildRule rule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -980,6 +995,7 @@ public class ProjectGeneratorTest {
     arg.sourceUnderTest = ImmutableSortedSet.of();
     arg.testType = Optional.of("xctest");
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
 
     BuildRule rule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -1028,6 +1044,7 @@ public class ProjectGeneratorTest {
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       arg.deps = Optional.absent();
+      arg.gid = Optional.absent();
       libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
 
@@ -1047,6 +1064,7 @@ public class ProjectGeneratorTest {
       arg.sourceUnderTest = ImmutableSortedSet.of();
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
+      arg.gid = Optional.absent();
 
       testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
@@ -1088,6 +1106,7 @@ public class ProjectGeneratorTest {
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
 
     BuildRule rule = iosBinaryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -1145,6 +1164,7 @@ public class ProjectGeneratorTest {
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(libParams, buildRuleResolver, arg);
 
     buildRuleResolver.addToIndex(libTarget, rule);
@@ -1295,6 +1315,7 @@ public class ProjectGeneratorTest {
         AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1696,6 +1717,7 @@ public class ProjectGeneratorTest {
     arg.srcs = ImmutableList.of();
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
 
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -1766,6 +1788,7 @@ public class ProjectGeneratorTest {
     arg.srcs = ImmutableList.of();
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(rule),
@@ -1822,6 +1845,142 @@ public class ProjectGeneratorTest {
     assertEquals(
         expectedAttribute.value(),
         actualAttribute.value());
+  }
+
+  @Test
+  public void targetGidInDescriptionSetsTargetGidInGeneratedProject() throws IOException {
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of();
+    arg.srcs = ImmutableList.of();
+    arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
+    arg.gid = Optional.of("D00D64738");
+
+    BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    // Ensure the GID for the target uses the gid value in the description.
+    assertThat(target.getGlobalID(), equalTo("D00D64738"));
+  }
+
+  @Test
+  public void targetGidInDescriptionReservesGidFromUseByAnotherTarget() throws IOException {
+    BuildRuleParams fooParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg fooArg =
+      iosLibraryDescription.createUnpopulatedConstructorArg();
+    fooArg.configs = ImmutableMap.of();
+    fooArg.srcs = ImmutableList.of();
+    fooArg.frameworks = ImmutableSortedSet.of();
+    fooArg.deps = Optional.absent();
+    fooArg.gid = Optional.of("E66DC04E36F2D8BE00000000");
+
+    BuildRule fooRule =
+      iosLibraryDescription.createBuildRule(fooParams, new BuildRuleResolver(), fooArg);
+
+    BuildRuleParams barParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//bar", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg barArg =
+      iosLibraryDescription.createUnpopulatedConstructorArg();
+    barArg.configs = ImmutableMap.of();
+    barArg.srcs = ImmutableList.of();
+    barArg.frameworks = ImmutableSortedSet.of();
+    barArg.deps = Optional.absent();
+    barArg.gid = Optional.absent();
+
+    BuildRule barRule =
+      iosLibraryDescription.createBuildRule(barParams, new BuildRuleResolver(), barArg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(fooRule, barRule),
+        ImmutableSet.of(fooRule.getBuildTarget(), barRule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//bar:lib");
+    // Note the '1': normally //bar:lib's GID would be
+    // E66DC04E36F2D8BE00000000 but we hard-coded that in //foo:lib, so //bar:lib
+    // will try and fail to use GID, as it'll already have been reserved.
+    String expectedGID = String.format(
+        "%08X%08X%08X", target.isa().hashCode(), target.getName().hashCode(), 1);
+    assertEquals(
+        "expected GID has correct value",
+        "E66DC04E36F2D8BE00000001", expectedGID);
+    assertEquals("generated GID is same as expected", expectedGID, target.getGlobalID());
+  }
+
+  @Test
+  public void targetGidShouldNotReuseIfNameMatchInExistingProjectWhenGidOverrideInDescription()
+    throws IOException {
+    String projectData =
+      "// !$*UTF8*$!\n" +
+      "{\n" +
+      "  archiveVersion = 1;\n" +
+      "  classes = {};\n" +
+      "  objectVersion = 46;\n" +
+      "  objects = {\n" +
+      "    \"12345\" /* libFoo.a */ = {isa = PBXFileReference; explicitFileType = " +
+      "      archive.ar; path = libFoo.a; sourceTree = BUILT_PRODUCTS_DIR; };\n" +
+      "    ABCDE /* //foo:lib */ = {\n" +
+      "      isa = PBXNativeTarget;\n" +
+      "      buildConfigurationList = 7CC5FDCE622E7F7B4F76AB38 /* Build configuration list for " +
+      "        PBXNativeTarget \"Foo\" */;\n" +
+      "      buildPhases = (\n" +
+      "      );\n" +
+      "      buildRules = (\n" +
+      "      );\n" +
+      "      dependencies = (\n" +
+      "      );\n" +
+      "      name = \"//foo:lib\";\n" +
+      "      productName = Foo;\n" +
+      "      productReference = \"12345\" /* libFoo.a */;\n" +
+      "      productType = \"com.apple.product-type.library.static\";\n" +
+      "    };\n" +
+      "  };\n" +
+      "}";
+    projectFilesystem.writeContentsToPath(projectData, OUTPUT_PROJECT_FILE_PATH);
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of();
+    arg.srcs = ImmutableList.of();
+    arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
+    arg.gid = Optional.of("A1B2C3D4");
+
+    BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    // Ensure the GID for the target uses the gid value in the
+    // description, not the one in the project.
+    assertThat(target.getGlobalID(), equalTo("A1B2C3D4"));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
@@ -1892,6 +2051,7 @@ public class ProjectGeneratorTest {
     arg.sourceUnderTest = sourceUnderTest;
     arg.testType = Optional.absent();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
     return iosTestDescription.createBuildRule(buildRuleParams, new BuildRuleResolver(), arg);
   }
 

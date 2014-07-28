@@ -47,6 +47,7 @@ public class IosLibraryTest {
     arg.configs = ImmutableMap.of();
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "foo").build()).build();

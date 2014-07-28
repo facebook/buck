@@ -377,26 +377,43 @@ public class ProjectGenerator {
         "should not generate rule if it shouldn't be built by current project");
     Preconditions.checkNotNull(targetNameToGIDMap);
     Optional<PBXTarget> result;
+    Optional<AbstractAppleNativeTargetBuildRule> nativeTargetRule;
     if (rule.getType().equals(IosLibraryDescription.TYPE)) {
+      IosLibrary library = (IosLibrary) rule;
       result = Optional.of((PBXTarget) generateIosLibraryTarget(
-          project, rule, (IosLibrary) rule));
+          project, rule, library));
+      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(library);
     } else if (rule.getType().equals(IosTestDescription.TYPE)) {
+      IosTest test = (IosTest) rule;
       result = Optional.of((PBXTarget) generateIosTestTarget(
-          project, rule, (IosTest) rule));
+          project, rule, test));
+      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(test);
     } else if (rule.getType().equals(IosBinaryDescription.TYPE)) {
+      IosBinary binary = (IosBinary) rule;
       result = Optional.of((PBXTarget) generateIOSBinaryTarget(
-              project, rule, (IosBinary) rule));
+              project, rule, binary));
+      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
     } else if (rule.getType().equals(MacosxFrameworkDescription.TYPE)) {
+      MacosxFramework framework = (MacosxFramework) rule;
       result = Optional.of((PBXTarget) generateMacosxFrameworkTarget(
-              project, rule, (MacosxFramework) rule));
+              project, rule, framework));
+      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(framework);
     } else if (rule.getType().equals(MacosxBinaryDescription.TYPE)) {
-    result = Optional.of((PBXTarget) generateMacosxBinaryTarget(
-            project, rule, (MacosxBinary) rule));
+      MacosxBinary binary = (MacosxBinary) rule;
+      result = Optional.of((PBXTarget) generateMacosxBinaryTarget(
+            project, rule, binary));
+      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
     } else {
       result = Optional.absent();
+      nativeTargetRule = Optional.absent();
     }
 
-    if (result.isPresent()) {
+    if (result.isPresent() &&
+        nativeTargetRule.isPresent() &&
+        !nativeTargetRule.get().getGid().isPresent()) {
+      // Override the target GID with the one read in from the
+      // existing .pbxproj only if a gid isn't hard-coded in the
+      // target's BUCK file.
       setTargetGIDIfNameInMap(result.get(), targetNameToGIDMap);
     }
 
@@ -410,6 +427,8 @@ public class ProjectGenerator {
       throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
     target.setProductType(PBXTarget.ProductType.IOS_LIBRARY);
+
+    setNativeTargetGid(target, buildable);
 
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
@@ -532,6 +551,15 @@ public class ProjectGenerator {
     return target;
   }
 
+  private void setNativeTargetGid(
+      PBXNativeTarget target,
+      AbstractAppleNativeTargetBuildRule buildable) {
+    Optional<String> buildableGid = buildable.getGid();
+    if (buildableGid.isPresent()) {
+      target.setGlobalID(buildableGid.get());
+    }
+  }
+
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       BuildRule rule,
@@ -542,6 +570,7 @@ public class ProjectGenerator {
       throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
     target.setProductType(productType);
+    setNativeTargetGid(target, buildable);
 
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 

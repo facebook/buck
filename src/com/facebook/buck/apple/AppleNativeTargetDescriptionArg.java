@@ -42,4 +42,5 @@ public class AppleNativeTargetDescriptionArg implements ConstructorArg {
   public ImmutableList<AppleSource> srcs;
   public ImmutableSortedSet<String> frameworks;
   public Optional<ImmutableSortedSet<BuildRule>> deps;
+  public Optional<String> gid;
 }
