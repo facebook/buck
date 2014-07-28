@@ -1,0 +1,4 @@
+java_test(
+  name = 'thrifty',
+  srcs = glob(['*.thrift']),
+)

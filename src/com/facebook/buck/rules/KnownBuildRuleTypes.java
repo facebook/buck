@@ -60,6 +60,7 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
 import com.facebook.buck.shell.ShTestDescription;
+import com.facebook.buck.thrift.ThriftLibraryDescription;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -204,6 +205,7 @@ public class KnownBuildRuleTypes {
     builder.register(new RobolectricTestDescription(javacEnv));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription());
+    builder.register(new ThriftLibraryDescription());
     builder.register(new XcodeNativeDescription());
     builder.register(new XcodeProjectConfigDescription());
     builder.register(new XcodeWorkspaceConfigDescription());
