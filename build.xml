@@ -14,9 +14,6 @@
   <property name="buck.path_to_buck_py" value="${basedir}/src/com/facebook/buck/parser/buck.py" />
   <property name="buck.path_to_compile_asset_catalogs_py" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs.py" />
   <property name="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh" />
-  <property name="buck.path_to_emma_jar"
-            value="${basedir}/third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar"
-            />
   <property name="buck.logging_config_file" value="${basedir}/config/logging.properties" />
   <property name="classes.dir" value="${build.dir}/classes" />
   <property name="testclasses.dir" value="${build.dir}/testclasses" />
@@ -96,7 +93,6 @@
   </path>
 
   <target name="clean" description="remove all generated files">
-    <ant inheritAll="false" antfile="third-party/java/emma-2.0.5312/build.xml" target="clean" />
     <ant inheritAll="false" antfile="third-party/java/jacoco-0.6.4/build.xml" target="clean" />
     <delete dir="${build.dir}" />
   </target>
@@ -160,7 +156,6 @@
   <target name="compile"
           depends="compile-testrunner, compile-abi-processor, javacc, dx"
           description="compile Java source code">
-    <ant inheritAll="false" antfile="third-party/java/emma-2.0.5312/build.xml" target="core.package" />
     <ant inheritAll="false" antfile="third-party/java/jacoco-0.6.4/build.xml" target="build" />
     <mkdir dir="${classes.dir}" />
     <javac destdir="${classes.dir}"
@@ -308,7 +303,6 @@
            showoutput="true"
            forkmode="perBatch"
            haltonerror="on">
-      <sysproperty key="buck.path_to_emma_jar" value="${buck.path_to_emma_jar}" />
       <sysproperty key="buck.path_to_buck_py" value="${buck.path_to_buck_py}" />
       <sysproperty key="buck.path_to_compile_asset_catalogs_py" value="${buck.path_to_compile_asset_catalogs_py}" />
       <sysproperty key="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${buck.path_to_compile_asset_catalogs_build_phase_sh}" />

@@ -46,7 +46,6 @@ public class ExecutionContext {
   private final Optional<TargetDevice> targetDevice;
   private final long defaultTestTimeoutMillis;
   private final boolean isCodeCoverageEnabled;
-  private final boolean isJacocoEnabled;
   private final boolean isDebugEnabled;
   private final ProcessExecutor processExecutor;
   private final BuckEventBus eventBus;
@@ -61,7 +60,6 @@ public class ExecutionContext {
       Optional<TargetDevice> targetDevice,
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
-      boolean isJacocoEnabled,
       boolean isDebugEnabled,
       BuckEventBus eventBus,
       Platform platform,
@@ -74,7 +72,6 @@ public class ExecutionContext {
     this.targetDevice = Preconditions.checkNotNull(targetDevice);
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
-    this.isJacocoEnabled = isJacocoEnabled;
     this.isDebugEnabled = isDebugEnabled;
     this.processExecutor = new ProcessExecutor(console);
     this.eventBus = Preconditions.checkNotNull(eventBus);
@@ -95,7 +92,6 @@ public class ExecutionContext {
         getTargetDeviceOptional(),
         getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
-        isJacocoEnabled(),
         isDebugEnabled,
         eventBus,
         platform,
@@ -190,10 +186,6 @@ public class ExecutionContext {
     return isCodeCoverageEnabled;
   }
 
-  public boolean isJacocoEnabled() {
-    return isJacocoEnabled;
-  }
-
   public boolean isDebugEnabled() {
     return isDebugEnabled;
   }
@@ -222,7 +214,6 @@ public class ExecutionContext {
     private Optional<TargetDevice> targetDevice = Optional.absent();
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
-    private boolean isJacocoEnabled = false;
     private boolean isDebugEnabled = false;
     @Nullable private BuckEventBus eventBus = null;
     @Nullable private Platform platform = null;
@@ -239,7 +230,6 @@ public class ExecutionContext {
           targetDevice,
           defaultTestTimeoutMillis,
           isCodeCoverageEnabled,
-          isJacocoEnabled,
           isDebugEnabled,
           eventBus,
           platform,
@@ -254,7 +244,6 @@ public class ExecutionContext {
       setTargetDevice(executionContext.getTargetDeviceOptional());
       setDefaultTestTimeoutMillis(executionContext.getDefaultTestTimeoutMillis());
       setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled());
-      setJacocoEnabled(executionContext.isJacocoEnabled());
       setDebugEnabled(executionContext.isDebugEnabled());
       setEventBus(executionContext.getBuckEventBus());
       setPlatform(executionContext.getPlatform());
@@ -293,11 +282,6 @@ public class ExecutionContext {
 
     public Builder setCodeCoverageEnabled(boolean isCodeCoverageEnabled) {
       this.isCodeCoverageEnabled = isCodeCoverageEnabled;
-      return this;
-    }
-
-    public Builder setJacocoEnabled(boolean isJacocoEnabled) {
-      this.isJacocoEnabled = isJacocoEnabled;
       return this;
     }
 

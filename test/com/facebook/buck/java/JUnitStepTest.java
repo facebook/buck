@@ -60,7 +60,6 @@ public class JUnitStepTest {
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
     Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
     boolean isCodeCoverageEnabled = false;
-    boolean isJacocoEnabled = true;
     boolean isDebugEnabled = false;
     Path testRunnerClassesDirectory = Paths.get("build/classes/junit");
 
@@ -71,7 +70,6 @@ public class JUnitStepTest {
         directoryForTestResults,
         directoryForTemp,
         isCodeCoverageEnabled,
-        isJacocoEnabled,
         isDebugEnabled,
         pretendBuildId,
         TestSelectorList.empty(),
@@ -126,7 +124,6 @@ public class JUnitStepTest {
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
     Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
     boolean isCodeCoverageEnabled = false;
-    boolean isJacocoEnabled = false;
     boolean isDebugEnabled = true;
     Path testRunnerClassesDirectory = Paths.get("build/classes/junit");
 
@@ -137,7 +134,6 @@ public class JUnitStepTest {
         directoryForTestResults,
         directoryForTemp,
         isCodeCoverageEnabled,
-        isJacocoEnabled,
         isDebugEnabled,
         pretendBuildId,
         TestSelectorList.empty(),
