@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
@@ -28,8 +28,11 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.List;
 
-public class GenRDotTxtStep extends CompositeStep {
+public class GenRDotTxtUtil {
+
+  private GenRDotTxtUtil() {}
 
   /**
    * Creates a command that will run {@code aapt} for the purpose of generating {@code R.txt}.
@@ -49,30 +52,30 @@ public class GenRDotTxtStep extends CompositeStep {
    *     match those in an .apk that includes the resources.
    * @param dummyAndroidManifest Where the a dummy {@code AndroidManifest.xml} file can be written.
    */
-  public GenRDotTxtStep(
-      ImmutableList<Path> resDirectories,
-      Path genDirectoryPath,
-      final Supplier<String> libraryPackage,
-      boolean isTempRDotJava,
-      Path dummyAndroidManifest) {
-    super(ImmutableList.of(
-        new MkdirStep(dummyAndroidManifest.getParent()),
-        new WriteFileStep(
-            new Supplier<String>() {
-              @Override
-              public String get() {
-                return String.format(
-                    "<manifest xmlns:android='http://schemas.android.com/apk/res/android' " +
-                        "package='%s' />",
-                    libraryPackage.get());
-              }
-            },
-            dummyAndroidManifest),
-        new GenRDotTxtStepInternal(
-            resDirectories,
-            genDirectoryPath,
-            isTempRDotJava,
-            dummyAndroidManifest)));
+  public static List<Step> createSteps(
+    ImmutableList<Path> resDirectories,
+    Path genDirectoryPath,
+    final Supplier<String> libraryPackage,
+    boolean isTempRDotJava,
+    Path dummyAndroidManifest) {
+    return ImmutableList.of(
+            new MkdirStep(dummyAndroidManifest.getParent()),
+            new WriteFileStep(
+                new Supplier<String>() {
+                  @Override
+                  public String get() {
+                    return String.format(
+                        "<manifest xmlns:android='http://schemas.android.com/apk/res/android' " +
+                            "package='%s' />",
+                        libraryPackage.get());
+                  }
+                },
+                dummyAndroidManifest),
+            new GenRDotTxtStepInternal(
+                resDirectories,
+                genDirectoryPath,
+                isTempRDotJava,
+                dummyAndroidManifest));
   }
 
   private static class GenRDotTxtStepInternal extends ShellStep {

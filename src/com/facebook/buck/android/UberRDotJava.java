@@ -268,7 +268,7 @@ public class UberRDotJava extends AbstractBuildRule implements
     // Generate the real R.txt file.
     Path dummyManifestFile = BuildTargets.getGenPath(
         getBuildTarget(), "__%s_dummy_manifest/AndroidManifest.xml");
-    steps.add(new GenRDotTxtStep(
+    steps.addAll(GenRDotTxtUtil.createSteps(
         resDirectories,
         rDotTxtDir,
         Suppliers.ofInstance(Iterables.get(rDotJavaPackages, 0)),

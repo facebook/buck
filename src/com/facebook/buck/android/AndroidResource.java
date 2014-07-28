@@ -321,7 +321,7 @@ public class AndroidResource extends AbstractBuildRule
 
     Path dummyManifestFile = BuildTargets.getGenPath(
         getBuildTarget(), "__%s_dummy_manifest/AndroidManifest.xml");
-    steps.add(new GenRDotTxtStep(
+    steps.addAll(GenRDotTxtUtil.createSteps(
         resDirectories,
         pathToTextSymbolsDir,
         rDotJavaPackageSupplier,
