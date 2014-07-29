@@ -123,6 +123,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -238,6 +239,7 @@ public class ProjectGenerator {
     xcodeConfigurationLayersMultimapBuilder;
 
   private ImmutableMap<String, String> targetNameToGIDMap;
+  private Set<String> nativeTargetGIDs;
 
   public ProjectGenerator(
       PartialGraph partialGraph,
@@ -283,6 +285,7 @@ public class ProjectGenerator {
         });
 
     xcodeConfigurationLayersMultimapBuilder = ImmutableMultimap.builder();
+    nativeTargetGIDs = new HashSet<>();
   }
 
   @VisibleForTesting
@@ -409,12 +412,18 @@ public class ProjectGenerator {
     }
 
     if (result.isPresent() &&
-        nativeTargetRule.isPresent() &&
-        !nativeTargetRule.get().getGid().isPresent()) {
-      // Override the target GID with the one read in from the
-      // existing .pbxproj only if a gid isn't hard-coded in the
-      // target's BUCK file.
-      setTargetGIDIfNameInMap(result.get(), targetNameToGIDMap);
+        nativeTargetRule.isPresent()) {
+      Optional<String> gid = nativeTargetRule.get().getGid();
+      if (gid.isPresent()) {
+        // Remember the GID hard-coded in the target's BUCK file
+        // so we don't try to re-use it later.
+        nativeTargetGIDs.add(gid.get());
+      } else {
+        // Override the target GID with the one read in from the
+        // existing .pbxproj only if a gid isn't hard-coded in the
+        // target's BUCK file.
+        setTargetGIDIfNameInMap(result.get(), targetNameToGIDMap);
+      }
     }
 
     return result;
@@ -1371,7 +1380,12 @@ public class ProjectGenerator {
   private Path writeProjectFile(PBXProject project) throws IOException {
     Preconditions.checkNotNull(targetNameToGIDMap);
     XcodeprojSerializer serializer = new XcodeprojSerializer(
-        new GidGenerator(ImmutableSet.copyOf(targetNameToGIDMap.values())), project);
+        new GidGenerator(
+            ImmutableSet.<String>builder()
+                .addAll(targetNameToGIDMap.values())
+                .addAll(nativeTargetGIDs)
+                .build()),
+        project);
     NSDictionary rootObject = serializer.toPlist();
     Path xcodeprojDir = outputDirectory.resolve(projectName + ".xcodeproj");
     projectFilesystem.mkdirs(xcodeprojDir);
