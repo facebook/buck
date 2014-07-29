@@ -16,11 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
@@ -28,7 +26,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -64,11 +61,10 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
     // The skeleton does not appear to be in either params.getDeclaredDeps() or
     // params.getExtraDeps(), even though the type of Arg.skeleton is SourcePath.
     // TODO(simons): t4744625 This should happen automagically.
-    ImmutableSortedSet<BuildRule> newDeps = FluentIterable
-        .from(Sets.union(manifestFiles, Collections.singleton(args.skeleton)))
-        .filter(BuildRuleSourcePath.class)
-        .transform(SourcePaths.TO_BUILD_RULE_REFERENCES)
-        .toSortedSet(BuildTarget.BUILD_TARGET_COMPARATOR);
+    ImmutableSortedSet<BuildRule> newDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(SourcePaths.filterBuildRuleInputs(
+            Sets.union(manifestFiles, Collections.singleton(args.skeleton))))
+        .build();
 
     return new AndroidManifest(
         params.copyWithDeps(newDeps, params.getExtraDeps()),
