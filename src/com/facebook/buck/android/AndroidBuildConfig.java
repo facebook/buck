@@ -187,6 +187,7 @@ public class AndroidBuildConfig extends AbstractBuildRule {
 
     steps.add(new MakeCleanDirectoryStep(pathToOutputFile.getParent()));
     steps.add(new GenerateBuildConfigStep(
+        getBuildTarget(),
         javaPackage,
         useConstantExpressions,
         totalFields,

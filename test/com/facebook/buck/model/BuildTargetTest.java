@@ -19,6 +19,7 @@ package com.facebook.buck.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -140,5 +141,14 @@ public class BuildTargetTest {
     } catch (IllegalArgumentException e) {
       assertEquals("Invalid flavor: ", e.getMessage());
     }
+  }
+
+  @Test
+  public void testGetUnflavoredTarget() {
+    BuildTarget unflavoredTarget = BuildTarget.builder("//foo/bar", "baz").build();
+    assertSame(unflavoredTarget, unflavoredTarget.getUnflavoredTarget());
+
+    BuildTarget flavoredTarget = BuildTarget.builder("//foo/bar", "baz").setFlavor("biz").build();
+    assertEquals(unflavoredTarget, flavoredTarget.getUnflavoredTarget());
   }
 }

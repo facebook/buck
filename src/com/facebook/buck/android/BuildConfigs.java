@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -52,8 +53,8 @@ public class BuildConfigs {
   /**
    * Returns a list of fields (with values) that every {@code BuildConfig.java} should
    * declare. The default value of each constant may be overridden by the {@code userFields} passed
-   * to {@link #generateBuildConfigDotJava(String, boolean, BuildConfigFields)} when generating a
-   * {@code BuildConfig.java}.
+   * to {@link #generateBuildConfigDotJava(BuildTarget, String, boolean, BuildConfigFields)} when
+   * generating a {@code BuildConfig.java}.
    */
   public static BuildConfigFields getDefaultBuildConfigFields() {
     return DEFAULT_BUILD_CONFIG_CONSTANTS;
@@ -63,8 +64,9 @@ public class BuildConfigs {
    * Generates the source code for an Android {@code BuildConfig.java} file with the default set of
    * fields specified by {@link #getDefaultBuildConfigFields()}.
    */
-  public static String generateBuildConfigDotJava(String javaPackage) {
+  public static String generateBuildConfigDotJava(BuildTarget source, String javaPackage) {
     return generateBuildConfigDotJava(
+        source,
         javaPackage,
         /* useConstantExpressions */ false,
         BuildConfigFields.empty());
@@ -96,6 +98,7 @@ public class BuildConfigs {
    *     {@code BuildConfig} class.
    */
   public static String generateBuildConfigDotJava(
+      BuildTarget source,
       String javaPackage,
       boolean useConstantExpressions,
       BuildConfigFields userFields) {
@@ -103,6 +106,6 @@ public class BuildConfigs {
     Preconditions.checkNotNull(userFields);
 
     BuildConfigFields totalFields = getDefaultBuildConfigFields().putAll(userFields);
-    return totalFields.generateBuildConfigDotJava(javaPackage, useConstantExpressions);
+    return totalFields.generateBuildConfigDotJava(source, javaPackage, useConstantExpressions);
   }
 }

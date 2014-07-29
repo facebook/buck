@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -30,16 +31,19 @@ import java.nio.file.Path;
 
 public class GenerateBuildConfigStep implements Step {
 
+  private final BuildTarget source;
   private final String javaPackage;
   private final boolean useConstantExpressions;
   private final Supplier<BuildConfigFields> fields;
   private final Path outBuildConfigPath;
 
   public GenerateBuildConfigStep(
+      BuildTarget source,
       String javaPackage,
       boolean useConstantExpressions,
       Supplier<BuildConfigFields> fields,
       Path outBuildConfigPath) {
+    this.source = Preconditions.checkNotNull(source);
     this.javaPackage = Preconditions.checkNotNull(javaPackage);
     this.useConstantExpressions = useConstantExpressions;
     this.fields = Preconditions.checkNotNull(fields);
@@ -52,6 +56,7 @@ public class GenerateBuildConfigStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     String java = BuildConfigs.generateBuildConfigDotJava(
+        source,
         javaPackage,
         useConstantExpressions,
         fields.get());

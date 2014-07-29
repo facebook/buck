@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBuildConfig.ReadValuesStep;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -73,6 +74,7 @@ public class AndroidBuildConfigTest {
         FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
     Step generateBuildConfigStep = steps.get(1);
     GenerateBuildConfigStep expectedStep = new GenerateBuildConfigStep(
+        /* source */ BuildTargetFactory.newInstance("//java/com/example:build_config"),
         /* javaPackage */ "com.example",
         /* useConstantExpressions */ false,
         /* constants */ Suppliers.ofInstance(BuildConfigFields.empty()),
