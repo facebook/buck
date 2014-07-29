@@ -33,7 +33,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -41,6 +40,7 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
@@ -91,14 +91,23 @@ public class Parser {
   private final BuildTargetParser buildTargetParser;
 
   /**
-   * The build files that have been parsed and whose build rules are in {@link #knownBuildTargets}.
+   * The build files that have been parsed and whose build rules are in
+   * {@link #memoizedTargetNodes}.
    */
   private final ListMultimap<Path, Map<String, Object>> parsedBuildFiles;
+
+  /**
+   * We parse a build file in search for one particular rule; however, we also keep track of the
+   * other rules that were also parsed from it.
+   */
+  private final Map<BuildTarget, TargetNode<?>> memoizedTargetNodes;
+
+
   private final Map<BuildTarget, Path> targetsToFile;
   private final ImmutableSet<Pattern> tempFilePatterns;
 
   /**
-   * True if all build files have been parsed and so all rules are in {@link #knownBuildTargets}.
+   * True if all build files have been parsed and so all rules are in {@link #memoizedTargetNodes}.
    */
   private boolean allBuildFilesParsed;
 
@@ -110,13 +119,6 @@ public class Parser {
    */
   @Nullable
   private List<String> cacheDefaultIncludes;
-
-  /**
-   * We parse a build file in search for one particular rule; however, we also keep track of the
-   * other rules that were also parsed from it.
-   */
-  // TODO(user): Stop caching these in addition to parsedBuildFiles?
-  private final Map<BuildTarget, TargetNode<?>> knownBuildTargets;
 
   private final Repository repository;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
@@ -235,7 +237,6 @@ public class Parser {
           }
         },
         new BuildTargetParser(repository.getFilesystem()),
-         /* knownBuildTargets */ Maps.<BuildTarget, TargetNode<?>>newHashMap(),
         new DefaultProjectBuildFileParserFactory(
             repository.getFilesystem(),
             pythonInterpreter,
@@ -254,7 +255,6 @@ public class Parser {
       ImmutableMap<String, String> environment,
       InputSupplier<BuildFileTree> buildFileTreeSupplier,
       BuildTargetParser buildTargetParser,
-      Map<BuildTarget, TargetNode<?>> knownBuildTargets,
       ProjectBuildFileParserFactory buildFileParserFactory,
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
@@ -263,7 +263,7 @@ public class Parser {
     this.environment = Preconditions.checkNotNull(environment);
     this.buildFileTreeCache = new BuildFileTreeCache(
         Preconditions.checkNotNull(buildFileTreeSupplier));
-    this.knownBuildTargets = Maps.newHashMap(Preconditions.checkNotNull(knownBuildTargets));
+    this.memoizedTargetNodes = Maps.newHashMap();
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
     this.buildFileParserFactory = Preconditions.checkNotNull(buildFileParserFactory);
     this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
@@ -328,7 +328,7 @@ public class Parser {
       console.getStdErr().println("Parser invalidating entire cache");
     }
     parsedBuildFiles.clear();
-    knownBuildTargets.clear();
+    memoizedTargetNodes.clear();
     allBuildFilesParsed = false;
   }
 
@@ -401,6 +401,62 @@ public class Parser {
     return buildActionGraphFromTargetGraph(graph);
   }
 
+  @Nullable
+  private TargetNode<?> getTargetNode(BuildTarget buildTarget) {
+    // Fast path.
+    TargetNode<?> toReturn = memoizedTargetNodes.get(buildTarget);
+    if (toReturn != null) {
+      return toReturn;
+    }
+
+    List<Map<String, Object>> rules =
+        Preconditions.checkNotNull(parsedBuildFiles.get(normalize(buildTarget.getBuildFilePath())));
+    for (Map<String, Object> map : rules) {
+
+      if (!buildTarget.getShortName().equals(map.get("name"))) {
+        continue;
+      }
+
+      BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
+      BuildTarget target = parseBuildTargetFromRawRule(map);
+      targetsToFile.put(
+          target,
+          normalize(Paths.get((String) map.get("buck.base_path")))
+              .resolve("BUCK").toAbsolutePath());
+
+      Description<?> description = repository.getDescription(buildRuleType);
+      if (description == null) {
+        throw new HumanReadableException("Unrecognized rule %s while parsing %s%s.",
+            buildRuleType,
+            BuildTarget.BUILD_TARGET_PREFIX,
+            target.getBuildFilePath());
+      }
+
+      BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
+          map,
+          repository.getFilesystem(),
+          buildTargetParser,
+          target,
+          ruleKeyBuilderFactory);
+      TargetNode<?> targetNode;
+      try {
+        targetNode = new TargetNode<>(description, factoryParams);
+      } catch (NoSuchBuildTargetException e) {
+        //
+        throw new HumanReadableException(e);
+      }
+
+      TargetNode<?> existingTargetNode = memoizedTargetNodes.put(target, targetNode);
+      if (existingTargetNode != null) {
+        throw new HumanReadableException("Duplicate definition for " + target);
+      }
+
+      // PMD considers it bad form to return while in a loop.
+    }
+
+    return memoizedTargetNodes.get(buildTarget);
+  }
+
   private TraversableGraph<TargetNode<?>> buildTargetGraph(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes,
@@ -415,24 +471,23 @@ public class Parser {
 
             // Verify that the BuildTarget actually exists in the map of known BuildTargets
             // before trying to recurse through its children.
-            if (!knownBuildTargets.containsKey(buildTarget)) {
+            TargetNode<?> targetNode = getTargetNode(buildTarget);
+            if (targetNode == null) {
               throw new HumanReadableException(
                   NoSuchBuildTargetException.createForMissingBuildRule(buildTarget, parseContext));
             }
 
-            TargetNode<?> targetNode = knownBuildTargets.get(buildTarget);
-
             Set<BuildTarget> deps = Sets.newHashSet();
             for (BuildTarget buildTargetForDep : targetNode.getDeps()) {
               try {
-                TargetNode<?> depTargetNode = knownBuildTargets.get(buildTargetForDep);
+                TargetNode<?> depTargetNode = getTargetNode(buildTargetForDep);
                 if (depTargetNode == null) {
                   parseBuildFileContainingTarget(
                       buildTarget,
                       buildTargetForDep,
                       defaultIncludes,
                       buildFileParser);
-                  depTargetNode = knownBuildTargets.get(buildTargetForDep);
+                  depTargetNode = getTargetNode(buildTargetForDep);
                   if (depTargetNode == null) {
                     throw new HumanReadableException(
                         NoSuchBuildTargetException.createForMissingBuildRule(
@@ -452,11 +507,11 @@ public class Parser {
 
           @Override
           protected void onNodeExplored(BuildTarget buildTarget) {
-            TargetNode<?> targetNode = knownBuildTargets.get(buildTarget);
+            TargetNode<?> targetNode = getTargetNode(buildTarget);
             Preconditions.checkNotNull(targetNode, "No target node found for %s", buildTarget);
             graph.addNode(targetNode);
             for (BuildTarget target : targetNode.getDeps()) {
-              graph.addEdge(targetNode, knownBuildTargets.get(target));
+              graph.addEdge(targetNode, getTargetNode(target));
             }
           }
 
@@ -635,13 +690,8 @@ public class Parser {
         continue;
       }
 
-      BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
       BuildTarget target = parseBuildTargetFromRawRule(map);
-      targetsToFile.put(
-          target,
-          normalize(Paths.get((String) map.get("buck.base_path")))
-              .resolve("BUCK").toAbsolutePath());
-
+      BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
       Description<?> description = repository.getDescription(buildRuleType);
       if (description == null) {
         throw new HumanReadableException("Unrecognized rule %s while parsing %s.",
@@ -649,20 +699,13 @@ public class Parser {
             target.getBuildFile(repository.getFilesystem()));
       }
 
-      BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
-          map,
-          repository.getFilesystem(),
-          buildTargetParser,
+      targetsToFile.put(
           target,
-          ruleKeyBuilderFactory);
-      TargetNode<?> targetNode = new TargetNode<>(description, factoryParams);
+          normalize(Paths.get((String) map.get("buck.base_path")))
+              .resolve("BUCK").toAbsolutePath());
 
-      TargetNode<?> existingTargetNode = knownBuildTargets.put(target, targetNode);
-      if (existingTargetNode != null) {
-        throw new HumanReadableException("Duplicate definition for " + target);
-      }
       parsedBuildFiles.put(
-          normalize(target.getBuildFile(repository.getFilesystem()).toPath()),
+          normalize(target.getBuildFilePath()),
           map);
     }
   }
@@ -792,7 +835,7 @@ public class Parser {
           projectFilesystem.getProjectRoot(), filesystem.getProjectRoot()));
     }
     if (!isCacheComplete(includes)) {
-      knownBuildTargets.clear();
+      memoizedTargetNodes.clear();
       parsedBuildFiles.clear();
       parseRawRulesInternal(
           ProjectBuildFileParser.getAllRulesInProject(
@@ -939,7 +982,7 @@ public class Parser {
       // Remove all targets defined by path from cache.
       for (Map<String, Object> rawRule : parsedBuildFiles.get(path)) {
         BuildTarget target = parseBuildTargetFromRawRule(rawRule);
-        knownBuildTargets.remove(target);
+        memoizedTargetNodes.remove(target);
       }
 
       // Remove all rules defined in path from cache.

@@ -34,6 +34,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
+import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -46,21 +47,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
-import com.facebook.buck.rules.FakeTargetNodeBuilder;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.BuckTestConstant;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.util.BuckConstant;
@@ -75,10 +66,9 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
 
@@ -182,39 +172,46 @@ public class ParserTest extends EasyMockSupport {
     };
   }
 
-  private Parser createParser(Map<BuildTarget, TargetNode<?>> knownBuildTargets)
+  private Parser createParser(Iterable<Map<String, Object>> rules)
       throws IOException {
     return createParser(
         ofInstance(new FilesystemBackedBuildFileTree(filesystem)),
-        knownBuildTargets,
+        rules,
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes),
         new BuildTargetParser(filesystem));
   }
 
   private Parser createParser(
-      Map<BuildTarget, TargetNode<?>> knownBuildTargets,
+      Iterable<Map<String, Object>> rules,
       ProjectBuildFileParserFactory buildFileParserFactory) throws IOException {
     return createParser(
         ofInstance(new FilesystemBackedBuildFileTree(filesystem)),
-        knownBuildTargets,
+        rules,
         buildFileParserFactory,
         new BuildTargetParser(filesystem));
   }
 
   private Parser createParser(InputSupplier<BuildFileTree> buildFileTreeSupplier,
-    Map<BuildTarget, TargetNode<?>> knownBuildTargets,
+    Iterable<Map<String, Object>> rules,
     ProjectBuildFileParserFactory buildFileParserFactory,
     BuildTargetParser buildTargetParser) {
-    return new Parser(
+    Parser parser = new Parser(
         repository,
         new TestConsole(),
-        ImmutableMap.copyOf(System.getenv()),
+        ImmutableMap.copyOf(System.getenv()),  // TODO(simons): I think not
         buildFileTreeSupplier,
         buildTargetParser,
-        knownBuildTargets,
         buildFileParserFactory,
         tempFilePatterns,
         new FakeRuleKeyBuilderFactory());
+
+    try {
+      parser.parseRawRulesInternal(rules);
+    } catch (BuildTargetException|IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    return parser;
   }
 
   /**
@@ -1142,67 +1139,39 @@ public class ParserTest extends EasyMockSupport {
     }
   }
 
-  private Map<BuildTarget, TargetNode<?>> emptyBuildTargets() {
-    return Maps.newHashMap();
+  private Iterable<Map<String, Object>> emptyBuildTargets() {
+    return Sets.newHashSet();
   }
 
-  private Map<BuildTarget, TargetNode<?>> circularBuildTargets() {
-    return ImmutableMap.<BuildTarget, TargetNode<?>>builder()
-        .put(BuildTargetFactory.newInstance("//:A"), createTargetNode("A", "B", "C"))
-        .put(BuildTargetFactory.newInstance("//:B"), createTargetNode("B", "D", "E"))
-        .put(BuildTargetFactory.newInstance("//:C"), createTargetNode("C", "E"))
-        .put(BuildTargetFactory.newInstance("//:D"), createTargetNode("D", "F"))
-        .put(BuildTargetFactory.newInstance("//:E"), createTargetNode("E", "F"))
-        .put(BuildTargetFactory.newInstance("//:F"), createTargetNode("F", "C"))
+  private Iterable<Map<String, Object>> circularBuildTargets() {
+    return ImmutableSet.<Map<String, Object>>builder()
+        .add(createRule("//:A", "B", "C"))
+        .add(createRule("//:B", "D", "E"))
+        .add(createRule("//:C", "E"))
+        .add(createRule("//:D", "F"))
+        .add(createRule("//:E", "F"))
+        .add(createRule("//:F", "C"))
         .build();
   }
 
-  private static TargetNode<FakeDescription.FakeArg> createTargetNode(
-      String name,
-      String... qualifiedDeps) {
-    final BuildTarget buildTarget = BuildTargetFactory.newInstance("//:" + name);
-    ImmutableSortedSet.Builder<BuildTarget> depsBuilder = ImmutableSortedSet.naturalOrder();
-    for (String dep : qualifiedDeps) {
-      depsBuilder.add(BuildTargetFactory.newInstance("//:" + dep));
-    }
-    final ImmutableSortedSet<BuildTarget> deps = depsBuilder.build();
+  private ImmutableMap<String, Object> createRule(String name, String... deps) {
+    BuildTarget target = BuildTargetFactory.newInstance(name);
 
-    FakeTargetNodeBuilder<FakeDescription.FakeArg> builder = new FakeTargetNodeBuilder<>();
-    return builder.build(
-        new FakeDescription(),
-        new BuildRuleFactoryParams(
-            ImmutableMap.<String, Object>of(),
-            new FakeProjectFilesystem(),
-            new BuildTargetParser(new FakeProjectFilesystem()),
-            buildTarget,
-            new FakeRuleKeyBuilderFactory()),
-        deps);
+    ImmutableMap.Builder<String, Object> rule = ImmutableMap.<String, Object>builder()
+        .put("name", target.getShortName())
+        .put("type", PrebuiltJarDescription.TYPE.toString())
+        .put("binary_jar", name + ".jar")
+        .put("buck.base_path", target.getBasePath().toString());
+
+    ImmutableList.Builder<String> allDeps = ImmutableList.builder();
+    for (String dep : deps) {
+      allDeps.add(String.format("%s:%s", BuildTarget.BUILD_TARGET_PREFIX, dep));
+    }
+    rule.put("deps", allDeps.build());
+
+    return rule.build();
   }
 
-  public static class FakeDescription implements Description<FakeDescription.FakeArg> {
-
-    @Override
-    public BuildRuleType getBuildRuleType() {
-      return new BuildRuleType("fake_rule");
-    }
-
-    @Override
-    public FakeArg createUnpopulatedConstructorArg() {
-      return new FakeArg();
-    }
-
-    @Override
-    public <A extends FakeArg> BuildRule createBuildRule(
-        BuildRuleParams params,
-        BuildRuleResolver resolver,
-        A args) {
-      return new FakeBuildRule(params);
-    }
-
-    public static class FakeArg implements ConstructorArg {
-
-    }
-  }
 
   /**
    * ProjectBuildFileParser test double which counts the number of times rules are parsed to test
