@@ -18,8 +18,9 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.test.CoverageReportFormat;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -29,19 +30,17 @@ import java.util.Set;
 
 public class GenerateCodeCoverageReportStep extends ShellStep {
 
-  @VisibleForTesting
-  static final String REPORT_OUTPUT_DIR = "report.out.dir";
-
-  @VisibleForTesting
-  static final ImmutableSet<String> CODE_COVERAGE_OUTPUT_FORMAT =
-      ImmutableSet.of("html", "xml", "txt");
-
   private final Set<Path> classesDirectories;
   private final Path outputDirectory;
+  private CoverageReportFormat format;
 
-  public GenerateCodeCoverageReportStep( Set<Path> classesDirectories, Path outputDirectory) {
+  public GenerateCodeCoverageReportStep(
+      Set<Path> classesDirectories,
+      Path outputDirectory,
+      CoverageReportFormat format) {
     this.classesDirectories = ImmutableSet.copyOf(classesDirectories);
-    this.outputDirectory = outputDirectory;
+    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
+    this.format = Preconditions.checkNotNull(format);
   }
 
   @Override
@@ -61,6 +60,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     args.add(String.format("-Djacoco.output.dir=%s", outputDirectory));
 
     args.add(String.format("-Djacoco.exec.data.file=%s", JUnitStep.JACOCO_EXEC_COVERAGE_FILE));
+
+    args.add(String.format("-Djacoco.format=%s", format.toString().toLowerCase()));
 
     args.add(String.format("-Dclasses.dir=%s",
         Joiner.on(":").join(Iterables.transform(classesDirectories,

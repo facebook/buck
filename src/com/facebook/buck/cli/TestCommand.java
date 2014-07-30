@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.java.JUnitStep;
@@ -173,7 +174,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       ImmutableSet<JavaLibrary> rulesUnderTest,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       ProjectFilesystem filesystem,
-      Path outputDirectory) {
+      Path outputDirectory,
+      CoverageReportFormat format) {
     ImmutableSet.Builder<String> srcDirectories = ImmutableSet.builder();
     ImmutableSet.Builder<Path> pathsToClasses = ImmutableSet.builder();
 
@@ -191,7 +193,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       pathsToClasses.add(pathToOutput);
     }
 
-    return new GenerateCodeCoverageReportStep(pathsToClasses.build(), outputDirectory);
+    return new GenerateCodeCoverageReportStep(pathsToClasses.build(), outputDirectory, format);
   }
 
   /**
@@ -575,7 +577,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
             getReportCommand(rulesUnderTest,
                 defaultJavaPackageFinderOptional,
                 getProjectFilesystem(),
-                JUnitStep.JACOCO_OUTPUT_DIR));
+                JUnitStep.JACOCO_OUTPUT_DIR,
+                options.getCoverageReportFormat()));
       } catch (StepFailedException e) {
         console.printBuildFailureWithoutStacktrace(e);
         return 1;

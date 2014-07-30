@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.step.TargetDevice;
@@ -40,6 +41,9 @@ public class TestCommandOptions extends BuildCommandOptions {
 
   @Option(name = "--code-coverage", usage = "Whether code coverage information will be generated.")
   private boolean isCodeCoverageEnabled = false;
+
+  @Option(name = "--code-coverage-format", usage = "Format to be used for coverage")
+  private CoverageReportFormat coverageReportFormat = CoverageReportFormat.HTML;
 
   @Option(name = "--debug",
           usage = "Whether the test will start suspended with a JDWP debug port of 5005")
@@ -108,6 +112,10 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Override
   public boolean isCodeCoverageEnabled() {
     return isCodeCoverageEnabled;
+  }
+
+  public CoverageReportFormat getCoverageReportFormat() {
+    return coverageReportFormat;
   }
 
   private void setUseResultsCacheFromConfig(BuckConfig buckConfig) {

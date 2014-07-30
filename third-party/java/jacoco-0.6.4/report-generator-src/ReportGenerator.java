@@ -13,6 +13,7 @@
  *
  *******************************************************************************/
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.jacoco.core.analysis.Analyzer;
@@ -22,7 +23,9 @@ import org.jacoco.core.tools.ExecFileLoader;
 import org.jacoco.report.DirectorySourceFileLocator;
 import org.jacoco.report.FileMultiReportOutput;
 import org.jacoco.report.IReportVisitor;
+import org.jacoco.report.csv.CSVFormatter;
 import org.jacoco.report.html.HTMLFormatter;
+import org.jacoco.report.xml.XMLFormatter;
 
 /**
  * This example creates a HTML report for eclipse like projects based on a
@@ -40,6 +43,7 @@ public class ReportGenerator {
         private final String classesPath;
         private final File sourceDirectory;
         private final File reportDirectory;
+        private final String reportFormat;
 
         private ExecFileLoader execFileLoader;
 
@@ -55,6 +59,7 @@ public class ReportGenerator {
                 this.classesPath = System.getProperty("classes.dir");
                 this.sourceDirectory = new File(System.getProperty("src.dir"));
                 this.reportDirectory = new File(jacocoOutputDir, "code-coverage");
+                this.reportFormat = System.getProperty("jacoco.format", "html");
         }
 
         /**
@@ -85,9 +90,31 @@ public class ReportGenerator {
 
                 // Create a concrete report visitor based on some supplied
                 // configuration. In this case we use the defaults
-                final HTMLFormatter htmlFormatter = new HTMLFormatter();
-                final IReportVisitor visitor = htmlFormatter
-                                .createVisitor(new FileMultiReportOutput(reportDirectory));
+                IReportVisitor visitor;
+                switch (reportFormat) {
+                    case "csv":
+                        reportDirectory.mkdirs();
+                        CSVFormatter csvFormatter = new CSVFormatter();
+                        visitor = csvFormatter.createVisitor(
+                            new FileOutputStream(new File(reportDirectory, "coverage.csv")));
+                        break;
+
+                    case "html":
+                        HTMLFormatter htmlFormatter = new HTMLFormatter();
+                        visitor = htmlFormatter.createVisitor(
+                            new FileMultiReportOutput(reportDirectory));
+                        break;
+
+                    case "xml":
+                        reportDirectory.mkdirs();
+                        XMLFormatter xmlFormatter = new XMLFormatter();
+                        visitor = xmlFormatter.createVisitor(
+                            new FileOutputStream(new File(reportDirectory, "coverage.xml")));
+                        break;
+
+                    default:
+                        throw new RuntimeException("Unable to parse format: " + reportFormat);
+                }
 
                 // Initialize the report with all of the execution and session
                 // information. At this point the report doesn't know about the
@@ -134,8 +161,8 @@ public class ReportGenerator {
          * @throws IOException
          */
         public static void main(final String[] args) throws IOException {
-                        final ReportGenerator generator = new ReportGenerator();
-                        generator.create();
+                final ReportGenerator generator = new ReportGenerator();
+                generator.create();
         }
 
 }

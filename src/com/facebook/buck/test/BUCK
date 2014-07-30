@@ -1,7 +1,17 @@
+java_library(
+  name = 'report-format',
+  srcs = [ 'CoverageReportFormat.java' ],
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/java:steps',
+    '//test/com/facebook/buck/java:java',
+  ],
+)
+
 # Sources for dealing with test results.
 java_library(
   name = 'test',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = ['CoverageReportFormat.java']),
   deps = [
     '//lib:guava',
     '//lib:jsr305',

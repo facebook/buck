@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -50,7 +51,7 @@ public class GenerateCodeCoverageReportStepTest {
       Set<Path> classesDirectories,
       String outputDirectory) {
     GenerateCodeCoverageReportStep step = new GenerateCodeCoverageReportStep(
-        classesDirectories, Paths.get(outputDirectory));
+        classesDirectories, Paths.get(outputDirectory), CoverageReportFormat.HTML);
 
     ExecutionContext context = createMock(ExecutionContext.class);
     expect(
@@ -65,6 +66,7 @@ public class GenerateCodeCoverageReportStepTest {
         JUnitStep.PATH_TO_JACOCO_JARS, JUnitStep.PATH_TO_JACOCO_JARS),
         String.format("-Djacoco.output.dir=%s", outputDirectory),
         String.format("-Djacoco.exec.data.file=%s", JUnitStep.JACOCO_EXEC_COVERAGE_FILE),
+        "-Djacoco.format=html",
         String.format("-Dclasses.dir=%s",
             String.format("%s/%s:%s/%s",
                 new File(".").getAbsoluteFile().toPath().normalize(),
