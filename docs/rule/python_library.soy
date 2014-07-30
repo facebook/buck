@@ -1,0 +1,85 @@
+{namespace python_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'python_library()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>python_library()</code> rule is used to group together Python sources
+and resources to be packaged into a top-level {call buck.python_binary /} rule.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of <code>.py</code> files included in this library.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  Static files to be packaged along with the python sources. These resources can be
+  accessed at runtime using the <a href="https://pythonhosted.org/setuptools/pkg_resources.html">pkg_resources</a> API.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Other <code>python_library()</code> rules which lists <code>srcs</code> from
+  which this rule imports modules.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+# A rule that includes a single .py file.
+python_library(
+  name = 'fileutil',
+  srcs = ['fileutil.py'],
+  deps = [
+    '//third_party/python-magic:python-magic',
+  ],
+)
+
+# A rule that uses glob() to include all sources in the directory which the
+# rule is defined.  It also lists a resource file that gets packaged with
+# the sources in this rule.
+python_library(
+  name = 'testutil',
+  srcs = glob(['testutil/**/*.py'],
+  resources = [
+    'testdata.dat',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

@@ -1,0 +1,69 @@
+{namespace python_binary}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'python_binary()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>python_binary()</code> rule is used to build a <a href="http://pantsbuild.github.io/pex_design.html">PEX</a> file
+-- an exectuble python package that includes python sources and resources
+from all transitive {call buck.python_library /} dependencies.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.  The output PEX file will also get this name, with an additional <code>.pex</code> suffix.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'main' /}
+  {param desc}
+  A <code>.py</code> source serving as the entry point for this rule.
+  This source will be executed by the interpreter when the PEX file is run.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  {call buck.python_library /} rules to include in the PEX file (including all transitive dependencies).
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+python_binary(
+  name = 'tailer',
+  main = 'tailer.py',
+  deps = [
+    ':tailerutils',
+  ],
+)
+
+python_library(
+  name = 'tailerutils',
+  srcs = glob(['*.py'], excludes = ['tailer.py']),
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
