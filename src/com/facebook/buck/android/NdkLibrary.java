@@ -132,7 +132,10 @@ public class NdkLibrary extends AbstractBuildRule
         binDirectory,
         genDirectory,
         CopyStep.DirectoryMode.CONTENTS_ONLY);
+
     buildableContext.recordArtifactsInDirectory(genDirectory);
+    // Some tools need to inspect .so files whose symbols haven't been stripped, so cache these too.
+    buildableContext.recordArtifactsInDirectory(buildArtifactsDirectory);
     return ImmutableList.of(nkdBuildStep, mkDirStep, copyStep);
   }
 
