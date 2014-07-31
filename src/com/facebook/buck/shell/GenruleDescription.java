@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.regex.Matcher;
@@ -55,6 +56,7 @@ public class GenruleDescription
       A args) {
     ImmutableList<SourcePath> srcs = args.srcs.get();
     ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(params.getExtraDeps())
         .addAll(SourcePaths.filterBuildRuleInputs(srcs))
         .build();
 
@@ -70,16 +72,25 @@ public class GenruleDescription
 
   @Override
   public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params) {
-    Object rawCmd = params.getNullableRawAttribute("cmd");
+    ImmutableSet.Builder<String> targets = ImmutableSet.builder();
+    addDepsFromParam(params, "bash", targets);
+    addDepsFromParam(params, "cmd", targets);
+    addDepsFromParam(params, "cmdExe", targets);
+    return targets.build();
+  }
+
+  private static void addDepsFromParam(
+      BuildRuleFactoryParams params,
+      String paramName,
+      ImmutableSet.Builder<String> targets) {
+    Object rawCmd = params.getNullableRawAttribute(paramName);
     if (rawCmd == null) {
-      return ImmutableList.of();
+      return;
     }
-    ImmutableList.Builder<String> targets = ImmutableList.builder();
     Matcher matcher = AbstractGenruleStep.BUILD_TARGET_PATTERN.matcher(((String) rawCmd));
     while (matcher.find()) {
       targets.add(matcher.group(3));
     }
-    return targets.build();
   }
 
   public class Arg implements ConstructorArg {
