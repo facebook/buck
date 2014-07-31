@@ -2,6 +2,7 @@ android_library(
   name = 'lib',
   srcs = glob(['*.java']),
   deps = [
+    '//res/com/sample/title:title',
     '//res/com/sample/top:top',
     '//res/com/sample/asset_only:asset_only',
   ],

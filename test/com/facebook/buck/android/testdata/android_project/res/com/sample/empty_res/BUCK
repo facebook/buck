@@ -6,5 +6,6 @@ android_resource(
   deps = [
     '//res/com/sample/base:base',
     '//res/com/sample/top:top',
+    '//res/com/sample/title:title',
   ],
 )

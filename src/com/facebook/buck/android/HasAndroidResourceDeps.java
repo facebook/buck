@@ -42,6 +42,8 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
             // Avoid collisions by marking end of path explicitly.
             hasher.putChar('\0');
             hasher.putUnencodedChars(dep.getTextSymbolsAbiKey().getHash());
+            hasher.putUnencodedChars(dep.getRDotJavaPackage());
+            hasher.putChar('\0');
           }
           return new Sha1HashCode(hasher.hash().toString());
         }

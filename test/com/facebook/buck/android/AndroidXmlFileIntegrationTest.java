@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertTrue;
+
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -131,5 +133,14 @@ public class AndroidXmlFileIntegrationTest {
     buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib_using_transitive_empty_res");
     buildLog.assertTargetBuiltLocally(
         "//java/com/sample/lib:lib_using_transitive_empty_res#dummy_r_dot_java");
+  }
+
+  @Test
+  public void testChangingRDotJavaPackageBreaksBuild() throws IOException {
+    workspace.replaceFileContents("res/com/sample/title/BUCK", "com.sample2", "com.sample");
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
+    result.assertFailure();
+    assertTrue(result.getStderr().contains("package com.sample2 does not exist"));
   }
 }
