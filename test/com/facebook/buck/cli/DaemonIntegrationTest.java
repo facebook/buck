@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
@@ -100,7 +101,8 @@ public class DaemonIntegrationTest {
       public void run() {
         try {
           Main main = new Main(stdOut, firstThreadStdErr);
-          int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(),
+          int exitCode = main.tryRunMainWithExitCode(
+              new BuildId(), tmp.getRoot(),
               Optional.<NGContext>absent(),
               "build",
               "//:sleep");
@@ -114,24 +116,26 @@ public class DaemonIntegrationTest {
         }
       }
     }, 0, TimeUnit.MILLISECONDS);
-    Future<?> secondThread = executorService.schedule(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          Main main = new Main(stdOut, secondThreadStdErr);
-          int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(),
-              Optional.<NGContext>absent(),
-              "targets");
-          assertEquals("Should return 2 when command running.", Main.BUSY_EXIT_CODE, exitCode);
-        } catch (IOException e) {
-          fail("Should not throw exception.");
-          throw Throwables.propagate(e);
-        } catch (InterruptedException e) {
-          fail("Should not throw exception.");
-          Thread.currentThread().interrupt();
-        }
-      }
-    }, 500L, TimeUnit.MILLISECONDS);
+    Future<?> secondThread = executorService.schedule(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              Main main = new Main(stdOut, secondThreadStdErr);
+              int exitCode = main.tryRunMainWithExitCode(
+                  new BuildId(), tmp.getRoot(),
+                  Optional.<NGContext>absent(),
+                  "targets");
+              assertEquals("Should return 2 when command running.", Main.BUSY_EXIT_CODE, exitCode);
+            } catch (IOException e) {
+              fail("Should not throw exception.");
+              throw Throwables.propagate(e);
+            } catch (InterruptedException e) {
+              fail("Should not throw exception.");
+              Thread.currentThread().interrupt();
+            }
+          }
+        }, 500L, TimeUnit.MILLISECONDS);
     firstThread.get();
     secondThread.get();
   }

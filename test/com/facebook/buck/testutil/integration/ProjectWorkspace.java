@@ -251,7 +251,7 @@ public class ProjectWorkspace {
     Main main = new Main(stdout, stderr, Optional.of(capturingEventListener));
     int exitCode = 0;
     try {
-      exitCode = main.runMainWithExitCode(destDir, context, args);
+      exitCode = main.runMainWithExitCode(new BuildId(), destDir, context, args);
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
       exitCode = Main.FAIL_EXIT_CODE;

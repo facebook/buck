@@ -34,12 +34,12 @@ public class MoreExecutors {
    * A ThreadFactory which gives each thread a meaningful and distinct name.
    * ThreadFactoryBuilder is not used to avoid a dependency on Guava in the junit target.
    */
-  private static class NamedThreadFactory implements ThreadFactory {
+  public static class NamedThreadFactory implements ThreadFactory {
 
     private final AtomicInteger threadCount = new AtomicInteger(0);
     private final String threadName;
 
-    NamedThreadFactory(String threadName) {
+    public NamedThreadFactory(String threadName) {
       this.threadName = threadName;
     }
 
@@ -61,28 +61,36 @@ public class MoreExecutors {
    * @param threadName a thread name prefix used to easily identify threads when debugging.
    */
   public static ExecutorService newSingleThreadExecutor(final String threadName) {
+    return newSingleThreadExecutor(new NamedThreadFactory(threadName));
+  }
+
+  public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
     return new ThreadPoolExecutor(
         /* corePoolSize */ 1,
         /* maximumPoolSize */ 1,
         /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(),
-        /* threadFactory */ new NamedThreadFactory(threadName),
+        /* threadFactory */ threadFactory,
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
   }
 
   /**
    * Creates a multi-threaded executor with meaningfully named threads.
    * @param threadName a thread name prefix used to easily identify threads when debugging.
-   * @param threadCount the number of threads that should be created in the pool.
+   * @param count the number of threads that should be created in the pool.
    * @return A multi-threaded executor.
    */
-  public static ExecutorService newMultiThreadExecutor(final String threadName, int threadCount) {
+  public static ExecutorService newMultiThreadExecutor(final String threadName, int count) {
+    return newMultiThreadExecutor(new NamedThreadFactory(threadName), count);
+  }
+
+  public static ExecutorService newMultiThreadExecutor(ThreadFactory threadFactory, int count) {
     return new ThreadPoolExecutor(
-        /* corePoolSize */ threadCount,
-        /* maximumPoolSize */ threadCount,
+        /* corePoolSize */ count,
+        /* maximumPoolSize */ count,
         /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(),
-        /* threadFactory */ new NamedThreadFactory(threadName),
+        /* threadFactory */ threadFactory,
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
   }
 

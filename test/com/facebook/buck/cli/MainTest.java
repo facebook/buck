@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -64,7 +65,10 @@ public class MainTest {
     CapturingPrintStream stdErr = new CapturingPrintStream();
 
     Main main = new Main(stdOut, stdErr);
-    int exitCode = main.runMainWithExitCode(new File("."), Optional.<NGContext>absent());
+    int exitCode = main.runMainWithExitCode(
+        new BuildId(),
+        new File("."),
+        Optional.<NGContext>absent());
     assertEquals(1, exitCode);
     assertEquals(
         "When the user does not specify any arguments, the usage information should be displayed",
@@ -77,7 +81,11 @@ public class MainTest {
     CapturingPrintStream stdErr = new CapturingPrintStream();
 
     Main main = new Main(stdOut, stdErr);
-    int exitCode = main.runMainWithExitCode(new File("."), Optional.<NGContext>absent(), "--help");
+    int exitCode = main.runMainWithExitCode(
+        new BuildId(),
+        new File("."),
+        Optional.<NGContext>absent(),
+        "--help");
     assertEquals(1, exitCode);
     assertEquals("Users instinctively try running `buck --help`, so it should print usage info.",
         getUsageString(),

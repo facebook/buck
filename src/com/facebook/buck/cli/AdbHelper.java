@@ -31,6 +31,7 @@ import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.TraceEventLogger;
+import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidManifestReader;
@@ -280,7 +281,11 @@ public class AdbHelper {
     // Start executions on all matching devices.
     List<ListenableFuture<Boolean>> futures = Lists.newArrayList();
     ListeningExecutorService executorService =
-        listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), adbThreadCount));
+        listeningDecorator(
+            newMultiThreadExecutor(
+                new LogFormatter.CommandThreadFactory(getClass().getSimpleName()),
+                adbThreadCount));
+
     for (final IDevice device : devices) {
       futures.add(executorService.submit(adbCallable.forDevice(device)));
     }
