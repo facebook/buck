@@ -103,6 +103,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -175,9 +176,6 @@ public class ProjectGenerator {
     /** Use short BuildTarget name instead of full name for targets */
     USE_SHORT_NAMES_FOR_TARGETS,
 
-    /** Generate headermaps for public headers of libraries */
-    GENERATE_HEADER_MAPS_FOR_LIBRARY_TARGETS,
-
     /** Generate read-only project files */
     GENERATE_READ_ONLY_FILES,
 
@@ -207,6 +205,10 @@ public class ProjectGenerator {
       System.getProperty(
           "buck.path_override_for_asset_catalog_build_phase",
           null);
+
+  private static final String PUBLIC_HEADER_MAP_SUFFIX = "-public-headers.hmap";
+  private static final String TARGET_HEADER_MAP_SUFFIX = "-target-headers.hmap";
+  private static final String TARGET_FLAT_HEADER_MAP_SUFFIX = "-target-flat-headers.hmap";
 
   private static final FileAttribute<?> READ_ONLY_FILE_ATTRIBUTE =
     PosixFilePermissions.asFileAttribute(
@@ -442,14 +444,19 @@ public class ProjectGenerator {
     setNativeTargetGid(target, buildable);
 
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
+    BuildTarget buildTarget = rule.getBuildTarget();
 
     // -- configurations
+    ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
+    if (buildable.getUseBuckHeaderMaps()) {
+      extraSettingsBuilder.put("USE_HEADERMAP", "NO");
+    }
     setTargetBuildConfigurations(
         rule,
         target,
         targetGroup,
         buildable.getConfigurations(),
-        ImmutableMap.<String, String>of(),
+        extraSettingsBuilder.build(),
         ImmutableMap.of(
             "PUBLIC_HEADERS_FOLDER_PATH",
             getHeaderOutputPathForRule(buildable.getHeaderPathPrefix()),
@@ -461,9 +468,12 @@ public class ProjectGenerator {
     // TODO(Task #3772930): Go through all dependencies of the rule
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
-    addSourcesAndHeadersBuildPhases(
+    addBuildPhasesGroupsAndHeaderMapsForSourcesAndHeaders(
+        buildTarget,
         target,
         targetGroup,
+        buildable.getHeaderPathPrefix(),
+        buildable.getUseBuckHeaderMaps(),
         buildable.getSrcs(),
         buildable.getPerFileFlags());
     addCoreDataModelBuildPhase(
@@ -471,41 +481,36 @@ public class ProjectGenerator {
         collectCoreDataModels(rule.getDeps()));
 
     // -- products
+    String productName = getProductName(buildTarget);
+    String libraryName = "lib" + productName + ".a";
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
-    String libraryName = "lib" + getProductName(rule.getBuildTarget()) + ".a";
     PBXFileReference productReference = new PBXFileReference(
         libraryName, libraryName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
     productsGroup.getChildren().add(productReference);
     target.setProductReference(productReference);
-
-    // -- header map
-    if (options.contains(Option.GENERATE_HEADER_MAPS_FOR_LIBRARY_TARGETS)) {
-      HeaderMap.Builder builder = HeaderMap.builder();
-      addGroupedSourcesToHeaderMap(
-          builder,
-          Paths.get(getProductName(rule.getBuildTarget())),
-          buildable.getSrcs(),
-          buildable.getPerFileFlags());
-      HeaderMap headerMap = builder.build();
-      String headerMapName = getProductName(rule.getBuildTarget()) + "-public-headers.hmap";
-      Path headerMapFile = projectPath.resolve(headerMapName);
-      headerMaps.add(headerMapFile);
-      projectFilesystem.mkdirs(projectPath);
-      if (shouldGenerateReadOnlyFiles()) {
-        projectFilesystem.writeBytesToPath(
-            headerMap.getBytes(),
-            headerMapFile,
-            READ_ONLY_FILE_ATTRIBUTE);
-      } else {
-        projectFilesystem.writeBytesToPath(
-            headerMap.getBytes(),
-            headerMapFile);
-      }
-    }
-
     project.getTargets().add(target);
     LOG.debug("Generated iOS library target %s", target);
     return target;
+  }
+
+  private void writeHeaderMap(HeaderMap headerMap, BuildTarget target, String suffix)
+      throws IOException {
+    if (headerMap.getNumEntries() == 0) {
+      return;
+    }
+    Path headerMapFile = getHeaderMapPathForTarget(target, suffix);
+    headerMaps.add(headerMapFile);
+    projectFilesystem.mkdirs(headerMapFile.getParent());
+    if (shouldGenerateReadOnlyFiles()) {
+      projectFilesystem.writeBytesToPath(
+          headerMap.getBytes(),
+          headerMapFile,
+          READ_ONLY_FILE_ATTRIBUTE);
+    } else {
+      projectFilesystem.writeBytesToPath(
+          headerMap.getBytes(),
+          headerMapFile);
+    }
   }
 
   private PBXNativeTarget generateIosTestTarget(
@@ -603,6 +608,9 @@ public class ProjectGenerator {
       Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(infoPlistOptional.get());
       extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
     }
+    if (buildable.getUseBuckHeaderMaps()) {
+      extraSettingsBuilder.put("USE_HEADERMAP", "NO");
+    }
     setTargetBuildConfigurations(
         rule,
         target,
@@ -618,9 +626,12 @@ public class ProjectGenerator {
     // TODO(Task #3772930): Go through all dependencies of the rule
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
-    addSourcesAndHeadersBuildPhases(
+    addBuildPhasesGroupsAndHeaderMapsForSourcesAndHeaders(
+        rule.getBuildTarget(),
         target,
         targetGroup,
+        buildable.getHeaderPathPrefix(),
+        buildable.getUseBuckHeaderMaps(),
         buildable.getSrcs(),
         buildable.getPerFileFlags());
     ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
@@ -662,8 +673,8 @@ public class ProjectGenerator {
 
 
     // -- products
-    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
     String productName = getProductName(rule.getBuildTarget());
+    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
     String productOutputName = String.format(productOutputFormat, productName);
     PBXFileReference productReference = new PBXFileReference(
         productOutputName, productOutputName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
@@ -738,7 +749,12 @@ public class ProjectGenerator {
             appendBuildSettings)
         .put(
             "HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveHeaderSearchPaths(buildRule)))
+            Joiner.on(' ').join(Iterators.concat(
+                collectRecursiveHeaderSearchPaths(buildRule).iterator(),
+                collectRecursiveHeaderMaps(buildRule).iterator())))
+        .put(
+            "FLAT_HEADER_SEARCH_PATHS",
+            Joiner.on(' ').join(collectRecursiveFlatHeaderMaps(buildRule)))
         .put(
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(buildRule)))
@@ -912,13 +928,14 @@ public class ProjectGenerator {
 
   private void addPostBuildScriptPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
     addRunScriptBuildPhasesForDependenciesWithType(
-      rule,
-      target,
-      IosPostprocessResourcesDescription.TYPE);
+        rule,
+        target,
+        IosPostprocessResourcesDescription.TYPE);
   }
 
   /**
    * Add sources and headers build phases to a target, and add references to the target's group.
+   * Create header map files and write them to disk.
    *
    * @param target      Target to add the build phases to.
    * @param targetGroup Group to link the source files to.
@@ -926,11 +943,14 @@ public class ProjectGenerator {
    *        phase, path relative to project root.
    * @param sourceFlags    Source path to flag mapping.
    */
-  private void addSourcesAndHeadersBuildPhases(
+  private void addBuildPhasesGroupsAndHeaderMapsForSourcesAndHeaders(
+      BuildTarget buildTarget,
       PBXNativeTarget target,
       PBXGroup targetGroup,
+      Optional<String> headerPathPrefix,
+      boolean useBuckHeaderMaps,
       Iterable<GroupedSource> groupedSources,
-      ImmutableMap<SourcePath, String> sourceFlags) {
+      ImmutableMap<SourcePath, String> sourceFlags) throws IOException {
     PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
     // Sources groups stay in the order in which they're declared in the BUCK file.
     sourcesGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
@@ -940,7 +960,10 @@ public class ProjectGenerator {
     addGroupedSourcesToBuildPhases(
         sourcesGroup,
         sourcesBuildPhase,
-        Optional.of(headersBuildPhase),
+        // We still want to create groups for header files even if header build phases
+        // are replaced with header maps.
+        (useBuckHeaderMaps ? Optional.<PBXHeadersBuildPhase>absent()
+            : Optional.of(headersBuildPhase)),
         groupedSources,
         sourceFlags);
 
@@ -950,10 +973,30 @@ public class ProjectGenerator {
     if (!headersBuildPhase.getFiles().isEmpty()) {
       target.getBuildPhases().add(headersBuildPhase);
     }
+
+    // -- header maps
+    if (useBuckHeaderMaps) {
+      HeaderMap.Builder publicMapBuilder = HeaderMap.builder();
+      HeaderMap.Builder targetMapBuilder = HeaderMap.builder();
+      HeaderMap.Builder targetFlatMapBuilder = HeaderMap.builder();
+      addGroupedSourcesToHeaderMaps(
+          publicMapBuilder,
+          targetMapBuilder,
+          targetFlatMapBuilder,
+          Paths.get(headerPathPrefix.or(getProductName(buildTarget))),
+          groupedSources,
+          sourceFlags);
+      writeHeaderMap(publicMapBuilder.build(), buildTarget, PUBLIC_HEADER_MAP_SUFFIX);
+      writeHeaderMap(targetMapBuilder.build(), buildTarget, TARGET_HEADER_MAP_SUFFIX);
+      writeHeaderMap(targetFlatMapBuilder.build(), buildTarget, TARGET_FLAT_HEADER_MAP_SUFFIX);
+    }
+
   }
 
-  private void addGroupedSourcesToHeaderMap(
-      HeaderMap.Builder headerMap,
+  private void addGroupedSourcesToHeaderMaps(
+      HeaderMap.Builder publicHeaderMap,
+      HeaderMap.Builder targetHeaderMap,
+      HeaderMap.Builder targetFlatHeaderMap,
       Path prefix,
       Iterable<GroupedSource> groupedSources,
       ImmutableMap<SourcePath, String> sourceFlags) {
@@ -963,16 +1006,20 @@ public class ProjectGenerator {
           if (SourcePaths.isSourcePathExtensionInSet(
                   groupedSource.getSourcePath(),
                   FileExtensions.CLANG_HEADERS)) {
-            addSourcePathToHeaderMap(
+            addSourcePathToHeaderMaps(
                 groupedSource.getSourcePath(),
                 prefix,
-                headerMap,
+                publicHeaderMap,
+                targetHeaderMap,
+                targetFlatHeaderMap,
                 sourceFlags);
           }
           break;
         case SOURCE_GROUP:
-          addGroupedSourcesToHeaderMap(
-              headerMap,
+          addGroupedSourcesToHeaderMaps(
+              publicHeaderMap,
+              targetHeaderMap,
+              targetFlatHeaderMap,
               prefix,
               groupedSource.getSourceGroup(),
               sourceFlags);
@@ -995,13 +1042,11 @@ public class ProjectGenerator {
           if (SourcePaths.isSourcePathExtensionInSet(
                   groupedSource.getSourcePath(),
                   FileExtensions.CLANG_HEADERS)) {
-            if (headersBuildPhase.isPresent()) {
               addSourcePathToHeadersBuildPhase(
                   groupedSource.getSourcePath(),
                   sourcesGroup,
-                  headersBuildPhase.get(),
+                  headersBuildPhase,
                   sourceFlags);
-            }
           } else {
             addSourcePathToSourcesBuildPhase(
                 groupedSource.getSourcePath(),
@@ -1054,37 +1099,59 @@ public class ProjectGenerator {
         fileReference);
   }
 
-  private void addSourcePathToHeaderMap(
+  private void addHeaderMapEntry(
+      HeaderMap.Builder builder,
+      String builderName,
+      String key,
+      Path value) {
+    builder.add(key, value);
+    LOG.verbose(
+        "Adding %s mapping %s -> %s",
+        builderName,
+        key,
+        value);
+  }
+
+  private void addSourcePathToHeaderMaps(
       SourcePath headerPath,
       Path prefix,
-      HeaderMap.Builder headerMap,
+      HeaderMap.Builder publicHeaderMap,
+      HeaderMap.Builder targetHeaderMap,
+      HeaderMap.Builder targetFlatHeaderMap,
       ImmutableMap<SourcePath, String> sourceFlags) {
+    HeaderVisibility visibility = HeaderVisibility.PROJECT;
     String headerFlags = sourceFlags.get(headerPath);
     if (headerFlags != null) {
-      HeaderVisibility visibility = HeaderVisibility.fromString(headerFlags);
-      Path keyPath = prefix.resolve(headerPath.resolve().getFileName());
-      if (visibility == HeaderVisibility.PUBLIC) {
-        // Add an entry: LibraryName/File.h -> Path/From/RepoRoot/File.h
-        headerMap.add(keyPath.toString(), headerPath.resolve());
-        LOG.verbose(
-            "Added public header map %s -> %s to header map %s",
-            keyPath,
-            headerPath.resolve(),
-            headerMap);
-      } else {
-        LOG.verbose(
-            "Not adding header map %s -> %s to header map %s",
-            keyPath,
-            headerPath.resolve(),
-            headerMap);
-      }
+      visibility = HeaderVisibility.fromString(headerFlags);
+    }
+    String fileName = headerPath.resolve().getFileName().toString();
+    String prefixedFileName = prefix.resolve(fileName).toString();
+    Path value =
+        projectFilesystem.getPathForRelativePath(headerPath.resolve())
+            .toAbsolutePath().normalize();
+
+    // Add an entry Prefix/File.h -> AbsolutePathTo/File.h
+    // to targetHeaderMap and possibly publicHeaderMap
+    addHeaderMapEntry(targetHeaderMap, "target", prefixedFileName, value);
+    if (visibility == HeaderVisibility.PUBLIC) {
+      addHeaderMapEntry(publicHeaderMap, "public", prefixedFileName, value);
+    }
+
+    // Add an entry File.h -> AbsolutePathTo/File.h
+    // to targetFlatHeaderMap
+    addHeaderMapEntry(targetFlatHeaderMap, "target-flat", fileName, value);
+    if (visibility == HeaderVisibility.PRIVATE) {
+      throw new HumanReadableException(
+          "Xcode's so-called 'private' headers have been deprecated in the new header map mode. " +
+          "Please declare '" + fileName + "' as public, " +
+          "or use the default visibility (i.e. by target) instead.");
     }
   }
 
   private void addSourcePathToHeadersBuildPhase(
       SourcePath headerPath,
       PBXGroup headersGroup,
-      PBXHeadersBuildPhase headersBuildPhase,
+      Optional<PBXHeadersBuildPhase> headersBuildPhase,
       ImmutableMap<SourcePath, String> sourceFlags) {
     Path path = headerPath.resolve();
     Path repoRootRelativePath = repoRootRelativeToOutputDirectory.resolve(path);
@@ -1104,13 +1171,22 @@ public class ProjectGenerator {
     } else {
       buildFile.setSettings(Optional.<NSDictionary>absent());
     }
-    headersBuildPhase.getFiles().add(buildFile);
-    LOG.verbose(
-        "Added header path %s to headers group %s, flags %s, PBXFileReference %s",
-        headerPath,
-        headersGroup.getName(),
-        headerFlags,
-        fileReference);
+    if (headersBuildPhase.isPresent()) {
+      headersBuildPhase.get().getFiles().add(buildFile);
+      LOG.verbose(
+          "Added header path %s to headers group %s, flags %s, PBXFileReference %s",
+          headerPath,
+          headersGroup.getName(),
+          headerFlags,
+          fileReference);
+    } else {
+      LOG.verbose(
+          "Skipped header path %s to headers group %s, flags %s, PBXFileReference %s",
+          headerPath,
+          headersGroup.getName(),
+          headerFlags,
+          fileReference);
+    }
   }
 
   private void addResourcesBuildPhase(
@@ -1562,7 +1638,7 @@ public class ProjectGenerator {
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append(
         "// This configuration is autogenerated.\n" +
-        "// Re-run buck to update this file after modifying the hand-written configs.\n");
+            "// Re-run buck to update this file after modifying the hand-written configs.\n");
     for (String line : sortedConfigs) {
       stringBuilder.append(line);
       stringBuilder.append('\n');
@@ -1601,6 +1677,17 @@ public class ProjectGenerator {
         "..",
         "Headers",
         headerPathPrefix.or("$TARGET_NAME"));
+  }
+
+  private Path getHeaderMapPathForTarget(BuildTarget target, String suffix) {
+    Path targetPath = target.getBasePath();
+    String fileName = getProductName(target) + suffix;
+    return BuckConstant.BUCK_OUTPUT_PATH.resolve(targetPath).resolve(fileName);
+  }
+
+  private String getHeaderMapRelativePathForRule(BuildRule rule, String suffix) {
+    Path filePath = getHeaderMapPathForTarget(rule.getBuildTarget(), suffix);
+    return repoRootRelativeToOutputDirectory.resolve(filePath).toString();
   }
 
   private String getHeaderSearchPathForRule(BuildRule rule) {
@@ -1652,6 +1739,22 @@ public class ProjectGenerator {
               }
             })
         .toSet();
+  }
+
+  private ImmutableSet<String> collectRecursiveHeaderMaps(BuildRule rule) {
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+
+    builder.add(getHeaderMapRelativePathForRule(rule, TARGET_HEADER_MAP_SUFFIX));
+
+    for (BuildRule input : getRecursiveRuleDependenciesOfType(rule, IosLibraryDescription.TYPE)) {
+      builder.add(getHeaderMapRelativePathForRule(input, PUBLIC_HEADER_MAP_SUFFIX));
+    }
+
+    return builder.build();
+  }
+
+  private ImmutableSet<String> collectRecursiveFlatHeaderMaps(BuildRule rule) {
+    return ImmutableSet.of(getHeaderMapRelativePathForRule(rule, TARGET_FLAT_HEADER_MAP_SUFFIX));
   }
 
   private ImmutableSet<String> collectRecursiveLibrarySearchPaths(BuildRule rule) {

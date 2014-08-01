@@ -220,7 +220,7 @@ public class ProjectGeneratorTest {
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -281,7 +281,7 @@ public class ProjectGeneratorTest {
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -347,20 +347,147 @@ public class ProjectGeneratorTest {
     NSArray blechAttributes = (NSArray) blechBuildFileSettings.get("ATTRIBUTES");
     assertArrayEquals(new NSString[]{new NSString("Private")}, blechAttributes.getArray());
 
-    // Test generation of header maps
+    // No header map should be generated
     List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
-    assertThat(headerMaps, hasSize(1));
-    Path headerMapFile = headerMaps.get(0);
-    assertEquals(
-        "_gen/GeneratedProject.xcodeproj/lib-public-headers.hmap",
-        headerMapFile.toString());
+    assertThat(headerMaps, hasSize(0));
+  }
 
-    byte[] bytes = projectFilesystem.readFileIfItExists(headerMapFile).get().getBytes();
+  @Test(expected = HumanReadableException.class)
+  public void testLibraryPrivateHeaderWithHeaderMaps() throws IOException {
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.srcs = ImmutableList.of(
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "HeaderGroup2",
+                ImmutableList.of(
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new TestSourcePath("blech.h"), "private"))))));
+    arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.of(true);
+    BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+  }
+
+    @Test
+  public void testLibraryHeaderGroupsWithHeaderMaps() throws IOException {
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.srcs = ImmutableList.of(
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "HeaderGroup1",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new TestSourcePath("bar.h"), "public"))))),
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "HeaderGroup2",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new TestSourcePath("baz.h"))))));
+    arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.of(true);
+    BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
+    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
+
+    assertThat(sourcesGroup.getChildren(), hasSize(2));
+
+    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
+    assertEquals("HeaderGroup1", group1.getName());
+    assertThat(group1.getChildren(), hasSize(2));
+    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
+    assertEquals("foo.h", fileRefFoo.getName());
+    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
+    assertEquals("bar.h", fileRefBar.getName());
+
+    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
+    assertEquals("HeaderGroup2", group2.getName());
+    assertThat(group2.getChildren(), hasSize(1));
+    PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
+    assertEquals("baz.h", fileRefBaz.getName());
+
+    // There should be no PBXHeadersBuildPhase in the 'Buck header map mode'.
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+    assertEquals(Optional.<PBXBuildPhase>absent(),
+        Iterables.tryFind(target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
+          @Override
+          public boolean apply(PBXBuildPhase input) {
+            return input instanceof PBXHeadersBuildPhase;
+          }
+        }));
+
+    List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
+    assertThat(headerMaps, hasSize(3));
+
+    assertEquals("buck-out/foo/lib-public-headers.hmap", headerMaps.get(0).toString());
+    assertThatHeaderMapFileContains(
+        "buck-out/foo/lib-public-headers.hmap",
+        ImmutableMap.<String, String>of("lib/bar.h", "bar.h")
+    );
+
+    assertEquals("buck-out/foo/lib-target-headers.hmap", headerMaps.get(1).toString());
+    assertThatHeaderMapFileContains(
+        "buck-out/foo/lib-target-headers.hmap",
+        ImmutableMap.<String, String>of(
+            "lib/foo.h", "foo.h",
+            "lib/bar.h", "bar.h",
+            "lib/baz.h", "baz.h"
+            )
+    );
+
+    assertEquals("buck-out/foo/lib-target-flat-headers.hmap", headerMaps.get(2).toString());
+    assertThatHeaderMapFileContains(
+        "buck-out/foo/lib-target-flat-headers.hmap",
+        ImmutableMap.<String, String>of(
+            "foo.h", "foo.h",
+            "bar.h", "bar.h",
+            "baz.h", "baz.h"
+        )
+    );
+  }
+
+  private void assertThatHeaderMapFileContains(String file, ImmutableMap<String, String> content) {
+    byte[] bytes = projectFilesystem.readFileIfItExists(Paths.get(file)).get().getBytes();
     HeaderMap map = HeaderMap.deserialize(bytes);
-    assertEquals(1, map.getNumEntries());
-    assertEquals(
-        "bar.h",
-        map.lookup("lib/bar.h"));
+    assertEquals(content.size(), map.getNumEntries());
+    for (String key : content.keySet()) {
+      assertEquals(
+          Paths.get(content.get(key)).toAbsolutePath().toString(),
+          map.lookup(key));
+    }
+
   }
 
   @Test
@@ -381,7 +508,7 @@ public class ProjectGeneratorTest {
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -448,7 +575,7 @@ public class ProjectGeneratorTest {
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.of("MyHeaderPathPrefix");
-    arg.useBuckHeaderMaps = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -606,8 +733,14 @@ public class ProjectGeneratorTest {
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
         new NSString("$(inherited) " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
+            "$SYMROOT/F4XWM33PHJWGSYQ/Headers " +
+            "../buck-out/foo/test-target-headers.hmap " +
+            "../buck-out/foo/lib-public-headers.hmap"),
         settings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        new NSString("$(inherited) " +
+            "../buck-out/foo/test-target-flat-headers.hmap"),
+        settings.get("FLAT_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
             "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
@@ -631,6 +764,8 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(
             "HEADER_SEARCH_PATHS",
             "headers",
+            "FLAT_HEADER_SEARCH_PATHS",
+            "flat_headers",
             "LIBRARY_SEARCH_PATHS",
             "libraries",
             "FRAMEWORK_SEARCH_PATHS",
@@ -700,8 +835,14 @@ public class ProjectGeneratorTest {
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
         new NSString("headers " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
+            "$SYMROOT/F4XWM33PHJWGSYQ/Headers " +
+            "../buck-out/foo/test-target-headers.hmap " +
+            "../buck-out/foo/lib-public-headers.hmap"),
         settings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        new NSString("flat_headers " +
+            "../buck-out/foo/test-target-flat-headers.hmap"),
+        settings.get("FLAT_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("libraries " +
             "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
@@ -806,8 +947,15 @@ public class ProjectGeneratorTest {
     assertEquals(
         new NSString("$(inherited) " +
             "$SYMROOT/F4XWEYLSHJWGSYQ/Headers " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
+            "$SYMROOT/F4XWM33PHJWGSYQ/Headers " +
+            "../buck-out/foo/test-target-headers.hmap " +
+            "../buck-out/bar/lib-public-headers.hmap " +
+            "../buck-out/foo/lib-public-headers.hmap"),
         settings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        new NSString("$(inherited) " +
+            "../buck-out/foo/test-target-flat-headers.hmap"),
+        settings.get("FLAT_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
             "$SYMROOT/F4XWEYLSHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME " +
@@ -2142,7 +2290,6 @@ public class ProjectGeneratorTest {
     ImmutableSet<ProjectGenerator.Option> options = ImmutableSet.<ProjectGenerator.Option>builder()
         .addAll(projectGeneratorOptions)
         .addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS)
-        .add(ProjectGenerator.Option.GENERATE_HEADER_MAPS_FOR_LIBRARY_TARGETS)
         .build();
 
     return new ProjectGenerator(
