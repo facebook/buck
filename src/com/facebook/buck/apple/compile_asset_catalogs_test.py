@@ -63,16 +63,33 @@ class TestCompileAssetCatalogs(unittest.TestCase):
     /path/to/AssetCatalog.xcassets/some.imageset/some.png: warning: something
     done
     """)
-        self.assertFalse(transform_actool_output(sample))
+        self.assertFalse(transform_actool_output(sample, False))
         sample.close()
+
+        sample = StringIO.StringIO("""
+    asset compiler starting
+    /path/to/AssetCatalog.xcassets/some.imageset/some.png: warning: something
+    done
+    """)
+        self.assertFalse(transform_actool_output(sample, True))
+        sample.close()
+
 
     def test_returns_true_when_no_errors_encountered(self):
         sample = StringIO.StringIO("""
     asset compiler starting
     done
     """)
-        self.assertTrue(transform_actool_output(sample))
+        self.assertTrue(transform_actool_output(sample, False))
         sample.close()
+
+        sample = StringIO.StringIO("""
+    asset compiler starting
+    done
+    """)
+        self.assertTrue(transform_actool_output(sample, True))
+        sample.close()
+
 
     def test_splits_into_bundles_when_told_prior_to_ios7(self):
         catalogs = ['/A.xcassets', '/B.xcassets']

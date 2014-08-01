@@ -179,8 +179,9 @@ def transform_actool_output_line(line):
     return line
 
 
-def transform_actool_output(stdout):
+def transform_actool_output(stdout, verbose):
     has_errors = False
+    is_error = False
 
     # Using `for line in proc.stdout` causes OS X to barf with errno=35.  Not
     # sure why, but it appears to be a rate limiting issue.  Creating the loop
@@ -189,14 +190,16 @@ def transform_actool_output(stdout):
     while line:
         line = transform_actool_output_line(line)
         if line.startswith('error:'):
+            is_error = True
             has_errors = True
-        print line
+        if is_error or verbose:
+            print line
         line = stdout.readline()
     return not has_errors
 
 
 def compile_asset_catalogs(target, platform, devices, output, catalogs,
-                           split_into_bundles):
+                           split_into_bundles, verbose):
     cmd_pairs = actool_cmds(
         target,
         platform,
@@ -225,7 +228,7 @@ def compile_asset_catalogs(target, platform, devices, output, catalogs,
         # indicates an error, which is the desired behavior here.
         actool_output = subprocess.check_output(cmd, env=env)
         actool_stdout = StringIO.StringIO(actool_output)
-        success = transform_actool_output(actool_stdout)
+        success = transform_actool_output(actool_stdout, verbose)
 
         if not success:
             errors_encountered = True
@@ -309,7 +312,8 @@ if __name__ == "__main__":
 
     exit_code = 0
     if not compile_asset_catalogs(args.target, args.platform, args.device,
-                                  args.output, args.catalogs, args.bundles):
+                                  args.output, args.catalogs,
+                                  args.bundles, args.verbose):
         exit_code = 1
 
     logger.info('Done')
