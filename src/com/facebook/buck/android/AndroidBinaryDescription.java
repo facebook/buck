@@ -36,7 +36,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -119,13 +118,6 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
         FluentIterable.from(buildRulesToExcludeFromDex)
             .filter(JavaLibrary.class)
-            .transform(
-                new Function<BuildRule, JavaLibrary>() {
-                  @Override
-                  public JavaLibrary apply(BuildRule input) {
-                    return (JavaLibrary) input;
-                  }
-                })
             .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
 
     PackageType packageType = getPackageType(args);

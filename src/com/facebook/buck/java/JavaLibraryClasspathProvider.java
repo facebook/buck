@@ -18,16 +18,12 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 public class JavaLibraryClasspathProvider {
 
@@ -114,19 +110,6 @@ public class JavaLibraryClasspathProvider {
   }
 
   static FluentIterable<JavaLibrary> getJavaLibraryDeps(Iterable<BuildRule> deps) {
-    return FluentIterable
-        .from(deps)
-        .transform(
-            new Function<BuildRule, JavaLibrary>() {
-              @Nullable
-              @Override
-              public JavaLibrary apply(BuildRule input) {
-                if (input instanceof JavaLibrary) {
-                  return (JavaLibrary) input;
-                }
-                return null;
-              }
-            })
-        .filter(Predicates.notNull());
+    return FluentIterable.from(deps).filter(JavaLibrary.class);
   }
 }
