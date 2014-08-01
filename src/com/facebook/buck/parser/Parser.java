@@ -26,6 +26,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -47,7 +48,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -122,7 +122,6 @@ public class Parser {
   private final Repository repository;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
-  private Console console;
   private ImmutableMap<String, String> environment;
 
   /**
@@ -145,13 +144,7 @@ public class Parser {
    */
   private Optional<BuckEvent> parseStartEvent = Optional.absent();
 
-  /**
-   * Parsers may be reused with different consoles, so need to allow the console to be set.
-   * @param console The new console that the Parser should use.
-   */
-  public synchronized void setConsole(Console console) {
-    this.console = Preconditions.checkNotNull(console);
-  }
+  private static final Logger LOG = Logger.get(Parser.class);
 
   /**
    * @param environment The new environment that the Parser should use.
@@ -220,13 +213,11 @@ public class Parser {
 
   public Parser(
       final Repository repository,
-      Console console,
       ImmutableMap<String, String> environment,
       String pythonInterpreter,
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this(repository,
-        console,
         environment,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
         new InputSupplier<BuildFileTree>() {
@@ -250,7 +241,6 @@ public class Parser {
   @VisibleForTesting
   Parser(
       Repository repository,
-      Console console,
       ImmutableMap<String, String> environment,
       InputSupplier<BuildFileTree> buildFileTreeSupplier,
       BuildTargetParser buildTargetParser,
@@ -258,7 +248,6 @@ public class Parser {
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this.repository = Preconditions.checkNotNull(repository);
-    this.console = Preconditions.checkNotNull(console);
     this.environment = Preconditions.checkNotNull(environment);
     this.buildFileTreeCache = new BuildFileTreeCache(
         Preconditions.checkNotNull(buildFileTreeSupplier));
@@ -323,9 +312,7 @@ public class Parser {
   }
 
   private synchronized void invalidateCache() {
-    if (console.getVerbosity() == Verbosity.ALL) {
-      console.getStdErr().println("Parser invalidating entire cache");
-    }
+    LOG.debug("Parser invalidating entire cache");
     parsedBuildFiles.clear();
     memoizedTargetNodes.clear();
     allBuildFilesParsed = false;
@@ -340,7 +327,8 @@ public class Parser {
   public ActionGraph parseBuildFilesForTargets(
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      Console console)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
@@ -373,7 +361,8 @@ public class Parser {
   @VisibleForTesting
   ActionGraph onlyUseThisWhenTestingToFindAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
-      Iterable<String> defaultIncludes)
+      Iterable<String> defaultIncludes,
+      Console console)
       throws IOException, BuildFileParseException, InterruptedException {
     try (ProjectBuildFileParser parser = buildFileParserFactory.createParser(
         defaultIncludes,
@@ -651,7 +640,8 @@ public class Parser {
       File buildFile,
       Iterable<String> defaultIncludes,
       EnumSet<ProjectBuildFileParser.Option> parseOptions,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      Console console)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     try (ProjectBuildFileParser projectBuildFileParser =
         buildFileParserFactory.createParser(
@@ -678,12 +668,7 @@ public class Parser {
     Preconditions.checkNotNull(buildFileParser);
 
     if (!isCached(buildFile, defaultIncludes)) {
-      if (console.getVerbosity().shouldPrintCommand()) {
-        console.getStdErr().printf("Parsing %s file: %s\n",
-            BuckConstant.BUILD_RULES_FILE_NAME,
-            buildFile);
-      }
-
+      LOG.debug("Parsing %s file: %s\n", BuckConstant.BUILD_RULES_FILE_NAME, buildFile);
       parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFile.toPath()));
     }
     return parsedBuildFiles.get(normalize(buildFile.toPath()));
@@ -835,9 +820,11 @@ public class Parser {
    * @return The build targets in the project filtered by the given filter.
    */
   @Nullable
-  public synchronized List<BuildTarget> filterAllTargetsInProject(ProjectFilesystem filesystem,
-                                                     Iterable<String> includes,
-                                                     @Nullable RawRulePredicate filter)
+  public synchronized List<BuildTarget> filterAllTargetsInProject(
+      ProjectFilesystem filesystem,
+      Iterable<String> includes,
+      @Nullable RawRulePredicate filter,
+      Console console)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     Preconditions.checkNotNull(filesystem);
     Preconditions.checkNotNull(includes);
@@ -875,13 +862,15 @@ public class Parser {
    * {@code android_binary}. See {@link RawRulePredicates#matchBuildRuleType(BuildRuleType)} for an
    * example of such a {@link RawRulePredicate}.
    */
+  @Nullable
   public synchronized Iterable<BuildTarget> filterTargetsInProjectFromRoots(
       Iterable<BuildTarget> roots,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
-      RawRulePredicate filter)
+      RawRulePredicate filter,
+      Console console)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    ActionGraph actionGraph = parseBuildFilesForTargets(roots, defaultIncludes, eventBus);
+    ActionGraph actionGraph = parseBuildFilesForTargets(roots, defaultIncludes, eventBus, console);
 
     return filterGraphTargets(filter, actionGraph);
   }
@@ -908,10 +897,10 @@ public class Parser {
    */
   @Subscribe
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
-    if (console.getVerbosity() == Verbosity.ALL) {
-      console.getStdErr().printf("Parser watched event %s %s\n", event.kind(),
-          repository.getFilesystem().createContextString(event));
-    }
+    LOG.debug(
+        "Parser watched event %s %s\n",
+        event.kind(),
+        repository.getFilesystem().createContextString(event));
 
     if (repository.getFilesystem().isPathChangeEvent(event)) {
       Path path = (Path) event.context();
@@ -986,10 +975,7 @@ public class Parser {
     path = normalize(path);
 
     if (parsedBuildFiles.containsKey(path)) {
-      if (console.getVerbosity() == Verbosity.ALL) {
-        console.getStdErr().printf("Parser invalidating %s cache\n",
-            path.toAbsolutePath());
-      }
+      LOG.debug("Parser invalidating %s cache\n", path.toAbsolutePath());
 
       // Remove all targets defined by path from cache.
       for (Map<String, Object> rawRule : parsedBuildFiles.get(path)) {

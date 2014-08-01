@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -38,7 +37,7 @@ public class FakeBuildRuleParamsBuilder {
   private ImmutableSet<BuildTargetPattern> visibilityPatterns = BuildTargetPattern.PUBLIC;
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private FileHashCache fileHashCache =
-      new DefaultFileHashCache(new ProjectFilesystem(Paths.get(".")), new TestConsole());
+      new DefaultFileHashCache(new ProjectFilesystem(Paths.get(".")));
 
   private BuildRuleType buildRuleType = new BuildRuleType("fake_build_rule");
 

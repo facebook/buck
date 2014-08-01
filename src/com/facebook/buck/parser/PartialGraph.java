@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -57,13 +58,15 @@ public class PartialGraph {
       ProjectFilesystem projectFilesystem,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      Console console)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     return createPartialGraph(RawRulePredicates.alwaysTrue(),
         projectFilesystem,
         includes,
         parser,
-        eventBus);
+        eventBus,
+        console);
   }
 
   public static PartialGraph createPartialGraph(
@@ -71,15 +74,22 @@ public class PartialGraph {
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      Console console)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Preconditions.checkNotNull(predicate);
 
     List<BuildTarget> targets = parser.filterAllTargetsInProject(filesystem,
         includes,
-        predicate);
+        predicate,
+        console);
 
-    return parseAndCreateGraphFromTargets(targets, includes, parser, eventBus);
+    // filterAllTargetsInProject should only return Null when predicate is null.
+    // Check this reasoning is true at runtime to placate static checkers.
+    // TODO(#4825537): Refactor filterAllTargetsInProject to not accept null: it confuses robots.
+    Preconditions.checkNotNull(targets);
+
+    return parseAndCreateGraphFromTargets(targets, includes, parser, eventBus, console);
   }
 
   /**
@@ -94,14 +104,21 @@ public class PartialGraph {
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      Console console)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Preconditions.checkNotNull(predicate);
 
     Iterable<BuildTarget> buildTargets = parser.filterTargetsInProjectFromRoots(
-        roots, includes, eventBus, RawRulePredicates.alwaysTrue());
+        roots, includes, eventBus, RawRulePredicates.alwaysTrue(), console);
+
+    // filterTargetsInProject should only return null when predicate is null.
+    // Check this reasoning is true at runtime to placate static checkers.
+    // TODO(#4825537): Refactor filterTargetsInProject to not accept null: it confuses robots.
+    Preconditions.checkNotNull(buildTargets);
+
     ActionGraph buildGraph =
-        parseAndCreateGraphFromTargets(buildTargets, includes, parser, eventBus)
+        parseAndCreateGraphFromTargets(buildTargets, includes, parser, eventBus, console)
             .getActionGraph();
 
     // We have to enumerate all test targets, and see which ones refer to a rule in our build graph
@@ -115,7 +132,8 @@ public class PartialGraph {
         filesystem,
         includes,
         parser,
-        eventBus);
+        eventBus,
+        console);
 
     ActionGraph testActionGraph = testGraph.getActionGraph();
 
@@ -133,8 +151,14 @@ public class PartialGraph {
     }
 
     Iterable<BuildTarget> allTargets = parser.filterTargetsInProjectFromRoots(
-        buildAndTestTargetsBuilder.build(), includes, eventBus, predicate);
-    return parseAndCreateGraphFromTargets(allTargets, includes, parser, eventBus);
+        buildAndTestTargetsBuilder.build(), includes, eventBus, predicate, console);
+
+    // filterTargetsInProject should only return null when predicate is null.
+    // Check this reasoning is true at runtime to placate static checkers.
+    // TODO(#4825537): Refactor filterTargetsInProject to not accept null: it confuses robots.
+    Preconditions.checkNotNull(allTargets);
+
+    return parseAndCreateGraphFromTargets(allTargets, includes, parser, eventBus, console);
   }
 
   /**
@@ -146,17 +170,22 @@ public class PartialGraph {
   public static PartialGraph createPartialGraphFromRoots(
       Iterable<BuildTarget> roots,
       RawRulePredicate predicate,
-
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      Console console)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Preconditions.checkNotNull(predicate);
 
     Iterable<BuildTarget> targets = parser.filterTargetsInProjectFromRoots(
-        roots, includes, eventBus, predicate);
+        roots, includes, eventBus, predicate, console);
 
-    return parseAndCreateGraphFromTargets(targets, includes, parser, eventBus);
+    // filterTargetsInProject should only return null when predicate is null.
+    // Check this reasoning is true at runtime to placate static checkers.
+    // TODO(#4825537): Refactor filterTargetsInProject to not accept null: it confuses robots.
+    Preconditions.checkNotNull(targets);
+
+    return parseAndCreateGraphFromTargets(targets, includes, parser, eventBus, console);
   }
 
 
@@ -171,23 +200,25 @@ public class PartialGraph {
       Iterable<BuildTarget> roots,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      Console console)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    return parseAndCreateGraphFromTargets(roots, includes, parser, eventBus);
+    return parseAndCreateGraphFromTargets(roots, includes, parser, eventBus, console);
   }
 
   private static PartialGraph parseAndCreateGraphFromTargets(
       Iterable<BuildTarget> targets,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      Console console)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
 
     Preconditions.checkNotNull(parser);
 
     // Now that the Parser is loaded up with the set of all build rules, use it to create a
     // DependencyGraph of only the targets we want to build.
-    ActionGraph graph = parser.parseBuildFilesForTargets(targets, includes, eventBus);
+    ActionGraph graph = parser.parseBuildFilesForTargets(targets, includes, eventBus, console);
 
     return new PartialGraph(graph, ImmutableList.copyOf(targets));
   }

@@ -17,24 +17,28 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+
+import static org.easymock.EasyMock.createMock;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
@@ -54,6 +58,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+
+import java.util.Map;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -135,7 +142,8 @@ public class DaemonIntegrationTest {
               Thread.currentThread().interrupt();
             }
           }
-        }, 500L, TimeUnit.MILLISECONDS);
+        }, 500L, TimeUnit.MILLISECONDS
+    );
     firstThread.get();
     secondThread.get();
   }
@@ -389,35 +397,44 @@ public class DaemonIntegrationTest {
   @Test
   public void whenBuckConfigChangesParserInvalidated()
       throws IOException, InterruptedException {
-    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "file_watching", tmp);
-    workspace.setUp();
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    KnownBuildRuleTypes knownBuildRuleTypes = KnownBuildRuleTypes.builder().build();
+    AndroidDirectoryResolver androidDirectoryResolver = createMock(AndroidDirectoryResolver.class);
 
-    ProcessResult rebuild =
-        workspace.runBuckdCommand("build", "//java/com/example/activity:activity", "-v", "10");
-    rebuild.assertSuccess();
+    Object daemon = Main.getDaemon(
+        projectFilesystem,
+        new FakeBuckConfig(
+            ImmutableMap.<String, Map<String, String>>builder()
+                .put("somesection", ImmutableMap.of("somename", "somevalue"))
+                .build()),
+        knownBuildRuleTypes,
+        androidDirectoryResolver,
+        ImmutableMap.<String, String>of());
 
-    assertThat("Noop build should not have reparsed.",
-        rebuild.getStderr(),
-        not(containsString("Parsing")));
+    assertEquals("Daemon should not be replaced when config equal.", daemon,
+        Main.getDaemon(
+            projectFilesystem,
+            new FakeBuckConfig(
+                ImmutableMap.<String, Map<String, String>>builder()
+                    .put("somesection", ImmutableMap.of("somename", "somevalue"))
+                    .build()),
+            knownBuildRuleTypes,
+            androidDirectoryResolver,
+            ImmutableMap.<String, String>of()));
 
-    String buckConfigFilename = ".buckconfig";
-    String extraConfigOptions = Joiner.on("\n").join(
-        "[ndk]",
-        "    ndk_version = r9b",
-        "");
-
-    Files.append(extraConfigOptions, workspace.getFile(buckConfigFilename), Charsets.UTF_8);
-
-    rebuild =
-        workspace.runBuckdCommand("build", "//java/com/example/activity:activity", "-v", "10");
-    rebuild.assertSuccess();
-
-    assertThat("Changing .buckconfing should have forced a reparse.",
-        rebuild.getStderr(),
-        containsString("Parsing"));
+    assertNotEquals(
+        "Daemon should be replaced when config not equal.", daemon,
+        Main.getDaemon(
+            projectFilesystem,
+            new FakeBuckConfig(
+                ImmutableMap.<String, Map<String, String>>builder()
+                    .put("somesection", ImmutableMap.of("somename", "someothervalue"))
+                    .build()
+            ),
+            knownBuildRuleTypes,
+            androidDirectoryResolver,
+            ImmutableMap.<String, String>of()));
   }
 
   @Test

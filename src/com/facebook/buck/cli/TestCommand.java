@@ -288,7 +288,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getProjectFilesystem(),
         options.getDefaultIncludes(),
         getParser(),
-        getBuckEventBus());
+        getBuckEventBus(),
+        console);
 
     final ActionGraph graph = partialGraph.getActionGraph();
 

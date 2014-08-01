@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -37,15 +38,15 @@ import java.util.concurrent.ExecutionException;
 
 public class DefaultFileHashCache implements FileHashCache {
 
+  private static final Logger LOG = Logger.get(DefaultFileHashCache.class);
+
   private final ProjectFilesystem projectFilesystem;
-  private Console console;
 
   @VisibleForTesting
   final LoadingCache<Path, HashCode> loadingCache;
 
-  public DefaultFileHashCache(ProjectFilesystem projectFilesystem, Console console) {
+  public DefaultFileHashCache(ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.console = Preconditions.checkNotNull(console);
 
     this.loadingCache = CacheBuilder.newBuilder()
         .build(new CacheLoader<Path, HashCode>() {
@@ -95,10 +96,10 @@ public class DefaultFileHashCache implements FileHashCache {
    */
   @Subscribe
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
-    if (console.getVerbosity() == Verbosity.ALL) {
-      console.getStdErr().printf("DefaultFileHashCache watched event %s %s\n", event.kind(),
-          projectFilesystem.createContextString(event));
-    }
+    LOG.info(
+        "DefaultFileHashCache watched event %s %s\n",
+        event.kind(),
+        projectFilesystem.createContextString(event));
 
     if (projectFilesystem.isPathChangeEvent(event)) {
       // Path event, remove the path from the cache as it has been changed, added or deleted.
@@ -110,11 +111,4 @@ public class DefaultFileHashCache implements FileHashCache {
     }
   }
 
-  /**
-   * DefaultFileHashCaches may be reused on different consoles, so allow the console to be set.
-   * @param console The new console that the Parser should use.
-   */
-  public synchronized void setConsole(Console console) {
-    this.console = console;
-  }
 }

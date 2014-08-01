@@ -105,13 +105,15 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         graph = PartialGraph.createFullGraph(getProjectFilesystem(),
             options.getDefaultIncludes(),
             getParser(),
-            getBuckEventBus());
+            getBuckEventBus(),
+            console);
       } else {
         graph = PartialGraph.createPartialGraphIncludingRoots(
             matchingBuildTargets,
             options.getDefaultIncludes(),
             getParser(),
-            getBuckEventBus());
+            getBuckEventBus(),
+            console);
       }
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
@@ -222,7 +224,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
             buildFile,
             defaultIncludes,
             EnumSet.noneOf(ProjectBuildFileParser.Option.class),
-            environment);
+            environment,
+            console);
       } catch (BuildTargetException e) {
         console.printErrorText(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
@@ -328,7 +331,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           buildTarget.getBuildFile(getProjectFilesystem()),
           options.getDefaultIncludes(),
           EnumSet.noneOf(ProjectBuildFileParser.Option.class),
-          environment);
+          environment,
+          console);
     } catch (BuildTargetException | BuildFileParseException e) {
       // TODO(devjasta): this doesn't smell right!
       return null;

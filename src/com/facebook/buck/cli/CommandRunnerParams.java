@@ -75,7 +75,6 @@ class CommandRunnerParams {
         artifactCacheFactory,
         eventBus,
         new Parser(repository,
-            console,
             environment,
             pythonInterpreter,
             /* tempFilePatterns */ ImmutableSet.<Pattern>of(),
