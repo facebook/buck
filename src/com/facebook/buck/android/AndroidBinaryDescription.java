@@ -126,7 +126,6 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         !args.preprocessJavaClassesBash.isPresent();
 
     ResourceCompressionMode compressionMode = getCompressionMode(args);
-    ImmutableSet<TargetCpuType> cpuFilters = getCpuFilters(args);
     ResourceFilter resourceFilter =
         new ResourceFilter(args.resourceFilter.or(ImmutableList.<String>of()));
 
@@ -137,7 +136,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         resourceFilter,
         args.manifest,
         packageType,
-        cpuFilters,
+        ImmutableSet.copyOf(args.cpuFilters.get()),
         args.buildStringSourceMap.or(false),
         shouldPreDex,
         AndroidBinary.getPrimaryDexPath(params.getBuildTarget()),
@@ -165,7 +164,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         args.optimizationPasses,
         args.proguardConfig,
         compressionMode,
-        cpuFilters,
+        args.cpuFilters.get(),
         resourceFilter,
         args.exopackage.or(false),
         args.preprocessJavaClassesDeps.or(ImmutableSet.<BuildRule>of()),
@@ -207,16 +206,6 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     return ResourceCompressionMode.valueOf(args.resourceCompression.get().toUpperCase());
   }
 
-  private ImmutableSet<TargetCpuType> getCpuFilters(Arg args) {
-    ImmutableSet.Builder<TargetCpuType> cpuFilters = ImmutableSet.builder();
-    if (args.cpuFilters.isPresent()) {
-      for (String cpuFilter : args.cpuFilters.get()) {
-        cpuFilters.add(TargetCpuType.valueOf(cpuFilter.toUpperCase()));
-      }
-    }
-    return cpuFilters.build();
-  }
-
   public static class Arg implements ConstructorArg {
     public SourcePath manifest;
     public String target;
@@ -241,7 +230,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<Long> linearAllocHardLimit;
     public Optional<List<String>> resourceFilter;
     public Optional<Boolean> buildStringSourceMap;
-    public Optional<List<String>> cpuFilters;
+    public Optional<Set<TargetCpuType>> cpuFilters;
     public Optional<Set<BuildRule>> preprocessJavaClassesDeps;
     public Optional<String> preprocessJavaClassesBash;
 
