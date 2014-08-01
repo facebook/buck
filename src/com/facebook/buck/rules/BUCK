@@ -85,6 +85,7 @@ java_library(
     'SourcePath.java',
     'SourcePaths.java',
     'SourceRoot.java',
+    'TargetGraph.java',
     'TargetName.java',
     'TargetNode.java',
   ] + glob(["coercer/*.java"]),

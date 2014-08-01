@@ -21,9 +21,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -42,6 +40,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.util.BuckConstant;
@@ -385,7 +384,6 @@ public class Parser {
     }
   }
 
-
   /**
    * @param toExplore BuildTargets whose dependencies need to be explored.
    */
@@ -395,8 +393,7 @@ public class Parser {
       final Iterable<String> defaultIncludes,
       final ProjectBuildFileParser buildFileParser) throws IOException {
 
-    final TraversableGraph<TargetNode<?>> graph =
-        buildTargetGraph(toExplore, defaultIncludes, buildFileParser);
+    final TargetGraph graph = buildTargetGraph(toExplore, defaultIncludes, buildFileParser);
 
     return buildActionGraphFromTargetGraph(graph);
   }
@@ -457,7 +454,23 @@ public class Parser {
     return memoizedTargetNodes.get(buildTarget);
   }
 
-  private TraversableGraph<TargetNode<?>> buildTargetGraph(
+  /**
+   * Build a {@link TargetGraph} from the {@code toExplore} targets. Note that this graph isn't
+   * pruned in any way and needs to be transformed into an {@link ActionGraph} before being useful
+   * in a build. The TargetGraph is useful for commands such as
+   * {@link com.facebook.buck.cli.AuditOwnerCommand} which only need to understand the relationship
+   * between modules.
+   * <p>
+   * Note that this method does not cache results. Call either this or
+   * {@link #buildActionGraphFromTargetGraph(TargetGraph)} in a single
+   * {@link com.facebook.buck.rules.BuildEngine} execution.
+   *
+   * @param toExplore the {@link BuildTarget}s that {@link TargetGraph} is calculated for.
+   * @param defaultIncludes the files to include before executing build files.
+   * @param buildFileParser the parser for build files.
+   * @return a {@link TargetGraph} containing all the nodes from {@code toExplore}.
+   */
+  public TargetGraph buildTargetGraph(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes,
       final ProjectBuildFileParser buildFileParser) throws IOException {
@@ -526,11 +539,10 @@ public class Parser {
       throw new HumanReadableException(e.getMessage());
     }
 
-    return new DefaultImmutableDirectedAcyclicGraph<>(graph);
+    return new TargetGraph(graph);
   }
 
-  private ActionGraph buildActionGraphFromTargetGraph(
-      final TraversableGraph<TargetNode<?>> graph) {
+  private ActionGraph buildActionGraphFromTargetGraph(final TargetGraph graph) {
     final BuildRuleResolver ruleResolver = new BuildRuleResolver();
     final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
 
