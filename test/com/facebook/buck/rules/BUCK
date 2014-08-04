@@ -15,6 +15,7 @@ java_library(
     'NonCheckingBuildRuleFactoryParams.java',
     'ProjectConfigBuilder.java',
     'RetainOrderComparator.java',
+    'TestRepositoryBuilder.java',
     'TestSourcePath.java',
   ],
   deps = [

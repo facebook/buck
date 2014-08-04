@@ -17,8 +17,6 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-
-import static org.easymock.EasyMock.createMock;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -28,12 +26,11 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -58,9 +55,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-
 import java.util.Map;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -397,43 +392,35 @@ public class DaemonIntegrationTest {
   @Test
   public void whenBuckConfigChangesParserInvalidated()
       throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
-    KnownBuildRuleTypes knownBuildRuleTypes = KnownBuildRuleTypes.builder().build();
-    AndroidDirectoryResolver androidDirectoryResolver = createMock(AndroidDirectoryResolver.class);
-
-    Object daemon = Main.getDaemon(
-        projectFilesystem,
+    Object daemon = Main.getDaemon(new TestRepositoryBuilder().setBuckConfig(
         new FakeBuckConfig(
             ImmutableMap.<String, Map<String, String>>builder()
                 .put("somesection", ImmutableMap.of("somename", "somevalue"))
-                .build()),
-        knownBuildRuleTypes,
-        androidDirectoryResolver);
+                .build()))
+        .setFilesystem(filesystem)
+        .build());
 
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
-        Main.getDaemon(
-            projectFilesystem,
+        Main.getDaemon(new TestRepositoryBuilder().setBuckConfig(
             new FakeBuckConfig(
                 ImmutableMap.<String, Map<String, String>>builder()
                     .put("somesection", ImmutableMap.of("somename", "somevalue"))
-                    .build()
-            ),
-            knownBuildRuleTypes,
-            androidDirectoryResolver));
+                    .build()))
+            .setFilesystem(filesystem)
+            .build()));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
-        Main.getDaemon(
-            projectFilesystem,
+        Main.getDaemon(new TestRepositoryBuilder().setBuckConfig(
             new FakeBuckConfig(
                 ImmutableMap.<String, Map<String, String>>builder()
                     .put("somesection", ImmutableMap.of("somename", "someothervalue"))
-                    .build()
-            ),
-            knownBuildRuleTypes,
-            androidDirectoryResolver));
+                    .build()))
+            .setFilesystem(filesystem)
+            .build()));
   }
 
   @Test

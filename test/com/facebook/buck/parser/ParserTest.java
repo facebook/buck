@@ -28,7 +28,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -51,6 +50,7 @@ import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
@@ -82,6 +82,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.EnumSet;
@@ -146,7 +147,10 @@ public class ParserTest extends EasyMockSupport {
 
     buildRuleTypes = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);
 
-    repository = new Repository("parser test", filesystem, buildRuleTypes, new FakeBuckConfig());
+    repository = new TestRepositoryBuilder()
+        .setFilesystem(filesystem)
+        .setBuildRuleTypes(buildRuleTypes)
+        .build();
 
     DefaultProjectBuildFileParserFactory testBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
@@ -229,11 +233,9 @@ public class ParserTest extends EasyMockSupport {
         "buck.base_path", "testdata/com/facebook/feed/model");
     List<Map<String, Object>> ruleObjects = ImmutableList.of(rawRule);
 
-    ProjectFilesystem fs = new ProjectFilesystem(new File("."));
-    KnownBuildRuleTypes types = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(
-        filesystem);
+    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
     Parser parser = new Parser(
-        new Repository("test", fs, types, new FakeBuckConfig()),
+        new TestRepositoryBuilder().setFilesystem(filesystem).build(),
         BuckTestConstant.PYTHON_INTERPRETER,
         tempFilePatterns,
         new FakeRuleKeyBuilderFactory());

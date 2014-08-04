@@ -34,7 +34,6 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.Repository;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -46,10 +45,10 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
@@ -86,8 +85,6 @@ import java.util.SortedMap;
 
 public class TargetsCommandTest {
 
-  private final String projectRootPath = ".";
-  private final File projectRoot = new File(projectRootPath);
   private TestConsole console;
   private TargetsCommand targetsCommand;
 
@@ -118,14 +115,7 @@ public class TargetsCommandTest {
   @Before
   public void setUp() {
     console = new TestConsole();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
-    KnownBuildRuleTypes buildRuleTypes =
-        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem);
-    Repository repository = new Repository(
-        "test",
-        projectFilesystem,
-        buildRuleTypes,
-        new FakeBuckConfig());
+    Repository repository = new TestRepositoryBuilder().build();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();

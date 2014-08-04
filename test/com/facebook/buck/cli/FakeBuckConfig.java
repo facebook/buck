@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.easymock.EasyMock;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -61,10 +62,12 @@ public class FakeBuckConfig extends BuckConfig {
       Platform platform,
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment) {
-    super(sections,
+    super(
+        sections,
         filesystem == null ? EasyMock.createMock(ProjectFilesystem.class) : filesystem,
         EasyMock.createMock(BuildTargetParser.class),
         platform,
-        environment);
+        environment,
+        ImmutableMap.<String, Path>of());
   }
 }

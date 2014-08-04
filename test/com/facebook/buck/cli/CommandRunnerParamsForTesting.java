@@ -20,20 +20,16 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaPackageFinder;
-import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
-
-import java.io.File;
 
 public class CommandRunnerParamsForTesting extends CommandRunnerParams {
 
@@ -67,10 +63,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
 
   public static class Builder {
 
-    private ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
     private AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-    private KnownBuildRuleTypes buildRuleTypes =
-        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(projectFilesystem);
     private ArtifactCacheFactory artifactCacheFactory = new InstanceArtifactCacheFactory(
         new NoopArtifactCache());
     private Console console = new TestConsole();
@@ -81,11 +74,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
     private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
 
     public CommandRunnerParamsForTesting build() {
-      Repository repository = new Repository(
-          "command runner params for testing",
-          projectFilesystem,
-          buildRuleTypes,
-          new FakeBuckConfig());
+      Repository repository = new TestRepositoryBuilder().build();
       return new CommandRunnerParamsForTesting(
           console,
           repository,

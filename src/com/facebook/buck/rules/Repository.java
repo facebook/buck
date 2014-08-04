@@ -17,7 +17,9 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -27,20 +29,23 @@ import com.google.common.collect.ImmutableSet;
  */
 public class Repository {
 
-  private final String name;
   private final ProjectFilesystem filesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
   private final BuckConfig buckConfig;
 
+  // TODO(jacko): This is a hack to avoid breaking the build. Get rid of it.
+  public final AndroidDirectoryResolver androidDirectoryResolver;
+
+  @VisibleForTesting
   public Repository(
-      String name,
       ProjectFilesystem filesystem,
       KnownBuildRuleTypes buildRuleTypes,
-      BuckConfig buckConfig) {
-    this.name = Preconditions.checkNotNull(name);
+      BuckConfig buckConfig,
+      AndroidDirectoryResolver androidDirectoryResolver) {
     this.filesystem = Preconditions.checkNotNull(filesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.buckConfig = Preconditions.checkNotNull(buckConfig);
+    this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -59,13 +64,17 @@ public class Repository {
     return buildRuleTypes.getAllDescriptions();
   }
 
+  public KnownBuildRuleTypes getKnownBuildRuleTypes() {
+    return buildRuleTypes;
+  }
+
   public BuckConfig getBuckConfig() {
     return buckConfig;
   }
 
   @Override
   public String toString() {
-    return String.format("@%s (%s)", name, filesystem.getRootPath());
+    return String.format("<Repository (%s)>", filesystem.getRootPath());
   }
 
   @Override
@@ -79,11 +88,8 @@ public class Repository {
       return false;
     }
 
-    if (obj.equals(this)) {
-      return true;
-    }
-
     Repository that = (Repository) obj;
-    return this.getFilesystem().equals(that.getFilesystem());
+    return this.getFilesystem().equals(that.getFilesystem()) &&
+        this.getBuckConfig().equals(that.getBuckConfig());
   }
 }

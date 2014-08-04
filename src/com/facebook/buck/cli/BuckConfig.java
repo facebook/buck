@@ -79,6 +79,10 @@ import javax.annotation.concurrent.Immutable;
 @Beta
 @Immutable
 public class BuckConfig {
+
+  private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
+  private static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
+
   private static final String ALIAS_SECTION_HEADER = "alias";
 
   /**
@@ -108,6 +112,8 @@ public class BuckConfig {
 
   private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
 
+  private final ImmutableMap<String, Path> repoNamesToPaths;
+
   private final ProjectFilesystem projectFilesystem;
 
   private final BuildTargetParser buildTargetParser;
@@ -135,11 +141,13 @@ public class BuckConfig {
   }
 
   @VisibleForTesting
-  BuckConfig(Map<String, Map<String, String>> sectionsToEntries,
+  BuckConfig(
+      Map<String, Map<String, String>> sectionsToEntries,
       ProjectFilesystem projectFilesystem,
       BuildTargetParser buildTargetParser,
       Platform platform,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      ImmutableMap<String, Path> repoNamesToPaths) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
 
@@ -156,6 +164,8 @@ public class BuckConfig {
     this.aliasToBuildTargetMap = createAliasToBuildTargetMap(
         this.getEntriesForSection(ALIAS_SECTION_HEADER),
         buildTargetParser);
+
+    this.repoNamesToPaths = Preconditions.checkNotNull(repoNamesToPaths);
 
     this.platform = Preconditions.checkNotNull(platform);
     this.environment = Preconditions.checkNotNull(environment);
@@ -183,7 +193,8 @@ public class BuckConfig {
           projectFilesystem,
           buildTargetParser,
           platform,
-          environment);
+          environment,
+          ImmutableMap.<String, Path>of());
     }
 
     // Convert the Files to Readers.
@@ -304,12 +315,15 @@ public class BuckConfig {
       ImmutableMap<String, String> environment)
       throws IOException {
     Map<String, Map<String, String>> sectionsToEntries = createFromReaders(readers);
+    ImmutableMap<String, Path> repoNamesToPaths =
+        createRepoNamesToPaths(projectFilesystem, sectionsToEntries);
     return new BuckConfig(
         sectionsToEntries,
         projectFilesystem,
         buildTargetParser,
         platform,
-        environment);
+        environment,
+        repoNamesToPaths);
   }
 
   public ImmutableMap<String, String> getEntriesForSection(String section) {
@@ -850,8 +864,56 @@ public class BuckConfig {
     throw new HumanReadableException(errorMsg + path);
   }
 
+  private static ImmutableMap<String, Path> createRepoNamesToPaths(
+      ProjectFilesystem filesystem,
+      Map<String, Map<String, String>> sectionsToEntries)
+      throws IOException {
+    @Nullable Map<String, String> repositoryConfigs = sectionsToEntries.get("repositories");
+    if (repositoryConfigs == null) {
+      return ImmutableMap.of();
+    }
+    ImmutableMap.Builder<String, Path> repositoryPaths = ImmutableMap.builder();
+    for (String name : repositoryConfigs.keySet()) {
+      String pathString = repositoryConfigs.get(name);
+      Path canonicalPath = filesystem.resolve(Paths.get(pathString)).toRealPath();
+      repositoryPaths.put(name, canonicalPath);
+    }
+    return repositoryPaths.build();
+  }
+
+  public ImmutableMap<String, Path> getRepositoryPaths() {
+    return repoNamesToPaths;
+  }
+
   @VisibleForTesting
   String getProperty(String key, String def) {
     return System.getProperty(key, def);
+  }
+
+  /**
+   * @param projectFilesystem The directory that is the root of the project being built.
+   */
+  public static BuckConfig createDefaultBuckConfig(
+      ProjectFilesystem projectFilesystem,
+      Platform platform,
+      ImmutableMap<String, String> environment)
+      throws IOException {
+    ImmutableList.Builder<File> configFileBuilder = ImmutableList.builder();
+    File configFile = projectFilesystem.getFileForRelativePath(DEFAULT_BUCK_CONFIG_FILE_NAME);
+    if (configFile.isFile()) {
+      configFileBuilder.add(configFile);
+    }
+    File overrideConfigFile = projectFilesystem.getFileForRelativePath(
+        DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
+    if (overrideConfigFile.isFile()) {
+      configFileBuilder.add(overrideConfigFile);
+    }
+
+    ImmutableList<File> configFiles = configFileBuilder.build();
+    return BuckConfig.createFromFiles(
+        projectFilesystem,
+        configFiles,
+        platform,
+        environment);
   }
 }
