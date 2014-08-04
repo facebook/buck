@@ -79,6 +79,7 @@ java_library(
     'JavaLibraryDescription.java',
     'JavaLibraryClasspathProvider.java',
     'JavaLibraryRules.java',
+    'JavaSourceJar.java',
     'JavaTest.java',
     'JavaTestDescription.java',
     'Keystore.java',
@@ -110,6 +111,7 @@ java_library(
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/zip:steps',
   ],
   visibility = ['PUBLIC'],
 )

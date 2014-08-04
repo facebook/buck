@@ -453,7 +453,7 @@ public class Parser {
 
       if ((description instanceof Flavored) &&
           !((Flavored) description).hasFlavor(buildTarget.getFlavor())) {
-        throw new HumanReadableException("Unrecognized flavor in target %s while parsing %s%s.",
+          throw new HumanReadableException("Unrecognized flavor in target %s while parsing %s%s.",
             buildTarget,
             BuildTarget.BUILD_TARGET_PREFIX,
             target.getBuildFilePath());

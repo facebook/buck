@@ -19,6 +19,8 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -41,10 +43,11 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>,
-    FlavorableDescription<JavaLibraryDescription.Arg> {
+    FlavorableDescription<JavaLibraryDescription.Arg>, Flavored {
 
   public static final BuildRuleType TYPE = new BuildRuleType("java_library");
   public static final String ANNOTATION_PROCESSORS = "annotation_processors";
+
   @VisibleForTesting
   final JavaCompilerEnvironment javacEnv;
 
@@ -58,6 +61,10 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   @Override
+  public boolean hasFlavor(Flavor flavor) {
+    return flavor.equals(Flavor.DEFAULT) || flavor.equals(JavaLibrary.SRC_JAR);
+  }
+
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
   }
@@ -67,10 +74,12 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    BuildTarget target = params.getBuildTarget();
+
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
 
     AnnotationProcessingParams annotationParams =
-        args.buildAnnotationProcessingParams(params.getBuildTarget());
+        args.buildAnnotationProcessingParams(target);
     javacOptions.setAnnotationProcessingData(annotationParams);
 
     return new DefaultJavaLibrary(
@@ -163,7 +172,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   /**
-   * A {@JavaLibrary} registers a {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
+   * A {@link JavaLibrary} registers the ability to create {@link JavaLibrary#SRC_JAR}s when source
+   * is present and also {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
    */
   @Override
   public void registerFlavors(
@@ -173,6 +183,24 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleResolver ruleResolver) {
     BuildTarget originalBuildTarget = buildRule.getBuildTarget();
+
+    if (!arg.srcs.get().isEmpty()) {
+      BuildTarget srcJar = BuildTarget.builder(originalBuildTarget)
+          .setFlavor(JavaLibrary.SRC_JAR)
+          .build();
+
+      BuildRuleParams params = new BuildRuleParams(
+          srcJar,
+          /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
+          /* inferredDeps */ ImmutableSortedSet.<BuildRule>of(),
+          BuildTargetPattern.PUBLIC,
+          projectFilesystem,
+          ruleKeyBuilderFactory,
+          JavaSourceJar.TYPE);
+
+      ruleResolver.addToIndex(new JavaSourceJar(params, arg.srcs.get()));
+    }
+
     Optional<GwtModule> gwtModuleOptional = tryCreateGwtModule(
         originalBuildTarget,
         projectFilesystem,
@@ -198,12 +226,14 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       Arg arg) {
-    if (arg.srcs.get().isEmpty() && arg.resources.get().isEmpty()) {
+    if (arg.srcs.get().isEmpty() &&
+        arg.resources.get().isEmpty() &&
+        Flavor.DEFAULT.equals(originalBuildTarget.getFlavor())) {
       return Optional.absent();
     }
 
     BuildTarget gwtModuleBuildTarget = BuildTargets.createFlavoredBuildTarget(
-        originalBuildTarget,
+        originalBuildTarget.getUnflavoredTarget(),
         JavaLibrary.GWT_MODULE_FLAVOR);
     ImmutableSortedSet<SourcePath> filesForGwtModule = ImmutableSortedSet
         .<SourcePath>naturalOrder()

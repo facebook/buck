@@ -52,6 +52,11 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
    */
   public static final Flavor GWT_MODULE_FLAVOR = new Flavor("gwt_module");
 
+  /**
+   * It's possible to ask a {@link JavaLibrary} to collect its own sources and build a source jar.
+   */
+  public static final Flavor SRC_JAR = new Flavor("src");
+
   // TODO(natthu): This can probably be avoided by using a JavaPackageable interface similar to
   // AndroidPackageable.
   public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries();

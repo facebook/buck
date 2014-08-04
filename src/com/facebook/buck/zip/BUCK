@@ -47,6 +47,7 @@ java_library(
   ],
   visibility = [
     '//src/com/facebook/buck/android/...',
+    '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/rules:rules',
     '//test/com/facebook/buck/zip:zip',
   ],
