@@ -96,7 +96,7 @@ public class BuckConfig {
   private static final String DEFAULT_CASSANDRA_MODE = CacheMode.readwrite.name();
   private static final String DEFAULT_CASSANDRA_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_HTTP_CACHE_MODE = CacheMode.readwrite.name();
-  private static final String DEFAULT_HTTP_CACHE_PORT = "5551";
+  private static final String DEFAULT_HTTP_CACHE_PORT = "8080";
   private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
 

@@ -103,7 +103,7 @@ public class HttpArtifactCacheTest {
 
     FakeHttpArtifactCache(HttpURLConnection connectionMock, ProjectFilesystem projectFilesystem,
         BuckEventBus buckEventBus) {
-      super("localhost", 5551, 1, true, projectFilesystem, buckEventBus);
+      super("localhost", 8080, 1, true, projectFilesystem, buckEventBus);
       this.connectionMock = connectionMock;
     }
 
