@@ -409,19 +409,19 @@ public class DaemonIntegrationTest {
                 .put("somesection", ImmutableMap.of("somename", "somevalue"))
                 .build()),
         knownBuildRuleTypes,
-        androidDirectoryResolver,
-        ImmutableMap.<String, String>of());
+        androidDirectoryResolver);
 
-    assertEquals("Daemon should not be replaced when config equal.", daemon,
+    assertEquals(
+        "Daemon should not be replaced when config equal.", daemon,
         Main.getDaemon(
             projectFilesystem,
             new FakeBuckConfig(
                 ImmutableMap.<String, Map<String, String>>builder()
                     .put("somesection", ImmutableMap.of("somename", "somevalue"))
-                    .build()),
+                    .build()
+            ),
             knownBuildRuleTypes,
-            androidDirectoryResolver,
-            ImmutableMap.<String, String>of()));
+            androidDirectoryResolver));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
@@ -433,8 +433,7 @@ public class DaemonIntegrationTest {
                     .build()
             ),
             knownBuildRuleTypes,
-            androidDirectoryResolver,
-            ImmutableMap.<String, String>of()));
+            androidDirectoryResolver));
   }
 
   @Test

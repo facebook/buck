@@ -119,10 +119,18 @@ public class Parser {
   @Nullable
   private List<String> cacheDefaultIncludes;
 
+  /**
+   * Environment used by build files. If the environment is changed, then build files need to be
+   * reevaluated with the new environment, so the environment used when populating the rule cache
+   * is stored between requests to parse build files and the cache is invalidated and build files
+   * reevaluated if the environment changes.
+   */
+  @Nullable
+  private ImmutableMap<String, String> cacheEnvironment;
+
   private final Repository repository;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
-  private ImmutableMap<String, String> environment;
 
   /**
    * Key of the meta-rule that lists the build files executed while reading rules.
@@ -145,16 +153,6 @@ public class Parser {
   private Optional<BuckEvent> parseStartEvent = Optional.absent();
 
   private static final Logger LOG = Logger.get(Parser.class);
-
-  /**
-   * @param environment The new environment that the Parser should use.
-   */
-  public synchronized void setEnvironment(ImmutableMap<String, String> environment) {
-    if (!this.environment.equals(Preconditions.checkNotNull(environment))) {
-      invalidateCache(); // TODO(user): Track python env access and only purge affected entries.
-    }
-    this.environment = environment;
-  }
 
   /**
    * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.
@@ -213,12 +211,10 @@ public class Parser {
 
   public Parser(
       final Repository repository,
-      ImmutableMap<String, String> environment,
       String pythonInterpreter,
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this(repository,
-        environment,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
         new InputSupplier<BuildFileTree>() {
           @Override
@@ -241,14 +237,12 @@ public class Parser {
   @VisibleForTesting
   Parser(
       Repository repository,
-      ImmutableMap<String, String> environment,
       InputSupplier<BuildFileTree> buildFileTreeSupplier,
       BuildTargetParser buildTargetParser,
       ProjectBuildFileParserFactory buildFileParserFactory,
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this.repository = Preconditions.checkNotNull(repository);
-    this.environment = Preconditions.checkNotNull(environment);
     this.buildFileTreeCache = new BuildFileTreeCache(
         Preconditions.checkNotNull(buildFileTreeSupplier));
     this.memoizedTargetNodes = Maps.newHashMap();
@@ -271,27 +265,36 @@ public class Parser {
 
   /**
    * The rules in a build file are cached if that specific build file was parsed or all build
-   * files in the project were parsed and the includes haven't changed since the rules were
-   * cached.
+   * files in the project were parsed and the includes and environment haven't changed since the
+   * rules were cached.
    *
    * @param buildFile the build file to look up in the {@link #parsedBuildFiles} cache.
    * @param includes the files to include before executing the build file.
+   * @param env the environment to execute the build file in.
    * @return true if the build file has already been parsed and its rules are cached.
    */
-  private boolean isCached(File buildFile, Iterable<String> includes) {
-    return !invalidateCacheOnIncludeChange(includes) && (allBuildFilesParsed ||
-        parsedBuildFiles.containsKey(normalize(buildFile.toPath())));
+  private boolean isCached(
+      File buildFile,
+      Iterable<String> includes,
+      ImmutableMap<String, String> env) {
+    boolean includesChanged = invalidateCacheOnIncludeChange(includes);
+    boolean environmentChanged = invalidateCacheOnEnvironmentChange(env);
+    boolean fileParsed = parsedBuildFiles.containsKey(normalize(buildFile.toPath()));
+    return !includesChanged && !environmentChanged && (allBuildFilesParsed || fileParsed);
   }
 
   /**
-   * The cache is complete if all build files in the project were parsed and the includes haven't
-   * changed since the rules were cached.
+   * The cache is complete if all build files in the project were parsed and the includes and
+   * environment haven't changed since the rules were cached.
    *
    * @param includes the files to include before executing the build file.
+   * @param env the environment to execute the build file in.
    * @return true if all build files have already been parsed and their rules are cached.
    */
-  private boolean isCacheComplete(Iterable<String> includes) {
-    return !invalidateCacheOnIncludeChange(includes) && allBuildFilesParsed;
+  private boolean isCacheComplete(Iterable<String> includes, ImmutableMap<String, String> env) {
+    boolean includesChanged = invalidateCacheOnIncludeChange(includes);
+    boolean environmentChanged = invalidateCacheOnEnvironmentChange(env);
+    return !includesChanged && !environmentChanged && allBuildFilesParsed;
   }
 
   /**
@@ -302,8 +305,9 @@ public class Parser {
    * @return true if the cache was invalidated, false if the cache is still valid.
    */
   private synchronized boolean invalidateCacheOnIncludeChange(Iterable<String> includes) {
-    List<String> includesList = Lists.newArrayList(includes);
+    List<String> includesList = Lists.newArrayList(Preconditions.checkNotNull(includes));
     if (!includesList.equals(this.cacheDefaultIncludes)) {
+      LOG.debug("Parser invalidating entire cache on default include change.");
       invalidateCache();
       this.cacheDefaultIncludes = includesList;
       return true;
@@ -311,8 +315,25 @@ public class Parser {
     return false;
   }
 
+  /**
+   * Invalidates the cached build rules if {@code environment} has changed since the last call.
+   * If the cache is invalidated the new {@code environment} used to build the new cache is stored.
+   *
+   * @param environment the environment to execute the build file in.
+   * @return true if the cache was invalidated, false if the cache is still valid.
+   */
+  private synchronized boolean invalidateCacheOnEnvironmentChange(
+      ImmutableMap<String, String> environment) {
+    if (!Preconditions.checkNotNull(environment).equals(cacheEnvironment)) {
+      LOG.debug("Parser invalidating entire cache on environment change.");
+      invalidateCache();
+      this.cacheEnvironment = environment;
+      return true;
+    }
+    return false;
+  }
+
   private synchronized void invalidateCache() {
-    LOG.debug("Parser invalidating entire cache");
     parsedBuildFiles.clear();
     memoizedTargetNodes.clear();
     allBuildFilesParsed = false;
@@ -328,7 +349,8 @@ public class Parser {
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
-      Console console)
+      Console console,
+      ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
@@ -340,18 +362,22 @@ public class Parser {
                  EnumSet.of(ProjectBuildFileParser.Option.STRIP_NULL),
                  console,
                  environment)) {
-      if (!isCacheComplete(defaultIncludes)) {
+      if (!isCacheComplete(defaultIncludes, environment)) {
         Set<File> buildTargetFiles = Sets.newHashSet();
         for (BuildTarget buildTarget : buildTargets) {
           File buildFile = buildTarget.getBuildFile(repository.getFilesystem());
           boolean isNewElement = buildTargetFiles.add(buildFile);
           if (isNewElement) {
-            parseBuildFile(buildFile, defaultIncludes, buildFileParser);
+            parseBuildFile(buildFile, defaultIncludes, buildFileParser, environment);
           }
         }
       }
 
-      graph = findAllTransitiveDependencies(buildTargets, defaultIncludes, buildFileParser);
+      graph = findAllTransitiveDependencies(
+          buildTargets,
+          defaultIncludes,
+          buildFileParser,
+          environment);
       return graph;
     } finally {
       eventBus.post(ParseEvent.finished(buildTargets, Optional.fromNullable(graph)));
@@ -362,14 +388,15 @@ public class Parser {
   ActionGraph onlyUseThisWhenTestingToFindAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
       Iterable<String> defaultIncludes,
-      Console console)
+      Console console,
+      ImmutableMap<String, String> environment)
       throws IOException, BuildFileParseException, InterruptedException {
     try (ProjectBuildFileParser parser = buildFileParserFactory.createParser(
         defaultIncludes,
         EnumSet.noneOf(ProjectBuildFileParser.Option.class),
         console,
         environment)) {
-      return findAllTransitiveDependencies(toExplore, defaultIncludes, parser);
+      return findAllTransitiveDependencies(toExplore, defaultIncludes, parser, environment);
     }
   }
 
@@ -380,9 +407,14 @@ public class Parser {
   private ActionGraph findAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes,
-      final ProjectBuildFileParser buildFileParser) throws IOException {
+      final ProjectBuildFileParser buildFileParser,
+      final ImmutableMap<String, String> environment) throws IOException {
 
-    final TargetGraph graph = buildTargetGraph(toExplore, defaultIncludes, buildFileParser);
+    final TargetGraph graph = buildTargetGraph(
+        toExplore,
+        defaultIncludes,
+        buildFileParser,
+        environment);
 
     return buildActionGraphFromTargetGraph(graph);
   }
@@ -462,7 +494,8 @@ public class Parser {
   public TargetGraph buildTargetGraph(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes,
-      final ProjectBuildFileParser buildFileParser) throws IOException {
+      final ProjectBuildFileParser buildFileParser,
+      final ImmutableMap<String, String> environment) throws IOException {
     final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
 
     AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
@@ -488,7 +521,8 @@ public class Parser {
                       buildTarget,
                       buildTargetForDep,
                       defaultIncludes,
-                      buildFileParser);
+                      buildFileParser,
+                      environment);
                   depTargetNode = getTargetNode(buildTargetForDep);
                   if (depTargetNode == null) {
                     throw new HumanReadableException(
@@ -607,9 +641,10 @@ public class Parser {
       BuildTarget sourceTarget,
       BuildTarget buildTarget,
       Iterable<String> defaultIncludes,
-      ProjectBuildFileParser buildFileParser)
+      ProjectBuildFileParser buildFileParser,
+      ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException {
-    if (isCacheComplete(defaultIncludes)) {
+    if (isCacheComplete(defaultIncludes, environment)) {
       // In this case, all of the build rules should have been loaded into the knownBuildTargets
       // Map before this method was invoked. Therefore, there should not be any more build files to
       // parse. This must be the result of traversing a non-existent dep in a build rule, so an
@@ -622,7 +657,7 @@ public class Parser {
     }
 
     File buildFile = buildTarget.getBuildFile(repository.getFilesystem());
-    if (isCached(buildFile, defaultIncludes)) {
+    if (isCached(buildFile, defaultIncludes, environment)) {
       throw new HumanReadableException(
           "The build file that should contain %s has already been parsed (%s), " +
               "but %s was not found. Please make sure that %s is defined in %s.",
@@ -633,7 +668,7 @@ public class Parser {
           buildFile);
     }
 
-    parseBuildFile(buildFile, defaultIncludes, buildFileParser);
+    parseBuildFile(buildFile, defaultIncludes, buildFileParser, environment);
   }
 
   public List<Map<String, Object>> parseBuildFile(
@@ -649,25 +684,27 @@ public class Parser {
             parseOptions,
             console,
             environment)) {
-      return parseBuildFile(buildFile, defaultIncludes, projectBuildFileParser);
+      return parseBuildFile(buildFile, defaultIncludes, projectBuildFileParser, environment);
     }
   }
 
   /**
    * @param buildFile the build file to execute to generate build rules if they are not cached.
    * @param defaultIncludes the files to include before executing the build file.
+   * @param environment the environment to execute the build file in.
    * @return a list of raw build rules generated by executing the build file.
    */
   public List<Map<String, Object>> parseBuildFile(
       File buildFile,
       Iterable<String> defaultIncludes,
-      ProjectBuildFileParser buildFileParser)
+      ProjectBuildFileParser buildFileParser,
+      ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException {
     Preconditions.checkNotNull(buildFile);
     Preconditions.checkNotNull(defaultIncludes);
     Preconditions.checkNotNull(buildFileParser);
 
-    if (!isCached(buildFile, defaultIncludes)) {
+    if (!isCached(buildFile, defaultIncludes, environment)) {
       LOG.debug("Parsing %s file: %s\n", BuckConstant.BUILD_RULES_FILE_NAME, buildFile);
       parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFile.toPath()));
     }
@@ -824,7 +861,8 @@ public class Parser {
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       @Nullable RawRulePredicate filter,
-      Console console)
+      Console console,
+      ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     Preconditions.checkNotNull(filesystem);
     Preconditions.checkNotNull(includes);
@@ -833,7 +871,7 @@ public class Parser {
       throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
           projectFilesystem.getProjectRoot(), filesystem.getProjectRoot()));
     }
-    if (!isCacheComplete(includes)) {
+    if (!isCacheComplete(includes, environment)) {
       memoizedTargetNodes.clear();
       parsedBuildFiles.clear();
       parseRawRulesInternal(
@@ -868,9 +906,15 @@ public class Parser {
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
       RawRulePredicate filter,
-      Console console)
+      Console console,
+      ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    ActionGraph actionGraph = parseBuildFilesForTargets(roots, defaultIncludes, eventBus, console);
+    ActionGraph actionGraph = parseBuildFilesForTargets(
+        roots,
+        defaultIncludes,
+        eventBus,
+        console,
+        environment);
 
     return filterGraphTargets(filter, actionGraph);
   }
@@ -926,6 +970,7 @@ public class Parser {
     } else {
 
       // Non-path change event, likely an overflow due to many change events: invalidate everything.
+      LOG.debug("Parser invalidating entire cache on overflow.");
       buildFileTreeCache.invalidateIfStale();
       invalidateCache();
     }

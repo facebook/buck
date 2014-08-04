@@ -106,14 +106,16 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
             options.getDefaultIncludes(),
             getParser(),
             getBuckEventBus(),
-            console);
+            console,
+            environment);
       } else {
         graph = PartialGraph.createPartialGraphIncludingRoots(
             matchingBuildTargets,
             options.getDefaultIncludes(),
             getParser(),
             getBuckEventBus(),
-            console);
+            console,
+            environment);
       }
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);

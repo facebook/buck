@@ -63,7 +63,8 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
       actionGraph = parser.parseBuildFilesForTargets(ImmutableList.of(buildTarget),
           options.getDefaultIncludes(),
           getBuckEventBus(),
-          console);
+          console,
+          environment);
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

@@ -155,8 +155,7 @@ public final class Main {
         ProjectFilesystem projectFilesystem,
         KnownBuildRuleTypes knownBuildRuleTypes,
         AndroidDirectoryResolver androidDirectoryResolver,
-        BuckConfig config,
-        ImmutableMap<String, String> environment) throws IOException {
+        BuckConfig config) throws IOException {
       this.config = Preconditions.checkNotNull(config);
       this.hashCache = new DefaultFileHashCache(projectFilesystem);
       Repository repository = new Repository(
@@ -166,7 +165,6 @@ public final class Main {
           config);
       this.parser = new Parser(
           repository,
-          environment,
           config.getPythonInterpreter(),
           config.getTempFilePatterns(),
           createRuleKeyBuilderFactory(hashCache));
@@ -255,7 +253,6 @@ public final class Main {
     }
 
     private void watchFileSystem(
-        ImmutableMap<String, String> environment,
         CommandEvent commandEvent,
         BuckEventBus eventBus) throws IOException, InterruptedException {
 
@@ -264,7 +261,6 @@ public final class Main {
       // invalidations triggered by requests to parse build files or interrupted by client
       // disconnections.
       synchronized (parser) {
-        parser.setEnvironment(environment);
         parser.recordParseStartTime(eventBus);
         fileEventBus.post(commandEvent);
         filesystemWatcher.postEvents();
@@ -315,16 +311,14 @@ public final class Main {
       ProjectFilesystem filesystem,
       BuckConfig config,
       KnownBuildRuleTypes knownBuildRuleTypes,
-      AndroidDirectoryResolver androidDirectoryResolver,
-      ImmutableMap<String, String> environment) throws IOException {
+      AndroidDirectoryResolver androidDirectoryResolver) throws IOException {
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", filesystem.getProjectRoot());
       daemon = new Daemon(
           filesystem,
           knownBuildRuleTypes,
           androidDirectoryResolver,
-          config,
-          environment);
+          config);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -347,8 +341,7 @@ public final class Main {
             filesystem,
             knownBuildRuleTypes,
             androidDirectoryResolver,
-            config,
-            environment);
+            config);
       }
     }
     return daemon;
@@ -561,8 +554,7 @@ public final class Main {
           projectFilesystem,
           config,
           buildRuleTypes,
-          androidDirectoryResolver,
-          clientEnvironment);
+          androidDirectoryResolver);
       eventListeners = addEventListeners(buildEventBus,
           projectFilesystem,
           config,
@@ -592,7 +584,6 @@ public final class Main {
               config,
               buildRuleTypes,
               androidDirectoryResolver,
-              clientEnvironment,
               commandEvent,
               buildEventBus);
         } catch (WatchmanWatcherException | IOException e) {
@@ -607,7 +598,6 @@ public final class Main {
       if (parser == null) {
         parser = new Parser(
             repository,
-            clientEnvironment,
             config.getPythonInterpreter(),
             config.getTempFilePatterns(),
             createRuleKeyBuilderFactory(new DefaultFileHashCache(projectFilesystem)));
@@ -688,7 +678,6 @@ public final class Main {
       BuckConfig config,
       KnownBuildRuleTypes knownBuildRuleTypes,
       AndroidDirectoryResolver androidDirectoryResolver,
-      ImmutableMap<String, String> environment,
       CommandEvent commandEvent,
       BuckEventBus eventBus) throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
@@ -696,10 +685,9 @@ public final class Main {
         projectFilesystem,
         config,
         knownBuildRuleTypes,
-        androidDirectoryResolver,
-        environment);
+        androidDirectoryResolver);
     daemon.watchClient(context.get());
-    daemon.watchFileSystem(environment, commandEvent, eventBus);
+    daemon.watchFileSystem(commandEvent, eventBus);
     daemon.initWebServer();
     return daemon.getParser();
   }
@@ -709,15 +697,13 @@ public final class Main {
       ProjectFilesystem projectFilesystem,
       BuckConfig config,
       KnownBuildRuleTypes knownBuildRuleTypes,
-      AndroidDirectoryResolver androidDirectoryResolver,
-      ImmutableMap<String, String> environment) throws IOException {
+      AndroidDirectoryResolver androidDirectoryResolver) throws IOException {
     if (context.isPresent()) {
       Daemon daemon = getDaemon(
           projectFilesystem,
           config,
           knownBuildRuleTypes,
-          androidDirectoryResolver,
-          environment);
+          androidDirectoryResolver);
       return daemon.getWebServer();
     }
     return Optional.absent();

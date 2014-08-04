@@ -289,7 +289,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         options.getDefaultIncludes(),
         getParser(),
         getBuckEventBus(),
-        console);
+        console,
+        environment);
 
     final ActionGraph graph = partialGraph.getActionGraph();
 

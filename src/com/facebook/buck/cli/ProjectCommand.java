@@ -349,7 +349,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           options.getDefaultIncludes(),
           getParser(),
           getBuckEventBus(),
-          console);
+          console,
+          environment);
     } else {
       // If build targets were specified, generate a partial intellij project that contains the
       // files needed to build the build targets specified.
@@ -363,14 +364,16 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             options.getDefaultIncludes(),
             getParser(),
             getBuckEventBus(),
-            console);
+            console,
+            environment);
       } else {
         return PartialGraph.createPartialGraphFromRoots(targets,
             rulePredicate,
             options.getDefaultIncludes(),
             getParser(),
             getBuckEventBus(),
-            console);
+            console,
+            environment);
       }
     }
   }
