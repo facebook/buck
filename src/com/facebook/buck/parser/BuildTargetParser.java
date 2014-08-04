@@ -19,11 +19,13 @@ package com.facebook.buck.parser;
 import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,9 +40,29 @@ public class BuildTargetParser {
   private static final List<String> INVALID_BUILD_RULE_SUBSTRINGS = ImmutableList.of("..", "./");
 
   private final ProjectFilesystem projectFilesystem;
+  private final ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap;
 
+  // TODO(jacko): This is broken. Get rid of it. Probably stop taking a filesystem at all.
   public BuildTargetParser(ProjectFilesystem projectFilesystem) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    // By default, use a canonical names map that only allows targets with no repo name.
+    this(projectFilesystem, ImmutableMap.of(
+            Optional.<String>absent(), Optional.<String>absent()));
+  }
+
+  /**
+   *
+   * @param localToCanonicalRepoNamesMap
+   *          Internally, buck uses a unique, global name to refer to each repository.  All targets
+   *          that live in repo X are represented internally using this unique name. However, other
+   *          repos might have their own names for X, and rules inside of X will refer to each other
+   *          with no explicit repo at all. This map provides the translation from local repo names
+   *          used within the current repo to their unique, global repo names.
+   */
+  public BuildTargetParser(
+      ProjectFilesystem projectFilesystem,
+      ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap) {
+    this.projectFilesystem = projectFilesystem;
+    this.localToCanonicalRepoNamesMap = localToCanonicalRepoNamesMap;
   }
 
   /**
@@ -71,7 +93,7 @@ public class BuildTargetParser {
           String.format("%s cannot end with a colon", buildTargetName));
     }
 
-    Optional<String> repoName = Optional.absent();
+    Optional<String> givenRepoName = Optional.absent();
     String targetAfterRepo = buildTargetName;
     if (buildTargetName.startsWith(REPOSITORY_STARTER)) {
       if (!buildTargetName.contains(BUILD_RULE_PREFIX)) {
@@ -82,12 +104,20 @@ public class BuildTargetParser {
                 buildTargetName));
       }
       int slashIndex = buildTargetName.indexOf(BUILD_RULE_PREFIX);
-      repoName = Optional.of(buildTargetName.substring(REPOSITORY_STARTER.length(), slashIndex));
+      givenRepoName = Optional.of(
+          buildTargetName.substring(REPOSITORY_STARTER.length(), slashIndex));
       targetAfterRepo = buildTargetName.substring(slashIndex);
     }
 
-    if (repoName.isPresent() && repoName.get().isEmpty()) {
+    if (givenRepoName.isPresent() && givenRepoName.get().isEmpty()) {
       throw new BuildTargetParseException("Repo name must not be empty.");
+    }
+
+    if (!localToCanonicalRepoNamesMap.containsKey(givenRepoName)) {
+      throw new HumanReadableException(String.format(
+          "In build target '%s', repo '%s' is not defined.",
+          buildTargetName,
+          givenRepoName));
     }
 
     List<String> parts = BUILD_RULE_SEPARATOR_SPLITTER.splitToList(targetAfterRepo);
@@ -105,6 +135,8 @@ public class BuildTargetParser {
           String.format("%s must start with %s", fullyQualifiedName, BUILD_RULE_PREFIX));
     }
 
+    // TODO(jacko): We need to stop doing this, unless we want to take a repository as an argument,
+    //              which would be a dependency tangle.
     // Make sure the directory that contains the build file exists.
     Path buildFileDirectory = Paths.get(baseName.substring(BUILD_RULE_PREFIX.length()));
     Path buildFilePath = buildFileDirectory.resolve(BUILD_RULES_FILE_NAME);
@@ -138,8 +170,9 @@ public class BuildTargetParser {
     }
 
     BuildTarget.Builder builder = BuildTarget.builder(baseName, shortName);
-    if (repoName.isPresent()) {
-      builder.setRepository(repoName.get()).build();
+    Optional<String> canonicalRepoName = localToCanonicalRepoNamesMap.get(givenRepoName);
+    if (canonicalRepoName.isPresent()) {
+      builder.setRepository(canonicalRepoName.get());
     }
     return builder.build();
   }

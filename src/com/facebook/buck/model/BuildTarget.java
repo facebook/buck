@@ -96,6 +96,8 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
    * The build file in which this rule was defined.
    * @throws MissingBuildFileException if the build file for the target does not exist.
    */
+  // TODO(jacko): This relies on the caller to pass in the correct projectFilesystem for this
+  //              target's repo. Ultimately it should take a RepositoryFactory or something similar.
   public File getBuildFile(ProjectFilesystem projectFilesystem) throws MissingBuildFileException {
     String pathToBuildFile = getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME;
     File buildFile = projectFilesystem.getFileForRelativePath(pathToBuildFile);
@@ -282,6 +284,15 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
       this.flavor = buildTarget.flavor;
     }
 
+    /**
+     * Build targets are hashable and equality-comparable, so targets referring to the same
+     * repository <strong>must</strong> use the same name. But build target syntax in BUCK files
+     * does <strong>not</strong> have this property -- repository names are configured in the local
+     * .buckconfig, and one project could use different naming from another. (And of course, targets
+     * within an external project will need a @repo name prepended to them, to distinguish them from
+     * targets in the root project.) It's the caller's responsibility to guarantee that repository
+     * names are disambiguated before BuildTargets are created.
+     */
     public Builder setRepository(String repo) {
       this.repository = Optional.of(repo);
       return this;

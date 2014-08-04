@@ -20,8 +20,12 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+
+import java.nio.file.Path;
 
 /**
  * Represents a single checkout of a code base. Two repositories model the same code base if their
@@ -29,23 +33,36 @@ import com.google.common.collect.ImmutableSet;
  */
 public class Repository {
 
+  private final Optional<String> name;
   private final ProjectFilesystem filesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
   private final BuckConfig buckConfig;
+  private final RepositoryFactory repositoryFactory;
+  private final ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap;
 
   // TODO(jacko): This is a hack to avoid breaking the build. Get rid of it.
   public final AndroidDirectoryResolver androidDirectoryResolver;
 
   @VisibleForTesting
   public Repository(
+      Optional<String> name,
       ProjectFilesystem filesystem,
       KnownBuildRuleTypes buildRuleTypes,
       BuckConfig buckConfig,
+      RepositoryFactory repositoryFactory,
       AndroidDirectoryResolver androidDirectoryResolver) {
+    this.name = Preconditions.checkNotNull(name);
     this.filesystem = Preconditions.checkNotNull(filesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.buckConfig = Preconditions.checkNotNull(buckConfig);
+    this.repositoryFactory = Preconditions.checkNotNull(repositoryFactory);
     this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
+
+    localToCanonicalRepoNamesMap = buildLocalToCanonicalRepoNamesMap();
+  }
+
+  public Optional<String> getName() {
+    return name;
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -70,6 +87,31 @@ public class Repository {
 
   public BuckConfig getBuckConfig() {
     return buckConfig;
+  }
+
+  private ImmutableMap<Optional<String>, Optional<String>> buildLocalToCanonicalRepoNamesMap() {
+    ImmutableMap.Builder<Optional<String>, Optional<String>> localToCanonicalMap =
+        ImmutableMap.builder();
+
+    // Paths starting with "//" (i.e. no "@repo" prefix) always map to the name of the current repo.
+    // For the root repo where buck is invoked, there is no name, and this mapping is a no-op.
+    localToCanonicalMap.put(Optional.<String>absent(), name);
+
+    // Add mappings for repos listed in the [repositories] section of .buckconfig.
+    ImmutableMap<String, Path> localNamePaths = buckConfig.getRepositoryPaths();
+    ImmutableMap<Path, Optional<String>> canonicalPathNames =
+        repositoryFactory.getCanonicalPathNames();
+    for (String localName : localNamePaths.keySet()) {
+      Path canonicalPath = localNamePaths.get(localName);
+      Optional<String> canonicalName = canonicalPathNames.get(canonicalPath);
+      Preconditions.checkNotNull(canonicalName);
+      localToCanonicalMap.put(Optional.of(localName), canonicalName);
+    }
+    return localToCanonicalMap.build();
+  }
+
+  public ImmutableMap<Optional<String>, Optional<String>> getLocalToCanonicalRepoNamesMap() {
+    return localToCanonicalRepoNamesMap;
   }
 
   @Override

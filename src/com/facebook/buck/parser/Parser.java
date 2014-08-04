@@ -223,7 +223,10 @@ public class Parser {
             return new FilesystemBackedBuildFileTree(repository.getFilesystem());
           }
         },
-        new BuildTargetParser(repository.getFilesystem()),
+        // TODO(jacko): Get rid of this global BuildTargetParser completely.
+        new BuildTargetParser(
+            repository.getFilesystem(),
+            repository.getLocalToCanonicalRepoNamesMap()),
         new DefaultProjectBuildFileParserFactory(
             repository.getFilesystem(),
             pythonInterpreter,
@@ -357,6 +360,8 @@ public class Parser {
     // seed BuildTargets for the traversal.
     postParseStartEvent(buildTargets, eventBus);
     ActionGraph graph = null;
+    // TODO(jacko): Instantiating one ProjectBuildFileParser here isn't enough. We a collection of
+    //              repo-specific parsers.
     try (ProjectBuildFileParser buildFileParser =
              buildFileParserFactory.createParser(
                  defaultIncludes,
@@ -665,6 +670,7 @@ public class Parser {
           "Unable to locate dependency \"%s\" for target \"%s\"", buildTarget, sourceTarget);
     }
 
+    // TODO(jacko): THIS ISN'T CORRECT: should use the filesystem the target is referenced from
     File buildFile = buildTarget.getBuildFile(repository.getFilesystem());
     if (isCached(buildFile, defaultIncludes, environment)) {
       throw new HumanReadableException(

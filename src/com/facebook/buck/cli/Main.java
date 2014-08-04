@@ -460,7 +460,7 @@ public final class Main {
 
     Path canonicalRootPath = projectRoot.toPath().toRealPath();
     RepositoryFactory repositoryFactory =
-        new RepositoryFactory(clientEnvironment, platform, console);
+        new RepositoryFactory(clientEnvironment, platform, console, canonicalRootPath);
 
     Repository rootRepository = repositoryFactory.getRepositoryByAbsolutePath(canonicalRootPath);
 

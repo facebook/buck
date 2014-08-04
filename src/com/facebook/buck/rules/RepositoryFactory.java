@@ -23,16 +23,21 @@ import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.util.DefaultPropertyFinder;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -46,14 +51,39 @@ public class RepositoryFactory {
   private final Console console;
 
   private final ConcurrentMap<Path, Repository> cachedRepositories = Maps.newConcurrentMap();
+  private final BiMap<Path, Optional<String>> canonicalPathNames =
+      Maps.synchronizedBiMap(HashBiMap.<Path, Optional<String>>create());
 
   public RepositoryFactory(
       ImmutableMap<String, String> clientEnvironment,
       Platform platform,
-      Console console) {
+      Console console,
+      Path canonicalRootPath) {
     this.clientEnvironment = Preconditions.checkNotNull(clientEnvironment);
     this.platform = Preconditions.checkNotNull(platform);
     this.console = Preconditions.checkNotNull(console);
+    // Ideally we would do isRealPath() to make sure canonicalRootPath doesn't contain symlinks, but
+    // since this requires IO it's the responsibility of the caller. Checking isAbsolute() is the
+    // next best thing.
+    Preconditions.checkArgument(canonicalRootPath.isAbsolute());
+    // The root repo has no explicit name. All other repos will get a global, unique name.
+    this.canonicalPathNames.put(canonicalRootPath, Optional.<String>absent());
+  }
+
+  /**
+   * The table of canonical names grows as more repos are discovered. This returns a copy of the
+   * current table.
+   */
+  public ImmutableMap<Path, Optional<String>> getCanonicalPathNames() {
+    return ImmutableMap.copyOf(canonicalPathNames);
+  }
+
+  public Repository getRepositoryByCanonicalName(Optional<String> canonicalName) {
+    if (!canonicalPathNames.containsValue(canonicalName)) {
+      throw new HumanReadableException("No repository with canonical name '%s'.", canonicalName);
+    }
+    Path repoPath = canonicalPathNames.inverse().get(canonicalName);
+    return cachedRepositories.get(repoPath);
   }
 
   public Repository getRepositoryByAbsolutePath(Path absolutePath)
@@ -67,6 +97,11 @@ public class RepositoryFactory {
     if (cachedRepositories.containsKey(root)) {
       return cachedRepositories.get(root);
     }
+
+    if (!canonicalPathNames.containsKey(root)) {
+      throw new HumanReadableException("No repository name known for " + root);
+    }
+    Optional<String> name = canonicalPathNames.get(root);
 
     // Create common command parameters. projectFilesystem initialization looks odd because it needs
     // ignorePaths from a BuckConfig instance, which in turn needs a ProjectFilesystem (i.e. this
@@ -104,12 +139,52 @@ public class RepositoryFactory {
             javacEnv);
 
     Repository repository = new Repository(
+        name,
         projectFilesystem,
         buildRuleTypes,
         config,
+        this,
         androidDirectoryResolver);
     cachedRepositories.put(root, repository);
 
+    updateCanonicalNames(repository.getBuckConfig().getRepositoryPaths());
+
     return repository;
+  }
+
+  /**
+   * BuildTargets from the same repo need to always use the same repo name, no matter where the
+   * target is being used, or else our build will get very confused.  But that's not how build
+   * target syntax works in actual BUCK files. There, repo names are interpreted relative to the
+   * local .buckconfig, and targets within the repo aren't given any explicit repo name at all. We
+   * need to figure out a target's canonical repo name when we parse it, and in order to do that, we
+   * maintain the table of canonical names here as repos are discovered. Whenever a Repository is
+   * created, we check to see if it defines any external repos we haven't seen before, and if so we
+   * add their names to the canonical table.
+   * @param externalRepositoryPaths
+   */
+  private synchronized void updateCanonicalNames(Map<String, Path> externalRepositoryPaths) {
+    for (String possibleName : externalRepositoryPaths.keySet()) {
+      Path canonicalPath = externalRepositoryPaths.get(possibleName);
+      // If we already have a name for this repo, skip it.
+      if (canonicalPathNames.containsKey(canonicalPath)) {
+        // TODO(jacko): Should we choke in this case, if possibleName is different from what we
+        // already have (excluding Optional.absent() for the root repo).
+        continue;
+      }
+      // Make sure the new name hasn't been used before at a different path.
+      // TODO(jacko): Maybe generate a new unique name when there's a collision?
+      if (canonicalPathNames.containsValue(Optional.of(possibleName))) {
+        Path knownPath = canonicalPathNames.inverse().get(Optional.of(possibleName));
+        throw new HumanReadableException(
+            String.format(
+                "Tried to define repo \"%s\" at path %s, but it's already defined at path %s",
+                possibleName,
+                canonicalPath,
+                knownPath));
+      }
+      // Update the canonical table with the new name.
+      canonicalPathNames.put(canonicalPath, Optional.of(possibleName));
+    }
   }
 }
