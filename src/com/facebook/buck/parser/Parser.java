@@ -32,6 +32,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -446,6 +447,14 @@ public class Parser {
       if (description == null) {
         throw new HumanReadableException("Unrecognized rule %s while parsing %s%s.",
             buildRuleType,
+            BuildTarget.BUILD_TARGET_PREFIX,
+            target.getBuildFilePath());
+      }
+
+      if ((description instanceof Flavored) &&
+          !((Flavored) description).hasFlavor(buildTarget.getFlavor())) {
+        throw new HumanReadableException("Unrecognized flavor in target %s while parsing %s%s.",
+            buildTarget,
             BuildTarget.BUILD_TARGET_PREFIX,
             target.getBuildFilePath());
       }

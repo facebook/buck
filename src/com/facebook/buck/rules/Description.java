@@ -16,9 +16,12 @@
 
 package com.facebook.buck.rules;
 
+
+import com.facebook.buck.model.Flavor;
+
 /**
  * The Source of Truth about a {@link BuildRule}, providing mechanisms to expose the arguments that
- * rules derived from the Buildable take and providing a factory for those Buildables. It is
+ * rules derived from the Buildable take and providing a factory for those BuildRules. It is
  * expected that instances of this class are stateless.
  *
  * @param <T> The object describing the parameters to be passed to the {@link BuildRule}. How this
@@ -40,6 +43,10 @@ public interface Description<T extends ConstructorArg> {
   T createUnpopulatedConstructorArg();
 
   /**
+   * Create a {@link BuildRule} for the given {@link BuildableParams}. Note that the
+   * {@link com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the
+   * {@link Flavor} to create.
+   *
    * @param resolver For querying for build rules by their targets.
    * @param args A constructor argument, as returned by {@link #createUnpopulatedConstructorArg()}.
    * @return The {@link BuildRule} that describes the default flavour of the rule being described.

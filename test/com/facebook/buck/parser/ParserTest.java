@@ -66,6 +66,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -366,6 +367,29 @@ public class ParserTest extends EasyMockSupport {
     } catch (HumanReadableException e) {
       assertEquals("No rule found when resolving target //java/com/facebook:raz in build file " +
                    "//java/com/facebook/BUCK",
+          e.getHumanReadableErrorMessage());
+    }
+  }
+
+  @Test
+  public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeen()
+      throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
+    BuildTarget flavored = BuildTarget.builder("//java/com/facebook", "foo")
+        .setFlavor("doesNotExist")
+        .build();
+    try {
+      testParser.parseBuildFilesForTargets(
+          ImmutableSortedSet.of(flavored),
+          ImmutableList.<String>of(),
+          BuckEventBusFactory.newInstance(),
+          new TestConsole(),
+          ImmutableMap.<String, String>of());
+    } catch (HumanReadableException e) {
+      // TODO(simons): The text of this exception will change once flavoured targets can be
+      // addressed in the Parser.
+      assertEquals(
+          "No rule found when resolving target //java/com/facebook:foo#doesNotExist in build " +
+              "file //java/com/facebook/BUCK",
           e.getHumanReadableErrorMessage());
     }
   }
