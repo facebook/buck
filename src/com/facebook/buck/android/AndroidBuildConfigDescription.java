@@ -25,10 +25,11 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.util.Map;
 
 public class AndroidBuildConfigDescription
     implements Description<AndroidBuildConfigDescription.Arg> {
@@ -54,28 +55,41 @@ public class AndroidBuildConfigDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    // TODO(mbolin): Make it possible for users to specify additional constants via args.
-    Map<String, Object> constants = ImmutableMap.<String, Object>of();
-
-    return createBuildRule(params, args.javaPackage, /* useConstantExpressions */ false, constants);
+    return createBuildRule(
+        params,
+        args.javaPackage,
+        args.values.get(),
+        args.valuesFile,
+        /* useConstantExpressions */ false);
   }
 
+  /**
+   * @param values Collection whose entries identify fields for the generated
+   *     {@code BuildConfig} class. The values for fields can be overridden by values from the
+   *     {@code valuesFile} file, if present.
+   * @param valuesFile Path to a file with values to override those in {@code values}.
+   */
   static AndroidBuildConfigJavaLibrary createBuildRule(
       BuildRuleParams params,
       String javaPackage,
-      boolean useConstantExpressions,
-      Map<String, Object> constants) {
+      BuildConfigFields values,
+      Optional<SourcePath> valuesFile,
+      boolean useConstantExpressions) {
     // Create one build rule to generate BuildConfig.java.
     BuildRuleParams buildConfigParams = params.copyWithChanges(
         GEN_JAVA_TYPE,
         BuildTarget.builder(params.getBuildTarget()).setFlavor(GEN_JAVA_FLAVOR).build(),
         params.getDeclaredDeps(),
-        params.getExtraDeps());
+        /* extraDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(params.getExtraDeps())
+            .addAll(SourcePaths.filterBuildRuleInputs(valuesFile.asSet()))
+            .build());
     AndroidBuildConfig androidBuildConfig = new AndroidBuildConfig(
         buildConfigParams,
         javaPackage,
-        useConstantExpressions,
-        constants);
+        values,
+        valuesFile,
+        useConstantExpressions);
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     BuildRuleParams javaLibraryParams = params.copyWithChanges(
@@ -91,5 +105,11 @@ public class AndroidBuildConfigDescription
   public static class Arg implements ConstructorArg {
     @Hint(name = "package")
     public String javaPackage;
+
+    /** This will never be absent after this Arg is populated. */
+    public Optional<BuildConfigFields> values;
+
+    /** If present, contents of file can override those of {@link #values}. */
+    public Optional<SourcePath> valuesFile;
   }
 }

@@ -4,7 +4,7 @@ Buck
 Buck is an Android build tool. To see what Buck can do for you,
 check out the documentation at <http://facebook.github.io/buck/>.
 
-[![Build Status](https://travis-ci.org/facebook/buck.png)](https://travis-ci.org/facebook/buck)
+[![Build Status](https://travis-ci.org/facebook/buck.svg)](https://travis-ci.org/facebook/buck)
 
 Installation
 ------------

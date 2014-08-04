@@ -29,6 +29,7 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.log.LogConfig;
+import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
@@ -127,6 +128,7 @@ public final class Main {
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
+  private final Optional<BuckEventListener> externalEventsListener;
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
 
@@ -390,9 +392,18 @@ public final class Main {
 
   @VisibleForTesting
   public Main(PrintStream stdOut, PrintStream stdErr) {
+    this(stdOut, stdErr, Optional.<BuckEventListener>absent());
+  }
+
+  @VisibleForTesting
+  public Main(
+      PrintStream stdOut,
+      PrintStream stdErr,
+      Optional<BuckEventListener> externalEventsListener) {
     this.stdOut = Preconditions.checkNotNull(stdOut);
     this.stdErr = Preconditions.checkNotNull(stdErr);
     this.platform = Platform.detect();
+    this.externalEventsListener = externalEventsListener;
   }
 
   /** Prints the usage message to standard error. */
@@ -428,21 +439,24 @@ public final class Main {
   }
 
   /**
+   *
+   * @param buildId an identifier for this command execution.
    * @param context an optional NGContext that is present if running inside a Nailgun server.
    * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
-  public int runMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
+  public int runMainWithExitCode(
+      BuildId buildId,
+      File projectRoot,
+      Optional<NGContext> context,
+      String... args)
       throws IOException, InterruptedException {
-    if (args.length == 0) {
-      return usage();
-    }
 
     // Find and execute command.
     int exitCode;
-    Command.ParseResult command = Command.parseCommandName(args[0]);
+    Command.ParseResult command = parseCommandIfPresent(args);
     if (command.getCommand().isPresent()) {
-      return executeCommand(projectRoot, command, context, args);
+      return executeCommand(buildId, projectRoot, command, context, args);
     } else {
       exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
       if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
@@ -453,6 +467,13 @@ public final class Main {
     }
   }
 
+  private Command.ParseResult parseCommandIfPresent(String... args) {
+    if (args.length == 0) {
+      return new Command.ParseResult(Optional.<Command>absent(), Optional.<String>absent());
+    }
+    return Command.parseCommandName(args[0]);
+  }
+
   /**
    * @param context an optional NGContext that is present if running inside a Nailgun server.
    * @param args command line arguments
@@ -460,6 +481,7 @@ public final class Main {
    */
   @SuppressWarnings({"PMD.EmptyCatchBlock", "PMD.PrematureDeclaration"})
   public int executeCommand(
+      BuildId buildId,
       File projectRoot,
       Command.ParseResult commandParseResult,
       Optional<NGContext> context,
@@ -495,7 +517,6 @@ public final class Main {
 
     int exitCode;
     ImmutableList<BuckEventListener> eventListeners;
-    BuildId buildId = new BuildId();
     Clock clock = new DefaultClock();
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
         processExecutor,
@@ -809,6 +830,10 @@ public final class Main {
       buckEvents.register(eventListener);
     }
 
+    if (externalEventsListener.isPresent()) {
+      buckEvents.register(externalEventsListener.get());
+    }
+
     return eventListeners;
   }
 
@@ -879,7 +904,11 @@ public final class Main {
   }
 
   @VisibleForTesting
-  int tryRunMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
+  int tryRunMainWithExitCode(
+      BuildId buildId,
+      File projectRoot,
+      Optional<NGContext> context,
+      String... args)
       throws IOException, InterruptedException {
     // TODO(user): enforce write command exclusion, but allow concurrent read only commands?
     try {
@@ -890,7 +919,7 @@ public final class Main {
         LogConfig.setupLogging();
       }
       LOG.debug("Starting up with args: %s", Arrays.toString(args));
-      return runMainWithExitCode(projectRoot, context, args);
+      return runMainWithExitCode(buildId, projectRoot, context, args);
     } catch (HumanReadableException e) {
       Console console = new Console(Verbosity.STANDARD_INFORMATION,
           stdOut,
@@ -911,8 +940,10 @@ public final class Main {
   private void runMainThenExit(String[] args, Optional<NGContext> context) {
     File projectRoot = new File(".");
     int exitCode = FAIL_EXIT_CODE;
-    try {
-      exitCode = tryRunMainWithExitCode(projectRoot, context, args);
+    BuildId buildId = new BuildId();
+    try (LogFormatter.CommandThreadAssociation commandThreadAssociation =
+             new LogFormatter.CommandThreadAssociation(buildId.toString())) {
+      exitCode = tryRunMainWithExitCode(buildId, projectRoot, context, args);
     } catch (Throwable t) {
       LOG.error(t, "Uncaught exception at top level");
     } finally {

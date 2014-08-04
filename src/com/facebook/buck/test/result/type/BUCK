@@ -6,6 +6,7 @@ java_library(
   ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/junit:junit',
     '//src/com/facebook/buck/shell:steps',
@@ -13,6 +14,7 @@ java_library(
     '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/event:event',
+    '//test/com/facebook/buck/junit:junit',
     '//test/com/facebook/buck/test:test',
   ],
 )

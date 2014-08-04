@@ -45,6 +45,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
@@ -137,6 +138,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     return exitCode;
   }
 
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   static int executeBuildAndPrintAnyFailuresToConsole(
       Iterable<? extends HasBuildTarget> buildTargetsToBuild,
       Build build,
@@ -162,9 +164,13 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       try {
         buildFuture.get();
       } catch (InterruptedException e) {
-        buildFuture.cancel(true);
+        try {
+          buildFuture.cancel(true);
+        } catch (CancellationException ignored) {
+          // Rethrow original InterruptedException instead.
+        }
         Thread.currentThread().interrupt();
-        return 1;
+        throw e;
       }
       exitCode = 0;
     } catch (IOException e) {

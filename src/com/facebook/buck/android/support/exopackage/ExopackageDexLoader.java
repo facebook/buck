@@ -76,7 +76,7 @@ public class ExopackageDexLoader {
       for (File odex : odexes) {
         if (!expectedOdexSet.contains(odex.getName())) {
           if (!odex.delete()) {
-            Log.w(TAG, "Failed to delete state odex: " + odex.getAbsolutePath());
+            Log.w(TAG, "Failed to delete stale odex: " + odex.getAbsolutePath());
           }
         }
       }

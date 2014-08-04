@@ -18,9 +18,9 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
-import com.facebook.buck.java.InstrumentStep;
 import com.facebook.buck.java.JUnitStep;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaTest;
@@ -90,6 +90,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
@@ -165,29 +166,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   /**
-   * Returns the ShellCommand object that is supposed to instrument the class files that the list
-   * of tests is supposed to be testing. From TestRule objects, we derive the class file folders
-   * and generate a EMMA instr shell command object, which can run in a CommandRunner.
-   */
-  private Step getInstrumentCommand(
-      ImmutableSet<JavaLibrary> rulesUnderTest, ProjectFilesystem projectFilesystem) {
-    ImmutableSet.Builder<Path> pathsToInstrumentedClasses = ImmutableSet.builder();
-
-    // Add all JAR files produced by java libraries that we are testing to -instrpath.
-    for (JavaLibrary path : rulesUnderTest) {
-      Path pathToOutput = path.getPathToOutputFile();
-      if (pathToOutput == null) {
-        continue;
-      }
-      pathsToInstrumentedClasses.add(projectFilesystem.getAbsolutifier().apply(pathToOutput));
-    }
-
-    // Run EMMA instrumentation. This will instrument the classes we generated in the build command.
-    // TODO(user): Output instrumented class files in different folder and change junit classdir.
-    return new InstrumentStep("overwrite", pathsToInstrumentedClasses.build());
-  }
-
-  /**
    * Returns the ShellCommand object that is supposed to generate a code coverage report from data
    * obtained during the test run. This method will also generate a set of source paths to the class
    * files tested during the test run.
@@ -196,7 +174,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       ImmutableSet<JavaLibrary> rulesUnderTest,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       ProjectFilesystem filesystem,
-      Path outputDirectory) {
+      Path outputDirectory,
+      CoverageReportFormat format) {
     ImmutableSet.Builder<String> srcDirectories = ImmutableSet.builder();
     ImmutableSet.Builder<Path> pathsToClasses = ImmutableSet.builder();
 
@@ -214,9 +193,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       pathsToClasses.add(pathToOutput);
     }
 
-    return new GenerateCodeCoverageReportStep(srcDirectories.build(),
-        pathsToClasses.build(),
-        outputDirectory);
+    return new GenerateCodeCoverageReportStep(pathsToClasses.build(), outputDirectory, format);
   }
 
   /**
@@ -457,6 +434,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     }
   }
 
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   private int runTests(
       Iterable<TestRule> tests,
       BuildContext buildContext,
@@ -475,17 +453,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       rulesUnderTest = getRulesUnderTest(tests);
       if (!rulesUnderTest.isEmpty()) {
         try {
-          if (options.isJacocoEnabled()) {
-            stepRunner.runStep(
-                new MakeCleanDirectoryStep(JUnitStep.JACOCO_OUTPUT_DIR));
-          } else {
-            stepRunner.runStep(
-                new MakeCleanDirectoryStep(JUnitStep.EMMA_OUTPUT_DIR));
-            stepRunner.runStep(
-                getInstrumentCommand(
-                    rulesUnderTest,
-                    executionContext.getProjectFilesystem()));
-          }
+          stepRunner.runStep(
+              new MakeCleanDirectoryStep(JUnitStep.JACOCO_OUTPUT_DIR));
         } catch (StepFailedException e) {
           console.printBuildFailureWithoutStacktrace(e);
           return 1;
@@ -578,9 +547,13 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       e.printStackTrace(getStdErr());
       return 1;
     } catch (InterruptedException e) {
-      uberFuture.cancel(true);
+      try {
+        uberFuture.cancel(true);
+      } catch (CancellationException ignored) {
+        // Rethrow original InterruptedException instead.
+      }
       Thread.currentThread().interrupt();
-      return 1;
+      throw e;
     }
 
     getBuckEventBus().post(TestRunEvent.finished(
@@ -600,17 +573,12 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       try {
         Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional =
             options.getJavaPackageFinder();
-        Path outputDirectory;
-        if (options.isJacocoEnabled()) {
-          outputDirectory = JUnitStep.JACOCO_OUTPUT_DIR;
-        } else {
-          outputDirectory = JUnitStep.EMMA_OUTPUT_DIR;
-        }
         stepRunner.runStep(
             getReportCommand(rulesUnderTest,
                 defaultJavaPackageFinderOptional,
                 getProjectFilesystem(),
-                outputDirectory));
+                JUnitStep.JACOCO_OUTPUT_DIR,
+                options.getCoverageReportFormat()));
       } catch (StepFailedException e) {
         console.printBuildFailureWithoutStacktrace(e);
         return 1;

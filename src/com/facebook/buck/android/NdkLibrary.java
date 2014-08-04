@@ -132,7 +132,10 @@ public class NdkLibrary extends AbstractBuildRule
         binDirectory,
         genDirectory,
         CopyStep.DirectoryMode.CONTENTS_ONLY);
+
     buildableContext.recordArtifactsInDirectory(genDirectory);
+    // Some tools need to inspect .so files whose symbols haven't been stripped, so cache these too.
+    buildableContext.recordArtifactsInDirectory(buildArtifactsDirectory);
     return ImmutableList.of(nkdBuildStep, mkDirStep, copyStep);
   }
 
@@ -140,7 +143,7 @@ public class NdkLibrary extends AbstractBuildRule
    * @param isScratchDir true if this should be the "working directory" where a build rule may write
    *     intermediate files when computing its output. false if this should be the gen/ directory
    *     where the "official" outputs of the build rule should be written. Files of the latter type
-   *     can be referenced via the genfile() function.
+   *     can be referenced via a {@link com.facebook.buck.rules.BuildRuleSourcePath} or somesuch.
    */
   private Path getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
     Path base = isScratchDir ? BuckConstant.BIN_PATH : BuckConstant.GEN_PATH;

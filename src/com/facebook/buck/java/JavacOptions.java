@@ -75,8 +75,8 @@ public class JavacOptions {
     Preconditions.checkNotNull(optionsBuilder);
 
     // Add some standard options.
-    optionsBuilder.add("-target", javacEnv.getSourceLevel());
-    optionsBuilder.add("-source", javacEnv.getTargetLevel());
+    optionsBuilder.add("-source", javacEnv.getSourceLevel());
+    optionsBuilder.add("-target", javacEnv.getTargetLevel());
 
     if (debug) {
       optionsBuilder.add("-g");

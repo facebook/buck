@@ -43,19 +43,33 @@ public class TestContext extends NGContext implements Closeable {
   private Properties properties;
   private HashSet<NGClientListener> listeners;
   private CapturingPrintStream serverLog;
+  private boolean addListeners;
 
+  /**
+   * Simulates client that never disconnects, with normal system environment.
+   */
   public TestContext() {
     this(ImmutableMap.copyOf(System.getenv()),
-        createHeartBeatStream(NGConstants.HEARTBEAT_INTERVAL_MILLIS),
-        NGConstants.HEARTBEAT_TIMEOUT_MILLIS);
+        createDisconnectionStream(0),
+        0);
+    addListeners = false; // Only track disconnections when input stream supplied.
   }
 
+  /**
+   * Simulates client that never disconnects, with given environment.
+   */
   public TestContext(ImmutableMap<String, String> environment) {
     this(environment,
-        createHeartBeatStream(NGConstants.HEARTBEAT_INTERVAL_MILLIS),
-        NGConstants.HEARTBEAT_TIMEOUT_MILLIS);
+        createDisconnectionStream(0),
+        0);
+    addListeners = false; // Only track disconnections when input stream supplied.
   }
 
+  /**
+   * Simulates client connected to given stream, with given timeout and environment.
+   * If stream blocks for longer than timeout, or throws an exception, a client disconnection
+   * is triggered as normal.
+   */
   public TestContext(ImmutableMap<String, String> environment,
       InputStream clientStream,
       long timeoutMillis) {
@@ -72,6 +86,7 @@ public class TestContext extends NGContext implements Closeable {
       properties.setProperty(key, environment.get(key));
     }
     listeners = new HashSet<>();
+    addListeners = true;
   }
 
   @Override
@@ -81,14 +96,18 @@ public class TestContext extends NGContext implements Closeable {
 
   @Override
   public void addClientListener(NGClientListener listener) {
-    listeners.add(listener);
-    super.addClientListener(listener);
+    if (addListeners) {
+      listeners.add(listener);
+      super.addClientListener(listener);
+    }
   }
 
   @Override
   public void removeClientListener(NGClientListener listener) {
-    listeners.remove(listener);
-    super.removeClientListener(listener);
+    if (addListeners) {
+      listeners.remove(listener);
+      super.removeClientListener(listener);
+    }
   }
 
   public ImmutableSet<NGClientListener> getListeners() {
@@ -108,9 +127,28 @@ public class TestContext extends NGContext implements Closeable {
         try {
           Thread.sleep(byteInterval);
         } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
+          throw new IOException(e);
         }
         return NGConstants.CHUNKTYPE_HEARTBEAT;
+      }
+    };
+  }
+
+
+  /**
+   * @param disconnectMillis duration to wait before generating IOException.
+   * @return an InputStream which will wait and then simulate a client disconnection.
+   */
+  public static InputStream createDisconnectionStream(final long disconnectMillis) {
+    return new InputStream() {
+      @Override
+      public int read() throws IOException {
+        try {
+          Thread.sleep(disconnectMillis);
+        } catch (InterruptedException e) {
+          throw new IOException(e);
+        }
+        throw new IOException("Fake client disconnection.");
       }
     };
   }

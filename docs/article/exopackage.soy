@@ -127,7 +127,7 @@ revision used to create this tutorial:
 <p>
 
 <pre>{literal}
-git clone --recursive git@github.com:dreiss/AntennaPod.git
+git clone --recursive git@github.com:facebookarchive/AntennaPod.git
 cd AntennaPod
 git checkout c2080b1dfd17fc371e04ce1e7b39ebadaf3cb7a7
 {/literal}</pre>
@@ -753,8 +753,7 @@ Empirically, we have determined that the following devices do not work with exop
 <p>
 
 <ul class="tight-list">
-  <li>Genymotion Gingerbread devices
-  <li>HTC One X
+  <li>Some AOSP builds between the KitKat release and L Preview.
 </ul>
 
 You might want to keep two versions of your {call buck.android_binary /} rule in
@@ -784,7 +783,7 @@ That way, you will always have a way to test on devices that do not support exop
  */
 {template .gitHubCommit}
 <span style="font-size: 80%">
-  View on GitHub: <a href="https://github.com/dreiss/AntennaPod/commit/{$sha1}">{$sha1}</a>
+  View on GitHub: <a href="https://github.com/facebookarchive/AntennaPod/commit/{$sha1}">{$sha1}</a>
 </span>
 {/template}
 

@@ -1,3 +1,4 @@
+#include <string.h>
 #define MINIZ_HEADER_FILE_ONLY
 #include "miniz.c"
 #include "miniz-extensions.h"

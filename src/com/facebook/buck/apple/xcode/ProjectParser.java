@@ -21,17 +21,23 @@ import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.InputStream;
 import java.io.IOException;
 
+import java.util.HashMap;
+
 /**
  * Parser for xcode project files.
  */
 public class ProjectParser {
+
+  private static final Logger LOG = Logger.get(ProjectParser.class);
 
   // Utility class; do not instantiate.
   private ProjectParser() { }
@@ -69,6 +75,31 @@ public class ProjectParser {
   public static void extractTargetNameToGIDMap(
       NSDictionary objects,
       ImmutableMap.Builder<String, String> targetNamesToGIDs) {
+    Optional<ImmutableMap.Builder<String, String>> targetNamesToFileNames = Optional.absent();
+    doExtractTargetNameToGIDAndFileNameMaps(objects, targetNamesToGIDs, targetNamesToFileNames);
+  }
+
+  /**
+   * Given a dictionary of {GID: ObjectNSDictionary} pairs and
+   * builders for {TargetName: TargetGID} and {TargetName: TargetFileName} pairs,
+   * fills out the builders with the name:gid and name:filename pairs.
+   */
+  public static void extractTargetNameToGIDAndFileNameMaps(
+      NSDictionary objects,
+      ImmutableMap.Builder<String, String> targetNamesToGIDs,
+      ImmutableMap.Builder<String, String> targetNamesToFileNames) {
+    doExtractTargetNameToGIDAndFileNameMaps(
+        objects,
+        targetNamesToGIDs,
+        Optional.of(targetNamesToFileNames));
+  }
+
+  private static void doExtractTargetNameToGIDAndFileNameMaps(
+      NSDictionary objects,
+      ImmutableMap.Builder<String, String> targetNamesToGIDs,
+      Optional<ImmutableMap.Builder<String, String>> targetNamesToFileNames) {
+    HashMap<String, String> builtProductReferenceGidsToPaths = new HashMap<>();
+
     for (String gid : objects.allKeys()) {
       NSObject object = objects.objectForKey(gid);
       if (!(object instanceof NSDictionary)) {
@@ -90,8 +121,47 @@ public class ProjectParser {
             throw new HumanReadableException("Malformed Xcode project (non-string name)");
           }
           targetNamesToGIDs.put(name.toString(), gid);
+          NSObject productReference = objectDict.objectForKey("productReference");
+          if (productReference != null) {
+            if (!(productReference instanceof NSString)) {
+              throw new HumanReadableException(
+                  "Malformed Xcode project (non-string productReference)");
+            }
+            String targetFileName = builtProductReferenceGidsToPaths.get(
+                productReference.toString());
+            if (targetFileName == null) {
+              LOG.error(
+                  "Target %s has no built product reference (looked for gid %s)",
+                  name.toString(),
+                  gid);
+              throw new HumanReadableException(
+                  "Malformed Xcode project (PBXFileReference %s missing)",
+                  productReference.toString());
+            }
+            LOG.debug(
+                "Mapped target %s to built product filename %s (gid %s)",
+                name.toString(),
+                targetFileName,
+                gid);
+            if (targetNamesToFileNames.isPresent()) {
+              targetNamesToFileNames.get().put(name.toString(), targetFileName);
+            }
+          }
           break;
         }
+        case "PBXFileReference":
+          NSObject sourceTree = objectDict.objectForKey("sourceTree");
+          if (!(sourceTree instanceof NSString)) {
+            throw new HumanReadableException("Malformed Xcode project (non-string sourceTree)");
+          }
+          if (sourceTree.toString().equals("BUILT_PRODUCTS_DIR")) {
+            NSObject path = objectDict.objectForKey("path");
+            if (!(path instanceof NSString)) {
+              throw new HumanReadableException("Malformed Xcode project (non-string path)");
+            }
+            builtProductReferenceGidsToPaths.put(gid, path.toString());
+          }
+          break;
       }
     }
   }

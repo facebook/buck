@@ -213,6 +213,18 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     return BUILD_TARGET_PREFIX.equals(baseName);
   }
 
+  /**
+   * @return a {@link BuildTarget} that is equal to the current one, but without the flavor. If
+   *     this build target does not have a flavor, then this object will be returned.
+   */
+  public BuildTarget getUnflavoredTarget() {
+    if (!isFlavored()) {
+      return this;
+    } else {
+      return new BuildTarget(repository, baseName, shortName, Optional.<Flavor>absent());
+    }
+  }
+
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof BuildTarget)) {

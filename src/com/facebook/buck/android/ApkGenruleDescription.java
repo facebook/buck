@@ -23,12 +23,12 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class ApkGenruleDescription implements Description<ApkGenruleDescription.Arg> {
 
@@ -58,9 +58,16 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
 
     InstallableApk installableApk = (InstallableApk) args.apk;
 
+    ImmutableList<SourcePath> srcs = args.srcs.get();
+    ImmutableSortedSet<BuildRule> extraDeps =
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(SourcePaths.filterBuildRuleInputs(srcs))
+        .add(installableApk)
+        .build();
+
     return new ApkGenrule(
-        params,
-        args.srcs.get(),
+        params.copyWithExtraDeps(extraDeps),
+        srcs,
         args.cmd,
         args.bash,
         args.cmdExe,
@@ -75,7 +82,7 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
     public Optional<String> bash;
     public Optional<String> cmd;
     public Optional<String> cmdExe;
-    public Optional<ImmutableList<Path>> srcs;
+    public Optional<ImmutableList<SourcePath>> srcs;
 
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }

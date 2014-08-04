@@ -31,6 +31,7 @@ import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.TraceEventLogger;
+import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidManifestReader;
@@ -55,6 +56,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -243,6 +245,7 @@ public class AdbHelper {
    *  mode is enabled (-x). This flag is used as a marker that user understands that multiple
    *  devices will be used to install the apk if needed.
    */
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   public boolean adbCall(AdbCallable adbCallable) throws InterruptedException {
     List<IDevice> devices;
 
@@ -278,7 +281,11 @@ public class AdbHelper {
     // Start executions on all matching devices.
     List<ListenableFuture<Boolean>> futures = Lists.newArrayList();
     ListeningExecutorService executorService =
-        listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), adbThreadCount));
+        listeningDecorator(
+            newMultiThreadExecutor(
+                new LogFormatter.CommandThreadFactory(getClass().getSimpleName()),
+                adbThreadCount));
+
     for (final IDevice device : devices) {
       futures.add(executorService.submit(adbCallable.forDevice(device)));
     }
@@ -292,9 +299,13 @@ public class AdbHelper {
       ex.printStackTrace(console.getStdErr());
       return false;
     } catch (InterruptedException e) {
-      Futures.allAsList(futures).cancel(true);
+      try {
+        Futures.allAsList(futures).cancel(true);
+      } catch (CancellationException ignored) {
+        // Rethrow original InterruptedException instead.
+      }
       Thread.currentThread().interrupt();
-      return false;
+      throw e;
     } finally {
       MoreExecutors.shutdownOrThrow(
           executorService,

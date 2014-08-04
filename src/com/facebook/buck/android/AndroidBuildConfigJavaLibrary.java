@@ -72,7 +72,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary
   public void addToCollector(AndroidPackageableCollector collector) {
     collector.addBuildConfig(
         androidBuildConfig.getJavaPackage(),
-        androidBuildConfig.getConstants());
+        androidBuildConfig.getBuildConfigFields());
   }
 
   public AndroidBuildConfig getAndroidBuildConfig() {

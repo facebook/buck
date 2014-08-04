@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
@@ -167,5 +168,27 @@ public class FakeProjectFilesystemTest {
         Paths.get("hello.txt"),
         attribute);
     assertEquals(ImmutableSet.of(attribute), filesystem.getFileAttributesAtPath(path));
+  }
+
+  @Test
+  public void testFileOutputStream() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path filePath = Paths.get("somefile.txt");
+
+    try (OutputStream stream = filesystem.newFileOutputStream(filePath)) {
+      stream.write("hello world".getBytes());
+    }
+    assertEquals("hello world", filesystem.readFileIfItExists(filePath).get());
+  }
+
+  @Test
+  public void testFlushThenCloseFileOutputStream() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path filePath = Paths.get("somefile.txt");
+    OutputStream stream = filesystem.newFileOutputStream(filePath);
+    stream.write("hello world".getBytes());
+    stream.flush();
+    stream.close();
+    assertEquals("hello world", filesystem.readFileIfItExists(filePath).get());
   }
 }

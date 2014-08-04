@@ -91,7 +91,6 @@ public class Build implements Closeable {
       Console console,
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
-      boolean isJacocoEnabled,
       boolean isDebugEnabled,
       BuildDependencies buildDependencies,
       BuckEventBus eventBus,
@@ -112,7 +111,6 @@ public class Build implements Closeable {
         .setTargetDevice(targetDevice)
         .setDefaultTestTimeoutMillis(defaultTestTimeoutMillis)
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
-        .setJacocoEnabled(isJacocoEnabled)
         .setDebugEnabled(isDebugEnabled)
         .setEventBus(eventBus)
         .setPlatform(platform)

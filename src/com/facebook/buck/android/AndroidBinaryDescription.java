@@ -16,12 +16,11 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.AndroidBinary.PackageType;
-import static com.facebook.buck.android.AndroidBinary.TargetCpuType;
-import static com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
-import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
-import static com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
-
+import com.facebook.buck.android.AndroidBinary.PackageType;
+import com.facebook.buck.android.AndroidBinary.TargetCpuType;
+import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
+import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
@@ -35,6 +34,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -154,7 +154,9 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         javacOptions,
         args.exopackage.or(false),
-        keystore);
+        keystore,
+        args.buildConfigValues.get(),
+        args.buildConfigValuesFile);
     AndroidBinaryGraphEnhancer.EnhancementResult result =
         graphEnhancer.createAdditionalBuildables();
 
@@ -250,6 +252,11 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<List<String>> cpuFilters;
     public Optional<Set<BuildRule>> preprocessJavaClassesDeps;
     public Optional<String> preprocessJavaClassesBash;
+
+    /** This will never be absent after this Arg is populated. */
+    public Optional<BuildConfigFields> buildConfigValues;
+
+    public Optional<SourcePath> buildConfigValuesFile;
 
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }

@@ -208,7 +208,7 @@ static int raw_receive_file(const char* path, int expected_size, int sock) {
     return -1;
   }
   char tempfile[PATH_MAX];
-  ret = snprintf(tempfile, sizeof(tempfile), "%.*s%s%s-XXXXXX", (slash-path+1), path, TEMP_PREFIX, slash+1);
+  ret = snprintf(tempfile, sizeof(tempfile), "%.*s%s%s-XXXXXX", (uint32_t)(slash-path+1), path, TEMP_PREFIX, slash+1);
   if (ret <= 0 || ret >= sizeof(tempfile)) {
     fprintf(stderr, "temp file name snprintf failed: %d\n", ret);
     return -1;

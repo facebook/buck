@@ -104,6 +104,22 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {/call}
 
 {call buck.arg}
+  {param name : 'build_config_values' /}
+  {param default : '[]' /}
+  {param desc}
+  See the documentation on the <tt>values</tt> argument for {call buck.android_build_config /}.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'build_config_values_file' /}
+  {param default : 'None' /}
+  {param desc}
+  See the documentation on the <tt>values_file</tt> argument for {call buck.android_build_config /}.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'deps' /}
   {param default : '[]' /}
   {param desc}

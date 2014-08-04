@@ -53,11 +53,11 @@ public class ExternalJavacTest extends EasyMockSupport {
     ExternalJavacStep warn = createTestStep(BuildDependencies.WARN_ON_TRANSITIVE);
     ExternalJavacStep transitive = createTestStep(BuildDependencies.TRANSITIVE);
 
-    assertEquals("fakeJavac -target 6 -source 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
+    assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
         firstOrder.getDescription(context));
-    assertEquals("fakeJavac -target 6 -source 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
+    assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
         warn.getDescription(context));
-    assertEquals("fakeJavac -target 6 -source 6 -g -d . -classpath bar.jar" + File.pathSeparator +
+    assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath bar.jar" + File.pathSeparator +
         "foo.jar @" + PATH_TO_SRCS_LIST,
         transitive.getDescription(context));
   }

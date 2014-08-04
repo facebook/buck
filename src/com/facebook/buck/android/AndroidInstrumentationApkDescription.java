@@ -16,10 +16,10 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.AndroidBinary.PackageType;
-import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import static com.facebook.buck.model.HasBuildTarget.TO_TARGET;
 
+import com.facebook.buck.android.AndroidBinary.PackageType;
+import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
@@ -33,6 +33,7 @@ import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -104,7 +105,9 @@ public class AndroidInstrumentationApkDescription
         resourcesToExclude,
         JavacOptions.DEFAULTS,
         /* exopackage */ false,
-        apkUnderTest.getKeystore());
+        apkUnderTest.getKeystore(),
+        /* buildConfigValues */ BuildConfigFields.empty(),
+        /* buildConfigValuesFile */ Optional.<SourcePath>absent());
 
     AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();

@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
@@ -92,7 +93,7 @@ public class SourcePaths {
         .toList();
   }
 
-  public static Collection<Path> toPaths(Iterable<? extends SourcePath> sourcePaths) {
+  public static ImmutableList<Path> toPaths(Iterable<? extends SourcePath> sourcePaths) {
     // Maintain ordering and duplication if necessary.
     return FluentIterable.from(sourcePaths).transform(TO_PATH).toList();
   }

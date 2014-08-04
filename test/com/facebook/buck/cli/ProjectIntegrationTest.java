@@ -55,6 +55,7 @@ public class ProjectIntegrationTest {
         Joiner.on('\n').join(
           "MODIFIED FILES:",
           ".idea/compiler.xml",
+          ".idea/libraries/__libs:generated_jar.xml",
           ".idea/libraries/libs_guava_jar.xml",
           ".idea/libraries/libs_jsr305_jar.xml",
           ".idea/libraries/libs_junit_jar.xml",

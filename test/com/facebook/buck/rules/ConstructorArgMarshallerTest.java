@@ -588,32 +588,6 @@ public class ConstructorArgMarshallerTest {
         observedValues);
   }
 
-  @Test
-  public void shouldBeAbleToSetGenfilesProperly() throws ConstructorArgMarshalException {
-    class Dto implements ConstructorArg {
-      public Path path;
-      public SourcePath sourcePath;
-    }
-
-    String raw = BuildRuleFactoryParams.GENFILE_PREFIX + "Thing.java";
-
-    Dto dto = new Dto();
-    BuildRuleFactoryParams params = buildRuleFactoryParams(
-        ImmutableMap.<String, Object>of(
-            "path", raw,
-            "sourcePath", raw));
-
-    Path expected = params.resolveFilePathRelativeToBuildFileDirectory(raw);
-
-    marshaller.populate(
-        ruleResolver,
-        filesystem,
-        params,
-        dto);
-
-    assertEquals(expected, dto.path);
-  }
-
   public BuildRuleFactoryParams buildRuleFactoryParams(Map<String, Object> args) {
     ProjectFilesystem filesystem = new ProjectFilesystem(new File(".")) {
       @Override

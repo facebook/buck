@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -126,7 +127,7 @@ public class AndroidPackageableCollection {
    */
   public final ImmutableSet<Path> noDxClasspathEntries;
 
-  public final ImmutableMap<String, ImmutableMap<String, Object>> buildConfigs;
+  public final ImmutableMap<String, BuildConfigFields> buildConfigs;
 
   /**
    * Prebuild/third-party jars to be included in the package.  For apks, their resources will
@@ -154,7 +155,7 @@ public class AndroidPackageableCollection {
       ImmutableSet<Path> proguardConfigs,
       ImmutableSet<Path> classpathEntriesToDex,
       ImmutableSet<Path> noDxClasspathEntries,
-      ImmutableMap<String, ImmutableMap<String, Object>> buildConfigs,
+      ImmutableMap<String, BuildConfigFields> buildConfigs,
       ImmutableSet<Path> pathsToThirdPartyJars,
       ImmutableSet<BuildTarget> javaLibrariesToDex,
       Supplier<Map<String, HashCode>> classNamesToHashesSupplier) {

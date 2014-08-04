@@ -33,7 +33,7 @@ public final class AgentUtil {
 
   // These must match the values in the agent manifest.
   public static final String AGENT_PACKAGE_NAME = "com.facebook.buck.android.agent";
-  public static final String AGENT_VERSION_CODE = "2";
+  public static final String AGENT_VERSION_CODE = "3";
 
   /**
    * Size in bytes of the binary data use to generate the secret key for receive-file.

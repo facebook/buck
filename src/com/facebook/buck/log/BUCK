@@ -2,9 +2,11 @@ java_library(
   name = 'log',
   srcs = glob(['*.java']),
   deps = [
+    '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
     '//lib:guava',
+    '//lib:jsr305',
   ],
   visibility = [
     'PUBLIC',

@@ -18,20 +18,32 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.AndroidBuildConfig.ReadValuesStep;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -58,17 +70,14 @@ public class AndroidBuildConfigTest {
   @Test
   public void testBuildInternal() throws IOException {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
-
-    // Mock out a BuildContext whose DependencyGraph will be traversed.
-    BuildContext buildContext = EasyMock.createMock(BuildContext.class);
-    EasyMock.replay(buildContext);
-
-    List<Step> steps = buildConfig.getBuildSteps(buildContext, new FakeBuildableContext());
+    List<Step> steps = buildConfig.getBuildSteps(
+        FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
     Step generateBuildConfigStep = steps.get(1);
     GenerateBuildConfigStep expectedStep = new GenerateBuildConfigStep(
+        /* source */ BuildTargetFactory.newInstance("//java/com/example:build_config"),
         /* javaPackage */ "com.example",
         /* useConstantExpressions */ false,
-        /* constants */ ImmutableMap.<String, Object>of(),
+        /* constants */ Suppliers.ofInstance(BuildConfigFields.empty()),
         BuckConstant.GEN_PATH.resolve("java/com/example/__build_config__/BuildConfig.java"));
     assertEquals(expectedStep, generateBuildConfigStep);
   }
@@ -76,6 +85,32 @@ public class AndroidBuildConfigTest {
   @Test
   public void testGetTypeMethodOfBuilder() {
     assertEquals("android_build_config", AndroidBuildConfigDescription.TYPE.getName());
+  }
+
+  @Test
+  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals") // PMD has a bad heuristic here.
+  public void testReadValuesStep() throws IOException {
+    Path pathToValues = Paths.get("src/values.txt");
+
+    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.expect(projectFilesystem.readLines(pathToValues)).andReturn(
+        ImmutableList.of("boolean DEBUG = false", "String FOO = \"BAR\""));
+    EasyMock.replay(projectFilesystem);
+
+    ReadValuesStep step = new ReadValuesStep(new PathSourcePath(pathToValues));
+    ExecutionContext context = TestExecutionContext
+        .newBuilder()
+        .setProjectFilesystem(projectFilesystem)
+        .build();
+    int exitCode = step.execute(context);
+    assertEquals(0, exitCode);
+    assertEquals(
+        BuildConfigFields.fromFields(ImmutableList.of(
+            new BuildConfigFields.Field("boolean", "DEBUG", "false"),
+            new BuildConfigFields.Field("String", "FOO", "\"BAR\""))),
+        step.get());
+
+    EasyMock.verify(projectFilesystem);
   }
 
   private static AndroidBuildConfig createSimpleBuildConfigRule() {
@@ -87,8 +122,9 @@ public class AndroidBuildConfigTest {
     return new AndroidBuildConfig(
         params,
         /* javaPackage */ "com.example",
-        /* useConstantExpressions */ false,
-        /* constants */ ImmutableMap.<String, Object>of());
+        /* values */ BuildConfigFields.empty(),
+        /* valuesFile */ Optional.<SourcePath>absent(),
+        /* useConstantExpressions */ false);
   }
 
   // TODO(nickpalmer): Add another unit test that passes in a non-trivial DependencyGraph and verify

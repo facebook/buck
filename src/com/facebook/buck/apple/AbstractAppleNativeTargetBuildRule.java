@@ -38,6 +38,7 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
   private final ImmutableList<GroupedSource> srcs;
   private final ImmutableMap<SourcePath, String> perFileFlags;
   private final ImmutableSortedSet<String> frameworks;
+  private final Optional<String> gid;
 
   public AbstractAppleNativeTargetBuildRule(
       BuildRuleParams params,
@@ -49,6 +50,7 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
     frameworks = Preconditions.checkNotNull(arg.frameworks);
     srcs = Preconditions.checkNotNull(targetSources.srcs);
     perFileFlags = Preconditions.checkNotNull(targetSources.perFileFlags);
+    gid = Preconditions.checkNotNull(arg.gid);
   }
 
   /**
@@ -84,6 +86,13 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
    */
   public ImmutableSortedSet<String> getFrameworks() {
     return frameworks;
+  }
+
+  /**
+   * Returns an optional GID to be used for the target, if present.
+   */
+  public Optional<String> getGid() {
+    return gid;
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.step.TargetDevice;
@@ -41,6 +42,9 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Option(name = "--code-coverage", usage = "Whether code coverage information will be generated.")
   private boolean isCodeCoverageEnabled = false;
 
+  @Option(name = "--code-coverage-format", usage = "Format to be used for coverage")
+  private CoverageReportFormat coverageReportFormat = CoverageReportFormat.HTML;
+
   @Option(name = "--debug",
           usage = "Whether the test will start suspended with a JDWP debug port of 5005")
   private boolean isDebugEnabled = false;
@@ -48,10 +52,6 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Option(name = "--xml", usage = "Where to write test output as XML.")
   @Nullable
   private String pathToXmlTestOutput = null;
-
-  @Option(name = "--jacoco",
-          usage = "Whether jacoco should be used for code coverage analysis or emma.")
-  private boolean isJaccoEnabled = false;
 
   @Option(name = "--no-results-cache", usage = "Whether to use cached test results.")
   private boolean isResultsCacheDisabled = false;
@@ -114,9 +114,8 @@ public class TestCommandOptions extends BuildCommandOptions {
     return isCodeCoverageEnabled;
   }
 
-  @Override
-  public boolean isJacocoEnabled() {
-    return isJaccoEnabled;
+  public CoverageReportFormat getCoverageReportFormat() {
+    return coverageReportFormat;
   }
 
   private void setUseResultsCacheFromConfig(BuckConfig buckConfig) {

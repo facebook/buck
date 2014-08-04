@@ -19,6 +19,8 @@ package com.facebook.buck.apple.xcode;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 
+import com.facebook.buck.util.HumanReadableException;
+
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 
@@ -97,5 +99,58 @@ public class ProjectParserTest {
     assertEquals(
         ImmutableMap.of("Foo", "E66DC04ECEB7F6CD00000000"),
         fileReferenceMapBuilder.build());
+  }
+
+  @Test
+  public void extractingTargetNameToGidAndFileNameMapsSucceedsWithValidObjects() {
+    NSDictionary objects = new NSDictionary();
+    NSDictionary productReference = new NSDictionary();
+    productReference.put("isa", "PBXFileReference");
+    productReference.put("name", "libFoo.a");
+    productReference.put("path", "libFoo.a");
+    productReference.put("explicitFileType", "archive.ar");
+    productReference.put("sourceTree", "BUILT_PRODUCTS_DIR");
+    objects.put("D97ABD8BAD38536B8B15AAC2", productReference);
+    NSDictionary nativeTarget = new NSDictionary();
+    nativeTarget.put("isa", "PBXNativeTarget");
+    nativeTarget.put("name", "Foo");
+    nativeTarget.put("productReference", "D97ABD8BAD38536B8B15AAC2");
+    objects.put("E66DC04ECEB7F6CD00000000", nativeTarget);
+
+    ImmutableMap.Builder<String, String> fileReferenceMapBuilder =
+      ImmutableMap.builder();
+    ImmutableMap.Builder<String, String> fileNameMapBuilder =
+      ImmutableMap.builder();
+    ProjectParser.extractTargetNameToGIDAndFileNameMaps(
+        objects, fileReferenceMapBuilder, fileNameMapBuilder);
+    assertEquals(
+        ImmutableMap.of("Foo", "E66DC04ECEB7F6CD00000000"),
+        fileReferenceMapBuilder.build());
+    assertEquals(
+        ImmutableMap.of("Foo", "libFoo.a"),
+        fileNameMapBuilder.build());
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void extractingTargetNameToGidAndFileNameMapsThrowsWithMissingProductReference() {
+    NSDictionary objects = new NSDictionary();
+    NSDictionary nativeTarget = new NSDictionary();
+    nativeTarget.put("isa", "PBXNativeTarget");
+    nativeTarget.put("name", "Foo");
+    nativeTarget.put("productReference", "D97ABD8BAD38536B8B15AAC2");
+    objects.put("E66DC04ECEB7F6CD00000000", nativeTarget);
+
+    ImmutableMap.Builder<String, String> fileReferenceMapBuilder =
+      ImmutableMap.builder();
+    ImmutableMap.Builder<String, String> fileNameMapBuilder =
+      ImmutableMap.builder();
+    ProjectParser.extractTargetNameToGIDAndFileNameMaps(
+        objects, fileReferenceMapBuilder, fileNameMapBuilder);
+    assertEquals(
+        ImmutableMap.of("Foo", "E66DC04ECEB7F6CD00000000"),
+        fileReferenceMapBuilder.build());
+    assertEquals(
+        ImmutableMap.of("Foo", "libFoo.a"),
+        fileNameMapBuilder.build());
   }
 }

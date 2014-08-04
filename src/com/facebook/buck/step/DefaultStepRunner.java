@@ -19,6 +19,7 @@ package com.facebook.buck.step;
 import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
+import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.concurrent.MoreExecutors;
@@ -52,7 +53,11 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
 
   public DefaultStepRunner(ExecutionContext context,
                            int numThreads) {
-    this(context, listeningDecorator(newMultiThreadExecutor("DefaultStepRunner", numThreads)));
+    this(context,
+        listeningDecorator(
+            newMultiThreadExecutor(
+                new LogFormatter.CommandThreadFactory("DefaultStepRunner"),
+                numThreads)));
   }
 
   @VisibleForTesting

@@ -23,15 +23,26 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
  * {@link BuildRule} that can generate a {@code BuildConfig.java} file and compile it so it can be
@@ -120,32 +131,38 @@ import java.util.Map;
 public class AndroidBuildConfig extends AbstractBuildRule {
 
   private final String javaPackage;
+  private final BuildConfigFields defaultValues;
+  private final Optional<SourcePath> valuesFile;
   private final boolean useConstantExpressions;
-  private final ImmutableMap<String, Object> constants;
   private final Path pathToOutputFile;
 
   protected AndroidBuildConfig(
       BuildRuleParams buildRuleParams,
       String javaPackage,
-      boolean useConstantExpressions,
-      Map<String, Object> constants) {
+      BuildConfigFields defaultValues,
+      Optional<SourcePath> valuesFile,
+      boolean useConstantExpressions) {
     super(buildRuleParams);
     this.javaPackage = Preconditions.checkNotNull(javaPackage);
+    this.defaultValues = Preconditions.checkNotNull(defaultValues);
+    this.valuesFile = Preconditions.checkNotNull(valuesFile);
     this.useConstantExpressions = useConstantExpressions;
-    this.constants = ImmutableMap.copyOf(constants);
     this.pathToOutputFile = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s__")
         .resolve("BuildConfig.java");
   }
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
+    return SourcePaths.filterInputsToCompareToOutput(valuesFile.asSet());
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("package", javaPackage);
+        .set("javaPackage", javaPackage)
+        .set("valuesFile", valuesFile.isPresent() ? valuesFile.get().toString() : null)
+        .set("useConstantExpressions", useConstantExpressions)
+        .set("defaultValues", defaultValues.toString());
   }
 
   @Override
@@ -154,11 +171,26 @@ public class AndroidBuildConfig extends AbstractBuildRule {
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
+    Supplier<BuildConfigFields> totalFields;
+    if (valuesFile.isPresent()) {
+      final ReadValuesStep readValuesStep = new ReadValuesStep(valuesFile.get());
+      steps.add(readValuesStep);
+      totalFields = Suppliers.memoize(new Supplier<BuildConfigFields>() {
+        @Override
+        public BuildConfigFields get() {
+          return defaultValues.putAll(readValuesStep.get());
+        }
+      });
+    } else {
+      totalFields = Suppliers.ofInstance(defaultValues);
+    }
+
     steps.add(new MakeCleanDirectoryStep(pathToOutputFile.getParent()));
     steps.add(new GenerateBuildConfigStep(
+        getBuildTarget(),
         javaPackage,
         useConstantExpressions,
-        constants,
+        totalFields,
         pathToOutputFile));
 
     buildableContext.recordArtifact(pathToOutputFile);
@@ -178,7 +210,41 @@ public class AndroidBuildConfig extends AbstractBuildRule {
     return useConstantExpressions;
   }
 
-  public ImmutableMap<String, Object> getConstants() {
-    return constants;
+  public BuildConfigFields getBuildConfigFields() {
+    return defaultValues;
+  }
+
+  @VisibleForTesting
+  static class ReadValuesStep extends AbstractExecutionStep
+      implements Supplier<BuildConfigFields> {
+
+    private final SourcePath valuesFile;
+
+    @Nullable
+    private BuildConfigFields values;
+
+    public ReadValuesStep(SourcePath valuesFile) {
+      super("read values from " + valuesFile.toString());
+      this.valuesFile = Preconditions.checkNotNull(valuesFile);
+    }
+
+    @Override
+    public int execute(ExecutionContext context) {
+      List<String> lines;
+      try {
+        lines = context.getProjectFilesystem().readLines(valuesFile.resolve());
+      } catch (IOException e) {
+        context.logError(e, "Error reading %s.", valuesFile);
+        return 1;
+      }
+      values = BuildConfigFields.fromFieldDeclarations(lines);
+      return 0;
+    }
+
+    @Override
+    public BuildConfigFields get() {
+      return Preconditions.checkNotNull(values);
+    }
+
   }
 }

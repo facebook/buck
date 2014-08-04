@@ -41,8 +41,6 @@ import javax.annotation.Nullable;
  *  xcode_native(
  *    name = 'SPDY',
  *    xcodeproj = 'spdy/SPDY/SPDY.xcodeproj',
- *    gid = '3870AF5114E47F8E009D8118',
- *    product = 'libSPDY.a',
  *  )
  * </pre>
  */

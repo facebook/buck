@@ -95,6 +95,7 @@ public class TypeCoercerFactory {
 
       // other simple
       appleSourceTypeCoercer,
+      new BuildConfigFieldsTypeCoercer(),
   };
 
   public TypeCoercer<?> typeCoercerForType(Type type) {

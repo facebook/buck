@@ -1,0 +1,13 @@
+java_test(
+  name = 'coercer',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/rules:build_rule',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//test/com/facebook/buck/testutil:testutil',
+  ],
+)

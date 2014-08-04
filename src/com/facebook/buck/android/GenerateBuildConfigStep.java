@@ -16,33 +16,37 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.base.Supplier;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 
 public class GenerateBuildConfigStep implements Step {
 
+  private final BuildTarget source;
   private final String javaPackage;
   private final boolean useConstantExpressions;
-  private final ImmutableMap<String, Object> constants;
+  private final Supplier<BuildConfigFields> fields;
   private final Path outBuildConfigPath;
 
   public GenerateBuildConfigStep(
+      BuildTarget source,
       String javaPackage,
       boolean useConstantExpressions,
-      Map<String, Object> constants,
+      Supplier<BuildConfigFields> fields,
       Path outBuildConfigPath) {
+    this.source = Preconditions.checkNotNull(source);
     this.javaPackage = Preconditions.checkNotNull(javaPackage);
     this.useConstantExpressions = useConstantExpressions;
-    this.constants = ImmutableMap.copyOf(constants);
+    this.fields = Preconditions.checkNotNull(fields);
     this.outBuildConfigPath = Preconditions.checkNotNull(outBuildConfigPath);
     if (outBuildConfigPath.getNameCount() == 0) {
       throw new HumanReadableException("Output BuildConfig.java filepath is missing");
@@ -52,9 +56,10 @@ public class GenerateBuildConfigStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     String java = BuildConfigs.generateBuildConfigDotJava(
+        source,
         javaPackage,
         useConstantExpressions,
-        constants);
+        fields.get());
     ProjectFilesystem filesystem = context.getProjectFilesystem();
     try {
       filesystem.writeContentsToPath(java, outBuildConfigPath);
@@ -85,7 +90,7 @@ public class GenerateBuildConfigStep implements Step {
     GenerateBuildConfigStep that = (GenerateBuildConfigStep) obj;
     return Objects.equal(this.javaPackage, that.javaPackage) &&
         this.useConstantExpressions == that.useConstantExpressions &&
-        Objects.equal(this.constants, that.constants) &&
+        Objects.equal(this.fields, that.fields) &&
         Objects.equal(this.outBuildConfigPath, that.outBuildConfigPath);
   }
 
@@ -94,7 +99,7 @@ public class GenerateBuildConfigStep implements Step {
     return Objects.hashCode(
         javaPackage,
         useConstantExpressions,
-        constants,
+        fields,
         outBuildConfigPath);
   }
 }

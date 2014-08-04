@@ -78,8 +78,6 @@ public class ExopackageInstaller {
    */
   private static final int MAX_ADB_COMMAND_SIZE = 1019;
 
-  private static final boolean USE_NATIVE_AGENT = true;
-
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
   private final AdbHelper adbHelper;
@@ -94,6 +92,8 @@ public class ExopackageInstaller {
    */
   @Nullable
   private IDevice device;
+
+  private boolean useNativeAgent = true;
 
   /**
    * Set after the agent is installed.
@@ -166,6 +166,7 @@ public class ExopackageInstaller {
     }
 
     nativeAgentPath = agentInfo.get().nativeLibPath;
+    determineBestAgent();
 
     final File apk = apkRule.getApkPath().toFile();
     // TODO(user): Support SD installation.
@@ -195,8 +196,24 @@ public class ExopackageInstaller {
     return true;
   }
 
+  /**
+   * Sets {@link #useNativeAgent} to true on pre-L devices, because our native agent is built
+   * without -fPIC.  The java agent works fine on L as long as we don't use it for mkdir.
+   */
+  private void determineBestAgent() throws Exception {
+    String value = AdbHelper.executeCommandWithErrorChecking(
+        device, "getprop ro.build.version.sdk");
+    try {
+      if (Integer.valueOf(value.trim()) > 19) {
+        useNativeAgent = false;
+      }
+    } catch (NumberFormatException exn) {
+      useNativeAgent = false;
+    }
+  }
+
   private String getAgentCommand() {
-    if (USE_NATIVE_AGENT) {
+    if (useNativeAgent) {
       return nativeAgentPath + "/libagent.so ";
     } else {
       return JAVA_AGENT_COMMAND;
@@ -380,8 +397,13 @@ public class ExopackageInstaller {
     try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "prepare_dex_dir")) {
       final ImmutableSet.Builder<String> foundHashes = ImmutableSet.builder();
 
+      // Kind of a hack here.  The java agent can't force the proper permissions on the directories
+      // it creates, so we use the command-line "mkdir -p" instead of the java agent.  Fortunately,
+      // "mkdir -p" seems to work on all devices where we use use the java agent.
+      String mkdirP = useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
+
       AdbHelper.executeCommandWithErrorChecking(
-          device, "umask 022 && mkdir -p " + dataRoot + "/secondary-dex");
+          device, "umask 022 && " + mkdirP + " " + dataRoot + "/secondary-dex");
       String output = AdbHelper.executeCommandWithErrorChecking(
           device, "ls " + dataRoot + "/secondary-dex");
 

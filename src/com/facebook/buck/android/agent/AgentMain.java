@@ -64,6 +64,8 @@ public class AgentMain {
     try {
       if (command.equals("get-signature")) {
         doGetSignature(userArgs);
+      } else if (command.equals("mkdir-p")) {
+        doMkdirP(userArgs);
       } else if (command.equals("receive-file")) {
         doReceiveFile(userArgs);
       } else {
@@ -87,6 +89,24 @@ public class AgentMain {
     String packagePath = userArgs.get(0);
 
     System.out.println(AgentUtil.getJarSignature(packagePath));
+  }
+
+  /**
+   * Roughly equivalent to the shell command "mkdir -p".
+   *
+   * Note that some (all?) versions of Android will force restrictive permissions
+   * on the created directories.
+   */
+  private static void doMkdirP(List<String> userArgs) throws IOException {
+    if (userArgs.size() != 1) {
+      throw new IllegalArgumentException("usage: mkdir -p PATH");
+    }
+
+    File path = new File(userArgs.get(0));
+    boolean success = path.mkdirs();
+    if (!success) {
+      throw new IOException("Creating directory failed.");
+    }
   }
 
   /**

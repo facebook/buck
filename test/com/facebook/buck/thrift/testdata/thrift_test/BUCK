@@ -1,0 +1,5 @@
+thrift_library(
+  name = 'thrifty',
+  srcs = glob(['*.thrift' ]),
+)
+

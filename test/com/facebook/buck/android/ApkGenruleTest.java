@@ -42,6 +42,8 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -52,12 +54,16 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMock;
@@ -125,8 +131,9 @@ public class ApkGenruleTest {
     arg.cmd = Optional.of("python signer.py $APK key.properties > $OUT");
     arg.cmdExe = Optional.of("");
     arg.out = "signed_fb4a.apk";
-    arg.srcs = Optional.of(ImmutableList.of(
-            Paths.get("src/com/facebook/signer.py"), Paths.get("src/com/facebook/key.properties")));
+    arg.srcs = Optional.of(ImmutableList.<SourcePath>of(
+        new PathSourcePath(Paths.get("src/com/facebook/signer.py")),
+        new PathSourcePath(Paths.get("src/com/facebook/key.properties"))));
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(
             new ProjectFilesystem(Paths.get(".")) {
@@ -143,6 +150,13 @@ public class ApkGenruleTest {
         "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk";
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
+    assertEquals(
+        "The apk that this rule is modifying must have the apk in its deps.",
+        ImmutableSet.of(apkTarget.toString()),
+        FluentIterable
+            .from(apkGenrule.getDeps())
+            .transform(Functions.toStringFunction())
+            .toSet());
     BuildContext buildContext = BuildContext.builder()
         .setActionGraph(EasyMock.createMock(ActionGraph.class))
         .setStepRunner(EasyMock.createNiceMock(StepRunner.class))
@@ -151,10 +165,11 @@ public class ApkGenruleTest {
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
         .setEventBus(BuckEventBusFactory.newInstance())
         .build();
-    ImmutableSortedSet<Path> inputsToCompareToOutputs = ImmutableSortedSet.of(
-        Paths.get("src/com/facebook/key.properties"),
-        Paths.get("src/com/facebook/signer.py"));
-    assertEquals(inputsToCompareToOutputs,
+    Iterable<Path> expectedInputsToCompareToOutputs = ImmutableList.<Path>of(
+        Paths.get("src/com/facebook/signer.py"),
+        Paths.get("src/com/facebook/key.properties"));
+    MoreAsserts.assertIterablesEquals(
+        expectedInputsToCompareToOutputs,
         apkGenrule.getInputsToCompareToOutput());
 
     // Verify that the shell commands that the genrule produces are correct.

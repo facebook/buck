@@ -1,0 +1,4 @@
+package exotest;
+class Value {
+  static final String VALUE = "HERE".toString();
+}

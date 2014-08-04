@@ -42,12 +42,14 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -113,7 +115,9 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
         /* exopackage */ false,
-        createStrictMock(Keystore.class));
+        createStrictMock(Keystore.class),
+        /* buildConfigValues */ BuildConfigFields.empty(),
+        /* buildConfigValuesFile */ Optional.<SourcePath>absent());
 
     BuildTarget uberRDotJavaTarget =
         BuildTarget.builder("//java/com/example", "apk").setFlavor("uber_r_dot_java").build();
@@ -181,8 +185,9 @@ public class AndroidBinaryGraphEnhancerTest {
         .createBuildRule(
           buildConfigParams,
           "com.example.buck",
-          /* useConstantExpressions */ false,
-          /* constants */ ImmutableMap.<String, Object>of());
+          /* values */ BuildConfigFields.empty(),
+          /* valuesFile */ Optional.<SourcePath>absent(),
+          /* useConstantExpressions */ false);
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams = new FakeBuildRuleParamsBuilder(apkTarget)
@@ -208,7 +213,9 @@ public class AndroidBinaryGraphEnhancerTest {
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
         /* exopackage */ true,
-        keystore);
+        keystore,
+        /* buildConfigValues */ BuildConfigFields.empty(),
+        /* buildConfigValuesFiles */ Optional.<SourcePath>absent());
     replay(keystore);
     EnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
@@ -233,8 +240,10 @@ public class AndroidBinaryGraphEnhancerTest {
     assertTrue(androidBuildConfig.isUseConstantExpressions());
     assertEquals(
         "IS_EXOPACKAGE defaults to false, but should now be true. DEBUG should still be true.",
-        ImmutableMap.of("DEBUG", Boolean.TRUE, "IS_EXOPACKAGE", Boolean.TRUE),
-        androidBuildConfig.getConstants());
+        BuildConfigFields.fromFields(ImmutableList.of(
+            new BuildConfigFields.Field("boolean", "DEBUG", "true"),
+            new BuildConfigFields.Field("boolean", "IS_EXOPACKAGE", "true"))),
+        androidBuildConfig.getBuildConfigFields());
 
     ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();
     // Verify that the only dep is computeExopackageDepsAbi

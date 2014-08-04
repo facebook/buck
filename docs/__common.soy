@@ -181,6 +181,8 @@ ga('send', 'pageview');
         'prebuilt_jar',
         'prebuilt_native_library',
         'project_config',
+        'python_binary',
+        'python_library',
         ]}
       <li><a href="{ROOT}rule/{$rule}.html">{$rule}()</a>
     {/foreach}
@@ -188,7 +190,6 @@ ga('send', 'pageview');
   <h3>Functions</h3>
   <ul>
     {foreach $function in [
-        'genfile',
         'glob',
         'include_defs',
         ]}
@@ -461,6 +462,16 @@ ga('send', 'pageview');
 /***/
 {template .project_config}
 {call .ruleLink}{param name : 'project_config' /}{/call}
+{/template}
+
+/***/
+{template .python_binary}
+{call .ruleLink}{param name : 'python_binary' /}{/call}
+{/template}
+
+/***/
+{template .python_library}
+{call .ruleLink}{param name : 'python_library' /}{/call}
 {/template}
 
 /***/

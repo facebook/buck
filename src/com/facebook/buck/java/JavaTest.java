@@ -179,7 +179,6 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         pathToTestOutput,
         tmpDirectory,
         executionContext.isCodeCoverageEnabled(),
-        executionContext.isJacocoEnabled(),
         executionContext.isDebugEnabled(),
         executionContext.getBuckEventBus().getBuildId(),
         testSelectorList,
