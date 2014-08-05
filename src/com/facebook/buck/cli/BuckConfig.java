@@ -694,7 +694,7 @@ public class BuckConfig {
     String host = getValue("cache", "http_host").or("localhost");
     int port = Integer.parseInt(getValue("cache", "http_port").or(DEFAULT_HTTP_CACHE_PORT));
     int timeoutSeconds = Integer.parseInt(
-        getValue("cache", "connection_timeout_seconds").or(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS));
+        getValue("cache", "http_timeout_seconds").or(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS));
     boolean doStore = readCacheMode("http_mode", DEFAULT_HTTP_CACHE_MODE);
     return new HttpArtifactCache(
         host,

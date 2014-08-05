@@ -91,7 +91,7 @@ public class HttpArtifactCache implements ArtifactCache {
     HttpURLConnection connection;
     try {
       connection = getConnection(url);
-      connection.setConnectTimeout(timeoutSeconds);
+      connection.setConnectTimeout(1000 * timeoutSeconds);
     } catch (MalformedURLException e) {
       logger.error(e, "fetch(%s): malformed URL: %s", ruleKey, url);
       return CacheResult.MISS;
@@ -139,7 +139,7 @@ public class HttpArtifactCache implements ArtifactCache {
     HttpURLConnection connection;
     try {
       connection = getConnection(urlStore);
-      connection.setConnectTimeout(timeoutSeconds);
+      connection.setConnectTimeout(1000 * timeoutSeconds);
       connection.setRequestMethod(method);
       prepareFileUpload(connection, file, ruleKey.toString());
     } catch (MalformedURLException e) {

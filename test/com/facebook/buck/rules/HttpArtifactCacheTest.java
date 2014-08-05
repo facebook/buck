@@ -83,7 +83,7 @@ public class HttpArtifactCacheTest {
 
   @Test
   public void testStore() throws IOException {
-    connection.setConnectTimeout(1);
+    connection.setConnectTimeout(1000);
     connection.setDoOutput(true);
     connection.setRequestMethod("POST");
     expect(connection.getOutputStream()).andReturn(nullOutputStream());
