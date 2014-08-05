@@ -68,6 +68,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
@@ -144,7 +145,8 @@ public class ProjectGeneratorTest {
     projectFilesystem.writeContentsToPath(
         "",
         Paths.get(ProjectGenerator.PATH_TO_ASSET_CATALOG_BUILD_PHASE_SCRIPT));
-    projectFilesystem.writeContentsToPath("",
+    projectFilesystem.writeContentsToPath(
+        "",
         Paths.get(ProjectGenerator.PATH_TO_ASSET_CATALOG_COMPILER));
   }
 
@@ -401,8 +403,8 @@ public class ProjectGeneratorTest {
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
-        "foo.m", Optional.of("-foo"),
-        "bar.m", Optional.<String>absent()));
+            "foo.m", Optional.of("-foo"),
+            "bar.m", Optional.<String>absent()));
 
    // check headers
     {
@@ -571,7 +573,9 @@ public class ProjectGeneratorTest {
       arg.configs = configs;
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
-      arg.sourceUnderTest = ImmutableSortedSet.of();
+      arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
+      arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
+      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
@@ -626,11 +630,12 @@ public class ProjectGeneratorTest {
             "FRAMEWORK_SEARCH_PATHS",
             "frameworks"));
     ImmutableMap<String, ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs =
-        ImmutableMap.of("Debug", ImmutableList.of(
-            argConfig,
-            argSettings,
-            argConfig,
-            argSettings));
+        ImmutableMap.of(
+            "Debug", ImmutableList.of(
+                argConfig,
+                argSettings,
+                argConfig,
+                argSettings));
 
     {
       BuildRuleParams params =
@@ -658,7 +663,9 @@ public class ProjectGeneratorTest {
       arg.configs = configs;
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
-      arg.sourceUnderTest = ImmutableSortedSet.of();
+      arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
+      arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
+      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
@@ -755,7 +762,9 @@ public class ProjectGeneratorTest {
       arg.configs = configs;
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
-      arg.sourceUnderTest = ImmutableSortedSet.of();
+      arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
+      arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
+      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
@@ -913,7 +922,8 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXCopyFilesBuildPhase.class);
     PBXBuildFile frameworkFile = Iterables.getOnlyElement(copyFrameworksBuildPhase.getFiles());
     assertEquals("LocalFramework.framework", frameworkFile.getFileRef().getName());
-    assertEquals(copyFrameworksBuildPhase.getDstSubfolderSpec(),
+    assertEquals(
+        copyFrameworksBuildPhase.getDstSubfolderSpec(),
         PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
   }
 
@@ -934,7 +944,9 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of(
         "$SDKROOT/Foo.framework",
         "$DEVELOPER_DIR/XCTest.framework");
-    arg.sourceUnderTest = ImmutableSortedSet.of();
+    arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
+    arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
+    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
     arg.testType = Optional.absent();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
@@ -992,7 +1004,9 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of(
         "$SDKROOT/Foo.framework",
         "$DEVELOPER_DIR/XCTest.framework");
-    arg.sourceUnderTest = ImmutableSortedSet.of();
+    arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
+    arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
+    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
     arg.testType = Optional.of("xctest");
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
@@ -1061,7 +1075,9 @@ public class ProjectGeneratorTest {
           "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
       arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")));
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Test.framework");
-      arg.sourceUnderTest = ImmutableSortedSet.of();
+      arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
+      arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
+      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
@@ -1225,9 +1241,9 @@ public class ProjectGeneratorTest {
         });
 
     BuildRule iosBinaryRule = createBuildRuleWithDefaults(
-      BuildTarget.builder("//foo", "bin").build(),
-      ImmutableSortedSet.of(scriptRule, resourceRule),
-      iosBinaryDescription);
+        BuildTarget.builder("//foo", "bin").build(),
+        ImmutableSortedSet.of(scriptRule, resourceRule),
+        iosBinaryDescription);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
       ImmutableSet.of(iosBinaryRule),
@@ -1348,35 +1364,56 @@ public class ProjectGeneratorTest {
     //
     // Calling generate on FooBin should pull in everything except BazLibTest
 
-    BuildRule barLib = createBuildRuleWithDefaults(
+    final BuildRule barLib = createBuildRuleWithDefaults(
         BuildTarget.builder("//bar", "lib").build(),
         ImmutableSortedSet.<BuildRule>of(),
         iosLibraryDescription);
-    BuildRule fooLib = createBuildRuleWithDefaults(
+    final BuildRule fooLib = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(barLib),
         iosLibraryDescription);
-    BuildRule fooBin = createBuildRuleWithDefaults(
+    final BuildRule fooBin = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "bin").build(),
         ImmutableSortedSet.of(fooLib),
         iosBinaryDescription);
-    BuildRule bazLib = createBuildRuleWithDefaults(
+    final BuildRule bazLib = createBuildRuleWithDefaults(
         BuildTarget.builder("//baz", "lib").build(),
         ImmutableSortedSet.of(fooLib),
         iosLibraryDescription);
 
-    BuildRule bazLibTest = createIosTestRule(
+    final BuildRule bazLibTest = createBuildRuleWithDefaults(
         BuildTarget.builder("//baz", "test").build(),
         ImmutableSortedSet.of(bazLib),
-        ImmutableSortedSet.of(bazLib));
-    BuildRule fooLibTest = createIosTestRule(
+        iosTestDescription,
+        new Function<IosTestDescription.Arg, IosTestDescription.Arg>() {
+          @Override
+          public IosTestDescription.Arg apply(IosTestDescription.Arg input) {
+            input.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib));
+            return input;
+          }
+        });
+    final BuildRule fooLibTest = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "lib-test").build(),
-        ImmutableSortedSet.of(fooLib),
-        ImmutableSortedSet.of(fooLib, bazLib));
-    BuildRule fooBinTest = createIosTestRule(
+        ImmutableSortedSet.of(fooLib, bazLib),
+        iosTestDescription,
+        new Function<IosTestDescription.Arg, IosTestDescription.Arg>() {
+          @Override
+          public IosTestDescription.Arg apply(IosTestDescription.Arg input) {
+            input.sourceUnderTest = Optional.of(ImmutableSortedSet.of(fooLib));
+            return input;
+          }
+        });
+    final BuildRule fooBinTest = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "bin-test").build(),
         ImmutableSortedSet.of(fooBin),
-        ImmutableSortedSet.of(fooBin));
+        iosTestDescription,
+        new Function<IosTestDescription.Arg, IosTestDescription.Arg>() {
+          @Override
+          public IosTestDescription.Arg apply(IosTestDescription.Arg input) {
+            input.sourceUnderTest = Optional.of(ImmutableSortedSet.of(fooBin));
+            return input;
+          }
+        });
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(barLib, fooLib, fooBin, bazLib, bazLibTest, fooLibTest, fooBinTest),
@@ -2033,26 +2070,6 @@ public class ProjectGeneratorTest {
         fileRef.getSourceTree());
     return projectFilesystem.resolve(OUTPUT_DIRECTORY).resolve(fileRef.getPath())
         .normalize().toString();
-  }
-
-  private BuildRule createIosTestRule(
-      BuildTarget target,
-      ImmutableSortedSet<BuildRule> sourceUnderTest,
-      ImmutableSortedSet<BuildRule> deps) {
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(target)
-        .setDeps(deps)
-        .setType(IosTestDescription.TYPE)
-        .build();
-    IosTestDescription.Arg arg = iosTestDescription.createUnpopulatedConstructorArg();
-    arg.configs = ImmutableMap.of();
-    arg.infoPlist = Optional.of(Paths.get("Info.plist"));
-    arg.frameworks = ImmutableSortedSet.of();
-    arg.srcs = ImmutableList.of();
-    arg.sourceUnderTest = sourceUnderTest;
-    arg.testType = Optional.absent();
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    return iosTestDescription.createBuildRule(buildRuleParams, new BuildRuleResolver(), arg);
   }
 
   private void assertHasConfigurations(PBXTarget target, String... names) {

@@ -38,7 +38,10 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.TypeCoercer;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.RuleMap;
+import com.facebook.buck.util.Types;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -50,6 +53,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -87,7 +91,10 @@ final class ProjectGeneratorTestUtils {
       } else if (field.getType().isAssignableFrom(ImmutableMap.class)) {
         value = ImmutableMap.of();
       } else if (field.getType().isAssignableFrom(Optional.class)) {
-        value = Optional.absent();
+        Type nonOptionalType = Types.getFirstNonOptionalType(field);
+        TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
+        TypeCoercer<?> typeCoercer = typeCoercerFactory.typeCoercerForType(nonOptionalType);
+        value = typeCoercer.getOptionalValue();
       } else if (field.getType().isAssignableFrom(String.class)) {
         value = "";
       } else if (field.getType().isAssignableFrom(Path.class)) {
@@ -111,6 +118,7 @@ final class ProjectGeneratorTestUtils {
         .setDeps(deps)
         .setType(description.getBuildRuleType())
         .build();
+
     return description.createBuildRule(
         buildRuleParams,
         new BuildRuleResolver(),

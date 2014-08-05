@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Label;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -46,7 +47,9 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
   }
 
   public static class Arg extends AppleNativeTargetDescriptionArg {
-    public ImmutableSortedSet<BuildRule> sourceUnderTest;
+    public Optional<ImmutableSortedSet<String>> contacts;
+    public Optional<ImmutableSortedSet<Label>> labels;
+    public Optional<ImmutableSortedSet<BuildRule>> sourceUnderTest;
     public Optional<String> testType;
   }
 }
