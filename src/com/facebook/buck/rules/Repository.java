@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents a single checkout of a code base. Two repositories model the same code base if their
  * underlying {@link ProjectFilesystem}s are equal.
@@ -38,7 +40,9 @@ public class Repository {
   private final KnownBuildRuleTypes buildRuleTypes;
   private final BuckConfig buckConfig;
   private final RepositoryFactory repositoryFactory;
-  private final ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap;
+
+  @Nullable
+  private volatile ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap;
 
   // TODO(jacko): This is a hack to avoid breaking the build. Get rid of it.
   public final AndroidDirectoryResolver androidDirectoryResolver;
@@ -58,7 +62,7 @@ public class Repository {
     this.repositoryFactory = Preconditions.checkNotNull(repositoryFactory);
     this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
 
-    localToCanonicalRepoNamesMap = buildLocalToCanonicalRepoNamesMap();
+    localToCanonicalRepoNamesMap = null;
   }
 
   public Optional<String> getName() {
@@ -89,29 +93,38 @@ public class Repository {
     return buckConfig;
   }
 
-  private ImmutableMap<Optional<String>, Optional<String>> buildLocalToCanonicalRepoNamesMap() {
-    ImmutableMap.Builder<Optional<String>, Optional<String>> localToCanonicalMap =
-        ImmutableMap.builder();
-
-    // Paths starting with "//" (i.e. no "@repo" prefix) always map to the name of the current repo.
-    // For the root repo where buck is invoked, there is no name, and this mapping is a no-op.
-    localToCanonicalMap.put(Optional.<String>absent(), name);
-
-    // Add mappings for repos listed in the [repositories] section of .buckconfig.
-    ImmutableMap<String, Path> localNamePaths = buckConfig.getRepositoryPaths();
-    ImmutableMap<Path, Optional<String>> canonicalPathNames =
-        repositoryFactory.getCanonicalPathNames();
-    for (String localName : localNamePaths.keySet()) {
-      Path canonicalPath = localNamePaths.get(localName);
-      Optional<String> canonicalName = canonicalPathNames.get(canonicalPath);
-      Preconditions.checkNotNull(canonicalName);
-      localToCanonicalMap.put(Optional.of(localName), canonicalName);
-    }
-    return localToCanonicalMap.build();
-  }
-
   public ImmutableMap<Optional<String>, Optional<String>> getLocalToCanonicalRepoNamesMap() {
-    return localToCanonicalRepoNamesMap;
+    if (localToCanonicalRepoNamesMap != null) {
+      return localToCanonicalRepoNamesMap;
+    }
+
+    synchronized (this) {
+      // Double-check locking.
+      if (localToCanonicalRepoNamesMap != null) {
+        return localToCanonicalRepoNamesMap;
+      }
+
+      ImmutableMap.Builder<Optional<String>, Optional<String>> builder =
+          ImmutableMap.builder();
+
+      // Paths starting with "//" (i.e. no "@repo" prefix) always map to the name of the current
+      // repo. For the root repo where buck is invoked, there is no name, and this mapping is a
+      // no-op.
+      builder.put(Optional.<String>absent(), name);
+
+      // Add mappings for repos listed in the [repositories] section of .buckconfig.
+      ImmutableMap<String, Path> localNamePaths = buckConfig.getRepositoryPaths();
+      ImmutableMap<Path, Optional<String>> canonicalPathNames =
+          repositoryFactory.getCanonicalPathNames();
+      for (String localName : localNamePaths.keySet()) {
+        Path canonicalPath = localNamePaths.get(localName);
+        Optional<String> canonicalName = canonicalPathNames.get(canonicalPath);
+        Preconditions.checkNotNull(canonicalName);
+        builder.put(Optional.of(localName), canonicalName);
+      }
+      localToCanonicalRepoNamesMap = builder.build();
+      return localToCanonicalRepoNamesMap;
+    }
   }
 
   @Override

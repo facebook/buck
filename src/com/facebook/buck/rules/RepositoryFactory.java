@@ -78,12 +78,13 @@ public class RepositoryFactory {
     return ImmutableMap.copyOf(canonicalPathNames);
   }
 
-  public Repository getRepositoryByCanonicalName(Optional<String> canonicalName) {
+  public Repository getRepositoryByCanonicalName(Optional<String> canonicalName)
+      throws IOException, InterruptedException {
     if (!canonicalPathNames.containsValue(canonicalName)) {
       throw new HumanReadableException("No repository with canonical name '%s'.", canonicalName);
     }
     Path repoPath = canonicalPathNames.inverse().get(canonicalName);
-    return cachedRepositories.get(repoPath);
+    return getRepositoryByAbsolutePath(repoPath);
   }
 
   public Repository getRepositoryByAbsolutePath(Path absolutePath)
