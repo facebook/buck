@@ -195,8 +195,8 @@ if [ -z "$BUCK_REPOSITORY_DIRTY" ]; then
     BUCK_CURRENT_VERSION=`git rev-parse HEAD`
     BUCK_VERSION_TIMESTAMP=`git log --pretty=format:%ct -1 HEAD`
 
-    # if the output of "git status -s" is non-empty.
-    if [ -n "`git status -s`" ]; then
+    # if the output of "git status --porcelain" is non-empty.
+    if [ -n "`git status --porcelain`" ]; then
       BUCK_REPOSITORY_DIRTY=1
     fi
     # If the output of "git ls-files -m" is non-empty, buck has local changes to
