@@ -55,8 +55,10 @@ public abstract class AbstractCommandOptions {
 
   @Nullable
   @Option(
-      name = "--output-events-to-file",
-      usage = "Serialize event bus events to the given file as line-oriented JSON objects.")
+      name = "--output-test-events-to-file",
+      aliases = { "--output-events-to-file" },
+      usage = "Serialize test-related event-bus events to the given file " +
+          "as line-oriented JSON objects.")
   private String eventsOutputPath = null;
 
   @Option(

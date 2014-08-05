@@ -1,0 +1,4 @@
+sh_test(
+  name = 'something',
+  test = './test.sh',
+)

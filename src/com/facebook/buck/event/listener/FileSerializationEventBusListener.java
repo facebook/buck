@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.IndividualTestEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
 
@@ -51,7 +52,7 @@ public class FileSerializationEventBusListener implements BuckEventListener, Clo
   }
 
   @Subscribe
-  public void writeEvent(BuckEvent event) {
+  public void writeEvent(IndividualTestEvent.Finished event) {
     String json = serializeEvent(event);
     try {
       bufferedWriter.write(json + "\n");

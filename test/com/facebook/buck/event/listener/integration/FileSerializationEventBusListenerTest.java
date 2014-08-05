@@ -47,9 +47,9 @@ public class FileSerializationEventBusListenerTest {
     File eventsOutputFile = workspace.getFile("events.json");
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build",
-        ":something",
-        "--output-events-to-file",
+        "test",
+        "--all",
+        "--output-test-events-to-file",
         eventsOutputFile.getAbsolutePath());
     result.assertSuccess();
 
