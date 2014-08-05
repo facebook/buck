@@ -46,17 +46,19 @@ function setBuckdRunning() {
 function killBuckd() {
   # Kill any existing buckd process.
   if [ $BUCKD_RUNNING -eq 0 ] && [ -n "$BUCKD_PID_FILE" ]; then
-    echo >&2 "Killing existing buckd process"
+    echo >&2 "Terminating existing buckd process..."
     BUCK_PID=$(cat "$BUCKD_PID_FILE")
     kill $BUCK_PID &> /dev/null || true
     WAIT_COUNT=1
-    echo >&2 "Waiting for existing buckd process to exit"
+    echo >&2 "Waiting for existing buckd process to exit..."
     while [ $(ps -p $BUCK_PID &> /dev/null; echo $? || true) -eq 0 ];
       do sleep 0.1
       WAIT_COUNT=$((WAIT_COUNT + 1))
       if [ $WAIT_COUNT -gt 100 ]; then
-        echo >&2 "Could not kill existing buckd process after 10 seconds!"
-        exit 1
+        echo >&2 "Could not kill terminate buckd process after 10 seconds!"
+        echo >&2 "Force killing existing buckd process."
+        kill $BUCK_PID -9 &> /dev/null || true
+        break
       fi
     done
   fi

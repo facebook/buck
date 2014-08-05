@@ -264,16 +264,19 @@ class BuckRepo:
 
     def _kill_buckd_process_and_wait(self, buckd_pid):
         try:
-            print("Killing existing buckd process.", file=sys.stderr)
+            print("Terminating existing buckd process...", file=sys.stderr)
             os.kill(buckd_pid, signal.SIGTERM)
-            print("Waiting for existing buckd process to exit.",
+            print("Waiting for existing buckd process to exit...",
                   file=sys.stderr)
             for count in range(100):
                 time.sleep(0.1)
-                os.kill(buckd_pid, 0)
+                os.kill(buckd_pid, signal.SIGTERM)
             else:
-                raise BuckRepoException(
-                    "Could not kill existing buckd process after 10 seconds!")
+                print(textwrap.dedent("""\
+                    Could not kill existing buckd process after 10 seconds!
+                    Force killing existing buckd process."""),
+                      file=sys.stderr)
+                os.kill(buckd_pid, signal.SIGKILL)
         except OSError as e:
             if e.errno != errno.ESRCH:
                 raise
