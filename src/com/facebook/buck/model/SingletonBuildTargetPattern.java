@@ -25,18 +25,19 @@ import javax.annotation.Nullable;
  */
 public class SingletonBuildTargetPattern implements BuildTargetPattern {
 
-  public static final String RESOURCE_SUFFIX = "_resources";
-
-  public static final String PREBUILT_NATIVE_LIBS_SUFFIX = "_prebuilt_native_libs";
-
-  private final String fullyQualifiedName;
+  private final BuildTarget target;
 
   /**
    * @param fullyQualifiedName The fully qualified name of valid target. It is expected to
    *     match the value returned from a {@link BuildTarget#getFullyQualifiedName()} call.
    */
   public SingletonBuildTargetPattern(String fullyQualifiedName) {
-    this.fullyQualifiedName = Preconditions.checkNotNull(fullyQualifiedName);
+    Preconditions.checkNotNull(fullyQualifiedName);
+
+    int colon = fullyQualifiedName.lastIndexOf(':');
+    target = BuildTarget
+        .builder(fullyQualifiedName.substring(0, colon), fullyQualifiedName.substring(colon + 1))
+        .build();
   }
 
   /**
@@ -45,11 +46,7 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
    */
   @Override
   public boolean apply(@Nullable BuildTarget target) {
-    if (target == null) {
-      return false;
-    } else {
-      return Objects.equal(this.fullyQualifiedName, target.getFullyQualifiedName());
-    }
+    return target != null && this.target.equals(target.getUnflavoredTarget());
   }
 
   @Override
@@ -58,12 +55,12 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
       return false;
     }
     SingletonBuildTargetPattern that = (SingletonBuildTargetPattern) o;
-    return Objects.equal(this.fullyQualifiedName, that.fullyQualifiedName);
+    return Objects.equal(this.target, that.target);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(fullyQualifiedName);
+    return target.hashCode();
   }
 
 }

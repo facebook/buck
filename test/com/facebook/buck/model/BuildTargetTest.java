@@ -134,13 +134,10 @@ public class BuildTargetTest {
 
   @Test
   public void testNotSettingTheFlavorInTheShortStringButLookingLikeYouMightIsTeasingAndWrong() {
-    try {
-      // Hilarious case that might result in an IndexOutOfBoundsException
-      BuildTarget.builder("//foo/bar", "baz#").build();
-      fail("Should have thrown IllegalArgumentException.");
-    } catch (IllegalArgumentException e) {
-      assertEquals("Invalid flavor: ", e.getMessage());
-    }
+    // Hilarious case that might result in an IndexOutOfBoundsException
+    BuildTarget target = BuildTarget.builder("//foo/bar", "baz#").build();
+
+    assertEquals(Flavor.DEFAULT, target.getFlavor());
   }
 
   @Test
@@ -150,5 +147,17 @@ public class BuildTargetTest {
 
     BuildTarget flavoredTarget = BuildTarget.builder("//foo/bar", "baz").setFlavor("biz").build();
     assertEquals(unflavoredTarget, flavoredTarget.getUnflavoredTarget());
+  }
+
+  @Test
+  public void testCanUnflavorATarget() {
+    BuildTarget flavored = BuildTarget.builder("//foo", "bar")
+        .setFlavor(new Flavor("cake"))
+        .build();
+
+    // This might throw an exception if it fails to parse
+    BuildTarget unflavored = BuildTarget.builder(flavored).setFlavor(Flavor.DEFAULT).build();
+
+    assertEquals(Flavor.DEFAULT, unflavored.getFlavor());
   }
 }

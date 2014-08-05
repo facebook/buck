@@ -1,0 +1,11 @@
+
+export_file(
+  name = 'example',
+  src = ':lib#src',
+  out = 'example-sources.zip',
+)
+
+java_library(
+  name = 'lib',
+  srcs = glob(['*.java']),
+)

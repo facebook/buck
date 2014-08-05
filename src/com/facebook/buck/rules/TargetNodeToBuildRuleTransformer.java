@@ -71,7 +71,7 @@ public class TargetNodeToBuildRuleTransformer<T extends ConstructorArg> {
     BuildRule buildRule = description.createBuildRule(params, ruleResolver, arg);
 
     // Note that describedRule has not been added to the BuildRuleResolver yet.
-    if (description instanceof FlavorableDescription) {
+    if (description instanceof FlavorableDescription && !targetNode.getBuildTarget().isFlavored()) {
       FlavorableDescription<T> flavorable = (FlavorableDescription<T>) description;
       flavorable.registerFlavors(
           arg,

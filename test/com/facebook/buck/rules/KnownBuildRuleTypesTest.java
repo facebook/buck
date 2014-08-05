@@ -121,7 +121,10 @@ public class KnownBuildRuleTypesTest {
 
     JavaLibraryDescription.Arg arg = new JavaLibraryDescription.Arg();
     populateJavaArg(arg);
-    return description.createBuildRule(buildRuleParams, new BuildRuleResolver(), arg);
+    return (DefaultJavaLibrary) description.createBuildRule(
+        buildRuleParams,
+        new BuildRuleResolver(),
+        arg);
   }
 
   @Test

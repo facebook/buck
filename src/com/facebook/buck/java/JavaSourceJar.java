@@ -57,7 +57,7 @@ public class JavaSourceJar extends AbstractBuildRule {
     super(params);
     this.sources = Preconditions.checkNotNull(sources);
     BuildTarget target = params.getBuildTarget();
-    this.output = BuildTargets.getGenPath(target, String.format("%%s-%s", JavacStep.SRC_ZIP));
+    this.output = BuildTargets.getGenPath(target, String.format("%%s%s", JavacStep.SRC_ZIP));
     this.temp = BuildTargets.getBinPath(target, "%s-srcs");
   }
 
@@ -97,10 +97,12 @@ public class JavaSourceJar extends AbstractBuildRule {
     }
     steps.add(new ZipStep(
             output,
-            ImmutableSet.of(temp),
+            ImmutableSet.<Path>of(),
             /* junk paths */ false,
             DEFAULT_COMPRESSION_LEVEL,
             temp));
+
+    buildableContext.recordArtifact(output);
 
     return steps.build();
   }

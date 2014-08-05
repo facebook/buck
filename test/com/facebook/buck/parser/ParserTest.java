@@ -387,15 +387,12 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of());
     } catch (HumanReadableException e) {
-      // TODO(simons): The text of this exception will change once flavoured targets can be
-      // addressed in the Parser.
       assertEquals(
-          "No rule found when resolving target //java/com/facebook:foo#doesNotExist in build " +
-              "file //java/com/facebook/BUCK",
+          "Unrecognized flavor in target //java/com/facebook:foo#doesNotExist while parsing " +
+              "//java/com/facebook/BUCK.",
           e.getHumanReadableErrorMessage());
     }
   }
-
 
   @Test
   public void testInvalidDepFromValidFile()

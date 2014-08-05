@@ -76,7 +76,8 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
         shortName);
     if (flavor.isPresent()) {
       Flavor flavorName = flavor.get();
-      if (!VALID_FLAVOR_PATTERN.matcher(flavorName.toString()).matches()) {
+      if (!Flavor.DEFAULT.equals(flavorName) &&
+          !VALID_FLAVOR_PATTERN.matcher(flavorName.toString()).matches()) {
         throw new IllegalArgumentException("Invalid flavor: " + flavorName);
       }
     }
@@ -88,8 +89,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     this.flavor = flavor;
     this.fullyQualifiedName =
         (repository.isPresent() ? "@" + repository.get() : "") +
-        baseName + ":" + shortName +
-        (flavor.isPresent() ? "#" + flavor.get() : "");
+        baseName + ":" + shortName + getFlavorPostfix();
   }
 
   /**
@@ -137,7 +137,11 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
    * "guava-latest". Note that the flavor of the target is included here.
    */
   public String getShortName() {
-    return shortName + (flavor.isPresent() ? "#" + flavor.get() : "");
+    return shortName + getFlavorPostfix();
+  }
+
+  private String getFlavorPostfix() {
+    return (flavor.isPresent() && !flavor.get().equals(Flavor.DEFAULT) ? "#" + flavor.get() : "");
   }
 
   @JsonProperty("shortName")

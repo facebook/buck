@@ -433,18 +433,18 @@ public class Parser {
       return toReturn;
     }
 
+    BuildTarget unflavored = buildTarget.getUnflavoredTarget();
     List<Map<String, Object>> rules =
-        Preconditions.checkNotNull(parsedBuildFiles.get(normalize(buildTarget.getBuildFilePath())));
+        Preconditions.checkNotNull(parsedBuildFiles.get(normalize(unflavored.getBuildFilePath())));
     for (Map<String, Object> map : rules) {
 
-      if (!buildTarget.getShortName().equals(map.get("name"))) {
+      if (!buildTarget.getShortNameOnly().equals(map.get("name"))) {
         continue;
       }
 
       BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
-      BuildTarget target = parseBuildTargetFromRawRule(map);
       targetsToFile.put(
-          target,
+          unflavored,
           normalize(Paths.get((String) map.get("buck.base_path")))
               .resolve("BUCK").toAbsolutePath());
 
@@ -453,7 +453,7 @@ public class Parser {
         throw new HumanReadableException("Unrecognized rule %s while parsing %s%s.",
             buildRuleType,
             BuildTarget.BUILD_TARGET_PREFIX,
-            target.getBuildFilePath());
+            unflavored.getBuildFilePath());
       }
 
       if ((description instanceof Flavored) &&
@@ -461,14 +461,16 @@ public class Parser {
           throw new HumanReadableException("Unrecognized flavor in target %s while parsing %s%s.",
             buildTarget,
             BuildTarget.BUILD_TARGET_PREFIX,
-            target.getBuildFilePath());
+            buildTarget.getBuildFilePath());
       }
 
       BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
           map,
           repository.getFilesystem(),
           buildTargetParser,
-          target,
+          // Although we store the rule by its unflavoured name, when we construct it, we need the
+          // flavour.
+          buildTarget,
           ruleKeyBuilderFactory);
       TargetNode<?> targetNode;
       try {
@@ -478,9 +480,9 @@ public class Parser {
         throw new HumanReadableException(e);
       }
 
-      TargetNode<?> existingTargetNode = memoizedTargetNodes.put(target, targetNode);
+      TargetNode<?> existingTargetNode = memoizedTargetNodes.put(buildTarget, targetNode);
       if (existingTargetNode != null) {
-        throw new HumanReadableException("Duplicate definition for " + target);
+        throw new HumanReadableException("Duplicate definition for " + unflavored);
       }
 
       // PMD considers it bad form to return while in a loop.
@@ -596,7 +598,7 @@ public class Parser {
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
             }
-            ruleResolver.addToIndex(node.getBuildTarget(), rule);
+            ruleResolver.addToIndex(rule.getBuildTarget(), rule);
             actionGraph.addNode(rule);
 
             for (BuildRule buildRule : rule.getDeps()) {

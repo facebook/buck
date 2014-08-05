@@ -70,11 +70,18 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   @Override
-  public <A extends Arg> DefaultJavaLibrary createBuildRule(
+  public <A extends Arg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
     BuildTarget target = params.getBuildTarget();
+
+    // We know that the flavour we're being asked to create is valid, since the check is done when
+    // creating the action graph from the target graph.
+
+    if (JavaLibrary.SRC_JAR.equals(target.getFlavor())) {
+      return new JavaSourceJar(params, args.srcs.get());
+    }
 
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
 
@@ -183,23 +190,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleResolver ruleResolver) {
     BuildTarget originalBuildTarget = buildRule.getBuildTarget();
-
-    if (!arg.srcs.get().isEmpty()) {
-      BuildTarget srcJar = BuildTarget.builder(originalBuildTarget)
-          .setFlavor(JavaLibrary.SRC_JAR)
-          .build();
-
-      BuildRuleParams params = new BuildRuleParams(
-          srcJar,
-          /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
-          /* inferredDeps */ ImmutableSortedSet.<BuildRule>of(),
-          BuildTargetPattern.PUBLIC,
-          projectFilesystem,
-          ruleKeyBuilderFactory,
-          JavaSourceJar.TYPE);
-
-      ruleResolver.addToIndex(new JavaSourceJar(params, arg.srcs.get()));
-    }
 
     Optional<GwtModule> gwtModuleOptional = tryCreateGwtModule(
         originalBuildTarget,
