@@ -1551,7 +1551,9 @@ public class ProjectGenerator {
             .base32()
             .omitPadding()
             .encode(rule.getFullyQualifiedName().getBytes()),
-        "$CONFIGURATION");
+        // $EFFECTIVE_PLATFORM_NAME starts with a dash, so this expands to something like:
+        // Debug-iphonesimulator
+        "$CONFIGURATION$EFFECTIVE_PLATFORM_NAME");
   }
 
   private ImmutableSet<String> collectRecursiveHeaderSearchPaths(BuildRule rule) {

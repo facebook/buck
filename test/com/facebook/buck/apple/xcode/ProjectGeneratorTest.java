@@ -468,7 +468,7 @@ public class ProjectGeneratorTest {
         .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
-        new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+        new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
         new NSString("../Headers/$TARGET_NAME"),
@@ -520,7 +520,7 @@ public class ProjectGeneratorTest {
         .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
-        new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+        new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
         new NSString("FooHeaders"),
@@ -600,11 +600,11 @@ public class ProjectGeneratorTest {
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -687,11 +687,11 @@ public class ProjectGeneratorTest {
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("libraries " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
         new NSString("frameworks " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -785,13 +785,13 @@ public class ProjectGeneratorTest {
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
-            "$SYMROOT/F4XWEYLSHJWGSYQ/$CONFIGURATION " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+            "$SYMROOT/F4XWEYLSHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
-            "$SYMROOT/F4XWEYLSHJWGSYQ/$CONFIGURATION " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION"),
+            "$SYMROOT/F4XWEYLSHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME " +
+            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
