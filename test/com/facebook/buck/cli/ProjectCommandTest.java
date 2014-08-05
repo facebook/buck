@@ -106,7 +106,7 @@ public class ProjectCommandTest {
             "[project]",
             "initial_targets = " + javaLibraryTargetName));
 
-    ProjectCommandForTest command = new ProjectCommandForTest();
+    ProjectCommandForTest command = new ProjectCommandForTest(projectFilesystem);
     command.createPartialGraphCallReturnValues.push(
         createGraphFromBuildRules(ImmutableList.of(ruleConfig)));
 
@@ -156,7 +156,7 @@ public class ProjectCommandTest {
         .setSrcRule(ruleWith)
         .build(ruleResolver);
 
-    ProjectCommandForTest command = new ProjectCommandForTest();
+    ProjectCommandForTest command = new ProjectCommandForTest(projectFilesystem);
     command.createPartialGraphCallReturnValues.addLast(
         createGraphFromBuildRules(ImmutableList.<BuildRule>of(ruleConfig)));
     command.createPartialGraphCallReturnValues.addLast(
@@ -251,7 +251,7 @@ public class ProjectCommandTest {
             "ide = xcode",
             "default_exclude_paths = foo"));
 
-    ProjectCommandForTest command = new ProjectCommandForTest();
+    ProjectCommandForTest command = new ProjectCommandForTest(projectFilesystem);
     command.createPartialGraphCallReturnValues.push(
         createGraphFromBuildRules(ImmutableList.of(barProjectRule)));
 
@@ -266,6 +266,70 @@ public class ProjectCommandTest {
 
     // Ensure //bar:project is not ignored when we specify default_exclude_paths = //foo.
     checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, barProjectRule, true);
+  }
+
+  @Test
+  public void testXcodeProjectDoesNotExcludeProjectsWhenSpecifiedExplicitly() throws Exception {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    IosLibraryDescription iosLibraryDescription = new IosLibraryDescription();
+    XcodeProjectConfigDescription xcodeProjectConfigDescription =
+      new XcodeProjectConfigDescription();
+
+    // ios_library //foo:lib
+    BuildRuleParams fooParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+            .setType(IosLibraryDescription.TYPE)
+            .setProjectFilesystem(projectFilesystem)
+            .build();
+    AppleNativeTargetDescriptionArg libFooArg =
+      iosLibraryDescription.createUnpopulatedConstructorArg();
+    libFooArg.configs = ImmutableMap.of();
+    libFooArg.srcs = ImmutableList.of();
+    libFooArg.frameworks = ImmutableSortedSet.of();
+    libFooArg.deps = Optional.absent();
+    libFooArg.gid = Optional.absent();
+    BuildRule fooLibRule = iosLibraryDescription.createBuildRule(
+        fooParams, ruleResolver, libFooArg);
+
+    // xcode_project_config //foo:project
+    BuildRuleParams fooProjectParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "project").build())
+            .setType(XcodeProjectConfigDescription.TYPE)
+            .setDeps(ImmutableSortedSet.of(fooLibRule))
+            .setProjectFilesystem(projectFilesystem)
+            .build();
+    XcodeProjectConfigDescription.Arg fooProjectArg =
+      xcodeProjectConfigDescription.createUnpopulatedConstructorArg();
+    fooProjectArg.projectName = "foo";
+    fooProjectArg.rules = ImmutableSet.of(fooLibRule);
+    BuildRule fooProjectRule = xcodeProjectConfigDescription.createBuildRule(
+        fooProjectParams, ruleResolver, fooProjectArg);
+
+    BuckConfig buckConfig = createBuckConfig(
+        Joiner.on("\n").join(
+            "[project]",
+            "ide = xcode",
+            "default_exclude_paths = foo"));
+
+    ProjectCommandForTest command = new ProjectCommandForTest(projectFilesystem);
+    command.createPartialGraphCallReturnValues.push(
+        createGraphFromBuildRules(ImmutableList.of(fooLibRule, fooProjectRule)));
+
+    ProjectCommandOptions projectCommandOptions = createOptions(buckConfig);
+    projectCommandOptions.setArguments(ImmutableList.of("//foo:project"));
+    // BuildTargetParser insists on the directory and BUCK file existing.
+    projectFilesystem.mkdirs(Paths.get("foo"));
+    projectFilesystem.touch(Paths.get("foo/BUCK"));
+
+    command.runCommandWithOptions(projectCommandOptions);
+
+    assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
+
+    RawRulePredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
+
+    // Ensure //foo:project is not ignored when we specify default_exclude_paths = //foo
+    // and explicitly specify that project on the command  line.
+    checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, fooProjectRule, true);
   }
 
   BuckConfig createBuckConfig(String contents)
@@ -324,11 +388,11 @@ public class ProjectCommandTest {
     private LinkedList<PartialGraph> createPartialGraphCallReturnValues = Lists.newLinkedList();
     private BuildCommandOptions buildCommandOptions;
 
-    ProjectCommandForTest() {
+    ProjectCommandForTest(FakeProjectFilesystem projectFilesystem) {
       super(
           new CommandRunnerParams(
               new TestConsole(),
-              new TestRepositoryBuilder().build(),
+              new TestRepositoryBuilder().setFilesystem(projectFilesystem).build(),
               new FakeAndroidDirectoryResolver(),
               new InstanceArtifactCacheFactory(artifactCache),
               BuckEventBusFactory.newInstance(),

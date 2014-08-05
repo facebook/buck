@@ -217,6 +217,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     PartialGraph partialGraph;
     try {
       final ImmutableSet<String> defaultExcludePaths = options.getDefaultExcludePaths();
+      final ImmutableSet<BuildTarget> passedInTargetsSet =
+        ImmutableSet.copyOf(getBuildTargets(options.getArgumentsFormattedAsBuildTargets()));
+
       partialGraph = createPartialGraph(
           new RawRulePredicate() {
             @Override
@@ -226,7 +229,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
                 BuildTarget buildTarget) {
               String targetName = buildTarget.getFullyQualifiedName();
               for (String prefix : defaultExcludePaths) {
-                if (targetName.startsWith("//" + prefix)) {
+                if (targetName.startsWith("//" + prefix) &&
+                    !passedInTargetsSet.contains(buildTarget)) {
                   LOG.debug(
                       "Ignoring build target %s (exclude_paths contains %s)",
                       buildTarget,
