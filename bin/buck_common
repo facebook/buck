@@ -11,9 +11,9 @@ function gitFetchFailed()
 
 function checkForAnt()
 {
-  if ! command -v ant; then
+  if ! `command -v ant > /dev/null`; then
     echo >&2 "You do not have ant on your \$PATH. Cannot build Buck."
-    if [[ "$OSTYPE" =~ ^darwin ]] && [ command -v brew ]; then
+    if [[ "$OSTYPE" =~ ^darwin ]] && [ `command -v brew > /dev/null` ]; then
       echo >&2 "Try running 'brew install ant'."
     fi
     exit 1
@@ -61,7 +61,7 @@ function killBuckd() {
     done
   fi
   rm -rf "${BUCKD_DIR}"
-  if command -v watchman; then
+  if `command -v watchman > /dev/null`; then
       HAS_TRIGGERS=$(python <<-EOT
 import json
 print bool(json.loads("""$(watchman trigger-list $PWD)""").get("triggers", None))
