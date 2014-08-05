@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 
@@ -55,6 +56,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 // TODO(natthu): Implement methods that throw UnsupportedOperationException.
 public class FakeProjectFilesystem extends ProjectFilesystem {
@@ -109,11 +111,13 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   private final Map<Path, byte[]> fileContents;
   private final Map<Path, ImmutableSet<FileAttribute<?>>> fileAttributes;
+  private final Set<Path> directories;
 
   public FakeProjectFilesystem() {
     super(Paths.get("."));
     fileContents = Maps.newHashMap();
     fileAttributes = Maps.newHashMap();
+    directories = Sets.newHashSet();
 
     // Generally, tests don't care whether files exist.
     ignoreValidityOfPaths = true;
@@ -144,7 +148,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public boolean exists(Path path) {
-    return fileContents.containsKey(path.normalize());
+    return isFile(path) || isDirectory(path);
   }
 
   @Override
@@ -170,12 +174,12 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public boolean isFile(Path path) {
-    throw new UnsupportedOperationException();
+    return fileContents.containsKey(path.normalize());
   }
 
   @Override
   public boolean isDirectory(Path path, LinkOption... linkOptions) {
-    throw new UnsupportedOperationException();
+    return directories.contains(path.normalize());
   }
 
   @Override
@@ -193,14 +197,14 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
         iterator.remove();
       }
     }
+    directories.remove(path);
   }
 
   @Override
   public void mkdirs(Path path) {
-  }
-
-  @Override
-  public void createParentDirs(Path path) {
+    for (int i = 0; i < path.getNameCount(); i++) {
+      directories.add(path.subpath(0, i + 1));
+    }
   }
 
   @Override

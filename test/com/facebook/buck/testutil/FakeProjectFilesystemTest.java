@@ -191,4 +191,47 @@ public class FakeProjectFilesystemTest {
     stream.close();
     assertEquals("hello world", filesystem.readFileIfItExists(filePath).get());
   }
+
+  @Test
+  public void testSingleElementMkdirsExists() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.mkdirs(Paths.get("foo"));
+    assertTrue(filesystem.isDirectory(Paths.get("foo")));
+    assertFalse(filesystem.isDirectory(Paths.get("foo/bar")));
+  }
+
+  @Test
+  public void testEachElementOfMkdirsExists() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.mkdirs(Paths.get("foo/bar/baz"));
+    assertTrue(filesystem.isDirectory(Paths.get("foo")));
+    assertTrue(filesystem.isDirectory(Paths.get("foo/bar")));
+    assertTrue(filesystem.isDirectory(Paths.get("foo/bar/baz")));
+    assertFalse(filesystem.isDirectory(Paths.get("foo/bar/baz/blech")));
+  }
+
+  @Test
+  public void testDirectoryDoesNotExistAfterRmdir() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.mkdirs(Paths.get("foo"));
+    filesystem.rmdir(Paths.get("foo"));
+    assertFalse(filesystem.isDirectory(Paths.get("foo")));
+  }
+
+  @Test
+  public void testDirectoryExistsIfIsDirectory() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.mkdirs(Paths.get("foo"));
+    assertTrue(filesystem.isDirectory(Paths.get("foo")));
+    assertTrue(filesystem.exists(Paths.get("foo")));
+  }
+
+  @Test
+  public void testIsFileAfterTouch() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.touch(Paths.get("foo"));
+    assertFalse(filesystem.isDirectory(Paths.get("foo")));
+    assertTrue(filesystem.isFile(Paths.get("foo")));
+    assertTrue(filesystem.exists(Paths.get("foo")));
+  }
 }
