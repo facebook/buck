@@ -62,7 +62,6 @@ class AndroidPrebuiltAarGraphEnhancer {
   private static final Flavor AAR_MANIFEST = new Flavor("aar_manifest");
   private static final Flavor AAR_PREBUILT_JAR_FLAVOR = new Flavor("aar_prebuilt_jar");
   private static final Flavor AAR_ANDROID_RESOURCE_FLAVOR = new Flavor("aar_android_resource");
-  private static final Flavor AAR_ANDROID_LIBRARY_FLAVOR = new Flavor("aar_android_library");
 
   /** Utility class: do not instantiate. */
   private AndroidPrebuiltAarGraphEnhancer() {}
@@ -152,13 +151,13 @@ class AndroidPrebuiltAarGraphEnhancer {
     // android_library
     BuildRuleParams androidLibraryParams = originalBuildRuleParams.copyWithChanges(
         AndroidLibraryDescription.TYPE,
-        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_LIBRARY_FLAVOR),
+        originalBuildTarget,
         /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(
             androidResource,
             prebuiltJar,
             unzipAar),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
-    return new AndroidLibrary(
+    AndroidLibrary library = new AndroidLibrary(
         androidLibraryParams,
         /* srcs */ ImmutableSortedSet.<SourcePath>of(),
         /* resources */ ImmutableSortedSet.<SourcePath>of(),
@@ -171,6 +170,8 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* resourcesRoot */ Optional.<Path>absent(),
         /* manifestFile */ Optional.<SourcePath>absent(),
         /* isPrebuiltAar */ true);
+
+    return library;
   }
 
   private static class UnzipAar extends AbstractBuildRule {
