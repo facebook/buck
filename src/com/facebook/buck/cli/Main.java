@@ -616,10 +616,13 @@ public final class Main {
    */
   @SuppressWarnings({"unchecked", "rawtypes"}) // Safe as Property is a Map<String, String>.
   private ImmutableMap<String, String> getClientEnvironment(Optional<NGContext> context) {
+    ImmutableMap<String, String> env;
     if (context.isPresent()) {
-      return ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());
+      env = ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());
+    } else {
+      env = ImmutableMap.copyOf(System.getenv());
     }
-    return ImmutableMap.copyOf(System.getenv());
+    return EnvironmentFilter.filteredEnvironment(env);
   }
 
   private static void closeCreatedArtifactCaches(
