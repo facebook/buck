@@ -31,6 +31,8 @@
   <property name="dx.etc.dir" value="${dx.base.dir}/etc" />
   <property name="dx.classes.dir" value="${build.dir}/dx_classes" />
 
+  <property name="eclipse.dir" value="${basedir}/third-party/java/eclipse" />
+
   <fileset dir="${lib.dir}" id="buck.jars">
     <include name="args4j-2.0.28.jar" />
     <include name="ddmlib-22.5.3.jar" />
@@ -80,12 +82,16 @@
     <include name="java/commons-compress/commons-compress-1.8.1.jar" />
   </fileset>
 
-  <path id="classpath">
+  <path id="classpath-no-src">
     <fileset refid="buck.jars" />
     <fileset refid="third-party.jars" />
     <pathelement location="${classes.dir}" />
-    <pathelement location="${src.dir}" />
     <pathelement location="${dx.classes.dir}" />
+  </path>
+
+  <path id="classpath">
+    <path refid="classpath-no-src" />
+    <pathelement location="${src.dir}" />
   </path>
 
   <path id="junit">
@@ -155,31 +161,166 @@
         />
   </target>
 
+  <macrodef name="ecj" description="Compile Java using the ecj compiler with strict checks.">
+    <attribute name="srcdir" default="${src.dir}" />
+    <attribute name="classpathref" default="classpath-no-src" />
+    <attribute name="destdir" default="${classes.dir}" />
+    <!--
+      patterns should be a list of include and possibly exclude elements.
+      According to http://ant.apache.org/manual/Tasks/javac.html, the only way
+      to enumerate the .java inputs to javac in Ant is to set the sourcepath
+      to the empty string, set the srcdir to something, and use include/exclude
+      elements to filter things under the srcdir.
+    -->
+    <element name="patterns" />
+    <sequential>
+      <javac srcdir="${src.dir}"
+             sourcepath=""
+             destdir="${classes.dir}"
+             classpathref="classpath-no-src"
+             debug="on"
+             deprecation="on"
+             includeAntRuntime="no"
+             compiler="org.eclipse.jdt.core.JDTCompilerAdapter"
+             >
+        <patterns />
+        <!--
+          ecj does not appear to support -Werror. As suggested by
+          http://stackoverflow.com/a/14927725/396304, we specify an Eclipse preferences
+          file to ECJ with the rules we want to enforce set to error.
+
+          To see the full list of compiler options available, read the Javadoc for JavaCore at:
+          http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2FJavaCore.html
+          Apparently Eclipse refuses to publish traditional Javadoc with manageable URLs.
+        -->
+        <compilerarg line="-properties ${eclipse.dir}/org.eclipse.jdt.core.prefs" />
+        <compilerarg value="-Xlint:rawtypes" />
+        <compilerarg value="-Xlint:unchecked" />
+        <compilerarg value="-Xlint:serial" />
+        <compilerarg value="-time" />
+        <compilerclasspath>
+          <pathelement location="${eclipse.dir}/org.eclipse.jdt.core_3.9.2.v20140114-1555.jar" />
+          <pathelement location="${eclipse.dir}/jdtCompilerAdapter.jar" />
+        </compilerclasspath>
+      </javac>
+    </sequential>
+  </macrodef>
+
   <target name="compile"
           depends="compile-testrunner, compile-abi-processor, javacc, dx"
           description="compile Java source code">
     <ant inheritAll="false" antfile="third-party/java/jacoco-0.6.4/build.xml" target="build" />
     <mkdir dir="${classes.dir}" />
+
+    <!--
+      //src/com/facebook/buck/apple/xcode/xcconfig:xcconfig depends on
+      //src/com/facebook/buck/util:exceptions and //src/com/facebook/buck/util:io,
+      so we must compile these build targets (and their transitive deps) first.
+
+      Admittedly, it is annoying to keep this list in sync with src/com/facebook/buck/util/BUCK,
+      but there does not seem to be an easier way to do this right now. (Though moving
+      these build rules into their own subpackages of util would make the patterns easier
+      to maintain.)
+    -->
+    <ecj>
+      <patterns>
+        <!-- //src/com/facebook/buck/util:exceptions -->
+        <include name="com/facebook/buck/util/ExceptionWithHumanReadableMessage.java" />
+        <include name="com/facebook/buck/util/HumanReadableException.java" />
+        <include name="com/facebook/buck/util/WatchmanWatcherException.java" />
+
+        <!-- //src/com/facebook/buck/util:io -->
+        <include name="com/facebook/buck/util/Ansi.java" />
+        <include name="com/facebook/buck/util/Console.java" />
+        <include name="com/facebook/buck/util/CapturingPrintStream.java" />
+        <include name="com/facebook/buck/util/DefaultDirectoryTraverser.java" />
+        <include name="com/facebook/buck/util/DirectoryTraverser.java" />
+        <include name="com/facebook/buck/util/DirectoryTraversal.java" />
+        <include name="com/facebook/buck/util/DirtyPrintStreamDecorator.java" />
+        <include name="com/facebook/buck/util/InputStreamConsumer.java" />
+        <include name="com/facebook/buck/util/MoreFiles.java" />
+        <include name="com/facebook/buck/util/MorePaths.java" />
+        <include name="com/facebook/buck/util/MorePosixFilePermissions.java" />
+        <include name="com/facebook/buck/util/ProcessExecutor.java" />
+        <include name="com/facebook/buck/util/ProjectFilesystem.java" />
+        <include name="com/facebook/buck/util/Threads.java" />
+        <include name="com/facebook/buck/util/Verbosity.java" />
+
+        <!-- //src/com/facebook/buck/util:constants -->
+        <include name="com/facebook/buck/util/BuckConstant.java" />
+
+        <!-- //src/com/facebook/buck/util/environment:platform -->
+        <include name="com/facebook/buck/util/environment/Platform.java" />
+
+        <!-- //src/com/facebook/buck/zip:stream -->
+        <include name="com/facebook/buck/zip/AppendingZipOutputStream.java" />
+        <include name="com/facebook/buck/zip/ByteIo.java" />
+        <include name="com/facebook/buck/zip/CentralDirectory.java" />
+        <include name="com/facebook/buck/zip/CustomZipOutputStream.java" />
+        <include name="com/facebook/buck/zip/CustomZipEntry.java" />
+        <include name="com/facebook/buck/zip/EntryAccounting.java" />
+        <include name="com/facebook/buck/zip/OverwritingZipOutputStream.java" />
+        <include name="com/facebook/buck/zip/ZipOutputStreams.java" />
+
+        <!-- //src/com/facebook/buck/timing:timing -->
+        <include name="com/facebook/buck/timing/*.java" />
+      </patterns>
+    </ecj>
+
+    <!--
+      Compile code from AOSP as well as code generated by javacc using the default compiler.
+      Using ecj spits out too many warnings that are not our responsibility (or in the case
+      of javacc, within our control) to fix.
+
+      Although we should compile src/com/facebook/buck/apple/xcode/xcconfig/*.java with
+      strict checks from ecj, they must be compiled with
+      build/javacc/com/facebook/buck/apple/xcode/xcconfig/*.java, which will not abide by
+      those strict checks, so we must use the more lenient javac in this case.
+    -->
     <javac destdir="${classes.dir}"
            classpathref="classpath"
            debug="on"
            deprecation="on"
            includeAntRuntime="no"
            >
-      <src path="${src.dir}" />
       <src path="${aosp.src.dir}" />
       <src path="${javacc.gensrc.dir}" />
-      <exclude name="com/facebook/buck/android/support/**" />
-      <exclude name="com/facebook/buck/cli/quickstart/**" />
-      <exclude name="com/facebook/buck/java/abi/**" />
-      <exclude name="com/facebook/buck/junit/**" />
+      <src path="${src.dir}/com/facebook/buck/apple/xcode/xcconfig" />
+
       <compilerarg value="-Xlint:rawtypes" />
       <compilerarg value="-Xlint:unchecked" />
       <compilerarg value="-Xlint:serial" />
-      <!-- Suppress the warning from implicitly compiling files that are not
-           annotation processed. Not sure which files are the culprit -->
-      <compilerarg value="-implicit:class" />
     </javac>
+
+    <!--
+      Note that the inputs to this <ecj> task overlap with those from the previous
+      <ecj> task. It's too much work to exclude them here.
+    -->
+    <ecj>
+      <patterns>
+        <!--
+          These patterns are excluded because they are compiled elsewhere
+          and are deliberately isolated from Buck's core.
+        -->
+        <exclude name="com/facebook/buck/android/support/**" />
+        <exclude name="com/facebook/buck/apple/xcode/xcconfig/**" />
+        <exclude name="com/facebook/buck/cli/quickstart/**" />
+        <exclude name="com/facebook/buck/java/abi/AbiWriter.java" />
+        <exclude name="com/facebook/buck/java/abi/Annotations.java" />
+        <exclude name="com/facebook/buck/java/abi/ConstructorSummary.java" />
+        <exclude name="com/facebook/buck/java/abi/EmptySummary.java" />
+        <exclude name="com/facebook/buck/java/abi/EnumConstantSummary.java" />
+        <exclude name="com/facebook/buck/java/abi/FieldSummary.java" />
+        <exclude name="com/facebook/buck/java/abi/Joiner.java" />
+        <exclude name="com/facebook/buck/java/abi/MethodSummary.java" />
+        <exclude name="com/facebook/buck/java/abi/Modifiers.java" />
+        <exclude name="com/facebook/buck/java/abi/Parameters.java" />
+        <exclude name="com/facebook/buck/java/abi/Renderable.java" />
+        <exclude name="com/facebook/buck/java/abi/RenderableTypes.java" />
+        <exclude name="com/facebook/buck/java/abi/TypeSummary.java" />
+        <exclude name="com/facebook/buck/junit/**" />
+      </patterns>
+    </ecj>
   </target>
 
   <fileset dir="${lib.dir}" id="dx.jars">

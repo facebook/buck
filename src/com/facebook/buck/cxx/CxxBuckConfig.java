@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -39,24 +38,6 @@ public class CxxBuckConfig {
       split.addAll(Splitter.on(" ").split(flags.get().trim()));
     }
     return split.build();
-  }
-
-  private String getRequiredString(String section, String name) {
-    Optional<String> value = delegate.getValue(section, name);
-    if (!value.isPresent()) {
-      throw new HumanReadableException(
-          String.format("Required config setting %s:%s not set", section, name));
-    }
-    return value.get();
-  }
-
-  private Path getRequiredPath(String section, String name) {
-    Optional<Path> path = delegate.getPath(section, name);
-    if (!path.isPresent()) {
-      throw new HumanReadableException(
-          String.format("Required config setting %s:%s not set", section, name));
-    }
-    return path.get();
   }
 
   public Optional<Path> getCompiler() {
