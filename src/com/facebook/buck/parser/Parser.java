@@ -986,7 +986,6 @@ public class Parser {
       invalidateDependents(path);
 
     } else {
-
       // Non-path change event, likely an overflow due to many change events: invalidate everything.
       LOG.debug("Parser invalidating entire cache on overflow.");
       buildFileTreeCache.invalidateIfStale();

@@ -153,6 +153,16 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
           case FIELD_NAME:
             String fieldName = jsonParser.getCurrentName();
             switch (fieldName) {
+              case "is_fresh_instance":
+                // Force caches to be invalidated --- we have no idea what's happening.
+                Boolean newInstance = jsonParser.nextBooleanValue();
+                if (newInstance) {
+                  LOG.debug("Fresh watchman instance detected. " +
+                          "Posting overflow event to flush caches");
+                  eventBus.post(createOverflowEvent());
+                }
+                break;
+
               case "name":
                 File file = new File(jsonParser.nextTextValue());
                 if (!file.isDirectory()) {

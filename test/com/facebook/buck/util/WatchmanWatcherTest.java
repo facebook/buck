@@ -32,7 +32,9 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 
 import org.easymock.Capture;
 import org.hamcrest.Matchers;
@@ -45,6 +47,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.Set;
 
 public class WatchmanWatcherTest {
 
@@ -289,6 +292,39 @@ public class WatchmanWatcherTest {
           e.getMessage(),
           Matchers.containsString(watchmanError));
     }
+  }
+
+  @Test
+  public void whenWatchmanInstanceIsFreshAllCachesAreCleared()
+      throws IOException, InterruptedException {
+    String watchmanOutput = Joiner.on('\n').join(
+        "{",
+        "\"version\": \"2.9.2\",",
+        "\"clock\": \"c:1386170113:26390:5:50273\",",
+        "\"is_fresh_instance\": true,",
+        "\"files\": []",
+        "}");
+
+    final Set<WatchEvent<?>> events = Sets.newHashSet();
+    EventBus bus = new EventBus("watchman test");
+    bus.register(
+        new Object() {
+          @Subscribe
+          public void listen(WatchEvent<?> event) {
+            events.add(event);
+          }
+        });
+    Process process = createWaitForProcessMock(watchmanOutput);
+    replay(process);
+    WatchmanWatcher watcher = createWatcher(bus, process);
+    watcher.postEvents();
+
+    verify(process);
+    boolean overflowSeen = false;
+    for (WatchEvent<?> event : events) {
+      overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
+    }
+    assertTrue(overflowSeen);
   }
 
   private WatchmanWatcher createWatcher(EventBus eventBus, Process process) {
