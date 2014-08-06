@@ -925,10 +925,12 @@ public class Parser {
    */
   @Subscribe
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
-    LOG.debug(
-        "Parser watched event %s %s",
-        event.kind(),
-        repository.getFilesystem().createContextString(event));
+    if (LOG.isVerboseEnabled()) {
+      LOG.verbose(
+          "Parser watched event %s %s",
+          event.kind(),
+          repository.getFilesystem().createContextString(event));
+    }
 
     if (repository.getFilesystem().isPathChangeEvent(event)) {
       Path path = (Path) event.context();

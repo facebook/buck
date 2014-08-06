@@ -96,17 +96,14 @@ public class DefaultFileHashCache implements FileHashCache {
    */
   @Subscribe
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
-    LOG.info(
-        "DefaultFileHashCache watched event %s %s",
-        event.kind(),
-        projectFilesystem.createContextString(event));
-
     if (projectFilesystem.isPathChangeEvent(event)) {
       // Path event, remove the path from the cache as it has been changed, added or deleted.
-      Path path = (Path) event.context();
-      loadingCache.invalidate(path.normalize());
+      Path path = ((Path) event.context()).normalize();
+      LOG.verbose("Invalidating %s", path);
+      loadingCache.invalidate(path);
     } else {
       // Non-path change event, likely an overflow due to many change events: invalidate everything.
+      LOG.debug("Invalidating all");
       loadingCache.invalidateAll();
     }
   }

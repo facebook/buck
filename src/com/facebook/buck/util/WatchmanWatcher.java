@@ -317,6 +317,11 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       public Object context() {
         return null;
       }
+
+      @Override
+      public String toString() {
+        return "Watchman Overflow WatchEvent " + kind();
+      }
     };
   }
 
@@ -363,6 +368,11 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         @Override
         public Path context() {
           return path;
+        }
+
+        @Override
+        public String toString() {
+          return "Watchman Path WatchEvent " + kind + " " + path;
         }
       };
     }
