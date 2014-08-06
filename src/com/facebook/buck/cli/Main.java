@@ -142,9 +142,11 @@ public final class Main {
     private final EventBus fileEventBus;
     private final ProjectFilesystemWatcher filesystemWatcher;
     private final Optional<WebServer> webServer;
+    private final Clock clock;
 
-    public Daemon(Repository repository) throws IOException {
+    public Daemon(Repository repository, Clock clock) throws IOException {
       this.repository = repository;
+      this.clock = Preconditions.checkNotNull(clock);
       this.hashCache = new DefaultFileHashCache(repository.getFilesystem());
       this.parser = new Parser(
           repository,
@@ -166,7 +168,8 @@ public final class Main {
         LOG.debug("Using watchman to watch for file changes.");
         return new WatchmanWatcher(
             projectFilesystem,
-            fileEventBus);
+            fileEventBus,
+            clock);
       }
       LOG.debug("Using java.nio.file.WatchService to watch for file changes.");
       return new WatchServiceWatcher(
@@ -281,11 +284,11 @@ public final class Main {
    * Get or create Daemon.
    */
   @VisibleForTesting
-  static Daemon getDaemon(Repository repository) throws IOException {
+  static Daemon getDaemon(Repository repository, Clock clock) throws IOException {
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]",
           repository.getFilesystem().getProjectRoot());
-      daemon = new Daemon(repository);
+      daemon = new Daemon(repository, clock);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -303,7 +306,7 @@ public final class Main {
       if (!daemon.repository.equals(repository)) {
         LOG.info("Shutting down and restarting daemon on config or directory resolver change.");
         daemon.close();
-        daemon = new Daemon(repository);
+        daemon = new Daemon(repository, clock);
       }
     }
     return daemon;
@@ -511,7 +514,7 @@ public final class Main {
       // running commands such as `buck clean`.
       artifactCacheFactory = new LoggingArtifactCacheFactory(executionEnvironment, buildEventBus);
 
-      Optional<WebServer> webServer = getWebServerIfDaemon(context, rootRepository);
+      Optional<WebServer> webServer = getWebServerIfDaemon(context, rootRepository, clock);
       eventListeners = addEventListeners(buildEventBus,
           rootRepository.getFilesystem(),
           rootRepository.getBuckConfig(),
@@ -539,7 +542,8 @@ public final class Main {
               context,
               rootRepository,
               commandEvent,
-              buildEventBus);
+              buildEventBus,
+              clock);
         } catch (WatchmanWatcherException | IOException e) {
           buildEventBus.post(ConsoleEvent.warning(
                   "Watchman threw an exception while parsing file changes.\n%s",
@@ -630,9 +634,10 @@ public final class Main {
       Optional<NGContext> context,
       Repository repository,
       CommandEvent commandEvent,
-      BuckEventBus eventBus) throws IOException, InterruptedException {
+      BuckEventBus eventBus,
+      Clock clock) throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
-    Daemon daemon = getDaemon(repository);
+    Daemon daemon = getDaemon(repository, clock);
     daemon.watchClient(context.get());
     daemon.watchFileSystem(commandEvent, eventBus);
     daemon.initWebServer();
@@ -641,9 +646,10 @@ public final class Main {
 
   private Optional<WebServer> getWebServerIfDaemon(
       Optional<NGContext> context,
-      Repository repository) throws IOException {
+      Repository repository,
+      Clock clock) throws IOException {
     if (context.isPresent()) {
-      Daemon daemon = getDaemon(repository);
+      Daemon daemon = getDaemon(repository, clock);
       return daemon.getWebServer();
     }
     return Optional.absent();

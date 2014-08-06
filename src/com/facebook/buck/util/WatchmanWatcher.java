@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.timing.Clock;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -37,6 +38,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A ProjectFilesystemWatcher implementation that uses a local watchman service.
@@ -44,10 +46,12 @@ import java.util.UUID;
 public class WatchmanWatcher implements ProjectFilesystemWatcher {
 
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
-  private static final int DEFAULT_OVERFLOW_THRESHOLD = 200;
+  private static final int DEFAULT_OVERFLOW_THRESHOLD = 10000;
+  private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
   private final Supplier<Process> watchmanProcessSupplier;
   private final EventBus eventBus;
+  private final Clock clock;
   private final JsonFactory jsonFactory;
   private final String query;
 
@@ -61,23 +65,32 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
    */
   private final int overflow;
 
+  private final long timeoutMillis;
+
   public WatchmanWatcher(ProjectFilesystem filesystem,
-                         EventBus fileChangeEventBus) {
+                         EventBus fileChangeEventBus,
+                         Clock clock) {
     this(createProcessSupplier(),
         fileChangeEventBus,
+        clock,
         DEFAULT_OVERFLOW_THRESHOLD,
+        DEFAULT_TIMEOUT_MILLIS,
         createQuery(filesystem));
   }
 
   @VisibleForTesting
   WatchmanWatcher(Supplier<Process> processSupplier,
                   EventBus fileChangeEventBus,
+                  Clock clock,
                   int overflow,
+                  long timeoutMillis,
                   String query) {
     this.watchmanProcessSupplier = Preconditions.checkNotNull(processSupplier);
     this.eventBus = Preconditions.checkNotNull(fileChangeEventBus);
+    this.clock = Preconditions.checkNotNull(clock);
     this.jsonFactory = new JsonFactory();
     this.overflow = overflow;
+    this.timeoutMillis = timeoutMillis;
     this.query = Preconditions.checkNotNull(query);
   }
 
@@ -124,6 +137,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       watchmanProcess.getOutputStream().write(query.getBytes(Charsets.US_ASCII));
       watchmanProcess.getOutputStream().close();
       LOG.debug("Parsing JSON output from Watchman");
+      final long parseStartTimeMillis = clock.currentTimeMillis();
       InputStream jsonInput = watchmanProcess.getInputStream();
       if (LOG.isVerboseEnabled()) {
         byte[] fullResponse = ByteStreams.toByteArray(jsonInput);
@@ -153,13 +167,30 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
        */
       int eventCount = 0;
       while (token != null) {
+        boolean shouldOverflow = false;
         if (eventCount > overflow) {
-          LOG.info("Too many watchman events. " +
-                  "Posting overflow event to flush caches.");
+          LOG.warn(
+              "Received too many events from Watchmen (%d > overflow max %d), posting overflow " +
+              "event and giving up.",
+              eventCount,
+              overflow);
+          shouldOverflow = true;
+        } else {
+          long elapsedMillis = clock.currentTimeMillis() - parseStartTimeMillis;
+          if (elapsedMillis >= timeoutMillis) {
+            LOG.warn(
+                "Parsing took too long (timeout %d ms), posting overflow event and giving up.",
+                timeoutMillis);
+            shouldOverflow = true;
+          }
+        }
+
+        if (shouldOverflow) {
           postWatchEvent(createOverflowEvent());
           watchmanProcess.destroy();
           return;
         }
+
         switch (token) {
           case FIELD_NAME:
             String fieldName = jsonParser.getCurrentName();

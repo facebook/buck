@@ -34,6 +34,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -434,7 +435,8 @@ public class DaemonIntegrationTest {
                 .put("somesection", ImmutableMap.of("somename", "somevalue"))
                 .build()))
         .setFilesystem(filesystem)
-        .build());
+        .build(),
+        new FakeClock(0));
 
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
@@ -444,7 +446,8 @@ public class DaemonIntegrationTest {
                     .put("somesection", ImmutableMap.of("somename", "somevalue"))
                     .build()))
             .setFilesystem(filesystem)
-            .build()));
+            .build(),
+            new FakeClock(0)));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
@@ -454,7 +457,8 @@ public class DaemonIntegrationTest {
                     .put("somesection", ImmutableMap.of("somename", "someothervalue"))
                     .build()))
             .setFilesystem(filesystem)
-            .build()));
+            .build(),
+            new FakeClock(0)));
   }
 
   @Test

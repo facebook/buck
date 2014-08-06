@@ -28,6 +28,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.IncrementingFakeClock;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -70,7 +73,7 @@ public class WatchmanWatcherTest {
     EventBus eventBus = createStrictMock(EventBus.class);
     Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
-    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process, new IncrementingFakeClock());
     watcher.postEvents();
     verify(eventBus, process);
   }
@@ -88,7 +91,7 @@ public class WatchmanWatcherTest {
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
-    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process, new IncrementingFakeClock());
     watcher.postEvents();
     verify(eventBus, process);
     assertEquals("Should be modify event.",
@@ -113,7 +116,7 @@ public class WatchmanWatcherTest {
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
-    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process, new IncrementingFakeClock());
     watcher.postEvents();
     verify(eventBus, process);
     assertEquals("Should be create event.",
@@ -136,7 +139,7 @@ public class WatchmanWatcherTest {
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
-    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process, new IncrementingFakeClock());
     watcher.postEvents();
     verify(eventBus, process);
     assertEquals("Should be delete event.",
@@ -160,7 +163,7 @@ public class WatchmanWatcherTest {
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
-    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process, new IncrementingFakeClock());
     watcher.postEvents();
     verify(eventBus, process);
     assertEquals("Should be delete event.",
@@ -187,7 +190,7 @@ public class WatchmanWatcherTest {
     eventBus.post(capture(secondEvent));
     Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
-    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process, new IncrementingFakeClock());
     watcher.postEvents();
     verify(eventBus, process);
     assertEquals("Path should match watchman output.",
@@ -217,7 +220,9 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         process,
-        -1 /* overflow */);
+        new IncrementingFakeClock(),
+        -1 /* overflow */,
+        10000 /* timeout */);
     watcher.postEvents();
     verify(eventBus, process);
     assertEquals("Should be overflow event.",
@@ -234,7 +239,7 @@ public class WatchmanWatcherTest {
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput, 1);
     replay(eventBus, process);
-    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process, new IncrementingFakeClock());
     try {
       watcher.postEvents();
       fail("Should have thrown IOException.");
@@ -258,7 +263,7 @@ public class WatchmanWatcherTest {
     Process process = createWaitForProcessMock(watchmanOutput, new InterruptedException(message));
     process.destroy();
     replay(eventBus, process);
-    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process, new IncrementingFakeClock());
     try {
       watcher.postEvents();
     } catch (InterruptedException e) {
@@ -283,7 +288,7 @@ public class WatchmanWatcherTest {
     EventBus eventBus = createStrictMock(EventBus.class);
     Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
-    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process, new IncrementingFakeClock());
     try {
       watcher.postEvents();
       fail("Should have thrown RuntimeException");
@@ -316,7 +321,7 @@ public class WatchmanWatcherTest {
         });
     Process process = createWaitForProcessMock(watchmanOutput);
     replay(process);
-    WatchmanWatcher watcher = createWatcher(bus, process);
+    WatchmanWatcher watcher = createWatcher(bus, process, new IncrementingFakeClock());
     watcher.postEvents();
 
     verify(process);
@@ -327,20 +332,65 @@ public class WatchmanWatcherTest {
     assertTrue(overflowSeen);
   }
 
-  private WatchmanWatcher createWatcher(EventBus eventBus, Process process) {
+  @Test
+  public void whenParseTimesOutThenOverflowGenerated()
+      throws IOException, InterruptedException {
+    String watchmanOutput = Joiner.on('\n').join(
+        "{",
+        "\"version\": \"2.9.2\",",
+        "\"clock\": \"c:1386170113:26390:5:50273\",",
+        "\"is_fresh_instance\": true,",
+        "\"files\": []",
+        "}");
+
+    final Set<WatchEvent<?>> events = Sets.newHashSet();
+    EventBus bus = new EventBus("watchman test");
+    bus.register(
+        new Object() {
+          @Subscribe
+          public void listen(WatchEvent<?> event) {
+            events.add(event);
+          }
+        });
+    Process process = createProcessMock(watchmanOutput);
+    process.destroy();
+    replay(process);
+    WatchmanWatcher watcher = createWatcher(
+        bus,
+        process,
+        new IncrementingFakeClock(),
+        200 /* overflow */,
+        -1 /* timeout */);
+    watcher.postEvents();
+
+    verify(process);
+    boolean overflowSeen = false;
+    for (WatchEvent<?> event : events) {
+      overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
+    }
+    assertTrue(overflowSeen);
+  }
+
+  private WatchmanWatcher createWatcher(EventBus eventBus, Process process, Clock clock) {
     return createWatcher(
         eventBus,
         process,
-        200 /* overflow */);
+        clock,
+        200 /* overflow */,
+        10000 /* timeout */);
   }
 
   private WatchmanWatcher createWatcher(EventBus eventBus,
                                         Process process,
-                                        int overflow) {
+                                        Clock clock,
+                                        int overflow,
+                                        long timeoutMillis) {
     return new WatchmanWatcher(
         Suppliers.ofInstance(process),
         eventBus,
+        clock,
         overflow,
+        timeoutMillis,
         "" /* query */);
   }
 
