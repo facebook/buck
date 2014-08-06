@@ -126,8 +126,8 @@ public class MergeAndroidResourcesStep implements Step {
 
     SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToResources = sortSymbols(
         symbolsFileToRDotJavaPackage.build(),
-        filesystem,
-        uberRDotTxtIds);
+        uberRDotTxtIds,
+        context);
 
     writePerPackageRDotJava(rDotJavaPackageToResources, filesystem);
   }
@@ -183,8 +183,8 @@ public class MergeAndroidResourcesStep implements Step {
   @VisibleForTesting
   static SortedSetMultimap<String, RDotTxtEntry> sortSymbols(
       Map<Path, String> symbolsFileToRDotJavaPackage,
-      ProjectFilesystem filesystem,
-      Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds) {
+      Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds,
+      ExecutionContext context) {
     // If we're reenumerating, start at 0x7f01001 so that the resulting file is human readable.
     // This value range (0x7f010001 - ...) is easier to spot as an actual resource id instead of
     // other values in styleable which can be enumerated integers starting at 0.
@@ -203,9 +203,10 @@ public class MergeAndroidResourcesStep implements Step {
       // Read the symbols file and parse each line as a Resource.
       List<String> linesInSymbolsFile;
       try {
-        linesInSymbolsFile = FluentIterable.from(filesystem.readLines(symbolsFile))
-            .filter(MoreStrings.NON_EMPTY)
-            .toList();
+        linesInSymbolsFile =
+            FluentIterable.from(context.getProjectFilesystem().readLines(symbolsFile))
+                .filter(MoreStrings.NON_EMPTY)
+                .toList();
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -221,11 +222,16 @@ public class MergeAndroidResourcesStep implements Step {
         // and ignore everything else, allowing the styleable references to be messed up.
         RDotTxtEntry resource = parsedEntry.get();
         if (uberRDotTxtIds.isPresent()) {
-          Preconditions.checkState(
-              finalIds.containsKey(resource),
-              "Cannot find resource '%s' in the uber R.txt.", resource);
+          Preconditions.checkNotNull(finalIds);
+          if (!finalIds.containsKey(resource)) {
+            context.logError(
+                new RuntimeException(),
+                "Cannot find resource '%s' in the uber R.txt.", resource);
+            continue;
+          }
           resource = resource.copyWithNewIdValue(finalIds.get(resource));
         } else if (resource.idValue.startsWith("0x7f")) {
+          Preconditions.checkNotNull(enumerator);
           resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
         }
 
