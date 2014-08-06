@@ -97,7 +97,7 @@ public class DefaultFileHashCache implements FileHashCache {
   @Subscribe
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
     LOG.info(
-        "DefaultFileHashCache watched event %s %s\n",
+        "DefaultFileHashCache watched event %s %s",
         event.kind(),
         projectFilesystem.createContextString(event));
 

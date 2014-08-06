@@ -28,9 +28,11 @@ import com.google.common.base.Throwables;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteStreams;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -122,7 +124,14 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       watchmanProcess.getOutputStream().write(query.getBytes(Charsets.US_ASCII));
       watchmanProcess.getOutputStream().close();
       LOG.debug("Parsing JSON output from Watchman");
-      JsonParser jsonParser = jsonFactory.createJsonParser(watchmanProcess.getInputStream());
+      InputStream jsonInput = watchmanProcess.getInputStream();
+      if (LOG.isVerboseEnabled()) {
+        byte[] fullResponse = ByteStreams.toByteArray(jsonInput);
+        jsonInput.close();
+        jsonInput = new ByteArrayInputStream(fullResponse);
+        LOG.verbose("Full JSON: " + new String(fullResponse, Charsets.UTF_8).trim());
+      }
+      JsonParser jsonParser = jsonFactory.createJsonParser(jsonInput);
       PathEventBuilder builder = new PathEventBuilder();
       JsonToken token = jsonParser.nextToken();
       /*
@@ -145,7 +154,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       int eventCount = 0;
       while (token != null) {
         if (eventCount > overflow) {
-          eventBus.post(createOverflowEvent());
+          LOG.info("Too many watchman events. " +
+                  "Posting overflow event to flush caches.");
+          postWatchEvent(createOverflowEvent());
           watchmanProcess.destroy();
           return;
         }
@@ -157,9 +168,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
                 // Force caches to be invalidated --- we have no idea what's happening.
                 Boolean newInstance = jsonParser.nextBooleanValue();
                 if (newInstance) {
-                  LOG.debug("Fresh watchman instance detected. " +
-                          "Posting overflow event to flush caches");
-                  eventBus.post(createOverflowEvent());
+                  LOG.info("Fresh watchman instance detected. " +
+                          "Posting overflow event to flush caches.");
+                  postWatchEvent(createOverflowEvent());
                 }
                 break;
 
@@ -188,7 +199,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
             break;
           case END_OBJECT:
             if (builder.canBuild()) {
-              eventBus.post(builder.build());
+              postWatchEvent(builder.build());
               ++eventCount;
             }
             builder = new PathEventBuilder();
@@ -204,7 +215,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       watchmanExitCode = watchmanProcess.waitFor();
       if (watchmanExitCode != 0) {
         LOG.error("Watchman exited with error code %d", watchmanExitCode);
-        eventBus.post(createOverflowEvent()); // Events may have been lost, signal overflow.
+        postWatchEvent(createOverflowEvent()); // Events may have been lost, signal overflow.
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         ByteStreams.copy(watchmanProcess.getErrorStream(), buffer);
         throw new WatchmanWatcherException(
@@ -214,16 +225,21 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       }
     } catch (InterruptedException e) {
       LOG.warn(e, "Killing Watchman process on interrupted exception");
-      eventBus.post(createOverflowEvent()); // Events may have been lost, signal overflow.
+      postWatchEvent(createOverflowEvent()); // Events may have been lost, signal overflow.
       watchmanProcess.destroy();
       Thread.currentThread().interrupt();
       throw e;
     } catch (IOException e) {
       LOG.error(e, "Killing Watchman process on I/O exception");
-      eventBus.post(createOverflowEvent()); // Events may have been lost, signal overflow.
+      postWatchEvent(createOverflowEvent()); // Events may have been lost, signal overflow.
       watchmanProcess.destroy();
       throw e;
     }
+  }
+
+  private void postWatchEvent(WatchEvent<?> event) {
+    LOG.verbose("Posting WatchEvent: %s", event);
+    eventBus.post(event);
   }
 
   private WatchEvent<Object> createOverflowEvent() {

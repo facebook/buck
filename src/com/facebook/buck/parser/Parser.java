@@ -723,7 +723,7 @@ public class Parser {
     Preconditions.checkNotNull(buildFileParser);
 
     if (!isCached(buildFile, defaultIncludes, environment)) {
-      LOG.debug("Parsing %s file: %s\n", BuckConstant.BUILD_RULES_FILE_NAME, buildFile);
+      LOG.debug("Parsing %s file: %s", BuckConstant.BUILD_RULES_FILE_NAME, buildFile);
       parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFile.toPath()));
     }
     return parsedBuildFiles.get(normalize(buildFile.toPath()));
@@ -960,7 +960,7 @@ public class Parser {
   @Subscribe
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
     LOG.debug(
-        "Parser watched event %s %s\n",
+        "Parser watched event %s %s",
         event.kind(),
         repository.getFilesystem().createContextString(event));
 
@@ -1037,7 +1037,7 @@ public class Parser {
     path = normalize(path);
 
     if (parsedBuildFiles.containsKey(path)) {
-      LOG.debug("Parser invalidating %s cache\n", path.toAbsolutePath());
+      LOG.debug("Parser invalidating %s cache", path.toAbsolutePath());
 
       // Remove all targets defined by path from cache.
       for (Map<String, Object> rawRule : parsedBuildFiles.get(path)) {
