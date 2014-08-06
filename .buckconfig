@@ -25,6 +25,7 @@
       test/com/facebook/buck/test/cache/testdata, \
       test/com/facebook/buck/test/labels/testdata, \
       test/com/facebook/buck/test/result/groups/testdata, \
+      test/com/facebook/buck/event/listener/integration/testdata, \
 
     # Common temp file patterns:
     # .*\.swp$ (vim)
