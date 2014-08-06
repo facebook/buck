@@ -53,6 +53,7 @@ import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidDirectoryResolver;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -325,6 +326,16 @@ public class TargetsCommandTest {
     // The test-android-library target indirectly depends on the referenced file,
     // while test-java-library target directly depends on the referenced file.
     referencedFiles = ImmutableSet.of("javasrc/JavaLibrary.java");
+    matchingBuildRules =
+        targetsCommand.getMatchingBuildRules(
+            graph.getActionGraph(),
+            new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, targetBuildRules));
+    assertEquals(
+        ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
+        matchingBuildRules.keySet());
+
+    // Verify that BUCK files show up as referenced_files.
+    referencedFiles = ImmutableSet.of("javasrc/" + BuckConstant.BUILD_RULES_FILE_NAME);
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getActionGraph(),

@@ -403,6 +403,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
               break;
             }
           }
+          if (referencedInputs.contains(rule.getBuildTarget().getBuildFilePath())) {
+            isDependent = true;
+          }
         }
 
         if (isDependent) {
