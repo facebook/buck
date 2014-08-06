@@ -476,10 +476,15 @@ public final class Main {
         processExecutor,
         clientEnvironment);
 
-    // No more early outs: acquire the command semaphore and become the only executing command.
+    // No more early outs: if this command is not read only, acquire the command semaphore to
+    // become the only executing read/write command.
     // This must happen immediately before the try block to ensure that the semaphore is released.
-    if (!commandSemaphore.tryAcquire()) {
-      return BUSY_EXIT_CODE;
+    boolean commandSemaphoreAcquired = false;
+    if (!commandParseResult.getCommand().get().isReadOnly()) {
+      commandSemaphoreAcquired = commandSemaphore.tryAcquire();
+      if (!commandSemaphoreAcquired) {
+        return BUSY_EXIT_CODE;
+      }
     }
 
     @Nullable ArtifactCacheFactory artifactCacheFactory = null;
@@ -577,7 +582,9 @@ public final class Main {
       closeCreatedArtifactCaches(artifactCacheFactory); // Close cache before exit on exception.
       throw t;
     } finally {
-      commandSemaphore.release(); // Allow another command to execute while outputting traces.
+      if (commandSemaphoreAcquired) {
+        commandSemaphore.release(); // Allow another command to execute while outputting traces.
+      }
     }
     if (isDaemon && !rootRepository.getBuckConfig().getFlushEventsBeforeExit()) {
       context.get().in.close(); // Avoid client exit triggering client disconnection handling.
@@ -782,7 +789,6 @@ public final class Main {
       Optional<NGContext> context,
       String... args)
       throws IOException, InterruptedException {
-    // TODO(user): enforce write command exclusion, but allow concurrent read only commands?
     try {
       if (daemon != null) {
         // Reset logging each time we run a command while daemonized.

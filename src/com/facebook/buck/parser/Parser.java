@@ -83,8 +83,7 @@ import javax.annotation.Nullable;
  * High-level build file parsing machinery.  Primarily responsible for producing a
  * {@link ActionGraph} based on a set of targets.  Also exposes some low-level facilities to
  * parse individual build files. Caches build rules to minimise the number of calls to python and
- * processes filesystem WatchEvents to invalidate the cache as files change. Expected to be used
- * from a single thread, so methods are not synchronized or thread safe.
+ * processes filesystem WatchEvents to invalidate the cache as files change.
  */
 public class Parser {
 
@@ -178,7 +177,7 @@ public class Parser {
      * If the BuildFileTree was created during the current build it is still valid and
      * recreating it would generate an identical tree.
      */
-    public void invalidateIfStale() {
+    public synchronized void invalidateIfStale() {
       if (!currentBuildId.equals(buildTreeBuildId)) {
         buildFileTree = null;
       }
@@ -188,7 +187,7 @@ public class Parser {
      * @return the cached BuildFileTree, or a new lazily constructed BuildFileTree.
      */
     @Override
-    public BuildFileTree getInput() throws IOException {
+    public synchronized BuildFileTree getInput() throws IOException {
       if (buildFileTree == null) {
         buildTreeBuildId = currentBuildId;
         buildFileTree = supplier.getInput();
@@ -199,7 +198,7 @@ public class Parser {
     /**
      * Stores the current build id, which is used to determine when the BuildFileTree is invalid.
      */
-    public void onCommandStartedEvent(BuckEvent event) {
+    public synchronized void onCommandStartedEvent(BuckEvent event) {
       // Ideally, the type of event would be CommandEvent.Started, but that would introduce
       // a dependency on com.facebook.buck.cli.
       Preconditions.checkArgument(event.getEventName().equals("CommandStarted"),
@@ -277,7 +276,7 @@ public class Parser {
    * @param env the environment to execute the build file in.
    * @return true if the build file has already been parsed and its rules are cached.
    */
-  private boolean isCached(
+  private synchronized boolean isCached(
       File buildFile,
       Iterable<String> includes,
       ImmutableMap<String, String> env) {
@@ -295,7 +294,9 @@ public class Parser {
    * @param env the environment to execute the build file in.
    * @return true if all build files have already been parsed and their rules are cached.
    */
-  private boolean isCacheComplete(Iterable<String> includes, ImmutableMap<String, String> env) {
+  private synchronized boolean isCacheComplete(
+      Iterable<String> includes,
+      ImmutableMap<String, String> env) {
     boolean includesChanged = invalidateCacheOnIncludeChange(includes);
     boolean environmentChanged = invalidateCacheOnEnvironmentChange(env);
     return !includesChanged && !environmentChanged && allBuildFilesParsed;
@@ -349,7 +350,7 @@ public class Parser {
    * @param eventBus used to log events while parsing.
    * @return the action graph containing the build targets and their related targets.
    */
-  public ActionGraph parseBuildFilesForTargets(
+  public synchronized ActionGraph parseBuildFilesForTargets(
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
@@ -391,7 +392,7 @@ public class Parser {
   }
 
   @VisibleForTesting
-  ActionGraph onlyUseThisWhenTestingToFindAllTransitiveDependencies(
+  synchronized ActionGraph onlyUseThisWhenTestingToFindAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
       Iterable<String> defaultIncludes,
       Console console,
@@ -426,7 +427,7 @@ public class Parser {
   }
 
   @Nullable
-  private TargetNode<?> getTargetNode(BuildTarget buildTarget) {
+  private synchronized TargetNode<?> getTargetNode(BuildTarget buildTarget) {
     // Fast path.
     TargetNode<?> toReturn = memoizedTargetNodes.get(buildTarget);
     if (toReturn != null) {
@@ -507,7 +508,7 @@ public class Parser {
    * @param buildFileParser the parser for build files.
    * @return a {@link TargetGraph} containing all the nodes from {@code toExplore}.
    */
-  public TargetGraph buildTargetGraph(
+  public synchronized TargetGraph buildTargetGraph(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes,
       final ProjectBuildFileParser buildFileParser,
@@ -581,7 +582,7 @@ public class Parser {
     return new TargetGraph(graph);
   }
 
-  private ActionGraph buildActionGraphFromTargetGraph(final TargetGraph graph) {
+  private synchronized ActionGraph buildActionGraphFromTargetGraph(final TargetGraph graph) {
     final BuildRuleResolver ruleResolver = new BuildRuleResolver();
     final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
 
@@ -653,7 +654,7 @@ public class Parser {
    * Note that if this Parser is populated via
    * {@link #filterAllTargetsInProject}, then this method should not be called.
    */
-  private void parseBuildFileContainingTarget(
+  private synchronized void parseBuildFileContainingTarget(
       BuildTarget sourceTarget,
       BuildTarget buildTarget,
       Iterable<String> defaultIncludes,
@@ -688,7 +689,7 @@ public class Parser {
     parseBuildFile(buildFile, defaultIncludes, buildFileParser, environment);
   }
 
-  public List<Map<String, Object>> parseBuildFile(
+  public synchronized List<Map<String, Object>> parseBuildFile(
       File buildFile,
       Iterable<String> defaultIncludes,
       EnumSet<ProjectBuildFileParser.Option> parseOptions,
@@ -711,7 +712,7 @@ public class Parser {
    * @param environment the environment to execute the build file in.
    * @return a list of raw build rules generated by executing the build file.
    */
-  public List<Map<String, Object>> parseBuildFile(
+  public synchronized List<Map<String, Object>> parseBuildFile(
       File buildFile,
       Iterable<String> defaultIncludes,
       ProjectBuildFileParser buildFileParser,
@@ -774,7 +775,7 @@ public class Parser {
    * @param map a meta rule read from a build file.
    */
   @SuppressWarnings("unchecked") // Needed for downcast from Object to List<String>.
-  private boolean parseMetaRule(Map<String, Object> map) {
+  private synchronized boolean parseMetaRule(Map<String, Object> map) {
     Preconditions.checkState(isMetaRule(map));
 
     // INCLUDES_META_RULE maps to a list of file paths: the head is a
@@ -1014,7 +1015,7 @@ public class Parser {
    * @param path A {@link Path}, relative to the project root and "contained"
    *             within the build file to find and invalidate.
    */
-  private void invalidateContainingBuildFile(Path path) throws IOException {
+  private synchronized void invalidateContainingBuildFile(Path path) throws IOException {
     String packageBuildFilePath =
         buildFileTreeCache.getInput().getBasePathOfAncestorTarget(path).toString();
     invalidateDependents(

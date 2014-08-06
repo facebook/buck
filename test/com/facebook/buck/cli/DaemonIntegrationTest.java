@@ -17,6 +17,9 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+
+import static java.util.concurrent.Executors.callable;
+
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -38,7 +41,10 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
+
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGClientListener;
@@ -56,6 +62,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Map;
+
+import java.util.concurrent.Callable;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -72,7 +81,7 @@ public class DaemonIntegrationTest {
 
   @Before
   public void setUp() {
-    executorService = Executors.newScheduledThreadPool(2);
+    executorService = Executors.newScheduledThreadPool(5);
   }
 
   @After
@@ -83,62 +92,26 @@ public class DaemonIntegrationTest {
   }
 
   /**
-   * This verifies that when the user tries to run the Buck Main method, while it is already
+   * This verifies that when the user tries to run a read/write command, while another is already
    * running, the second call will fail. Serializing command execution in this way avoids
-   * multiple threads accessing and corrupting the static state used by the Buck daemon.
+   * multiple threads accessing and corrupting the static state used by the Buck daemon and
+   * trampling over each others output.
    */
   @Test
-  public void testExclusiveExecution()
+  public void whenConcurrentCommandExecutedThenSecondCommandFails()
       throws IOException, InterruptedException, ExecutionException {
-    final CapturingPrintStream stdOut = new CapturingPrintStream();
-    final CapturingPrintStream firstThreadStdErr = new CapturingPrintStream();
-    final CapturingPrintStream secondThreadStdErr = new CapturingPrintStream();
 
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "exclusive_execution", tmp);
     workspace.setUp();
-
-    Future<?> firstThread = executorService.schedule(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          Main main = new Main(stdOut, firstThreadStdErr);
-          int exitCode = main.tryRunMainWithExitCode(
-              new BuildId(), tmp.getRoot(),
-              Optional.<NGContext>absent(),
-              "build",
-              "//:sleep");
-          assertEquals("Should return 0 when no command running.", SUCCESS_EXIT_CODE, exitCode);
-        } catch (IOException e) {
-          fail("Should not throw exception.");
-          throw Throwables.propagate(e);
-        } catch (InterruptedException e) {
-          fail("Should not throw exception.");
-          Thread.currentThread().interrupt();
-        }
-      }
-    }, 0, TimeUnit.MILLISECONDS);
+    Future<?> firstThread = executorService.schedule(
+        createRunnableCommand(SUCCESS_EXIT_CODE, "build", "//:sleep"),
+        0,
+        TimeUnit.MILLISECONDS);
     Future<?> secondThread = executorService.schedule(
-        new Runnable() {
-          @Override
-          public void run() {
-            try {
-              Main main = new Main(stdOut, secondThreadStdErr);
-              int exitCode = main.tryRunMainWithExitCode(
-                  new BuildId(), tmp.getRoot(),
-                  Optional.<NGContext>absent(),
-                  "targets");
-              assertEquals("Should return 2 when command running.", Main.BUSY_EXIT_CODE, exitCode);
-            } catch (IOException e) {
-              fail("Should not throw exception.");
-              throw Throwables.propagate(e);
-            } catch (InterruptedException e) {
-              fail("Should not throw exception.");
-              Thread.currentThread().interrupt();
-            }
-          }
-        }, 500L, TimeUnit.MILLISECONDS
-    );
+        createRunnableCommand(Main.BUSY_EXIT_CODE, "build", "//:sleep"),
+        500L,
+        TimeUnit.MILLISECONDS);
     firstThread.get();
     secondThread.get();
   }
@@ -202,6 +175,67 @@ public class DaemonIntegrationTest {
       result.assertFailure();
       assertThat(result.getStderr(), containsString("InterruptedException"));
     }
+  }
+
+  @Test
+  public void whenConcurrentReadOnlyCommandExecutedThenReadOnlyCommandSucceeds()
+      throws IOException, InterruptedException, ExecutionException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "exclusive_execution", tmp);
+    workspace.setUp();
+    Future<?> firstThread = executorService.schedule(
+        createRunnableCommand(SUCCESS_EXIT_CODE, "build", "//:sleep"), 0, TimeUnit.MILLISECONDS);
+    Future<?> secondThread = executorService.schedule(
+        createRunnableCommand(SUCCESS_EXIT_CODE, "targets"), 500L, TimeUnit.MILLISECONDS);
+    firstThread.get();
+    secondThread.get();
+  }
+
+  /**
+   * This verifies that multiple read only commands can be executed concurrently successfully.
+   */
+  @Test
+  public void whenReadOnlyCommandsExecutedConcurrentlyThenAllSucceed()
+      throws IOException, InterruptedException, ExecutionException {
+
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "exclusive_execution", tmp);
+    workspace.setUp();
+    executorService.invokeAll(
+        ImmutableList.of(
+            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
+            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
+            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
+            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
+            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"))
+    );
+  }
+
+  private Runnable createRunnableCommand(final int expectedExitCode, final String ... args) {
+    return new Runnable() {
+      @Override
+      public void run() {
+        try {
+          Main main = new Main(new CapturingPrintStream(), new CapturingPrintStream());
+          int exitCode = main.tryRunMainWithExitCode(
+              new BuildId(),
+              tmp.getRoot(),
+              Optional.<NGContext>of(new TestContext()),
+              args);
+          assertEquals("Unexpected exit code.", expectedExitCode, exitCode);
+        } catch (IOException e) {
+          fail("Should not throw exception.");
+          throw Throwables.propagate(e);
+        } catch (InterruptedException e) {
+          fail("Should not throw exception.");
+          Thread.currentThread().interrupt();
+        }
+      }
+    };
+  }
+
+  private Callable<Object> createCallableCommand(int expectedExitCode, String ... args) {
+    return callable(createRunnableCommand(expectedExitCode, args));
   }
 
   /**
