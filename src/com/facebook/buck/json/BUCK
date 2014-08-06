@@ -22,6 +22,7 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',

@@ -18,6 +18,7 @@ package com.facebook.buck.json;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
@@ -69,6 +70,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
   /** Path to the buck.py script that is used to evaluate a build file. */
   private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
       "src/com/facebook/buck/parser/buck.py");
+
+  private static final Logger LOG = Logger.get(ProjectBuildFileParser.class);
 
   private final ImmutableMap<String, String> environment;
 
@@ -158,7 +161,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ProcessBuilder processBuilder = new ProcessBuilder(buildArgs());
     processBuilder.environment().clear();
     processBuilder.environment().putAll(environment);
+
+    LOG.debug(
+        "Starting buck.py command: %s environment: %s",
+        processBuilder.command(),
+        processBuilder.environment());
     buckPyProcess = processBuilder.start();
+    LOG.debug("Started process %s successfully", buckPyProcess);
 
     OutputStream stdin = buckPyProcess.getOutputStream();
     InputStream stderr = buckPyProcess.getErrorStream();
@@ -286,7 +295,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
       buckPyStdinWriter.flush();
     }
 
-    return buckPyStdoutParser.nextRules();
+    LOG.debug("Parsing output of process %s...", buckPyProcess);
+    List<Map<String, Object>> result = buckPyStdoutParser.nextRules();
+    LOG.debug("Parsed %d rules from process", result.size());
+    return result;
   }
 
   @Override
@@ -320,11 +332,14 @@ public class ProjectBuildFileParser implements AutoCloseable {
           }
         }
 
+        LOG.debug("Waiting for process %s to exit...", buckPyProcess);
         int exitCode = buckPyProcess.waitFor();
         if (exitCode != 0) {
+          LOG.error("Process %s exited with error code %d", buckPyProcess, exitCode);
           throw BuildFileParseException.createForUnknownParseError(
               String.format("Parser did not exit cleanly (exit code: %d)", exitCode));
         }
+        LOG.debug("Process %s exited cleanly.", buckPyProcess);
 
         try {
           synchronized (this) {
@@ -353,6 +368,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       return;
     }
 
+    LOG.debug("Creating temporary buck.py instance...");
     // We currently create a temporary buck.py per instance of this class, rather than a single one
     // for the life of this buck invocation. We do this since this is generated in parallel we end
     // up with strange InterruptedExceptions being thrown.
@@ -385,6 +401,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
           "    print >> sys.stderr, 'Killed by User'",
           ""));
     }
-    pathToBuckPy = Optional.of(buckDotPy.normalize());
+    Path normalizedBuckDotPyPath = buckDotPy.normalize();
+    pathToBuckPy = Optional.of(normalizedBuckDotPyPath);
+    LOG.debug("Created temporary buck.py instance at %s.", normalizedBuckDotPyPath);
   }
 }

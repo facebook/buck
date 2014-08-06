@@ -724,6 +724,8 @@ public class Parser {
     if (!isCached(buildFile, defaultIncludes, environment)) {
       LOG.debug("Parsing %s file: %s", BuckConstant.BUILD_RULES_FILE_NAME, buildFile);
       parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFile.toPath()));
+    } else {
+      LOG.debug("Not parsing %s file (already in cache)", BuckConstant.BUILD_RULES_FILE_NAME);
     }
     return parsedBuildFiles.get(normalize(buildFile.toPath()));
   }
