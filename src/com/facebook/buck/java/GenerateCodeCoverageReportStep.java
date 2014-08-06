@@ -32,7 +32,9 @@ import java.util.Set;
 public class GenerateCodeCoverageReportStep extends ShellStep {
 
   @VisibleForTesting
-  static final String PATH_TO_ASM_JAR = "third-party/java/asm/asm-debug-all-4.1.jar";
+  static final String PATH_TO_ASM_JAR = System.getProperty(
+      "buck.path_to_asm_jar",
+      "third-party/java/asm/asm-debug-all-4.1.jar");
 
   private final Set<Path> classesDirectories;
   private final Path outputDirectory;
