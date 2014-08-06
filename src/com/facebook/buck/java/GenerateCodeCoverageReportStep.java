@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.CoverageReportFormat;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -29,6 +30,9 @@ import java.nio.file.Path;
 import java.util.Set;
 
 public class GenerateCodeCoverageReportStep extends ShellStep {
+
+  @VisibleForTesting
+  static final String PATH_TO_ASM_JAR = "third-party/java/asm/asm-debug-all-4.1.jar";
 
   private final Set<Path> classesDirectories;
   private final Path outputDirectory;
@@ -54,8 +58,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     args.add("java");
 
     args.add("-classpath",
-        String.format("%s/*:%s/../report-generator-build/",
-            JUnitStep.PATH_TO_JACOCO_JARS, JUnitStep.PATH_TO_JACOCO_JARS));
+        String.format("%s:%s/*:%s/../report-generator-build/",
+            PATH_TO_ASM_JAR, JUnitStep.PATH_TO_JACOCO_JARS, JUnitStep.PATH_TO_JACOCO_JARS));
 
     args.add(String.format("-Djacoco.output.dir=%s", outputDirectory));
 
