@@ -39,7 +39,7 @@ public class IncrementingFakeClock implements Clock {
 
   @Override
   public long currentTimeMillis() {
-    return TimeUnit.NANOSECONDS.toMillis(counter.incrementAndGet());
+    return TimeUnit.NANOSECONDS.toMillis(nanoTime());
   }
 
   @Override
