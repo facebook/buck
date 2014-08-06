@@ -131,7 +131,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         sourceLevel,
         targetLevel);
 
-    javacOptions.setJavaCompilerEnviornment(javacEnvToUse);
+    javacOptions.setJavaCompilerEnvironment(javacEnvToUse);
 
     return javacOptions;
   }

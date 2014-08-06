@@ -161,7 +161,7 @@ public class KnownBuildRuleTypes {
     Builder builder = builder();
 
     JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
-        .setJavaCompilerEnviornment(javacEnv)
+        .setJavaCompilerEnvironment(javacEnv)
         .build();
     builder.register(new AndroidBinaryDescription(
             androidBinaryOptions,

@@ -126,7 +126,7 @@ public class AndroidLibraryGraphEnhancerTest {
         buildTarget,
         buildRuleParams,
         JavacOptions.builder(JavacOptions.DEFAULTS)
-            .setJavaCompilerEnviornment(
+            .setJavaCompilerEnvironment(
                 new JavaCompilerEnvironment(
                     Optional.of(Paths.get("javac")),
                     Optional.of(new JavacVersion("1.7")),

@@ -94,7 +94,7 @@ public class BuckExtension extends AbstractBuildRule {
       BuildableContext buildableContext) {
 
     JavacOptions javacOptions = JavacOptions.builder()
-        .setJavaCompilerEnviornment(BUCK_ENV)
+        .setJavaCompilerEnvironment(BUCK_ENV)
         .build();
     ImmutableSortedSet.Builder<Path> classpath = ImmutableSortedSet.naturalOrder();
     ImmutableCollection<Path> depPaths = Classpaths.getClasspathEntries(getDeclaredDeps()).values();

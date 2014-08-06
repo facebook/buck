@@ -171,7 +171,7 @@ public class JavacOptions {
     builder.setAnnotationProcessingData(options.annotationProcessingData);
     builder.setBootclasspath(options.bootclasspath.orNull());
 
-    builder.setJavaCompilerEnviornment(options.getJavaCompilerEnvironment());
+    builder.setJavaCompilerEnvironment(options.getJavaCompilerEnvironment());
 
     return builder;
   }
@@ -206,7 +206,7 @@ public class JavacOptions {
       return this;
     }
 
-    public Builder setJavaCompilerEnviornment(JavaCompilerEnvironment javacEnv) {
+    public Builder setJavaCompilerEnvironment(JavaCompilerEnvironment javacEnv) {
       this.javacEnv = javacEnv;
       return this;
     }

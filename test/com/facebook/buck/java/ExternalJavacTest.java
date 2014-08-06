@@ -70,10 +70,10 @@ public class ExternalJavacTest extends EasyMockSupport {
             ImmutableSet.of(Paths.get("bar.jar"), Paths.get("foo.jar")),
           /* declaredClasspathEntries */ ImmutableSet.of(Paths.get("foo.jar")),
           JavacOptions.builder(JavacOptions.DEFAULTS)
-              .setJavaCompilerEnviornment(
+              .setJavaCompilerEnvironment(
                   new JavaCompilerEnvironment(
                       Optional.of(Paths.get("fakeJavac")),
-                      Optional.<JavacVersion> absent(),
+                      Optional.<JavacVersion>absent(),
                       /* sourceLevel */ "6",
                       /* targetLevel */ "6"))
               .build(),

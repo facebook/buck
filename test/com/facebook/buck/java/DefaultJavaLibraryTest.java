@@ -1154,7 +1154,7 @@ public class DefaultJavaLibraryTest {
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     JavacOptions javacOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
-        .setJavaCompilerEnviornment(
+        .setJavaCompilerEnvironment(
             new JavaCompilerEnvironment(
                 Optional.of(Paths.get("javac")),
                 Optional.<JavacVersion>absent(),
