@@ -34,7 +34,7 @@ import java.nio.file.Path;
 
 public class DirArtifactCache implements ArtifactCache {
 
-  private static final Logger logger = Logger.get(DirArtifactCache.class);
+  private static final Logger LOG = Logger.get(DirArtifactCache.class);
 
   private final File cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
@@ -58,12 +58,15 @@ public class DirArtifactCache implements ArtifactCache {
         Files.copy(cacheEntry.toPath(), output.toPath(), REPLACE_EXISTING);
         success = CacheResult.DIR_HIT;
       } catch (IOException e) {
-        logger.warn(e, "Artifact fetch(%s, %s) error",
+        LOG.warn(
+            e,
+            "Artifact fetch(%s, %s) error",
             ruleKey,
             output.getPath());
       }
     }
-    logger.info("Artifact fetch(%s, %s) cache %s",
+    LOG.debug(
+        "Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output.getPath(),
         (success.isSuccess() ? "hit" : "miss"));
@@ -85,7 +88,9 @@ public class DirArtifactCache implements ArtifactCache {
       Files.copy(output.toPath(), tmpCacheEntry, REPLACE_EXISTING);
       Files.move(tmpCacheEntry, cacheEntry.toPath(), REPLACE_EXISTING);
     } catch (IOException e) {
-      logger.warn(e, "Artifact store(%s, %s) error",
+      LOG.warn(
+          e,
+          "Artifact store(%s, %s) error",
           ruleKey,
           output.getPath());
       if (tmpCacheEntry != null) {
@@ -93,7 +98,7 @@ public class DirArtifactCache implements ArtifactCache {
           Files.deleteIfExists(tmpCacheEntry);
         } catch (IOException ignored) {
           // Unable to delete a temporary file. Nothing sane to do.
-          logger.debug(ignored, "Unable to delete temp cache file");
+          LOG.debug(ignored, "Unable to delete temp cache file");
         }
       }
     }

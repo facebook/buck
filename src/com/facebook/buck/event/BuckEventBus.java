@@ -80,6 +80,16 @@ public class BuckEventBus implements Closeable {
     eventBus.post(event);
   }
 
+  public void logVerboseAndPost(Logger logger, BuckEvent event) {
+    logger.verbose("%s", event);
+    post(event);
+  }
+
+  public void logDebugAndPost(Logger logger, BuckEvent event) {
+    logger.debug("%s", event);
+    post(event);
+  }
+
   /**
    * Post event to the EventBus using the timestamp given by atTime.
    */

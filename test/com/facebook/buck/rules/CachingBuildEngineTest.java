@@ -211,8 +211,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Set the requisite expectations to build the rule.
     expect(context.getEventBus()).andReturn(buckEventBus).anyTimes();
-    context.logBuildInfo("[BUILDING %s]", "//src/com/facebook/orca:orca");
-    expect(context.getStepRunner()).andReturn(createSameThreadStepRunner()).anyTimes();
+    expect(context.getStepRunner()).andReturn(createSameThreadStepRunner(buckEventBus)).anyTimes();
 
     expect(dep.getBuildTarget()).andStubReturn(depTarget);
     CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
@@ -254,7 +253,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CacheResult.MISS,
             Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
             buckEventBus),
-        events.get(1));
+        events.get(events.size() - 2));
   }
 
   @Test
@@ -407,8 +406,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   }
 
   private StepRunner createSameThreadStepRunner() {
+    return createSameThreadStepRunner(null);
+  }
 
+  private StepRunner createSameThreadStepRunner(@Nullable BuckEventBus eventBus) {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
+    if (eventBus != null) {
+      expect(executionContext.getBuckEventBus()).andStubReturn(eventBus);
+    }
     expect(executionContext.getVerbosity()).andReturn(Verbosity.SILENT).anyTimes();
     executionContext.postEvent(anyObject(BuckEvent.class));
     expectLastCall().anyTimes();
@@ -433,8 +438,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(buildContext.getProjectRoot()).andReturn(createMock(Path.class));
     NoopArtifactCache artifactCache = new NoopArtifactCache();
     expect(buildContext.getArtifactCache()).andStubReturn(artifactCache);
-    buildContext.logBuildInfo(anyObject(String.class), anyObject());
-    expectLastCall().asStub();
     expect(buildContext.getStepRunner()).andStubReturn(null);
 
     BuildInfoRecorder buildInfoRecorder = createMock(BuildInfoRecorder.class);

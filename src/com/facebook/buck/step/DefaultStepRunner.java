@@ -20,6 +20,7 @@ import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExec
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 import com.facebook.buck.log.LogFormatter;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.concurrent.MoreExecutors;
@@ -43,6 +44,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public final class DefaultStepRunner implements StepRunner, Closeable {
+
+  private static final Logger LOG = Logger.get(DefaultStepRunner.class);
 
   // Shutdown timeout should be longer than the maximum runtime of a single step as some
   // steps ignore interruption. The longest ever recorded step execution time as of
@@ -88,14 +91,16 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
       context.getStdErr().println(step.getDescription(context));
     }
 
-    context.postEvent(StepEvent.started(step, step.getDescription(context)));
+    context.getBuckEventBus().logDebugAndPost(
+        LOG, StepEvent.started(step, step.getDescription(context)));
     int exitCode = 1;
     try {
       exitCode = step.execute(context);
     } catch (RuntimeException e) {
       throw StepFailedException.createForFailingStepWithException(step, e, buildTarget);
     } finally {
-      context.postEvent(StepEvent.finished(step, step.getDescription(context), exitCode));
+      context.getBuckEventBus().logDebugAndPost(
+          LOG, StepEvent.finished(step, step.getDescription(context), exitCode));
     }
     if (exitCode != 0) {
       throw StepFailedException.createForFailingStepWithExitCode(step,

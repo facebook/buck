@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 
+import com.facebook.buck.step.StepEvent;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 
@@ -40,14 +41,22 @@ import java.util.logging.LogRecord;
 public class LoggingBuildListener implements BuckEventListener {
 
   private static final Logger LOG = Logger.getLogger(LoggingBuildListener.class.getName());
+
+  /**
+   * These are message types that have custom handling or where we want to do nothing
+   * because they are logged inline before being posted.
+   */
   private static final ImmutableSet<Class<? extends AbstractBuckEvent>>
       EXPLICITLY_HANDLED_EVENT_TYPES =
-          ImmutableSet.of(
-              ConsoleEvent.class,
-              BuildEvent.Started.class,
-              BuildEvent.Finished.class,
-              BuildRuleEvent.Started.class,
-              BuildRuleEvent.Finished.class);
+          ImmutableSet.<Class<? extends AbstractBuckEvent>>builder()
+              .add(ConsoleEvent.class)
+              .add(BuildEvent.Started.class)
+              .add(BuildEvent.Finished.class)
+              .add(BuildRuleEvent.Started.class)
+              .add(BuildRuleEvent.Finished.class)
+              .add(StepEvent.Started.class)
+              .add(StepEvent.Finished.class)
+              .build();
   private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT =
     new ThreadLocal<SimpleDateFormat>() {
         @Override
@@ -81,28 +90,6 @@ public class LoggingBuildListener implements BuckEventListener {
         "Build finished at {0}");
     record.setParameters(new Object[] { formatTimestamp(finished.getTimestamp()) });
     record.setLoggerName(getClass().getName());
-    LOG.log(record);
-  }
-
-  @Subscribe
-  public void ruleStarted(BuildRuleEvent.Started started) {
-    LogRecord record = new LogRecord(
-        Level.INFO,
-        "Rule {0} started at {1}");
-    record.setParameters(new Object[] { started, formatTimestamp(started.getTimestamp())});
-    record.setLoggerName(getClass().getName());
-    record.setMillis(started.getTimestamp());
-    LOG.log(record);
-  }
-
-  @Subscribe
-  public void ruleFinished(BuildRuleEvent.Finished finished) {
-    LogRecord record = new LogRecord(
-        Level.INFO,
-        "Rule {0} finished at {1}");
-    record.setParameters(new Object[] { finished, formatTimestamp(finished.getTimestamp()) });
-    record.setLoggerName(getClass().getName());
-    record.setMillis(finished.getTimestamp());
     LOG.log(record);
   }
 

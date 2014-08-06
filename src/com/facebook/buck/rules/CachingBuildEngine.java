@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
@@ -51,6 +52,8 @@ import javax.annotation.Nullable;
  * tries to fetch its output from an {@link ArtifactCache} to avoid doing any computation.
  */
 public class CachingBuildEngine implements BuildEngine {
+
+  private static final Logger LOG = Logger.get(CachingBuildEngine.class);
 
   /**
    * Key for {@link OnDiskBuildInfo} to identify the ABI key for the deps of a build rule.
@@ -169,7 +172,7 @@ public class CachingBuildEngine implements BuildEngine {
             @Override
             public void onSuccess(List<BuildRuleSuccess> deps) {
               // Record the start of the build.
-              eventBus.post(BuildRuleEvent.started(rule));
+              eventBus.logVerboseAndPost(LOG, BuildRuleEvent.started(rule));
               startOfBuildWasRecordedOnTheEventBus = true;
 
               ruleKeys.putIfAbsent(rule.getBuildTarget(), rule.getRuleKey());
@@ -258,10 +261,13 @@ public class CachingBuildEngine implements BuildEngine {
             }
 
             private void logBuildRuleFinished(BuildResult result) {
-              eventBus.post(BuildRuleEvent.finished(rule,
-                  result.getStatus(),
-                  result.getCacheResult(),
-                  Optional.fromNullable(result.getSuccess())));
+              eventBus.logVerboseAndPost(
+                  LOG,
+                  BuildRuleEvent.finished(
+                      rule,
+                      result.getStatus(),
+                      result.getCacheResult(),
+                      Optional.fromNullable(result.getSuccess())));
             }
           });
     } catch (Throwable failure) {
@@ -299,7 +305,6 @@ public class CachingBuildEngine implements BuildEngine {
 
     // If the RuleKeys match, then there is nothing to build.
     if (ruleKey.equals(cachedRuleKey.orNull())) {
-      context.logBuildInfo("[UNCHANGED %s]", rule.getFullyQualifiedName());
       return new BuildResult(BuildRuleSuccess.Type.MATCHING_RULE_KEY,
           CacheResult.LOCAL_KEY_UNCHANGED_HIT);
     }
@@ -455,7 +460,7 @@ public class CachingBuildEngine implements BuildEngine {
       OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder)
       throws Exception {
-    context.logBuildInfo("[BUILDING %s]", rule.getFullyQualifiedName());
+    LOG.debug("Building locally: %s", rule);
 
     // Get and run all of the commands.
     BuildableContext buildableContext = new DefaultBuildableContext(onDiskBuildInfo,
@@ -479,6 +484,8 @@ public class CachingBuildEngine implements BuildEngine {
         throw new InterruptedException();
       }
     }
+
+    LOG.debug("Build completed: %s", rule);
   }
 
   @VisibleForTesting

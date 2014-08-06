@@ -129,25 +129,6 @@ public class BuildContextTest {
   }
 
   @Test
-  public void testLogBuildInfo() {
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
-    eventBus.register(listener);
-    BuildContext buildContext = BuildContext.builder()
-        .setActionGraph(createMock(ActionGraph.class))
-        .setStepRunner(createMock(StepRunner.class))
-        .setProjectFilesystem(createMock(ProjectFilesystem.class))
-        .setArtifactCache(createMock(ArtifactCache.class))
-        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-        .setEventBus(eventBus)
-        .build();
-
-    buildContext.logBuildInfo("My name is %s and I can count to %d.", "Michael", 10);
-    assertEquals(ImmutableList.of("My name is Michael and I can count to 10."),
-        listener.getLogMessages());
-  }
-
-  @Test
   public void testLogError() {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
