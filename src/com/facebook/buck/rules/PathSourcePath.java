@@ -21,10 +21,17 @@ import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 
 public class PathSourcePath extends AbstractSourcePath {
+
   private final Path relativePath;
+  private final String name;
+
+  public PathSourcePath(Path relativePath, String name) {
+    this.relativePath = Preconditions.checkNotNull(relativePath);
+    this.name = Preconditions.checkNotNull(name);
+  }
 
   public PathSourcePath(Path relativePath) {
-    this.relativePath = Preconditions.checkNotNull(relativePath);
+    this(relativePath, relativePath.toString());
   }
 
   @Override
@@ -36,4 +43,10 @@ public class PathSourcePath extends AbstractSourcePath {
   public Path asReference() {
     return relativePath;
   }
+
+  @Override
+  public String getName() {
+    return name;
+  }
+
 }

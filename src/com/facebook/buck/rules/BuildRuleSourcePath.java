@@ -26,10 +26,17 @@ import java.nio.file.Path;
  * represents.
  */
 public class BuildRuleSourcePath extends AbstractSourcePath {
+
   private final BuildRule rule;
+  private final String name;
 
   public BuildRuleSourcePath(BuildRule rule) {
+    this(rule, rule.getBuildTarget().getShortNameOnly());
+  }
+
+  public BuildRuleSourcePath(BuildRule rule, String name) {
     this.rule = Preconditions.checkNotNull(rule);
+    this.name = Preconditions.checkNotNull(name);
   }
 
   @Override
@@ -47,7 +54,13 @@ public class BuildRuleSourcePath extends AbstractSourcePath {
     return rule;
   }
 
+  @Override
+  public String getName() {
+    return name;
+  }
+
   public BuildRule getRule() {
     return rule;
   }
+
 }

@@ -59,7 +59,7 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
     } catch (CoerceFailedException e) {
       Path path = pathTypeCoercer.coerce(
           buildRuleResolver, filesystem, pathRelativeToProjectRoot, object);
-      return new PathSourcePath(path);
+      return new PathSourcePath(path, String.valueOf(object));
     }
   }
 }

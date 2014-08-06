@@ -8,6 +8,8 @@ java_test(
     '//lib:guava',
     '//lib:junit',
     '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/util:io',
     '//test/com/facebook/buck/testutil:testutil',
   ],
 )

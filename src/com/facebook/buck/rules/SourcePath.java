@@ -35,4 +35,10 @@ public interface SourcePath extends Comparable<SourcePath>  {
    * @return a representation of path in a stable manner that does not involve calling {#resolve()}
    */
   public Object asReference();
+
+  /**
+   * @return the logical name of this source (e.g. as labled in a BUCK file).
+   */
+  public String getName();
+
 }
