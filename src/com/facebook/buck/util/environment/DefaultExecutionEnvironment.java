@@ -114,10 +114,8 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
 
   @Override
   public String getenv(String key, String defaultValue) {
-    if (environment.containsKey(key)) {
-      return environment.get(key);
-    }
-    return defaultValue;
+    String value = environment.get(key);
+    return value != null ? value : defaultValue;
   }
 
   @Override
