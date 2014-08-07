@@ -463,7 +463,7 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
+    arg.headerPathPrefix = Optional.of("MyHeaderPathPrefix");
     arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -488,7 +488,7 @@ public class ProjectGeneratorTest {
         new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
-        new NSString("../Headers/$TARGET_NAME"),
+        new NSString("../Headers/MyHeaderPathPrefix"),
         settings.get("PUBLIC_HEADERS_FOLDER_PATH"));
   }
 

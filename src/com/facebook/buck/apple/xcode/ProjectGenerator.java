@@ -453,7 +453,7 @@ public class ProjectGenerator {
         ImmutableMap.<String, String>of(),
         ImmutableMap.of(
             "PUBLIC_HEADERS_FOLDER_PATH",
-            getHeaderOutputPathForRule(),
+            getHeaderOutputPathForRule(buildable.getHeaderPathPrefix()),
             "CONFIGURATION_BUILD_DIR",
             getObjectOutputPathForRule(rule)),
         ImmutableMap.<String, String>of());
@@ -599,7 +599,9 @@ public class ProjectGenerator {
         targetGroup,
         buildable.getConfigurations(),
         extraSettingsBuilder.build(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.<String, String>of(
+            "PUBLIC_HEADERS_FOLDER_PATH",
+            getHeaderOutputPathForRule(buildable.getHeaderPathPrefix())),
         ImmutableMap.<String, String>of());
 
     // -- phases
@@ -1537,13 +1539,13 @@ public class ProjectGenerator {
     return repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path).normalize();
   }
 
-  private String getHeaderOutputPathForRule() {
+  private String getHeaderOutputPathForRule(Optional<String> headerPathPrefix) {
     // This is appended to $(CONFIGURATION_BUILD_DIR), so we need to get reference the parent
     // directory to get $(SYMROOT)
     return Joiner.on('/').join(
         "..",
         "Headers",
-        "$TARGET_NAME");
+        headerPathPrefix.or("$TARGET_NAME"));
   }
 
   private String getHeaderSearchPathForRule(BuildRule rule) {
