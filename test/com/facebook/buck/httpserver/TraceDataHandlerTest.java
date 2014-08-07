@@ -56,7 +56,6 @@ public class TraceDataHandlerTest extends EasyMockSupport {
   }
 
   @Test
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   public void testHandleGet() throws IOException, ServletException {
     Request baseRequest = createMock(Request.class);
     expect(baseRequest.getMethod()).andReturn("GET");
@@ -92,7 +91,6 @@ public class TraceDataHandlerTest extends EasyMockSupport {
   }
 
   @Test
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   public void testHandleGetWithCallback() throws IOException, ServletException {
     Request baseRequest = createMock(Request.class);
     expect(baseRequest.getMethod()).andReturn("GET");

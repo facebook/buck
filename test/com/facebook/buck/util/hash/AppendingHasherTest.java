@@ -78,7 +78,6 @@ public class AppendingHasherTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation")
   public void testAllPutMethods() {
     HashFunction md5 = Hashing.md5();
     Hasher ordinaryHasher = md5.newHasher();

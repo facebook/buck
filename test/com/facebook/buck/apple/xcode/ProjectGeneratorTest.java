@@ -37,14 +37,14 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
-import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
-import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
+import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
-import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
@@ -2876,34 +2876,6 @@ public class ProjectGeneratorTest {
         assertFalse(
             "Build file should not have settings dictionary", file.getSettings().isPresent());
       }
-    }
-  }
-
-  private void assertHasSingletonHeadersPhaseWithHeaders(
-      PBXTarget target,
-      String... headers) {
-
-    PBXHeadersBuildPhase headersBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXHeadersBuildPhase.class);
-
-    assertEquals(
-        "Headers build phase should have correct number of headers",
-        headers.length, headersBuildPhase.getFiles().size());
-
-    // map keys to absolute paths
-    ImmutableSet.Builder<String> expectedHeadersSetBuilder = ImmutableSet.builder();
-    for (String header : headers) {
-      expectedHeadersSetBuilder.add(
-          projectFilesystem.getRootPath().resolve(header).toAbsolutePath()
-              .normalize().toString());
-    }
-    ImmutableSet<String> expectedHeadersSet = expectedHeadersSetBuilder.build();
-
-    for (PBXBuildFile file : headersBuildPhase.getFiles()) {
-      String header = assertFileRefIsRelativeAndResolvePath(file.getFileRef());
-      assertTrue(
-          "Header should be in list of expected headers: " + header,
-          expectedHeadersSet.contains(header));
     }
   }
 

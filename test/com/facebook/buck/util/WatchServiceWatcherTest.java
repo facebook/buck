@@ -60,7 +60,6 @@ public class WatchServiceWatcherTest {
   public TemporaryFolder tempDir = new TemporaryFolder();
 
   @Before
-  @SuppressWarnings("unchecked") // Needed to mock generic class.
   public void setUp() throws IOException {
     eventBus = createStrictMock(EventBus.class);
     filesystem = createNiceMock(ProjectFilesystem.class);

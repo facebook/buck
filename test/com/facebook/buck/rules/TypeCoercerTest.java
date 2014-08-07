@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -177,18 +178,19 @@ public class TypeCoercerTest {
 
     TestTraversal traversal = new TestTraversal();
     coercer.traverse(input, traversal);
-    List<Object> objects = traversal.getObjects();
 
-    assertThat(objects, Matchers.<Object>contains(ImmutableList.of(
-        sameInstance((Object) input),
-        is((Object) "foo"),
-        sameInstance((Object) input.get("foo")),
-        is((Object) "//foo:bar"),
-        is((Object) "//foo:baz"),
-        is((Object) "bar"),
-        sameInstance((Object) input.get("bar")),
-        is((Object) ":bar"),
-        is((Object) "//foo:foo"))));
+    Matcher<Iterable<? extends Object>> matcher = Matchers.contains(
+        ImmutableList.<Matcher<? super Object>>of(
+            sameInstance((Object) input),
+            is((Object) "foo"),
+            sameInstance((Object) input.get("foo")),
+            is((Object) "//foo:bar"),
+            is((Object) "//foo:baz"),
+            is((Object) "bar"),
+            sameInstance((Object) input.get("bar")),
+            is((Object) ":bar"),
+            is((Object) "//foo:foo")));
+    assertThat(traversal.getObjects(), matcher);
   }
 
   @Test
@@ -238,7 +240,7 @@ public class TypeCoercerTest {
     coercer.traverse(input, traversal);
     assertThat(
         traversal.getObjects(),
-        Matchers.<Object>contains(ImmutableList.of(
+        Matchers.contains(ImmutableList.<Matcher<? super Object>>of(
             sameInstance((Object) input),
             sameInstance((Object) input.get(0)))));
 
@@ -294,10 +296,10 @@ public class TypeCoercerTest {
     coercer.traverse(input, traversal);
     assertThat(
         traversal.getObjects(),
-        Matchers.<Object>contains(
-            ImmutableList.of(
-                sameInstance(input.get(0)),
-                sameInstance(input.get(1)))));
+        Matchers.contains(
+            ImmutableList.<Matcher<? super Object>>of(
+                sameInstance((Object) input.get(0)),
+                sameInstance((Object) input.get(1)))));
   }
 
   @Test
@@ -552,7 +554,6 @@ public class TypeCoercerTest {
             invalidListOfStrings));
   }
 
-  @SuppressWarnings("unused")
   static class TestFields {
     public ImmutableMap<String, ImmutableList<Integer>> stringMapOfLists;
     public ImmutableList<ImmutableSet<Integer>> listOfSets;

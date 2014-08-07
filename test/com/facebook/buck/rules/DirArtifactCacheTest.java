@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -45,11 +46,20 @@ public class DirArtifactCacheTest {
 
   private FileHashCache fileHashCache = new NullFileHashCache();
 
+  private DirArtifactCache dirArtifactCache;
+
+  @After
+  public void tearDown() {
+    if (dirArtifactCache != null) {
+      dirArtifactCache.close();
+    }
+  }
+
   @Test
   public void testCacheCreation() throws IOException {
     File cacheDir = tmpDir.newFolder();
 
-    new DirArtifactCache(
+    dirArtifactCache = new DirArtifactCache(
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
@@ -60,7 +70,7 @@ public class DirArtifactCacheTest {
     File cacheDir = tmpDir.newFolder();
     File fileX = tmpDir.newFile("x");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+    dirArtifactCache = new DirArtifactCache(
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
@@ -78,7 +88,7 @@ public class DirArtifactCacheTest {
     File cacheDir = tmpDir.newFolder();
     File fileX = tmpDir.newFile("x");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+    dirArtifactCache = new DirArtifactCache(
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.<Long>absent());
@@ -104,7 +114,7 @@ public class DirArtifactCacheTest {
     File cacheDir = tmpDir.newFolder();
     File fileX = tmpDir.newFile("x");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+    dirArtifactCache = new DirArtifactCache(
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
@@ -127,7 +137,7 @@ public class DirArtifactCacheTest {
     File fileY = tmpDir.newFile("y");
     File fileZ = tmpDir.newFile("z");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+    dirArtifactCache = new DirArtifactCache(
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
@@ -181,7 +191,7 @@ public class DirArtifactCacheTest {
     File fileY = tmpDir.newFile("y");
     File fileZ = tmpDir.newFile("z");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+    dirArtifactCache = new DirArtifactCache(
         cacheDir,
         /* doStore */ false,
         /* maxCacheSizeBytes */ Optional.of(0L));
@@ -231,7 +241,7 @@ public class DirArtifactCacheTest {
     File fileY = new File(cacheDir, "y");
     File fileZ = new File(cacheDir, "z");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+    dirArtifactCache = new DirArtifactCache(
         tmpDir.getRoot(),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(1024L));
@@ -254,7 +264,7 @@ public class DirArtifactCacheTest {
     File fileY = new File(cacheDir, "y");
     File fileZ = new File(cacheDir, "z");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+    dirArtifactCache = new DirArtifactCache(
         tmpDir.getRoot(),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.<Long>absent());
@@ -278,7 +288,7 @@ public class DirArtifactCacheTest {
     File fileY = new File(cacheDir, "y");
     File fileZ = new File(cacheDir, "z");
 
-    DirArtifactCache dirArtifactCache = new DirArtifactCache(
+    dirArtifactCache = new DirArtifactCache(
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(2L));

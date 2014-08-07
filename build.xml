@@ -174,10 +174,10 @@
     -->
     <element name="patterns" />
     <sequential>
-      <javac srcdir="${src.dir}"
+      <javac srcdir="@{srcdir}"
              sourcepath=""
-             destdir="${classes.dir}"
-             classpathref="classpath-no-src"
+             destdir="@{destdir}"
+             classpathref="@{classpathref}"
              debug="on"
              deprecation="on"
              includeAntRuntime="no"
@@ -423,19 +423,21 @@
           depends="compile, javacc-tests"
           >
     <mkdir dir="${testclasses.dir}" />
-    <javac excludes="**/testdata/**"
+    <javac srcdir="${javacc.test.dir}"
            destdir="${testclasses.dir}"
            classpathref="tests.classpath"
            debug="on"
            deprecation="on"
-           includeAntRuntime="no"
-           >
-      <src path="${test.dir}" />
-      <src path="${javacc.test.dir}" />
-      <compilerarg value="-Xlint:rawtypes" />
-      <compilerarg value="-Xlint:unchecked" />
-      <compilerarg value="-Xlint:serial" />
-    </javac>
+           includeAntRuntime="on"
+           />
+    <ecj srcdir="${test.dir}"
+         destdir="${testclasses.dir}"
+         classpathref="tests.classpath"
+         >
+      <patterns>
+        <exclude name="**/testdata/**" />
+      </patterns>
+    </ecj>
   </target>
 
   <target name="java-test"

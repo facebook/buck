@@ -31,7 +31,6 @@ import java.io.IOException;
 
 public class TracesHandlerTest extends EasyMockSupport {
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
   public void testHandleGet() throws IOException {
     File a = createMock(File.class);

@@ -16,28 +16,29 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.util.ProjectFilesystem;
 import static com.google.common.io.ByteStreams.nullOutputStream;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.util.ProjectFilesystem;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public class HttpArtifactCacheTest {
 
@@ -107,6 +108,7 @@ public class HttpArtifactCacheTest {
       this.connectionMock = connectionMock;
     }
 
+    @Override
     protected HttpURLConnection getConnection(String url)
         throws MalformedURLException, IOException {
       return connectionMock;

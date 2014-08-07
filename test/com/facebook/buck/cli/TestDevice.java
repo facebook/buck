@@ -238,6 +238,7 @@ public class TestDevice implements IDevice {
 
   @Deprecated
   @Override
+  @SuppressWarnings("deprecation")
   public void executeShellCommand(String s, IShellOutputReceiver iShellOutputReceiver, int i)
       throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
       IOException {

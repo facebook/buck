@@ -81,7 +81,6 @@ public class TargetNodeTest {
             BuildTargetFactory.newInstance("//example/path:two")));
   }
 
-  @SuppressWarnings("unused")
   public class Arg implements ConstructorArg {
     public ImmutableSortedSet<BuildRule> deps;
     public ImmutableSortedSet<SourcePath> sourcePaths;

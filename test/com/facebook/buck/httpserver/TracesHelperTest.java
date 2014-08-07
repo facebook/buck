@@ -37,7 +37,6 @@ import java.nio.file.Path;
 public class TracesHelperTest extends EasyMockSupport {
 
   @Test
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   public void testGetTraceAttributesForId() throws IOException {
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
@@ -80,7 +79,6 @@ public class TracesHelperTest extends EasyMockSupport {
   }
 
   @Test
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   public void testGetTraceAttributesForJsonWithoutName() throws IOException {
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
@@ -119,7 +117,6 @@ public class TracesHelperTest extends EasyMockSupport {
   }
 
   @Test
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   public void testGetTraceAttributesForJsonWithoutCommandArgs() throws IOException {
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
