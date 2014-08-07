@@ -522,8 +522,8 @@ class BuckRepo:
         return self._compute_local_hash()
 
     def _get_java_args(self, version_uid):
-        java_args = [
-            "-XX:MaxPermSize=256m",
+        java_args = [] if is_java8() else ["-XX:MaxPermSize=256m"]
+        java_args.extend([
             "-Xmx1000m",
             "-Djava.awt.headless=true",
             "-Djava.util.logging.config.class=com.facebook.buck.log.LogConfig",
@@ -536,7 +536,7 @@ class BuckRepo:
             "-Dbuck.buckd_dir={}".format(self._buck_project.buckd_dir),
             "-Dlog4j.configuration=file:{}".format(
                 self._join_buck_dir("config/log4j.properties")),
-        ]
+        ])
         for key, value in BUCK_DIR_JAVA_ARGS.items():
             java_args.append("-Dbuck.{}={}".format(
                              key, self._join_buck_dir(value)))
@@ -628,3 +628,9 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
                 if _access_check(name, mode):
                     return name
     return None
+
+
+def is_java8():
+    output = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
+    version_line = output.strip().splitlines()[0]
+    return re.compile('java version "1\.8\..*').match(version_line)
