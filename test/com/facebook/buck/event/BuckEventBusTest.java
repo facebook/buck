@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.eventbus.Subscribe;
 
@@ -106,6 +107,21 @@ public class BuckEventBusTest {
     eb.close();
     assertEquals(timestamp.getTimestamp(), event.getTimestamp());
     assertEquals(timestamp.getNanoTime(), event.getNanoTime());
+  }
+
+  @Test
+  public void timestampedEventHasSeparateNanosAndMillis() throws IOException {
+    SettableFakeClock fakeClock = new SettableFakeClock(49152, 64738);
+    BuckEventBus eb = new BuckEventBus(
+        fakeClock,
+        MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
+        BuckEventBusFactory.BUILD_ID_FOR_TEST,
+        timeoutMillis);
+    TestEvent event = new TestEvent();
+    eb.post(event);
+    eb.close();
+    assertEquals(event.getTimestamp(), 49152);
+    assertEquals(event.getNanoTime(), 64738);
   }
 
   private static class SleepEvent extends AbstractBuckEvent {

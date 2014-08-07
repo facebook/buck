@@ -27,6 +27,7 @@ java_test(
     '//src/com/facebook/buck/util:exceptions',
     '//test/com/facebook/buck/java:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/timing:testutil',
     '//test/com/facebook/buck/rules:testutil',
   ],
 )
