@@ -150,7 +150,6 @@ public class BuckEventBus implements Closeable {
    * pass its timestamp on to another posted event.
    */
   public void timestamp(BuckEvent event) {
-    long nanos = clock.nanoTime();
-    event.configure(TimeUnit.NANOSECONDS.toMillis(nanos), nanos, threadIdSupplier.get(), buildId);
+    event.configure(clock.currentTimeMillis(), clock.nanoTime(), threadIdSupplier.get(), buildId);
   }
 }
