@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cpp;
+package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -26,8 +26,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class CppLibraryDescription implements Description<CppLibraryDescription.Arg> {
-  public static final BuildRuleType TYPE = new BuildRuleType("cpp_library");
+public class CxxBinaryDescription implements Description<CxxBinaryDescription.Arg> {
+  public static final BuildRuleType TYPE = new BuildRuleType("cxx_binary");
 
   @Override
   public Arg createUnpopulatedConstructorArg() {
@@ -35,11 +35,11 @@ public class CppLibraryDescription implements Description<CppLibraryDescription.
   }
 
   @Override
-  public <A extends Arg> CppLibrary createBuildRule(
+  public <A extends Arg> CxxBinary createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new CppLibrary(params, args.srcs, args.headers);
+    return new CxxBinary(params, args.srcs);
   }
 
   @Override
@@ -49,7 +49,6 @@ public class CppLibraryDescription implements Description<CppLibraryDescription.
 
   public static class Arg implements ConstructorArg {
     public ImmutableSortedSet<SourcePath> srcs;
-    public ImmutableSortedSet<SourcePath> headers;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }
 }

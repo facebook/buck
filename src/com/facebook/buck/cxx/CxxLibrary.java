@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cpp;
+package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
@@ -27,18 +27,15 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Create a c++ binary.
+ * Create a c++ static library (.a file).
  */
-public class CppBinary extends AbstractNativeBuildRule {
+public class CxxLibrary extends AbstractNativeBuildRule {
 
-  public CppBinary(
+  public CxxLibrary(
       BuildRuleParams params,
-      ImmutableSortedSet<SourcePath> srcs) {
-    super(
-        params,
-        srcs,
-        ImmutableSortedSet.<SourcePath>of(),
-        ImmutableMap.<SourcePath, String>of());
+      ImmutableSortedSet<SourcePath> srcs,
+      ImmutableSortedSet<SourcePath> headers) {
+    super(params, srcs, headers, ImmutableMap.<SourcePath, String>of());
   }
 
   @Override
@@ -47,20 +44,12 @@ public class CppBinary extends AbstractNativeBuildRule {
   }
 
   @Override
-  protected List<Step> getFinalBuildSteps(ImmutableSortedSet<Path> files,  Path outputFile) {
-    return ImmutableList.<Step>of(
-        new CompilerStep(
-            /* compiler */ DEFAULT_CPP_COMPILER,
-            /* shouldLink */ true,
-            /* srcs */ files,
-            /* outputFile */ outputFile,
-            /* shouldAddProjectRootToIncludePaths */ true,
-            /* includePaths */ ImmutableSortedSet.<Path>of(),
-            /* commandLineArgs */ ImmutableList.<String>of()));
+  protected List<Step> getFinalBuildSteps(ImmutableSortedSet<Path> files, Path outputFile) {
+    return ImmutableList.<Step>of(new ArStep(files, outputFile));
   }
 
   @Override
   protected String getOutputFileNameFormat() {
-    return "%s";
+    return "lib%s.a";
   }
 }

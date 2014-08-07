@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cpp;
+package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -140,7 +140,7 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
 
     for (BuildRule dep : getDeps()) {
       // Only c++ static libraries are supported for now.
-      if (dep instanceof CppLibrary) {
+      if (dep instanceof CxxLibrary) {
         objectFiles.add(dep.getPathToOutputFile());
       }
     }

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cpp;
+package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
@@ -45,18 +45,18 @@ import org.junit.Test;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class CppBinaryRuleTest {
+public class CxxBinaryRuleTest {
 
   private BuildContext context = FakeBuildContext.NOOP_CONTEXT;
   private BuildableContext buildableContext = new FakeBuildableContext();
   private ExecutionContext executionContext = TestExecutionContext.newInstance();
 
-  private CppBinary makeCppBinaryBuildRule(
+  private CxxBinary makeCxxBinaryBuildRule(
       BuildTarget buildTarget,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet< BuildRule> deps) {
-    CppBinaryDescription description = new CppBinaryDescription();
-    CppBinaryDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    CxxBinaryDescription description = new CxxBinaryDescription();
+    CxxBinaryDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.srcs = srcs;
     arg.deps = Optional.of(deps);
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
@@ -66,13 +66,13 @@ public class CppBinaryRuleTest {
     return description.createBuildRule(buildRuleParams, new BuildRuleResolver(), arg);
   }
 
-  private CppLibrary makeCppLibraryBuildRule(
+  private CxxLibrary makeCxxLibraryBuildRule(
       BuildTarget buildTarget,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> headers,
       ImmutableSortedSet< BuildRule> deps) {
-    CppLibraryDescription description = new CppLibraryDescription();
-    CppLibraryDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    CxxLibraryDescription description = new CxxLibraryDescription();
+    CxxLibraryDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.srcs = srcs;
     arg.deps = Optional.of(deps);
     arg.headers = headers;
@@ -85,8 +85,8 @@ public class CppBinaryRuleTest {
   }
 
   @Test
-  public void testCppBinary() {
-    BuildRule library = makeCppLibraryBuildRule(
+  public void testCxxBinary() {
+    BuildRule library = makeCxxLibraryBuildRule(
         BuildTarget.builder("//lib", "bla").build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("libsource1.c"),
@@ -94,7 +94,7 @@ public class CppBinaryRuleTest {
         ImmutableSortedSet.<SourcePath>of(),
         ImmutableSortedSet.<BuildRule>of());
 
-    CppBinary binary = makeCppBinaryBuildRule(
+    CxxBinary binary = makeCxxBinaryBuildRule(
         BuildTarget.builder("//foo", "bar").build(),
         ImmutableSortedSet.<SourcePath>of(
           new TestSourcePath("source1.c"),
@@ -131,8 +131,8 @@ public class CppBinaryRuleTest {
   }
 
   @Test
-  public void testCppLibrary() {
-    BuildRule library = makeCppLibraryBuildRule(
+  public void testCxxLibrary() {
+    BuildRule library = makeCxxLibraryBuildRule(
         BuildTarget.builder("//lib", "bla").build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("libsource1.c"),
@@ -140,7 +140,7 @@ public class CppBinaryRuleTest {
         ImmutableSortedSet.<SourcePath>of(),
         ImmutableSortedSet.<BuildRule>of());
 
-    CppLibrary targetLibrary = makeCppLibraryBuildRule(
+    CxxLibrary targetLibrary = makeCxxLibraryBuildRule(
         BuildTarget.builder("//foo", "bar").build(),
         ImmutableSortedSet.<SourcePath>of(
             new TestSourcePath("source1.c"),

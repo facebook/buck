@@ -10,7 +10,7 @@ java_test(
     '//lib:guava',
     '//lib:junit',
     '//src/com/facebook/buck/apple:rules',
-    '//src/com/facebook/buck/cpp:rules',
+    '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:rule_pattern',

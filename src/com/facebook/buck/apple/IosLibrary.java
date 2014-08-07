@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cpp.ArStep;
+import com.facebook.buck.cxx.ArStep;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;

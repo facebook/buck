@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cpp.AbstractNativeBuildRule;
+import com.facebook.buck.cxx.AbstractNativeBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
