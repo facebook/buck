@@ -32,6 +32,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
 import org.easymock.Capture;
@@ -116,7 +117,8 @@ public class CleanCommandTest extends EasyMockSupport {
         createMock(Parser.class),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder());
+        new FakeJavaPackageFinder(),
+        new ObjectMapper());
     return new CleanCommand(params);
   }
 

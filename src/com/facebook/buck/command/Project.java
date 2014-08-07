@@ -54,7 +54,6 @@ import com.facebook.buck.util.Verbosity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
@@ -141,6 +140,7 @@ public class Project {
   private final Optional<String> pathToPostProcessScript;
   private final Set<BuildRule> libraryJars;
   private final String pythonInterpreter;
+  private final ObjectMapper objectMapper;
 
   public Project(PartialGraph partialGraph,
       Map<Path, String> basePathToAliasMap,
@@ -149,7 +149,8 @@ public class Project {
       ProjectFilesystem projectFilesystem,
       Optional<String> pathToDefaultAndroidManifest,
       Optional<String> pathToPostProcessScript,
-      String pythonInterpreter) {
+      String pythonInterpreter,
+      ObjectMapper objectMapper) {
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.buildFileTree = new InMemoryBuildFileTree(partialGraph.getTargets());
     this.basePathToAliasMap = ImmutableMap.copyOf(basePathToAliasMap);
@@ -160,6 +161,7 @@ public class Project {
     this.pathToPostProcessScript = Preconditions.checkNotNull(pathToPostProcessScript);
     this.libraryJars = Sets.newHashSet();
     this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
+    this.objectMapper = Preconditions.checkNotNull(objectMapper);
   }
 
   public int createIntellijProject(
@@ -961,8 +963,6 @@ public class Project {
 
     // Write out the JSON config to be consumed by the Python.
     try (Writer writer = new FileWriter(jsonTempFile)) {
-      JsonFactory jsonFactory = new JsonFactory();
-      ObjectMapper objectMapper = new ObjectMapper(jsonFactory);
       if (executionContext.getVerbosity().shouldPrintOutput()) {
         ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
         objectWriter.writeValue(writer, config);

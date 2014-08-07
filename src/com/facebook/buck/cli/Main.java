@@ -58,6 +58,7 @@ import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -126,6 +127,10 @@ public final class Main {
   private static final Semaphore commandSemaphore = new Semaphore(1);
 
   private final Platform platform;
+
+  // It's important to re-use this object for perf:
+  // http://wiki.fasterxml.com/JacksonBestPracticesPerformance
+  private final ObjectMapper objectMapper;
 
   private static final Logger LOG = Logger.get(Main.class);
 
@@ -351,6 +356,7 @@ public final class Main {
     this.stdOut = Preconditions.checkNotNull(stdOut);
     this.stdErr = Preconditions.checkNotNull(stdErr);
     this.platform = Platform.detect();
+    this.objectMapper = new ObjectMapper();
     this.externalEventsListener = externalEventsListener;
   }
 
@@ -573,7 +579,8 @@ public final class Main {
               parser,
               platform,
               clientEnvironment,
-              rootRepository.getBuckConfig().createDefaultJavaPackageFinder()));
+              rootRepository.getBuckConfig().createDefaultJavaPackageFinder(),
+              objectMapper));
 
       // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
       if (webServer.isPresent()) {

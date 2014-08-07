@@ -57,7 +57,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -88,6 +87,7 @@ public class TargetsCommandTest {
 
   private TestConsole console;
   private TargetsCommand targetsCommand;
+  private ObjectMapper objectMapper;
 
   private SortedMap<String, BuildRule> buildBuildTargets(String outputFile, String name) {
     return buildBuildTargets(outputFile, name, "//");
@@ -122,6 +122,7 @@ public class TargetsCommandTest {
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    objectMapper = new ObjectMapper();
 
     targetsCommand =
         new TargetsCommand(new CommandRunnerParams(
@@ -133,7 +134,8 @@ public class TargetsCommandTest {
             BuckTestConstant.PYTHON_INTERPRETER,
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
-            new FakeJavaPackageFinder()));
+            new FakeJavaPackageFinder(),
+            objectMapper));
   }
 
   @Test
@@ -141,8 +143,6 @@ public class TargetsCommandTest {
       throws IOException, BuildFileParseException, InterruptedException {
     final String testBuckFileJson1 = testDataPath("TargetsCommandTestBuckJson1.js");
     final String outputFile = "buck-out/gen/test/outputFile";
-    JsonFactory jsonFactory = new JsonFactory();
-    ObjectMapper mapper = new ObjectMapper();
 
     // run `buck targets` on the build file and parse the observed JSON.
     SortedMap<String, BuildRule> buildRules = buildBuildTargets(
@@ -150,12 +150,14 @@ public class TargetsCommandTest {
 
     targetsCommand.printJsonForTargets(buildRules, /* includes */ ImmutableList.<String>of());
     String observedOutput = console.getTextWrittenToStdOut();
-    JsonNode observed = mapper.readTree(jsonFactory.createJsonParser(observedOutput));
+    JsonNode observed = objectMapper.readTree(
+        objectMapper.getJsonFactory().createJsonParser(observedOutput));
 
     // parse the expected JSON.
     String expectedJson = Files.toString(new File(testBuckFileJson1), Charsets.UTF_8)
         .replace("{$OUTPUT_FILE}", outputFile);
-    JsonNode expected = mapper.readTree(jsonFactory.createJsonParser(expectedJson)
+    JsonNode expected = objectMapper.readTree(
+        objectMapper.getJsonFactory().createJsonParser(expectedJson)
         .enable(Feature.ALLOW_COMMENTS));
 
     assertEquals("Output from targets command should match expected JSON.", expected, observed);

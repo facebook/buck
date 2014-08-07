@@ -27,7 +27,6 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.util.HumanReadableException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -164,10 +163,8 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
               Functions.toStringFunction()));
     }
 
-    ObjectMapper mapper = new ObjectMapper();
-
     // Note: using `asMap` here ensures that the keys are sorted
-    mapper.writeValue(
+    getObjectMapper().writeValue(
         console.getStdOut(),
         targetClasspaths.asMap());
 

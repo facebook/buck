@@ -8,6 +8,8 @@ java_test(
     '//lib:easymock',
     '//lib:guava',
     '//lib:jackson-annotations',
+    '//lib:jackson-core',
+    '//lib:jackson-databind',
     '//lib:jsr305',
     '//lib:junit',
     '//src/com/facebook/buck/android:rules',

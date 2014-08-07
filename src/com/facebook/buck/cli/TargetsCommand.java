@@ -212,7 +212,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     // Print the JSON representation of the build rule for the specified target(s).
     getStdOut().println("[");
 
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = getObjectMapper();
     Iterator<BuildRule> valueIterator = buildIndex.values().iterator();
 
     while (valueIterator.hasNext()) {

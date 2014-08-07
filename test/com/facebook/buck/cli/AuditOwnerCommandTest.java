@@ -45,6 +45,7 @@ import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -201,7 +202,8 @@ public class AuditOwnerCommandTest {
         buckConfig.getPythonInterpreter(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder()));
+        new FakeJavaPackageFinder(),
+        new ObjectMapper()));
   }
 
   @Test

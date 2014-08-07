@@ -36,6 +36,8 @@ java_library(
     '//lib:args4j',
     '//lib:guava',
     '//lib:ddmlib',
+    '//lib:jackson-core',
+    '//lib:jackson-databind',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/event:event',

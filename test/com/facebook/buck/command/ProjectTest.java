@@ -51,6 +51,7 @@ import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -732,7 +733,8 @@ public class ProjectTest {
         projectFilesystem,
         /* pathToDefaultAndroidManifest */ Optional.<String>absent(),
         /* pathToPostProcessScript */ Optional.<String>absent(),
-        BuckTestConstant.PYTHON_INTERPRETER);
+        BuckTestConstant.PYTHON_INTERPRETER,
+        new ObjectMapper());
 
     // Execute Project's business logic.
     EasyMock.replay(executionContext, projectFilesystem);

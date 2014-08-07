@@ -33,6 +33,7 @@ import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -59,6 +60,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final BuckEventBus eventBus;
   private final Platform platform;
   private final AndroidDirectoryResolver androidDirectoryResolver;
+  private final ObjectMapper objectMapper;
   protected final ImmutableMap<String, String> environment;
 
   /** This is constructed lazily. */
@@ -79,6 +81,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     this.androidDirectoryResolver =
         Preconditions.checkNotNull(params.getAndroidDirectoryResolver());
     this.environment = Preconditions.checkNotNull(params.getEnvironment());
+    this.objectMapper = Preconditions.checkNotNull(params.getObjectMapper());
   }
 
   abstract T createOptions(BuckConfig buckConfig);
@@ -217,6 +220,10 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
    */
   public Parser getParser() {
     return parser;
+  }
+
+  public ObjectMapper getObjectMapper() {
+    return objectMapper;
   }
 
   protected BuildEngine getBuildEngine() {

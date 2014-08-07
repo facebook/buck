@@ -29,6 +29,7 @@ import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
 public class CommandRunnerParamsForTesting extends CommandRunnerParams {
@@ -42,7 +43,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
       String pythonInterpreter,
       Platform platform,
       ImmutableMap<String, String> environment,
-      JavaPackageFinder javaPackageFinder) {
+      JavaPackageFinder javaPackageFinder,
+      ObjectMapper objectMapper) {
     super(console,
         repository,
         androidDirectoryResolver,
@@ -51,7 +53,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
         pythonInterpreter,
         platform,
         environment,
-        javaPackageFinder);
+        javaPackageFinder,
+        objectMapper);
   }
 
   // Admittedly, this class has no additional methods beyond its superclass today, but we will
@@ -72,6 +75,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
     private Platform platform = Platform.detect();
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
     private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     public CommandRunnerParamsForTesting build() {
       Repository repository = new TestRepositoryBuilder().build();
@@ -84,7 +88,8 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
           pythonInterpreter,
           platform,
           environment,
-          javaPackageFinder);
+          javaPackageFinder,
+          objectMapper);
     }
 
     public Builder setConsole(Console console) {

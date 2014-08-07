@@ -32,6 +32,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -55,6 +56,7 @@ class CommandRunnerParams {
   private final AndroidDirectoryResolver androidDirectoryResolver;
   private final Repository repository;
   private final JavaPackageFinder javaPackageFinder;
+  private final ObjectMapper objectMapper;
 
   @VisibleForTesting
   CommandRunnerParams(
@@ -66,7 +68,8 @@ class CommandRunnerParams {
       String pythonInterpreter,
       Platform platform,
       ImmutableMap<String, String> environment,
-      JavaPackageFinder javaPackageFinder) {
+      JavaPackageFinder javaPackageFinder,
+      ObjectMapper objectMapper) {
     this(
         console,
         repository,
@@ -85,7 +88,8 @@ class CommandRunnerParams {
             }),
         platform,
         environment,
-        javaPackageFinder);
+        javaPackageFinder,
+        objectMapper);
   }
 
   public CommandRunnerParams(
@@ -98,7 +102,8 @@ class CommandRunnerParams {
       Parser parser,
       Platform platform,
       ImmutableMap<String, String> environment,
-      JavaPackageFinder javaPackageFinder) {
+      JavaPackageFinder javaPackageFinder,
+      ObjectMapper objectMapper) {
     this.console = Preconditions.checkNotNull(console);
     this.repository = Preconditions.checkNotNull(repository);
     this.buildEngine = Preconditions.checkNotNull(buildEngine);
@@ -109,6 +114,7 @@ class CommandRunnerParams {
     this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
     this.environment = Preconditions.checkNotNull(environment);
     this.javaPackageFinder = javaPackageFinder;
+    this.objectMapper = Preconditions.checkNotNull(objectMapper);
   }
 
   public Ansi getAnsi() {
@@ -157,5 +163,9 @@ class CommandRunnerParams {
 
   public JavaPackageFinder getJavaPackageFinder() {
     return javaPackageFinder;
+  }
+
+  public ObjectMapper getObjectMapper() {
+    return objectMapper;
   }
 }

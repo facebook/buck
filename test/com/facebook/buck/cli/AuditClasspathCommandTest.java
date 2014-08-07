@@ -46,6 +46,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -87,7 +88,8 @@ public class AuditClasspathCommandTest {
         BuckTestConstant.PYTHON_INTERPRETER,
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder()));
+        new FakeJavaPackageFinder(),
+        new ObjectMapper()));
   }
 
   private PartialGraph createGraphFromBuildRules(BuildRuleResolver ruleResolver,
