@@ -80,7 +80,8 @@ public class DefaultExecutionEnvironmentTest {
     String name = "TEST_USER_PLEASE_IGNORE";
     DefaultExecutionEnvironment environment = new DefaultExecutionEnvironment(
         new FakeProcessExecutor(),
-        ImmutableMap.of("USER", name));
+        ImmutableMap.of("USER", name),
+        System.getProperties());
     assertEquals("Username should match test data.", name, environment.getUsername());
   }
 }

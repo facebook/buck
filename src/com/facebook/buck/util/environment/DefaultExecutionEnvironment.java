@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,13 +40,16 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   private final Platform platform;
   private final ProcessExecutor processExecutor;
   private final ImmutableMap<String, String> environment;
+  private final Properties properties;
 
   public DefaultExecutionEnvironment(
       ProcessExecutor processExecutor,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      Properties properties) {
     this.platform = Platform.detect();
     this.processExecutor = Preconditions.checkNotNull(processExecutor);
     this.environment = Preconditions.checkNotNull(environment);
+    this.properties = Preconditions.checkNotNull(properties);
   }
 
   @Override
@@ -61,7 +65,7 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
 
   @Override
   public String getUsername() {
-    return getProperty("USER", "unknown");
+    return getenv("USER", "unknown");
   }
 
   @Override
@@ -109,11 +113,16 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   }
 
   @Override
-  public String getProperty(String key, String defaultValue) {
+  public String getenv(String key, String defaultValue) {
     if (environment.containsKey(key)) {
       return environment.get(key);
     }
     return defaultValue;
+  }
+
+  @Override
+  public String getProperty(String key, String defaultValue) {
+    return properties.getProperty(key, defaultValue);
   }
 
   @VisibleForTesting

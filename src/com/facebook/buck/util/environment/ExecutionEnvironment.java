@@ -50,7 +50,12 @@ public interface ExecutionEnvironment {
   public Optional<String> getWifiSsid() throws InterruptedException;
 
   /**
-   * Gets the system property indicated by the specified key.
+   * Gets the environment variable indicated by the specified key.
+   */
+  public String getenv(String key, String defaultValue);
+
+  /**
+   * Gets the java property indicated by the specified key.
    */
   public String getProperty(String key, String defaultValue);
 }

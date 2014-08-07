@@ -102,7 +102,8 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             new DefaultExecutionEnvironment(
                 new FakeProcessExecutor(),
-                ImmutableMap.copyOf(System.getenv())),
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
             /* isTreatingAssumptionsAsErrors */ false);
     eventBus.register(listener);
 

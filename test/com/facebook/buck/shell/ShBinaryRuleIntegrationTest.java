@@ -114,7 +114,8 @@ public class ShBinaryRuleIntegrationTest {
     ExecutionEnvironment executionEnvironment =
         new DefaultExecutionEnvironment(
             new FakeProcessExecutor(),
-            ImmutableMap.copyOf(System.getenv()));
+            ImmutableMap.copyOf(System.getenv()),
+            System.getProperties());
     String expectedPlatform = executionEnvironment.getPlatform().getPrintableName();
     assertEquals(expectedPlatform, lines.get(0));
     assertEquals("arg1 arg2", lines.get(1));

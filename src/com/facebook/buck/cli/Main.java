@@ -474,7 +474,9 @@ public final class Main {
     ProcessExecutor processExecutor = new ProcessExecutor(console);
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
         processExecutor,
-        clientEnvironment);
+        clientEnvironment,
+        // TODO(user): Thread through properties from client environment.
+        System.getProperties());
 
     // No more early outs: if this command is not read only, acquire the command semaphore to
     // become the only executing read/write command.
