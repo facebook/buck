@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,7 +24,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
@@ -90,37 +88,6 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     this.fullyQualifiedName =
         (repository.isPresent() ? "@" + repository.get() : "") +
         baseName + ":" + shortName + getFlavorPostfix();
-  }
-
-  /**
-   * The build file in which this rule was defined.
-   * @throws MissingBuildFileException if the build file for the target does not exist.
-   */
-  // TODO(jacko): This relies on the caller to pass in the correct projectFilesystem for this
-  //              target's repo. Ultimately it should take a RepositoryFactory or something similar.
-  public File getBuildFile(ProjectFilesystem projectFilesystem) throws MissingBuildFileException {
-    String pathToBuildFile = getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME;
-    File buildFile = projectFilesystem.getFileForRelativePath(pathToBuildFile);
-    if (buildFile.isFile()) {
-      return buildFile;
-    } else {
-      throw new MissingBuildFileException(this);
-    }
-  }
-
-  @SuppressWarnings("serial")
-  public static class MissingBuildFileException extends BuildTargetException {
-
-    private MissingBuildFileException(BuildTarget buildTarget) {
-      super(String.format("No build file at %s when resolving target %s.",
-          buildTarget.getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME,
-          buildTarget.getFullyQualifiedName()));
-    }
-
-    @Override
-    public String getHumanReadableErrorMessage() {
-      return getMessage();
-    }
   }
 
   public Path getBuildFilePath() {

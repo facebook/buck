@@ -116,7 +116,9 @@ public class TargetsCommandTest {
   @Before
   public void setUp() {
     console = new TestConsole();
-    Repository repository = new TestRepositoryBuilder().build();
+    Repository repository = new TestRepositoryBuilder()
+        .setFilesystem(new ProjectFilesystem(Paths.get(".")))
+        .build();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();

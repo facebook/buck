@@ -17,7 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.util.AndroidDirectoryResolver;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -146,5 +149,33 @@ public class Repository {
     Repository that = (Repository) obj;
     return this.getFilesystem().equals(that.getFilesystem()) &&
         this.getBuckConfig().equals(that.getBuckConfig());
+  }
+
+  public Path getAbsolutePathToBuildFile(BuildTarget target)
+      throws MissingBuildFileException {
+    Preconditions.checkArgument(
+        target.getRepository().equals(name),
+        "Target %s is not from this repository %s.",
+        target,
+        name);
+    Path relativePath = target.getBuildFilePath();
+    if (!filesystem.isFile(relativePath)) {
+      throw new MissingBuildFileException(target);
+    }
+    return filesystem.resolve(relativePath);
+  }
+
+  @SuppressWarnings("serial")
+  public static class MissingBuildFileException extends BuildTargetException {
+    public MissingBuildFileException(BuildTarget buildTarget) {
+      super(String.format("No build file at %s when resolving target %s.",
+          buildTarget.getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME,
+          buildTarget.getFullyQualifiedName()));
+    }
+
+    @Override
+    public String getHumanReadableErrorMessage() {
+      return getMessage();
+    }
   }
 }

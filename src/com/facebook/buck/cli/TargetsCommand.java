@@ -221,7 +221,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
       List<Map<String, Object>> rules;
       try {
-        File buildFile = buildTarget.getBuildFile(getProjectFilesystem());
+        File buildFile = getRepository().getAbsolutePathToBuildFile(buildTarget).toFile();
         rules = getParser().parseBuildFile(
             buildFile,
             defaultIncludes,
@@ -330,7 +330,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     Parser parser = getParser();
     try {
       ruleObjects = parser.parseBuildFile(
-          buildTarget.getBuildFile(getProjectFilesystem()),
+          getRepository().getAbsolutePathToBuildFile(buildTarget).toFile(),
           options.getDefaultIncludes(),
           EnumSet.noneOf(ProjectBuildFileParser.Option.class),
           environment,

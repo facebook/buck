@@ -25,6 +25,7 @@ java_library(
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/thrift:rules',
+    '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:util',

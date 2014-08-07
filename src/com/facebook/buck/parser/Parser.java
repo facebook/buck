@@ -372,7 +372,7 @@ public class Parser {
       if (!isCacheComplete(defaultIncludes, environment)) {
         Set<File> buildTargetFiles = Sets.newHashSet();
         for (BuildTarget buildTarget : buildTargets) {
-          File buildFile = buildTarget.getBuildFile(repository.getFilesystem());
+          File buildFile = repository.getAbsolutePathToBuildFile(buildTarget).toFile();
           boolean isNewElement = buildTargetFiles.add(buildFile);
           if (isNewElement) {
             parseBuildFile(buildFile, defaultIncludes, buildFileParser, environment);
@@ -673,8 +673,7 @@ public class Parser {
           "Unable to locate dependency \"%s\" for target \"%s\"", buildTarget, sourceTarget);
     }
 
-    // TODO(jacko): THIS ISN'T CORRECT: should use the filesystem the target is referenced from
-    File buildFile = buildTarget.getBuildFile(repository.getFilesystem());
+    File buildFile = repository.getAbsolutePathToBuildFile(buildTarget).toFile();
     if (isCached(buildFile, defaultIncludes, environment)) {
       throw new HumanReadableException(
           "The build file that should contain %s has already been parsed (%s), " +
@@ -748,7 +747,7 @@ public class Parser {
       if (description == null) {
         throw new HumanReadableException("Unrecognized rule %s while parsing %s.",
             buildRuleType,
-            target.getBuildFile(repository.getFilesystem()));
+            repository.getAbsolutePathToBuildFile(target));
       }
 
       targetsToFile.put(
