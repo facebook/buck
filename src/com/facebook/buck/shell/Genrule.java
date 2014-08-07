@@ -113,6 +113,7 @@ public class Genrule extends AbstractBuildRule {
 
   protected final Map<Path, Path> srcsToAbsolutePaths;
 
+  private final String out;
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
   private final Path pathToTmpDirectory;
@@ -144,7 +145,7 @@ public class Genrule extends AbstractBuildRule {
           }
         });
 
-    Preconditions.checkNotNull(out);
+    this.out = Preconditions.checkNotNull(out);
     BuildTarget target = params.getBuildTarget();
     this.pathToOutDirectory = Paths.get(
         BuckConstant.GEN_DIR,
@@ -328,4 +329,12 @@ public class Genrule extends AbstractBuildRule {
       commands.add(new MkdirAndSymlinkFileStep(entry.getKey(), destination));
     }
   }
+
+  /**
+   * Get the output name of the generated file, as listed in the BUCK file.
+   */
+  public String getOutputName() {
+    return out;
+  }
+
 }

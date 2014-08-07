@@ -571,6 +571,26 @@ public class GenruleTest {
     }
   }
 
+  @Test
+  public void testGetOutputNameMethod() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:test");
+
+    // Sample data of output names to test with Genrule
+    ImmutableList<String> names = ImmutableList.of(
+        "out.txt",
+        "out/file.txt");
+
+    // Create genrules using the names above and verify the output name method returns
+    // them.
+    for (String name : names) {
+      Genrule genrule = GenruleBuilder
+          .createGenrule(target)
+          .setOut(name)
+          .build();
+      assertEquals(name, genrule.getOutputName());
+    }
+  }
+
   private static String getAbsolutePathFor(String path) {
     return new File(path).getAbsolutePath();
   }
