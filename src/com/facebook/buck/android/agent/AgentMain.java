@@ -134,19 +134,26 @@ public class AgentMain {
     File path = new File(userArgs.get(2));
 
     // First make sure we can bind to the port.
-    ServerSocket serverSocket = new ServerSocket(port);
+    ServerSocket serverSocket = null;
+    try {
+      serverSocket = new ServerSocket(port);
 
-    byte[] secretKey = createAndSendSessionKey();
+      byte[] secretKey = createAndSendSessionKey();
 
-    // Open the connection with appropriate timeouts.
-    serverSocket.setSoTimeout(CONNECT_TIMEOUT_MS);
-    Socket connectionSocket = serverSocket.accept();
-    connectionSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
-    InputStream input = connectionSocket.getInputStream();
+      // Open the connection with appropriate timeouts.
+      serverSocket.setSoTimeout(CONNECT_TIMEOUT_MS);
+      Socket connectionSocket = serverSocket.accept();
+      connectionSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
+      InputStream input = connectionSocket.getInputStream();
 
-    receiveAndValidateSessionKey(secretKey, input);
+      receiveAndValidateSessionKey(secretKey, input);
 
-    doRawReceiveFile(path, size, input);
+      doRawReceiveFile(path, size, input);
+    } finally {
+      if (serverSocket != null) {
+        serverSocket.close();
+      }
+    }
   }
 
   private static byte[] createAndSendSessionKey() throws IOException {

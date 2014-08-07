@@ -1,6 +1,10 @@
 android_library(
   name = 'agent-lib',
   srcs = glob(['*.java']),
+  # Because this code gets dx'd, we restrict the source to Java 6 so that
+  # trying to use something like try-with-resources is a compile-time error.
+  source = '6',
+  target = '6',
   deps = [
     '//src/com/facebook/buck/android/agent/util:util',
     # Do not add other deps here.  The agent should remain very small.
