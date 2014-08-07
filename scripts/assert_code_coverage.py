@@ -114,6 +114,9 @@ def calculate_code_coverage():
     coverage_by_package.sort(cmp=pair_compare)
     for item in coverage_by_package:
         info = item.copy()
+        if not 'BRANCH' in info:
+            # It is possible to have a module of Java code with no branches.
+            info['BRANCH'] = 100
         info['color'] = get_color_for_percentage(item[SORT_TYPE])
         info['label'] = label_with_padding(item['package_name'])
         print format_string % info
