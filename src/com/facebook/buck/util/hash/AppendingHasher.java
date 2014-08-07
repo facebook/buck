@@ -154,6 +154,7 @@ public class AppendingHasher implements Hasher {
 
   @Override
   @Deprecated
+  @SuppressWarnings("deprecation")
   public Hasher putString(CharSequence charSequence) {
     for (Hasher hasher : hashers) {
       hasher.putString(charSequence);

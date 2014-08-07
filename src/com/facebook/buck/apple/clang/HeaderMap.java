@@ -381,7 +381,7 @@ public class HeaderMap {
     FAILURE_ALREADY_PRESENT
   };
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings("PMD.UnusedPrivateMethod") // PMD has a bad heuristic here.
   private AddResult add(String str, String prefix, String suffix) {
     int hash0 = hashKey(str) & (numBuckets - 1);
 
