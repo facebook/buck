@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 
@@ -31,12 +32,25 @@ public class BuildRuleSourcePath extends AbstractSourcePath {
   private final String name;
 
   public BuildRuleSourcePath(BuildRule rule) {
-    this(rule, rule.getBuildTarget().getShortNameOnly());
+    this(rule, getNameForRule(rule));
   }
 
   public BuildRuleSourcePath(BuildRule rule, String name) {
     this.rule = Preconditions.checkNotNull(rule);
     this.name = Preconditions.checkNotNull(name);
+  }
+
+  private static String getNameForRule(BuildRule rule) {
+
+    // If this build rule implements `HasOutputName`, then return the output name
+    // it provides.
+    if (rule instanceof HasOutputName) {
+      HasOutputName hasOutputName = (HasOutputName) rule;
+      return hasOutputName.getOutputName();
+    }
+
+    // Otherwise, fall back to using the short name of rule's build target.
+    return rule.getBuildTarget().getShortNameOnly();
   }
 
   @Override

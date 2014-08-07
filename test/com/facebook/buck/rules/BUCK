@@ -102,6 +102,7 @@ java_test(
     '//test/com/facebook/buck/testutil/integration:integration',
     '//test/com/facebook/buck/timing:testutil',
     '//test/com/facebook/buck/util:testutil',
+    '//test/com/facebook/buck/shell:testutil',
     ':testutil',
     '//third-party/java/astyanax:astyanax-cassandra',
     '//third-party/java/astyanax:astyanax-core',

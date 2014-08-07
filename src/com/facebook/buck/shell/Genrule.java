@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -100,7 +101,7 @@ import java.util.Set;
  * <p>
  * Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends AbstractBuildRule {
+public class Genrule extends AbstractBuildRule implements HasOutputName {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
@@ -333,6 +334,7 @@ public class Genrule extends AbstractBuildRule {
   /**
    * Get the output name of the generated file, as listed in the BUCK file.
    */
+  @Override
   public String getOutputName() {
     return out;
   }
