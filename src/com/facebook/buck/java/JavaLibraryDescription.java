@@ -65,6 +65,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     return flavor.equals(Flavor.DEFAULT) || flavor.equals(JavaLibrary.SRC_JAR);
   }
 
+  @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
   }
