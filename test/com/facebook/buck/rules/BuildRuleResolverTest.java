@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
@@ -44,4 +45,28 @@ public class BuildRuleResolverTest {
           e.getMessage());
     }
   }
+
+  @Test
+  public void testAddIterableToBuildRuleResolver() {
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+
+    // Create an iterable of some build rules.
+    ImmutableSortedSet<BuildRule> buildRules = ImmutableSortedSet.of(
+            JavaLibraryBuilder
+                .createBuilder(BuildTargetFactory.newInstance("//foo:bar"))
+                .build(),
+            JavaLibraryBuilder
+                .createBuilder(BuildTargetFactory.newInstance("//foo:bar"))
+                .build());
+
+    // Check that we get back the rules we added from the function.
+    ImmutableSortedSet<BuildRule> added = buildRuleResolver.addAllToIndex(buildRules);
+    assertEquals(buildRules, added);
+
+    // Test that we actuall added the rules.
+    ImmutableSortedSet<BuildRule> all = ImmutableSortedSet.copyOf(
+        buildRuleResolver.getBuildRules());
+    assertEquals(buildRules, all);
+  }
+
 }
