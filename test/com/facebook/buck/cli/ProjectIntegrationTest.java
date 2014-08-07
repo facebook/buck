@@ -152,6 +152,44 @@ public class ProjectIntegrationTest {
   }
 
   /**
+   * Verify that if we build a project by specifying a target and '--with-tests', the tests'
+   * dependencies are referenced even if they are defined in a buck file that would not have been
+   * parsed otherwise.
+   */
+  @Test
+  public void testBuckProjectSliceWithTestsDependenciesInDifferentBuckFile() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_slice_with_tests_dependencies_in_different_buck_file", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--with-tests",
+        "//modules/dep1:dep1");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+
+    assertEquals(
+        "`buck project` should report the files it modified.",
+        Joiner.on('\n').join(
+            "MODIFIED FILES:",
+            ".idea/compiler.xml",
+            ".idea/modules.xml",
+            ".idea/runConfigurations/Debug_Buck_test.xml",
+            "modules/dep1/module_modules_dep1.iml",
+            "modules/dep2/module_modules_dep2.iml",
+            "tests/module_tests.iml"
+        ) + '\n',
+        result.getStdout());
+
+    assertThat(
+        "`buck project` should contain warning to restart IntelliJ.",
+        result.getStderr(),
+        containsString("  ::  Please close and re-open IntelliJ."));
+  }
+
+  /**
    * Tests the case where a build file has a test rule that depends on a library rule in the same
    * build file, and the test rule is specified as the {@code test_target} in its
    * {@code project_config()}. When this happens, all libraries in the generated {@code .iml} file
