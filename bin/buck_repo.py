@@ -354,7 +354,7 @@ class BuckRepo:
             return buck_repo_dirty == "1"
 
         output = subprocess.check_output(
-            ['git', 'status', '-s'],
+            ['git', 'status', '--porcelain'],
             cwd=self._buck_dir)
         return bool(output.strip())
 
