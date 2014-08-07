@@ -19,23 +19,27 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.List;
 
 /**
  * Create a c++ static library (.a file).
  */
 public class CxxLibrary extends AbstractNativeBuildRule {
 
+  private final Path archiver;
+
   public CxxLibrary(
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> srcs,
-      ImmutableSortedSet<SourcePath> headers) {
+      ImmutableSortedSet<SourcePath> headers,
+      Path archiver) {
     super(params, srcs, headers, ImmutableMap.<SourcePath, String>of());
+    this.archiver = Preconditions.checkNotNull(archiver);
   }
 
   @Override
@@ -44,8 +48,11 @@ public class CxxLibrary extends AbstractNativeBuildRule {
   }
 
   @Override
-  protected List<Step> getFinalBuildSteps(ImmutableSortedSet<Path> files, Path outputFile) {
-    return ImmutableList.<Step>of(new ArStep(files, outputFile));
+  protected ImmutableList<Step> getFinalBuildSteps(
+      ImmutableSortedSet<Path> files,
+      Path outputFile) {
+    return ImmutableList.<Step>of(
+        new ArchiveStep(archiver, outputFile, ImmutableList.copyOf(files)));
   }
 
   @Override

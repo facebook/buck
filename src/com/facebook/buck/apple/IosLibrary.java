@@ -16,30 +16,39 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.ArStep;
+import com.facebook.buck.cxx.ArchiveStep;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.List;
 
 public class IosLibrary extends AbstractAppleNativeTargetBuildRule {
+
+  Path archiver;
 
   public IosLibrary(
       BuildRuleParams params,
       AppleNativeTargetDescriptionArg arg,
-      TargetSources targetSources) {
+      TargetSources targetSources,
+      Path archiver) {
     super(params, arg, targetSources);
+    this.archiver = Preconditions.checkNotNull(archiver);
   }
 
   @Override
-  protected List<Step> getFinalBuildSteps(ImmutableSortedSet<Path> files, Path outputFile) {
+  protected ImmutableList<Step> getFinalBuildSteps(
+      ImmutableSortedSet<Path> files,
+      Path outputFile) {
     if (files.isEmpty()) {
       return ImmutableList.of();
     } else {
-      return ImmutableList.<Step>of(new ArStep(files, outputFile));
+      return ImmutableList.<Step>of(new ArchiveStep(
+          archiver,
+          outputFile,
+          ImmutableList.copyOf(files)));
     }
   }
 

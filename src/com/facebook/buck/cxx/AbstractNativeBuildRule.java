@@ -40,7 +40,6 @@ import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -71,7 +70,9 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
   protected abstract String getCompiler();
 
   /** Final linking step(s) */
-  protected abstract List<Step> getFinalBuildSteps(ImmutableSortedSet<Path> srcs, Path outputFile);
+  protected abstract ImmutableList<Step> getFinalBuildSteps(
+      ImmutableSortedSet<Path> srcs,
+      Path outputFile);
 
   /** String format to deduce the output file out of the target name */
   protected abstract String getOutputFileNameFormat();

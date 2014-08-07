@@ -42,6 +42,7 @@ import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
@@ -70,6 +71,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -158,6 +160,10 @@ public class KnownBuildRuleTypes {
       ndkVersion = androidDirectoryResolver.getNdkVersion();
     }
 
+    // Look up the path to the "ar" tool in the buck config, falling back to the default
+    // if not found.
+    Path archiver = config.getPath("tools", "ar").or(Archives.DEFAULT_ARCHIVE_PATH);
+
     Builder builder = builder();
 
     JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
@@ -177,7 +183,7 @@ public class KnownBuildRuleTypes {
     builder.register(new BuckExtensionDescription());
     builder.register(new CoreDataModelDescription());
     builder.register(new CxxBinaryDescription());
-    builder.register(new CxxLibraryDescription());
+    builder.register(new CxxLibraryDescription(archiver));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
@@ -188,7 +194,7 @@ public class KnownBuildRuleTypes {
     builder.register(new JavaLibraryDescription(javacEnv));
     builder.register(new JavaTestDescription(javacEnv));
     builder.register(new IosBinaryDescription());
-    builder.register(new IosLibraryDescription());
+    builder.register(new IosLibraryDescription(archiver));
     builder.register(new IosPostprocessResourcesDescription());
     builder.register(new IosResourceDescription());
     builder.register(new IosTestDescription());

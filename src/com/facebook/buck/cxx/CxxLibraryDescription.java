@@ -24,10 +24,19 @@ import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.nio.file.Path;
 
 public class CxxLibraryDescription implements Description<CxxLibraryDescription.Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_library");
+
+  private final Path archiver;
+
+  public CxxLibraryDescription(Path archiver) {
+    this.archiver = Preconditions.checkNotNull(archiver);
+  }
 
   @Override
   public Arg createUnpopulatedConstructorArg() {
@@ -39,7 +48,7 @@ public class CxxLibraryDescription implements Description<CxxLibraryDescription.
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new CxxLibrary(params, args.srcs, args.headers);
+    return new CxxLibrary(params, args.srcs, args.headers, archiver);
   }
 
   @Override

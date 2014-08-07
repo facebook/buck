@@ -20,9 +20,18 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.google.common.base.Preconditions;
+
+import java.nio.file.Path;
 
 public class IosLibraryDescription implements Description<AppleNativeTargetDescriptionArg> {
   public static final BuildRuleType TYPE = new BuildRuleType("ios_library");
+
+  private final Path archiver;
+
+  public IosLibraryDescription(Path archiver) {
+    this.archiver = Preconditions.checkNotNull(archiver);
+  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -39,6 +48,10 @@ public class IosLibraryDescription implements Description<AppleNativeTargetDescr
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new IosLibrary(params, args, TargetSources.ofAppleSources(args.srcs));
+    return new IosLibrary(
+        params,
+        args,
+        TargetSources.ofAppleSources(args.srcs),
+        archiver);
   }
 }

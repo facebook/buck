@@ -25,6 +25,7 @@ import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.command.Project;
+import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.FakeJavaPackageFinder;
@@ -188,7 +189,8 @@ public class ProjectCommandTest {
   @Test
   public void testXcodeProjectExcludesProjectsInPath() throws Exception {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    IosLibraryDescription iosLibraryDescription = new IosLibraryDescription();
+    IosLibraryDescription iosLibraryDescription =
+        new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
     XcodeProjectConfigDescription xcodeProjectConfigDescription =
       new XcodeProjectConfigDescription();
 
@@ -272,7 +274,8 @@ public class ProjectCommandTest {
   @Test
   public void testXcodeProjectDoesNotExcludeProjectsWhenSpecifiedExplicitly() throws Exception {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    IosLibraryDescription iosLibraryDescription = new IosLibraryDescription();
+    IosLibraryDescription iosLibraryDescription =
+        new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
     XcodeProjectConfigDescription xcodeProjectConfigDescription =
       new XcodeProjectConfigDescription();
 

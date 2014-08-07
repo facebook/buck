@@ -856,6 +856,18 @@ public class BuckConfig {
     return checkPathExists(pathToAapt.toString(), "Overridden aapt path not found: ");
   }
 
+  /**
+   * @return the path for the given section and property.
+   */
+  public Optional<Path> getPath(String sectionName, String name) {
+    Optional<String> pathString = getValue(sectionName, name);
+    return pathString.isPresent() ?
+        checkPathExists(
+            pathString.get(),
+            String.format("Overridden %s:%s path not found: ", sectionName, name)) :
+        Optional.<Path>absent();
+  }
+
   public Optional<Path> checkPathExists(String pathString, String errorMsg) {
     Path path = Paths.get(pathString);
     if (projectFilesystem.exists(path)) {

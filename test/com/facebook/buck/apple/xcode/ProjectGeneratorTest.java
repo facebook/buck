@@ -62,6 +62,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.codegen.SourceSigner;
+import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -132,7 +133,7 @@ public class ProjectGeneratorTest {
     fakeProjectFilesystem = new FakeProjectFilesystem();
     projectFilesystem = fakeProjectFilesystem;
     executionContext = TestExecutionContext.newInstance();
-    iosLibraryDescription = new IosLibraryDescription();
+    iosLibraryDescription = new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
     iosTestDescription = new IosTestDescription();
     iosBinaryDescription = new IosBinaryDescription();
     iosPostprocessResourcesDescription = new IosPostprocessResourcesDescription();

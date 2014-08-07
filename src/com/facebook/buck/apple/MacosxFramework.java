@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.List;
 
 public class MacosxFramework extends AbstractAppleNativeTargetBuildRule {
 
@@ -35,7 +34,9 @@ public class MacosxFramework extends AbstractAppleNativeTargetBuildRule {
   }
 
   @Override
-  protected List<Step> getFinalBuildSteps(ImmutableSortedSet<Path> files, Path outputFile) {
+  protected ImmutableList<Step> getFinalBuildSteps(
+      ImmutableSortedSet<Path> files,
+      Path outputFile) {
     if (files.isEmpty()) {
       return ImmutableList.of();
     } else {

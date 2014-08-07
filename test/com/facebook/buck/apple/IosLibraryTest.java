@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -36,7 +37,8 @@ import java.nio.file.Paths;
 
 public class IosLibraryTest {
 
-  private IosLibraryDescription description = new IosLibraryDescription();
+  private IosLibraryDescription description =
+      new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
 
   @Test
   public void getInputsToCompareToOutput() {

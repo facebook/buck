@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.List;
 
 /**
  * Create a c++ binary.
@@ -47,7 +46,9 @@ public class CxxBinary extends AbstractNativeBuildRule {
   }
 
   @Override
-  protected List<Step> getFinalBuildSteps(ImmutableSortedSet<Path> files,  Path outputFile) {
+  protected ImmutableList<Step> getFinalBuildSteps(
+      ImmutableSortedSet<Path> files,
+      Path outputFile) {
     return ImmutableList.<Step>of(
         new CompilerStep(
             /* compiler */ DEFAULT_CPP_COMPILER,

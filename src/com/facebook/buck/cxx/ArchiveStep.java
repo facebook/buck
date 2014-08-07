@@ -18,44 +18,44 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
 /**
  * Create an object archive with ar.
  */
-public class ArStep extends ShellStep {
+public class ArchiveStep extends ShellStep {
 
-  public static final String AR = "ar";
+  private final Path archiver;
+  private final Path output;
+  private final ImmutableList<Path> inputs;
 
-  private final ImmutableSortedSet<Path> srcs;
-  private final Path outputFile;
-
-  public ArStep(ImmutableSortedSet<Path> srcs,  Path outputFile) {
-    this.srcs = Preconditions.checkNotNull(srcs);
-    this.outputFile = Preconditions.checkNotNull(outputFile);
+  public ArchiveStep(
+      Path archiver,
+      Path output,
+      ImmutableList<Path> inputs) {
+    this.archiver = Preconditions.checkNotNull(archiver);
+    this.output = Preconditions.checkNotNull(output);
+    this.inputs = Preconditions.checkNotNull(inputs);
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> cmdBuilder = ImmutableList.builder();
-
-    cmdBuilder
-        .add(AR)
-        .add("-q") /* do not check for existing objects */
-        .add(outputFile.toString());
-    for (Path src : srcs) {
-      cmdBuilder.add(src.toString());
-    }
-
-    return cmdBuilder.build();
+    return ImmutableList.<String>builder()
+        .add(archiver.toString())
+        .add("rcs")
+        .add(output.toString())
+        .addAll(Iterables.transform(inputs, Functions.toStringFunction()))
+        .build();
   }
 
   @Override
   public String getShortName() {
-    return AR;
+    return "archive";
   }
+
 }

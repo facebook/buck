@@ -71,7 +71,7 @@ public class CxxBinaryRuleTest {
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> headers,
       ImmutableSortedSet< BuildRule> deps) {
-    CxxLibraryDescription description = new CxxLibraryDescription();
+    CxxLibraryDescription description = new CxxLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
     CxxLibraryDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.srcs = srcs;
     arg.deps = Optional.of(deps);
@@ -174,7 +174,9 @@ public class CxxBinaryRuleTest {
         "mkdir -p buck-out/gen",
         "g++ -c -I . source1.c -o buck-out/gen/source1.o",
         "g++ -c -I . source2.c -o buck-out/gen/source2.o",
-        "ar -q buck-out/bin/foo/libbar.a buck-out/bin/lib/libbla.a " +
-            "buck-out/gen/source1.o buck-out/gen/source2.o"));
+        String.format(
+            "%s rcs buck-out/bin/foo/libbar.a buck-out/bin/lib/libbla.a " +
+            "buck-out/gen/source1.o buck-out/gen/source2.o",
+            Archives.DEFAULT_ARCHIVE_PATH)));
   }
 }

@@ -32,6 +32,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -70,7 +71,7 @@ public class SchemeGeneratorTest {
   @Before
   public void setUp() throws IOException {
     projectFilesystem = new FakeProjectFilesystem();
-    iosLibraryDescription = new IosLibraryDescription();
+    iosLibraryDescription = new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
     iosTestDescription = new IosTestDescription();
   }
 

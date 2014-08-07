@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
@@ -62,7 +61,9 @@ public class IosTest extends AbstractAppleNativeTargetBuildRule implements TestR
   }
 
   @Override
-  protected List<Step> getFinalBuildSteps(ImmutableSortedSet<Path> files, Path outputFile) {
+  protected ImmutableList<Step> getFinalBuildSteps(
+      ImmutableSortedSet<Path> files,
+      Path outputFile) {
     if (files.isEmpty()) {
       return ImmutableList.of();
     } else {
