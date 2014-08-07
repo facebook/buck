@@ -1,6 +1,7 @@
 UTIL_SRCS = [
   'FakeClock.java',
   'IncrementingFakeClock.java',
+  'SettableFakeClock.java',
 ]
 
 java_library(
