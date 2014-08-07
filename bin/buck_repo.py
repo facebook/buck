@@ -112,7 +112,7 @@ class BuckRepo:
         self._is_git = os.path.exists(dot_git) and os.path.isdir(dot_git)
 
         buck_version = buck_project.buck_version
-        if not buck_project.has_no_buck_check and buck_version:
+        if self._is_git and not buck_project.has_no_buck_check and buck_version:
             revision = buck_version[0]
             branch = buck_version[1] if len(buck_version) > 1 else None
             self._checkout_and_clean(revision, branch)
@@ -356,24 +356,36 @@ class BuckRepo:
         if buck_repo_dirty:
             return buck_repo_dirty == "1"
 
+        if not self._is_git:
+            return False
+
         output = subprocess.check_output(
             ['git', 'status', '--porcelain'],
             cwd=self._buck_dir)
         return bool(output.strip())
 
     def _has_local_changes(self):
+        if not self._is_git:
+            return False
+
         output = subprocess.check_output(
             ['git', 'ls-files', '-m'],
             cwd=self._buck_dir)
         return bool(output.strip())
 
     def _get_git_revision(self):
+        if not self._is_git:
+            return 'N/A'
+
         output = subprocess.check_output(
             ['git', 'rev-parse', 'HEAD', '--'],
             cwd=self._buck_dir)
         return output.splitlines()[0].strip()
 
     def _get_git_commit_timestamp(self):
+        if not self._is_git:
+            return -1
+
         return subprocess.check_output(
             ['git', 'log', '--pretty=format:%ct', '-1', 'HEAD', '--'],
             cwd=self._buck_dir).strip()
