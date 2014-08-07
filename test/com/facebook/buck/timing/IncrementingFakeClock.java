@@ -20,8 +20,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Provides a fake implementation of a {@link Clock} which increments by a fixed amount every
- * time the time is queried.
+ * Provides a fake implementation of a {@link Clock} which increments
+ * both {@link currentTimeMillis()} and {@link nanoTime()} by a fixed
+ * amount every time either is queried.
  */
 public class IncrementingFakeClock implements Clock {
   private AtomicLong counter;
@@ -39,7 +40,9 @@ public class IncrementingFakeClock implements Clock {
 
   @Override
   public long currentTimeMillis() {
-    return TimeUnit.NANOSECONDS.toMillis(counter.incrementAndGet());
+    // In our world, currentTimeMillis() is based on nanoTime().
+    // This isn't the case for normal clocks, but it works for us.
+    return TimeUnit.NANOSECONDS.toMillis(nanoTime());
   }
 
   @Override
