@@ -37,7 +37,7 @@ package com.facebook.buck.rules;
  *     public class ExampleLibraryArg {
  *       public String name;
  *       public ImmutableSortedSet&gt;SourcePath> srcs;
- *       @Hint(name = "optional_thing")
+ *       {@literal @}Hint(name = "optional_thing")
  *       public Optional&gt;Boolean> isNeeded;
  *     }
  * </pre>

@@ -22,7 +22,7 @@ import java.util.logging.Level;
 
 /**
  * Event for messages.  Post ConsoleEvents to the event bus where you would normally use
- * {@link java.util.logging}.
+ * {@code java.util.logging}.
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public class ConsoleEvent extends AbstractBuckEvent {
