@@ -39,7 +39,7 @@ import java.util.Set;
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
-public class TargetNode<T extends ConstructorArg> {
+public class TargetNode<T extends ConstructorArg> implements Comparable<TargetNode<?>> {
 
   private final BuildRuleFactoryParams ruleFactoryParams;
   private final Description<T> description;
@@ -50,14 +50,15 @@ public class TargetNode<T extends ConstructorArg> {
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
 
   @VisibleForTesting
-  TargetNode(
+  public TargetNode(
       Description<T> description,
       BuildRuleFactoryParams params,
+      ImmutableSet<Path> inputs,
       Set<BuildTarget> declaredDeps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     this.description = Preconditions.checkNotNull(description);
     this.ruleFactoryParams = Preconditions.checkNotNull(params);
-    this.pathsReferenced = ImmutableSet.of();
+    this.pathsReferenced = Preconditions.checkNotNull(inputs);
     this.declaredDeps = ImmutableSortedSet.copyOf(declaredDeps);
     this.extraDeps = ImmutableSortedSet.of();
     this.visibilityPatterns = Preconditions.checkNotNull(visibilityPatterns);
@@ -209,4 +210,8 @@ public class TargetNode<T extends ConstructorArg> {
     return param.charAt(0) == ':' || param.startsWith(BuildTarget.BUILD_TARGET_PREFIX);
   }
 
+  @Override
+  public int compareTo(TargetNode<?> o) {
+    return getBuildTarget().compareTo(o.getBuildTarget());
+  }
 }

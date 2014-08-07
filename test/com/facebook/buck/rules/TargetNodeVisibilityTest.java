@@ -32,6 +32,8 @@ import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
+
 public class TargetNodeVisibilityTest {
 
   private static final BuildTarget orcaTarget =
@@ -233,6 +235,7 @@ public class TargetNodeVisibilityTest {
     return new TargetNode<>(
         description,
         params,
+        ImmutableSet.<Path>of(),
         ImmutableSet.<BuildTarget>of(),
         visibilityPatterns);
   }

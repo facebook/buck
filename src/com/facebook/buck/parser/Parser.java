@@ -427,7 +427,7 @@ public class Parser {
   }
 
   @Nullable
-  private synchronized TargetNode<?> getTargetNode(BuildTarget buildTarget) {
+  public synchronized TargetNode<?> getTargetNode(BuildTarget buildTarget) {
     // Fast path.
     TargetNode<?> toReturn = memoizedTargetNodes.get(buildTarget);
     if (toReturn != null) {

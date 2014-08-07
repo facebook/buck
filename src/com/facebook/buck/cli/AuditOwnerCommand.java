@@ -17,29 +17,35 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.json.ProjectBuildFileParser;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.ProjectConfigDescription;
+import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
-import com.google.common.collect.Multimap;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -48,6 +54,7 @@ import java.util.Set;
 public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> {
 
   private static final String FILE_INDENT = "    ";
+  private static final int BUILD_TARGET_ERROR = 13;
 
   public AuditOwnerCommand(CommandRunnerParams params) {
     super(params);
@@ -55,12 +62,12 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
 
   @VisibleForTesting
   static final class OwnersReport {
-    final ImmutableSetMultimap<BuildRule, Path> owners;
+    final ImmutableSetMultimap<TargetNode<?>, Path> owners;
     final ImmutableSet<Path> inputsWithNoOwners;
     final ImmutableSet<String> nonExistentInputs;
     final ImmutableSet<String> nonFileInputs;
 
-    public OwnersReport(SetMultimap<BuildRule, Path> owners,
+    public OwnersReport(SetMultimap<TargetNode<?>, Path> owners,
                         Set<Path> inputsWithNoOwners,
                         Set<String> nonExistentInputs,
                         Set<String> nonFileInputs) {
@@ -68,6 +75,26 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       this.inputsWithNoOwners = ImmutableSet.copyOf(inputsWithNoOwners);
       this.nonExistentInputs = ImmutableSet.copyOf(nonExistentInputs);
       this.nonFileInputs = ImmutableSet.copyOf(nonFileInputs);
+    }
+
+    public static OwnersReport emptyReport() {
+      return new OwnersReport(
+          ImmutableSetMultimap.<TargetNode<?>, Path>of(),
+          Sets.<Path>newHashSet(),
+          Sets.<String>newHashSet(),
+          Sets.<String>newHashSet());
+    }
+
+    public OwnersReport updatedWith(OwnersReport other) {
+      SetMultimap<TargetNode<?>, Path> updatedOwners =
+          TreeMultimap.<TargetNode<?>, Path>create(owners);
+      updatedOwners.putAll(other.owners);
+
+      return new OwnersReport(
+          updatedOwners,
+          Sets.intersection(inputsWithNoOwners, other.inputsWithNoOwners),
+          Sets.union(nonExistentInputs, other.nonExistentInputs),
+          Sets.union(nonFileInputs, other.nonFileInputs));
     }
   }
 
@@ -79,29 +106,71 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   @Override
   int runCommandWithOptionsInternal(AuditOwnerOptions options)
       throws IOException, InterruptedException {
+    OwnersReport report = OwnersReport.emptyReport();
+    Map<File, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
 
-    // Build full graph.
-    PartialGraph graph;
-    try {
-      graph = PartialGraph.createFullGraph(
-          getProjectFilesystem(),
-          options.getDefaultIncludes(),
-          getParser(),
-          getBuckEventBus(),
-          console,
-          environment);
-    } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
-      return 1;
+    for (String filePath : options.getArguments()) {
+      File buckFile = findBuckFileFor(new File(filePath));
+
+      // Get the target base name.
+      Path targetBasePath = MorePaths.relativize(
+          getProjectFilesystem().getRootPath().toAbsolutePath(),
+          buckFile.getParentFile().toPath().toAbsolutePath());
+      String targetBaseName = "//" + targetBasePath.toString();
+
+      // Parse buck files and load target nodes.
+      if (!targetNodes.containsKey(buckFile)) {
+        try {
+          Parser parser = getParser();
+
+          List<Map<String, Object>> buildFileTargets = parser.parseBuildFile(
+              buckFile,
+              options.getDefaultIncludes(),
+              EnumSet.of(ProjectBuildFileParser.Option.STRIP_NULL),
+              environment,
+              console);
+
+          for (Map<String, Object> buildFileTarget : buildFileTargets) {
+            if (!buildFileTarget.containsKey("name")) {
+              continue;
+            }
+
+            BuildTarget target = BuildTarget.builder(
+                targetBaseName,
+                (String) buildFileTarget.get("name")).build();
+
+            if (!targetNodes.containsKey(buckFile)) {
+              targetNodes.put(buckFile, Lists.<TargetNode<?>>newArrayList());
+            }
+            TargetNode<?> parsedTargetNode = parser.getTargetNode(target);
+            if (parsedTargetNode != null) {
+              targetNodes.get(buckFile).add(parsedTargetNode);
+            }
+          }
+        } catch (BuildFileParseException | BuildTargetException e) {
+          console.getStdErr().format("Could not parse build targets for %s", targetBaseName);
+          return BUILD_TARGET_ERROR;
+        }
+      }
+
+      for (TargetNode<?> targetNode : targetNodes.get(buckFile)) {
+        report = report.updatedWith(
+            generateOwnersReport(
+                targetNode,
+                ImmutableList.of(filePath),
+                options.isGuessForDeletedEnabled()));
+      }
     }
 
-    OwnersReport report = generateOwnersReport(graph.getActionGraph(), options);
     printReport(options, report);
     return 0;
   }
 
   @VisibleForTesting
-  OwnersReport generateOwnersReport(ActionGraph graph, AuditOwnerOptions options) {
+  OwnersReport generateOwnersReport(
+      TargetNode<?> targetNode,
+      Iterable<String> filePaths,
+      boolean guessForDeletedEnabled) {
 
     // Process arguments assuming they are all relative file paths.
     Set<Path> inputs = Sets.newHashSet();
@@ -109,7 +178,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     Set<String> nonFileInputs = Sets.newHashSet();
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    for (String filePath : options.getArguments()) {
+    for (String filePath : filePaths) {
       File file = projectFilesystem.getFileForRelativePath(filePath);
       if (!file.exists()) {
         nonExistentInputs.add(filePath);
@@ -122,50 +191,22 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
 
     // Try to find owners for each valid and existing file.
     Set<Path> inputsWithNoOwners = Sets.newHashSet(inputs);
-    SetMultimap<BuildRule, Path> owners = TreeMultimap.create();
-    for (BuildRule rule : graph.getNodes()) {
-      for (Path ruleInput : rule.getInputs()) {
-        if (inputs.contains(ruleInput)) {
-          inputsWithNoOwners.remove(ruleInput);
-          owners.put(rule, ruleInput);
-        }
+    SetMultimap<TargetNode<?>, Path> owners = TreeMultimap.create();
+    for (Path ruleInput : targetNode.getInputs()) {
+      if (inputs.contains(ruleInput)) {
+        inputsWithNoOwners.remove(ruleInput);
+        owners.put(targetNode, ruleInput);
       }
     }
 
     // Try to guess owners for nonexistent files.
-    if (options.isGuessForDeletedEnabled()) {
-      guessOwnersForNonExistentFiles(graph, owners, nonExistentInputs);
+    if (guessForDeletedEnabled) {
+      for (String nonExsitentInput : nonExistentInputs) {
+        owners.put(targetNode, new File(nonExsitentInput).toPath());
+      }
     }
 
     return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
-  }
-
-  /**
-   * Guess target owners for deleted/missing files by finding first
-   * BUCK file and assuming that all targets in this file used
-   * missing file as input.
-   */
-  private void guessOwnersForNonExistentFiles(ActionGraph graph,
-      SetMultimap<BuildRule, Path> owners, Set<String> nonExistentFiles) {
-
-    ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    for (String nonExistentFile : nonExistentFiles) {
-      File file = projectFilesystem.getFileForRelativePath(nonExistentFile);
-      File buck = findBuckFileFor(file);
-      for (BuildRule rule : graph.getNodes()) {
-        if (rule.getType() == ProjectConfigDescription.TYPE) {
-          continue;
-        }
-        try {
-          File ruleBuck = rule.getBuildTarget().getBuildFile(projectFilesystem);
-          if (buck.getCanonicalFile().equals(ruleBuck.getCanonicalFile())) {
-            owners.put(rule, Paths.get(nonExistentFile));
-          }
-        } catch (IOException | BuildTargetException e) {
-          throw Throwables.propagate(e);
-        }
-      }
-    }
   }
 
   private File findBuckFileFor(File file) {
@@ -201,9 +242,9 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
    * Print only targets which were identified as owners.
    */
   private void printOwnersOnlyReport(OwnersReport report) {
-    Set<BuildRule> sortedRules = report.owners.keySet();
-    for (BuildRule rule : sortedRules) {
-      console.getStdOut().println(rule.getFullyQualifiedName());
+    Set<TargetNode<?>> sortedTargetNodes = report.owners.keySet();
+    for (TargetNode<?> targetNode : sortedTargetNodes) {
+      console.getStdOut().println(targetNode.getBuildTarget().getFullyQualifiedName());
     }
   }
 
@@ -214,11 +255,11 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   void printOwnersOnlyJsonReport(OwnersReport report) throws IOException {
     final Multimap<String, String> output = TreeMultimap.create();
 
-    Set<BuildRule> sortedRules = report.owners.keySet();
-    for (BuildRule rule : sortedRules) {
-      Set<Path> files = report.owners.get(rule);
+    Set<TargetNode<?>> sortedTargetNodes = report.owners.keySet();
+    for (TargetNode<?> targetNode : sortedTargetNodes) {
+      Set<Path> files = report.owners.get(targetNode);
       for (Path input : files) {
-        output.put(input.toString(), rule.getFullyQualifiedName());
+        output.put(input.toString(), targetNode.getBuildTarget().getFullyQualifiedName());
       }
     }
 
@@ -236,9 +277,9 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       out.println(ansi.asErrorText("No owners found"));
     } else {
       out.println(ansi.asSuccessText("Owners:"));
-      for (BuildRule rule : report.owners.keySet()) {
-        out.println(rule.getFullyQualifiedName());
-        Set<Path> files = report.owners.get(rule);
+      for (TargetNode<?> targetNode : report.owners.keySet()) {
+        out.println(targetNode.getBuildTarget().getFullyQualifiedName());
+        Set<Path> files = report.owners.get(targetNode);
         for (Path input : files) {
           out.println(FILE_INDENT + input);
         }

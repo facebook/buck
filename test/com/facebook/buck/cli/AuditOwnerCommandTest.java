@@ -21,22 +21,23 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.ConstructorArg;
+import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidDirectoryResolver;
@@ -45,22 +46,18 @@ import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
-
-import javax.annotation.Nullable;
 
 /**
  * Outputs targets that own a specified list of files.
@@ -68,73 +65,46 @@ import javax.annotation.Nullable;
 public class AuditOwnerCommandTest {
   private TestConsole console;
 
-  private static class StubBuildRule implements BuildRule {
+  public static class FakeDescription implements Description<FakeDescription.FakeArg> {
 
-    private final ImmutableSet<Path> inputs;
-    private final BuildTarget target;
-
-    public StubBuildRule(BuildTarget target, Iterable<Path> inputs) {
-      this.target = target;
-      this.inputs = ImmutableSet.copyOf(inputs);
+    @Override
+    public BuildRuleType getBuildRuleType() {
+      return new BuildRuleType("fake_rule");
     }
 
     @Override
-    public Iterable<Path> getInputs() {
-      return inputs;
+    public FakeArg createUnpopulatedConstructorArg() {
+      return new FakeArg();
     }
 
     @Override
-    public BuildTarget getBuildTarget() {
-      return target;
+    public <A extends FakeArg> BuildRule createBuildRule(
+        BuildRuleParams params,
+        BuildRuleResolver resolver,
+        A args) {
+      return new FakeBuildRule(params);
     }
 
-    @Override
-    public String getFullyQualifiedName() {
-      return target.getFullyQualifiedName();
-    }
+    public static class FakeArg implements ConstructorArg {
 
-    @Override
-    public BuildRuleType getType() {
-      throw new UnsupportedOperationException();
     }
+  }
 
-    @Override
-    public BuildableProperties getProperties() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ImmutableSortedSet<BuildRule> getDeps() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public final RuleKey getRuleKey() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public final RuleKey getRuleKeyWithoutDeps() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext context,
-        BuildableContext buildableContext) {
-      return ImmutableList.of();
-    }
-
-    @Override
-    @Nullable
-    public Path getPathToOutputFile() {
-      return null;
-    }
-
-    @Override
-    public int compareTo(HasBuildTarget other) {
-      return this.getBuildTarget().compareTo(other.getBuildTarget());
-    }
+  private static TargetNode<?> createTargetNode(
+      BuildTarget buildTarget,
+      ImmutableSet<Path> inputs) {
+    Description<FakeDescription.FakeArg> description = new FakeDescription();
+    BuildRuleFactoryParams params =
+        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
+            Maps.<String, Object>newHashMap(),
+            new BuildTargetParser(new FakeProjectFilesystem()),
+            buildTarget);
+    return new TargetNode<>(
+        description,
+        params,
+        inputs,
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<BuildTargetPattern>of());
   }
 
   private static class FakeProjectFilesystem extends ProjectFilesystem {
@@ -217,12 +187,6 @@ public class AuditOwnerCommandTest {
     buckConfig = new FakeBuckConfig();
   }
 
-  private AuditOwnerOptions getOptions(String... args) throws CmdLineException {
-    AuditOwnerOptions options = new AuditOwnerOptions(buckConfig);
-    new CmdLineParser(options).parseArgument(args);
-    return options;
-  }
-
   private AuditOwnerCommand createAuditOwnerCommand(ProjectFilesystem filesystem) {
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
@@ -242,7 +206,6 @@ public class AuditOwnerCommandTest {
 
   @Test
   public void verifyPathsThatAreNotFilesAreCorrectlyReported() throws CmdLineException {
-    // All files will be directories now
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
@@ -250,26 +213,17 @@ public class AuditOwnerCommandTest {
       }
     };
 
-    // Empty graph
-    MutableDirectedGraph<BuildRule> mutableGraph = new MutableDirectedGraph<BuildRule>();
-    ActionGraph graph = new ActionGraph(mutableGraph);
-
     // Inputs that should be treated as "non-files", i.e. as directories
-    String[] args = new String[] {
+    ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder",
         "java/somefolder",
-        "com/test/subtest"
-    };
-    ImmutableSet<String> inputs = ImmutableSet.copyOf(args);
+        "com/test/subtest");
 
-    // Create options
-    AuditOwnerOptions options = getOptions(args);
+    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
-    // Create command under test
     AuditOwnerCommand command = createAuditOwnerCommand(filesystem);
-
-    // Generate report and verify nonFileInputs are filled in as expected.
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(graph, options);
+    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(targetNode, inputs, false);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
@@ -286,26 +240,17 @@ public class AuditOwnerCommandTest {
       }
     };
 
-    // Empty graph
-    MutableDirectedGraph<BuildRule> mutableGraph = new MutableDirectedGraph<BuildRule>();
-    ActionGraph graph = new ActionGraph(mutableGraph);
-
     // Inputs that should be treated as missing files
-    String[] args = new String[] {
+    ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
-        "com/test/subtest/random.java"
-    };
-    ImmutableSet<String> inputs = ImmutableSet.copyOf(args);
+        "com/test/subtest/random.java");
 
-    // Create options
-    AuditOwnerOptions options = getOptions(args);
+    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
-    // Create command under test
     AuditOwnerCommand command = createAuditOwnerCommand(filesystem);
-
-    // Generate report and verify nonFileInputs are filled in as expected.
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(graph, options);
+    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(targetNode, inputs, false);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
@@ -314,7 +259,6 @@ public class AuditOwnerCommandTest {
 
   @Test
   public void verifyInputsWithoutOwnersAreCorrectlyReported() throws CmdLineException {
-    // All files will be directories now
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
@@ -322,30 +266,22 @@ public class AuditOwnerCommandTest {
       }
     };
 
-    // Empty graph
-    MutableDirectedGraph<BuildRule> mutableGraph = new MutableDirectedGraph<BuildRule>();
-    ActionGraph graph = new ActionGraph(mutableGraph);
-
     // Inputs that should be treated as existing files
-    String[] args = new String[] {
+    ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
-        "com/test/subtest/random.java"
-    };
-    ImmutableSortedSet<Path> inputs = MorePaths.asPaths(Arrays.asList(args));
+        "com/test/subtest/random.java");
+    ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    // Create options
-    AuditOwnerOptions options = getOptions(args);
+    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
-    // Create command under test
     AuditOwnerCommand command = createAuditOwnerCommand(filesystem);
-
-    // Generate report and verify nonFileInputs are filled in as expected.
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(graph, options);
+    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(targetNode, inputs, false);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
-    assertEquals(inputs, report.inputsWithNoOwners);
+    assertEquals(inputPaths, report.inputsWithNoOwners);
   }
 
   /**
@@ -354,7 +290,6 @@ public class AuditOwnerCommandTest {
    */
   @Test
   public void verifyInputsWithOneOwnerAreCorrectlyReported() throws CmdLineException {
-    // All files will be directories now
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
@@ -362,39 +297,24 @@ public class AuditOwnerCommandTest {
       }
     };
 
-    // Create inputs
-    String[] args = new String[] {
+    ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
-        "com/test/subtest/random.java"
-    };
-    ImmutableSortedSet<Path> inputs = MorePaths.asPaths(ImmutableSortedSet.copyOf(args));
+        "com/test/subtest/random.java");
+    ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    // Build rule that owns all inputs
-    BuildTarget target = BuildTarget.builder("//base/name", "name").build();
-    BuildRule ownerRule = new StubBuildRule(target, inputs);
+    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    TargetNode<?> targetNode = createTargetNode(target, inputPaths);
 
-    // Create graph
-    MutableDirectedGraph<BuildRule> mutableGraph = new MutableDirectedGraph<BuildRule>();
-    mutableGraph.addNode(ownerRule);
-
-    ActionGraph graph = new ActionGraph(mutableGraph);
-
-    // Create options
-    AuditOwnerOptions options = getOptions(args);
-
-    // Create command under test
     AuditOwnerCommand command = createAuditOwnerCommand(filesystem);
-
-    // Generate report and verify nonFileInputs are filled in as expected.
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(graph, options);
+    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(targetNode, inputs, false);
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
 
     assertEquals(inputs.size(), report.owners.size());
-    assertTrue(report.owners.containsKey(ownerRule));
-    assertEquals(ownerRule.getInputs(), report.owners.get(ownerRule));
+    assertTrue(report.owners.containsKey(targetNode));
+    assertEquals(targetNode.getInputs(), report.owners.get(targetNode));
   }
 
   /**
@@ -404,7 +324,6 @@ public class AuditOwnerCommandTest {
   @Test
   public void verifyInputsWithOneOwnerAreCorrectlyReportedInJson()
     throws CmdLineException, IOException {
-    // All files will be directories now
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
@@ -412,32 +331,17 @@ public class AuditOwnerCommandTest {
       }
     };
 
-    // Create inputs
-    String[] args = new String[] {
+    ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
-        "com/test/subtest/random.java"
-    };
-    ImmutableSortedSet<Path> inputs = MorePaths.asPaths(ImmutableSortedSet.copyOf(args));
+        "com/test/subtest/random.java");
+    ImmutableSortedSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    // Build rule that owns all inputs
     BuildTarget target = BuildTarget.builder("//base/name", "name").build();
-    BuildRule ownerRule = new StubBuildRule(target, inputs);
+    TargetNode<?> targetNode = createTargetNode(target, inputPaths);
 
-    // Create graph
-    MutableDirectedGraph<BuildRule> mutableGraph = new MutableDirectedGraph<BuildRule>();
-    mutableGraph.addNode(ownerRule);
-
-    ActionGraph graph = new ActionGraph(mutableGraph);
-
-    // Create options
-    AuditOwnerOptions options = getOptions(args);
-
-    // Create command under test
     AuditOwnerCommand command = createAuditOwnerCommand(filesystem);
-
-    // Generate report and verify nonFileInputs are filled in as expected.
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(graph, options);
+    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(targetNode, inputs, false);
     command.printOwnersOnlyJsonReport(report);
 
     String expectedJson = Joiner.on("").join(
@@ -458,7 +362,6 @@ public class AuditOwnerCommandTest {
    */
   @Test
   public void verifyInputsWithMultipleOwnersAreCorrectlyReported() throws CmdLineException {
-    // All files will be directories now
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
@@ -466,43 +369,30 @@ public class AuditOwnerCommandTest {
       }
     };
 
-    // Create inputs
-    String[] args = new String[] {
+    ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
-        "com/test/subtest/random.java"
-    };
-    ImmutableSortedSet<Path> inputs = MorePaths.asPaths(ImmutableSortedSet.copyOf(args));
+        "com/test/subtest/random.java");
+    ImmutableSortedSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    // Build rule that owns all inputs
-    BuildTarget target1 = BuildTargetFactory.newInstance("//base/name1:name1");
-    BuildTarget target2 = BuildTargetFactory.newInstance("//base/name2:name2");
-    BuildRule owner1Rule = new StubBuildRule(target1, inputs);
-    BuildRule owner2Rule = new StubBuildRule(target2, inputs);
+    BuildTarget target1 = BuildTarget.builder("//base/name1", "name").build();
+    BuildTarget target2 = BuildTarget.builder("//base/name2", "name").build();
+    TargetNode<?> targetNode1 = createTargetNode(target1, inputPaths);
+    TargetNode<?> targetNode2 = createTargetNode(target2, inputPaths);
 
-    // Create graph
-    MutableDirectedGraph<BuildRule> mutableGraph = new MutableDirectedGraph<BuildRule>();
-    mutableGraph.addNode(owner1Rule);
-    mutableGraph.addNode(owner2Rule);
-
-    ActionGraph graph = new ActionGraph(mutableGraph);
-
-    // Create options
-    AuditOwnerOptions options = getOptions(args);
-
-    // Create command under test
     AuditOwnerCommand command = createAuditOwnerCommand(filesystem);
+    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.OwnersReport.emptyReport();
+    report = report.updatedWith(command.generateOwnersReport(targetNode1, inputs, false));
+    report = report.updatedWith(command.generateOwnersReport(targetNode2, inputs, false));
 
-    // Generate report and verify nonFileInputs are filled in as expected.
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(graph, options);
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
 
-    assertTrue(report.owners.containsKey(owner1Rule));
-    assertTrue(report.owners.containsKey(owner2Rule));
-    assertEquals(owner1Rule.getInputs(), report.owners.get(owner1Rule));
-    assertEquals(owner2Rule.getInputs(), report.owners.get(owner2Rule));
+    assertTrue(report.owners.containsKey(targetNode1));
+    assertTrue(report.owners.containsKey(targetNode2));
+    assertEquals(targetNode1.getInputs(), report.owners.get(targetNode1));
+    assertEquals(targetNode2.getInputs(), report.owners.get(targetNode2));
   }
 
 }
