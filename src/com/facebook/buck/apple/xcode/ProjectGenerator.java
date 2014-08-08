@@ -318,7 +318,7 @@ public class ProjectGenerator {
 
     try {
       targetNameToGIDMap = buildTargetNameToGIDMap();
-      Iterable<BuildRule> allRules = RuleDependencyFinder.getAllRules(partialGraph, initialTargets);
+      Iterable<BuildRule> allRules = partialGraph.getActionGraph().getNodes();
 
       for (BuildRule rule : allRules) {
         if (isBuiltByCurrentProject(rule)) {

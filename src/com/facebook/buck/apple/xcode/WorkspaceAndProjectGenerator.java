@@ -36,7 +36,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -113,11 +112,7 @@ public class WorkspaceAndProjectGenerator {
         workspaceName,
         outputDirectory);
 
-    Iterable<BuildRule> allRules = Iterables.concat(
-        RuleDependencyFinder.getAllRules(
-            partialGraph,
-            ImmutableList.of(workspaceBuildable.getSrcTarget().getBuildTarget())),
-        ImmutableList.of(workspaceTargetRule));
+    Iterable<BuildRule> allRules = partialGraph.getActionGraph().getNodes();
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
