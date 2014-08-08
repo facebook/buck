@@ -17,8 +17,10 @@ java_library(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/timing:testutil',
   ],
   visibility = [
     '//test/...',
@@ -39,8 +41,10 @@ java_test(
     '//lib:junit',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/rules:build_rule',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/testutil/integration:integration',
+    '//test/com/facebook/buck/timing:testutil',
   ],
 )

@@ -22,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.timing.SettableFakeClock;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -36,6 +38,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -233,5 +236,39 @@ public class FakeProjectFilesystemTest {
     assertFalse(filesystem.isDirectory(Paths.get("foo")));
     assertTrue(filesystem.isFile(Paths.get("foo")));
     assertTrue(filesystem.exists(Paths.get("foo")));
+  }
+
+  @Test(expected = NoSuchFileException.class)
+  public void fileModifiedTimeThrowsIfDoesNotExist() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.getLastModifiedTime(Paths.get("foo"));
+  }
+
+  @Test
+  public void fileModifiedTimeIsSetOnInitialWrite() throws IOException {
+    SettableFakeClock clock = new SettableFakeClock(49152, 0);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(clock);
+    filesystem.touch(Paths.get("foo"));
+    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo")), 49152);
+  }
+
+  @Test
+  public void fileModifiedTimeIsUpdatedOnSubsequentWrite() throws IOException {
+    SettableFakeClock clock = new SettableFakeClock(49152, 0);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(clock);
+    filesystem.touch(Paths.get("foo"));
+    clock.setCurrentTimeMillis(64738);
+    filesystem.touch(Paths.get("foo"));
+    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo")), 64738);
+  }
+
+  @Test
+  public void fileModifiedTimeIsSetOnMkdirs() throws IOException {
+    SettableFakeClock clock = new SettableFakeClock(49152, 0);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(clock);
+    filesystem.mkdirs(Paths.get("foo/bar/baz"));
+    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo")), 49152);
+    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo/bar")), 49152);
+    assertEquals(filesystem.getLastModifiedTime(Paths.get("foo/bar/baz")), 49152);
   }
 }

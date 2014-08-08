@@ -16,6 +16,8 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -111,13 +113,21 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   private final Map<Path, byte[]> fileContents;
   private final Map<Path, ImmutableSet<FileAttribute<?>>> fileAttributes;
+  private final Map<Path, FileTime> fileLastModifiedTimes;
   private final Set<Path> directories;
+  private final Clock clock;
 
   public FakeProjectFilesystem() {
+    this(new FakeClock(0));
+  }
+
+  public FakeProjectFilesystem(Clock clock) {
     super(Paths.get("."));
     fileContents = Maps.newHashMap();
     fileAttributes = Maps.newHashMap();
+    fileLastModifiedTimes = Maps.newHashMap();
     directories = Sets.newHashSet();
+    this.clock = Preconditions.checkNotNull(clock);
 
     // Generally, tests don't care whether files exist.
     ignoreValidityOfPaths = true;
@@ -130,6 +140,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   private void rmFile(Path path) {
     fileContents.remove(path.normalize());
     fileAttributes.remove(path.normalize());
+    fileLastModifiedTimes.remove(path.normalize());
   }
 
   public ImmutableSet<FileAttribute<?>> getFileAttributesAtPath(Path path) {
@@ -188,22 +199,35 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
+  public long getLastModifiedTime(Path path) throws IOException {
+    Path normalizedPath = path.normalize();
+    if (!exists(normalizedPath)) {
+      throw new NoSuchFileException(path.toString());
+    }
+    return fileLastModifiedTimes.get(normalizedPath).toMillis();
+  }
+
+  @Override
   public void rmdir(Path path) {
     Path normalizedPath = path.normalize();
     for (Iterator<Path> iterator = fileContents.keySet().iterator(); iterator.hasNext();) {
       Path subPath = iterator.next();
       if (subPath.startsWith(normalizedPath)) {
         fileAttributes.remove(subPath.normalize());
+        fileLastModifiedTimes.remove(subPath.normalize());
         iterator.remove();
       }
     }
+    fileLastModifiedTimes.remove(path);
     directories.remove(path);
   }
 
   @Override
   public void mkdirs(Path path) {
     for (int i = 0; i < path.getNameCount(); i++) {
-      directories.add(path.subpath(0, i + 1));
+      Path subpath = path.subpath(0, i + 1);
+      directories.add(subpath);
+      fileLastModifiedTimes.put(subpath, FileTime.fromMillis(clock.currentTimeMillis()));
     }
   }
 
@@ -235,6 +259,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       FileAttribute<?>... attrs) {
     fileContents.put(path.normalize(), Preconditions.checkNotNull(bytes));
     fileAttributes.put(path.normalize(), ImmutableSet.copyOf(attrs));
+    fileLastModifiedTimes.put(path.normalize(), FileTime.fromMillis(clock.currentTimeMillis()));
   }
 
   @Override
