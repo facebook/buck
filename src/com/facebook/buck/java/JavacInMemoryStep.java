@@ -17,32 +17,44 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.event.MissingSymbolEvent;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import javax.annotation.Nullable;
+import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -63,6 +75,8 @@ import javax.tools.ToolProvider;
  * the transitive classpath but not in the declared classpath.
  */
 public class JavacInMemoryStep extends JavacStep {
+
+  private static final Logger LOG = Logger.get(JavacInMemoryStep.class);
 
   public JavacInMemoryStep(
       Path outputDirectory,
@@ -150,8 +164,25 @@ public class JavacInMemoryStep extends JavacStep {
         classNamesForAnnotationProcessing,
         compilationUnits);
 
-    // Invoke the compilation and inspect the result.
-    boolean isSuccess = compilationTask.call();
+    // Ensure annotation processors are loaded from their own classloader. If we don't do this, then
+    // the evidence suggests that they get one polluted with Buck's own classpath, which means that
+    // libraries that have dependencies on different versions of Buck's deps may choke with novel
+    // errors that don't occur on the command line.
+    ProcessorBundle bundle = null;
+    boolean isSuccess;
+
+    try {
+      bundle = prepareProcessors(invokingRule.orNull(), options);
+      compilationTask.setProcessors(bundle.processors);
+
+      // Invoke the compilation and inspect the result.
+      isSuccess = compilationTask.call();
+    } finally {
+      if (bundle != null) {
+        bundle.close();
+      }
+    }
+
     if (isSuccess) {
       if (abiKeyFile != null) {
         try {
@@ -187,6 +218,70 @@ public class JavacInMemoryStep extends JavacStep {
       }
       return 1;
     }
+  }
+
+  private ProcessorBundle prepareProcessors(@Nullable BuildTarget target, List<String> options) {
+    String processorClassPath = null;
+    String processorNames = null;
+
+    Iterator<String> iterator = options.iterator();
+    while (iterator.hasNext()) {
+      String curr = iterator.next();
+      if ("-processorpath".equals(curr) && iterator.hasNext()) {
+        processorClassPath = iterator.next();
+      } else if ("-processor".equals(curr) && iterator.hasNext()) {
+        processorNames = iterator.next();
+      }
+    }
+
+    ProcessorBundle processorBundle = new ProcessorBundle();
+    if (processorClassPath == null || processorNames == null) {
+      return processorBundle;
+    }
+
+    Iterable<String> rawPaths = Splitter.on(File.pathSeparator)
+        .omitEmptyStrings()
+        .split(processorClassPath);
+    URL[] urls = FluentIterable.from(rawPaths)
+        .transform(
+            new Function<String, URL>() {
+              @Override
+              public URL apply(String pathRelativeToProjectRoot) {
+                try {
+                  return Paths.get(pathRelativeToProjectRoot).toUri().toURL();
+                } catch (MalformedURLException e) {
+                  // The paths we're being given should have all been resolved from the file system
+                  // already. We'd need to be unfortunate to get here. Bubble up a runtime
+                  // exception.
+                  throw new RuntimeException(e);
+                }
+              }
+            })
+        .toArray(URL.class);
+    // Note the lack of a parent classloader.
+    processorBundle.classLoader = new URLClassLoader(urls, /* parent */ null);
+
+    Iterable<String> names = Splitter.on(",")
+        .trimResults()
+        .omitEmptyStrings()
+        .split(processorNames);
+    for (String name : names) {
+      try {
+        Class<? extends Processor> aClass = processorBundle.classLoader
+            .loadClass(name)
+            .asSubclass(Processor.class);
+        processorBundle.processors.add(aClass.newInstance());
+      } catch (ReflectiveOperationException e) {
+        processorBundle.close();
+        // If this happens, then the build is really in trouble. Better warn the user.
+        throw new HumanReadableException(
+            "%s: javac unable to load annotation processor: %s",
+            target != null ? target.getFullyQualifiedName() : "unknown target",
+            name);
+      }
+    }
+
+    return processorBundle;
   }
 
   private Iterable<? extends JavaFileObject> createCompilationUnits(
@@ -240,5 +335,24 @@ public class JavacInMemoryStep extends JavacStep {
         symbol.get(),
         MissingSymbolEvent.SymbolType.Java);
     context.getBuckEventBus().post(event);
+  }
+
+  private static class ProcessorBundle {
+    @Nullable
+    public URLClassLoader classLoader;
+    public List<Processor> processors = Lists.newArrayList();
+
+    public void close() {
+      if (classLoader == null) {
+        return;
+      }
+
+      try {
+        classLoader.close();
+      } catch (IOException e) {
+        // Nothing sane to do. Log and carry on.
+        LOG.warn("Unable to close annotation processor classloader.");
+      }
+    }
   }
 }
