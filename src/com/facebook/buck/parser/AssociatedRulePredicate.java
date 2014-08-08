@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRule;
 
 /**
  * Matches build rules based on their association with actions in the given action graph.
- * @param <T> The interface all rules matched by the predicate implement.
  */
 public interface AssociatedRulePredicate {
   public boolean isMatch(
