@@ -33,11 +33,12 @@ import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.AssociatedRulePredicate;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
-import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.parser.RuleJsonPredicate;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
@@ -115,7 +116,7 @@ public class ProjectCommandTest {
     assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
 
     // The PartialGraph comprises build config rules.
-    RawRulePredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
+    RuleJsonPredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
     checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, javaLibraryRule, false);
     checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, ruleConfig, true);
 
@@ -169,13 +170,13 @@ public class ProjectCommandTest {
     assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
 
     // The first PartialGraph comprises build config rules.
-    RawRulePredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
+    RuleJsonPredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
     checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, ruleWithout, false);
     checkPredicate(projectConfigPredicate, annotationParseData, ruleWith, false);
     checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, ruleConfig, true);
 
     // The second PartialGraph comprises java rules with annotations
-    RawRulePredicate annotationUsagePredicate = command.createPartialGraphCallPredicates.get(1);
+    RuleJsonPredicate annotationUsagePredicate = command.createPartialGraphCallPredicates.get(1);
     checkPredicate(annotationUsagePredicate, EMPTY_PARSE_DATA, ruleWithout, false);
     checkPredicate(annotationUsagePredicate, annotationParseData, ruleWith, true);
     checkPredicate(annotationUsagePredicate, EMPTY_PARSE_DATA, ruleConfig, false);
@@ -259,7 +260,7 @@ public class ProjectCommandTest {
 
     assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
 
-    RawRulePredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
+    RuleJsonPredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
 
     // Ensure //foo:project is ignored when we specify default_exclude_paths = //foo.
     checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, fooProjectRule, false);
@@ -325,7 +326,7 @@ public class ProjectCommandTest {
 
     assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
 
-    RawRulePredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
+    RuleJsonPredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
 
     // Ensure //foo:project is not ignored when we specify default_exclude_paths = //foo
     // and explicitly specify that project on the command  line.
@@ -343,7 +344,7 @@ public class ProjectCommandTest {
   }
 
   private static void checkPredicate(
-      RawRulePredicate predicate,
+      RuleJsonPredicate predicate,
       ImmutableMap<String, Object> rawParseData,
       BuildRule rule,
       boolean expectMatch) {
@@ -384,7 +385,7 @@ public class ProjectCommandTest {
    */
   private static class ProjectCommandForTest extends ProjectCommand {
 
-    private List<RawRulePredicate> createPartialGraphCallPredicates = Lists.newArrayList();
+    private List<RuleJsonPredicate> createPartialGraphCallPredicates = Lists.newArrayList();
     private LinkedList<PartialGraph> createPartialGraphCallReturnValues = Lists.newLinkedList();
     private BuildCommandOptions buildCommandOptions;
 
@@ -403,7 +404,10 @@ public class ProjectCommandTest {
     }
 
     @Override
-    PartialGraph createPartialGraph(RawRulePredicate rulePredicate, ProjectCommandOptions options)
+    PartialGraph createPartialGraph(
+        RuleJsonPredicate rulePredicate,
+        AssociatedRulePredicate associatedRulePredicate,
+        ProjectCommandOptions options)
         throws BuildFileParseException, NoSuchBuildTargetException {
       assertNotNull(options);
       createPartialGraphCallPredicates.add(rulePredicate);

@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -63,7 +62,8 @@ public class PartialGraph {
       Console console,
       ImmutableMap<String, String> environment)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    return createPartialGraph(RawRulePredicates.alwaysTrue(),
+    return createPartialGraph(
+        RuleJsonPredicates.alwaysTrue(),
         projectFilesystem,
         includes,
         parser,
@@ -73,7 +73,7 @@ public class PartialGraph {
   }
 
   public static PartialGraph createPartialGraph(
-      RawRulePredicate predicate,
+      RuleJsonPredicate predicate,
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       Parser parser,
@@ -81,19 +81,12 @@ public class PartialGraph {
       Console console,
       ImmutableMap<String, String> environment)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    Preconditions.checkNotNull(predicate);
-
     List<BuildTarget> targets = parser.filterAllTargetsInProject(filesystem,
         includes,
         predicate,
         console,
         environment);
 
-    // filterAllTargetsInProject should only return Null when predicate is null.
-    // Check this reasoning is true at runtime to placate static checkers.
-    // TODO(#4825537): Refactor filterAllTargetsInProject to not accept null: it confuses robots.
-    Preconditions.checkNotNull(targets);
-
     return parseAndCreateGraphFromTargets(
         targets,
         includes,
@@ -104,14 +97,15 @@ public class PartialGraph {
   }
 
   /**
-   * Creates a partial graph of all {@link BuildRule}s that are either
-   * transitive dependencies or tests for (rules that pass {@code predicate} and are contained in
-   * BUCK files that contain transitive dependencies of the {@link BuildTarget}s defined in
-   * {@code roots}).
+   * Creates a graph containing the {@link BuildRule}s identified by {@code roots} and their
+   * dependencies. Then for each pair of {@link RuleJsonPredicate} in {@code predicates} and
+   * {@link AssociatedRulePredicate} in {@code associatedRulePredicates}, rules throughout the
+   * project that pass are added to the graph.
    */
-  public static PartialGraph createPartialGraphFromRootsWithTests(
+  public static PartialGraph createPartialGraphFromRootsWithAssociatedRules(
       Iterable<BuildTarget> roots,
-      RawRulePredicate predicate,
+      ImmutableList<RuleJsonPredicate> predicates,
+      ImmutableList<AssociatedRulePredicate> associatedRulePredicates,
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       Parser parser,
@@ -119,110 +113,59 @@ public class PartialGraph {
       Console console,
       ImmutableMap<String, String> environment)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    Preconditions.checkNotNull(predicate);
+    Iterable<BuildTarget> buildTargets = parser.targetsInProjectFromRoots(
+        roots, includes, eventBus, console, environment);
 
-    Iterable<BuildTarget> buildTargets = parser.filterTargetsInProjectFromRoots(
-        roots, includes, eventBus, RawRulePredicates.alwaysTrue(), console, environment);
-
-    // filterTargetsInProject should only return null when predicate is null.
-    // Check this reasoning is true at runtime to placate static checkers.
-    // TODO(#4825537): Refactor filterTargetsInProject to not accept null: it confuses robots.
-    Preconditions.checkNotNull(buildTargets);
-
-    ActionGraph buildGraph =
-        parseAndCreateGraphFromTargets(
-            buildTargets,
-            includes,
-            parser,
-            eventBus,
-            console,
-            environment)
-            .getActionGraph();
-
-    // We have to enumerate all test targets, and see which ones refer to a rule in our build graph
-    // with it's src_under_test field.
-    ImmutableList.Builder<BuildTarget> buildAndTestTargetsBuilder =
-        ImmutableList.<BuildTarget>builder()
-            .addAll(roots);
-
-    PartialGraph testGraph = PartialGraph.createPartialGraph(
-        RawRulePredicates.isTestRule(),
-        filesystem,
+    PartialGraph partialGraph = parseAndCreateGraphFromTargets(
+        buildTargets,
         includes,
         parser,
         eventBus,
         console,
         environment);
 
-    ActionGraph testActionGraph = testGraph.getActionGraph();
+    for (int i = 0; i < predicates.size(); i++) {
+      RuleJsonPredicate predicate = predicates.get(i);
+      AssociatedRulePredicate associatedRulePredicate = associatedRulePredicates.get(i);
 
-    // Iterate through all possible test targets, looking for ones who's src_under_test intersects
-    // with our build graph.
-    for (BuildTarget buildTarget : testGraph.getTargets()) {
-      TestRule testRule =
-          (TestRule) testActionGraph.findBuildRuleByTarget(buildTarget);
-      for (BuildRule buildRuleUnderTest : testRule.getSourceUnderTest()) {
-        if (buildGraph.findBuildRuleByTarget(buildRuleUnderTest.getBuildTarget()) != null) {
-          buildAndTestTargetsBuilder.add(testRule.getBuildTarget());
-          break;
+      PartialGraph associatedPartialGraph = PartialGraph.createPartialGraph(
+          predicate,
+          filesystem,
+          includes,
+          parser,
+          eventBus,
+          console,
+          environment);
+
+      ImmutableList.Builder<BuildTarget> associatedRulesBuilder =
+          ImmutableList.<BuildTarget>builder().addAll(roots);
+
+      for (BuildTarget buildTarget : associatedPartialGraph.getTargets()) {
+        BuildRule buildRule = associatedPartialGraph
+            .getActionGraph()
+            .findBuildRuleByTarget(buildTarget);
+        if (associatedRulePredicate.isMatch(buildRule, partialGraph.getActionGraph())) {
+          associatedRulesBuilder.add(buildRule.getBuildTarget());
         }
       }
+
+      Iterable<BuildTarget> allTargets = parser.targetsInProjectFromRoots(
+          associatedRulesBuilder.build(), includes, eventBus, console, environment);
+
+      partialGraph = parseAndCreateGraphFromTargets(
+          allTargets,
+          includes,
+          parser,
+          eventBus,
+          console,
+          environment);
     }
 
-    Iterable<BuildTarget> allTargets = parser.filterTargetsInProjectFromRoots(
-        buildAndTestTargetsBuilder.build(), includes, eventBus, predicate, console, environment);
-
-    // filterTargetsInProject should only return null when predicate is null.
-    // Check this reasoning is true at runtime to placate static checkers.
-    // TODO(#4825537): Refactor filterTargetsInProject to not accept null: it confuses robots.
-    Preconditions.checkNotNull(allTargets);
-
-    return parseAndCreateGraphFromTargets(
-        allTargets,
-        includes,
-        parser,
-        eventBus,
-        console,
-        environment);
+    return partialGraph;
   }
 
   /**
-   * Creates a partial graph of all {@link BuildRule}s that are transitive
-   * dependencies of (rules that pass {@code predicate} and are contained in BUCK files that contain
-   * transitive dependencies of the {@link BuildTarget}s defined in {@code roots}).
-
-   */
-  public static PartialGraph createPartialGraphFromRoots(
-      Iterable<BuildTarget> roots,
-      RawRulePredicate predicate,
-      Iterable<String> includes,
-      Parser parser,
-      BuckEventBus eventBus,
-      Console console,
-      ImmutableMap<String, String> environment)
-      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    Preconditions.checkNotNull(predicate);
-
-    Iterable<BuildTarget> targets = parser.filterTargetsInProjectFromRoots(
-        roots, includes, eventBus, predicate, console, environment);
-
-    // filterTargetsInProject should only return null when predicate is null.
-    // Check this reasoning is true at runtime to placate static checkers.
-    // TODO(#4825537): Refactor filterTargetsInProject to not accept null: it confuses robots.
-    Preconditions.checkNotNull(targets);
-
-    return parseAndCreateGraphFromTargets(
-        targets,
-        includes,
-        parser,
-        eventBus,
-        console,
-        environment);
-  }
-
-
-  /**
-   * Like {@link #createPartialGraphFromRootsWithTests}, but trades accuracy for speed.
+   * Like {@link #createPartialGraphFromRootsWithAssociatedRules}, but trades accuracy for speed.
    *
    * <p>The graph returned from this method will include all transitive deps of the roots, but
    * might also include rules that are not actually dependencies.  This looseness allows us to

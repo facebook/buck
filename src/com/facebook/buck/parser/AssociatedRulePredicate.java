@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,15 +16,15 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildRule;
 
-import java.util.Map;
-
-public interface RawRulePredicate {
-
-  public boolean isMatch(Map<String, Object> rawParseData,
-      BuildRuleType buildRuleType,
-      BuildTarget buildTarget);
-
+/**
+ * Matches build rules based on their association with actions in the given action graph.
+ * @param <T> The interface all rules matched by the predicate implement.
+ */
+public interface AssociatedRulePredicate {
+  public boolean isMatch(
+      BuildRule buildRule,
+      ActionGraph actionGraph);
 }

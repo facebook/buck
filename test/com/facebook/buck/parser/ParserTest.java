@@ -16,8 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.parser.RawRulePredicates.alwaysFalse;
-import static com.facebook.buck.parser.RawRulePredicates.alwaysTrue;
+import static com.facebook.buck.parser.RuleJsonPredicates.alwaysTrue;
 import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
@@ -61,7 +60,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -241,7 +239,7 @@ public class ParserTest extends EasyMockSupport {
         new FakeRuleKeyBuilderFactory());
 
     parser.parseRawRulesInternal(ruleObjects);
-    RawRulePredicate predicate = alwaysTrue();
+    RuleJsonPredicate predicate = alwaysTrue();
     List<BuildTarget> targets = parser.filterTargets(predicate);
     BuildTarget expectedBuildTarget = BuildTarget.builder(
         "//testdata/com/facebook/feed/model",
@@ -448,19 +446,6 @@ public class ParserTest extends EasyMockSupport {
         BuildTarget.builder("//java/com/facebook", "foo").build(),
         BuildTarget.builder("//java/com/facebook", "bar").build());
     assertEquals("Should have returned all rules.", expectedTargets, targets);
-  }
-
-  @Test
-  public void whenAllRulesRequestedWithFalseFilterThenNoRulesReturned()
-      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    List<BuildTarget> targets = testParser.filterAllTargetsInProject(
-        filesystem,
-        Lists.<String>newArrayList(),
-        alwaysFalse(),
-        new TestConsole(),
-        ImmutableMap.<String, String>of());
-    Preconditions.checkNotNull(targets); // Cannot be null as filter was not null.
-    assertEquals("Should have returned no rules.", 0, targets.size());
   }
 
   @Test

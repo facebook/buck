@@ -111,6 +111,39 @@ public class ProjectIntegrationTest {
   }
 
   /**
+   * Verify we can build a project by specifying a target, even if it depends on a target whose
+   * project is not in the same buck file as the targets it's for.
+   */
+  @Test
+  public void testBuckProjectSliceWithProjectInDifferentBuckFile() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_slice_with_project_in_different_buck_file", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "//:root");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+
+    assertEquals(
+        "`buck project` should report the files it modified.",
+        Joiner.on('\n').join(
+            "MODIFIED FILES:",
+            ".idea/compiler.xml",
+            ".idea/modules.xml",
+            ".idea/runConfigurations/Debug_Buck_test.xml",
+            "module_.iml",
+            "modules/module_modules_dep1.iml"
+        ) + '\n',
+        result.getStdout());
+
+    assertThat(
+        "`buck project` should contain warning to restart IntelliJ.",
+        result.getStderr(),
+        containsString("  ::  Please close and re-open IntelliJ."));
+  }
+
+  /**
    * Verify that if we build a project by specifying a target and '--with-tests', the resulting
    * project only contains the transitive deps of that target as well as any tests that specify
    * something in those transitive deps as "sources_under_test".  In this example, that means
@@ -180,6 +213,42 @@ public class ProjectIntegrationTest {
             "modules/dep1/module_modules_dep1.iml",
             "modules/dep2/module_modules_dep2.iml",
             "tests/module_tests.iml"
+        ) + '\n',
+        result.getStdout());
+
+    assertThat(
+        "`buck project` should contain warning to restart IntelliJ.",
+        result.getStderr(),
+        containsString("  ::  Please close and re-open IntelliJ."));
+  }
+
+  /**
+   * Verify that if we build a project by specifying a target and '--with-tests', the tests'
+   * projects rules are referenced even if they are defined in a different buck file from the tests.
+   */
+  @Test
+  public void testBuckProjectSliceWithTestsProjectInDifferentBuckFile() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_slice_with_tests_project_in_different_buck_file", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--with-tests",
+        "//modules/dep1:dep1");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+
+    assertEquals(
+        "`buck project` should report the files it modified.",
+        Joiner.on('\n').join(
+            "MODIFIED FILES:",
+            ".idea/compiler.xml",
+            ".idea/modules.xml",
+            ".idea/runConfigurations/Debug_Buck_test.xml",
+            "modules/dep1/module_modules_dep1.iml",
+            "tests/module_tests_test1.iml"
         ) + '\n',
         result.getStdout());
 

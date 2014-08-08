@@ -1,0 +1,13 @@
+java_test(
+  name = 'test1',
+  srcs = glob(['*Test.java']),
+  deps = [
+    '//modules/dep1:dep1',
+  ],
+  source_under_test = [
+    '//modules/dep1:dep1',
+  ],
+  visibility = [
+  	'PUBLIC'
+  ],
+)

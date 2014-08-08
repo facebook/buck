@@ -1,0 +1,10 @@
+java_binary(
+  name = 'root',
+  deps = [
+  	'//modules/dep1:dep1',
+  ],
+)
+
+project_config(
+  src_target = ':root',
+)

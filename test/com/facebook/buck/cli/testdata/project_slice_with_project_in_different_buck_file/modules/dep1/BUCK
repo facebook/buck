@@ -1,0 +1,20 @@
+android_library(
+  name = 'dep1',
+  srcs = glob(['src/*.java']),
+  deps = [
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_test(
+  name = 'test',
+  srcs = glob(['test/*Test.java']),
+  deps = [
+    ':dep1',
+  ],
+  visibility = [
+    'PUBLIC'
+  ],
+)

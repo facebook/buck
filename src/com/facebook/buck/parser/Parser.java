@@ -50,10 +50,12 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
@@ -792,18 +794,14 @@ public class Parser {
   /**
    * This method has been deprecated because it is not idempotent and returns different results
    * based upon what has been already parsed.
-   * Prefer {@link #filterGraphTargets(RawRulePredicate, com.facebook.buck.rules.ActionGraph)}
+   * Prefer {@link #filterGraphTargets(RuleJsonPredicate, com.facebook.buck.rules.ActionGraph)}
    *
    * @param filter the test to apply to all targets that have been read from build files, or null.
    * @return the build targets that pass the test, or null if the filter was null.
    */
   @VisibleForTesting
-  @Nullable
-  List<BuildTarget> filterTargets(@Nullable RawRulePredicate filter)
+  List<BuildTarget> filterTargets(RuleJsonPredicate filter)
       throws NoSuchBuildTargetException {
-    if (filter == null) {
-      return null;
-    }
 
     List<BuildTarget> matchingTargets = Lists.newArrayList();
     for (Map<String, Object> map : parsedBuildFiles.values()) {
@@ -815,34 +813,6 @@ public class Parser {
     }
 
     return matchingTargets;
-  }
-
-  /**
-   * @param filter the test to apply to all targets that have been read from build files, or null.
-   * @return the build targets that pass the test, or null if the filter was null.
-   */
-  @VisibleForTesting
-  @Nullable
-  Iterable<BuildTarget> filterGraphTargets(
-      @Nullable RawRulePredicate filter,
-      ActionGraph actionGraph) throws NoSuchBuildTargetException {
-    if (filter == null) {
-      return null;
-    }
-
-    ImmutableSet.Builder<BuildTarget> matchingTargets = ImmutableSet.builder();
-    for (BuildRule buildRule : actionGraph.getNodes()) {
-      for (Map<String, Object> map :
-           parsedBuildFiles.get(targetsToFile.get(buildRule.getBuildTarget()))) {
-        BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
-        BuildTarget target = parseBuildTargetFromRawRule(map);
-        if (filter.isMatch(map, buildRuleType, target)) {
-          matchingTargets.add(target);
-        }
-      }
-    }
-
-    return matchingTargets.build();
   }
 
   /**
@@ -875,11 +845,10 @@ public class Parser {
    *     in the List returned by this method. If filter is null, then this method returns null.
    * @return The build targets in the project filtered by the given filter.
    */
-  @Nullable
   public synchronized List<BuildTarget> filterAllTargetsInProject(
       ProjectFilesystem filesystem,
       Iterable<String> includes,
-      @Nullable RawRulePredicate filter,
+      RuleJsonPredicate filter,
       Console console,
       ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
@@ -906,25 +875,15 @@ public class Parser {
 
 
   /**
-   * Takes a sequence of build targets and parses all of the build files that contain them and their
-   * transitive deps, producing a collection of "raw rules" that have been produced from the build
-   * files. The specified {@link RawRulePredicate} is applied to this collection. This method
-   * returns the collection of {@link BuildTarget}s that correspond to the raw rules that were
-   * matched by the predicate.
-   * <p>
-   * Because {@code project_config} rules are not transitive dependencies of rules such as
-   * {@code android_binary}, but are defined in the same build files as the transitive
-   * dependencies of an {@code android_binary}, this method is helpful in finding all of the
-   * {@code project_config} rules needed to produce an IDE configuration to build said
-   * {@code android_binary}. See {@link RawRulePredicates#matchBuildRuleType(BuildRuleType)} for an
-   * example of such a {@link RawRulePredicate}.
+   * Traverses the target graph starting from {@code roots} and returns the {@link BuildTarget}s
+   * associated with the nodes for which the {@code filter} passes. See
+   * {@link RuleJsonPredicates#matchBuildRuleType(BuildRuleType)} for an example of such a
+   * {@link RuleJsonPredicate}.
    */
-  @Nullable
-  public synchronized Iterable<BuildTarget> filterTargetsInProjectFromRoots(
+  public synchronized Iterable<BuildTarget> targetsInProjectFromRoots(
       Iterable<BuildTarget> roots,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
-      RawRulePredicate filter,
       Console console,
       ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
@@ -935,7 +894,13 @@ public class Parser {
         console,
         environment);
 
-    return filterGraphTargets(filter, actionGraph);
+    return FluentIterable.from(actionGraph.getNodes()).transform(
+        new Function<BuildRule, BuildTarget>() {
+          @Override
+          public BuildTarget apply(BuildRule input) {
+            return input.getBuildTarget();
+          }
+        });
   }
 
   /**

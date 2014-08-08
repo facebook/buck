@@ -1,0 +1,6 @@
+project_config(
+  src_target = '//modules/dep1:dep1',
+  src_roots = [ 'src' ],
+  test_target = '//modules/dep1:test',
+  test_roots = [ 'test' ],
+)

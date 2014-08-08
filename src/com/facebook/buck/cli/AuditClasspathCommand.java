@@ -22,7 +22,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.parser.RuleJsonPredicate;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -69,7 +69,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
       return 1;
     }
 
-    RawRulePredicate predicate = new RawRulePredicate() {
+    RuleJsonPredicate predicate = new RuleJsonPredicate() {
       @Override
       public boolean isMatch(
           Map<String, Object> rawParseData,

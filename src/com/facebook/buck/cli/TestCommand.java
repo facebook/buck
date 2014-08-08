@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.java.JUnitStep;
@@ -28,8 +27,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.parser.RawRulePredicate;
-import com.facebook.buck.parser.RawRulePredicates;
+import com.facebook.buck.parser.RuleJsonPredicates;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -47,6 +45,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -282,9 +281,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
-    RawRulePredicate predicate = RawRulePredicates.isTestRule();
     PartialGraph partialGraph = PartialGraph.createPartialGraph(
-        predicate,
+        RuleJsonPredicates.isTestRule(),
         getProjectFilesystem(),
         options.getDefaultIncludes(),
         getParser(),

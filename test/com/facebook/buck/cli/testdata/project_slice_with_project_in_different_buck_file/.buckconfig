@@ -1,0 +1,9 @@
+[color]
+  ui = false
+[java]
+    # Indicates that any folder named src or test,
+    # as well as the directories in the root of the project,
+    # java or javatests, are folders that contain Java code.
+    # This makes it possible to determine the package of a
+    # Java file from the path alone.
+    src_roots = /libs, /modules, /tests

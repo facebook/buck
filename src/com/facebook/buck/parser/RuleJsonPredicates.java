@@ -21,10 +21,9 @@ import com.facebook.buck.rules.BuildRuleType;
 
 import java.util.Map;
 
-public class RawRulePredicates {
+public class RuleJsonPredicates {
 
-  private static final RawRulePredicate alwaysTrue = new RawRulePredicate() {
-
+  private static final RuleJsonPredicate ALWAYS_TRUE = new RuleJsonPredicate() {
     @Override
     public boolean isMatch(Map<String, Object> rawParseData,
         BuildRuleType buildRuleType, BuildTarget buildTarget) {
@@ -33,28 +32,14 @@ public class RawRulePredicates {
 
   };
 
-  private static final RawRulePredicate alwaysFalse = new RawRulePredicate() {
+  private RuleJsonPredicates() {}
 
-    @Override
-    public boolean isMatch(Map<String, Object> rawParseData,
-                           BuildRuleType buildRuleType, BuildTarget buildTarget) {
-      return false;
-    }
-
-  };
-
-  private RawRulePredicates() {}
-
-  public static RawRulePredicate alwaysTrue() {
-    return alwaysTrue;
+  public static RuleJsonPredicate alwaysTrue() {
+    return ALWAYS_TRUE;
   }
 
-  public static RawRulePredicate alwaysFalse() {
-    return alwaysFalse;
-  }
-
-  public static RawRulePredicate matchBuildRuleType(final BuildRuleType type) {
-    return new RawRulePredicate() {
+  public static RuleJsonPredicate matchBuildRuleType(final BuildRuleType type) {
+    return new RuleJsonPredicate() {
       @Override
       public boolean isMatch(
           Map<String, Object> rawParseData,
@@ -64,8 +49,8 @@ public class RawRulePredicates {
     };
   }
 
-  public static final RawRulePredicate isTestRule() {
-    return new RawRulePredicate() {
+  public static RuleJsonPredicate isTestRule() {
+    return new RuleJsonPredicate() {
       @Override
       public boolean isMatch(
           Map<String, Object> rawParseData,

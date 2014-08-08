@@ -353,6 +353,9 @@ public class Project {
     ImmutableSet.Builder<Path> noDxJarsBuilder = ImmutableSet.builder();
     for (BuildTarget target : partialGraph.getTargets()) {
       BuildRule buildRule = actionGraph.findBuildRuleByTarget(target);
+      if (!(buildRule instanceof ProjectConfig)) {
+        continue;
+      }
       ProjectConfig projectConfig = (ProjectConfig) buildRule;
 
       BuildRule srcRule = projectConfig.getSrcRule();

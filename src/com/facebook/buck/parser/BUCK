@@ -34,12 +34,15 @@ java_library(
   name = 'project',
   # TODO(simons): Find a proper home for these.
   srcs = [
-    'RawRulePredicate.java',
-    'RawRulePredicates.java',
+    'RuleJsonPredicate.java',
+    'RuleJsonPredicates.java',
+    'AssociatedRulePredicate.java',
+    'AssociatedRulePredicates.java',
   ],
   deps = [
     ':rule_pattern',
     '//lib:guava',
+    '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
