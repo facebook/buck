@@ -428,7 +428,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenBuckConfigChangesParserInvalidated()
       throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     ObjectMapper objectMapper = new ObjectMapper();
 
     Object daemon = Main.getDaemon(new TestRepositoryBuilder().setBuckConfig(
