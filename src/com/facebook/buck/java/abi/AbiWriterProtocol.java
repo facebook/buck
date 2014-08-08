@@ -30,7 +30,7 @@ public class AbiWriterProtocol {
       "buck.output_abi_file";
 
   /**
-   * The integrity of this value is verified by {@link com.facebook.buck.java.abi.AbiWriterTest}.
+   * The integrity of this value is verified by {@code com.facebook.buck.java.abi.AbiWriterTest}.
    */
   public static final String EMPTY_ABI_KEY = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
 }

@@ -439,12 +439,18 @@
 
   <target name="test" depends="java-test, py-test" description="runs the unit tests" />
 
+  <path id="javadoc.classpath">
+    <path refid="classpath" />
+    <!-- Buck test runner has references to JUnit. -->
+    <pathelement location="${lib.dir}/junit-4.11.jar" />
+  </path>
+
   <target name="javadoc" description="generates HTML documentation for Java code"
       depends="compile">
     <mkdir dir="${javadoc.dir}" />
     <javadoc destdir="${javadoc.dir}"
              protected="true"
-             classpathref="tests.classpath"
+             classpathref="javadoc.classpath"
              windowtitle="Buck"
              failonerror="true"
              >
