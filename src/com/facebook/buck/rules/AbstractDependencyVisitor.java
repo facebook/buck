@@ -17,10 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import java.util.Collection;
 import java.util.Queue;
 import java.util.Set;
 
@@ -40,9 +40,9 @@ public abstract class AbstractDependencyVisitor {
     this(excludeRoot ? initialRule.getDeps() : ImmutableSet.of(initialRule));
   }
 
-  public AbstractDependencyVisitor(Collection<BuildRule> initialDeps) {
+  public AbstractDependencyVisitor(Iterable<? extends BuildRule> initialDeps) {
     toExplore = Lists.newLinkedList();
-    toExplore.addAll(initialDeps);
+    Iterables.addAll(toExplore, initialDeps);
     explored = Sets.newHashSet();
   }
 

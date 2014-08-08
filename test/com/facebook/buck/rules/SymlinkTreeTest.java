@@ -47,8 +47,16 @@ public class SymlinkTreeTest {
 
   private BuildTarget buildTarget;
   private SymlinkTree symlinkTreeBuildRule;
-  private ImmutableMap<Path, Path> links;
+  private ImmutableMap<Path, SourcePath> links;
   private Path outputPath;
+
+  private ImmutableMap<Path, Path> resolveLinks(ImmutableMap<Path, SourcePath> links) {
+    ImmutableMap.Builder<Path, Path> resolvedLinks = ImmutableMap.builder();
+    for (ImmutableMap.Entry<Path, SourcePath> entry : links.entrySet()) {
+      resolvedLinks.put(entry.getKey(), entry.getValue().resolve());
+    }
+    return resolvedLinks.build();
+  }
 
   @Before
   public void setUp() throws IOException {
@@ -67,9 +75,9 @@ public class SymlinkTreeTest {
     Files.write(file2, "hello world".getBytes(Charsets.UTF_8));
 
     // Setup the map representing the link tree.
-    links = ImmutableMap.of(
-        link1, file1,
-        link2, file2);
+    links = ImmutableMap.<Path, SourcePath>of(
+        link1, new PathSourcePath(file1),
+        link2, new PathSourcePath(file2));
 
     // The output path used by the buildable for the link tree.
     outputPath = BuildTargets.getGenPath(buildTarget, "%s/symlink-tree-root");
@@ -77,6 +85,7 @@ public class SymlinkTreeTest {
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new SymlinkTree(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        outputPath,
         links);
 
   }
@@ -91,7 +100,7 @@ public class SymlinkTreeTest {
     // Verify the build steps are as expected.
     ImmutableList<Step> expectedBuildSteps = ImmutableList.of(
         new MakeCleanDirectoryStep(outputPath),
-        new SymlinkTreeStep(outputPath, links));
+        new SymlinkTreeStep(outputPath, resolveLinks(links)));
     ImmutableList<Step> actualBuildSteps = symlinkTreeBuildRule.getBuildSteps(
         buildContext,
         buildableContext);
@@ -111,7 +120,9 @@ public class SymlinkTreeTest {
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
     AbstractBuildRule modifiedSymlinkTreeBuildRule = new SymlinkTree(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
-        ImmutableMap.of(Paths.get("different/link"), aFile));
+        outputPath,
+        ImmutableMap.<Path, SourcePath>of(
+            Paths.get("different/link"), new PathSourcePath(aFile)));
 
     // Calculate their rule keys and verify they're different.
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
@@ -141,7 +152,7 @@ public class SymlinkTreeTest {
     RuleKey.Builder.RuleKeyPair pair1 = builder1.build();
 
     // Change the contents of the target of the link.
-    Path existingFile = links.values().asList().get(0);
+    Path existingFile = links.values().asList().get(0).resolve();
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key

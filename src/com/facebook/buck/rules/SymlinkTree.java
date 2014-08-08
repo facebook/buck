@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -35,25 +34,25 @@ import javax.annotation.Nullable;
 
 public class SymlinkTree extends AbstractBuildRule implements AbiRule {
 
-  private final ImmutableMap<Path, Path> links;
+  private final Path root;
+  private final ImmutableMap<Path, SourcePath> links;
 
-  public SymlinkTree(BuildRuleParams params, ImmutableMap<Path, Path> links) {
+  public SymlinkTree(
+      BuildRuleParams params,
+      Path root,
+      ImmutableMap<Path, SourcePath> links) {
     super(params);
+    this.root = Preconditions.checkNotNull(root);
     this.links = Preconditions.checkNotNull(links);
   }
 
-  private Path getSymlinkTreeRoot() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s/symlink-tree-root");
-  }
-
   /**
-   * @return a map of the full relative path of the links to their targets.
+   * Resolve {@link com.facebook.buck.rules.SourcePath} references in the link map.
    */
-  public ImmutableMap<Path, Path> getLinks() {
-    Path root = getSymlinkTreeRoot();
+  private ImmutableMap<Path, Path> resolveLinks() {
     ImmutableMap.Builder<Path, Path> resolvedLinks = ImmutableMap.builder();
-    for (ImmutableMap.Entry<Path, Path> entry : links.entrySet()) {
-      resolvedLinks.put(root.resolve(entry.getKey()), entry.getValue());
+    for (ImmutableMap.Entry<Path, SourcePath> entry : links.entrySet()) {
+      resolvedLinks.put(entry.getKey(), entry.getValue().resolve());
     }
     return resolvedLinks.build();
   }
@@ -62,10 +61,9 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    Path root = getSymlinkTreeRoot();
-    return ImmutableList.<Step>of(
+    return ImmutableList.of(
         new MakeCleanDirectoryStep(root),
-        new SymlinkTreeStep(root, links));
+        new SymlinkTreeStep(root, resolveLinks()));
   }
 
   // Put the link map into the rule key, as if it changes at all, we need to
@@ -75,7 +73,7 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
     List<Path> keyList = Lists.newArrayList(links.keySet());
     Collections.sort(keyList);
     for (Path key : keyList) {
-      builder.set("link(" + key.toString() + ")", links.get(key).toString());
+      builder.set("link(" + key.toString() + ")", links.get(key).resolve().toString());
     }
     return builder;
   }
