@@ -18,9 +18,9 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.timing.Clock;
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -52,7 +52,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   private final Supplier<Process> watchmanProcessSupplier;
   private final EventBus eventBus;
   private final Clock clock;
-  private final JsonFactory jsonFactory;
+  private final ObjectMapper objectMapper;
   private final String query;
 
   /**
@@ -69,10 +69,12 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
 
   public WatchmanWatcher(ProjectFilesystem filesystem,
                          EventBus fileChangeEventBus,
-                         Clock clock) {
+                         Clock clock,
+                         ObjectMapper objectMapper) {
     this(createProcessSupplier(),
         fileChangeEventBus,
         clock,
+        objectMapper,
         DEFAULT_OVERFLOW_THRESHOLD,
         DEFAULT_TIMEOUT_MILLIS,
         createQuery(filesystem));
@@ -82,13 +84,14 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   WatchmanWatcher(Supplier<Process> processSupplier,
                   EventBus fileChangeEventBus,
                   Clock clock,
+                  ObjectMapper objectMapper,
                   int overflow,
                   long timeoutMillis,
                   String query) {
     this.watchmanProcessSupplier = Preconditions.checkNotNull(processSupplier);
     this.eventBus = Preconditions.checkNotNull(fileChangeEventBus);
     this.clock = Preconditions.checkNotNull(clock);
-    this.jsonFactory = new JsonFactory();
+    this.objectMapper = Preconditions.checkNotNull(objectMapper);
     this.overflow = overflow;
     this.timeoutMillis = timeoutMillis;
     this.query = Preconditions.checkNotNull(query);
@@ -145,7 +148,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         jsonInput = new ByteArrayInputStream(fullResponse);
         LOG.verbose("Full JSON: " + new String(fullResponse, Charsets.UTF_8).trim());
       }
-      JsonParser jsonParser = jsonFactory.createJsonParser(jsonInput);
+      JsonParser jsonParser = objectMapper.getJsonFactory().createJsonParser(jsonInput);
       PathEventBuilder builder = new PathEventBuilder();
       JsonToken token = jsonParser.nextToken();
       /*

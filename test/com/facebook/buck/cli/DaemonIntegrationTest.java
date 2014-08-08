@@ -39,6 +39,7 @@ import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -428,6 +429,7 @@ public class DaemonIntegrationTest {
   public void whenBuckConfigChangesParserInvalidated()
       throws IOException, InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
+    ObjectMapper objectMapper = new ObjectMapper();
 
     Object daemon = Main.getDaemon(new TestRepositoryBuilder().setBuckConfig(
         new FakeBuckConfig(
@@ -436,7 +438,8 @@ public class DaemonIntegrationTest {
                 .build()))
         .setFilesystem(filesystem)
         .build(),
-        new FakeClock(0));
+        new FakeClock(0),
+        objectMapper);
 
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
@@ -447,7 +450,8 @@ public class DaemonIntegrationTest {
                     .build()))
             .setFilesystem(filesystem)
             .build(),
-            new FakeClock(0)));
+            new FakeClock(0),
+            objectMapper));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
@@ -458,7 +462,8 @@ public class DaemonIntegrationTest {
                     .build()))
             .setFilesystem(filesystem)
             .build(),
-            new FakeClock(0)));
+            new FakeClock(0),
+            objectMapper));
   }
 
   @Test

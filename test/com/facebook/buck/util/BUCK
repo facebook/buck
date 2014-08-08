@@ -32,6 +32,8 @@ java_test(
     '//lib:guava',
     '//lib:hamcrest-core',
     '//lib:hamcrest-library',
+    '//lib:jackson-core',
+    '//lib:jackson-databind',
     '//lib:junit',
     '//third-party/java/commons-compress:commons-compress',
     '//src/com/facebook/buck/timing:timing',

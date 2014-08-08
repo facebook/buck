@@ -148,10 +148,15 @@ public final class Main {
     private final ProjectFilesystemWatcher filesystemWatcher;
     private final Optional<WebServer> webServer;
     private final Clock clock;
+    private final ObjectMapper objectMapper;
 
-    public Daemon(Repository repository, Clock clock) throws IOException {
+    public Daemon(
+        Repository repository,
+        Clock clock,
+        ObjectMapper objectMapper) throws IOException {
       this.repository = repository;
       this.clock = Preconditions.checkNotNull(clock);
+      this.objectMapper = Preconditions.checkNotNull(objectMapper);
       this.hashCache = new DefaultFileHashCache(repository.getFilesystem());
       this.parser = new Parser(
           repository,
@@ -174,7 +179,9 @@ public final class Main {
         return new WatchmanWatcher(
             projectFilesystem,
             fileEventBus,
-            clock);
+            clock,
+            objectMapper
+        );
       }
       LOG.debug("Using java.nio.file.WatchService to watch for file changes.");
       return new WatchServiceWatcher(
@@ -289,11 +296,14 @@ public final class Main {
    * Get or create Daemon.
    */
   @VisibleForTesting
-  static Daemon getDaemon(Repository repository, Clock clock) throws IOException {
+  static Daemon getDaemon(
+      Repository repository,
+      Clock clock,
+      ObjectMapper objectMapper) throws IOException {
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]",
           repository.getFilesystem().getProjectRoot());
-      daemon = new Daemon(repository, clock);
+      daemon = new Daemon(repository, clock, objectMapper);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -311,7 +321,7 @@ public final class Main {
       if (!daemon.repository.equals(repository)) {
         LOG.info("Shutting down and restarting daemon on config or directory resolver change.");
         daemon.close();
-        daemon = new Daemon(repository, clock);
+        daemon = new Daemon(repository, clock, objectMapper);
       }
     }
     return daemon;
@@ -647,7 +657,7 @@ public final class Main {
       BuckEventBus eventBus,
       Clock clock) throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
-    Daemon daemon = getDaemon(repository, clock);
+    Daemon daemon = getDaemon(repository, clock, objectMapper);
     daemon.watchClient(context.get());
     daemon.watchFileSystem(commandEvent, eventBus);
     daemon.initWebServer();
@@ -659,7 +669,7 @@ public final class Main {
       Repository repository,
       Clock clock) throws IOException {
     if (context.isPresent()) {
-      Daemon daemon = getDaemon(repository, clock);
+      Daemon daemon = getDaemon(repository, clock, objectMapper);
       return daemon.getWebServer();
     }
     return Optional.absent();

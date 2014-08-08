@@ -85,6 +85,7 @@ java_library(
     ':io',
     '//lib:guava',
     '//lib:jackson-core',
+    '//lib:jackson-databind',
     '//lib:jsr305',
     '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/timing:timing',
