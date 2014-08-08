@@ -86,6 +86,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -109,6 +110,7 @@ import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -1398,15 +1400,24 @@ public class ProjectGenerator {
     } else {
       contentsToWrite = unsignedXmlProject;
     }
-    if (shouldGenerateReadOnlyFiles()) {
-      projectFilesystem.writeContentsToPath(
-          contentsToWrite,
-          serializedProject,
-          READ_ONLY_FILE_ATTRIBUTE);
+    // Before we write any files, check if the file contents have changed.
+    if (MorePaths.fileContentsDiffer(
+            new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
+            serializedProject,
+            projectFilesystem)) {
+      LOG.debug("Regenerating project at %s", serializedProject);
+      if (shouldGenerateReadOnlyFiles()) {
+        projectFilesystem.writeContentsToPath(
+            contentsToWrite,
+            serializedProject,
+            READ_ONLY_FILE_ATTRIBUTE);
+      } else {
+        projectFilesystem.writeContentsToPath(
+            contentsToWrite,
+            serializedProject);
+      }
     } else {
-      projectFilesystem.writeContentsToPath(
-          contentsToWrite,
-          serializedProject);
+      LOG.debug("Not regenerating project at %s (contents have not changed)", serializedProject);
     }
     return xcodeprojDir;
   }

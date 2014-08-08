@@ -79,6 +79,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
@@ -116,6 +117,7 @@ public class ProjectGeneratorTest {
   private static final Path OUTPUT_PROJECT_FILE_PATH =
       OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
 
+  private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private FakeProjectFilesystem fakeProjectFilesystem;
   private ExecutionContext executionContext;
@@ -130,7 +132,8 @@ public class ProjectGeneratorTest {
 
   @Before
   public void setUp() throws IOException {
-    fakeProjectFilesystem = new FakeProjectFilesystem();
+    clock = new SettableFakeClock(0, 0);
+    fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectFilesystem = fakeProjectFilesystem;
     executionContext = TestExecutionContext.newInstance();
     iosLibraryDescription = new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
@@ -2019,6 +2022,57 @@ public class ProjectGeneratorTest {
     // Ensure the GID for the target uses the gid value in the
     // description, not the one in the project.
     assertThat(target.getGlobalID(), equalTo("A1B2C3D4"));
+  }
+
+  @Test
+  public void projectIsRewrittenIfContentsHaveChanged() throws IOException {
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<BuildTarget>of());
+
+    clock.setCurrentTimeMillis(49152);
+    projectGenerator.createXcodeProjects();
+    assertThat(
+        projectFilesystem.getLastModifiedTime(OUTPUT_PROJECT_FILE_PATH),
+        equalTo(49152L));
+
+    BuildRule fooLib = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "foo").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+
+    ProjectGenerator projectGenerator2 = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(fooLib),
+        ImmutableSet.of(fooLib.getBuildTarget()));
+
+    clock.setCurrentTimeMillis(64738);
+    projectGenerator2.createXcodeProjects();
+    assertThat(
+        projectFilesystem.getLastModifiedTime(OUTPUT_PROJECT_FILE_PATH),
+        equalTo(64738L));
+  }
+
+  @Test
+  public void projectIsNotRewrittenIfContentsHaveNotChanged() throws IOException {
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<BuildTarget>of());
+
+    clock.setCurrentTimeMillis(49152);
+    projectGenerator.createXcodeProjects();
+    assertThat(
+        projectFilesystem.getLastModifiedTime(OUTPUT_PROJECT_FILE_PATH),
+        equalTo(49152L));
+
+    ProjectGenerator projectGenerator2 = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<BuildTarget>of());
+
+    clock.setCurrentTimeMillis(64738);
+    projectGenerator2.createXcodeProjects();
+    assertThat(
+        projectFilesystem.getLastModifiedTime(OUTPUT_PROJECT_FILE_PATH),
+        equalTo(49152L));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(

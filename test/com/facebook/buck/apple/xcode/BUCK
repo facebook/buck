@@ -50,6 +50,7 @@ java_test(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
@@ -59,6 +60,7 @@ java_test(
     '//test/com/facebook/buck/shell:testutil',
     '//test/com/facebook/buck/step:testutil',
     '//test/com/facebook/buck/testutil:testutil',
+    '//test/com/facebook/buck/timing:testutil',
     '//third-party/java/dd-plist:dd-plist',
   ]
 )
