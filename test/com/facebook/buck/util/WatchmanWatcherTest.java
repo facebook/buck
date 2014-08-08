@@ -415,6 +415,15 @@ public class WatchmanWatcherTest {
     assertTrue(overflowSeen);
   }
 
+  @Test
+  public void watchmanQueryWithRepoPathNeedingEscapingFormatsToCorrectJson() {
+    String query = WatchmanWatcher.createQuery(new ObjectMapper(), "/path/to/\"repo\"", "uuid");
+    assertEquals(
+        "[\"query\",\"/path/to/\\\"repo\\\"\",{\"since\":\"n:buckduuid\"," +
+        "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
+        query);
+  }
+
   private WatchmanWatcher createWatcher(
       EventBus eventBus,
       Process process,

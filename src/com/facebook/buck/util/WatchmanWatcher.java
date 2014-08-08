@@ -26,6 +26,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteStreams;
 
@@ -37,6 +38,10 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -77,7 +82,10 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         objectMapper,
         DEFAULT_OVERFLOW_THRESHOLD,
         DEFAULT_TIMEOUT_MILLIS,
-        createQuery(filesystem));
+        createQuery(
+            objectMapper,
+            MorePaths.absolutify(filesystem.getRootPath()).toString(),
+            UUID.randomUUID().toString()));
   }
 
   @VisibleForTesting
@@ -97,12 +105,28 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
     this.query = Preconditions.checkNotNull(query);
   }
 
-  private static String createQuery(ProjectFilesystem filesystem) {
-    return "[\"query\", \"" +
-        MorePaths.absolutify(filesystem.getRootPath()).toString() +
-        "\", {\"since\": \"n:buckd" +
-        UUID.randomUUID() +
-        "\", \"empty_on_fresh_instance\": true, \"fields\": [\"name\", \"exists\", \"new\"]}]";
+  @VisibleForTesting
+  static String createQuery(
+      ObjectMapper objectMapper,
+      String rootPath,
+      String uuid) {
+    List<Object> queryParams = new ArrayList<>();
+    queryParams.add("query");
+    queryParams.add(rootPath);
+    // Note that we use LinkedHashMap so insertion order is preserved. That
+    // helps us write tests that don't depend on the undefined order of HashMap.
+    Map<String, Object> sinceParams = new LinkedHashMap<>();
+    sinceParams.put(
+        "since",
+        new StringBuilder("n:buckd").append(uuid).toString());
+    sinceParams.put("empty_on_fresh_instance", true);
+    sinceParams.put("fields", Lists.newArrayList("name", "exists", "new"));
+    queryParams.add(sinceParams);
+    try {
+      return objectMapper.writeValueAsString(queryParams);
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
   }
 
   private static Supplier<Process> createProcessSupplier() {
