@@ -56,9 +56,6 @@ class TemplateHandler extends AbstractHandler {
   @Nullable
   private volatile SoyTofu tofu;
 
-  /**
-   * @param soyFiles The set of templates that can be used to produce a response from this handler.
-   */
   protected TemplateHandler(TemplateHandlerDelegate templateBasedHandler) {
     this.delegate = Preconditions.checkNotNull(templateBasedHandler);
   }
@@ -102,8 +99,9 @@ class TemplateHandler extends AbstractHandler {
   }
 
   /**
-   * Returns the {@link SoyTofu} for the {@link #soyFiles}. If {@link #DEBUG} is {@code false}, then
-   * the result will be cached because {@link SoyTofu} objects can be expensive to construct.
+   * Returns the {@link SoyTofu} for {@link TemplateHandlerDelegate#getTemplates()}. If
+   * {@link #DEBUG} is {@code false}, then the result will be cached because {@link SoyTofu} objects
+   * can be expensive to construct.
    */
   private SoyTofu createAndMaybeCacheSoyTofu() {
     // In debug mode, create a new SoyTofu object for each request. This makes it possible to test
@@ -125,7 +123,7 @@ class TemplateHandler extends AbstractHandler {
     return tofu;
   }
 
-  /** Creates the {@link SoyTofu} for the {@link #soyFiles}. */
+  /** Creates the {@link SoyTofu} for {@link TemplateHandlerDelegate#getTemplates()}. */
   private SoyTofu createSoyTofu() {
     SoyFileSet.Builder builder = new SoyFileSet.Builder();
     for (String soyFile : delegate.getTemplates()) {

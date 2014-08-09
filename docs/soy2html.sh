@@ -30,6 +30,6 @@ python soy2html.py $OUTPUT_DIR
 cd -
 
 # Generate javadoc and include it in the output directory.
-ant javadoc
+ant javadoc-with-android
 mkdir -p ${OUTPUT_DIR}/javadoc/
-cp -r build/javadoc/* ${OUTPUT_DIR}/javadoc/
+cp -r build/javadoc-with-android/* ${OUTPUT_DIR}/javadoc/

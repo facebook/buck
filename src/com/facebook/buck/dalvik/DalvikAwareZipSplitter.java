@@ -76,8 +76,9 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private DalvikAwareOutputStreamHelper primaryOut;
 
   /**
-   * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate,
-   *                                     DexSplitStrategy, CanaryStrategy, File)
+   * @see ZipSplitterFactory#newInstance(ProjectFilesystem, Set, File, File, String, Predicate,
+   *     com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy,
+   *     com.facebook.buck.dalvik.ZipSplitter.CanaryStrategy, File)
    */
   private DalvikAwareZipSplitter(
       ProjectFilesystem filesystem,

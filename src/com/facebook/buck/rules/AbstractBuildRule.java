@@ -39,7 +39,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final ImmutableSortedSet<BuildRule> deps;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final BuildRuleType buildRuleType;
-  /** @see Buildable#getInputsToCompareToOutput()  */
+  /** @see #getInputsToCompareToOutput()  */
   @Nullable private Iterable<Path> inputsToCompareToOutputs;
   @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
 

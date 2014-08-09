@@ -28,8 +28,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -39,9 +39,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.EnumSet;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -63,7 +63,7 @@ import javax.xml.transform.stream.StreamResult;
  * <li>associations between Xcode targets and the projects that contain them</li>
  * </ul>
  * <p>
- * Both of these values can be pulled out of {@class ProjectGenerator}.
+ * Both of these values can be pulled out of {@link ProjectGenerator}.
  */
 class SchemeGenerator {
   private final ProjectFilesystem projectFilesystem;

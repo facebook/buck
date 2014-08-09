@@ -792,10 +792,6 @@ public class Parser {
   }
 
   /**
-   * This method has been deprecated because it is not idempotent and returns different results
-   * based upon what has been already parsed.
-   * Prefer {@link #filterGraphTargets(RuleJsonPredicate, com.facebook.buck.rules.ActionGraph)}
-   *
    * @param filter the test to apply to all targets that have been read from build files, or null.
    * @return the build targets that pass the test, or null if the filter was null.
    */

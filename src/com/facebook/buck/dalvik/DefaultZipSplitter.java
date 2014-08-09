@@ -50,7 +50,8 @@ public class DefaultZipSplitter implements ZipSplitter {
 
   /**
    * @see ZipSplitterFactory#newInstance(ProjectFilesystem, Set, File, File, String, Predicate,
-   *                                     DexSplitStrategy, CanaryStrategy, File)
+   *     com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy,
+   *     com.facebook.buck.dalvik.ZipSplitter.CanaryStrategy, File)
    */
   private DefaultZipSplitter(
       ProjectFilesystem filesystem,

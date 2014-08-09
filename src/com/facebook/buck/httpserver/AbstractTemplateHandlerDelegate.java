@@ -24,6 +24,9 @@ abstract class AbstractTemplateHandlerDelegate implements TemplateHandlerDelegat
 
   private final ImmutableSet<String> templates;
 
+  /**
+   * @param templates The set of templates that can be used to produce a response from this handler.
+   */
   AbstractTemplateHandlerDelegate(ImmutableSet<String> templates) {
     this.templates = ImmutableSet.<String>builder()
         .addAll(COMMON_TEMPLATES)

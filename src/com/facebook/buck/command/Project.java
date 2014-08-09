@@ -256,7 +256,7 @@ public class Project {
    /**
    * @param module must be an android module
    * @param nameToModuleIndex
-   * @returns the File that was written, or {@code null} if no file was written.
+   * @return the File that was written, or {@code null} if no file was written.
    * @throws IOException
    */
   @VisibleForTesting
@@ -770,7 +770,7 @@ public class Project {
   /**
    * Walks the dependencies of a build rule and adds the appropriate DependentModules to the
    * specified dependencies collection. All library dependencies will be added before any module
-   * dependencies. See {@link ProjectTest#testThatJarsAreListedBeforeModules()} for details on why
+   * dependencies. See {@code ProjectTest#testThatJarsAreListedBeforeModules()} for details on why
    * this behavior is important.
    */
   private void walkRuleAndAdd(
