@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Provides a fake implementation of a {@link Clock} which increments
- * both {@link currentTimeMillis()} and {@link nanoTime()} by a fixed
+ * both {@link #currentTimeMillis()} and {@link #nanoTime()} by a fixed
  * amount every time either is queried.
  */
 public class IncrementingFakeClock implements Clock {
