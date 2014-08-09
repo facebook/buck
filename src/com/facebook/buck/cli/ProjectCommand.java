@@ -215,6 +215,18 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       }
     }
 
+    if (options.getArguments().isEmpty()) {
+      String greenStar = console.getAnsi().asHighlightedSuccessText(" * ");
+      getStdErr().printf(
+          console.getAnsi().asHighlightedSuccessText("=== Did you know ===") + "\n" +
+              greenStar + "You can run `buck project <target>` to generate a minimal project " +
+              "just for that target.\n" +
+              greenStar + "This will make your IDE faster when working on large projects.\n" +
+              greenStar + "See buck project --help for more info.\n" +
+              console.getAnsi().asHighlightedSuccessText(
+                  "--=* Knowing is half the battle!") + "\n");
+    }
+
     return 0;
   }
 
