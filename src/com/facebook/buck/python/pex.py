@@ -17,10 +17,10 @@ BUCK_ROOT = os.sep.join(__file__.split(os.sep)[:-6])
 
 # Add the path to the PEX library code, and the version of setuptools
 # it requires, to our path and import the key parts we need.
-sys.path.insert(0, os.path.join(BUCK_ROOT, 'third-party/py/setuptools'))
-sys.path.append(os.path.join(
+sys.path.insert(0, os.path.join(
     BUCK_ROOT,
     'third-party/py/twitter-commons/src/python'))
+sys.path.insert(0, os.path.join(BUCK_ROOT, 'third-party/py/setuptools'))
 from twitter.common.python.pex_builder import PEXBuilder
 from twitter.common.python.interpreter import PythonInterpreter
 
