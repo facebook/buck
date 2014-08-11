@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.google.common.collect.Ordering.natural;
 
+import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;

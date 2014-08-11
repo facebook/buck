@@ -89,6 +89,7 @@ java_library(
     '//lib:jackson-core',
     '//lib:jackson-databind',
     '//lib:jsr305',
+    '//src/com/facebook/buck/android/aapt:aapt',
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/dalvik:steps',
     '//src/com/facebook/buck/event:event',

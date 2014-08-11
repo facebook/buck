@@ -39,6 +39,7 @@ java_test(
     '//lib:junit',
     '//lib:jackson-core',
     '//lib:jackson-databind',
+    '//src/com/facebook/buck/android/aapt:aapt',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
