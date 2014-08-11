@@ -35,6 +35,58 @@ import java.util.regex.Pattern;
 @VisibleForTesting
 class RDotTxtEntry implements Comparable<RDotTxtEntry> {
 
+  // Taken from http://developer.android.com/reference/android/R.html
+  public static enum RType {
+    ANIM,
+    ANIMATOR,
+    ARRAY,
+    ATTR,
+    BOOL,
+    COLOR,
+    DIMEN,
+    DRAWABLE,
+    FRACTION,
+    ID,
+    INTEGER,
+    INTERPOLATOR,
+    LAYOUT,
+    MENU,
+    MIPMAP,
+    PLURALS,
+    RAW,
+    STRING,
+    STYLE,
+    STYLEABLE,
+    XML;
+
+    @Override
+    public String toString() {
+      return super.toString().toLowerCase();
+    }
+  }
+
+  public static enum IdType {
+    INT,
+    INT_ARRAY;
+
+    public static IdType from(String raw) {
+      if (raw.equals("int")) {
+        return INT;
+      } else if (raw.equals("int[]")) {
+        return INT_ARRAY;
+      }
+      throw new IllegalArgumentException(String.format("'%s' is not a valid ID type.", raw));
+    }
+
+    @Override
+    public String toString() {
+      if (this.equals(INT)) {
+        return "int";
+      }
+      return "int[]";
+    }
+  }
+
   public static final Function<String, RDotTxtEntry> TO_ENTRY =
       new Function<String, RDotTxtEntry>() {
         @Override
@@ -62,14 +114,14 @@ class RDotTxtEntry implements Comparable<RDotTxtEntry> {
   // - the type of the resource
   // - the name of the resource
   // - the value of the resource id
-  @VisibleForTesting final String idType;
-  @VisibleForTesting final String type;
+  @VisibleForTesting final IdType idType;
+  @VisibleForTesting final RType type;
   @VisibleForTesting final String name;
   @VisibleForTesting final String idValue;
 
   public RDotTxtEntry(
-      String idType,
-      String type,
+      IdType idType,
+      RType type,
       String name,
       String idValue) {
     this.idType = Preconditions.checkNotNull(idType);
@@ -88,8 +140,8 @@ class RDotTxtEntry implements Comparable<RDotTxtEntry> {
       return Optional.absent();
     }
 
-    String idType = matcher.group(1);
-    String type = matcher.group(2);
+    IdType idType = IdType.from(matcher.group(1));
+    RType type = RType.valueOf(matcher.group(2).toUpperCase());
     String name = matcher.group(3);
     String idValue = matcher.group(4);
 

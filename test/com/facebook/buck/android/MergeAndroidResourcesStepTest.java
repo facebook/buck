@@ -79,7 +79,7 @@ public class MergeAndroidResourcesStepTest {
 
     Set<String> uniqueEntries = Sets.newHashSet();
     for (RDotTxtEntry resource : resources) {
-      if (!resource.type.equals("styleable")) {
+      if (!resource.type.equals(RDotTxtEntry.RType.STYLEABLE)) {
         assertFalse("Duplicate ids should be fixed by renumerate=true; duplicate was: " +
             resource.idValue, uniqueEntries.contains(resource.idValue));
         uniqueEntries.add(resource.idValue);

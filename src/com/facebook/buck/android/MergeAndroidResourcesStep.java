@@ -143,10 +143,10 @@ public class MergeAndroidResourcesStep implements Step {
         writer.format("package %s;\n\n", rDotJavaPackage);
         writer.println("public class R {\n");
 
-        String lastType = null;
+        RDotTxtEntry.RType lastType = null;
 
         for (RDotTxtEntry res : packageToResources.get(rDotJavaPackage)) {
-          String type = res.type;
+          RDotTxtEntry.RType type = res.type;
           if (!type.equals(lastType)) {
             // If the previous type needs to be closed, close it.
             if (lastType != null) {
