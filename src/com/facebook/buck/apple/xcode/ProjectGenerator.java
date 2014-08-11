@@ -45,6 +45,7 @@ import com.facebook.buck.apple.MacosxFramework;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.OsxResourceDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
+import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
@@ -1546,25 +1547,37 @@ public class ProjectGenerator {
   }
 
   private String getHeaderSearchPathForRule(BuildRule rule) {
-    return Joiner.on('/').join(
-        "$SYMROOT",
-        BaseEncoding
-            .base32()
-            .omitPadding()
-            .encode(rule.getFullyQualifiedName().getBytes()),
-        "Headers");
+    if (rule.getType().equals(IosLibraryDescription.TYPE)) {
+      return Joiner.on('/').join(
+          "$SYMROOT",
+          BaseEncoding
+              .base32()
+              .omitPadding()
+              .encode(rule.getFullyQualifiedName().getBytes()),
+          "Headers");
+    } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
+      return "$BUILT_PRODUCTS_DIR/Headers";
+    } else {
+      throw new RuntimeException("Unexpected type: " + rule.getType());
+    }
   }
 
   private String getObjectOutputPathForRule(BuildRule rule) {
-    return Joiner.on('/').join(
-        "$SYMROOT",
-        BaseEncoding
-            .base32()
-            .omitPadding()
-            .encode(rule.getFullyQualifiedName().getBytes()),
-        // $EFFECTIVE_PLATFORM_NAME starts with a dash, so this expands to something like:
-        // Debug-iphonesimulator
-        "$CONFIGURATION$EFFECTIVE_PLATFORM_NAME");
+    if (rule.getType().equals(IosLibraryDescription.TYPE)) {
+      return Joiner.on('/').join(
+          "$SYMROOT",
+          BaseEncoding
+              .base32()
+              .omitPadding()
+              .encode(rule.getFullyQualifiedName().getBytes()),
+          // $EFFECTIVE_PLATFORM_NAME starts with a dash, so this expands to something like:
+          // Debug-iphonesimulator
+          "$CONFIGURATION$EFFECTIVE_PLATFORM_NAME");
+    } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
+      return "$BUILT_PRODUCTS_DIR";
+    } else {
+      throw new RuntimeException("Unexpected type: " + rule.getType());
+    }
   }
 
   private ImmutableSet<String> collectRecursiveHeaderSearchPaths(BuildRule rule) {
@@ -1572,7 +1585,8 @@ public class ProjectGenerator {
         .from(
             getRecursiveRuleDependenciesOfType(
                 rule,
-                IosLibraryDescription.TYPE))
+                IosLibraryDescription.TYPE,
+                XcodeNativeDescription.TYPE))
         .transform(
             new Function<BuildRule, String>() {
               @Override
@@ -1588,7 +1602,8 @@ public class ProjectGenerator {
         .from(
             getRecursiveRuleDependenciesOfType(
                 rule,
-                IosLibraryDescription.TYPE))
+                IosLibraryDescription.TYPE,
+                XcodeNativeDescription.TYPE))
         .transform(
             new Function<BuildRule, String>() {
               @Override
@@ -1604,7 +1619,8 @@ public class ProjectGenerator {
         .from(
             getRecursiveRuleDependenciesOfType(
                 rule,
-                IosLibraryDescription.TYPE))
+                IosLibraryDescription.TYPE,
+                XcodeNativeDescription.TYPE))
         .transform(
             new Function<BuildRule, String>() {
               @Override
@@ -1620,6 +1636,7 @@ public class ProjectGenerator {
       ImmutableSet.Builder<String> frameworksBuilder) {
     for (BuildRule ruleDependency :
            getRecursiveRuleDependenciesOfType(rule, IosLibraryDescription.TYPE)) {
+      // TODO(user): Add support to xcode_native rule for framework dependencies
       IosLibrary iosLibrary =
           (IosLibrary) Preconditions.checkNotNull(ruleDependency);
       frameworksBuilder.addAll(iosLibrary.getFrameworks());
@@ -1630,7 +1647,8 @@ public class ProjectGenerator {
     return FluentIterable
         .from(getRecursiveRuleDependenciesOfType(
             rule,
-            IosLibraryDescription.TYPE))
+            IosLibraryDescription.TYPE,
+            XcodeNativeDescription.TYPE))
         .transform(
             new Function<BuildRule, PBXFileReference>() {
               @Override
@@ -1653,6 +1671,13 @@ public class ProjectGenerator {
                     PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
                     Paths.get(getLibraryNameFromTargetName(rule.getBuildTarget().getShortName()))));
       }
+    } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
+        return project.getMainGroup()
+            .getOrCreateChildGroupByName("Frameworks")
+            .getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                    Paths.get(getLibraryNameFromTargetName(rule.getBuildTarget().getShortName()))));
     } else {
       throw new RuntimeException("Unexpected type: " + rule.getType());
     }

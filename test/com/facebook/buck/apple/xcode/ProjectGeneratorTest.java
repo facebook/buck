@@ -47,6 +47,7 @@ import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
+import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
@@ -129,6 +130,7 @@ public class ProjectGeneratorTest {
   private MacosxFrameworkDescription macosxFrameworkDescription;
   private MacosxBinaryDescription macosxBinaryDescription;
   private CoreDataModelDescription coreDataModelDescription;
+  private XcodeNativeDescription xcodeNativeDescription;
 
   @Before
   public void setUp() throws IOException {
@@ -144,6 +146,7 @@ public class ProjectGeneratorTest {
     macosxFrameworkDescription = new MacosxFrameworkDescription();
     macosxBinaryDescription = new MacosxBinaryDescription();
     coreDataModelDescription = new CoreDataModelDescription();
+    xcodeNativeDescription = new XcodeNativeDescription();
 
     // Add support files needed by project generation to fake filesystem.
     projectFilesystem.writeContentsToPath(
@@ -1104,6 +1107,38 @@ public class ProjectGeneratorTest {
             "$BUILT_PRODUCTS_DIR/liblib.a",
             "$SDKROOT/Library.framework",
             "$SDKROOT/Test.framework"));
+  }
+
+  @Test
+  public void testIosBinaryRuleGathersXcodeNativeDependencies() throws IOException {
+    BuildRule fooRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//external", "extFoo").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        xcodeNativeDescription);
+    BuildRule barRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//external", "extBar").build(),
+        ImmutableSortedSet.of(fooRule),
+        xcodeNativeDescription);
+
+    BuildRule binaryRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "foo").build(),
+        ImmutableSortedSet.of(barRule),
+        iosBinaryDescription);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(fooRule, barRule, binaryRule),
+        ImmutableSet.of(binaryRule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:foo");
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target,
+        ImmutableList.of(
+            "$BUILT_PRODUCTS_DIR/libextFoo.a",
+            "$BUILT_PRODUCTS_DIR/libextBar.a"));
   }
 
   @Test
