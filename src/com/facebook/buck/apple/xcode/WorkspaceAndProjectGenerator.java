@@ -27,6 +27,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.step.ExecutionContext;
@@ -112,7 +113,16 @@ public class WorkspaceAndProjectGenerator {
         workspaceName,
         outputDirectory);
 
-    Iterable<BuildRule> allRules = partialGraph.getActionGraph().getNodes();
+    final ImmutableSet.Builder<BuildRule> allRulesBuilder = ImmutableSet.builder();
+    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(actualTargetRule) {
+      @Override
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
+        allRulesBuilder.add(rule);
+        return rule.getDeps();
+      }
+    };
+    visitor.start();
+    Iterable<BuildRule> allRules = allRulesBuilder.build();
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
@@ -184,8 +194,7 @@ public class WorkspaceAndProjectGenerator {
         Path pbxprojectPath = projectPath.resolve("project.pbxproj");
         String targetName = rule.getBuildTarget().getShortName();
 
-        workspaceGenerator.addFilePath(DEPENDENCIES_GROUP,
-            projectFilesystem.getPathForRelativePath(projectPath));
+        workspaceGenerator.addFilePath(DEPENDENCIES_GROUP, projectPath);
 
         ImmutableMap.Builder<String, String> targetNameToGIDMapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, String> targetNameToFileNameBuilder = ImmutableMap.builder();
@@ -223,8 +232,7 @@ public class WorkspaceAndProjectGenerator {
               PBXFileReference.SourceTree.BUILT_PRODUCTS_DIR);
           fakeTarget.setProductReference(fakeProductReference);
           schemeGenerator.addRuleToTargetMap(ImmutableMap.of(rule, fakeTarget));
-          schemeGenerator.addTargetToProjectPathMap(fakeTarget,
-              projectFilesystem.getPathForRelativePath(projectPath));
+          schemeGenerator.addTargetToProjectPathMap(fakeTarget, projectPath);
         }
       }
     }

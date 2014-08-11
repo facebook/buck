@@ -285,6 +285,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
                 Map<String, Object> rawParseData,
                 BuildRuleType buildRuleType,
                 BuildTarget buildTarget) {
+              if (XcodeProjectConfigDescription.TYPE != buildRuleType) {
+                return false;
+              }
               String targetName = buildTarget.getFullyQualifiedName();
               for (String prefix : defaultExcludePaths) {
                 if (targetName.startsWith("//" + prefix) &&

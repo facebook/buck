@@ -301,4 +301,21 @@ public class ProjectIntegrationTest {
             ""),
         result.getStdout());
   }
+
+  @Test
+  public void testBuckProjectGeneratedSchemeOnlyIncludesDependencies() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_generated_scheme_only_includes_dependencies",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--workspace-and-projects",
+        "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
 }

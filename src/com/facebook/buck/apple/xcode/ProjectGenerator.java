@@ -271,11 +271,11 @@ public class ProjectGenerator {
         projectFilesystem.getRootPath(),
         this.repoRootRelativeToOutputDirectory);
 
-    this.placedAssetCatalogBuildPhaseScript = this.projectFilesystem.getPathForRelativePath(
-        BuckConstant.BIN_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh"));
+    this.placedAssetCatalogBuildPhaseScript =
+        BuckConstant.BIN_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh");
 
     this.project = new PBXProject(projectName);
-    this.headerMaps = new ArrayList<Path>();
+    this.headerMaps = new ArrayList<>();
 
     this.buildRuleToGeneratedTargetBuilder = ImmutableMap.builder();
     this.buildRuleToXcodeTarget = CacheBuilder.newBuilder().build(
