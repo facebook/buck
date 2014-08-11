@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -33,15 +34,18 @@ import java.util.Locale;
 public class DirtyPrintStreamDecoratorTest {
 
   @Test
-  public void testInitialState() {
+  public void testInitialState() throws IOException {
     PrintStream delegate = createMock(PrintStream.class);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    verify(delegate);
 
-    assertFalse(dirtyPrintStream.isDirty());
-    assertEquals(delegate, dirtyPrintStream.getRawStream());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      verify(delegate);
+      assertFalse(dirtyPrintStream.isDirty());
+      assertEquals(delegate, dirtyPrintStream.getRawStream());
+    }
   }
 
   @Test
@@ -50,12 +54,16 @@ public class DirtyPrintStreamDecoratorTest {
     int n = 42;
     delegate.write(n);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.write(n);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.write(n);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -64,12 +72,16 @@ public class DirtyPrintStreamDecoratorTest {
     byte[] bytes = new byte[] {65, 66, 67};
     delegate.write(bytes);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.write(bytes);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.write(bytes);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -78,12 +90,16 @@ public class DirtyPrintStreamDecoratorTest {
     byte[] bytes = new byte[] {65, 66, 67};
     delegate.write(bytes, 0, 3);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.write(bytes, 0, 3);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.write(bytes, 0, 3);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -92,12 +108,16 @@ public class DirtyPrintStreamDecoratorTest {
     boolean value = true;
     delegate.print(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.print(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.print(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -106,12 +126,16 @@ public class DirtyPrintStreamDecoratorTest {
     char value = 'a';
     delegate.print(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.print(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.print(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -120,12 +144,16 @@ public class DirtyPrintStreamDecoratorTest {
     int value = 42;
     delegate.print(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.print(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.print(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -134,12 +162,16 @@ public class DirtyPrintStreamDecoratorTest {
     long value = Long.MAX_VALUE;
     delegate.print(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.print(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.print(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -148,12 +180,16 @@ public class DirtyPrintStreamDecoratorTest {
     float value = 3.14f;
     delegate.print(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.print(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.print(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -162,12 +198,16 @@ public class DirtyPrintStreamDecoratorTest {
     double value = Math.PI;
     delegate.print(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.print(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.print(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -176,12 +216,16 @@ public class DirtyPrintStreamDecoratorTest {
     char[] value = new char[] {'h', 'e', 'l', 'l', 'o'};
     delegate.print(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.print(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.print(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -190,12 +234,16 @@ public class DirtyPrintStreamDecoratorTest {
     String value = "hello";
     delegate.print(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.print(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.print(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -204,12 +252,16 @@ public class DirtyPrintStreamDecoratorTest {
     Object value = new Object();
     delegate.print(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.print(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.print(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -217,12 +269,16 @@ public class DirtyPrintStreamDecoratorTest {
     PrintStream delegate = createMock(PrintStream.class);
     delegate.println();
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.println();
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.println();
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -231,12 +287,16 @@ public class DirtyPrintStreamDecoratorTest {
     boolean value = false;
     delegate.println(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.println(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.println(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -245,12 +305,16 @@ public class DirtyPrintStreamDecoratorTest {
     char value = 'z';
     delegate.println(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.println(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.println(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -259,12 +323,16 @@ public class DirtyPrintStreamDecoratorTest {
     int value = 144;
     delegate.println(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.println(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.println(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -273,12 +341,16 @@ public class DirtyPrintStreamDecoratorTest {
     long value = Long.MIN_VALUE;
     delegate.println(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.println(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.println(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -287,12 +359,16 @@ public class DirtyPrintStreamDecoratorTest {
     float value = 2.718f;
     delegate.println(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.println(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.println(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -301,12 +377,16 @@ public class DirtyPrintStreamDecoratorTest {
     double value = Math.E;
     delegate.println(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.println(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.println(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -315,12 +395,16 @@ public class DirtyPrintStreamDecoratorTest {
     char[] value = new char[] {'a', 'p', 'p', 'l', 'e'};
     delegate.println(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.println(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.println(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -329,12 +413,16 @@ public class DirtyPrintStreamDecoratorTest {
     String value = "buck";
     delegate.println(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.println(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.println(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
@@ -343,12 +431,16 @@ public class DirtyPrintStreamDecoratorTest {
     Object value = new Object();
     delegate.println(value);
 
+    delegate.close();
+    EasyMock.expectLastCall().anyTimes();
     replay(delegate);
-    DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
-    dirtyPrintStream.println(value);
-    verify(delegate);
 
-    assertTrue(dirtyPrintStream.isDirty());
+    try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
+      dirtyPrintStream.println(value);
+      verify(delegate);
+
+      assertTrue(dirtyPrintStream.isDirty());
+    }
   }
 
   @Test
