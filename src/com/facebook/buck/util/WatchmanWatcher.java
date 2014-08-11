@@ -32,10 +32,10 @@ import com.google.common.io.ByteStreams;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.ArrayList;
@@ -75,7 +75,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   public WatchmanWatcher(ProjectFilesystem filesystem,
                          EventBus fileChangeEventBus,
                          Clock clock,
-                         ObjectMapper objectMapper) {
+                         ObjectMapper objectMapper,
+                         Iterable<Path> ignorePaths,
+                         Iterable<String> ignoreGlobs) {
     this(createProcessSupplier(),
         fileChangeEventBus,
         clock,
@@ -85,7 +87,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         createQuery(
             objectMapper,
             MorePaths.absolutify(filesystem.getRootPath()).toString(),
-            UUID.randomUUID().toString()));
+            UUID.randomUUID().toString(),
+            ignorePaths,
+            ignoreGlobs));
   }
 
   @VisibleForTesting
@@ -109,7 +113,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   static String createQuery(
       ObjectMapper objectMapper,
       String rootPath,
-      String uuid) {
+      String uuid,
+      Iterable<Path> ignorePaths,
+      Iterable<String> ignoreGlobs) {
     List<Object> queryParams = new ArrayList<>();
     queryParams.add("query");
     queryParams.add(rootPath);
@@ -119,6 +125,41 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
     sinceParams.put(
         "since",
         new StringBuilder("n:buckd").append(uuid).toString());
+
+    // Exclude any expressions added to this list.
+    List<Object> excludeAnyOf = Lists.<Object>newArrayList("anyof");
+
+    // Exclude all directories.
+    excludeAnyOf.add(Lists.newArrayList("type", "d"));
+
+    // Exclude all files under directories in project.ignorePaths.
+    //
+    // Note that it's OK to exclude .git in a query (event though it's
+    // not currently OK to exclude .git in .watchmanconfig). This id
+    // because watchman's .git cookie magic is done before the query
+    // is applied.
+    for (Path ignorePath : ignorePaths) {
+      excludeAnyOf.add(
+          Lists.newArrayList(
+              "match",
+              ignorePath.toString() + "/*",
+              "wholename"));
+    }
+
+    // Exclude all files matching globs in project.ignoreGlobs.
+    for (String ignoreGlob : ignoreGlobs) {
+      excludeAnyOf.add(
+          Lists.newArrayList(
+              "match",
+              ignoreGlob,
+              "wholename"));
+    }
+
+    sinceParams.put(
+        "expression",
+        Lists.newArrayList(
+            "not",
+            excludeAnyOf));
     sinceParams.put("empty_on_fresh_instance", true);
     sinceParams.put("fields", Lists.newArrayList("name", "exists", "new"));
     queryParams.add(sinceParams);
@@ -233,10 +274,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
                 break;
 
               case "name":
-                File file = new File(jsonParser.nextTextValue());
-                if (!file.isDirectory()) {
-                  builder.setPath(file.toPath());
-                }
+                builder.setPath(Paths.get(jsonParser.nextTextValue()));
                 break;
               case "new":
                 if (jsonParser.nextBooleanValue()) {

@@ -132,6 +132,10 @@ public final class Main {
   // http://wiki.fasterxml.com/JacksonBestPracticesPerformance
   private final ObjectMapper objectMapper;
 
+  // This is a hack to work around a perf issue where generated Xcode IDE files
+  // trip WatchmanWatcher, causing buck project to take a long time to run.
+  private static final ImmutableSet<String> DEFAULT_IGNORE_GLOBS = ImmutableSet.of("*.pbxproj");
+
   private static final Logger LOG = Logger.get(Main.class);
 
   /**
@@ -180,7 +184,9 @@ public final class Main {
             projectFilesystem,
             fileEventBus,
             clock,
-            objectMapper
+            objectMapper,
+            repository.getBuckConfig().getIgnorePaths(),
+            DEFAULT_IGNORE_GLOBS
         );
       }
       LOG.debug("Using java.nio.file.WatchService to watch for file changes.");

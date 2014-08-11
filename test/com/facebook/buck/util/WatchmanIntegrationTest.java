@@ -34,6 +34,7 @@ import org.junit.Test;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 public class WatchmanIntegrationTest {
 
@@ -88,7 +89,9 @@ public class WatchmanIntegrationTest {
           new ProjectFilesystem(tmp.getRoot().toPath()),
           eventBus,
           new FakeClock(0),
-          new ObjectMapper());
+          new ObjectMapper(),
+          new ArrayList<Path>(),
+          new ArrayList<String>());
       watcher.postEvents();
     }
     verify(eventBus);

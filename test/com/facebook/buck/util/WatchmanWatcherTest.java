@@ -37,6 +37,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -50,6 +51,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Set;
@@ -417,9 +419,52 @@ public class WatchmanWatcherTest {
 
   @Test
   public void watchmanQueryWithRepoPathNeedingEscapingFormatsToCorrectJson() {
-    String query = WatchmanWatcher.createQuery(new ObjectMapper(), "/path/to/\"repo\"", "uuid");
+    String query = WatchmanWatcher.createQuery(
+        new ObjectMapper(),
+        "/path/to/\"repo\"",
+        "uuid",
+        Lists.<Path>newArrayList(),
+        Lists.<String>newArrayList());
     assertEquals(
         "[\"query\",\"/path/to/\\\"repo\\\"\",{\"since\":\"n:buckduuid\"," +
+        "\"expression\":[\"not\",[\"anyof\"," +
+        "[\"type\",\"d\"]]]," +
+        "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
+        query);
+  }
+
+  @Test
+  public void watchmanQueryWithExcludePathsAddsExpressionToQuery() {
+    String query = WatchmanWatcher.createQuery(
+        new ObjectMapper(),
+        "/path/to/repo",
+        "uuid",
+        Lists.<Path>newArrayList(Paths.get("foo"), Paths.get("bar/baz")),
+        Lists.<String>newArrayList());
+    assertEquals(
+        "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
+        "\"expression\":[\"not\",[\"anyof\"," +
+        "[\"type\",\"d\"]," +
+        "[\"match\",\"foo/*\",\"wholename\"]," +
+        "[\"match\",\"bar/baz/*\",\"wholename\"]]]," +
+        "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
+        query);
+  }
+
+  @Test
+  public void watchmanQueryWithExcludeGlobsAddsExpressionToQuery() {
+    String query = WatchmanWatcher.createQuery(
+        new ObjectMapper(),
+        "/path/to/repo",
+        "uuid",
+        Lists.<Path>newArrayList(),
+        Lists.<String>newArrayList("*/project.pbxproj", "buck-out/*"));
+    assertEquals(
+        "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
+        "\"expression\":[\"not\",[\"anyof\"," +
+        "[\"type\",\"d\"]," +
+        "[\"match\",\"*/project.pbxproj\",\"wholename\"]," +
+        "[\"match\",\"buck-out/*\",\"wholename\"]]]," +
         "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
         query);
   }
