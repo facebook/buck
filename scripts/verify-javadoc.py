@@ -16,7 +16,7 @@ WARNING_WHITELIST = sets.ImmutableSet(map(
         'http://docs.oracle.com/javase/7/docs/api/package-list',
         'http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/package-list',
         'https://junit-team.github.io/junit/javadoc/latest/package-list',
-    ]))
+    ]) + ['  [javadoc] 3 warnings'])
 
 
 def main(log_file):
@@ -29,7 +29,7 @@ def main(log_file):
             if 'warning' in line.lower() and line not in WARNING_WHITELIST:
                 errors.append(line)
     if len(errors):
-        print 'Unexpected Javadoc errors:'
+        print 'Unexpected Javadoc errors (%d):' % len(errors)
         for error in errors:
             print error
         sys.exit(1)
