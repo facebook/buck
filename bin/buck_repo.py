@@ -80,6 +80,7 @@ BUCK_DIR_JAVA_ARGS = {
     "src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh",
 
     "path_to_intellij_py": "src/com/facebook/buck/command/intellij.py",
+    "path_to_jacoco_jars": "third-party/java/jacoco-0.6.4/out",
     "path_to_static_content": "webserver/static",
     "path_to_pex": "src/com/facebook/buck/python/pex.py",
     "quickstart_origin_dir": "src/com/facebook/buck/cli/quickstart/android",
