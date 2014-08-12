@@ -55,6 +55,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
         args.manifestFile.orNull(),
         args.mergeManifests.or(true),
         args.metaInfDirectory.orNull(),
+        args.blacklist.or(ImmutableSortedSet.<String>of()),
         new DefaultDirectoryTraverser());
   }
 
@@ -65,5 +66,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
     public Optional<Boolean> mergeManifests;
     @Beta
     public Optional<Path> metaInfDirectory;
+    @Beta
+    public Optional<ImmutableSortedSet<String>> blacklist;
   }
 }

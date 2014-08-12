@@ -20,6 +20,7 @@ import static java.util.jar.Attributes.Name.IMPLEMENTATION_VERSION;
 import static java.util.jar.Attributes.Name.MANIFEST_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -143,7 +144,8 @@ public class JarDirectoryStepTest {
         ImmutableSet.of(Paths.get("input.jar")),
         /* main class */ null,
         Paths.get("manifest"),
-        /* merge manifest */ true);
+        /* merge manifest */ true,
+        /* blacklist */ ImmutableSet.<String>of());
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(tmp))
         .build();
@@ -214,6 +216,35 @@ public class JarDirectoryStepTest {
     assertEquals(expectedManifest.getEntries(), seenManifest.getEntries());
   }
 
+  @Test
+  public void shouldNotIncludeFilesInBlacklist() throws IOException {
+    File zipup = folder.newFolder();
+
+    File first = createZip(new File(zipup, "first.zip"), "dir/file1.txt", "dir/file2.txt");
+
+    JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
+        ImmutableSet.of(Paths.get(first.getName())),
+        "com.example.Main",
+        /* manifest file */ null,
+        /* merge manifests */ true,
+        /* blacklist */ ImmutableSet.of(".*2.*"));
+
+    ExecutionContext context = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(new ProjectFilesystem(zipup))
+        .build();
+
+    int returnCode = step.execute(context);
+
+    assertEquals(0, returnCode);
+
+    File zip = new File(zipup, "output.jar");
+
+    // file1.txt plus the manifest.
+    assertZipFileCountIs(2, zip);
+    assertZipContains(zip, "dir/file1.txt");
+    assertZipDoesNotContain(zip, "dir/file2.txt");
+  }
+
   private Manifest createManifestWithExampleSection(Map<String, String> attributes) {
     Manifest manifest = new Manifest();
     Attributes attrs = new Attributes();
@@ -248,7 +279,8 @@ public class JarDirectoryStepTest {
         ImmutableSortedSet.of(originalJar.toPath()),
         /* main class */ null,
         manifestFile.toPath(),
-        mergeEntries);
+        mergeEntries,
+        /* blacklist */ ImmutableSet.<String>of());
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(tmp))
         .build();
@@ -280,6 +312,14 @@ public class JarDirectoryStepTest {
 
     for (String file : files) {
       assertTrue(String.format("%s -> %s", file, contents), contents.contains(file));
+    }
+  }
+
+  private void assertZipDoesNotContain(File zip, String... files) throws IOException {
+    final Set<String> contents = getFileNames(zip);
+
+    for (String file : files) {
+      assertFalse(String.format("%s -> %s", file, contents), contents.contains(file));
     }
   }
 

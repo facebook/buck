@@ -62,6 +62,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule,
 
   @Nullable
   private final Path metaInfDirectory;
+  private final ImmutableSet<String> blacklist;
 
   private final DirectoryTraverser directoryTraverser;
 
@@ -71,19 +72,23 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule,
       @Nullable SourcePath manifestFile,
       boolean mergeManifests,
       @Nullable Path metaInfDirectory,
+      ImmutableSet<String> blacklist,
       DirectoryTraverser directoryTraverser) {
     super(params);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
     this.metaInfDirectory = metaInfDirectory;
+    this.blacklist = blacklist;
 
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.setReflectively("mainClass", mainClass);
+    return builder
+        .setReflectively("mainClass", mainClass)
+        .set("blacklist", blacklist);
   }
 
   @Override
@@ -144,7 +149,8 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule,
         includePaths,
         mainClass,
         manifestPath,
-        mergeManifests);
+        mergeManifests,
+        blacklist);
     commands.add(jar);
 
     buildableContext.recordArtifact(outputFile);

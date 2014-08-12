@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
@@ -49,6 +50,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -74,13 +76,15 @@ public class JarDirectoryStep implements Step {
   private final Path manifestFile;
   /** Indicates that manifest merging should occur. Defaults to true. */
   private final boolean mergeManifests;
+  /** Set of regex blacklist of whiched matched files will not be included in generated JAR. */
+  private final ImmutableSet<Pattern> blacklist;
 
   public JarDirectoryStep(
       Path pathToOutputFile,
       Set<Path> entriesToJar,
       @Nullable String mainClass,
       @Nullable Path manifestFile) {
-    this(pathToOutputFile, entriesToJar, mainClass, manifestFile, true);
+    this(pathToOutputFile, entriesToJar, mainClass, manifestFile, true, ImmutableSet.<String>of());
   }
 
   /**
@@ -101,12 +105,22 @@ public class JarDirectoryStep implements Step {
                           Set<Path> entriesToJar,
                           @Nullable String mainClass,
                           @Nullable Path manifestFile,
-                          boolean mergeManifests) {
+                          boolean mergeManifests,
+                          Set<String> blacklist) {
     this.pathToOutputFile = Preconditions.checkNotNull(pathToOutputFile);
     this.entriesToJar = ImmutableSet.copyOf(entriesToJar);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
+    this.blacklist = convertRegexesToPatterns(blacklist);
+  }
+
+  private ImmutableSet<Pattern> convertRegexesToPatterns(Set<String> regexes) {
+    Set<Pattern> patterns = new HashSet<>();
+    for (String regex : regexes) {
+      patterns.add(Pattern.compile(regex));
+    }
+    return ImmutableSet.copyOf(patterns);
   }
 
   private String getJarArgs() {
@@ -216,6 +230,7 @@ public class JarDirectoryStep implements Step {
       Set<String> alreadyAddedEntries,
       BuckEventBus eventBus) throws IOException {
     try (ZipFile zip = new ZipFile(file)) {
+      zipEntryLoop:
       for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
         ZipEntry entry = entries.nextElement();
         String entryName = entry.getName();
@@ -237,6 +252,14 @@ public class JarDirectoryStep implements Step {
           eventBus.post(ConsoleEvent.create(
               determineSeverity(entry), "Duplicate found when adding file to jar: %s", entryName));
           continue;
+        }
+
+        for (Pattern p : blacklist) {
+          if (p.matcher(entryName).matches()) {
+            eventBus.post(ConsoleEvent.create(
+                    determineSeverity(entry), "Skipping adding file to jar: %s", entryName));
+            continue zipEntryLoop;
+          }
         }
 
         ZipEntry newEntry = new ZipEntry(entry);

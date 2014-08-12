@@ -32,6 +32,7 @@ import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -80,6 +81,7 @@ public class JavaBinaryTest {
         null,
         /* merge manifests */ true,
         null,
+        /* blacklist */ ImmutableSet.<String>of(),
         new DefaultDirectoryTraverser());
 
     // Strip the trailing "." from the absolute path to the current directory.
