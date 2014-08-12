@@ -49,7 +49,7 @@ public class Archives {
   public static Path getArchiveOutputPath(BuildTarget target) {
     return BuildTargets.getGenPath(
         target,
-        "%s/lib" + target.getShortName() + ".a");
+        "%s/lib" + target.getShortNameOnly() + ".a");
   }
 
   /**
