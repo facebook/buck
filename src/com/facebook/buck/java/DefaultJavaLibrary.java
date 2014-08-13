@@ -171,7 +171,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     }
   };
 
-  protected DefaultJavaLibrary(
+  public DefaultJavaLibrary(
       BuildRuleParams params,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,

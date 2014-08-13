@@ -4,6 +4,9 @@ java_library(
   deps = [
     '//lib:guava',
     '//lib:jsr305',
+    '//src/com/facebook/buck/java:rules',
+    '//src/com/facebook/buck/java:steps',
+    '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
@@ -15,6 +18,7 @@ java_library(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/zip:steps',
   ],
   visibility = [
     '//src/com/facebook/buck/rules:types',

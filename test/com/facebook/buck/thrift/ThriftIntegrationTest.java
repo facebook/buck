@@ -43,15 +43,19 @@ public class ThriftIntegrationTest {
         this, "thrift_test", tmp);
     workspace.setUp();
 
-
-    ProcessResult result = workspace.runBuckCommand("build", "//:thrifty");
+    ProcessResult result = workspace.runBuckBuild();
     result.assertSuccess();
     String testFile = workspace.getFileContents(
-        "buck-out/gen/__thrift_thrifty__/gen-java/com/" +
+        "buck-out/gen/__thrift_thrifty#java_srcs__/gen-java/com/" +
         "facebook/fbtrace/constants/TestConstants.java");
-    assertThat("Check to make sure file is being generated",
+    assertThat("Check to make sure java file is being generated",
         testFile,
         containsString("public class TestConstants {"));
+    String testJar = workspace.getFileContents(
+        "buck-out/gen/lib__thrifty#java__output/thrifty#java.jar");
+    assertThat("Check to make sure .jar is being generated",
+        testJar,
+        containsString(".class"));
   }
 
 }

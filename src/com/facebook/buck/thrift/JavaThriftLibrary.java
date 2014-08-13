@@ -16,6 +16,7 @@
 
 package com.facebook.buck.thrift;
 
+import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -26,38 +27,42 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-import javax.annotation.Nullable;
+public class JavaThriftLibrary extends AbstractBuildRule {
+  private static final String JAVA = "java";
+  private final ImmutableSortedSet<SourcePath> srcs;
+  private final Path genPath;
+  private final Path srcJarOutputPath;
 
-public class ThriftLibrary extends AbstractBuildRule {
-  private ImmutableSortedSet<SourcePath> srcs;
-  private ImmutableSortedSet<String> langs = ImmutableSortedSet.<String>of("java");
-
-  public ThriftLibrary(
+  public JavaThriftLibrary(
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> srcs) {
     super(params);
     this.srcs = Preconditions.checkNotNull(srcs);
+    this.genPath = BuildTargets.getGenPath(getBuildTarget(), "__thrift_%s__");
+    this.srcJarOutputPath = genPath.resolve("gen-java" + JavacStep.SRC_ZIP);
   }
 
-  @Nullable
   @Override
   public Path getPathToOutputFile() {
-    return null;
+    return srcJarOutputPath;
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.set("langs", langs);
+    return builder.set("langs", JAVA);
   }
 
   @Override
@@ -70,22 +75,31 @@ public class ThriftLibrary extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    final Path genPath = BuildTargets.getGenPath(getBuildTarget(), "__thrift_%s__");
     steps.add(new MakeCleanDirectoryStep(genPath));
-    steps.addAll(FluentIterable.from(srcs).transform(
-        new Function<SourcePath, Step>() {
-          @Override
-          public Step apply(SourcePath input) {
-            return new ThriftStep(
-                input.resolve(),
-                /* outputDir */ Optional.of(genPath),
-                /* outputLocation */ Optional.<Path>absent(),
-                /* includePaths */ ImmutableSortedSet.<Path>of(),
-                langs,
-                /* commandLineArgs */ ImmutableSortedSet.<String>of());
-          }
-        }).toList());
-    buildableContext.recordArtifactsInDirectory(genPath);
+    steps.addAll(
+        FluentIterable.from(srcs).transform(
+            new Function<SourcePath, Step>() {
+              @Override
+              public Step apply(SourcePath input) {
+                return new ThriftStep(
+                    input.resolve(),
+                    /* outputDir */ Optional.of(genPath),
+                    /* outputLocation */ Optional.<Path>absent(),
+                    /* includePaths */ ImmutableSortedSet.<Path>of(),
+                    ImmutableSortedSet.of(JAVA),
+                    /* commandLineArgs */ ImmutableSortedSet.<String>of());
+              }
+            }).toList());
+
+    Path genJavaPath = genPath.resolve("gen-java");
+    steps.add(new RmStep(srcJarOutputPath, true));
+    steps.add(new ZipStep(
+        srcJarOutputPath,
+        /* paths */ ImmutableSet.<Path>of(),
+        /* junkPaths */ false,
+        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        genJavaPath));
+    buildableContext.recordArtifact(srcJarOutputPath);
     return steps.build();
   }
 
