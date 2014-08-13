@@ -52,6 +52,11 @@ public abstract class PBXObject {
     return 0;
   }
 
+  @Override
+  public String toString() {
+    return String.format("%s isa=%s gid=%s", super.toString(), isa(), getGlobalID());
+  }
+
   /**
    * Generate a stable GID.
    */

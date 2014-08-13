@@ -1011,6 +1011,12 @@ public class ProjectGenerator {
       settings.put("COMPILER_FLAGS", customFlags);
       buildFile.setSettings(Optional.of(settings));
     }
+    LOG.verbose(
+        "Added source path %s to group %s, flags %s, PBXFileReference %s",
+        sourcePath,
+        sourcesGroup.getName(),
+        customFlags,
+        fileReference);
   }
 
   private void addSourcePathToHeaderMap(
@@ -1021,10 +1027,21 @@ public class ProjectGenerator {
     String headerFlags = sourceFlags.get(headerPath);
     if (headerFlags != null) {
       HeaderVisibility visibility = HeaderVisibility.fromString(headerFlags);
+      Path keyPath = prefix.resolve(headerPath.resolve().getFileName());
       if (visibility == HeaderVisibility.PUBLIC) {
         // Add an entry: LibraryName/File.h -> Path/From/RepoRoot/File.h
-        Path keyPath = prefix.resolve(headerPath.resolve().getFileName());
         headerMap.add(keyPath.toString(), headerPath.resolve());
+        LOG.verbose(
+            "Added public header map %s -> %s to header map %s",
+            keyPath,
+            headerPath.resolve(),
+            headerMap);
+      } else {
+        LOG.verbose(
+            "Not adding header map %s -> %s to header map %s",
+            keyPath,
+            headerPath.resolve(),
+            headerMap);
       }
     }
   }
@@ -1035,10 +1052,11 @@ public class ProjectGenerator {
       PBXHeadersBuildPhase headersBuildPhase,
       ImmutableMap<SourcePath, String> sourceFlags) {
     Path path = headerPath.resolve();
+    Path repoRootRelativePath = repoRootRelativeToOutputDirectory.resolve(path);
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
-            repoRootRelativeToOutputDirectory.resolve(path)));
+            repoRootRelativePath));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     String headerFlags = sourceFlags.get(headerPath);
     if (headerFlags != null) {
@@ -1052,6 +1070,12 @@ public class ProjectGenerator {
       buildFile.setSettings(Optional.<NSDictionary>absent());
     }
     headersBuildPhase.getFiles().add(buildFile);
+    LOG.verbose(
+        "Added header path %s to headers group %s, flags %s, PBXFileReference %s",
+        headerPath,
+        headersGroup.getName(),
+        headerFlags,
+        fileReference);
   }
 
   private void addResourcesBuildPhase(

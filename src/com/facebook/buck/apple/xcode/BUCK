@@ -51,6 +51,7 @@ java_library(
     '//third-party/java/dd-plist:dd-plist',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/apple/xcode/plist:plist',
+    '//src/com/facebook/buck/log:log',
   ],
   visibility = [
     'PUBLIC'
