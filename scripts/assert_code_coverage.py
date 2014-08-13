@@ -34,19 +34,28 @@ def calculate_code_coverage():
     # Used for display purposes.
     max_package_name = 0
 
-    # Coverage types measured by Jacoco and present in the report.
-    # DO NOT ALPHA-SORT. List determines column display order in final report.
-    TYPES = [
+    # Coverage types measured by Jacoco.
+    TYPES = set([
+        'BRANCH',
+        'CLASS',
+        'COMPLEXITY',
+        'INSTRUCTION',
+        'LINE',
+        'METHOD',
+    ])
+
+    # List determines column display order in final report.
+    COLUMN_NAMES = [
         'INSTRUCTION',
         'LINE',
         'BRANCH',
         'METHOD',
         'CLASS',
-        'COMPLEXITY',
+        'LOC2FIX',
     ]
 
     # Column by which rows will be sorted in the final report.
-    SORT_TYPE = TYPES[0]
+    SORT_TYPE = 'INSTRUCTION'
 
     # Keys are values from TYPES; values are integers.
     total_covered_by_type = {}
@@ -59,6 +68,11 @@ def calculate_code_coverage():
     # from TYPES as keys. For entries from TYPES, values are the corresponding
     # coverage percentage for that type.
     coverage_by_package = []
+
+    # Track count of untested lines to see which packages
+    # have the largest amount of untested code.
+    missed_lines_by_package = {}
+    total_missed_lines = 0
 
     for element in root.findall('.//package'):
         package_name = element.attrib['name']
@@ -79,6 +93,10 @@ def calculate_code_coverage():
             total_missed_plus_covered_type[counter_type] += missed + covered
             coverage[counter_type] = percentage
 
+            if counter_type == 'LINE':
+                missed_lines_by_package[package_name] = missed
+                total_missed_lines += missed
+
     def pair_compare(p1, p2):
         # High percentage should be listed first.
         diff1 = cmp(p2[SORT_TYPE], p1[SORT_TYPE])
@@ -90,8 +108,14 @@ def calculate_code_coverage():
     def label_with_padding(label):
         return label + ' ' * (max_package_name - len(label)) + ' '
 
-    def print_separator():
-        print '-' * (max_package_name + 1 + len(TYPES) * 8)
+    def column_format_str(column_name):
+        if column_name == 'LOC2FIX':
+            return '%(' + column_name + ')8d'
+        else:
+            return '%(' + column_name + ')7.2f%%'
+
+    def print_separator(sep_len):
+        print '-' * sep_len
 
     def get_color_for_percentage(percentage):
         # \033[92m is OKGREEN.
@@ -100,25 +124,28 @@ def calculate_code_coverage():
 
     # Print header.
     # Type column headers are right-justified and truncated to 7 characters.
-    column_names = map(lambda x: x[0:7].rjust(7), TYPES)
+    column_names = map(lambda x: x[0:7].rjust(7), COLUMN_NAMES)
     print label_with_padding('PACKAGE') + ' ' + ' '.join(column_names)
-    print_separator()
+    separator_len = max_package_name + 1 + len(column_names) * 8
+    print_separator(separator_len)
 
     # Create the format string to use for each row.
     format_string = '%(color)s%(label)s'
-    for coverage_type in TYPES:
-        format_string += '%(' + coverage_type + ')7.2f%%'
+    for column in COLUMN_NAMES:
+        format_string += column_format_str(column)
     format_string += '\033[0m'
 
     # Print rows sorted by line coverage then package name.
     coverage_by_package.sort(cmp=pair_compare)
     for item in coverage_by_package:
         info = item.copy()
+        pkg = item['package_name']
         if not 'BRANCH' in info:
             # It is possible to have a module of Java code with no branches.
             info['BRANCH'] = 100
         info['color'] = get_color_for_percentage(item[SORT_TYPE])
-        info['label'] = label_with_padding(item['package_name'])
+        info['label'] = label_with_padding(pkg)
+        info['LOC2FIX'] = missed_lines_by_package[pkg]
         print format_string % info
 
     # Print aggregate numbers.
@@ -132,7 +159,8 @@ def calculate_code_coverage():
     observed_percentage = overall_percentages[SORT_TYPE]
     overall_percentages['color'] = get_color_for_percentage(observed_percentage)
     overall_percentages['label'] = label_with_padding('TOTAL')
-    print_separator()
+    overall_percentages['LOC2FIX'] = total_missed_lines
+    print_separator(separator_len)
     print format_string % overall_percentages
 
     return observed_percentage
