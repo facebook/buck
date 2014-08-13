@@ -3,6 +3,7 @@ import errno
 import os
 import pty
 import re
+import socket
 import signal
 import subprocess
 import sys
@@ -301,7 +302,10 @@ class BuckRepo:
 
     def _is_buckd_running(self):
         buckd_pid = self._buck_project.get_buckd_pid()
-        if not buckd_pid or not buckd_pid.isdigit():
+        buckd_port = self._buck_project.get_buckd_port()
+
+        if (buckd_pid is None or not buckd_pid.isdigit() or
+                buckd_port is None or not buckd_port.isdigit()):
             return False
 
         try:
@@ -309,7 +313,13 @@ class BuckRepo:
         except OSError:
             return False
 
-        return True
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            result = sock.connect_ex(('127.0.0.1', int(buckd_port)))
+        finally:
+            sock.close()
+
+        return result == 0
 
     def _checkout_and_clean(self, revision, branch):
         if not self._revision_exists(revision):
