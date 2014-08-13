@@ -39,6 +39,8 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
   private final ImmutableMap<SourcePath, String> perFileFlags;
   private final ImmutableSortedSet<String> frameworks;
   private final Optional<String> gid;
+  private final Optional<String> headerPathPrefix;
+  private final boolean useBuckHeaderMaps;
 
   public AbstractAppleNativeTargetBuildRule(
       BuildRuleParams params,
@@ -51,6 +53,8 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
     srcs = Preconditions.checkNotNull(targetSources.srcs);
     perFileFlags = Preconditions.checkNotNull(targetSources.perFileFlags);
     gid = Preconditions.checkNotNull(arg.gid);
+    headerPathPrefix = Preconditions.checkNotNull(arg.headerPathPrefix);
+    useBuckHeaderMaps = Preconditions.checkNotNull(arg.useBuckHeaderMaps).or(false);
   }
 
   /**
@@ -94,6 +98,16 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
   public Optional<String> getGid() {
     return gid;
   }
+
+  /**
+   * @return An optional prefix to be used instead of the target name when exposing library headers.
+   */
+  public Optional<String> getHeaderPathPrefix() { return headerPathPrefix; }
+
+  /**
+   * @return A boolean whether Buck should generate header maps for this project.
+   */
+  public boolean getUseBuckHeaderMaps() { return useBuckHeaderMaps; }
 
   @Override
   protected String getCompiler() {

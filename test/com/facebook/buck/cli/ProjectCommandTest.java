@@ -207,6 +207,8 @@ public class ProjectCommandTest {
     libFooArg.frameworks = ImmutableSortedSet.of();
     libFooArg.deps = Optional.absent();
     libFooArg.gid = Optional.absent();
+    libFooArg.headerPathPrefix = Optional.absent();
+    libFooArg.useBuckHeaderMaps = Optional.absent();
     BuildRule fooLibRule = iosLibraryDescription.createBuildRule(
         fooParams, ruleResolver, libFooArg);
 
@@ -222,6 +224,8 @@ public class ProjectCommandTest {
     libBarArg.frameworks = ImmutableSortedSet.of();
     libBarArg.deps = Optional.absent();
     libBarArg.gid = Optional.absent();
+    libBarArg.headerPathPrefix = Optional.absent();
+    libBarArg.useBuckHeaderMaps = Optional.absent();
     BuildRule barLibRule = iosLibraryDescription.createBuildRule(
         barParams, ruleResolver, libBarArg);
 
@@ -293,6 +297,8 @@ public class ProjectCommandTest {
     libFooArg.frameworks = ImmutableSortedSet.of();
     libFooArg.deps = Optional.absent();
     libFooArg.gid = Optional.absent();
+    libFooArg.headerPathPrefix = Optional.absent();
+    libFooArg.useBuckHeaderMaps = Optional.absent();
     BuildRule fooLibRule = iosLibraryDescription.createBuildRule(
         fooParams, ruleResolver, libFooArg);
 

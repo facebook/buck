@@ -50,6 +50,8 @@ public class IosLibraryTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "foo").build()).build();

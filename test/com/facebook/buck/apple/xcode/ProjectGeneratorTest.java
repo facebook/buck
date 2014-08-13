@@ -232,6 +232,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -291,6 +293,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -392,6 +396,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -457,6 +463,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -509,6 +517,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -565,6 +575,8 @@ public class ProjectGeneratorTest {
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
+      arg.headerPathPrefix = Optional.absent();
+      arg.useBuckHeaderMaps = Optional.absent();
       libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
 
@@ -586,6 +598,8 @@ public class ProjectGeneratorTest {
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
+      arg.headerPathPrefix = Optional.absent();
+      arg.useBuckHeaderMaps = Optional.absent();
 
       testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
@@ -655,6 +669,8 @@ public class ProjectGeneratorTest {
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
+      arg.headerPathPrefix = Optional.absent();
+      arg.useBuckHeaderMaps = Optional.absent();
       libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
 
@@ -676,6 +692,8 @@ public class ProjectGeneratorTest {
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
+      arg.headerPathPrefix = Optional.absent();
+      arg.useBuckHeaderMaps = Optional.absent();
 
       testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
@@ -739,6 +757,8 @@ public class ProjectGeneratorTest {
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
+      arg.headerPathPrefix = Optional.absent();
+      arg.useBuckHeaderMaps = Optional.absent();
       libraryDepRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
 
@@ -754,6 +774,8 @@ public class ProjectGeneratorTest {
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
+      arg.headerPathPrefix = Optional.absent();
+      arg.useBuckHeaderMaps = Optional.absent();
       libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
 
@@ -775,6 +797,8 @@ public class ProjectGeneratorTest {
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
+      arg.headerPathPrefix = Optional.absent();
+      arg.useBuckHeaderMaps = Optional.absent();
 
       testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
@@ -830,6 +854,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = macosxFrameworkDescription.createBuildRule(
         params,
         new BuildRuleResolver(),
@@ -900,6 +926,8 @@ public class ProjectGeneratorTest {
         "$BUILT_PRODUCTS_DIR/LocalFramework.framework");
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule rule = macosxBinaryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -957,6 +985,8 @@ public class ProjectGeneratorTest {
     arg.testType = Optional.absent();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule rule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -1017,6 +1047,8 @@ public class ProjectGeneratorTest {
     arg.testType = Optional.of("xctest");
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule rule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -1066,6 +1098,8 @@ public class ProjectGeneratorTest {
       arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Library.framework");
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
+      arg.headerPathPrefix = Optional.absent();
+      arg.useBuckHeaderMaps = Optional.absent();
       libraryRule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
 
@@ -1088,6 +1122,8 @@ public class ProjectGeneratorTest {
       arg.testType = Optional.absent();
       arg.deps = Optional.absent();
       arg.gid = Optional.absent();
+      arg.headerPathPrefix = Optional.absent();
+      arg.useBuckHeaderMaps = Optional.absent();
 
       testRule = iosTestDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     }
@@ -1162,6 +1198,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule rule = iosBinaryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -1220,6 +1258,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(libParams, buildRuleResolver, arg);
 
     buildRuleResolver.addToIndex(libTarget, rule);
@@ -1371,6 +1411,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1794,6 +1836,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -1865,6 +1909,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(rule),
@@ -1935,6 +1981,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.of("D00D64738");
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -1964,6 +2012,8 @@ public class ProjectGeneratorTest {
     fooArg.frameworks = ImmutableSortedSet.of();
     fooArg.deps = Optional.absent();
     fooArg.gid = Optional.of("E66DC04E36F2D8BE00000000");
+    fooArg.headerPathPrefix = Optional.absent();
+    fooArg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule fooRule =
       iosLibraryDescription.createBuildRule(fooParams, new BuildRuleResolver(), fooArg);
@@ -1979,6 +2029,8 @@ public class ProjectGeneratorTest {
     barArg.frameworks = ImmutableSortedSet.of();
     barArg.deps = Optional.absent();
     barArg.gid = Optional.absent();
+    barArg.headerPathPrefix = Optional.absent();
+    barArg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule barRule =
       iosLibraryDescription.createBuildRule(barParams, new BuildRuleResolver(), barArg);
@@ -2042,6 +2094,8 @@ public class ProjectGeneratorTest {
     arg.frameworks = ImmutableSortedSet.of();
     arg.deps = Optional.absent();
     arg.gid = Optional.of("A1B2C3D4");
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 

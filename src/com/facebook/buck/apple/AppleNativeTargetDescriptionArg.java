@@ -43,4 +43,6 @@ public class AppleNativeTargetDescriptionArg implements ConstructorArg {
   public ImmutableSortedSet<String> frameworks;
   public Optional<ImmutableSortedSet<BuildRule>> deps;
   public Optional<String> gid;
+  public Optional<String> headerPathPrefix;
+  public Optional<Boolean> useBuckHeaderMaps;
 }
