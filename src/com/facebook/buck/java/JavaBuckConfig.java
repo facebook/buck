@@ -90,4 +90,8 @@ public class JavaBuckConfig {
       throw new HumanReadableException("Could not run " + javac + " -version");
     }
   }
+
+  public Optional<String> getJavaThriftDep() {
+    return delegate.getValue("java", "thrift_library");
+  }
 }

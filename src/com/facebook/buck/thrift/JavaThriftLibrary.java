@@ -74,6 +74,7 @@ public class JavaThriftLibrary extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+    final Path projectRoot = context.getProjectRoot();
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MakeCleanDirectoryStep(genPath));
     steps.addAll(
@@ -85,7 +86,7 @@ public class JavaThriftLibrary extends AbstractBuildRule {
                     input.resolve(),
                     /* outputDir */ Optional.of(genPath),
                     /* outputLocation */ Optional.<Path>absent(),
-                    /* includePaths */ ImmutableSortedSet.<Path>of(),
+                    /* includePaths */ ImmutableSortedSet.<Path>of(projectRoot),
                     ImmutableSortedSet.of(JAVA),
                     /* commandLineArgs */ ImmutableSortedSet.<String>of());
               }

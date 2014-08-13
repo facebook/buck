@@ -17,14 +17,17 @@
 package com.facebook.buck.thrift;
 
 import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
@@ -41,7 +44,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public class JavaThriftLibraryDescription
-  implements Description<JavaThriftLibraryDescription.Arg>, Flavored {
+  implements Description<JavaThriftLibraryDescription.Arg>, Flavored,
+    ImplicitDepsInferringDescription {
   public static final BuildRuleType TYPE = new BuildRuleType("thrift_library");
   private static final Flavor JAVA_FLAVOR = new Flavor("java");
   private static final Flavor JAVASRCS_FLAVOR = new Flavor("java_srcs");
@@ -49,8 +53,13 @@ public class JavaThriftLibraryDescription
   @VisibleForTesting
   private final JavaCompilerEnvironment javacEnv;
 
-  public JavaThriftLibraryDescription(JavaCompilerEnvironment javacEnv) {
+  private final JavaBuckConfig javaBuckConfig;
+
+  public JavaThriftLibraryDescription(
+      JavaCompilerEnvironment javacEnv,
+      JavaBuckConfig javaBuckConfig) {
     this.javacEnv = Preconditions.checkNotNull(javacEnv);
+    this.javaBuckConfig = javaBuckConfig;
   }
 
   @Override
@@ -75,7 +84,7 @@ public class JavaThriftLibraryDescription
     ImmutableSortedSet.Builder<BuildRule> javaDeps = ImmutableSortedSet.naturalOrder();
     javaDeps.addAll(params.getDeclaredDeps());
     javaDeps.add(javaThriftLibrary);
-
+    javaDeps.addAll(params.getExtraDeps());
     BuildRuleParams javaParams = params.copyWithChanges(
         params.getBuildRuleType(),
         params.getBuildTarget(),
@@ -111,6 +120,14 @@ public class JavaThriftLibraryDescription
   @Override
   public boolean hasFlavor(Flavor flavor) {
     return JAVA_FLAVOR.equals(flavor) || Flavor.DEFAULT.equals(flavor);
+  }
+
+  /**
+   * Build against libthrift
+   */
+  @Override
+  public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params) {
+    return ImmutableSet.copyOf(javaBuckConfig.getJavaThriftDep().asSet());
   }
 
   public static class Arg implements ConstructorArg {
