@@ -214,7 +214,7 @@ public class JavaSymbolFinder {
     // For a source file like foo/bar/example.java, add paths like foo/bar/BUCK and foo/BUCK.
     while (dir != null) {
       Path buckFile = dir.resolve(BuckConstant.BUILD_RULES_FILE_NAME);
-      if (projectFilesystem.exists(buckFile)) {
+      if (projectFilesystem.isFile(buckFile)) {
         possibleBuckFiles.add(buckFile);
       }
       dir = dir.getParent();
