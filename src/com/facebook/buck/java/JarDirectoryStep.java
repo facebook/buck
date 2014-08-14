@@ -257,7 +257,7 @@ public class JarDirectoryStep implements Step {
         for (Pattern p : blacklist) {
           if (p.matcher(entryName).matches()) {
             eventBus.post(ConsoleEvent.create(
-                    determineSeverity(entry), "Skipping adding file to jar: %s", entryName));
+                    Level.FINE, "Skipping adding file to jar: %s", entryName));
             continue zipEntryLoop;
           }
         }
