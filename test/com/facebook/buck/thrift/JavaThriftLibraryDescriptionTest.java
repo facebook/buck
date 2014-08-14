@@ -36,7 +36,7 @@ import java.util.Map;
 
 public class JavaThriftLibraryDescriptionTest {
   @Test
-  public void TestThriftLibraryDepConfig() {
+  public void thriftLibraryDepConfig() {
     Map<String, Map<String, String>> sections = new HashMap<>();
     Map<String, String> javaSection = new HashMap<>();
     javaSection.put("thrift_library", "//thrift:lib");
