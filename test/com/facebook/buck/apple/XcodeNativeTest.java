@@ -22,6 +22,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TestSourcePath;
 
+import com.google.common.base.Optional;
+
 import org.junit.Test;
 
 public class XcodeNativeTest {
@@ -31,6 +33,8 @@ public class XcodeNativeTest {
     XcodeNativeDescription.Arg arg =
         new XcodeNativeDescription().createUnpopulatedConstructorArg();
     arg.projectContainerPath = new TestSourcePath("foo.xcodeproj");
+    arg.targetName = Optional.absent();
+    arg.buildableName = Optional.absent();
     XcodeNative xcodeNative = new XcodeNative(
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//test", "test").build()).build(),
         arg);

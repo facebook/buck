@@ -53,5 +53,7 @@ public class XcodeNativeDescription implements Description<XcodeNativeDescriptio
     @Hint(name = "xcodeproj")
     public SourcePath projectContainerPath;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<String> targetName;
+    public Optional<String> buildableName;
   }
 }

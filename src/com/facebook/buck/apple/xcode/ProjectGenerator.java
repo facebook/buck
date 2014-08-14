@@ -45,6 +45,7 @@ import com.facebook.buck.apple.MacosxFramework;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.OsxResourceDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
+import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
@@ -1698,12 +1699,13 @@ public class ProjectGenerator {
                     Paths.get(getLibraryNameFromTargetName(rule.getBuildTarget().getShortName()))));
       }
     } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
+      XcodeNative nativeRule = (XcodeNative) rule;
         return project.getMainGroup()
             .getOrCreateChildGroupByName("Frameworks")
             .getOrCreateFileReferenceBySourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                    Paths.get(getLibraryNameFromTargetName(rule.getBuildTarget().getShortName()))));
+                    Paths.get(nativeRule.getBuildableName())));
     } else {
       throw new RuntimeException("Unexpected type: " + rule.getType());
     }

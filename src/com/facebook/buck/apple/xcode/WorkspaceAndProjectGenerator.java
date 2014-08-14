@@ -192,7 +192,7 @@ public class WorkspaceAndProjectGenerator {
         XcodeNative buildable = (XcodeNative) rule;
         Path projectPath = buildable.getProjectContainerPath().resolve();
         Path pbxprojectPath = projectPath.resolve("project.pbxproj");
-        String targetName = rule.getBuildTarget().getShortName();
+        String targetName = buildable.getTargetName();
 
         workspaceGenerator.addFilePath(DEPENDENCIES_GROUP, projectPath);
 

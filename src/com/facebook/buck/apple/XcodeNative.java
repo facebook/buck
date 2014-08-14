@@ -46,14 +46,28 @@ import javax.annotation.Nullable;
  */
 public class XcodeNative extends AbstractBuildRule {
   private final SourcePath projectContainerPath;
+  private final String targetName;
+  private final String buildableName;
 
   public XcodeNative(BuildRuleParams params, XcodeNativeDescription.Arg arg) {
     super(params);
     this.projectContainerPath = Preconditions.checkNotNull(arg.projectContainerPath);
+
+    String shortName = params.getBuildTarget().getShortNameOnly();
+    this.targetName = Preconditions.checkNotNull(arg.targetName).or(shortName);
+    this.buildableName = Preconditions.checkNotNull(arg.buildableName).or("lib" + shortName + ".a");
   }
 
   public SourcePath getProjectContainerPath() {
     return projectContainerPath;
+  }
+
+  public String getTargetName() {
+    return targetName;
+  }
+
+  public String getBuildableName() {
+    return buildableName;
   }
 
   @Nullable

@@ -1178,6 +1178,42 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testIosBinaryRuleUsesCustomXcodeNativeBuildableNames() throws IOException {
+    BuildRule fooRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//external", "extFoo").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        xcodeNativeDescription,
+        new Function<XcodeNativeDescription.Arg,
+                     XcodeNativeDescription.Arg>() {
+          @Override
+          public XcodeNativeDescription.Arg apply(
+            XcodeNativeDescription.Arg input) {
+            input.buildableName = Optional.of("librickandmorty.a");
+            return input;
+          }
+        });
+
+    BuildRule binaryRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "foo").build(),
+        ImmutableSortedSet.of(fooRule),
+        iosBinaryDescription);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(fooRule, binaryRule),
+        ImmutableSet.of(binaryRule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:foo");
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target,
+        ImmutableList.of(
+            "$BUILT_PRODUCTS_DIR/librickandmorty.a"));
+  }
+
+  @Test
   public void testIosBinaryRule() throws IOException {
     BuildRule depRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "dep").build(),
