@@ -352,6 +352,9 @@ public class JavacInMemoryStep extends JavacStep {
       } catch (IOException e) {
         // Nothing sane to do. Log and carry on.
         LOG.warn("Unable to close annotation processor classloader.");
+      } finally {
+        // Null out the classloader to allow it to be garbage collected.
+        classLoader = null;
       }
     }
   }
