@@ -195,8 +195,8 @@ public class ExternalJavacStep extends JavacStep {
         }
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ImmutableList<Path> zipPaths = Unzip.extractZipFile(
-            projectFilesystem.resolve(path).toString(),
-            projectFilesystem.resolve(workingDirectory.get()).toString(),
+            projectFilesystem.resolve(path),
+            projectFilesystem.resolve(workingDirectory.get()),
             /* overwriteExistingFiles */ true);
         sources.addAll(
             FluentIterable.from(zipPaths)

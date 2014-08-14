@@ -62,8 +62,8 @@ public class UnzipTest {
 
     File extractFolder = tmpFolder.newFolder();
     ImmutableList<Path> result = Unzip.extractZipFile(
-        zipFile.getAbsolutePath(),
-        extractFolder.getAbsolutePath(),
+        zipFile.toPath().toAbsolutePath(),
+        extractFolder.toPath().toAbsolutePath(),
         false);
     assertTrue(new File(extractFolder.getAbsolutePath() + "/1.bin").exists());
     File bin2 = new File(extractFolder.getAbsolutePath() + "/subdir/2.bin");
@@ -102,8 +102,8 @@ public class UnzipTest {
     // Now run `Unzip.extractZipFile` on our test zip and verify that the file is executable.
     File extractFolder = tmpFolder.newFolder();
     ImmutableList<Path> result = Unzip.extractZipFile(
-        zipFile.getAbsolutePath(),
-        extractFolder.getAbsolutePath(),
+        zipFile.toPath().toAbsolutePath(),
+        extractFolder.toPath().toAbsolutePath(),
         false);
     File exe = new File(extractFolder.getAbsoluteFile() + "/test.exe");
     assertTrue(exe.exists());

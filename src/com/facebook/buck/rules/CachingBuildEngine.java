@@ -427,8 +427,8 @@ public class CachingBuildEngine implements BuildEngine {
     // to resolve a Path for a zip entry against a file Path on disk.
 
     try {
-      Unzip.extractZipFile(zipFile.getAbsolutePath(),
-          projectRoot.toAbsolutePath().toString(),
+      Unzip.extractZipFile(zipFile.toPath().toAbsolutePath(),
+          projectRoot.toAbsolutePath(),
           /* overwriteExistingFiles */ true);
     } catch (IOException e) {
       // In the wild, we have seen some inexplicable failures during this step. For now, we try to
