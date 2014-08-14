@@ -16,15 +16,18 @@
 
 package com.facebook.buck.zip;
 
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
-public class UnzipStep extends ShellStep {
+public class UnzipStep implements Step {
+  private static final Logger LOG = Logger.get(UnzipStep.class);
 
   private final Path zipFile;
   private final Path destinationDirectory;
@@ -35,17 +38,31 @@ public class UnzipStep extends ShellStep {
   }
 
   @Override
+  public int execute(ExecutionContext context) throws InterruptedException {
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
+    Path zip = filesystem.getPathForRelativeExistingPath(zipFile).toAbsolutePath();
+    Path out = filesystem.getPathForRelativeExistingPath(destinationDirectory).toAbsolutePath();
+
+    try {
+      Unzip.extractZipFile(zip, out, true);
+    } catch (IOException e) {
+      LOG.warn(e, "Unable to unpack zip: %s", zipFile);
+      return 1;
+    }
+    return 0;
+  }
+
+  @Override
   public String getShortName() {
     return "unzip";
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  public String getDescription(ExecutionContext context) {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    return ImmutableList.of(
-        "unzip",
-        projectFilesystem.resolve(zipFile).toString(),
-        "-d",
-        projectFilesystem.resolve(destinationDirectory).toString());
+    return String.format(
+        "unzip %s -d %s",
+        MorePaths.pathWithUnixSeparators(projectFilesystem.resolve(zipFile)),
+        MorePaths.pathWithUnixSeparators(projectFilesystem.resolve(destinationDirectory)));
   }
 }

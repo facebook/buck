@@ -22,7 +22,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
@@ -56,7 +55,7 @@ public class UnzipStepTest {
         .setProjectFilesystem(projectFilesystem)
         .build();
     assertEquals(
-        ImmutableList.of("unzip", "/abs/path/the/zipfile.zip", "-d", "/abs/path/an/output/dir"),
-        unzipStep.getShellCommandInternal(executionContext));
+        "unzip /abs/path/the/zipfile.zip -d /abs/path/an/output/dir",
+        unzipStep.getDescription(executionContext));
   }
 }
