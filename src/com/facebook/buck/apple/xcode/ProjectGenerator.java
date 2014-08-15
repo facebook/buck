@@ -1350,10 +1350,8 @@ public class ProjectGenerator {
       PBXNativeTarget target,
       PBXGroup sharedFrameworksGroup,
       Iterable<String> frameworks) {
-    PBXCopyFilesBuildPhase copyFrameworksBuildPhase =
-        new PBXCopyFilesBuildPhase(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS, "");
-    target.getBuildPhases().add(copyFrameworksBuildPhase);
 
+    ImmutableList.Builder<SourceTreePath> sourceTreePathBuilder = ImmutableList.builder();
     for (String framework : frameworks) {
       Path path = Paths.get(framework);
 
@@ -1367,20 +1365,41 @@ public class ProjectGenerator {
             (sourceTree.get() == PBXReference.SourceTree.BUILT_PRODUCTS_DIR ||
             sourceTree.get() == PBXReference.SourceTree.ABSOLUTE)) {
           Path sdkRootRelativePath = path.subpath(1, path.getNameCount());
-          PBXFileReference fileReference =
-              sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
-                  new SourceTreePath(sourceTree.get(), sdkRootRelativePath));
-          copyFrameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+          sourceTreePathBuilder.add(
+              new SourceTreePath(sourceTree.get(), sdkRootRelativePath));
         }
       } else {
         // regular path
-        PBXFileReference fileReference =
-            sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.GROUP,
-                    relativizeBuckRelativePathToGeneratedProject(buildTarget, path.toString())));
-        copyFrameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+        sourceTreePathBuilder.add(
+            new SourceTreePath(
+                PBXReference.SourceTree.GROUP,
+                relativizeBuckRelativePathToGeneratedProject(buildTarget, path.toString())));
       }
+    }
+    addCopyFilesBuildPhase(
+        target,
+        sharedFrameworksGroup,
+        PBXCopyFilesBuildPhase.Destination.FRAMEWORKS,
+        "",
+        sourceTreePathBuilder.build());
+  }
+
+  private void addCopyFilesBuildPhase(
+      PBXNativeTarget target,
+      PBXGroup sharedGroup,
+      PBXCopyFilesBuildPhase.Destination destination,
+      String destinationSubpath,
+      Iterable<SourceTreePath> files) {
+    PBXCopyFilesBuildPhase copyFilesBuildPhase = null;
+    for (SourceTreePath file : files) {
+      if (copyFilesBuildPhase == null) {
+        copyFilesBuildPhase =
+            new PBXCopyFilesBuildPhase(destination, destinationSubpath);
+        target.getBuildPhases().add(copyFilesBuildPhase);
+      }
+      PBXFileReference fileReference = sharedGroup.getOrCreateFileReferenceBySourceTreePath(
+          file);
+      copyFilesBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
     }
   }
 
