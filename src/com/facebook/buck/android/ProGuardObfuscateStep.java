@@ -272,7 +272,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       // Relative paths should be interpreted relative to project directory root, not the
       // written parameters file.
       args.add("-basedirectory")
-          .add(context.getProjectDirectoryRoot().getAbsolutePath());
+          .add(context.getProjectDirectoryRoot().toAbsolutePath().toString());
 
       // -include
       switch (sdkProguardConfig) {

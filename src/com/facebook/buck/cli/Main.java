@@ -308,7 +308,7 @@ public final class Main {
       ObjectMapper objectMapper) throws IOException {
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]",
-          repository.getFilesystem().getProjectRoot());
+          repository.getFilesystem().getRootPath());
       daemon = new Daemon(repository, clock, objectMapper);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
@@ -316,10 +316,10 @@ public final class Main {
       // buckd scripts attempt to enforce this, so a change in project root is an error that
       // should be reported rather than silently worked around by invalidating the cache and
       // creating a new daemon object.
-      File parserRoot = daemon.getParser().getProjectRoot();
-      if (!repository.getFilesystem().getProjectRoot().equals(parserRoot)) {
+      Path parserRoot = daemon.getParser().getProjectRoot();
+      if (!repository.getFilesystem().getRootPath().equals(parserRoot)) {
         throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
-            repository.getFilesystem().getProjectRoot(), parserRoot));
+            repository.getFilesystem().getRootPath(), parserRoot));
       }
 
       // If Buck config or the AndroidDirectoryResolver has changed, invalidate the cache and

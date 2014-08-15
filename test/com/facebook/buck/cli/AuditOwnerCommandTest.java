@@ -116,8 +116,8 @@ public class AuditOwnerCommandTest {
 
   @SuppressWarnings("serial")
   private static class ExistingDirectoryFile extends File {
-    public ExistingDirectoryFile(File file, String s) {
-      super(file, s);
+    public ExistingDirectoryFile(Path file, String s) {
+      super(file.toFile(), s);
     }
 
     @Override
@@ -138,8 +138,8 @@ public class AuditOwnerCommandTest {
 
   @SuppressWarnings("serial")
   private static class MissingFile extends File {
-    public MissingFile(File file, String s) {
-      super(file, s);
+    public MissingFile(Path file, String s) {
+      super(file.toFile(), s);
     }
 
     @Override
@@ -160,8 +160,8 @@ public class AuditOwnerCommandTest {
 
   @SuppressWarnings("serial")
   private static class ExistingFile extends File {
-    public ExistingFile(File file, String s) {
-      super(file, s);
+    public ExistingFile(Path file, String s) {
+      super(file.toFile(), s);
     }
 
     @Override
@@ -211,7 +211,7 @@ public class AuditOwnerCommandTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingDirectoryFile(getProjectRoot(), pathRelativeToProjectRoot);
+        return new ExistingDirectoryFile(getRootPath(), pathRelativeToProjectRoot);
       }
     };
 
@@ -238,7 +238,7 @@ public class AuditOwnerCommandTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new MissingFile(getProjectRoot(), pathRelativeToProjectRoot);
+        return new MissingFile(getRootPath(), pathRelativeToProjectRoot);
       }
     };
 
@@ -264,7 +264,7 @@ public class AuditOwnerCommandTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingFile(getProjectRoot(), pathRelativeToProjectRoot);
+        return new ExistingFile(getRootPath(), pathRelativeToProjectRoot);
       }
     };
 
@@ -295,7 +295,7 @@ public class AuditOwnerCommandTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingFile(getProjectRoot(), pathRelativeToProjectRoot);
+        return new ExistingFile(getRootPath(), pathRelativeToProjectRoot);
       }
     };
 
@@ -329,7 +329,7 @@ public class AuditOwnerCommandTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingFile(getProjectRoot(), pathRelativeToProjectRoot);
+        return new ExistingFile(getRootPath(), pathRelativeToProjectRoot);
       }
     };
 
@@ -367,7 +367,7 @@ public class AuditOwnerCommandTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingFile(getProjectRoot(), pathRelativeToProjectRoot);
+        return new ExistingFile(getRootPath(), pathRelativeToProjectRoot);
       }
     };
 

@@ -37,7 +37,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
@@ -105,7 +104,7 @@ public class WatchServiceWatcherTest {
     expect(key.pollEvents()).andReturn(
         Lists.<WatchEvent<?>>newArrayList(
             createPathEvent(
-                new File("./someproject/SomeClass.java"),
+                Paths.get("./someproject/SomeClass.java"),
                 StandardWatchEventKinds.ENTRY_MODIFY)));
     expect(path.relativize(anyObject(Path.class))).andReturn(Paths.get("SomeClass.java"));
     eventBus.post(anyObject(WatchEvent.class));
@@ -143,7 +142,7 @@ public class WatchServiceWatcherTest {
     expect(key.pollEvents()).andReturn(
         Lists.<WatchEvent<?>>newArrayList(
             createPathEvent(
-                new File("./someproject/somedir/SomeClass.java"),
+                Paths.get("./someproject/somedir/SomeClass.java"),
                 StandardWatchEventKinds.ENTRY_MODIFY)));
     expect(path.relativize(anyObject(Path.class))).andReturn(Paths.get("somedir/SomeClass.java"));
     replay(filesystem, eventBus, watchService, path, key);

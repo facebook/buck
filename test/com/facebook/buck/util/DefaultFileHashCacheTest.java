@@ -76,11 +76,10 @@ public class DefaultFileHashCacheTest {
   public void whenNotifiedOfCreateEventCacheEntryIsRemoved() throws IOException {
     DefaultFileHashCache cache =
         new DefaultFileHashCache(new ProjectFilesystem(new File(".")));
-    File file = new File("SomeClass.java");
-    Path path = file.toPath();
+    Path path = Paths.get("SomeClass.java");
     HashCode hash = HashCode.fromInt(42);
     cache.loadingCache.put(path, hash);
-    cache.onFileSystemChange(createPathEvent(file, StandardWatchEventKinds.ENTRY_CREATE));
+    cache.onFileSystemChange(createPathEvent(path, StandardWatchEventKinds.ENTRY_CREATE));
     assertFalse("Cache should not contain path", cache.contains(path));
   }
 
@@ -88,11 +87,10 @@ public class DefaultFileHashCacheTest {
   public void whenNotifiedOfChangeEventCacheEntryIsRemoved() throws IOException {
     DefaultFileHashCache cache =
         new DefaultFileHashCache(new ProjectFilesystem(new File(".")));
-    File file = new File("SomeClass.java");
-    Path path = file.toPath();
+    Path path = Paths.get("SomeClass.java");
     HashCode hash = HashCode.fromInt(42);
     cache.loadingCache.put(path, hash);
-    cache.onFileSystemChange(createPathEvent(file, StandardWatchEventKinds.ENTRY_MODIFY));
+    cache.onFileSystemChange(createPathEvent(path, StandardWatchEventKinds.ENTRY_MODIFY));
     assertFalse("Cache should not contain path", cache.contains(path));
   }
 
@@ -100,11 +98,10 @@ public class DefaultFileHashCacheTest {
   public void whenNotifiedOfDeleteEventCacheEntryIsRemoved() throws IOException {
     DefaultFileHashCache cache =
         new DefaultFileHashCache(new ProjectFilesystem(new File(".")));
-    File file = new File("SomeClass.java");
-    Path path = file.toPath();
+    Path path = Paths.get("SomeClass.java");
     HashCode hash = HashCode.fromInt(42);
     cache.loadingCache.put(path, hash);
-    cache.onFileSystemChange(createPathEvent(file, StandardWatchEventKinds.ENTRY_DELETE));
+    cache.onFileSystemChange(createPathEvent(path, StandardWatchEventKinds.ENTRY_DELETE));
     assertFalse("Cache should not contain path", cache.contains(path));
   }
 

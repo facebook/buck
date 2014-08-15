@@ -42,7 +42,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
@@ -128,7 +127,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         new TargetsCommandPredicate(
             graph,
             buildRuleTypesBuilder.build(),
-            options.getReferencedFiles(getProjectFilesystem().getProjectRoot()),
+            options.getReferencedFiles(getProjectFilesystem().getRootPath()),
             matchingBuildTargets));
 
     // Print out matching targets in alphabetical order.
@@ -222,7 +221,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
       List<Map<String, Object>> rules;
       try {
-        File buildFile = getRepository().getAbsolutePathToBuildFile(buildTarget).toFile();
+        Path buildFile = getRepository().getAbsolutePathToBuildFile(buildTarget);
         rules = getParser().parseBuildFile(
             buildFile,
             defaultIncludes,
@@ -331,7 +330,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     Parser parser = getParser();
     try {
       ruleObjects = parser.parseBuildFile(
-          getRepository().getAbsolutePathToBuildFile(buildTarget).toFile(),
+          getRepository().getAbsolutePathToBuildFile(buildTarget),
           options.getDefaultIncludes(),
           EnumSet.noneOf(ProjectBuildFileParser.Option.class),
           environment,

@@ -32,8 +32,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.File;
 import java.io.PrintStream;
+import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -115,8 +115,8 @@ public class ExecutionContext {
     return projectFilesystem;
   }
 
-  public File getProjectDirectoryRoot() {
-    return projectFilesystem.getProjectRoot();
+  public Path getProjectDirectoryRoot() {
+    return projectFilesystem.getRootPath();
   }
 
   public Console getConsole() {

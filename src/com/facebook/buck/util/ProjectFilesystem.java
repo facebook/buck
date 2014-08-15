@@ -163,13 +163,6 @@ public class ProjectFilesystem {
   }
 
   /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by {@link #getRootPath()}.
-   */
-  public File getProjectRoot() {
-    return projectRoot.toFile();
-  }
-
-  /**
    * @return A {@link ImmutableSet} of {@link Path} objects to have buck ignore.  All paths will be
    *     relative to the {@link ProjectFilesystem#getRootPath()}.
    */

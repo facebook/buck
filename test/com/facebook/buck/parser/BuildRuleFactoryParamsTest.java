@@ -79,7 +79,8 @@ public class BuildRuleFactoryParamsTest {
 
   @Test
   public void testResolveFilePathRelativeToBuildFileDirectoryInRootDirectory() throws IOException {
-    Files.touch(new File(filesystem.getProjectRoot(), "build.xml"));
+
+    Files.touch(filesystem.getRootPath().resolve("build.xml").toFile());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:wakizashi");
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(

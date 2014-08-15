@@ -143,7 +143,7 @@ public class ExternalJavacStep extends JavacStep {
     env.put("BUCK_DIRECTORY_ROOT", context.getProjectDirectoryRoot().toString());
     env.put("BUCK_OUTPUT_ABI_FILE", pathToOutputAbiFile.or(new File("").toPath()).toString());
 
-    processBuilder.directory(context.getProjectDirectoryRoot());
+    processBuilder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
     // Run the command
     int exitCode = -1;
     try {

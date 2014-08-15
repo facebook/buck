@@ -24,8 +24,9 @@ import com.google.common.collect.ImmutableSet;
 
 import org.kohsuke.args4j.Option;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
@@ -72,25 +73,25 @@ public class TargetsCommandOptions extends BuildCommandOptions {
    * 2. file path /otherproject/src/com/facebook/Test.java will be ignored.
    */
   public static ImmutableSet<String> getCanonicalFilesUnderProjectRoot(
-      File projectRoot, ImmutableSet<String> nonCanonicalFilePaths)
+      Path projectRoot, ImmutableSet<String> nonCanonicalFilePaths)
       throws IOException {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    String projectRootCanonicalFullPathWithEndSlash = projectRoot.getCanonicalPath() +
-        File.separator;
+    Path normalizedRoot = projectRoot.normalize();
     for (String filePath : nonCanonicalFilePaths) {
-      String canonicalFullPath = new File(filePath).getCanonicalPath();
+      Path canonicalFullPath = Paths.get(filePath).normalize();
 
       // Ignore files that aren't under project root.
-      if (canonicalFullPath.startsWith(projectRootCanonicalFullPathWithEndSlash)) {
-        String relativePath = canonicalFullPath.substring(
-            projectRootCanonicalFullPathWithEndSlash.length());
+      if (canonicalFullPath.startsWith(normalizedRoot)) {
+        Path relativePath = canonicalFullPath.subpath(
+            normalizedRoot.getNameCount(),
+            canonicalFullPath.getNameCount());
         builder.add(MorePaths.pathWithUnixSeparators(relativePath));
       }
     }
     return builder.build();
   }
 
-  public ImmutableSet<String> getReferencedFiles(File projectRoot)
+  public ImmutableSet<String> getReferencedFiles(Path projectRoot)
       throws IOException {
     return getCanonicalFilesUnderProjectRoot(projectRoot, referencedFiles.get());
   }

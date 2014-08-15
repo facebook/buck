@@ -70,7 +70,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
   public void testSdkConfigArgs() {
     ExecutionContext context = createMock(ExecutionContext.class);
     AndroidPlatformTarget target = createMock(AndroidPlatformTarget.class);
-    expect(context.getProjectDirectoryRoot()).andStubReturn(new File("root"));
+    expect(context.getProjectDirectoryRoot()).andStubReturn(Paths.get("root"));
     expect(context.getAndroidPlatformTarget()).andStubReturn(target);
     expect(target.getProguardConfig()).andStubReturn(Paths.get("sdk-default.pro"));
     expect(target.getOptimizedProguardConfig()).andStubReturn(Paths.get("sdk-optimized.pro"));
@@ -88,7 +88,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
   public void testAdditionalLibraryJarsParameterFormatting() {
     ExecutionContext context = createMock(ExecutionContext.class);
     AndroidPlatformTarget target = createMock(AndroidPlatformTarget.class);
-    expect(context.getProjectDirectoryRoot()).andStubReturn(new File("root"));
+    expect(context.getProjectDirectoryRoot()).andStubReturn(Paths.get("root"));
     expect(context.getAndroidPlatformTarget()).andStubReturn(target);
     expect(target.getProguardConfig()).andStubReturn(Paths.get("sdk-default.pro"));
     expect(target.getOptimizedProguardConfig()).andStubReturn(Paths.get("sdk-optimized.pro"));

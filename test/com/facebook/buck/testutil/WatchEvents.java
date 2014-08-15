@@ -16,7 +16,6 @@
 
 package com.facebook.buck.testutil;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -25,7 +24,7 @@ import java.nio.file.WatchEvent.Kind;
 public class WatchEvents {
   private WatchEvents() {}
 
-  public static WatchEvent<Path> createPathEvent(final File file, final Kind<Path> kind) {
+  public static WatchEvent<Path> createPathEvent(final Path file, final Kind<Path> kind) {
     return new WatchEvent<Path>() {
       @Override
       public Kind<Path> kind() {
@@ -39,7 +38,7 @@ public class WatchEvents {
 
       @Override
       public Path context() {
-        return file.toPath();
+        return file;
       }
     };
   }

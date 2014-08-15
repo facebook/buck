@@ -22,20 +22,21 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class TargetsCommandOptionsTest {
 
   @Test
   public void testGetCanonicalFilesUnderProjectRoot() throws IOException {
-    File projectRoot = new File("ProjectRoot");
+    Path projectRoot = Paths.get("ProjectRoot");
 
     ImmutableSet<String> nonCanonicalFilePaths = ImmutableSet.of(
         "ProjectRoot/src/com/facebook/CanonicalRelativePath.java",
         "./ProjectRoot/src/com/otherpackage/.././/facebook/NonCanonicalPath.java",
-        projectRoot.getCanonicalPath() + "/src/com/facebook/AbsolutePath.java",
-        projectRoot.getCanonicalPath() + "/../PathNotUnderProjectRoot.java");
+        projectRoot.normalize() + "/src/com/facebook/AbsolutePath.java",
+        projectRoot.normalize() + "/../PathNotUnderProjectRoot.java");
 
     assertEquals(
         ImmutableSet.of(

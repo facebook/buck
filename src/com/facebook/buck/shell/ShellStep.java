@@ -93,7 +93,7 @@ public abstract class ShellStep implements Step {
     if (workingDirectory != null) {
       processBuilder.directory(workingDirectory);
     } else {
-      processBuilder.directory(context.getProjectDirectoryRoot());
+      processBuilder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
     }
 
     Optional<String> stdin = getStdin();

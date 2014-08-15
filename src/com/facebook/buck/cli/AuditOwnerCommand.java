@@ -106,15 +106,15 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   int runCommandWithOptionsInternal(AuditOwnerOptions options)
       throws IOException, InterruptedException {
     OwnersReport report = OwnersReport.emptyReport();
-    Map<File, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
+    Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
 
     for (String filePath : options.getArguments()) {
-      File buckFile = findBuckFileFor(new File(filePath));
+      Path buckFile = findBuckFileFor(Paths.get(filePath));
 
       // Get the target base name.
       Path targetBasePath = MorePaths.relativize(
           getProjectFilesystem().getRootPath().toAbsolutePath(),
-          buckFile.getParentFile().toPath().toAbsolutePath());
+          buckFile.getParent().toAbsolutePath());
       String targetBaseName = "//" + targetBasePath.toString();
 
       // Parse buck files and load target nodes.
@@ -208,21 +208,21 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
   }
 
-  private File findBuckFileFor(File file) {
-    File dir = file;
-    if (!dir.isDirectory()) {
-      dir = dir.getParentFile();
+  private Path findBuckFileFor(Path file) {
+    Path dir = file;
+    if (!getProjectFilesystem().isDirectory(dir)) {
+      dir = dir.getParent();
     }
 
-    File projectRoot = getProjectFilesystem().getProjectRoot();
+    Path projectRoot = getProjectFilesystem().getRootPath();
     while (dir != null && !dir.equals(projectRoot)) {
-      File buck = new File(dir, BuckConstant.BUILD_RULES_FILE_NAME);
-      if (buck.exists()) {
+      Path buck = dir.resolve(BuckConstant.BUILD_RULES_FILE_NAME);
+      if (getProjectFilesystem().exists(buck)) {
         return buck;
       }
-      dir = dir.getParentFile();
+      dir = dir.getParent();
     }
-    throw new RuntimeException("Failed to find BUCK file for " + file.getPath());
+    throw new RuntimeException("Failed to find BUCK file for " + file);
   }
 
   private void printReport(AuditOwnerOptions options, OwnersReport report) throws IOException {

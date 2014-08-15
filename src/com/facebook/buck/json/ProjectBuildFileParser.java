@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -81,7 +80,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   @Nullable BuildFileToJsonParser buckPyStdoutParser;
   @Nullable private BufferedWriter buckPyStdinWriter;
 
-  private final File projectRoot;
+  private final Path projectRoot;
   private final ImmutableSet<Path> ignorePaths;
   private final ImmutableSet<Description<?>> descriptions;
   private final ImmutableList<String> commonIncludes;
@@ -102,7 +101,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       EnumSet<Option> parseOptions,
       Console console,
       ImmutableMap<String, String> environment) {
-    this.projectRoot = projectFilesystem.getProjectRoot();
+    this.projectRoot = projectFilesystem.getRootPath();
     this.descriptions = Preconditions.checkNotNull(descriptions);
     this.ignorePaths = projectFilesystem.getIgnorePaths();
     this.commonIncludes = ImmutableList.copyOf(commonIncludes);
@@ -206,7 +205,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add("--strip_none");
     }
 
-    argBuilder.add("--project_root", projectRoot.getAbsolutePath());
+    argBuilder.add("--project_root", projectRoot.toAbsolutePath().toString());
 
     // Add the --include flags.
     for (String include : commonIncludes) {
@@ -384,7 +383,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       out.write("\n\n");
 
       // The base path doesn't matter, but should be set.
-      ConstructorArgMarshaller inspector = new ConstructorArgMarshaller(projectRoot.toPath());
+      ConstructorArgMarshaller inspector = new ConstructorArgMarshaller(projectRoot);
       BuckPyFunction function = new BuckPyFunction(inspector);
       for (Description<?> description : descriptions) {
         out.write(function.toPythonFunction(
