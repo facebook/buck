@@ -25,10 +25,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 
@@ -42,8 +44,8 @@ public class PartialGraph {
 
   @VisibleForTesting
   PartialGraph(ActionGraph graph, ImmutableSet<BuildTarget> targets) {
-    this.graph = graph;
-    this.targets = targets;
+    this.graph = Preconditions.checkNotNull(graph);
+    this.targets = Preconditions.checkNotNull(targets);
   }
 
   public ActionGraph getActionGraph() {
@@ -81,19 +83,18 @@ public class PartialGraph {
       Console console,
       ImmutableMap<String, String> environment)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    ImmutableSet<BuildTarget> targets = parser.filterAllTargetsInProject(filesystem,
-        includes,
-        predicate,
-        console,
-        environment);
-
-    return parseAndCreateGraphFromTargets(
-        targets,
-        includes,
-        parser,
-        eventBus,
-        console,
-        environment);
+    return Iterables.getOnlyElement(
+        createPartialGraphs(
+            Optional.<ImmutableSet<BuildTarget>>absent(),
+            Optional.of(predicate),
+            ImmutableList.<RuleJsonPredicate>of(),
+            ImmutableList.<AssociatedRulePredicate>of(),
+            filesystem,
+            includes,
+            parser,
+            eventBus,
+            console,
+            environment));
   }
 
   /**
@@ -102,8 +103,9 @@ public class PartialGraph {
    * {@link AssociatedRulePredicate} in {@code associatedRulePredicates}, rules throughout the
    * project that pass are added to the graph.
    */
-  public static PartialGraph createPartialGraphFromRootsWithAssociatedRules(
-      ImmutableSet<BuildTarget> roots,
+  public static ImmutableList<PartialGraph> createPartialGraphs(
+      Optional<ImmutableSet<BuildTarget>> rootsOptional,
+      Optional<RuleJsonPredicate> rootsPredicate,
       ImmutableList<RuleJsonPredicate> predicates,
       ImmutableList<AssociatedRulePredicate> associatedRulePredicates,
       ProjectFilesystem filesystem,
@@ -113,16 +115,25 @@ public class PartialGraph {
       Console console,
       ImmutableMap<String, String> environment)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    ImmutableSet<BuildTarget> buildTargets = parser.targetsInProjectFromRoots(
-        roots, includes, eventBus, console, environment);
+    ImmutableSet<BuildTarget> roots = rootsOptional.or(
+        parser.filterAllTargetsInProject(
+            filesystem,
+            includes,
+            rootsPredicate.or(RuleJsonPredicates.alwaysTrue()),
+            console,
+            environment));
+
+    ImmutableList.Builder<PartialGraph> graphs = ImmutableList.builder();
 
     PartialGraph partialGraph = parseAndCreateGraphFromTargets(
-        buildTargets,
+        roots,
         includes,
         parser,
         eventBus,
         console,
         environment);
+
+    graphs.add(partialGraph);
 
     for (int i = 0; i < predicates.size(); i++) {
       RuleJsonPredicate predicate = predicates.get(i);
@@ -137,35 +148,34 @@ public class PartialGraph {
           console,
           environment);
 
-      ImmutableSet.Builder<BuildTarget> associatedRulesBuilder =
-          ImmutableSet.<BuildTarget>builder().addAll(roots);
+      ImmutableSet.Builder<BuildTarget> allTargetsBuilder = ImmutableSet.builder();
+      allTargetsBuilder.addAll(partialGraph.getTargets());
 
       for (BuildTarget buildTarget : associatedPartialGraph.getTargets()) {
         BuildRule buildRule = associatedPartialGraph
             .getActionGraph()
             .findBuildRuleByTarget(buildTarget);
         if (associatedRulePredicate.isMatch(buildRule, partialGraph.getActionGraph())) {
-          associatedRulesBuilder.add(buildRule.getBuildTarget());
+          allTargetsBuilder.add(buildRule.getBuildTarget());
         }
       }
 
-      ImmutableSet<BuildTarget> allTargets = parser.targetsInProjectFromRoots(
-          associatedRulesBuilder.build(), includes, eventBus, console, environment);
-
       partialGraph = parseAndCreateGraphFromTargets(
-          allTargets,
+          allTargetsBuilder.build(),
           includes,
           parser,
           eventBus,
           console,
           environment);
+
+      graphs.add(partialGraph);
     }
 
-    return partialGraph;
+    return graphs.build();
   }
 
   /**
-   * Like {@link #createPartialGraphFromRootsWithAssociatedRules}, but trades accuracy for speed.
+   * Like {@link #createPartialGraphs}, but trades accuracy for speed.
    *
    * <p>The graph returned from this method will include all transitive deps of the roots, but
    * might also include rules that are not actually dependencies.  This looseness allows us to

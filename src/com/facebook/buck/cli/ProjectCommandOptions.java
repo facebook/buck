@@ -17,7 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Ascii;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -33,7 +36,24 @@ import java.util.List;
 
 public class ProjectCommandOptions extends AbstractCommandOptions {
 
-  private static final String DEFAULT_IDE_VALUE = "intellij";
+  public enum Ide {
+    INTELLIJ,
+    XCODE;
+
+    public static Ide fromString(String string) {
+      switch (Ascii.toLowerCase(string)) {
+        case "intellij":
+          return Ide.INTELLIJ;
+        case "xcode":
+          return Ide.XCODE;
+        default:
+          throw new HumanReadableException("Invalid ide value %s.", string);
+      }
+    }
+
+  }
+
+  private static final Ide DEFAULT_IDE_VALUE = Ide.INTELLIJ;
   private static final boolean DEFAULT_READ_ONLY_VALUE = false;
 
   @Option(
@@ -57,14 +77,14 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
 
   @Option(
       name = "--ide",
-      usage = "The type of IDE for which to generate a project. Defaults to '" +
-          DEFAULT_IDE_VALUE + "' if not specified in .buckconfig.")
-  private String ide = null;
+      usage = "The type of IDE for which to generate a project. Defaults to 'intellij' if not " +
+          "specified in .buckconfig.")
+  private Ide ide = null;
 
   @Option(
       name = "--read-only",
       usage = "If true, generate project files read-only. Defaults to '" +
-          DEFAULT_IDE_VALUE + "' if not specified in .buckconfig. (Only " +
+          DEFAULT_READ_ONLY_VALUE + "' if not specified in .buckconfig. (Only " +
           "applies to generated Xcode projects.)")
   private boolean readOnly = DEFAULT_READ_ONLY_VALUE;
 
@@ -136,11 +156,17 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     return getBuckConfig().getBooleanValue("project", "read_only", DEFAULT_READ_ONLY_VALUE);
   }
 
-  public String getIde() {
+  public Ide getIde() {
     if (ide != null) {
       return ide;
     } else {
-      Optional<String> ide = getBuckConfig().getValue("project", "ide");
+      Optional<Ide> ide = getBuckConfig().getValue("project", "ide").transform(
+          new Function<String, Ide>() {
+            @Override
+            public Ide apply(String input) {
+              return Ide.fromString(input);
+            }
+          });
       return ide.or(DEFAULT_IDE_VALUE);
     }
   }

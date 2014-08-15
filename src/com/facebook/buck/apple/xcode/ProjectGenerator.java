@@ -183,6 +183,9 @@ public class ProjectGenerator {
 
     /** Generate read-only project files */
     GENERATE_READ_ONLY_FILES,
+
+    /** Include tests in the scheme */
+    INCLUDE_TESTS,
     ;
   }
 

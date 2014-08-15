@@ -22,6 +22,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -29,7 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -42,7 +42,6 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -70,6 +69,7 @@ class SchemeGenerator {
   private final PartialGraph partialGraph;
   private final BuildRule primaryRule;
   private final ImmutableSet<BuildRule> includedRules;
+  private final ImmutableSet<BuildRule> testRules;
   private final String schemeName;
   private final Path outputDirectory;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
@@ -81,6 +81,7 @@ class SchemeGenerator {
       PartialGraph partialGraph,
       BuildRule primaryRule,
       ImmutableSet<BuildRule> includedRules,
+      ImmutableSet<BuildRule> testRules,
       String schemeName,
       Path outputDirectory,
       Map<SchemeActionType, String> actionConfigNames) {
@@ -88,6 +89,7 @@ class SchemeGenerator {
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.primaryRule = Preconditions.checkNotNull(primaryRule);
     this.includedRules = Preconditions.checkNotNull(includedRules);
+    this.testRules = Preconditions.checkNotNull(testRules);
     this.schemeName = Preconditions.checkNotNull(schemeName);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
@@ -117,27 +119,41 @@ class SchemeGenerator {
     ImmutableMap<PBXTarget, Path> targetToProjectPathMap =
         targetToProjectPathMapBuilder.build();
 
+    class XcodeTargetPredicate implements Predicate<BuildRule> {
+      private final ImmutableSet<BuildRule> matches;
+
+      public XcodeTargetPredicate(ImmutableSet<BuildRule> matches) {
+        this.matches = Preconditions.checkNotNull(matches);
+      }
+
+      @Override
+      public boolean apply(BuildRule input) {
+        if (!AppleBuildRules.isXcodeTargetBuildRuleType(input.getType())) {
+          return false;
+        }
+        if (!matches.contains(input)) {
+          return false;
+        }
+        if (!buildRuleToTargetMap.containsKey(input)) {
+          throw new HumanReadableException(
+              "Scheme generation failed: No project containing required target %s was found.",
+              input.getFullyQualifiedName());
+        }
+        return true;
+      }
+    }
+
     List<BuildRule> orderedBuildRules = TopologicalSort.sort(
         partialGraph.getActionGraph(),
-        new Predicate<BuildRule>() {
-          @Override
-          public boolean apply(BuildRule input) {
-            return buildRuleToTargetMap.containsKey(input) && includedRules.contains(input);
-          }
-        });
+        new XcodeTargetPredicate(includedRules));
+    List<BuildRule> orderedTestRules = TopologicalSort.sort(
+        partialGraph.getActionGraph(),
+        new XcodeTargetPredicate(testRules));
 
-    Set<BuildRule> nonTestRules = Sets.newLinkedHashSet();
-    Set<BuildRule> testRules = Sets.newLinkedHashSet();
     Map<BuildRule, XCScheme.BuildableReference>
         buildRuleToBuildableReferenceMap = Maps.newHashMap();
 
-    for (BuildRule rule : orderedBuildRules) {
-      if (AppleBuildRules.isXcodeTargetTestBuildRuleType(rule.getType())) {
-        testRules.add(rule);
-      } else {
-        nonTestRules.add(rule);
-      }
-
+    for (BuildRule rule : Iterables.concat(orderedBuildRules, orderedTestRules)) {
       PBXTarget target = buildRuleToTargetMap.get(rule);
 
       String blueprintName = target.getProductName();
@@ -158,9 +174,9 @@ class SchemeGenerator {
     XCScheme.BuildAction buildAction = new XCScheme.BuildAction();
 
     // For aesthetic reasons put all non-test build actions before all test build actions.
-    for (BuildRule rule : Iterables.concat(nonTestRules, testRules)) {
+    for (BuildRule rule : Iterables.concat(orderedBuildRules, orderedTestRules)) {
       EnumSet<XCScheme.BuildActionEntry.BuildFor> buildFor;
-      if (AppleBuildRules.isXcodeTargetTestBuildRuleType(rule.getType())) {
+      if (testRules.contains(rule)) {
         buildFor = XCScheme.BuildActionEntry.BuildFor.TEST_ONLY;
       } else {
         buildFor = XCScheme.BuildActionEntry.BuildFor.DEFAULT;
@@ -175,7 +191,10 @@ class SchemeGenerator {
 
     XCScheme.TestAction testAction = new XCScheme.TestAction(
         actionConfigNames.get(SchemeActionType.TEST));
-    for (BuildRule rule : testRules) {
+    for (BuildRule rule : orderedTestRules) {
+      if (!AppleBuildRules.isXcodeTargetTestBuildRuleType(rule.getType())) {
+        continue;
+      }
       XCScheme.BuildableReference buildableReference = buildRuleToBuildableReferenceMap.get(rule);
       XCScheme.TestableReference testableReference =
           new XCScheme.TestableReference(buildableReference);

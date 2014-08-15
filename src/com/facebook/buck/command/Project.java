@@ -58,6 +58,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -152,7 +153,16 @@ public class Project {
       String pythonInterpreter,
       ObjectMapper objectMapper) {
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
-    this.buildFileTree = new InMemoryBuildFileTree(partialGraph.getTargets());
+    this.buildFileTree = new InMemoryBuildFileTree(
+        Iterables.transform(
+            partialGraph.getActionGraph().getNodes(),
+            new Function<BuildRule, BuildTarget>() {
+              @Override
+              public BuildTarget apply(BuildRule input) {
+                return input.getBuildTarget();
+              }
+            }
+        ));
     this.basePathToAliasMap = ImmutableMap.copyOf(basePathToAliasMap);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.executionContext = Preconditions.checkNotNull(executionContext);

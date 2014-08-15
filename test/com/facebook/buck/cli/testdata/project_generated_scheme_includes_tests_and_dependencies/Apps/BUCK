@@ -1,0 +1,54 @@
+EMPTY_CONFIGS = {
+  'Debug': (
+    '',
+    {},
+    '',
+    {},
+  ),
+  'Release': (
+    '',
+    {},
+    '',
+    {},
+  ),
+}
+
+ios_binary(
+  name = 'TestApp',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    '//Libraries:Dep1',
+    '//Libraries:Dep2',
+  ],
+)
+
+ios_test(
+  name = 'TestAppTests',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    ':TestApp',
+    '//Libraries:Dep1',
+    '//Libraries:Dep3',
+  ],
+  source_under_test = [
+    ':TestApp',
+  ],
+)
+
+xcode_project_config(
+  name = 'project',
+  project_name = 'TestApp',
+  rules = [
+    ':TestApp',
+    ':TestAppTests',
+  ],
+)
+
+xcode_workspace_config(
+  name = 'workspace',
+  src_target = '//Apps:TestApp'
+)

@@ -18,11 +18,11 @@ package com.facebook.buck.apple.xcode;
 
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.IosLibraryDescription;
@@ -37,6 +37,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -106,6 +107,7 @@ public class SchemeGeneratorTest {
         partialGraph,
         rootRule,
         ImmutableSet.of(rootRule, leftRule, rightRule, childRule),
+        ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         SchemeActionType.DEFAULT_CONFIG_NAMES);
@@ -173,6 +175,27 @@ public class SchemeGeneratorTest {
     assertThat(actualOrdering, either(equalTo(expectedOrdering1)).or(equalTo(expectedOrdering2)));
   }
 
+  @Test(expected = HumanReadableException.class)
+  public void schemeWithTargetWithoutCorrespondingProjectsFails() throws Exception {
+    BuildRule rootRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "root").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+    PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
+
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        partialGraph,
+        rootRule,
+        ImmutableSet.of(rootRule),
+        ImmutableSet.<BuildRule>of(),
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        SchemeActionType.DEFAULT_CONFIG_NAMES);
+
+    schemeGenerator.writeScheme();
+  }
+
   @Test
   public void schemeIncludesAllExpectedActions() throws Exception {
     BuildRule rootRule = createBuildRuleWithDefaults(
@@ -193,7 +216,8 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         rootRule,
-        ImmutableSet.of(rootRule, testRule),
+        ImmutableSet.of(rootRule),
+        ImmutableSet.of(testRule),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         SchemeActionType.DEFAULT_CONFIG_NAMES);
@@ -277,6 +301,7 @@ public class SchemeGeneratorTest {
         partialGraph,
         rootRule,
         ImmutableSet.of(rootRule),
+        ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         SchemeActionType.DEFAULT_CONFIG_NAMES);
@@ -333,6 +358,7 @@ public class SchemeGeneratorTest {
         partialGraph,
         rootRule,
         ImmutableSet.of(rootRule),
+        ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         SchemeActionType.DEFAULT_CONFIG_NAMES);

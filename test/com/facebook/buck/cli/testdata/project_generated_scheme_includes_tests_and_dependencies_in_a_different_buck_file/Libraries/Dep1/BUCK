@@ -1,0 +1,45 @@
+EMPTY_CONFIGS = {
+  'Debug': (
+    '',
+    {},
+    '',
+    {},
+  ),
+  'Release': (
+    '',
+    {},
+    '',
+    {},
+  ),
+}
+
+ios_library(
+  name = 'Dep1',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [],
+  visibility = ['PUBLIC'],
+)
+
+ios_test(
+  name = 'Dep1Tests',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    ':Dep1',
+  ],
+  source_under_test = [
+    ':Dep1',
+  ],
+)
+
+xcode_project_config(
+  name = 'project',
+  project_name = 'Libraries',
+  rules = [
+    ':Dep1',
+    ':Dep1Tests',
+  ],
+)

@@ -318,4 +318,41 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void testBuckProjectGeneratedSchemeIncludesTestsAndDependencies() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_generated_scheme_includes_tests_and_dependencies",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--workspace-and-projects",
+        "--with-tests",
+        "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testBuckProjectGeneratedSchemeIncludesTestsAndDependenciesInADifferentBuckFile()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_generated_scheme_includes_tests_and_dependencies_in_a_different_buck_file",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--workspace-and-projects",
+        "--with-tests",
+        "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
 }
