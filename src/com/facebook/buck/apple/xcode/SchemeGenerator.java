@@ -18,6 +18,7 @@ package com.facebook.buck.apple.xcode;
 
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.SchemeActionType;
+import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.parser.PartialGraph;
@@ -128,7 +129,8 @@ class SchemeGenerator {
 
       @Override
       public boolean apply(BuildRule input) {
-        if (!AppleBuildRules.isXcodeTargetBuildRuleType(input.getType())) {
+        if (!AppleBuildRules.isXcodeTargetBuildRuleType(input.getType()) &&
+            XcodeNativeDescription.TYPE != input.getType()) {
           return false;
         }
         if (!matches.contains(input)) {

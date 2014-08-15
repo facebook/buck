@@ -28,6 +28,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.SchemeActionType;
+import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
@@ -68,12 +69,14 @@ public class SchemeGeneratorTest {
   private ProjectFilesystem projectFilesystem;
   private IosLibraryDescription iosLibraryDescription;
   private IosTestDescription iosTestDescription;
+  private XcodeNativeDescription xcodeNativeDescription;
 
   @Before
   public void setUp() throws IOException {
     projectFilesystem = new FakeProjectFilesystem();
     iosLibraryDescription = new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
     iosTestDescription = new IosTestDescription();
+    xcodeNativeDescription = new XcodeNativeDescription();
   }
 
   @Test
@@ -194,6 +197,75 @@ public class SchemeGeneratorTest {
         SchemeActionType.DEFAULT_CONFIG_NAMES);
 
     schemeGenerator.writeScheme();
+  }
+
+  @Test
+  public void schemeIncludesXcodeNativeTargets() throws Exception {
+    BuildRule xcodeNativeRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "xcode-native").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        xcodeNativeDescription);
+    BuildRule rootRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "root").build(),
+        ImmutableSortedSet.of(xcodeNativeRule),
+        iosLibraryDescription);
+
+    PartialGraph partialGraph = createPartialGraphFromBuildRules(
+        ImmutableSet.of(
+            rootRule));
+
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        partialGraph,
+        rootRule,
+        ImmutableSet.of(rootRule, xcodeNativeRule),
+        ImmutableSet.<BuildRule>of(),
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        SchemeActionType.DEFAULT_CONFIG_NAMES);
+
+    PBXTarget rootTarget = new PBXNativeTarget("root");
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+    schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
+    PBXTarget xcodeNativeTarget = new PBXNativeTarget("xcode-native");
+    xcodeNativeTarget.setGlobalID("xcode-nativeGID");
+    xcodeNativeTarget.setProductReference(
+        new PBXFileReference(
+            "xcode-native.a", "xcode-native.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+    schemeGenerator.addRuleToTargetMap(xcodeNativeRule, xcodeNativeTarget);
+
+    Path projectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    schemeGenerator.addTargetToProjectPathMap(rootTarget, projectPath);
+
+    Path nativeProjectPath = Paths.get("foo/XcodeNative.xcodeproj/project.pbxproj");
+    schemeGenerator.addTargetToProjectPathMap(xcodeNativeTarget, nativeProjectPath);
+
+    Path schemePath = schemeGenerator.writeScheme();
+    String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
+    System.out.println(schemeXml);
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+    XPath xpath = xpathFactory.newXPath();
+    XPathExpression expr =
+        xpath.compile("//BuildAction//BuildableReference/@BlueprintIdentifier");
+    NodeList nodes = (NodeList) expr.evaluate(scheme, XPathConstants.NODESET);
+
+    List<String> expectedOrdering = ImmutableList.of(
+        "xcode-nativeGID",
+        "rootGID");
+
+    List<String> actualOrdering = Lists.newArrayList();
+    for (int i = 0; i < nodes.getLength(); i++) {
+      actualOrdering.add(nodes.item(i).getNodeValue());
+    }
+    assertThat(actualOrdering, equalTo(expectedOrdering));
   }
 
   @Test
