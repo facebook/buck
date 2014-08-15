@@ -134,7 +134,8 @@ public final class Main {
 
   // This is a hack to work around a perf issue where generated Xcode IDE files
   // trip WatchmanWatcher, causing buck project to take a long time to run.
-  private static final ImmutableSet<String> DEFAULT_IGNORE_GLOBS = ImmutableSet.of("*.pbxproj");
+  private static final ImmutableSet<String> DEFAULT_IGNORE_GLOBS =
+      ImmutableSet.of("*.pbxproj", "*.xcscheme", "*.xcworkspacedata");
 
   private static final Logger LOG = Logger.get(Main.class);
 
