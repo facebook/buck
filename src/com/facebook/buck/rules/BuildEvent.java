@@ -21,33 +21,31 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
-
-import java.util.List;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Base class for events about building.
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class BuildEvent extends AbstractBuckEvent {
-  private final ImmutableList<BuildTarget> buildTargets;
+  private final ImmutableSet<BuildTarget> buildTargets;
 
   /**
    * @param buildTargets The list of {@link BuildTarget}s being built.
    */
-  protected BuildEvent(List<BuildTarget> buildTargets) {
-    this.buildTargets = ImmutableList.copyOf(buildTargets);
+  protected BuildEvent(ImmutableSet<BuildTarget> buildTargets) {
+    this.buildTargets = ImmutableSet.copyOf(buildTargets);
   }
 
-  public ImmutableList<BuildTarget> getBuildTargets() {
+  public ImmutableSet<BuildTarget> getBuildTargets() {
     return buildTargets;
   }
 
-  public static Started started(List<BuildTarget> buildTargets) {
+  public static Started started(ImmutableSet<BuildTarget> buildTargets) {
     return new Started(buildTargets);
   }
 
-  public static Finished finished(List<BuildTarget> buildTargets, int exitCode) {
+  public static Finished finished(ImmutableSet<BuildTarget> buildTargets, int exitCode) {
     return new Finished(buildTargets, exitCode);
   }
 
@@ -74,7 +72,7 @@ public abstract class BuildEvent extends AbstractBuckEvent {
   }
 
   public static class Started extends BuildEvent {
-    protected Started(List<BuildTarget> buildTargets) {
+    protected Started(ImmutableSet<BuildTarget> buildTargets) {
       super(buildTargets);
     }
 
@@ -87,7 +85,7 @@ public abstract class BuildEvent extends AbstractBuckEvent {
   public static class Finished extends BuildEvent {
     private final int exitCode;
 
-    protected Finished(List<BuildTarget> buildRules, int exitCode) {
+    protected Finished(ImmutableSet<BuildTarget> buildRules, int exitCode) {
       super(buildRules);
       this.exitCode = exitCode;
     }

@@ -28,9 +28,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * A subgraph of the full action graph, which is also a valid action graph.
@@ -38,19 +38,19 @@ import java.util.List;
 public class PartialGraph {
 
   private final ActionGraph graph;
-  private final List<BuildTarget> targets;
+  private final ImmutableSet<BuildTarget> targets;
 
   @VisibleForTesting
-  PartialGraph(ActionGraph graph, List<BuildTarget> targets) {
+  PartialGraph(ActionGraph graph, ImmutableSet<BuildTarget> targets) {
     this.graph = graph;
-    this.targets = ImmutableList.copyOf(targets);
+    this.targets = targets;
   }
 
   public ActionGraph getActionGraph() {
     return graph;
   }
 
-  public List<BuildTarget> getTargets() {
+  public ImmutableSet<BuildTarget> getTargets() {
     return targets;
   }
 
@@ -81,7 +81,7 @@ public class PartialGraph {
       Console console,
       ImmutableMap<String, String> environment)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    List<BuildTarget> targets = parser.filterAllTargetsInProject(filesystem,
+    ImmutableSet<BuildTarget> targets = parser.filterAllTargetsInProject(filesystem,
         includes,
         predicate,
         console,
@@ -103,7 +103,7 @@ public class PartialGraph {
    * project that pass are added to the graph.
    */
   public static PartialGraph createPartialGraphFromRootsWithAssociatedRules(
-      Iterable<BuildTarget> roots,
+      ImmutableSet<BuildTarget> roots,
       ImmutableList<RuleJsonPredicate> predicates,
       ImmutableList<AssociatedRulePredicate> associatedRulePredicates,
       ProjectFilesystem filesystem,
@@ -113,7 +113,7 @@ public class PartialGraph {
       Console console,
       ImmutableMap<String, String> environment)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    Iterable<BuildTarget> buildTargets = parser.targetsInProjectFromRoots(
+    ImmutableSet<BuildTarget> buildTargets = parser.targetsInProjectFromRoots(
         roots, includes, eventBus, console, environment);
 
     PartialGraph partialGraph = parseAndCreateGraphFromTargets(
@@ -137,8 +137,8 @@ public class PartialGraph {
           console,
           environment);
 
-      ImmutableList.Builder<BuildTarget> associatedRulesBuilder =
-          ImmutableList.<BuildTarget>builder().addAll(roots);
+      ImmutableSet.Builder<BuildTarget> associatedRulesBuilder =
+          ImmutableSet.<BuildTarget>builder().addAll(roots);
 
       for (BuildTarget buildTarget : associatedPartialGraph.getTargets()) {
         BuildRule buildRule = associatedPartialGraph
@@ -149,7 +149,7 @@ public class PartialGraph {
         }
       }
 
-      Iterable<BuildTarget> allTargets = parser.targetsInProjectFromRoots(
+      ImmutableSet<BuildTarget> allTargets = parser.targetsInProjectFromRoots(
           associatedRulesBuilder.build(), includes, eventBus, console, environment);
 
       partialGraph = parseAndCreateGraphFromTargets(
@@ -172,7 +172,7 @@ public class PartialGraph {
    * run faster by avoiding a post-hoc filtering step.
    */
   public static PartialGraph createPartialGraphIncludingRoots(
-      Iterable<BuildTarget> roots,
+      ImmutableSet<BuildTarget> roots,
       Iterable<String> includes,
       Parser parser,
       BuckEventBus eventBus,
@@ -182,7 +182,7 @@ public class PartialGraph {
   }
 
   private static PartialGraph parseAndCreateGraphFromTargets(
-      Iterable<BuildTarget> targets,
+      ImmutableSet<BuildTarget> targets,
       Iterable<String> includes,
       Parser parser,
       BuckEventBus eventBus,
@@ -200,6 +200,6 @@ public class PartialGraph {
         console,
         environment);
 
-    return new PartialGraph(graph, ImmutableList.copyOf(targets));
+    return new PartialGraph(graph, targets);
   }
 }

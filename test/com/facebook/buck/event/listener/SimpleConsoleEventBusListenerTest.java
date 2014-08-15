@@ -39,7 +39,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.EventBus;
@@ -57,7 +56,7 @@ public class SimpleConsoleEventBusListenerTest {
     TestConsole console = new TestConsole();
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
-    ImmutableList<BuildTarget> buildTargets = ImmutableList.of(fakeTarget);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
     FakeBuildRule fakeRule = new FakeBuildRule(
         GenruleDescription.TYPE,
         fakeTarget,

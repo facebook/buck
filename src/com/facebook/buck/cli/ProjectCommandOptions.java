@@ -83,8 +83,8 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     this.arguments = arguments;
   }
 
-  public List<String> getArgumentsFormattedAsBuildTargets() {
-    return getCommandLineBuildTargetNormalizer().normalizeAll(getArguments());
+  public ImmutableSet<String> getArgumentsFormattedAsBuildTargets() {
+    return ImmutableSet.copyOf(getCommandLineBuildTargetNormalizer().normalizeAll(getArguments()));
   }
 
   public String getCombinedProject() {

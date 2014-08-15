@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -29,7 +30,7 @@ public class TestRunEventTest {
 
   @Test
   public void startAndStopShouldPairUpProperlyBasedOnHash() {
-    ImmutableList<String> tests = ImmutableList.of("//exmaple:other", "//thing/made/of:cheese");
+    ImmutableSet<String> tests = ImmutableSet.of("//exmaple:other", "//thing/made/of:cheese");
 
     TestRunEvent.Started started = TestRunEvent.started(
         false, TestSelectorList.empty(), false, tests);
@@ -42,8 +43,8 @@ public class TestRunEventTest {
 
   @Test
   public void shouldNotBelieveThatEventsThatAreNotPairsArePairs() {
-    ImmutableList<String> tests = ImmutableList.of("//exmaple:other", "//thing/made/of:cheese");
-    ImmutableList<String> otherTests = ImmutableList.of("//example:test");
+    ImmutableSet<String> tests = ImmutableSet.of("//exmaple:other", "//thing/made/of:cheese");
+    ImmutableSet<String> otherTests = ImmutableSet.of("//example:test");
 
     TestRunEvent.Started started = TestRunEvent.started(
         false, TestSelectorList.empty(), false, tests);

@@ -28,8 +28,10 @@ import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.command.Project.SourceFolder;
+import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavaLibraryDescription;
+import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
@@ -42,8 +44,6 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.java.FakeJavaPackageFinder;
-import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
@@ -702,14 +702,15 @@ public class ProjectTest {
     }
 
     ActionGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
-    List<BuildTarget> targets = ImmutableList.copyOf(Iterables.transform(projectConfigs,
-        new Function<BuildRule, BuildTarget>() {
-
-      @Override
-      public BuildTarget apply(BuildRule rule) {
-        return rule.getBuildTarget();
-      }
-    }));
+    ImmutableSet<BuildTarget> targets = ImmutableSet.copyOf(
+        Iterables.transform(
+            projectConfigs,
+            new Function<BuildRule, BuildTarget>() {
+              @Override
+              public BuildTarget apply(BuildRule rule) {
+                return rule.getBuildTarget();
+              }
+            }));
     PartialGraph partialGraph = PartialGraphFactory.newInstance(graph, targets);
 
     // Create the Project.

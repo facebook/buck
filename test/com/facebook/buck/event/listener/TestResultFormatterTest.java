@@ -82,7 +82,7 @@ public class TestResultFormatterTest {
         false,
         TestSelectorList.empty(),
         false,
-        ImmutableList.of("//:example", "//foo:bar"));
+        ImmutableSet.of("//:example", "//foo:bar"));
 
     assertEquals("TESTING //:example //foo:bar", toString(builder));
   }
@@ -95,7 +95,7 @@ public class TestResultFormatterTest {
         .addRawSelectors("com.example.clown.Car")
         .build();
 
-    ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
+    ImmutableSet<String> targetNames = ImmutableSet.of("//:example", "//foo:bar");
 
     formatter.runStarted(builder, false, testSelectorList, false, targetNames);
 
@@ -110,7 +110,7 @@ public class TestResultFormatterTest {
         .addRawSelectors("com.example.clown.Car")
         .build();
 
-    ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
+    ImmutableSet<String> targetNames = ImmutableSet.of("//:example", "//foo:bar");
     boolean shouldExplain = true;
 
     formatter.runStarted(builder, false, testSelectorList, shouldExplain, targetNames);
@@ -127,7 +127,7 @@ public class TestResultFormatterTest {
   @Test
   public void shouldShowThatAllTestAreBeingRunWhenRunIsStarted() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
+    ImmutableSet<String> targetNames = ImmutableSet.of("//:example", "//foo:bar");
 
     formatter.runStarted(builder, true, TestSelectorList.empty(), false, targetNames);
 
@@ -206,7 +206,7 @@ public class TestResultFormatterTest {
         "%s"),
         failingTest.getTestName(),
         failingTest.getMessage(),
-        stackTrace.toString(),
+        stackTrace,
         failingTest.getStdOut(),
         failingTest.getStdErr());
 

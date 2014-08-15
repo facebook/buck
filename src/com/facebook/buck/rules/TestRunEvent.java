@@ -22,7 +22,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 import java.util.Objects;
@@ -39,7 +39,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
       boolean isRunAllTests,
       TestSelectorList testSelectorList,
       boolean shouldExplainTestSelectorList,
-      List<String> targets) {
+      ImmutableSet<String> targets) {
     return new Started(
         targets.hashCode(),
         isRunAllTests,
@@ -48,7 +48,9 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
         Preconditions.checkNotNull(targets));
   }
 
-  public static Finished finished(List<String> targets, List<TestResults> completedResults) {
+  public static Finished finished(
+      ImmutableSet<String> targets,
+      List<TestResults> completedResults) {
     return new Finished(targets.hashCode(), Preconditions.checkNotNull(completedResults));
   }
 
@@ -66,26 +68,26 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
     private final boolean runAllTests;
     @JsonIgnore private TestSelectorList testSelectorList;
     private boolean shouldExplainTestSelectorList;
-    private final ImmutableList<String> targetNames;
+    private final ImmutableSet<String> targetNames;
 
     public Started(
         int secret,
         boolean runAllTests,
         TestSelectorList testSelectorList,
         boolean shouldExplainTestSelectorList,
-        List<String> targetNames) {
+        ImmutableSet<String> targetNames) {
       super(secret);
       this.runAllTests = runAllTests;
       this.testSelectorList = testSelectorList;
       this.shouldExplainTestSelectorList = shouldExplainTestSelectorList;
-      this.targetNames = ImmutableList.copyOf(Preconditions.checkNotNull(targetNames));
+      this.targetNames = ImmutableSet.copyOf(Preconditions.checkNotNull(targetNames));
     }
 
     public boolean isRunAllTests() {
       return runAllTests;
     }
 
-    public ImmutableList<String> getTargetNames() {
+    public ImmutableSet<String> getTargetNames() {
       return targetNames;
     }
 

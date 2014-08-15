@@ -268,7 +268,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       BuildTargetException, BuildFileParseException, ExecutionException, InterruptedException {
     // We won't have a list of targets until the build is already started, so BuildEvents will get
     // an empty list.
-    ImmutableList<BuildTarget> emptyTargetsList = ImmutableList.of();
+    ImmutableSet<BuildTarget> emptyTargetsList = ImmutableSet.of();
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
     if (getParser().getParseStartTime().isPresent()) {
@@ -402,7 +402,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // We always want to run the rules that are given on the command line. Always. Unless we don't
     // want to.
     if (!options.shouldExcludeWin()) {
-      List<String> allTargets = options.getArgumentsFormattedAsBuildTargets();
+      ImmutableSet<String> allTargets = options.getArgumentsFormattedAsBuildTargets();
       for (TestRule rule : testRules) {
         if (allTargets.contains(rule.getBuildTarget().getFullyQualifiedName())) {
           builder.add(rule);

@@ -95,7 +95,7 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildEventStarted() throws IOException {
-    BuildEvent.Started event = BuildEvent.started(ImmutableList.<BuildTarget>of(
+    BuildEvent.Started event = BuildEvent.started(ImmutableSet.<BuildTarget>of(
         BuildTarget.builder("//base", "short").build()));
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
@@ -106,7 +106,7 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildEventFinished() throws IOException {
-    BuildEvent.Finished event = BuildEvent.finished(ImmutableList.<BuildTarget>of(
+    BuildEvent.Finished event = BuildEvent.finished(ImmutableSet.<BuildTarget>of(
         BuildTarget.builder("//base", "short").build()), 0);
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
@@ -144,7 +144,7 @@ public class EventSerializationTest {
   @Test
   public void testTestRunEventStarted() throws IOException {
     TestRunEvent.Started event = TestRunEvent.started(
-        true, TestSelectorList.empty(), false, ImmutableList.<String>of());
+        true, TestSelectorList.empty(), false, ImmutableSet.<String>of());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
@@ -154,7 +154,7 @@ public class EventSerializationTest {
 
   @Test
   public void testTestRunEventFinished() throws IOException {
-    TestRunEvent.Finished event = TestRunEvent.finished(ImmutableList.<String>of("target"),
+    TestRunEvent.Finished event = TestRunEvent.finished(ImmutableSet.<String>of("target"),
         ImmutableList.<TestResults>of(generateFakeTestResults()));
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);

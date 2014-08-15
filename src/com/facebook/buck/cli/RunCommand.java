@@ -24,6 +24,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 
@@ -59,7 +61,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
     String targetName = options.getTarget();
     BuildTarget target;
     try {
-      target = getBuildTargets(ImmutableList.of(targetName)).get(0);
+      target = Iterables.getOnlyElement(getBuildTargets(ImmutableSet.of(targetName)));
     } catch (NoSuchBuildTargetException e) {
       console.printBuildFailure(e.getMessage());
       return 1;

@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 
 import java.util.List;
@@ -46,7 +47,7 @@ public class TestResultFormatter {
       boolean isRunAllTests,
       TestSelectorList testSelectorList,
       boolean shouldExplainTestSelectorList,
-      ImmutableList<String> targetNames) {
+      ImmutableSet<String> targetNames) {
     if (!testSelectorList.isEmpty()) {
       addTo.add("TESTING SELECTED TESTS");
       if (shouldExplainTestSelectorList) {

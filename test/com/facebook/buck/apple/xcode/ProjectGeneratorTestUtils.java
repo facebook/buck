@@ -128,7 +128,7 @@ final class ProjectGeneratorTestUtils {
 
   public static PartialGraph createPartialGraphFromBuildRuleResolver(BuildRuleResolver resolver) {
     ActionGraph graph = RuleMap.createGraphFromBuildRules(resolver);
-    ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
+    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
     for (BuildRule rule : graph.getNodes()) {
       targets.add(rule.getBuildTarget());
     }

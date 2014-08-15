@@ -33,6 +33,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Argument;
@@ -95,8 +96,8 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     this.arguments = arguments;
   }
 
-  public List<String> getArgumentsFormattedAsBuildTargets() {
-    return getCommandLineBuildTargetNormalizer().normalizeAll(getArguments());
+  public ImmutableSet<String> getArgumentsFormattedAsBuildTargets() {
+    return ImmutableSet.copyOf(getCommandLineBuildTargetNormalizer().normalizeAll(getArguments()));
   }
 
   public boolean isCodeCoverageEnabled() {

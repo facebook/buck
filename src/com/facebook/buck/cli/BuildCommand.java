@@ -54,7 +54,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   @Nullable private Build build;
 
-  private ImmutableList<BuildTarget> buildTargets = ImmutableList.of();
+  private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
 
   public BuildCommand(CommandRunnerParams params) {
     super(params);

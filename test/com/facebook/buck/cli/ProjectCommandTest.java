@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.IosLibraryDescription;
@@ -64,6 +63,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.junit.Before;
@@ -110,12 +110,11 @@ public class ProjectCommandTest {
             "initial_targets = " + javaLibraryTargetName));
 
     ProjectCommandForTest command = new ProjectCommandForTest(projectFilesystem);
-    command.createPartialGraphCallReturnValues.push(
-        createGraphFromBuildRules(ImmutableList.of(ruleConfig)));
+    PartialGraph projectGraph = createGraphFromBuildRules(ImmutableList.of(ruleConfig));
+    command.createPartialGraphCallReturnValues.push(projectGraph);
+    command.createPartialGraphCallReturnValues.push(projectGraph);
 
     command.runCommandWithOptions(createOptions(buckConfig));
-
-    assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
 
     // The PartialGraph comprises build config rules.
     RuleJsonPredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
@@ -161,15 +160,13 @@ public class ProjectCommandTest {
 
     ProjectCommandForTest command = new ProjectCommandForTest(projectFilesystem);
     command.createPartialGraphCallReturnValues.addLast(
-        createGraphFromBuildRules(ImmutableList.<BuildRule>of(ruleConfig)));
+        createGraphFromBuildRules(ImmutableList.of(ruleWith)));
     command.createPartialGraphCallReturnValues.addLast(
         createGraphFromBuildRules(ImmutableList.of(ruleWith)));
 
     ProjectCommandOptions projectCommandOptions = createOptions(buckConfig);
     projectCommandOptions.setProcessAnnotations(true);
     command.runCommandWithOptions(projectCommandOptions);
-
-    assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
 
     // The first PartialGraph comprises build config rules.
     RuleJsonPredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
@@ -262,10 +259,10 @@ public class ProjectCommandTest {
     ProjectCommandForTest command = new ProjectCommandForTest(projectFilesystem);
     command.createPartialGraphCallReturnValues.push(
         createGraphFromBuildRules(ImmutableList.of(barProjectRule)));
+    command.createPartialGraphCallReturnValues.push(
+        createGraphFromBuildRules(ImmutableList.of(barProjectRule)));
 
     command.runCommandWithOptions(createOptions(buckConfig));
-
-    assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
 
     RuleJsonPredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
 
@@ -324,7 +321,9 @@ public class ProjectCommandTest {
 
     ProjectCommandForTest command = new ProjectCommandForTest(projectFilesystem);
     command.createPartialGraphCallReturnValues.push(
-        createGraphFromBuildRules(ImmutableList.of(fooLibRule, fooProjectRule)));
+        createGraphFromBuildRules(ImmutableList.of(fooProjectRule)));
+    command.createPartialGraphCallReturnValues.push(
+        createGraphFromBuildRules(ImmutableList.of(fooProjectRule)));
 
     ProjectCommandOptions projectCommandOptions = createOptions(buckConfig);
     projectCommandOptions.setArguments(ImmutableList.of("//foo:project"));
@@ -333,8 +332,6 @@ public class ProjectCommandTest {
     projectFilesystem.touch(Paths.get("foo/BUCK"));
 
     command.runCommandWithOptions(projectCommandOptions);
-
-    assertTrue(command.createPartialGraphCallReturnValues.isEmpty());
 
     RuleJsonPredicate projectConfigPredicate = command.createPartialGraphCallPredicates.get(0);
 
@@ -375,12 +372,15 @@ public class ProjectCommandTest {
       }
     }
 
-    List<BuildTarget> buildTargets = Lists.transform(rules, new Function<BuildRule, BuildTarget>() {
-      @Override
-      public BuildTarget apply(BuildRule rule) {
-        return rule.getBuildTarget();
-      }
-    });
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.copyOf(
+        Iterables.transform(
+            rules,
+            new Function<BuildRule, BuildTarget>() {
+              @Override
+              public BuildTarget apply(BuildRule rule) {
+                return rule.getBuildTarget();
+              }
+            }));
 
     ActionGraph actionGraph = new ActionGraph(graph);
     return PartialGraphFactory.newInstance(actionGraph, buildTargets);

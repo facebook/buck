@@ -38,7 +38,6 @@ import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -122,7 +121,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
   @VisibleForTesting
   int printClasspath(PartialGraph partialGraph) {
-    List<BuildTarget> targets = partialGraph.getTargets();
+    ImmutableSet<BuildTarget> targets = partialGraph.getTargets();
     ActionGraph graph = partialGraph.getActionGraph();
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
@@ -147,7 +146,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   @VisibleForTesting
   int printJsonClasspath(PartialGraph partialGraph) throws IOException {
     ActionGraph graph = partialGraph.getActionGraph();
-    List<BuildTarget> targets = partialGraph.getTargets();
+    ImmutableSet<BuildTarget> targets = partialGraph.getTargets();
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {

@@ -19,8 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.google.common.base.Preconditions;
-
-import java.util.List;
+import com.google.common.collect.ImmutableSet;
 
 public class PartialGraphFactory {
 
@@ -34,7 +33,7 @@ public class PartialGraphFactory {
    * checks. Therefore, it is the responsibility of the caller to ensure that the graph is a
    * DependencyGraph built from the list of targets.
    */
-  public static PartialGraph newInstance(ActionGraph graph, List<BuildTarget> targets) {
+  public static PartialGraph newInstance(ActionGraph graph, ImmutableSet<BuildTarget> targets) {
     Preconditions.checkNotNull(graph);
     Preconditions.checkNotNull(targets);
     return new PartialGraph(graph, targets);

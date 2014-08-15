@@ -240,11 +240,11 @@ public class ParserTest extends EasyMockSupport {
 
     parser.parseRawRulesInternal(ruleObjects);
     RuleJsonPredicate predicate = alwaysTrue();
-    List<BuildTarget> targets = parser.filterTargets(predicate);
+    ImmutableSet<BuildTarget> targets = parser.filterTargets(predicate);
     BuildTarget expectedBuildTarget = BuildTarget.builder(
         "//testdata/com/facebook/feed/model",
         "feed").build();
-    assertEquals(ImmutableList.of(expectedBuildTarget), targets);
+    assertEquals(ImmutableSet.of(expectedBuildTarget), targets);
 
     try {
       parser.onlyUseThisWhenTestingToFindAllTransitiveDependencies(
@@ -435,14 +435,14 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void whenAllRulesRequestedWithTrueFilterThenMultipleRulesReturned()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    List<BuildTarget> targets = testParser.filterAllTargetsInProject(
+    ImmutableSet<BuildTarget> targets = testParser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
         ImmutableMap.<String, String>of());
 
-    List<BuildTarget> expectedTargets = ImmutableList.of(
+    ImmutableSet<BuildTarget> expectedTargets = ImmutableSet.of(
         BuildTarget.builder("//java/com/facebook", "foo").build(),
         BuildTarget.builder("//java/com/facebook", "bar").build());
     assertEquals("Should have returned all rules.", expectedTargets, targets);

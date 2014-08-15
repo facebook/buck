@@ -796,10 +796,10 @@ public class Parser {
    * @return the build targets that pass the test, or null if the filter was null.
    */
   @VisibleForTesting
-  List<BuildTarget> filterTargets(RuleJsonPredicate filter)
+  ImmutableSet<BuildTarget> filterTargets(RuleJsonPredicate filter)
       throws NoSuchBuildTargetException {
 
-    List<BuildTarget> matchingTargets = Lists.newArrayList();
+    ImmutableSet.Builder<BuildTarget> matchingTargets = ImmutableSet.builder();
     for (Map<String, Object> map : parsedBuildFiles.values()) {
       BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
       BuildTarget target = parseBuildTargetFromRawRule(map);
@@ -808,7 +808,7 @@ public class Parser {
       }
     }
 
-    return matchingTargets;
+    return matchingTargets.build();
   }
 
   /**
@@ -841,7 +841,7 @@ public class Parser {
    *     in the List returned by this method. If filter is null, then this method returns null.
    * @return The build targets in the project filtered by the given filter.
    */
-  public synchronized List<BuildTarget> filterAllTargetsInProject(
+  public synchronized ImmutableSet<BuildTarget> filterAllTargetsInProject(
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       RuleJsonPredicate filter,
@@ -876,8 +876,8 @@ public class Parser {
    * {@link RuleJsonPredicates#matchBuildRuleType(BuildRuleType)} for an example of such a
    * {@link RuleJsonPredicate}.
    */
-  public synchronized Iterable<BuildTarget> targetsInProjectFromRoots(
-      Iterable<BuildTarget> roots,
+  public synchronized ImmutableSet<BuildTarget> targetsInProjectFromRoots(
+      ImmutableSet<BuildTarget> roots,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
       Console console,
@@ -890,13 +890,15 @@ public class Parser {
         console,
         environment);
 
-    return FluentIterable.from(actionGraph.getNodes()).transform(
-        new Function<BuildRule, BuildTarget>() {
-          @Override
-          public BuildTarget apply(BuildRule input) {
-            return input.getBuildTarget();
-          }
-        });
+    return ImmutableSet.copyOf(
+        FluentIterable.from(
+            actionGraph.getNodes()).transform(
+            new Function<BuildRule, BuildTarget>() {
+              @Override
+              public BuildTarget apply(BuildRule input) {
+                return input.getBuildTarget();
+                }
+              }));
   }
 
   /**

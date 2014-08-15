@@ -102,7 +102,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     PartialGraph graph;
     try {
       if (matchingBuildTargets.isEmpty()) {
-        graph = PartialGraph.createFullGraph(getProjectFilesystem(),
+        graph = PartialGraph.createFullGraph(
+            getProjectFilesystem(),
             options.getDefaultIncludes(),
             getParser(),
             getBuckEventBus(),

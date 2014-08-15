@@ -311,8 +311,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ImmutableSet<BuildTarget> passedInTargetsSet;
 
     try {
-      List<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
-      passedInTargetsSet = ImmutableSet.copyOf(getBuildTargets(argumentsAsBuildTargets));
+      ImmutableSet<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
+      passedInTargetsSet = getBuildTargets(argumentsAsBuildTargets);
     } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e);
     }
@@ -409,7 +409,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       AssociatedRulePredicate associatedRulePredicate,
       ProjectCommandOptions options)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    List<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
+    ImmutableSet<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
 
     if (argumentsAsBuildTargets.isEmpty()) {
       return PartialGraph.createPartialGraph(
@@ -423,7 +423,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     } else {
       // If build targets were specified, generate a partial intellij project that contains the
       // files needed to build the build targets specified.
-      ImmutableList<BuildTarget> targets = getBuildTargets(argumentsAsBuildTargets);
+      ImmutableSet<BuildTarget> targets = getBuildTargets(argumentsAsBuildTargets);
 
       ImmutableList.Builder<RuleJsonPredicate> predicateBuilder = ImmutableList.builder();
       ImmutableList.Builder<AssociatedRulePredicate> associatedRulePredicateBuilder =

@@ -43,14 +43,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.List;
 
 public class AuditInputCommandTest {
 
@@ -109,12 +109,15 @@ public class AuditInputCommandTest {
         .addDep(rootRule)
         .build(ruleResolver);
 
-    List<BuildTarget> buildTargets = Lists.transform(targets, new Function<String, BuildTarget>() {
-      @Override
-      public BuildTarget apply(String target) {
-        return BuildTargetFactory.newInstance(target);
-      }
-    });
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.copyOf(
+        Iterables.transform(
+            targets,
+            new Function<String, BuildTarget>() {
+              @Override
+              public BuildTarget apply(String target) {
+                return BuildTargetFactory.newInstance(target);
+              }
+            }));
     ActionGraph actionGraph = RuleMap.createGraphFromBuildRules(ruleResolver);
     PartialGraph partialGraph = PartialGraphFactory.newInstance(actionGraph, buildTargets);
 

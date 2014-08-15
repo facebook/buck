@@ -66,6 +66,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
@@ -270,12 +271,15 @@ public class TargetsCommandTest {
 
   private PartialGraph createGraphFromBuildRules(BuildRuleResolver ruleResolver,
       List<String> targets) {
-    List<BuildTarget> buildTargets = Lists.transform(targets, new Function<String, BuildTarget>() {
-      @Override
-      public BuildTarget apply(String target) {
-        return BuildTargetFactory.newInstance(target);
-      }
-    });
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.copyOf(
+        Iterables.transform(
+            targets,
+            new Function<String, BuildTarget>() {
+              @Override
+              public BuildTarget apply(String target) {
+                return BuildTargetFactory.newInstance(target);
+              }
+            }));
 
     ActionGraph actionGraph = RuleMap.createGraphFromBuildRules(ruleResolver);
     return PartialGraphFactory.newInstance(actionGraph, buildTargets);

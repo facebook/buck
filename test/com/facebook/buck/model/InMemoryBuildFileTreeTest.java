@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 import org.easymock.EasyMock;
 import org.junit.Rule;
@@ -34,7 +33,6 @@ import org.junit.rules.TemporaryFolder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 public class InMemoryBuildFileTreeTest {
@@ -74,15 +72,15 @@ public class InMemoryBuildFileTreeTest {
 
   private static PartialGraph createGraphForRules(String... ruleNames) {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    List<BuildTarget> targets = Lists.newArrayList();
+    ImmutableSet.Builder<BuildTarget> targetsBuilder = ImmutableSet.builder();
     for (String ruleName : ruleNames) {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ruleName);
       JavaLibraryBuilder.createBuilder(buildTarget).build(ruleResolver);
-      targets.add(buildTarget);
+      targetsBuilder.add(buildTarget);
     }
 
     PartialGraph partialGraph = EasyMock.createMock(PartialGraph.class);
-    EasyMock.expect(partialGraph.getTargets()).andReturn(targets);
+    EasyMock.expect(partialGraph.getTargets()).andReturn(targetsBuilder.build());
     EasyMock.replay(partialGraph);
     return partialGraph;
   }

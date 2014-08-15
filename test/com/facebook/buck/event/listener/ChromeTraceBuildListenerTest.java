@@ -138,7 +138,7 @@ public class ChromeTraceBuildListenerTest {
     ExecutionContext context = createMock(ExecutionContext.class);
     replay(context);
 
-    ImmutableList<BuildTarget> buildTargets = ImmutableList.of(target);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(target);
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock,
         new BuildId("ChromeTraceBuildListenerTestBuildId"));
