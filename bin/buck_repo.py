@@ -170,7 +170,7 @@ class BuckRepo:
 
         command = ["java"]
         command.extend(self._get_java_args(self._buck_version_uid))
-        command.append("-Djava.io.tmpdir={}".format(self._tmp_dir))
+        command.append("-Djava.io.tmpdir={0}".format(self._tmp_dir))
         command.append("-classpath")
         command.append(self._get_java_classpath())
         command.append("com.facebook.buck.cli.Main")
@@ -195,14 +195,14 @@ class BuckRepo:
         command = ["java"]
         command.extend(self._get_java_args(self._buck_version_uid))
         command.append("-Dbuck.buckd_watcher=Watchman")
-        command.append("-XX:MaxGCPauseMillis={}".format(GC_MAX_PAUSE_TARGET))
+        command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
         command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
-        command.append("-Djava.io.tmpdir={}".format(buckd_tmp_dir))
+        command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
         command.append("-classpath")
         command.append(self._get_java_classpath())
         command.append("com.martiansoftware.nailgun.NGServer")
         command.append("localhost:0")
-        command.append("{}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
+        command.append("{0}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
 
         '''
         We want to launch the buckd process in such a way that it finds the
@@ -258,7 +258,7 @@ class BuckRepo:
         buckd_pid = self._buck_project.get_buckd_pid()
         if buckd_pid:
             if not buckd_pid.isdigit():
-                print("WARNING: Corrupt buckd pid: '{}'.".format(buckd_pid))
+                print("WARNING: Corrupt buckd pid: '{0}'.".format(buckd_pid))
             else:
                 self._kill_buckd_process_and_wait(int(buckd_pid))
 
@@ -341,7 +341,7 @@ class BuckRepo:
 
         if current_revision != revision:
             print(textwrap.dedent("""\
-                Buck is at {}, but should be {}.
+                Buck is at {0}, but should be {1}.
                 Buck is updating itself. To disable this, add a '.nobuckcheck'
                 file to your project root. In general, you should only disable
                 this if you are developing Buck.""".format(
@@ -370,7 +370,7 @@ class BuckRepo:
         if not self._is_git:
             return False
 
-        output = subprocess.check_output(
+        output = check_output(
             ['git', 'status', '--porcelain'],
             cwd=self._buck_dir)
         return bool(output.strip())
@@ -379,7 +379,7 @@ class BuckRepo:
         if not self._is_git:
             return False
 
-        output = subprocess.check_output(
+        output = check_output(
             ['git', 'ls-files', '-m'],
             cwd=self._buck_dir)
         return bool(output.strip())
@@ -388,7 +388,7 @@ class BuckRepo:
         if not self._is_git:
             return 'N/A'
 
-        output = subprocess.check_output(
+        output = check_output(
             ['git', 'rev-parse', 'HEAD', '--'],
             cwd=self._buck_dir)
         return output.splitlines()[0].strip()
@@ -397,7 +397,7 @@ class BuckRepo:
         if not self._is_git:
             return -1
 
-        return subprocess.check_output(
+        return check_output(
             ['git', 'log', '--pretty=format:%ct', '-1', 'HEAD', '--'],
             cwd=self._buck_dir).strip()
 
@@ -415,7 +415,7 @@ class BuckRepo:
             raise BuckRepoException(message)
 
     def _print_ant_failure_and_exit(self):
-        print("::: 'ant' failed in the buck repo at {}.".format(
+        print("::: 'ant' failed in the buck repo at {0}.".format(
               self._buck_dir), file=sys.stderr)
         if self._is_git:
             raise BuckRepoException(textwrap.dedent("""\
@@ -448,7 +448,7 @@ class BuckRepo:
             sys.exit(exitcode)
 
     def _compute_local_hash(self):
-        git_tree_in = subprocess.check_output(
+        git_tree_in = check_output(
             ['git', 'log', '-n1', '--pretty=format:%T', 'HEAD', '--'],
             cwd=self._buck_dir).strip()
 
@@ -467,7 +467,7 @@ class BuckRepo:
                 stderr=DEV_NULL,
                 env=new_environ)
 
-            git_tree_out = subprocess.check_output(
+            git_tree_out = check_output(
                 ['git', 'write-tree'],
                 cwd=self._buck_dir,
                 env=new_environ).strip()
@@ -478,7 +478,7 @@ class BuckRepo:
                 ['git', 'ls-tree',  '--full-tree', git_tree_out],
                 cwd=self._buck_dir,
                 stdout=uid_input)
-            return subprocess.check_output(
+            return check_output(
                 ['git', 'hash-object', uid_input.name],
                 cwd=self._buck_dir).strip()
 
@@ -539,17 +539,17 @@ class BuckRepo:
             "-Djava.awt.headless=true",
             "-Djava.util.logging.config.class=com.facebook.buck.log.LogConfig",
             "-Dbuck.test_util_no_tests_dir=true",
-            "-Dbuck.git_commit={}".format(self._get_git_revision()),
-            "-Dbuck.git_commit_timestamp={}".format(
+            "-Dbuck.git_commit={0}".format(self._get_git_revision()),
+            "-Dbuck.git_commit_timestamp={0}".format(
                 self._get_git_commit_timestamp()),
-            "-Dbuck.version_uid={}".format(version_uid),
-            "-Dbuck.git_dirty={}".format(int(self._is_dirty())),
-            "-Dbuck.buckd_dir={}".format(self._buck_project.buckd_dir),
-            "-Dlog4j.configuration=file:{}".format(
+            "-Dbuck.version_uid={0}".format(version_uid),
+            "-Dbuck.git_dirty={0}".format(int(self._is_dirty())),
+            "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
+            "-Dlog4j.configuration=file:{0}".format(
                 self._join_buck_dir("config/log4j.properties")),
         ])
         for key, value in BUCK_DIR_JAVA_ARGS.items():
-            java_args.append("-Dbuck.{}={}".format(
+            java_args.append("-Dbuck.{0}={1}".format(
                              key, self._join_buck_dir(value)))
 
         if os.environ.get("BUCK_DEBUG_MODE"):
@@ -641,7 +641,26 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
     return None
 
 
+# Backport of the Python 2.7 subprocess.check_output. Taken from
+# http://hg.python.org/cpython/file/71cb8f605f77/Lib/subprocess.py
+# Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se>
+# Licensed to PSF under a Contributor Agreement.
+# See http://www.python.org/2.4/license for licensing details.
+def check_output(*popenargs, **kwargs):
+    if 'stdout' in kwargs:
+        raise ValueError('stdout argument not allowed, it will be overridden.')
+    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+    output, unused_err = process.communicate()
+    retcode = process.poll()
+    if retcode:
+        cmd = kwargs.get("args")
+        if cmd is None:
+            cmd = popenargs[0]
+        raise subprocess.CalledProcessError(retcode, cmd, output=output)
+    return output
+
+
 def is_java8():
-    output = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
+    output = check_output(['java', '-version'], stderr=subprocess.STDOUT)
     version_line = output.strip().splitlines()[0]
     return re.compile('java version "1\.8\..*').match(version_line)

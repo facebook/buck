@@ -7,7 +7,7 @@ import textwrap
 import shutil
 import sys
 
-from buck_repo import which
+from buck_repo import check_output, which
 
 
 def get_file_contents_if_exists(path, default=None):
@@ -84,7 +84,7 @@ class BuckProject:
         if os.path.exists(self.buckd_dir):
             shutil.rmtree(self.buckd_dir)
         if which('watchman'):
-            trigger_list_output = subprocess.check_output(
+            trigger_list_output = check_output(
                 ['watchman', 'trigger-list', self.root])
             trigger_list = json.loads(trigger_list_output)
             if not trigger_list.get('triggers'):

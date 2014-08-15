@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import sys
 import json
 import shutil
-import hashlib
 import tempfile
-import argparse
-import subprocess
+import optparse
 
 # Find the buck repo root relative this file.  We'll use this
 # to find the PEX library components and a recent version of
@@ -38,12 +37,16 @@ def dereference_symlinks(src):
     return src
 
 
-def main(argv):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--entry-point', default='__main__')
-    parser.add_argument('--python', default=sys.executable)
-    parser.add_argument('output')
-    args = parser.parse_args(argv[1:])
+def main():
+    parser = optparse.OptionParser(usage="usage: %prog [options] output")
+    parser.add_option('--entry-point', default='__main__')
+    parser.add_option('--python', default=sys.executable)
+    options, args = parser.parse_args()
+    if len(args) == 1:
+        output = args[0]
+    else:
+        parser.error("'output' positional argument is required")
+        return 1
 
     # The manifest is passed via stdin, as it can sometimes get too large
     # to be passed as a CLA.
@@ -58,7 +61,8 @@ def main(argv):
         # force it into the process by constructing a custom PythonInterpreter
         # instance using it.
         interpreter = PythonInterpreter(
-            args.python, PythonInterpreter.from_binary(args.python).identity,
+            options.python,
+            PythonInterpreter.from_binary(options.python).identity,
             extras={('setuptools', '1.0'):
                     os.path.join(BUCK_ROOT, 'third-party/py/setuptools')})
 
@@ -75,7 +79,7 @@ def main(argv):
         pex_builder.info.zip_safe = True
 
         # Set the starting point for this PEX.
-        pex_builder.info.entry_point = args.entry_point
+        pex_builder.info.entry_point = options.entry_point
 
         # Add the sources listed in the manifest.
         for dst, src in manifest['modules'].iteritems():
@@ -92,11 +96,11 @@ def main(argv):
             pex_builder.add_resource(dereference_symlinks(src), dst)
 
         # Generate the PEX file.
-        pex_builder.build(args.output)
+        pex_builder.build(output)
 
     # Always try cleaning up the scratch dir, ignoring failures.
     finally:
         shutil.rmtree(tmp_dir, True)
 
 
-sys.exit(main(sys.argv))
+sys.exit(main())
