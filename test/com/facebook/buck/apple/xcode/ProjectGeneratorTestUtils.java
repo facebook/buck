@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
@@ -152,26 +153,39 @@ final class ProjectGeneratorTestUtils {
 
   public static void assertHasSingletonFrameworksPhaseWithFrameworkEntries(
       PBXTarget target, ImmutableList<String> frameworks) {
-    PBXFrameworksBuildPhase buildPhase =
-        getSingletonPhaseByType(target, PBXFrameworksBuildPhase.class);
-    assertEquals("Framework phase should have right number of elements",
-        frameworks.size(), buildPhase.getFiles().size());
+    assertHasSingletonPhaseWithEntries(target, PBXFrameworksBuildPhase.class, frameworks);
+  }
+
+  public static void assertHasSingletonCopyFilesPhaseWithFileEntries(
+    PBXTarget target, ImmutableList<String>files) {
+    assertHasSingletonPhaseWithEntries(target, PBXCopyFilesBuildPhase.class, files);
+  }
+
+  public static <T extends PBXBuildPhase> void assertHasSingletonPhaseWithEntries(
+      PBXTarget target,
+      final Class<T> cls,
+      ImmutableList<String> entries) {
+    PBXBuildPhase buildPhase = getSingletonPhaseByType(target, cls);
+    assertEquals(
+        "Phase should have right number of entries",
+        entries.size(),
+        buildPhase.getFiles().size());
 
     for (PBXBuildFile file : buildPhase.getFiles()) {
       PBXReference.SourceTree sourceTree = file.getFileRef().getSourceTree();
       switch (sourceTree) {
         case GROUP:
-          fail("Should not emit frameworks with sourceTree <group>");
+          fail("Should not emit entries with sourceTree <group>");
           break;
         case ABSOLUTE:
-          fail("Should not emit frameworks with sourceTree <absolute>");
+          fail("Should not emit entries with sourceTree <absolute>");
           break;
         // $CASES-OMITTED$
         default:
           String serialized = "$" + sourceTree + "/" + file.getFileRef().getPath();
           assertTrue(
-              "Framework should be listed in list of expected frameworks: " + serialized,
-              frameworks.contains(serialized));
+              "Framework should be listed in list of expected entries: " + serialized,
+              entries.contains(serialized));
           break;
       }
     }

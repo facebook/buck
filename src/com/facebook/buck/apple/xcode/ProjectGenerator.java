@@ -24,6 +24,8 @@ import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule;
 import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleExtension;
+import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.CoreDataModel;
 import com.facebook.buck.apple.CoreDataModelDescription;
@@ -410,6 +412,11 @@ public class ProjectGenerator {
       result = Optional.of((PBXTarget) generateMacosxBinaryTarget(
             project, rule, binary));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
+    } else if (rule.getType().equals(AppleExtensionDescription.TYPE)) {
+      AppleExtension binary = (AppleExtension) rule;
+      result = Optional.of((PBXTarget) generateExtensionTarget(
+              project, rule, binary));
+      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
     } else {
       result = Optional.absent();
       nativeTargetRule = Optional.absent();
@@ -573,6 +580,22 @@ public class ProjectGenerator {
     }
   }
 
+  private PBXNativeTarget generateExtensionTarget(
+      PBXProject project,
+      BuildRule rule,
+      AppleExtension buildable)
+      throws IOException {
+    PBXNativeTarget target = generateBinaryTarget(
+        project,
+        rule,
+        buildable,
+        PBXTarget.ProductType.APP_EXTENSION,
+        "%s.appex",
+        IosResourceDescription.TYPE);
+    project.getTargets().add(target);
+    return target;
+  }
+
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       BuildRule rule,
@@ -631,6 +654,26 @@ public class ProjectGenerator {
     addCoreDataModelBuildPhase(
         targetGroup,
         collectCoreDataModels(rule.getDeps()));
+
+    // -- copy any extensions into this bundle
+    ImmutableSet.Builder<SourceTreePath> extensionsSourceTreePathsBuilder = ImmutableSet.builder();
+    Iterable<BuildRule> extensions = getRecursiveRuleDependenciesOfType(
+        rule,
+        AppleExtensionDescription.TYPE);
+    for (BuildRule extension : extensions) {
+
+      extensionsSourceTreePathsBuilder.add(
+          new SourceTreePath(
+              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+              extension.getPathToOutputFile().getFileName()));
+    }
+    addCopyFilesBuildPhase(
+        target,
+        project.getMainGroup().getOrCreateChildGroupByName("Products"),
+        PBXCopyFilesBuildPhase.Destination.PLUGINS,
+        "",
+        extensionsSourceTreePathsBuilder.build());
+
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
