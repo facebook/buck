@@ -46,12 +46,11 @@ import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFramework;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.OsxResourceDescription;
-import com.facebook.buck.apple.XcodeRuleConfiguration;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
+import com.facebook.buck.apple.XcodeRuleConfiguration;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
@@ -69,9 +68,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
-import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -350,7 +347,6 @@ public class ProjectGenerator {
                 xcodeConfigurationLayersMultimapBuilder.build()));
       }
 
-      addGeneratedSignedSourceTarget(project);
       writeProjectFile(project);
 
       if (options.contains(Option.GENERATE_WORKSPACE)) {
@@ -498,11 +494,6 @@ public class ProjectGenerator {
           Paths.get(getProductName(rule.getBuildTarget())),
           buildable.getSrcs(),
           buildable.getPerFileFlags());
-      // Make .hmap files signable. The empty key is impossible: #include <> or "" does not parse.
-      builder.add(
-          "",
-          "",
-          "\n// @gen" + "erated SignedSource<<00000000000000000000000000000000>>\n");
       HeaderMap headerMap = builder.build();
       String headerMapName = getProductName(rule.getBuildTarget()) + "-public-headers.hmap";
       Path headerMapFile = projectPath.resolve(headerMapName);
@@ -1449,26 +1440,6 @@ public class ProjectGenerator {
     }
   }
 
-  private void addGeneratedSignedSourceTarget(PBXProject project) {
-    PBXAggregateTarget target = new PBXAggregateTarget("GeneratedSignedSourceTarget");
-    // If we don't do this, Xcode "helpfully" generates a new configuration list
-    // with a new GID every time.
-    XCConfigurationList buildConfigurationList = new XCConfigurationList();
-    for (String projectConfigurationName :
-           project.getBuildConfigurationList().getBuildConfigurationsByName().asMap().keySet()) {
-      buildConfigurationList.getBuildConfigurationsByName().getUnchecked(projectConfigurationName);
-    }
-    target.setBuildConfigurationList(buildConfigurationList);
-    setTargetGIDIfNameInMap(target, targetNameToGIDMap);
-    PBXShellScriptBuildPhase generatedSignedSourceScriptPhase = new PBXShellScriptBuildPhase();
-    generatedSignedSourceScriptPhase.setShellScript(
-        "# Do not change or remove this. This is a generated script phase\n" +
-            "# used solely to include a signature in the generated Xcode project.\n" +
-            "# " + SourceSigner.SIGNED_SOURCE_PLACEHOLDER);
-    target.getBuildPhases().add(generatedSignedSourceScriptPhase);
-    project.getTargets().add(target);
-  }
-
   /**
    * Create the project bundle structure and write {@code project.pbxproj}.
    */
@@ -1485,14 +1456,7 @@ public class ProjectGenerator {
     Path xcodeprojDir = outputDirectory.resolve(projectName + ".xcodeproj");
     projectFilesystem.mkdirs(xcodeprojDir);
     Path serializedProject = xcodeprojDir.resolve("project.pbxproj");
-    String unsignedXmlProject = rootObject.toXMLPropertyList();
-    Optional<String> signedXmlProject = SourceSigner.sign(unsignedXmlProject);
-    String contentsToWrite;
-    if (signedXmlProject.isPresent()) {
-      contentsToWrite = signedXmlProject.get();
-    } else {
-      contentsToWrite = unsignedXmlProject;
-    }
+    String contentsToWrite = rootObject.toXMLPropertyList();
     // Before we write any files, check if the file contents have changed.
     if (MorePaths.fileContentsDiffer(
             new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),

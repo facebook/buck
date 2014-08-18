@@ -63,7 +63,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
@@ -105,7 +104,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -191,20 +189,6 @@ public class ProjectGeneratorTest {
     assertThat(
         workspace,
         hasXPath("/Workspace/FileRef/@location", equalTo("container:" + PROJECT_CONTAINER)));
-  }
-
-  @Test
-  public void testProjectFileSigning() throws IOException {
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<BuildRule>of(), ImmutableSet.<BuildTarget>of());
-
-    projectGenerator.createXcodeProjects();
-
-    Optional<String> pbxproj = projectFilesystem.readFileIfItExists(OUTPUT_PROJECT_FILE_PATH);
-    assertTrue(pbxproj.isPresent());
-    assertEquals(
-        SourceSigner.SignatureStatus.OK,
-        SourceSigner.getSignatureStatus(pbxproj.get()));
   }
 
   @Test
@@ -373,10 +357,7 @@ public class ProjectGeneratorTest {
 
     byte[] bytes = projectFilesystem.readFileIfItExists(headerMapFile).get().getBytes();
     HeaderMap map = HeaderMap.deserialize(bytes);
-    assertEquals(2, map.getNumEntries());
-    assertEquals(
-        "\n// @gen" + "erated SignedSource<<00000000000000000000000000000000>>\n",
-        map.lookup(""));
+    assertEquals(1, map.getNumEntries());
     assertEquals(
         "bar.h",
         map.lookup("lib/bar.h"));
@@ -561,11 +542,12 @@ public class ProjectGeneratorTest {
     Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.<String, String>of());
     ImmutableMap<String, ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs =
-        ImmutableMap.of("Debug", ImmutableList.of(
-            argConfig,
-            argSettings,
-            argConfig,
-            argSettings));
+        ImmutableMap.of(
+            "Debug", ImmutableList.of(
+                argConfig,
+                argSettings,
+                argConfig,
+                argSettings));
 
     {
       BuildRuleParams params =
@@ -1309,7 +1291,7 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    assertThat(project.getTargets(), hasSize(2));
+    assertThat(project.getTargets(), hasSize(1));
     PBXTarget target = project.getTargets().get(0);
     assertThat(target.getName(), equalTo("//foo:lib"));
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1370,7 +1352,7 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    assertThat(project.getTargets(), hasSize(2));
+    assertThat(project.getTargets(), hasSize(1));
     PBXTarget target = project.getTargets().get(0);
     assertThat(target.getName(), equalTo("//foo:bin"));
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1477,7 +1459,8 @@ public class ProjectGeneratorTest {
     arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
+    arg.srcs = ImmutableList.of(
+        AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of();
@@ -1586,8 +1569,8 @@ public class ProjectGeneratorTest {
         projectGenerator.getBuildRuleToGeneratedTargetMap().values());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
-        "foo.m", Optional.of("-foo"),
-        "bar.m", Optional.<String>absent()));
+            "foo.m", Optional.of("-foo"),
+            "bar.m", Optional.<String>absent()));
   }
 
   @Test
@@ -2010,82 +1993,6 @@ public class ProjectGeneratorTest {
         "//foo:lib");
     // Ensure the GID for the target is the same as the one previously on disk.
     assertThat(target.getGlobalID(), equalTo("ABCDE"));
-  }
-
-  @Test
-  public void generatedSourceTargetGidShouldReuseIfNameMatchInExistingProject() throws IOException {
-    String projectData =
-      "// !$*UTF8*$!\n" +
-      "{\n" +
-      "  archiveVersion = 1;\n" +
-      "  classes = {};\n" +
-      "  objectVersion = 46;\n" +
-      "  objects = {\n" +
-      "    /* Begin PBXAggregateTarget section */\n" +
-      "            93C1B2AA1B49969700000000 /* GeneratedSignedSourceTarget */ = {\n" +
-      "                         isa = PBXAggregateTarget;\n" +
-      "                         buildConfigurationList = 64D2EE2518E12BBC00773179 /* Build " +
-      "configuration list for PBXAggregateTarget \"GeneratedSignedSourceTarget\" */;\n" +
-      "                         buildPhases = (\n" +
-      "                                 E1F174220000000000000000 /* ShellScript */,\n" +
-      "                         );\n" +
-      "                         dependencies = (\n" +
-      "                         );\n" +
-      "                         name = GeneratedSignedSourceTarget;\n" +
-      "                         productName = GeneratedSignedSourceTarget;\n" +
-      "                 };\n" +
-      "    /* End PBXAggregateTarget section */\n" +
-      "    };\n" +
-      "  };\n" +
-      "}";
-    projectFilesystem.writeContentsToPath(projectData, OUTPUT_PROJECT_FILE_PATH);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<BuildRule>of(),
-        ImmutableSet.<BuildTarget>of());
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "GeneratedSignedSourceTarget");
-    // Ensure the GID for the target is the same as the one previously on disk.
-    assertThat(target.getGlobalID(), equalTo("93C1B2AA1B49969700000000"));
-  }
-
-  @Test
-  public void generatedSourceTargetShouldHaveConfigsWithSameNamesAsProjectConfigs()
-      throws IOException {
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(IosLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
-    arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.srcs = ImmutableList.of();
-    arg.frameworks = ImmutableSortedSet.of();
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
-    BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    Set<String> projectConfigurationNames =
-      project.getBuildConfigurationList().getBuildConfigurationsByName().asMap().keySet();
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "GeneratedSignedSourceTarget");
-    Set<String> generatedSignedSourceTargetNames =
-      target.getBuildConfigurationList().getBuildConfigurationsByName().asMap().keySet();
-    assertEquals(ImmutableSet.of("Debug"), projectConfigurationNames);
-    assertEquals(projectConfigurationNames, generatedSignedSourceTargetNames);
   }
 
   @Test

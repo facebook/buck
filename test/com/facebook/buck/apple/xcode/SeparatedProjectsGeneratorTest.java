@@ -23,7 +23,6 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuil
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.isA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -36,7 +35,6 @@ import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
@@ -176,15 +174,11 @@ public class SeparatedProjectsGeneratorTest {
 
     PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
 
-    assertThat("Has only two targets", project.getTargets(), hasSize(2));
+    assertThat("Has only one targets", project.getTargets(), hasSize(1));
     assertThat(
-        "One of the targets is the named target",
+        "The target is the named target",
         project.getTargets(),
         hasItem(isTargetWithName("somelib")));
-    assertThat(
-        "Only other target is signed-source target",
-        project.getTargets(),
-        hasItem(isA(PBXAggregateTarget.class)));
   }
 
   @Test
