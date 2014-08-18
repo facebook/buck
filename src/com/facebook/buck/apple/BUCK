@@ -18,6 +18,7 @@ java_library(
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
+    '//third-party/java/infer-annotations:infer-annotations',
   ],
   visibility = [
     'PUBLIC'

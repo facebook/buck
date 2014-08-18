@@ -39,12 +39,11 @@ import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
-import com.facebook.buck.apple.AppleResourceDescriptionArg;
+import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
-import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
@@ -125,7 +124,7 @@ public class ProjectGeneratorTest {
   private IosTestDescription iosTestDescription;
   private IosBinaryDescription iosBinaryDescription;
   private IosPostprocessResourcesDescription iosPostprocessResourcesDescription;
-  private IosResourceDescription iosResourceDescription;
+  private AppleResourceDescription appleResourceDescription;
   private MacosxFrameworkDescription macosxFrameworkDescription;
   private MacosxBinaryDescription macosxBinaryDescription;
   private AppleExtensionDescription appleExtensionDescription;
@@ -142,7 +141,7 @@ public class ProjectGeneratorTest {
     iosTestDescription = new IosTestDescription();
     iosBinaryDescription = new IosBinaryDescription();
     iosPostprocessResourcesDescription = new IosPostprocessResourcesDescription();
-    iosResourceDescription = new IosResourceDescription();
+    appleResourceDescription = new AppleResourceDescription();
     macosxFrameworkDescription = new MacosxFrameworkDescription();
     macosxBinaryDescription = new MacosxBinaryDescription();
     appleExtensionDescription = new AppleExtensionDescription();
@@ -1479,10 +1478,10 @@ public class ProjectGeneratorTest {
     BuildRule resourceRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "resource").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosResourceDescription,
-        new Function<AppleResourceDescriptionArg, AppleResourceDescriptionArg>() {
+        appleResourceDescription,
+        new Function<AppleResourceDescription.Arg, AppleResourceDescription.Arg>() {
           @Override
-          public AppleResourceDescriptionArg apply(AppleResourceDescriptionArg input) {
+          public AppleResourceDescription.Arg apply(AppleResourceDescription.Arg input) {
             input.files = ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png"));
             return input;
           }
@@ -1838,10 +1837,10 @@ public class ProjectGeneratorTest {
     BuildRule resourceRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "res").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosResourceDescription,
-        new Function<AppleResourceDescriptionArg, AppleResourceDescriptionArg>() {
+        appleResourceDescription,
+        new Function<AppleResourceDescription.Arg, AppleResourceDescription.Arg>() {
           @Override
-          public AppleResourceDescriptionArg apply(AppleResourceDescriptionArg input) {
+          public AppleResourceDescription.Arg apply(AppleResourceDescription.Arg input) {
             input.files = ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png"));
             input.dirs = ImmutableSet.of(Paths.get("foodir"));
             return input;

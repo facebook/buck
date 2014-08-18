@@ -30,7 +30,7 @@ public class AppleBuildRulesTest {
 
   @Test
   public void testIosResourceIsNotXcodeTargetBuildRuleType() throws Exception {
-    assertFalse(AppleBuildRules.isXcodeTargetBuildRuleType(IosResourceDescription.TYPE));
+    assertFalse(AppleBuildRules.isXcodeTargetBuildRuleType(AppleResourceDescription.TYPE));
   }
 
   @Test

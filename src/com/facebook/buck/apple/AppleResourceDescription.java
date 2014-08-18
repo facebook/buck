@@ -19,19 +19,24 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.Set;
+
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 /**
- * Description for an ios_resource rule which copies resource files to
- * the root directory of the built iOS application.
+ * Description for an apple_resource rule which copies resource files to the built bundle.
  */
-public class IosResourceDescription implements Description<AppleResourceDescriptionArg> {
+public class AppleResourceDescription implements Description<AppleResourceDescription.Arg> {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("ios_resource");
+  public static final BuildRuleType TYPE = new BuildRuleType("apple_resource");
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -39,19 +44,25 @@ public class IosResourceDescription implements Description<AppleResourceDescript
   }
 
   @Override
-  public AppleResourceDescriptionArg createUnpopulatedConstructorArg() {
-    return new AppleResourceDescriptionArg();
+  public Arg createUnpopulatedConstructorArg() {
+    return new Arg();
   }
 
   @Override
-  public <A extends AppleResourceDescriptionArg> AppleResource createBuildRule(
+  public <A extends Arg> AppleResource createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
     return new AppleResource(
         params,
         new DefaultDirectoryTraverser(),
-        args,
-        Optional.<Path>absent());
+        args);
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Arg implements ConstructorArg {
+    public Set<Path> dirs;
+    public Set<SourcePath> files;
+    public Optional<Map<String, Map<String, SourcePath>>> variants;
   }
 }

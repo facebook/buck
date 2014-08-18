@@ -27,6 +27,7 @@ import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleExtension;
 import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleResource;
+import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.CoreDataModel;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.FileExtensions;
@@ -37,7 +38,6 @@ import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibrary;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
-import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTest;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.IosTestType;
@@ -45,7 +45,6 @@ import com.facebook.buck.apple.MacosxBinary;
 import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFramework;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
-import com.facebook.buck.apple.OsxResourceDescription;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
@@ -388,12 +387,12 @@ public class ProjectGenerator {
     if (rule.getType().equals(IosLibraryDescription.TYPE)) {
       IosLibrary library = (IosLibrary) rule;
       result = Optional.of((PBXTarget) generateIosLibraryTarget(
-          project, rule, library));
+              project, rule, library));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(library);
     } else if (rule.getType().equals(IosTestDescription.TYPE)) {
       IosTest test = (IosTest) rule;
       result = Optional.of((PBXTarget) generateIosTestTarget(
-          project, rule, test));
+              project, rule, test));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(test);
     } else if (rule.getType().equals(IosBinaryDescription.TYPE)) {
       IosBinary binary = (IosBinary) rule;
@@ -521,7 +520,7 @@ public class ProjectGenerator {
         buildable,
         testTypeToTargetProductType(buildable.getTestType()),
         "%s." + buildable.getTestType().toFileExtension(),
-        IosResourceDescription.TYPE);
+        AppleResourceDescription.TYPE);
     project.getTargets().add(target);
     LOG.debug("Generated iOS test target %s", target);
     return target;
@@ -536,7 +535,7 @@ public class ProjectGenerator {
         buildable,
         PBXTarget.ProductType.IOS_BINARY,
         "%s.app",
-        IosResourceDescription.TYPE);
+        AppleResourceDescription.TYPE);
 
     addPostBuildScriptPhasesForDependencies(rule, target);
 
@@ -556,7 +555,7 @@ public class ProjectGenerator {
         buildable,
         PBXTarget.ProductType.MACOSX_FRAMEWORK,
         "%s.framework",
-        OsxResourceDescription.TYPE);
+        AppleResourceDescription.TYPE);
     project.getTargets().add(target);
     LOG.debug("Generated OS X framework target %s", target);
     return target;
@@ -582,7 +581,7 @@ public class ProjectGenerator {
         buildable,
         PBXTarget.ProductType.APP_EXTENSION,
         "%s.appex",
-        IosResourceDescription.TYPE);
+        AppleResourceDescription.TYPE);
     project.getTargets().add(target);
     return target;
   }
@@ -694,7 +693,7 @@ public class ProjectGenerator {
         buildable,
         PBXTarget.ProductType.MACOSX_BINARY,
         "%s.app",
-        OsxResourceDescription.TYPE);
+        AppleResourceDescription.TYPE);
 
     // Unlike an ios target, macosx targets collect their frameworks and copy them in.
     ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();

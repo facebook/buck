@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.util.DirectoryTraverser;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +44,7 @@ import java.util.Map;
  * <p>
  * Example rule:
  * <pre>
- * ios_resource(
+ * apple_resource(
  *   name = 'res',
  *   dirs = ['MyLibrary.bundle'],
  *   files = glob(['Resources/**']),
@@ -69,8 +68,7 @@ public class AppleResource extends AbstractBuildRule {
   AppleResource(
       BuildRuleParams params,
       DirectoryTraverser directoryTraverser,
-      AppleResourceDescriptionArg args,
-      Optional<Path> outputPathSubdirectory) {
+      AppleResourceDescription.Arg args) {
     super(params);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
     this.dirs = ImmutableSortedSet.copyOf(args.dirs);
@@ -88,15 +86,10 @@ public class AppleResource extends AbstractBuildRule {
       this.variants = ImmutableMap.of();
     }
 
-    Preconditions.checkNotNull(outputPathSubdirectory);
     BuildTarget target = params.getBuildTarget();
     // TODO(user): This is hokey, just a hack to get started.
-    Path baseOutputDirectory = BuildTargets.getBinPath(target, "%s.app");
-    if (outputPathSubdirectory.isPresent()) {
-      this.outputDirectory = baseOutputDirectory.resolve(outputPathSubdirectory.get());
-    } else {
-      this.outputDirectory = baseOutputDirectory;
-    }
+    // TODO(grp): Support copying into a bundle's resources subdirectory.
+    this.outputDirectory = BuildTargets.getBinPath(target, "%s.app");
   }
 
   /**
@@ -144,7 +137,7 @@ public class AppleResource extends AbstractBuildRule {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.set("outputDirectory", outputDirectory.toString());
+    return builder;
   }
 
   @Override
