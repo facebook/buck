@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -96,7 +97,8 @@ public class Repository {
     return buckConfig;
   }
 
-  public ImmutableMap<Optional<String>, Optional<String>> getLocalToCanonicalRepoNamesMap() {
+  @VisibleForTesting
+  ImmutableMap<Optional<String>, Optional<String>> getLocalToCanonicalRepoNamesMap() {
     if (localToCanonicalRepoNamesMap != null) {
       return localToCanonicalRepoNamesMap;
     }
@@ -128,6 +130,10 @@ public class Repository {
       localToCanonicalRepoNamesMap = builder.build();
       return localToCanonicalRepoNamesMap;
     }
+  }
+
+  public BuildTargetParser getBuildTargetParser() {
+    return new BuildTargetParser(filesystem, getLocalToCanonicalRepoNamesMap());
   }
 
   @Override

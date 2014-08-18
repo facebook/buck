@@ -224,9 +224,7 @@ public class Parser {
           }
         },
         // TODO(jacko): Get rid of this global BuildTargetParser completely.
-        new BuildTargetParser(
-            repository.getFilesystem(),
-            repository.getLocalToCanonicalRepoNamesMap()),
+        repository.getBuildTargetParser(),
         new DefaultProjectBuildFileParserFactory(
             repository.getFilesystem(),
             pythonInterpreter,
