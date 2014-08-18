@@ -20,6 +20,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -33,7 +34,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 
-class ZipEntryJavaFileObject extends SimpleJavaFileObject {
+class ZipEntryJavaFileObject extends SimpleJavaFileObject implements Closeable {
 
   private final ZipFile zipFile;
   private final ZipEntry zipEntry;
@@ -76,6 +77,14 @@ class ZipEntryJavaFileObject extends SimpleJavaFileObject {
     }
 
     return contents;
+  }
+
+  /**
+   * Closes the {@link ZipFile} this entry was loaded from. Use with care.
+   */
+  @Override
+  public void close() throws IOException {
+    zipFile.close();
   }
 
   @Override

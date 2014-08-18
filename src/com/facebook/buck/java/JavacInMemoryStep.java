@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -58,6 +59,7 @@ import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
@@ -127,11 +129,12 @@ public class JavacInMemoryStep extends JavacStep {
     Preconditions.checkNotNull(compiler,
         "If using JRE instead of JDK, ToolProvider.getSystemJavaCompiler() may be null.");
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-    Iterable<? extends JavaFileObject> compilationUnits;
+    Iterable<? extends JavaFileObject> compilationUnits = ImmutableSet.of();
     try {
       compilationUnits = createCompilationUnits(
           fileManager, context.getProjectFilesystem().getAbsolutifier());
     } catch (IOException e) {
+      close(fileManager, compilationUnits, null);
       e.printStackTrace(context.getStdErr());
       return 1;
     }
@@ -145,6 +148,7 @@ public class JavacInMemoryStep extends JavacStep {
             Iterables.transform(javaSourceFilePaths, Functions.toStringFunction()),
             pathToSrcsList.get());
       } catch (IOException e) {
+        close(fileManager, compilationUnits, null);
         context.logError(e,
             "Cannot write list of .java files to compile to %s file! Terminating compilation.",
             pathToSrcsList.get());
@@ -178,9 +182,7 @@ public class JavacInMemoryStep extends JavacStep {
       // Invoke the compilation and inspect the result.
       isSuccess = compilationTask.call();
     } finally {
-      if (bundle != null) {
-        bundle.close();
-      }
+      close(fileManager, compilationUnits, bundle);
     }
 
     if (isSuccess) {
@@ -217,6 +219,32 @@ public class JavacInMemoryStep extends JavacStep {
         }
       }
       return 1;
+    }
+  }
+
+  private void close(
+      JavaFileManager fileManager,
+      Iterable<? extends JavaFileObject> compilationUnits,
+      @Nullable ProcessorBundle bundle) {
+    try {
+      fileManager.close();
+    } catch (IOException e) {
+      LOG.warn(e, "Unable to close java filemanager. We may be leaking memory.");
+    }
+
+    for (JavaFileObject unit : compilationUnits) {
+      if (!(unit instanceof ZipEntryJavaFileObject)) {
+        continue;
+      }
+      try {
+        ((ZipEntryJavaFileObject) unit).close();
+      } catch (IOException e) {
+        LOG.warn(e, "Unable to close zipfile. We may be leaking memory.");
+      }
+    }
+
+    if (bundle != null) {
+      bundle.close();
     }
   }
 
