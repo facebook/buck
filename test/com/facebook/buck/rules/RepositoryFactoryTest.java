@@ -63,7 +63,7 @@ public class RepositoryFactoryTest {
         ImmutableMap.<String, String>of(),
         Platform.detect(),
         new TestConsole(),
-        mainProjectFolder.getRoot().toPath());
+        mainProjectFolder.getRoot().toPath().toRealPath());
 
     Repository mainProjectRepo = factory.getRepositoryByCanonicalName(Optional.<String>absent());
     ImmutableMap<Optional<String>, Optional<String>> mainLocalToCanonicalMap =
