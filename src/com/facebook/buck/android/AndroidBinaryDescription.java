@@ -47,6 +47,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+
 public class AndroidBinaryDescription implements Description<AndroidBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("android_binary");
@@ -206,6 +208,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     return ResourceCompressionMode.valueOf(args.resourceCompression.get().toUpperCase());
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public SourcePath manifest;
     public String target;

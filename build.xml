@@ -74,6 +74,7 @@
     <include name="java/closure-templates/soy-2012-12-21-no-guava.jar" />
     <include name="java/dd-plist/dd-plist.jar" />
     <include name="java/gson/gson-2.2.4.jar" />
+    <include name="java/infer-annotations/infer-annotations-1.0.jar" />
     <include name="java/jetty/jetty-all-9.0.4.v20130625.jar" />
     <include name="java/jetty/servlet-api.jar" />
     <include name="java/xz-java-1.3/xz-1.3.jar" />
