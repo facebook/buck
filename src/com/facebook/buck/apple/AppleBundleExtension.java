@@ -26,6 +26,7 @@ public enum AppleBundleExtension {
   APP,
   FRAMEWORK,
   APPEX,
+  PLUGIN,
   BUNDLE,
   OCTEST,
   XCTEST;
@@ -38,6 +39,8 @@ public enum AppleBundleExtension {
         return FRAMEWORK;
       case "appex":
         return APPEX;
+      case "plugin":
+        return PLUGIN;
       case "bundle":
         return BUNDLE;
       case "octest":
@@ -57,6 +60,8 @@ public enum AppleBundleExtension {
         return "framework";
       case APPEX:
         return "appex";
+      case PLUGIN:
+        return "plugin";
       case BUNDLE:
         return "bundle";
       case OCTEST:

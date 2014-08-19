@@ -462,6 +462,17 @@ public class ProjectGenerator {
         "%s." + bundle.getExtensionString(),
         infoPlistPath,
         true);
+
+    // -- copy any binary and bundle targets into this bundle
+    Iterable<BuildRule> copiedRules = getRecursiveRuleDependenciesOfType(
+        RecursiveRuleDependenciesMode.COPYING,
+        rule,
+        IosLibraryDescription.TYPE,
+        AppleBundleDescription.TYPE);
+    generateCopyFilesBuildPhases(project, target, copiedRules);
+
+    addPostBuildScriptPhasesForDependencies(rule, target);
+
     project.getTargets().add(target);
     LOG.debug("Generated iOS bundle target %s", target);
     return target;
@@ -1410,6 +1421,77 @@ public class ProjectGenerator {
     }
   }
 
+  private Optional<PBXCopyFilesBuildPhase.Destination> getDestinationForRule(BuildRule rule) {
+    if (rule.getType().equals(AppleBundleDescription.TYPE)) {
+      AppleBundle bundle = (AppleBundle) rule;
+      AppleBundleExtension extension = bundle.getExtensionValue().or(AppleBundleExtension.BUNDLE);
+      switch (extension) {
+        case FRAMEWORK:
+          return Optional.of(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
+        case APPEX:
+        case PLUGIN:
+          return Optional.of(PBXCopyFilesBuildPhase.Destination.PLUGINS);
+        case APP:
+          return Optional.of(PBXCopyFilesBuildPhase.Destination.EXECUTABLES);
+        default:
+          return Optional.of(PBXCopyFilesBuildPhase.Destination.PRODUCTS);
+      }
+    } else if (rule.getType().equals(IosLibraryDescription.TYPE)) {
+      IosLibrary library = (IosLibrary) rule;
+      if (library.getLinkedDynamically()) {
+        return Optional.of(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
+      } else {
+        return Optional.absent();
+      }
+    } else {
+      throw new RuntimeException("Unexpected type: " + rule.getType());
+    }
+
+    // TODO(grp): return PBXCopyFilesBuildPhase.Destination.EXECUTABLES when appropriate.
+  }
+
+  private void generateCopyFilesBuildPhases(
+      PBXProject project,
+      PBXNativeTarget target,
+      Iterable<BuildRule> copiedRules) {
+    ImmutableMap.Builder<PBXCopyFilesBuildPhase.Destination, ImmutableSet.Builder<BuildRule>>
+        destinationRulesBuildersBuilder = ImmutableMap.builder();
+    for (PBXCopyFilesBuildPhase.Destination destination :
+        PBXCopyFilesBuildPhase.Destination.values()) {
+      destinationRulesBuildersBuilder.put(destination, ImmutableSet.<BuildRule>builder());
+    }
+
+    ImmutableMap<PBXCopyFilesBuildPhase.Destination, ImmutableSet.Builder<BuildRule>>
+        destinationRulesBuilders = destinationRulesBuildersBuilder.build();
+
+    for (BuildRule copiedRule : copiedRules) {
+      Optional<PBXCopyFilesBuildPhase.Destination> optionalDestination =
+          getDestinationForRule(copiedRule);
+
+      if (optionalDestination.isPresent()) {
+        PBXCopyFilesBuildPhase.Destination destination = optionalDestination.get();
+        ImmutableSet.Builder<BuildRule> rulesBuilder = destinationRulesBuilders.get(destination);
+        rulesBuilder.add(copiedRule);
+      }
+    }
+
+    for (PBXCopyFilesBuildPhase.Destination destination : destinationRulesBuilders.keySet()) {
+      ImmutableSet<BuildRule> rules = destinationRulesBuilders.get(destination).build();
+
+      ImmutableSet.Builder<SourceTreePath> copiedSourceTreePathsBuilder = ImmutableSet.builder();
+      for (BuildRule rule : rules) {
+        copiedSourceTreePathsBuilder.add(getProductsSourceTreePathForRule(rule));
+      }
+
+      addCopyFilesBuildPhase(
+          target,
+          project.getMainGroup().getOrCreateChildGroupByName("Dependencies"),
+          destination,
+          "",
+          copiedSourceTreePathsBuilder.build());
+    }
+  }
+
   private void addFrameworksBuildPhase(
       BuildTarget buildTarget,
       PBXNativeTarget target,
@@ -1825,7 +1907,22 @@ public class ProjectGenerator {
             RecursiveRuleDependenciesMode.LINKING,
             rule,
             IosLibraryDescription.TYPE,
+            AppleBundleDescription.TYPE,
             XcodeNativeDescription.TYPE))
+        .filter(
+            new Predicate<BuildRule>() {
+              @Override
+              public boolean apply(BuildRule input) {
+                if (input.getType().equals(AppleBundleDescription.TYPE)) {
+                  AppleBundle bundle = (AppleBundle) input;
+                  Optional<AppleBundleExtension> extension = bundle.getExtensionValue();
+                  return extension.isPresent() && extension.get() == AppleBundleExtension.FRAMEWORK;
+                } else {
+                  return true;
+                }
+              }
+            }
+        )
         .transform(
             new Function<BuildRule, PBXFileReference>() {
               @Override
@@ -1835,23 +1932,38 @@ public class ProjectGenerator {
             }).toSet();
   }
 
-  private PBXFileReference getLibraryFileReferenceForRule(BuildRule rule) {
+  private SourceTreePath getProductsSourceTreePathForRule(BuildRule rule) {
+    String productName = getProductName(rule.getBuildTarget());
+    String productOutputName;
+
     if (rule.getType().equals(IosLibraryDescription.TYPE)) {
+      IosLibrary library = (IosLibrary) rule;
+      String productOutputFormat =
+          IosLibrary.getOutputFileNameFormat(library.getLinkedDynamically());
+      productOutputName = String.format(productOutputFormat, productName);
+    } else if (rule.getType().equals(AppleBundleDescription.TYPE)) {
+      AppleBundle bundle = (AppleBundle) rule;
+      productOutputName = productName + "." + bundle.getExtensionString();
+    } else {
+      throw new RuntimeException("Unexpected type: " + rule.getType());
+    }
+
+    return new SourceTreePath(
+        PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+        Paths.get(productOutputName));
+  }
+
+  private PBXFileReference getLibraryFileReferenceForRule(BuildRule rule) {
+    if (rule.getType().equals(IosLibraryDescription.TYPE) ||
+        rule.getType().equals(AppleBundleDescription.TYPE)) {
       if (isBuiltByCurrentProject(rule)) {
         PBXNativeTarget target = (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(rule).get();
         return target.getProductReference();
       } else {
-        IosLibrary library = (IosLibrary) rule;
-        String productOutputFormat =
-            IosLibrary.getOutputFileNameFormat(library.getLinkedDynamically());
-        String productName = getProductName(rule.getBuildTarget());
-        String productOutputName = String.format(productOutputFormat, productName);
+        SourceTreePath productsPath = getProductsSourceTreePathForRule(rule);
         return project.getMainGroup()
             .getOrCreateChildGroupByName("Frameworks")
-            .getOrCreateFileReferenceBySourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                    Paths.get(productOutputName)));
+            .getOrCreateFileReferenceBySourceTreePath(productsPath);
       }
     } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
       XcodeNative nativeRule = (XcodeNative) rule;

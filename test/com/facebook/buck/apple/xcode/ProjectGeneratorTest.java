@@ -2015,9 +2015,242 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:final");
     assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/dynamic.dylib"));
+  }
+
+  @Test
+  public void stopsLinkingRecursiveDependenciesAtBundles() throws IOException {
+    BuildRule dependentStaticLibrary = createBuildRuleWithDefaults(
+        BuildTarget.builder("//dep", "static").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+
+    BuildTarget dependentDynamicLibraryTarget = BuildTarget
+        .builder("//dep", "dynamic")
+        .setFlavor(IosLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    BuildRuleParams dependentDynamicLibraryParams =
+        new FakeBuildRuleParamsBuilder(dependentDynamicLibraryTarget)
+            .setDeps(ImmutableSortedSet.of(dependentStaticLibrary))
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+
+    AppleNativeTargetDescriptionArg dependentDynamicLibraryArg =
+        iosLibraryDescription.createUnpopulatedConstructorArg();
+    dependentDynamicLibraryArg.configs = ImmutableMap.of();
+    dependentDynamicLibraryArg.srcs = ImmutableList.of();
+    dependentDynamicLibraryArg.frameworks = ImmutableSortedSet.of();
+    dependentDynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentStaticLibrary));
+    dependentDynamicLibraryArg.gid = Optional.absent();
+    dependentDynamicLibraryArg.headerPathPrefix = Optional.absent();
+    dependentDynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
+
+    BuildRule dependentDynamicLibrary = iosLibraryDescription.createBuildRule(
+        dependentDynamicLibraryParams,
+        new BuildRuleResolver(),
+        dependentDynamicLibraryArg);
+
+    BuildRuleParams dependentFrameworkParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//dep", "framework").build())
+            .setDeps(ImmutableSortedSet.of(dependentDynamicLibrary))
+            .setType(AppleBundleDescription.TYPE)
+            .build();
+
+    AppleBundleDescription.Arg dependentFrameworkArg =
+        appleBundleDescription.createUnpopulatedConstructorArg();
+    dependentFrameworkArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
+    dependentFrameworkArg.binary = dependentDynamicLibrary;
+    dependentFrameworkArg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
+    dependentFrameworkArg.deps = Optional.of(ImmutableSortedSet.of(dependentDynamicLibrary));
+
+    BuildRule dependentFramework = appleBundleDescription.createBuildRule(
+        dependentFrameworkParams,
+        new BuildRuleResolver(),
+        dependentFrameworkArg);
+
+    BuildTarget libraryTarget = BuildTarget
+        .builder("//foo", "library")
+        .setFlavor(IosLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    BuildRuleParams libraryParams =
+        new FakeBuildRuleParamsBuilder(libraryTarget)
+            .setDeps(ImmutableSortedSet.of(dependentFramework))
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+
+    AppleNativeTargetDescriptionArg libraryArg =
+        iosLibraryDescription.createUnpopulatedConstructorArg();
+    libraryArg.configs = ImmutableMap.of();
+    libraryArg.srcs = ImmutableList.of();
+    libraryArg.frameworks = ImmutableSortedSet.of();
+    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentFramework));
+    libraryArg.gid = Optional.absent();
+    libraryArg.headerPathPrefix = Optional.absent();
+    libraryArg.useBuckHeaderMaps = Optional.absent();
+
+    BuildRule library = iosLibraryDescription.createBuildRule(
+        libraryParams,
+        new BuildRuleResolver(),
+        libraryArg);
+
+    BuildRuleParams bundleParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "final").build())
+            .setDeps(ImmutableSortedSet.of(library))
+            .setType(AppleBundleDescription.TYPE)
+            .build();
+
+    AppleBundleDescription.Arg bundleArg =
+        appleBundleDescription.createUnpopulatedConstructorArg();
+    bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
+    bundleArg.binary = library;
+    bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
+    bundleArg.deps = Optional.of(ImmutableSortedSet.of(library));
+
+    BuildRule bundle = appleBundleDescription.createBuildRule(
+        bundleParams,
+        new BuildRuleResolver(),
+        bundleArg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(bundle),
+        ImmutableSet.of(bundle.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:final");
+    assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
+    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
+  }
+
+  @Test
+  public void stopsCopyingRecursiveDependenciesAtBundles() throws IOException {
+    BuildRule dependentStaticLibrary = createBuildRuleWithDefaults(
+        BuildTarget.builder("//dep", "static").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+
+    BuildRuleParams dependentStaticFrameworkParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//dep", "static-framework").build())
+            .setDeps(ImmutableSortedSet.of(dependentStaticLibrary))
+            .setType(AppleBundleDescription.TYPE)
+            .build();
+
+    AppleBundleDescription.Arg dependentStaticFrameworkArg =
+        appleBundleDescription.createUnpopulatedConstructorArg();
+    dependentStaticFrameworkArg.infoPlist =
+        Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
+    dependentStaticFrameworkArg.binary = dependentStaticLibrary;
+    dependentStaticFrameworkArg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
+    dependentStaticFrameworkArg.deps = Optional.of(ImmutableSortedSet.of(dependentStaticLibrary));
+
+    BuildRule dependentStaticFramework = appleBundleDescription.createBuildRule(
+        dependentStaticFrameworkParams,
+        new BuildRuleResolver(),
+        dependentStaticFrameworkArg);
+
+    BuildTarget dependentDynamicLibraryTarget = BuildTarget
+        .builder("//dep", "dynamic")
+        .setFlavor(IosLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    BuildRuleParams dependentDynamicLibraryParams =
+        new FakeBuildRuleParamsBuilder(dependentDynamicLibraryTarget)
+            .setDeps(ImmutableSortedSet.of(dependentStaticFramework))
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+
+    AppleNativeTargetDescriptionArg dependentDynamicLibraryArg =
+        iosLibraryDescription.createUnpopulatedConstructorArg();
+    dependentDynamicLibraryArg.configs = ImmutableMap.of();
+    dependentDynamicLibraryArg.srcs = ImmutableList.of();
+    dependentDynamicLibraryArg.frameworks = ImmutableSortedSet.of();
+    dependentDynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentStaticFramework));
+    dependentDynamicLibraryArg.gid = Optional.absent();
+    dependentDynamicLibraryArg.headerPathPrefix = Optional.absent();
+    dependentDynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
+
+    BuildRule dependentDynamicLibrary = iosLibraryDescription.createBuildRule(
+        dependentDynamicLibraryParams,
+        new BuildRuleResolver(),
+        dependentDynamicLibraryArg);
+
+    BuildRuleParams dependentFrameworkParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//dep", "framework").build())
+            .setDeps(ImmutableSortedSet.of(dependentDynamicLibrary))
+            .setType(AppleBundleDescription.TYPE)
+            .build();
+
+    AppleBundleDescription.Arg dependentFrameworkArg =
+        appleBundleDescription.createUnpopulatedConstructorArg();
+    dependentFrameworkArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
+    dependentFrameworkArg.binary = dependentDynamicLibrary;
+    dependentFrameworkArg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
+    dependentFrameworkArg.deps = Optional.of(ImmutableSortedSet.of(dependentDynamicLibrary));
+
+    BuildRule dependentFramework = appleBundleDescription.createBuildRule(
+        dependentFrameworkParams,
+        new BuildRuleResolver(),
+        dependentFrameworkArg);
+
+    BuildTarget libraryTarget = BuildTarget
+        .builder("//foo", "library")
+        .setFlavor(IosLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    BuildRuleParams libraryParams =
+        new FakeBuildRuleParamsBuilder(libraryTarget)
+            .setDeps(ImmutableSortedSet.of(dependentFramework))
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+
+    AppleNativeTargetDescriptionArg libraryArg =
+        iosLibraryDescription.createUnpopulatedConstructorArg();
+    libraryArg.configs = ImmutableMap.of();
+    libraryArg.srcs = ImmutableList.of();
+    libraryArg.frameworks = ImmutableSortedSet.of();
+    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentFramework));
+    libraryArg.gid = Optional.absent();
+    libraryArg.headerPathPrefix = Optional.absent();
+    libraryArg.useBuckHeaderMaps = Optional.absent();
+
+    BuildRule library = iosLibraryDescription.createBuildRule(
+        libraryParams,
+        new BuildRuleResolver(),
+        libraryArg);
+
+    BuildRuleParams bundleParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "final").build())
+            .setDeps(ImmutableSortedSet.of(library))
+            .setType(AppleBundleDescription.TYPE)
+            .build();
+
+    AppleBundleDescription.Arg bundleArg =
+        appleBundleDescription.createUnpopulatedConstructorArg();
+    bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
+    bundleArg.binary = library;
+    bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
+    bundleArg.deps = Optional.of(ImmutableSortedSet.of(library));
+
+    BuildRule bundle = appleBundleDescription.createBuildRule(
+        bundleParams,
+        new BuildRuleResolver(),
+        bundleArg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(bundle),
+        ImmutableSet.of(bundle.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:final");
+    assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
+    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
+    ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
+        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
   }
 
   @Test
