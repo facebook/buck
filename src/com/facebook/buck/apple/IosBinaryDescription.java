@@ -20,17 +20,22 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.google.common.base.Optional;
 
-public class IosBinaryDescription implements Description<AppleNativeTargetDescriptionArg> {
+import java.nio.file.Path;
+
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+
+public class IosBinaryDescription implements Description<IosBinaryDescription.Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("ios_binary");
 
   @Override
-  public AppleNativeTargetDescriptionArg createUnpopulatedConstructorArg() {
-    return new AppleNativeTargetDescriptionArg();
+  public Arg createUnpopulatedConstructorArg() {
+    return new Arg();
   }
 
   @Override
-  public <A extends AppleNativeTargetDescriptionArg> IosBinary createBuildRule(
+  public <A extends Arg> IosBinary createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -40,5 +45,10 @@ public class IosBinaryDescription implements Description<AppleNativeTargetDescri
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Arg extends AppleNativeTargetDescriptionArg {
+    public Optional<Path> infoPlist;
   }
 }

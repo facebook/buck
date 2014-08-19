@@ -20,8 +20,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.google.common.base.Optional;
 
-public class MacosxFrameworkDescription implements Description<AppleNativeTargetDescriptionArg> {
+import java.nio.file.Path;
+
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+
+public class MacosxFrameworkDescription implements Description<MacosxFrameworkDescription.Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("macosx_framework");
 
   @Override
@@ -30,15 +35,20 @@ public class MacosxFrameworkDescription implements Description<AppleNativeTarget
   }
 
   @Override
-  public AppleNativeTargetDescriptionArg createUnpopulatedConstructorArg() {
-    return new AppleNativeTargetDescriptionArg();
+  public Arg createUnpopulatedConstructorArg() {
+    return new Arg();
   }
 
   @Override
-  public <A extends AppleNativeTargetDescriptionArg> MacosxFramework createBuildRule(
+  public <A extends Arg> MacosxFramework createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
     return new MacosxFramework(params, args, TargetSources.ofAppleSources(args.srcs));
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Arg extends AppleNativeTargetDescriptionArg {
+    public Optional<Path> infoPlist;
   }
 }

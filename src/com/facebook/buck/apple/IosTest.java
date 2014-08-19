@@ -39,6 +39,7 @@ import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class IosTest extends AbstractAppleNativeTargetBuildRule implements TestRule {
+  private final Optional<Path> infoPlist;
   private final IosTestType testType;
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<Label> labels;
@@ -49,11 +50,16 @@ public class IosTest extends AbstractAppleNativeTargetBuildRule implements TestR
       IosTestDescription.Arg arg,
       TargetSources targetSources) {
     super(params, arg, targetSources);
+    this.infoPlist = arg.infoPlist;
     Optional<String> argTestType = Preconditions.checkNotNull(arg.testType);
     testType = IosTestType.fromString(argTestType.or("octest"));
     contacts = Preconditions.checkNotNull(arg.contacts.get());
     labels = Preconditions.checkNotNull(arg.labels.get());
     sourceUnderTest = Preconditions.checkNotNull(arg.sourceUnderTest.get());
+  }
+
+  public Optional<Path> getInfoPlist() {
+    return infoPlist;
   }
 
   public IosTestType getTestType() {

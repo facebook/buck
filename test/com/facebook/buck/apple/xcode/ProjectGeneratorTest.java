@@ -1027,7 +1027,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(MacosxFrameworkDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg =
+    MacosxFrameworkDescription.Arg arg =
         macosxFrameworkDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
@@ -1099,7 +1099,7 @@ public class ProjectGeneratorTest {
         .setType(MacosxBinaryDescription.TYPE)
         .build();
 
-    AppleNativeTargetDescriptionArg arg = macosxBinaryDescription.createUnpopulatedConstructorArg();
+    MacosxBinaryDescription.Arg arg = macosxBinaryDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
@@ -1410,7 +1410,7 @@ public class ProjectGeneratorTest {
         .setDeps(ImmutableSortedSet.of(depRule))
         .setType(IosBinaryDescription.TYPE)
         .build();
-    AppleNativeTargetDescriptionArg arg = iosBinaryDescription.createUnpopulatedConstructorArg();
+    IosBinaryDescription.Arg arg = iosBinaryDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
@@ -1594,7 +1594,7 @@ public class ProjectGeneratorTest {
             .setType(AppleExtensionDescription.TYPE)
             .build();
 
-    AppleNativeTargetDescriptionArg arg =
+    AppleExtensionDescription.Arg arg =
         appleExtensionDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
@@ -1656,7 +1656,7 @@ public class ProjectGeneratorTest {
             .setDeps(ImmutableSortedSet.of(depRule))
             .setType(IosBinaryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg = iosBinaryDescription.createUnpopulatedConstructorArg();
+    IosBinaryDescription.Arg arg = iosBinaryDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.of(Paths.get("Info.plist"));
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());

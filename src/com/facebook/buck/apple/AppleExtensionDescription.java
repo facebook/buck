@@ -20,20 +20,25 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.google.common.base.Optional;
+
+import java.nio.file.Path;
+
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 /**
  * Creates {@link AppleExtension} build rules.
  */
-public class AppleExtensionDescription implements Description<AppleNativeTargetDescriptionArg> {
+public class AppleExtensionDescription implements Description<AppleExtensionDescription.Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("apple_extension");
 
   @Override
-  public AppleNativeTargetDescriptionArg createUnpopulatedConstructorArg() {
-    return new AppleNativeTargetDescriptionArg();
+  public Arg createUnpopulatedConstructorArg() {
+    return new Arg();
   }
 
   @Override
-  public <A extends AppleNativeTargetDescriptionArg> AppleExtension createBuildRule(
+  public <A extends Arg> AppleExtension createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -43,5 +48,10 @@ public class AppleExtensionDescription implements Description<AppleNativeTargetD
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Arg extends AppleNativeTargetDescriptionArg {
+    public Optional<Path> infoPlist;
   }
 }

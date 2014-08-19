@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CompilerStep;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -26,11 +27,18 @@ import java.nio.file.Path;
 
 public class MacosxBinary extends AbstractAppleNativeTargetBuildRule {
 
+  private final Optional<Path> infoPlist;
+
   public MacosxBinary(
       BuildRuleParams params,
-      AppleNativeTargetDescriptionArg arg,
+      MacosxBinaryDescription.Arg arg,
       TargetSources targetSources) {
     super(params, arg, targetSources);
+    this.infoPlist = arg.infoPlist;
+  }
+
+  public Optional<Path> getInfoPlist() {
+    return infoPlist;
   }
 
   @Override

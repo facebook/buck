@@ -25,6 +25,8 @@ import com.facebook.buck.rules.Label;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 public class IosTestDescription implements Description<IosTestDescription.Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("ios_test");
 
@@ -47,6 +49,7 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
   }
 
   public static class Arg extends AppleNativeTargetDescriptionArg {
+    public Optional<Path> infoPlist;
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildRule>> sourceUnderTest;

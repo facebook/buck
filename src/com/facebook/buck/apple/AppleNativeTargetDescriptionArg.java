@@ -32,7 +32,6 @@ import java.nio.file.Path;
  * Arguments common to {@link com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule} subclasses
  */
 public class AppleNativeTargetDescriptionArg implements ConstructorArg {
-  public Optional<Path> infoPlist;
   /**
    * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
    */

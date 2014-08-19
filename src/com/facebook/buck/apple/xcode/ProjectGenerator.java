@@ -445,6 +445,7 @@ public class ProjectGenerator {
         buildable,
         productType,
         IosLibrary.getOutputFileNameFormat(buildable.getLinkedDynamically()),
+        Optional.<Path>absent(),
         false);
     project.getTargets().add(target);
     LOG.debug("Generated iOS library target %s", target);
@@ -479,6 +480,7 @@ public class ProjectGenerator {
         buildable,
         testTypeToTargetProductType(buildable.getTestType()),
         "%s." + buildable.getTestType().toFileExtension(),
+        buildable.getInfoPlist(),
         true);
     project.getTargets().add(target);
     LOG.debug("Generated iOS test target %s", target);
@@ -494,6 +496,7 @@ public class ProjectGenerator {
         buildable,
         PBXTarget.ProductType.IOS_BINARY,
         "%s.app",
+        buildable.getInfoPlist(),
         true);
 
     addPostBuildScriptPhasesForDependencies(rule, target);
@@ -514,6 +517,7 @@ public class ProjectGenerator {
         buildable,
         PBXTarget.ProductType.MACOSX_FRAMEWORK,
         "%s.framework",
+        buildable.getInfoPlist(),
         true);
     project.getTargets().add(target);
     LOG.debug("Generated OS X framework target %s", target);
@@ -540,6 +544,7 @@ public class ProjectGenerator {
         buildable,
         PBXTarget.ProductType.APP_EXTENSION,
         "%s.appex",
+        buildable.getInfoPlist(),
         true);
     project.getTargets().add(target);
     return target;
@@ -548,9 +553,10 @@ public class ProjectGenerator {
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       BuildRule rule,
-        AbstractAppleNativeTargetBuildRule buildable,
+      AbstractAppleNativeTargetBuildRule buildable,
       PBXTarget.ProductType productType,
       String productOutputFormat,
+      Optional<Path> infoPlistOptional,
       boolean includeFrameworksAndResources)
       throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
@@ -561,8 +567,7 @@ public class ProjectGenerator {
 
     // -- configurations
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
-    Optional<Path> infoPlistOptional = buildable.getInfoPlist();
-    if (infoPlistOptional != null && infoPlistOptional.isPresent()) {
+    if (infoPlistOptional.isPresent()) {
       Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(infoPlistOptional.get());
       extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
     }
@@ -659,6 +664,7 @@ public class ProjectGenerator {
         buildable,
         PBXTarget.ProductType.MACOSX_BINARY,
         "%s.app",
+        buildable.getInfoPlist(),
         true);
 
     // Unlike an ios target, macosx targets collect their frameworks and copy them in.

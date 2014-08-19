@@ -26,14 +26,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
-
 /**
  * A build rule that has configuration ready for Xcode-like build systems.
  */
 public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeBuildRule {
 
-  private final Optional<Path> infoPlist;
   private final ImmutableSet<XcodeRuleConfiguration> configurations;
   private final ImmutableList<GroupedSource> srcs;
   private final ImmutableMap<SourcePath, String> perFileFlags;
@@ -47,7 +44,6 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
       AppleNativeTargetDescriptionArg arg,
       TargetSources targetSources) {
     super(params, targetSources.srcPaths, targetSources.headerPaths, targetSources.perFileFlags);
-    infoPlist = arg.infoPlist;
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
     frameworks = Preconditions.checkNotNull(arg.frameworks);
     srcs = Preconditions.checkNotNull(targetSources.srcs);
@@ -55,13 +51,6 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
     gid = Preconditions.checkNotNull(arg.gid);
     headerPathPrefix = Preconditions.checkNotNull(arg.headerPathPrefix);
     useBuckHeaderMaps = Preconditions.checkNotNull(arg.useBuckHeaderMaps).or(false);
-  }
-
-  /**
-   * Returns a path to the info.plist to be bundled with a binary or framework.
-   */
-  public Optional<Path> getInfoPlist() {
-    return infoPlist;
   }
 
   /**
