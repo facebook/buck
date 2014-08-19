@@ -293,10 +293,11 @@ if __name__ == "__main__":
         raise ValueError('devices must be specified when platform is iphoneos '
                          'or iphonesimulator')
 
-    for device in opts.device:
-        if device != 'iphone' and device != 'ipad':
-            raise ValueError(
-                device + ': device(s) must be either iphone or ipad')
+    if opts.device is not None:
+        for device in opts.device:
+            if device != 'iphone' and device != 'ipad':
+                raise ValueError(
+                    device + ': device(s) must be either iphone or ipad')
 
     for path in catalogs:
         if os.path.splitext(os.path.basename(path))[1] != '.xcassets':
