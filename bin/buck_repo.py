@@ -415,29 +415,33 @@ class BuckRepo:
                 message += "\nTry running 'brew install ant'."
             raise BuckRepoException(message)
 
-    def _print_ant_failure_and_exit(self):
-        print("::: 'ant' failed in the buck repo at {0}.".format(
-              self._buck_dir), file=sys.stderr)
+    def _print_ant_failure_and_exit(self, ant_log_path):
+        print(textwrap.dedent("""\
+                ::: 'ant' failed in the buck repo at {0}.
+                ::: Check the logs at {1}.""".format(
+              self._buck_dir, ant_log_path)), file=sys.stderr)
         if self._is_git:
             raise BuckRepoException(textwrap.dedent("""\
-                ::: Try changing to that directory and running
-                'git clean -xfd'."""))
+                ::: Try running: git -C "{0}" clean -xfd""".format(self._buck_dir)))
         else:
             raise BuckRepoException(textwrap.dedent("""\
-                ::: Try changing to that directory and deleting the
-                'build' directory."""))
+                ::: Try running: rm -rf "{0}"/build""".format(self._buck_dir)))
 
     def _run_ant_clean(self):
-        exitcode = subprocess.call(['ant', 'clean'], stdout=sys.stderr,
-                                   cwd=self._buck_dir)
-        if exitcode is not 0:
-            self._print_ant_failure_and_exit()
+        clean_log_path = os.path.join(self._buck_project.get_buck_out_log_dir(), 'ant-clean.log')
+        with open(clean_log_path, 'w') as clean_log:
+            exitcode = subprocess.call(['ant', 'clean'], stdout=clean_log,
+                                       cwd=self._buck_dir)
+            if exitcode is not 0:
+                self._print_ant_failure_and_exit(clean_log_path)
 
     def _run_ant(self):
-        exitcode = subprocess.call(['ant'], stdout=sys.stderr,
-                                   cwd=self._buck_dir)
-        if exitcode is not 0:
-            self._print_ant_failure_and_exit()
+        ant_log_path = os.path.join(self._buck_project.get_buck_out_log_dir(), 'ant.log')
+        with open(ant_log_path, 'w') as ant_log:
+            exitcode = subprocess.call(['ant'], stdout=ant_log,
+                                       cwd=self._buck_dir)
+            if exitcode is not 0:
+                self._print_ant_failure_and_exit(ant_log_path)
 
     def _restart_buck(self):
         command = [os.path.join(self._buck_bin_dir, "buck")]

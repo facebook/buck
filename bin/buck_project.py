@@ -30,9 +30,9 @@ class BuckProject:
         buck_out_tmp = os.path.join(self._buck_out, "tmp")
         if not os.path.exists(buck_out_tmp):
             os.makedirs(buck_out_tmp)
-        buck_out_log = os.path.join(self._buck_out, "log")
-        if not os.path.exists(buck_out_log):
-            os.makedirs(buck_out_log)
+        self._buck_out_log = os.path.join(self._buck_out, "log")
+        if not os.path.exists(self._buck_out_log):
+            os.makedirs(self._buck_out_log)
         self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=buck_out_tmp)
 
         # Only created if buckd is used.
@@ -76,6 +76,9 @@ class BuckProject:
 
     def get_buckd_port(self):
         return get_file_contents_if_exists(self.buckd_port_file)
+
+    def get_buck_out_log_dir(self):
+        return self._buck_out_log
 
     def update_buckd_run_count(self, new_run_count):
         write_contents_to_file(self.buckd_run_count_file, new_run_count)
