@@ -16,11 +16,9 @@
 
 package com.facebook.buck.apple.xcode;
 
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -28,7 +26,14 @@ import org.w3c.dom.Element;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Stack;
+import java.util.TreeMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -47,7 +52,35 @@ public class WorkspaceGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final String workspaceName;
   private final Path outputDirectory;
-  private final Multimap<String, Path> projects;
+  private final TreeMap<String, WorkspaceNode> children;
+
+  private static class WorkspaceNode {
+
+  }
+
+  private static class WorkspaceGroup extends WorkspaceNode {
+    private final TreeMap<String, WorkspaceNode> children;
+
+    WorkspaceGroup() {
+      this.children = new TreeMap<>();
+    }
+
+    public Map<String, WorkspaceNode> getChildren() {
+      return children;
+    }
+  }
+
+  private static class WorkspaceFileRef extends WorkspaceNode {
+    private final Path path;
+
+    WorkspaceFileRef(Path path) {
+      this.path = Preconditions.checkNotNull(path);
+    }
+
+    public Path getPath() {
+      return path;
+    }
+  }
 
   public WorkspaceGenerator(
       ProjectFilesystem projectFilesystem,
@@ -56,11 +89,69 @@ public class WorkspaceGenerator {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.workspaceName = Preconditions.checkNotNull(workspaceName);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
-    projects = ArrayListMultimap.create();
+    this.children = new TreeMap<>();
   }
 
-  public void addFilePath(String groupName, Path path) {
-    projects.put(Strings.nullToEmpty(groupName), path);
+  public void addFilePath(Path path) {
+    path = path.normalize();
+    Map<String, WorkspaceNode> children = this.children;
+    // We skip the last name before the file name as it's usually the same as the project name, and
+    // adding a group would add an unnecessary level of nesting. We don't check whether it's the
+    // same or not to avoid inconsistent behaviour: this will result in all projects to show up in a
+    // group with the path of their grandparent directory in all cases.
+    if (path.getNameCount() > 2) {
+      for (Path name : path.subpath(0, path.getNameCount() - 2)) {
+        String groupName = name.toString();
+        WorkspaceNode node = children.get(groupName);
+        WorkspaceGroup group;
+        if (node instanceof WorkspaceFileRef) {
+          throw new HumanReadableException(
+              "Invalid workspace: a group and a project have the same name: %s", groupName);
+        } else if (node == null) {
+          group = new WorkspaceGroup();
+          children.put(groupName, group);
+        } else if (node instanceof WorkspaceGroup) {
+          group = (WorkspaceGroup) node;
+        } else {
+          // Unreachable
+          throw new HumanReadableException(
+              "Expected a workspace to only contain groups and file references");
+        }
+        children = group.getChildren();
+      }
+    }
+    children.put(path.getFileName().toString(), new WorkspaceFileRef(path));
+  }
+
+  private void walkNodeTree(FileVisitor<Map.Entry<String, WorkspaceNode>> visitor)
+      throws IOException{
+    Stack<Iterator<Map.Entry<String, WorkspaceNode>>> iterators = new Stack<>();
+    Stack<Map.Entry<String, WorkspaceNode>> groups = new Stack<>();
+    iterators.push(this.children.entrySet().iterator());
+    while (!iterators.isEmpty()) {
+      if (!iterators.peek().hasNext()) {
+        if (groups.isEmpty()) {
+          break;
+        }
+        visitor.postVisitDirectory(groups.pop(), null);
+        iterators.pop();
+        continue;
+      }
+      Map.Entry<String, WorkspaceNode> nextEntry = iterators.peek().next();
+      WorkspaceNode nextNode = nextEntry.getValue();
+      if (nextNode instanceof WorkspaceGroup) {
+        visitor.preVisitDirectory(nextEntry, null);
+        WorkspaceGroup nextGroup = (WorkspaceGroup) nextNode;
+        groups.push(nextEntry);
+        iterators.push(nextGroup.getChildren().entrySet().iterator());
+      } else if (nextNode instanceof WorkspaceFileRef) {
+        visitor.visitFile(nextEntry, null);
+      } else {
+        // Unreachable
+        throw new HumanReadableException(
+            "Expected a workspace to only contain groups and file references");
+      }
+    }
   }
 
   public Path writeWorkspace() throws IOException {
@@ -74,7 +165,7 @@ public class WorkspaceGenerator {
     }
 
     DOMImplementation domImplementation = docBuilder.getDOMImplementation();
-    Document doc = domImplementation.createDocument(
+    final Document doc = domImplementation.createDocument(
         /* namespaceURI */ null,
         "Workspace",
         /* docType */ null);
@@ -83,22 +174,55 @@ public class WorkspaceGenerator {
     Element rootElem = doc.getDocumentElement();
     rootElem.setAttribute("version", "1.0");
 
-    for (String groupName : projects.keySet()) {
-      Element targetElement = doc.getDocumentElement();
-      if (!groupName.isEmpty()) {
-        Element group = doc.createElement("Group");
-        group.setAttribute("location", "container:");
-        group.setAttribute("name", groupName);
-        rootElem.appendChild(group);
-        targetElement = group;
-      }
-      for (Path path : projects.get(groupName)) {
-        Element fileRef = doc.createElement("FileRef");
-        fileRef.setAttribute("location",
-            "container:" + outputDirectory.relativize(path).toString());
-        targetElement.appendChild(fileRef);
-      }
-    }
+    final Stack<Element> groups = new Stack<>();
+    groups.push(rootElem);
+
+    FileVisitor<Map.Entry<String, WorkspaceNode>> visitor =
+        new FileVisitor<Map.Entry<String, WorkspaceNode>>() {
+          @Override
+          public FileVisitResult preVisitDirectory(
+              Map.Entry<String, WorkspaceNode> dir,
+              BasicFileAttributes attrs) throws IOException {
+            Preconditions.checkArgument(dir.getValue() instanceof WorkspaceGroup);
+            Element element = doc.createElement("Group");
+            element.setAttribute("location", "container:");
+            element.setAttribute("name", dir.getKey());
+            groups.peek().appendChild(element);
+            groups.push(element);
+            return FileVisitResult.CONTINUE;
+          }
+
+          @Override
+          public FileVisitResult visitFile(
+              Map.Entry<String, WorkspaceNode> file,
+              BasicFileAttributes attrs) throws IOException {
+            Preconditions.checkArgument(file.getValue() instanceof WorkspaceFileRef);
+            WorkspaceFileRef fileRef = (WorkspaceFileRef) file.getValue();
+            Element element = doc.createElement("FileRef");
+            element.setAttribute(
+                "location",
+                "container:" +
+                    outputDirectory.normalize().relativize(fileRef.getPath()).toString());
+            groups.peek().appendChild(element);
+            return FileVisitResult.CONTINUE;
+          }
+
+          @Override
+          public FileVisitResult visitFileFailed(
+              Map.Entry<String, WorkspaceNode> file,
+              IOException exc) throws IOException {
+            return FileVisitResult.TERMINATE;
+          }
+
+          @Override
+          public FileVisitResult postVisitDirectory(
+              Map.Entry<String, WorkspaceNode> dir, IOException exc) throws IOException {
+            groups.pop();
+            return FileVisitResult.CONTINUE;
+          }
+        };
+
+    walkNodeTree(visitor);
 
     Path projectWorkspaceDir = outputDirectory.resolve(workspaceName + ".xcworkspace");
     projectFilesystem.mkdirs(projectWorkspaceDir);

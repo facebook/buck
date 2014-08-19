@@ -50,7 +50,6 @@ import java.util.Set;
 
 public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
-  private static final String DEPENDENCIES_GROUP = "Dependencies";
 
   private final ProjectFilesystem projectFilesystem;
   private final PartialGraph mainTargetGraph;
@@ -166,9 +165,7 @@ public class WorkspaceAndProjectGenerator {
           LOG.debug("Already generated project for rule %s, skipping", xcodeProjectConfig);
         }
 
-        String workspaceGroup = initialTargets.contains(actualTargetRule.getBuildTarget()) ?
-            "" : DEPENDENCIES_GROUP;
-        workspaceGenerator.addFilePath(workspaceGroup, generator.getProjectPath());
+        workspaceGenerator.addFilePath(generator.getProjectPath());
 
         schemeGenerator.addRuleToTargetMap(generator.getBuildRuleToGeneratedTargetMap());
         for (PBXTarget target : generator.getBuildRuleToGeneratedTargetMap().values()) {
@@ -190,7 +187,7 @@ public class WorkspaceAndProjectGenerator {
         Path pbxprojectPath = projectPath.resolve("project.pbxproj");
         String targetName = buildable.getTargetName();
 
-        workspaceGenerator.addFilePath(DEPENDENCIES_GROUP, projectPath);
+        workspaceGenerator.addFilePath(projectPath);
 
         ImmutableMap.Builder<String, String> targetNameToGIDMapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, String> targetNameToFileNameBuilder = ImmutableMap.builder();

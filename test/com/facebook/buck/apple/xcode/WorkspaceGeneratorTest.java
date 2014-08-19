@@ -22,10 +22,12 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,7 +49,7 @@ public class WorkspaceGeneratorTest {
 
   @Test
    public void testFlatWorkspaceContainsCorrectFileRefs() throws Exception {
-    generator.addFilePath(null, Paths.get("./Project.xcodeproj"));
+    generator.addFilePath(Paths.get("./Project.xcodeproj"));
     Path workspacePath = generator.writeWorkspace();
     Path contentsPath = workspacePath.resolve("contents.xcworkspacedata");
 
@@ -61,14 +63,66 @@ public class WorkspaceGeneratorTest {
 
   @Test
   public void testNestedWorkspaceContainsCorrectFileRefs() throws Exception {
-    generator.addFilePath("group", Paths.get("./Project.xcodeproj"));
+    generator.addFilePath(Paths.get("./grandparent/parent/Project.xcodeproj"));
     Path workspacePath = generator.writeWorkspace();
     Path contentsPath = workspacePath.resolve("contents.xcworkspacedata");
 
     DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
     Document workspace = dBuilder.parse(projectFilesystem.newFileInputStream(contentsPath));
-    assertThat(workspace, hasXPath("/Workspace/Group[@name=\"group\"]/FileRef/@location",
-            equalTo("container:Project.xcodeproj")));
+    assertThat(workspace, hasXPath("/Workspace/Group[@name=\"grandparent\"]/FileRef/@location",
+            equalTo("container:grandparent/parent/Project.xcodeproj")));
+  }
+
+  @Test
+  public void testWorkspaceContainsNodeInAlphabeticalOrder() throws Exception {
+    generator.addFilePath(Paths.get("./2/parent/C.xcodeproj"));
+    generator.addFilePath(Paths.get("./2/parent/B.xcodeproj"));
+    generator.addFilePath(Paths.get("./2/parent/D.xcodeproj"));
+    generator.addFilePath(Paths.get("./1/parent/E.xcodeproj"));
+    generator.addFilePath(Paths.get("./3/parent/A.xcodeproj"));
+
+    Path workspacePath = generator.writeWorkspace();
+    Path contentsPath = workspacePath.resolve("contents.xcworkspacedata");
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document workspace = dBuilder.parse(projectFilesystem.newFileInputStream(contentsPath));
+
+    Node workspaceNode = workspace.getChildNodes().item(0);
+
+    ImmutableList.Builder<String> groupsBuilder = ImmutableList.builder();
+    for (int i = 0; i < workspaceNode.getChildNodes().getLength(); ++i) {
+      groupsBuilder.add(
+          workspaceNode
+              .getChildNodes()
+              .item(i)
+              .getAttributes()
+              .getNamedItem("name")
+              .getNodeValue());
+    }
+    assertThat(groupsBuilder.build(), equalTo(ImmutableList.of("1", "2", "3")));
+
+    Node secondGroup = workspaceNode.getChildNodes().item(1);
+
+    assertThat(secondGroup.getAttributes().getNamedItem("name").getNodeValue(), equalTo("2"));
+
+    ImmutableList.Builder<String> projectsBuilder = ImmutableList.builder();
+    for (int i = 0; i < secondGroup.getChildNodes().getLength(); ++i) {
+      projectsBuilder.add(
+          secondGroup
+              .getChildNodes()
+              .item(i)
+              .getAttributes()
+              .getNamedItem("location")
+              .getNodeValue());
+    }
+    assertThat(
+        projectsBuilder.build(),
+        equalTo(
+            ImmutableList.of(
+                "container:2/parent/B.xcodeproj",
+                "container:2/parent/C.xcodeproj",
+                "container:2/parent/D.xcodeproj")));
   }
 }
