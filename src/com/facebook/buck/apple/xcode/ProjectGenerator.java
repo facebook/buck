@@ -244,7 +244,6 @@ public class ProjectGenerator {
   private final ImmutableMultimap.Builder<String, ConfigInXcodeLayout>
     xcodeConfigurationLayersMultimapBuilder;
 
-  private ImmutableMap<String, String> targetNameToGIDMap;
   private Set<String> nativeTargetGIDs;
 
   public ProjectGenerator(
@@ -323,7 +322,6 @@ public class ProjectGenerator {
     LOG.debug("Creating projects for targets %s", initialTargets);
 
     try {
-      targetNameToGIDMap = buildTargetNameToGIDMap();
       Iterable<BuildRule> allRules = partialGraph.getActionGraph().getNodes();
 
       for (BuildRule rule : allRules) {
@@ -383,7 +381,6 @@ public class ProjectGenerator {
     Preconditions.checkState(
         isBuiltByCurrentProject(rule),
         "should not generate rule if it shouldn't be built by current project");
-    Preconditions.checkNotNull(targetNameToGIDMap);
     Optional<PBXTarget> result;
     Optional<AbstractAppleNativeTargetBuildRule> nativeTargetRule;
     if (rule.getType().equals(IosLibraryDescription.TYPE)) {
@@ -428,11 +425,6 @@ public class ProjectGenerator {
         // Remember the GID hard-coded in the target's BUCK file
         // so we don't try to re-use it later.
         nativeTargetGIDs.add(gid.get());
-      } else {
-        // Override the target GID with the one read in from the
-        // existing .pbxproj only if a gid isn't hard-coded in the
-        // target's BUCK file.
-        setTargetGIDIfNameInMap(result.get(), targetNameToGIDMap);
       }
     }
 
@@ -1444,11 +1436,9 @@ public class ProjectGenerator {
    * Create the project bundle structure and write {@code project.pbxproj}.
    */
   private Path writeProjectFile(PBXProject project) throws IOException {
-    Preconditions.checkNotNull(targetNameToGIDMap);
     XcodeprojSerializer serializer = new XcodeprojSerializer(
         new GidGenerator(
             ImmutableSet.<String>builder()
-                .addAll(targetNameToGIDMap.values())
                 .addAll(nativeTargetGIDs)
                 .build()),
         project);
@@ -1840,54 +1830,6 @@ public class ProjectGenerator {
       throw new RuntimeException(e);
     }
     return filteredRules.build();
-  }
-
-  /**
-   * Once we've generated the target, check if there's already a GID for a
-   * target with the same name in an existing on-disk Xcode project.
-   *
-   * If there is, then re-use that target's GID instead of generating
-   * a new one based on the target's name.
-   */
-  private static void setTargetGIDIfNameInMap(
-      PBXTarget target,
-      ImmutableMap<String, String> targetNameToGIDMap) {
-    @Nullable String existingTargetGID = targetNameToGIDMap.get(target.getName());
-    if (existingTargetGID == null) {
-      return;
-    }
-
-    if (target.getGlobalID() == null) {
-      target.setGlobalID(existingTargetGID);
-    } else {
-      // We better not have already generated some other GID for this
-      // target.
-      Preconditions.checkState(target.getGlobalID().equals(existingTargetGID));
-    }
-  }
-
-  /**
-   * Reads in an existing Xcode project at
-   * "projectPath/project.pbxproj" and returns a map of {target-name:
-   * GID} pairs.
-   *
-   * If no such project exists, returns an empty map.
-   */
-  @SuppressWarnings("PMD.EmptyCatchBlock")
-  private ImmutableMap<String, String> buildTargetNameToGIDMap() throws IOException {
-    ImmutableMap.Builder<String, String> targetNameToGIDMapBuilder = ImmutableMap.builder();
-    try {
-      InputStream projectInputStream =
-        projectFilesystem.newFileInputStream(projectPath.resolve(Paths.get("project.pbxproj")));
-      NSDictionary projectObjects = ProjectParser.extractObjectsFromXcodeProject(
-          projectInputStream);
-      ProjectParser.extractTargetNameToGIDMap(
-          projectObjects,
-          targetNameToGIDMapBuilder);
-    } catch (NoSuchFileException e) {
-      // We'll leave the builder empty in this case and return an empty map.
-    }
-    return targetNameToGIDMapBuilder.build();
   }
 
   private static PBXTarget.ProductType testTypeToTargetProductType(IosTestType testType) {

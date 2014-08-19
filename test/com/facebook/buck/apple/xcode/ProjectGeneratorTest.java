@@ -1939,63 +1939,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void targetGidShouldReuseIfNameMatchInExistingProject() throws IOException {
-    String projectData =
-      "// !$*UTF8*$!\n" +
-      "{\n" +
-      "  archiveVersion = 1;\n" +
-      "  classes = {};\n" +
-      "  objectVersion = 46;\n" +
-      "  objects = {\n" +
-      "    \"12345\" /* libFoo.a */ = {isa = PBXFileReference; explicitFileType = " +
-      "      archive.ar; path = libFoo.a; sourceTree = BUILT_PRODUCTS_DIR; };\n" +
-      "    ABCDE /* //foo:lib */ = {\n" +
-      "      isa = PBXNativeTarget;\n" +
-      "      buildConfigurationList = 7CC5FDCE622E7F7B4F76AB38 /* Build configuration list for " +
-      "        PBXNativeTarget \"Foo\" */;\n" +
-      "      buildPhases = (\n" +
-      "      );\n" +
-      "      buildRules = (\n" +
-      "      );\n" +
-      "      dependencies = (\n" +
-      "      );\n" +
-      "      name = \"//foo:lib\";\n" +
-      "      productName = Foo;\n" +
-      "      productReference = \"12345\" /* libFoo.a */;\n" +
-      "      productType = \"com.apple.product-type.library.static\";\n" +
-      "    };\n" +
-      "  };\n" +
-      "}";
-    projectFilesystem.writeContentsToPath(projectData, OUTPUT_PROJECT_FILE_PATH);
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(IosLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
-    arg.configs = ImmutableMap.of();
-    arg.srcs = ImmutableList.of();
-    arg.frameworks = ImmutableSortedSet.of();
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
-
-    BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "//foo:lib");
-    // Ensure the GID for the target is the same as the one previously on disk.
-    assertThat(target.getGlobalID(), equalTo("ABCDE"));
-  }
-
-  @Test
   public void testGeneratedProjectIsNotReadOnlyIfOptionNotSpecified() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.<BuildRule>of(),
@@ -2117,65 +2060,6 @@ public class ProjectGeneratorTest {
         "expected GID has correct value",
         "E66DC04E36F2D8BE00000001", expectedGID);
     assertEquals("generated GID is same as expected", expectedGID, target.getGlobalID());
-  }
-
-  @Test
-  public void targetGidShouldNotReuseIfNameMatchInExistingProjectWhenGidOverrideInDescription()
-    throws IOException {
-    String projectData =
-      "// !$*UTF8*$!\n" +
-      "{\n" +
-      "  archiveVersion = 1;\n" +
-      "  classes = {};\n" +
-      "  objectVersion = 46;\n" +
-      "  objects = {\n" +
-      "    \"12345\" /* libFoo.a */ = {isa = PBXFileReference; explicitFileType = " +
-      "      archive.ar; path = libFoo.a; sourceTree = BUILT_PRODUCTS_DIR; };\n" +
-      "    ABCDE /* //foo:lib */ = {\n" +
-      "      isa = PBXNativeTarget;\n" +
-      "      buildConfigurationList = 7CC5FDCE622E7F7B4F76AB38 /* Build configuration list for " +
-      "        PBXNativeTarget \"Foo\" */;\n" +
-      "      buildPhases = (\n" +
-      "      );\n" +
-      "      buildRules = (\n" +
-      "      );\n" +
-      "      dependencies = (\n" +
-      "      );\n" +
-      "      name = \"//foo:lib\";\n" +
-      "      productName = Foo;\n" +
-      "      productReference = \"12345\" /* libFoo.a */;\n" +
-      "      productType = \"com.apple.product-type.library.static\";\n" +
-      "    };\n" +
-      "  };\n" +
-      "}";
-    projectFilesystem.writeContentsToPath(projectData, OUTPUT_PROJECT_FILE_PATH);
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(IosLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
-    arg.configs = ImmutableMap.of();
-    arg.srcs = ImmutableList.of();
-    arg.frameworks = ImmutableSortedSet.of();
-    arg.deps = Optional.absent();
-    arg.gid = Optional.of("A1B2C3D4");
-    arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
-
-    BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "//foo:lib");
-    // Ensure the GID for the target uses the gid value in the
-    // description, not the one in the project.
-    assertThat(target.getGlobalID(), equalTo("A1B2C3D4"));
   }
 
   @Test
