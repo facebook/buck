@@ -41,6 +41,7 @@ import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosBinaryDescription;
@@ -131,6 +132,7 @@ public class ProjectGeneratorTest {
   private MacosxBinaryDescription macosxBinaryDescription;
   private AppleExtensionDescription appleExtensionDescription;
   private AppleBundleDescription appleBundleDescription;
+  private AppleBinaryDescription appleBinaryDescription;
   private CoreDataModelDescription coreDataModelDescription;
   private XcodeNativeDescription xcodeNativeDescription;
 
@@ -149,6 +151,7 @@ public class ProjectGeneratorTest {
     macosxBinaryDescription = new MacosxBinaryDescription();
     appleExtensionDescription = new AppleExtensionDescription();
     appleBundleDescription = new AppleBundleDescription();
+    appleBinaryDescription = new AppleBinaryDescription();
     coreDataModelDescription = new CoreDataModelDescription();
     xcodeNativeDescription = new XcodeNativeDescription();
 
@@ -1333,6 +1336,58 @@ public class ProjectGeneratorTest {
             "$BUILT_PRODUCTS_DIR/liblib.a",
             "$SDKROOT/Library.framework",
             "$SDKROOT/Test.framework"));
+  }
+
+  @Test
+  public void testAppleBinaryRule() throws IOException {
+    BuildRule depRule = createBuildRuleWithDefaults(
+        BuildTarget.builder("//dep", "dep").build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "binary").build())
+            .setDeps(ImmutableSortedSet.of(depRule))
+            .setType(AppleBinaryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg arg = appleBinaryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
+    arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
+    arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
+
+    BuildRule rule = appleBinaryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:binary");
+    assertHasConfigurations(target, "Debug");
+    assertEquals(target.getProductType(), PBXTarget.ProductType.TOOL);
+    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target,
+        ImmutableMap.of(
+            "foo.m", Optional.of("-foo")));
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target,
+        ImmutableList.of(
+            "$SDKROOT/Foo.framework",
+            // Propagated library from deps.
+            "$BUILT_PRODUCTS_DIR/libdep.a"));
+
+    // this test does not have a dependency on any asset catalogs, so verify no build phase for them
+    // exists.
+    assertFalse(hasShellScriptPhaseToCompileAssetCatalogs(target));
   }
 
   @Test

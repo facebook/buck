@@ -27,6 +27,8 @@ import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleBinary;
+import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleExtension;
 import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleResource;
@@ -393,6 +395,12 @@ public class ProjectGenerator {
           (PBXTarget) generateIosLibraryTarget(
               project, rule, library));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(library);
+    } else if (rule.getType().equals(AppleBinaryDescription.TYPE)) {
+      AppleBinary binary = (AppleBinary) rule;
+      result = Optional.of(
+          (PBXTarget) generateAppleBinaryTarget(
+              project, rule, binary));
+      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
     } else if (rule.getType().equals(AppleBundleDescription.TYPE)) {
       AppleBundle bundle = (AppleBundle) rule;
       result = Optional.of(
@@ -461,7 +469,8 @@ public class ProjectGenerator {
         bundleToTargetProductType(bundle),
         "%s." + bundle.getExtensionString(),
         infoPlistPath,
-        true);
+        /* includeFrameworks */ true,
+        /* includeResources */ true);
 
     // -- copy any binary and bundle targets into this bundle
     Iterable<BuildRule> copiedRules = getRecursiveRuleDependenciesOfType(
@@ -475,6 +484,25 @@ public class ProjectGenerator {
 
     project.getTargets().add(target);
     LOG.debug("Generated iOS bundle target %s", target);
+    return target;
+  }
+
+  private PBXNativeTarget generateAppleBinaryTarget(
+      PBXProject project,
+      BuildRule rule,
+      AppleBinary buildable)
+      throws IOException {
+    PBXNativeTarget target = generateBinaryTarget(
+        project,
+        rule,
+        buildable,
+        PBXTarget.ProductType.TOOL,
+        "%s",
+        Optional.<Path>absent(),
+        /* includeFrameworks */ true,
+        /* includeResources */ false);
+    project.getTargets().add(target);
+    LOG.debug("Generated Apple binary target %s", target);
     return target;
   }
 
@@ -492,7 +520,8 @@ public class ProjectGenerator {
         productType,
         IosLibrary.getOutputFileNameFormat(buildable.getLinkedDynamically()),
         Optional.<Path>absent(),
-        false);
+        /* includeFrameworks */ false,
+        /* includeResources */ false);
     project.getTargets().add(target);
     LOG.debug("Generated iOS library target %s", target);
     return target;
@@ -527,7 +556,8 @@ public class ProjectGenerator {
         testTypeToTargetProductType(buildable.getTestType()),
         "%s." + buildable.getTestType().toFileExtension(),
         buildable.getInfoPlist(),
-        true);
+        /* includeFrameworks */ true,
+        /* includeResources */ true);
     project.getTargets().add(target);
     LOG.debug("Generated iOS test target %s", target);
     return target;
@@ -543,7 +573,8 @@ public class ProjectGenerator {
         PBXTarget.ProductType.APPLICATION,
         "%s.app",
         buildable.getInfoPlist(),
-        true);
+        /* includeFrameworks */ true,
+        /* includeResources */ true);
 
     addPostBuildScriptPhasesForDependencies(rule, target);
 
@@ -564,7 +595,8 @@ public class ProjectGenerator {
         PBXTarget.ProductType.FRAMEWORK,
         "%s.framework",
         buildable.getInfoPlist(),
-        true);
+        /* includeFrameworks */ true,
+        /* includeResources */ true);
     project.getTargets().add(target);
     LOG.debug("Generated OS X framework target %s", target);
     return target;
@@ -591,7 +623,8 @@ public class ProjectGenerator {
         PBXTarget.ProductType.APP_EXTENSION,
         "%s.appex",
         buildable.getInfoPlist(),
-        true);
+        /* includeFrameworks */ true,
+        /* includeResources */ true);
     project.getTargets().add(target);
     return target;
   }
@@ -603,7 +636,8 @@ public class ProjectGenerator {
       PBXTarget.ProductType productType,
       String productOutputFormat,
       Optional<Path> infoPlistOptional,
-      boolean includeFrameworksAndResources)
+      boolean includeFrameworks,
+      boolean includeResources)
       throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
     target.setProductType(productType);
@@ -623,7 +657,7 @@ public class ProjectGenerator {
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
     defaultSettingsBuilder.put("PUBLIC_HEADERS_FOLDER_PATH",
         getHeaderOutputPathForRule(buildable.getHeaderPathPrefix()));
-    if (!includeFrameworksAndResources) {
+    if (!includeFrameworks) {
       defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", getObjectOutputPathForRule(rule));
     }
     setTargetBuildConfigurations(
@@ -647,7 +681,7 @@ public class ProjectGenerator {
         buildable.getUseBuckHeaderMaps(),
         buildable.getSrcs(),
         buildable.getPerFileFlags());
-    if (includeFrameworksAndResources) {
+    if (includeFrameworks) {
       ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
       frameworksBuilder.addAll(buildable.getFrameworks());
       collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
@@ -657,6 +691,8 @@ public class ProjectGenerator {
           project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
           frameworksBuilder.build(),
           collectRecursiveLibraryDependencies(rule));
+    }
+    if (includeResources) {
       addResourcesBuildPhase(
           target,
           targetGroup,
@@ -667,7 +703,7 @@ public class ProjectGenerator {
         targetGroup,
         collectCoreDataModels(rule.getDeps()));
 
-    if (includeFrameworksAndResources) {
+    if (includeResources) {
       // -- copy any extensions into this bundle
       ImmutableSet.Builder<SourceTreePath> extensionsSourceTreePathsBuilder =
           ImmutableSet.builder();
@@ -712,7 +748,8 @@ public class ProjectGenerator {
         PBXTarget.ProductType.APPLICATION,
         "%s.app",
         buildable.getInfoPlist(),
-        true);
+        /* includeFrameworks */ true,
+        /* includeResources */ true);
 
     // Unlike an ios target, macosx targets collect their frameworks and copy them in.
     ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
