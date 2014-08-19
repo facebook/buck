@@ -113,6 +113,7 @@ class BuckRepo:
 
         dot_git = os.path.join(self._buck_dir, '.git')
         self._is_git = os.path.exists(dot_git) and os.path.isdir(dot_git)
+        self._is_buck_repo_dirty_override = os.environ.get('BUCK_REPOSITORY_DIRTY')
 
         buck_version = buck_project.buck_version
         if self._is_git and not buck_project.has_no_buck_check and buck_version:
@@ -365,9 +366,8 @@ class BuckRepo:
         return os.path.join(self._buck_dir, *(relative_path.split('/')))
 
     def _is_dirty(self):
-        buck_repo_dirty = os.environ.get('BUCK_REPOSITORY_DIRTY')
-        if buck_repo_dirty:
-            return buck_repo_dirty == "1"
+        if self._is_buck_repo_dirty_override:
+            return self._is_buck_repo_dirty_override == "1"
 
         if not self._is_git:
             return False
@@ -396,7 +396,7 @@ class BuckRepo:
         return output.splitlines()[0].strip()
 
     def _get_git_commit_timestamp(self):
-        if not self._is_git:
+        if self._is_buck_repo_dirty_override or not self._is_git:
             return -1
 
         return check_output(
