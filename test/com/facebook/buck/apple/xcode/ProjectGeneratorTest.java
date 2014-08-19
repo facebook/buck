@@ -37,9 +37,11 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
@@ -128,6 +130,7 @@ public class ProjectGeneratorTest {
   private MacosxFrameworkDescription macosxFrameworkDescription;
   private MacosxBinaryDescription macosxBinaryDescription;
   private AppleExtensionDescription appleExtensionDescription;
+  private AppleBundleDescription appleBundleDescription;
   private CoreDataModelDescription coreDataModelDescription;
   private XcodeNativeDescription xcodeNativeDescription;
 
@@ -145,6 +148,7 @@ public class ProjectGeneratorTest {
     macosxFrameworkDescription = new MacosxFrameworkDescription();
     macosxBinaryDescription = new MacosxBinaryDescription();
     appleExtensionDescription = new AppleExtensionDescription();
+    appleBundleDescription = new AppleBundleDescription();
     coreDataModelDescription = new CoreDataModelDescription();
     xcodeNativeDescription = new XcodeNativeDescription();
 
@@ -1125,7 +1129,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
         "//foo:binary");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.MACOSX_BINARY);
+    assertEquals(target.getProductType(), PBXTarget.ProductType.APPLICATION);
     assertHasConfigurations(target, "Debug");
     assertEquals("Should have exact number of build phases", 5, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
@@ -1186,7 +1190,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:test");
     assertEquals("PBXNativeTarget", target.isa());
-    assertEquals(PBXTarget.ProductType.IOS_TEST_OCTEST, target.getProductType());
+    assertEquals(PBXTarget.ProductType.BUNDLE, target.getProductType());
     PBXFileReference productReference = target.getProductReference();
     assertEquals("test.octest", productReference.getName());
     assertEquals(Optional.of("wrapper.cfbundle"), productReference.getExplicitFileType());
@@ -1248,7 +1252,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:test");
     assertEquals("PBXNativeTarget", target.isa());
-    assertEquals(PBXTarget.ProductType.IOS_TEST_XCTEST, target.getProductType());
+    assertEquals(PBXTarget.ProductType.UNIT_TEST, target.getProductType());
     PBXFileReference productReference = target.getProductReference();
     assertEquals("test.xctest", productReference.getName());
     assertEquals(Optional.of("wrapper.cfbundle"), productReference.getExplicitFileType());
@@ -1434,7 +1438,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:binary");
     assertHasConfigurations(target, "Debug");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.IOS_BINARY);
+    assertEquals(target.getProductType(), PBXTarget.ProductType.APPLICATION);
     assertEquals("Should have exact number of build phases", 4, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
@@ -1646,6 +1650,47 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testAppleBundleRuleForDynamicFramework() throws IOException {
+    BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
+        BuildTarget.builder("//dep", "dynamic").setFlavor(
+            IosLibraryDescription.DYNAMIC_LIBRARY).build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bundle").build())
+            .setDeps(ImmutableSortedSet.of(dynamicLibraryDep))
+            .setType(AppleBundleDescription.TYPE)
+            .build();
+
+    AppleBundleDescription.Arg arg =
+        appleBundleDescription.createUnpopulatedConstructorArg();
+    arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
+    arg.binary = dynamicLibraryDep;
+    arg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
+    arg.deps = Optional.absent();
+
+    BuildRule rule = appleBundleDescription.createBuildRule(
+        params,
+        new BuildRuleResolver(),
+        arg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:bundle");
+    assertEquals(target.getProductType(), PBXTarget.ProductType.FRAMEWORK);
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    PBXFileReference productReference = target.getProductReference();
+    assertEquals("bundle.framework", productReference.getName());
+    assertEquals(Optional.of("wrapper.framework"), productReference.getExplicitFileType());
+  }
+
+  @Test
   public void testIosBinaryRuleWithAppleExtension() throws IOException {
     BuildRule depRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "extension").build(),
@@ -1681,7 +1726,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:binary");
     assertHasConfigurations(target, "Debug");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.IOS_BINARY);
+    assertEquals(target.getProductType(), PBXTarget.ProductType.APPLICATION);
     assertEquals("Should have exact number of build phases", 5, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,

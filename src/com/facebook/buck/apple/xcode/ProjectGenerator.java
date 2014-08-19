@@ -24,6 +24,9 @@ import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule;
 import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleBundle;
+import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleExtension;
 import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleResource;
@@ -386,9 +389,16 @@ public class ProjectGenerator {
     Optional<AbstractAppleNativeTargetBuildRule> nativeTargetRule;
     if (rule.getType().equals(IosLibraryDescription.TYPE)) {
       IosLibrary library = (IosLibrary) rule;
-      result = Optional.of((PBXTarget) generateIosLibraryTarget(
+      result = Optional.of(
+          (PBXTarget) generateIosLibraryTarget(
               project, rule, library));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(library);
+    } else if (rule.getType().equals(AppleBundleDescription.TYPE)) {
+      AppleBundle bundle = (AppleBundle) rule;
+      result = Optional.of(
+          (PBXTarget) generateAppleBundleTarget(
+              project, rule, bundle));
+      nativeTargetRule = Optional.of((AbstractAppleNativeTargetBuildRule) bundle.getBinary());
     } else if (rule.getType().equals(IosTestDescription.TYPE)) {
       IosTest test = (IosTest) rule;
       result = Optional.of((PBXTarget) generateIosTestTarget(
@@ -407,7 +417,7 @@ public class ProjectGenerator {
     } else if (rule.getType().equals(MacosxBinaryDescription.TYPE)) {
       MacosxBinary binary = (MacosxBinary) rule;
       result = Optional.of((PBXTarget) generateMacosxBinaryTarget(
-            project, rule, binary));
+              project, rule, binary));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
     } else if (rule.getType().equals(AppleExtensionDescription.TYPE)) {
       AppleExtension binary = (AppleExtension) rule;
@@ -430,6 +440,31 @@ public class ProjectGenerator {
     }
 
     return result;
+  }
+
+  private PBXNativeTarget generateAppleBundleTarget(
+      PBXProject project,
+      BuildRule rule,
+      AppleBundle bundle)
+      throws IOException {
+    Optional<Path> infoPlistPath;
+    if (bundle.getInfoPlist().isPresent()) {
+      infoPlistPath = Optional.of(bundle.getInfoPlist().get().resolve());
+    } else {
+      infoPlistPath = Optional.absent();
+    }
+
+    PBXNativeTarget target = generateBinaryTarget(
+        project,
+        rule,
+        (AbstractAppleNativeTargetBuildRule) bundle.getBinary(),
+        bundleToTargetProductType(bundle),
+        "%s." + bundle.getExtensionString(),
+        infoPlistPath,
+        true);
+    project.getTargets().add(target);
+    LOG.debug("Generated iOS bundle target %s", target);
+    return target;
   }
 
   private PBXNativeTarget generateIosLibraryTarget(
@@ -494,7 +529,7 @@ public class ProjectGenerator {
         project,
         rule,
         buildable,
-        PBXTarget.ProductType.IOS_BINARY,
+        PBXTarget.ProductType.APPLICATION,
         "%s.app",
         buildable.getInfoPlist(),
         true);
@@ -515,7 +550,7 @@ public class ProjectGenerator {
         project,
         rule,
         buildable,
-        PBXTarget.ProductType.MACOSX_FRAMEWORK,
+        PBXTarget.ProductType.FRAMEWORK,
         "%s.framework",
         buildable.getInfoPlist(),
         true);
@@ -662,7 +697,7 @@ public class ProjectGenerator {
         project,
         rule,
         buildable,
-        PBXTarget.ProductType.MACOSX_BINARY,
+        PBXTarget.ProductType.APPLICATION,
         "%s.app",
         buildable.getInfoPlist(),
         true);
@@ -1919,12 +1954,48 @@ public class ProjectGenerator {
     return filteredRules.build();
   }
 
+  private static PBXTarget.ProductType bundleToTargetProductType(AppleBundle bundle) {
+    BuildRule binary = bundle.getBinary();
+
+    if (bundle.getExtensionValue().isPresent()) {
+      AppleBundleExtension extension = bundle.getExtensionValue().get();
+
+      if (binary.getType().equals(IosLibraryDescription.TYPE)) {
+        IosLibrary library = (IosLibrary) binary;
+
+        if (library.getLinkedDynamically()) {
+          switch (extension) {
+            case FRAMEWORK:
+              return PBXTarget.ProductType.FRAMEWORK;
+            case APPEX:
+              return PBXTarget.ProductType.APP_EXTENSION;
+            case BUNDLE:
+              return PBXTarget.ProductType.BUNDLE;
+            case OCTEST:
+              return PBXTarget.ProductType.BUNDLE;
+            case XCTEST:
+              return PBXTarget.ProductType.UNIT_TEST;
+          }
+        } else {
+          switch (extension) {
+            case FRAMEWORK:
+              return PBXTarget.ProductType.STATIC_FRAMEWORK;
+          }
+        }
+      }
+    }
+
+    // TODO(grp): return PBXTarget.ProductType.APPLICATION for executables.
+
+    return PBXTarget.ProductType.BUNDLE;
+  }
+
   private static PBXTarget.ProductType testTypeToTargetProductType(IosTestType testType) {
       switch (testType) {
         case OCTEST:
-          return PBXTarget.ProductType.IOS_TEST_OCTEST;
+          return PBXTarget.ProductType.BUNDLE;
         case XCTEST:
-          return PBXTarget.ProductType.IOS_TEST_XCTEST;
+          return PBXTarget.ProductType.UNIT_TEST;
         default:
           throw new IllegalStateException("Invalid test type value: " + testType.toString());
       }
