@@ -13,6 +13,7 @@ import time
 
 JAVA_CLASSPATHS = [
     "src",
+    "build/abi_processor/classes",
     "build/classes",
     "build/dx_classes",
     "lib/args4j-2.0.28.jar",

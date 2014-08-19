@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.event.MissingSymbolEvent;
+import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
@@ -79,6 +80,8 @@ import javax.tools.ToolProvider;
 public class JavacInMemoryStep extends JavacStep {
 
   private static final Logger LOG = Logger.get(JavacInMemoryStep.class);
+  @Nullable
+  private static final Class<? extends Processor> abiWriterClass = loadAbiWriterClass();
 
   public JavacInMemoryStep(
       Path outputDirectory,
@@ -295,6 +298,15 @@ public class JavacInMemoryStep extends JavacStep {
         .split(processorNames);
     for (String name : names) {
       try {
+        // We know that AbiWriter has no dependencies other than the JRE. We can safely load it from
+        // the current classloader, without needing to create an empty one for it.
+        if (abiWriterClass != null && abiWriterClass.getName().equals(name)) {
+          LOG.debug("Using new instance of abi writer class");
+          processorBundle.processors.add(abiWriterClass.newInstance());
+          continue;
+        }
+        LOG.debug("Loading %s from own classloader", name);
+
         Class<? extends Processor> aClass = processorBundle.classLoader
             .loadClass(name)
             .asSubclass(Processor.class);
@@ -363,6 +375,17 @@ public class JavacInMemoryStep extends JavacStep {
         symbol.get(),
         MissingSymbolEvent.SymbolType.Java);
     context.getBuckEventBus().post(event);
+  }
+
+  @Nullable
+  private static Class<? extends Processor> loadAbiWriterClass() {
+    try {
+      return Class.forName(AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME)
+          .asSubclass(Processor.class);
+    } catch (ClassNotFoundException e) {
+      LOG.info("Unable to load AbiWriter.");
+      return null;
+    }
   }
 
   private static class ProcessorBundle {
