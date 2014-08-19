@@ -118,8 +118,7 @@ class BuckProject:
             return BuckProject(current_dir)
         while current_dir != os.sep:
             if os.path.exists(os.path.join(current_dir, ".buckconfig")):
-                project = BuckProject(current_dir)
-                return project
+                return BuckProject(current_dir)
             current_dir = os.path.dirname(current_dir)
         raise NoBuckConfigFoundException()
 

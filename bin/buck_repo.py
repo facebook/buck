@@ -162,7 +162,7 @@ class BuckRepo:
                 command.append(buckd_port)
                 command.append("com.facebook.buck.cli.Main")
                 command.extend(sys.argv[1:])
-                exit_code = subprocess.call(command)
+                exit_code = subprocess.call(command, cwd=self._buck_project.root)
                 if exit_code == 2:
                     print('Daemon is busy, please wait',
                           'or run "buckd --kill" to terminate it.',
@@ -176,7 +176,7 @@ class BuckRepo:
         command.append(self._get_java_classpath())
         command.append("com.facebook.buck.cli.Main")
         command.extend(sys.argv[1:])
-        return subprocess.call(command)
+        return subprocess.call(command, cwd=self._buck_project.root)
 
     def launch_buckd(self):
         self._build()
@@ -223,6 +223,7 @@ class BuckRepo:
 
         process = subprocess.Popen(
             command,
+            cwd=self._buck_project.root,
             stdout=slave,
             stderr=slave,
             preexec_fn=preexec_func)
