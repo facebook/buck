@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CompilerStep;
 import com.facebook.buck.cxx.ArchiveStep;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.step.Step;
@@ -29,13 +30,21 @@ public class IosLibrary extends AbstractAppleNativeTargetBuildRule {
 
   Path archiver;
 
+  private final boolean linkedDynamically;
+
   public IosLibrary(
       BuildRuleParams params,
       AppleNativeTargetDescriptionArg arg,
       TargetSources targetSources,
-      Path archiver) {
+      Path archiver,
+      boolean linkedDynamically) {
     super(params, arg, targetSources);
+    this.linkedDynamically = linkedDynamically;
     this.archiver = Preconditions.checkNotNull(archiver);
+  }
+
+  public boolean getLinkedDynamically() {
+    return linkedDynamically;
   }
 
   @Override
@@ -44,6 +53,17 @@ public class IosLibrary extends AbstractAppleNativeTargetBuildRule {
       Path outputFile) {
     if (files.isEmpty()) {
       return ImmutableList.of();
+    } else if (linkedDynamically) {
+      // TODO(user): This needs to create a dylib, not a static library.
+      return ImmutableList.<Step>of(
+          new CompilerStep(
+              /* compiler */ getCompiler(),
+              /* shouldLink */ true,
+              /* srcs */ files,
+              /* outputFile */ outputFile,
+              /* shouldAddProjectRootToIncludePaths */ false,
+              /* includePaths */ ImmutableSortedSet.<Path>of(),
+              /* commandLineArgs */ ImmutableList.<String>of()));
     } else {
       return ImmutableList.<Step>of(new ArchiveStep(
           archiver,
@@ -54,6 +74,14 @@ public class IosLibrary extends AbstractAppleNativeTargetBuildRule {
 
   @Override
   protected String getOutputFileNameFormat() {
-    return "lib%s.a";
+    return getOutputFileNameFormat(linkedDynamically);
+  }
+
+  public static String getOutputFileNameFormat(boolean linkedDynamically) {
+    if (linkedDynamically) {
+      return "%s.dylib";
+    } else {
+      return "lib%s.a";
+    }
   }
 }

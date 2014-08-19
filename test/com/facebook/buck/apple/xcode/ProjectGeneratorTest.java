@@ -520,7 +520,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.IOS_LIBRARY));
+    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
@@ -588,7 +588,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.IOS_LIBRARY));
+    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
     XCBuildConfiguration configuration = target
@@ -596,6 +596,60 @@ public class ProjectGeneratorTest {
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
         new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+        settings.get("CONFIGURATION_BUILD_DIR"));
+    assertEquals(
+        new NSString("../Headers/MyHeaderPathPrefix"),
+        settings.get("PUBLIC_HEADERS_FOLDER_PATH"));
+  }
+
+  @Test
+  public void testIosLibraryConfiguresDynamicLibraryOutputPaths() throws IOException {
+    Path xcconfigFile = Paths.get("Test.xcconfig");
+    projectFilesystem.writeContentsToPath("", xcconfigFile);
+
+    BuildTarget buildTarget = BuildTarget.builder("//hi", "lib")
+        .setFlavor(IosLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(buildTarget)
+            .setType(IosLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+        ImmutableMap.<String, String>of());
+    arg.configs = ImmutableMap.of("Debug", ImmutableList.of(
+            argConfig,
+            argSettings,
+            argConfig,
+            argSettings));
+    arg.srcs = ImmutableList.of();
+    arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.of("MyHeaderPathPrefix");
+    arg.useBuckHeaderMaps = Optional.absent();
+    BuildRule rule = iosLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        createPartialGraphFromBuildRules(ImmutableSet.of(rule)),
+        ImmutableSet.of(rule.getBuildTarget()),
+        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//hi:lib#dynamic");
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.DYNAMIC_LIBRARY));
+
+    assertHasConfigurations(target, "Debug");
+    XCBuildConfiguration configuration = target
+        .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+    NSDictionary settings = configuration.getBuildSettings();
+    assertEquals(
+        new NSString("$SYMROOT/F4XWQ2J2NRUWEI3EPFXGC3LJMM/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
         new NSString("../Headers/MyHeaderPathPrefix"),
@@ -642,7 +696,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.IOS_LIBRARY));
+    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
     XCBuildConfiguration configuration = target

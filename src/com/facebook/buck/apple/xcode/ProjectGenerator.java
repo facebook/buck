@@ -438,7 +438,11 @@ public class ProjectGenerator {
       IosLibrary buildable)
       throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
-    target.setProductType(PBXTarget.ProductType.IOS_LIBRARY);
+    if (buildable.getLinkedDynamically()) {
+      target.setProductType(PBXTarget.ProductType.DYNAMIC_LIBRARY);
+    } else {
+      target.setProductType(PBXTarget.ProductType.STATIC_LIBRARY);
+    }
 
     setNativeTargetGid(target, buildable);
 
@@ -480,12 +484,10 @@ public class ProjectGenerator {
         collectCoreDataModels(rule.getDeps()));
 
     // -- products
-    String productName = getProductName(buildTarget);
-    String libraryName = "lib" + productName + ".a";
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
-    PBXFileReference productReference = new PBXFileReference(
-        libraryName, libraryName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
-    productsGroup.getChildren().add(productReference);
+    String libraryName = getProductOutputNameForRule(rule);
+    PBXFileReference productReference = productsGroup.getOrCreateFileReferenceBySourceTreePath(
+        new SourceTreePath(PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Paths.get(libraryName)));
     target.setProductReference(productReference);
     project.getTargets().add(target);
     LOG.debug("Generated iOS library target %s", target);
@@ -1653,7 +1655,7 @@ public class ProjectGenerator {
   }
 
   private static String getProductName(BuildTarget buildTarget) {
-    return buildTarget.getShortName();
+    return buildTarget.getShortNameOnly();
   }
 
   /**
@@ -1828,7 +1830,7 @@ public class ProjectGenerator {
             .getOrCreateFileReferenceBySourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                    Paths.get(getLibraryNameFromTargetName(rule.getBuildTarget().getShortName()))));
+                    Paths.get(getProductOutputNameForRule(rule))));
       }
     } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
       XcodeNative nativeRule = (XcodeNative) rule;
@@ -1851,13 +1853,22 @@ public class ProjectGenerator {
         initialTargets.contains(rule.getBuildTarget());
   }
 
-  private static String getLibraryNameFromTargetName(String string) {
-    return "lib" + string + ".a";
+  private static String getProductOutputNameForRule(BuildRule rule) {
+    if (rule.getType().equals(IosLibraryDescription.TYPE)) {
+      IosLibrary library = (IosLibrary) rule;
+      if (library.getLinkedDynamically()) {
+        return getProductName(rule.getBuildTarget()) + ".dylib";
+      } else {
+        return "lib" + getProductName(rule.getBuildTarget()) + ".a";
+      }
+    } else {
+      throw new RuntimeException("Unexpected type: " + rule.getType());
+    }
   }
 
   private String getXcodeTargetName(BuildRule rule) {
     return options.contains(Option.USE_SHORT_NAMES_FOR_TARGETS)
-        ? rule.getBuildTarget().getShortName()
+        ? rule.getBuildTarget().getShortNameOnly()
         : rule.getBuildTarget().getFullyQualifiedName();
   }
 

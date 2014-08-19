@@ -107,7 +107,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     return shortName + getFlavorPostfix();
   }
 
-  private String getFlavorPostfix() {
+  public String getFlavorPostfix() {
     return (flavor.isPresent() && !flavor.get().equals(Flavor.DEFAULT) ? "#" + flavor.get() : "");
   }
 

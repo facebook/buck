@@ -27,7 +27,8 @@ import java.util.List;
  */
 public abstract class PBXTarget extends PBXProjectItem {
   public enum ProductType {
-    IOS_LIBRARY("com.apple.product-type.library.static"),
+    STATIC_LIBRARY("com.apple.product-type.library.static"),
+    DYNAMIC_LIBRARY("com.apple.product-type.library.dynamic"),
     IOS_TEST_OCTEST("com.apple.product-type.bundle"),
     IOS_TEST_XCTEST("com.apple.product-type.bundle.unit-test"),
     IOS_BINARY("com.apple.product-type.application"),

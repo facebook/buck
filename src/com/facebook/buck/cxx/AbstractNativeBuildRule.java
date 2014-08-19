@@ -16,7 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -160,6 +162,17 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
 
   @Override
   public Path getPathToOutputFile() {
-    return BuildTargets.getBinPath(getBuildTarget(), getOutputFileNameFormat());
+    BuildTarget target = getBuildTarget();
+
+    if (!target.getFlavor().equals(Flavor.DEFAULT)) {
+      // TODO(grp): Consider putting this path format logic in BuildTargets.getBinPath() directly.
+      return Paths.get(String.format("%s/%s/%s/" + getOutputFileNameFormat(),
+              BuckConstant.BIN_DIR,
+              target.getBasePathWithSlash(),
+              target.getFlavorPostfix(),
+              target.getShortNameOnly()));
+    } else {
+      return BuildTargets.getBinPath(target, getOutputFileNameFormat());
+    }
   }
 }

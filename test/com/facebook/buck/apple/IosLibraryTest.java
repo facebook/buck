@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.Archives;
@@ -60,5 +61,25 @@ public class IosLibraryTest {
     assertThat(buildable.getInputsToCompareToOutput(), containsInAnyOrder(
         Paths.get("some_header.h"),
         Paths.get("some_source.m")));
+  }
+
+  @Test
+  public void getDynamicFlavorOutputName() {
+    AppleNativeTargetDescriptionArg arg = description.createUnpopulatedConstructorArg();
+    arg.srcs = ImmutableList.of();
+    arg.configs = ImmutableMap.of();
+    arg.frameworks = ImmutableSortedSet.of();
+    arg.deps = Optional.absent();
+    arg.gid = Optional.absent();
+    arg.headerPathPrefix = Optional.absent();
+    arg.useBuckHeaderMaps = Optional.absent();
+
+    BuildTarget target = BuildTarget.builder("//foo", "foo")
+        .setFlavor(IosLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    IosLibrary buildable = description.createBuildRule(params, new BuildRuleResolver(), arg);
+
+    assertEquals(Paths.get("buck-out/bin/foo/#dynamic/foo.dylib"), buildable.getPathToOutputFile());
   }
 }

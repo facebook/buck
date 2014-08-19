@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -24,8 +26,11 @@ import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
-public class IosLibraryDescription implements Description<AppleNativeTargetDescriptionArg> {
+public class IosLibraryDescription implements
+    Description<AppleNativeTargetDescriptionArg>, Flavored {
   public static final BuildRuleType TYPE = new BuildRuleType("ios_library");
+
+  public static final Flavor DYNAMIC_LIBRARY = new Flavor("dynamic");
 
   private final Path archiver;
 
@@ -44,6 +49,11 @@ public class IosLibraryDescription implements Description<AppleNativeTargetDescr
   }
 
   @Override
+  public boolean hasFlavor(Flavor flavor) {
+    return flavor.equals(Flavor.DEFAULT) || flavor.equals(DYNAMIC_LIBRARY);
+  }
+
+  @Override
   public <A extends AppleNativeTargetDescriptionArg> IosLibrary createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -52,6 +62,7 @@ public class IosLibraryDescription implements Description<AppleNativeTargetDescr
         params,
         args,
         TargetSources.ofAppleSources(args.srcs),
-        archiver);
+        archiver,
+        params.getBuildTarget().getFlavor().equals(DYNAMIC_LIBRARY));
   }
 }
