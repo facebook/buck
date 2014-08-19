@@ -477,6 +477,7 @@ public class ProjectGenerator {
         RecursiveRuleDependenciesMode.COPYING,
         rule,
         IosLibraryDescription.TYPE,
+        AppleBinaryDescription.TYPE,
         AppleBundleDescription.TYPE);
     generateCopyFilesBuildPhases(project, target, copiedRules);
 
@@ -1480,11 +1481,11 @@ public class ProjectGenerator {
       } else {
         return Optional.absent();
       }
+    } else if (rule.getType().equals(AppleBinaryDescription.TYPE)) {
+      return Optional.of(PBXCopyFilesBuildPhase.Destination.EXECUTABLES);
     } else {
       throw new RuntimeException("Unexpected type: " + rule.getType());
     }
-
-    // TODO(grp): return PBXCopyFilesBuildPhase.Destination.EXECUTABLES when appropriate.
   }
 
   private void generateCopyFilesBuildPhases(
@@ -1981,6 +1982,8 @@ public class ProjectGenerator {
     } else if (rule.getType().equals(AppleBundleDescription.TYPE)) {
       AppleBundle bundle = (AppleBundle) rule;
       productOutputName = productName + "." + bundle.getExtensionString();
+    } else if (rule.getType().equals(AppleBinaryDescription.TYPE)) {
+      productOutputName = productName;
     } else {
       throw new RuntimeException("Unexpected type: " + rule.getType());
     }
@@ -2208,10 +2211,13 @@ public class ProjectGenerator {
               return PBXTarget.ProductType.STATIC_FRAMEWORK;
           }
         }
+      } else if (binary.getType().equals(AppleBinaryDescription.TYPE)) {
+        switch (extension) {
+          case APP:
+            return PBXTarget.ProductType.APPLICATION;
+        }
       }
     }
-
-    // TODO(grp): return PBXTarget.ProductType.APPLICATION for executables.
 
     return PBXTarget.ProductType.BUNDLE;
   }
