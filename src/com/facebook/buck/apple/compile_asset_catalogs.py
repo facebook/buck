@@ -32,7 +32,7 @@ these resources.
 This script manipulates the asset catalog compiler (actool) to place resources
 in the expected place."""
 
-import argparse
+import optparse
 import errno
 import logging
 import os
@@ -237,37 +237,35 @@ def compile_asset_catalogs(target, platform, devices, output, catalogs,
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--target', required=True,
-                        help='Target operating system version for deployment')
-    parser.add_argument('-p', '--platform', required=True,
-                        help='Target platform.  Choices are iphonesimulator, '
-                        'iphoneos, and macosx.')
-    parser.add_argument('-d', '--device', action='append', type=str,
-                        help='Choices are iphone and ipad. May be specified '
-                        'multiple times. When platform is macosx, this '
-                        'option cannot be specified. Otherwise, this option '
-                        'must be specified.')
-    parser.add_argument('-b', '--bundles', action='store_true',
-                        help='Use the legacy output format, which copies '
-                        'asset catalogs to their sibling bundles. Without '
-                        'this option, all assets are copied to the root (or '
-                        'compiled into Assets.car)')
-    parser.add_argument('-o', '--output', required=True,
-                        help='Output directory for the specified asset '
-                        'catalog(s).')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='Print verbose output')
-    parser.add_argument('catalogs', metavar='catalog', type=str, nargs='+',
-                        help='Paths to asset catalogs to be compiled')
-    args = parser.parse_args()
+    parser = optparse.OptionParser()
+    parser.add_option('-t', '--target',
+                      help='Target operating system version for deployment')
+    parser.add_option('-p', '--platform',
+                      help='Target platform.  Choices are iphonesimulator, '
+                      'iphoneos, and macosx.')
+    parser.add_option('-d', '--device', action='append', type=str,
+                      help='Choices are iphone and ipad. May be specified '
+                      'multiple times. When platform is macosx, this '
+                      'option cannot be specified. Otherwise, this option '
+                      'must be specified.')
+    parser.add_option('-b', '--bundles', action='store_true',
+                      help='Use the legacy output format, which copies '
+                      'asset catalogs to their sibling bundles. Without '
+                      'this option, all assets are copied to the root (or '
+                      'compiled into Assets.car)')
+    parser.add_option('-o', '--output',
+                      help='Output directory for the specified asset '
+                      'catalog(s).')
+    parser.add_option('-v', '--verbose', action='store_true',
+                      help='Print verbose output')
+    opts, args = parser.parse_args()
 
     logging.basicConfig(
-        level=(logging.DEBUG if args.verbose else logging.INFO))
+        level=(logging.DEBUG if opts.verbose else logging.INFO))
     logger.info('Compiling asset catalogs...')
 
-    args.catalogs = map(os.path.abspath, args.catalogs)
-    args.output = os.path.abspath(args.output)
+    catalogs = map(os.path.abspath, args)
+    opts.output = os.path.abspath(opts.output)
 
     # Validation:
     #
@@ -277,43 +275,43 @@ if __name__ == "__main__":
     #   devices must be specified
     # - devices are valid values
     # - asset catalogs paths end in .xcassets
-    for component in args.target.split('.'):
+    for component in opts.target.split('.'):
         try:
             int(component)
         except:
-            raise ValueError(args.target + ': target must be a version string')
+            raise ValueError(opts.target + ': target must be a version string')
 
-    if (args.platform != 'iphonesimulator' and args.platform != 'iphoneos'
-            and args.platform != 'macosx'):
-        raise ValueError(args.platform + ': platform must be either iphoneos, '
-                         'iphonesimulator, or macosx')
+    if (opts.platform != 'iphonesimulator' and opts.platform != 'iphoneos'
+            and opts.platform != 'macosx'):
+        raise ValueError(opts.platform + ': platform must be either '
+                         'iphoneos, iphonesimulator, or macosx')
 
-    if args.platform == 'macosx' and args.device is not None:
+    if opts.platform == 'macosx' and opts.device is not None:
         raise ValueError(
             'devices must not be specified when platform is macosx')
-    elif args.platform != 'macosx' and (args.device or len(args.device) == 0):
+    elif opts.platform != 'macosx' and (opts.device or len(opts.device) == 0):
         raise ValueError('devices must be specified when platform is iphoneos '
                          'or iphonesimulator')
 
-    for device in args.device:
+    for device in opts.device:
         if device != 'iphone' and device != 'ipad':
             raise ValueError(
                 device + ': device(s) must be either iphone or ipad')
 
-    for path in args.catalogs:
+    for path in catalogs:
         if os.path.splitext(os.path.basename(path))[1] != '.xcassets':
             raise ValueError(
                 path + ': catalog paths must have an xcassets extension')
 
     # When the target platform is macosx, the device supplied to actool is
     # 'mac'
-    if args.platform == 'macosx':
-        args.device = ['mac']
+    if opts.platform == 'macosx':
+        opts.device = ['mac']
 
     exit_code = 0
-    if not compile_asset_catalogs(args.target, args.platform, args.device,
-                                  args.output, args.catalogs,
-                                  args.bundles, args.verbose):
+    if not compile_asset_catalogs(opts.target, opts.platform, opts.device,
+                                  opts.output, catalogs,
+                                  opts.bundles, opts.verbose):
         exit_code = 1
 
     logger.info('Done')
