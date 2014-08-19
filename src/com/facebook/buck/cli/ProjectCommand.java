@@ -54,7 +54,6 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
@@ -344,10 +343,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           executionContext,
           targets,
           optionsBuilder.build());
-      ImmutableSet<Path> generatedProjectPaths = projectGenerator.generateProjects();
-      for (Path path : generatedProjectPaths) {
-        console.getStdOut().println(path.toString());
-      }
+      projectGenerator.generateProjects();
     }
 
     return 0;

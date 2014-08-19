@@ -293,13 +293,6 @@ public class ProjectIntegrationTest {
     result.assertSuccess();
 
     workspace.verify();
-
-    assertEquals(
-        Joiner.on('\n').join(
-            "foo/fooproject.xcodeproj",
-            "bar/barproject.xcodeproj",
-            ""),
-        result.getStdout());
   }
 
   @Test
