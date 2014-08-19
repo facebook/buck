@@ -78,7 +78,7 @@ public class TargetsCommandOptions extends BuildCommandOptions {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     Path normalizedRoot = projectRoot.normalize();
     for (String filePath : nonCanonicalFilePaths) {
-      Path canonicalFullPath = Paths.get(filePath).normalize();
+      Path canonicalFullPath = Paths.get(filePath).toAbsolutePath().normalize();
 
       // Ignore files that aren't under project root.
       if (canonicalFullPath.startsWith(normalizedRoot)) {

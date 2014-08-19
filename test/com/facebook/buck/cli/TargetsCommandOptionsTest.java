@@ -30,7 +30,7 @@ public class TargetsCommandOptionsTest {
 
   @Test
   public void testGetCanonicalFilesUnderProjectRoot() throws IOException {
-    Path projectRoot = Paths.get("ProjectRoot");
+    Path projectRoot = Paths.get("").toAbsolutePath().resolve("ProjectRoot");
 
     ImmutableSet<String> nonCanonicalFilePaths = ImmutableSet.of(
         "ProjectRoot/src/com/facebook/CanonicalRelativePath.java",
