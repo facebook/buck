@@ -25,13 +25,11 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
+import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.util.concurrent.ExecutionException;
@@ -58,9 +56,10 @@ public class DefaultFileHashCache implements FileHashCache {
   }
 
   private HashCode getHashCode(Path path) throws IOException {
+    // TODO(simons): Should be this.projectFilesystem.computeSha1(path);
     File file = this.projectFilesystem.resolve(path).toFile();
-    InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(file);
-    return ByteStreams.hash(inputSupplier, Hashing.sha1());
+    ByteSource source = Files.asByteSource(file);
+    return source.hash(Hashing.sha1());
   }
 
   @Override

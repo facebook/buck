@@ -100,6 +100,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -114,17 +115,22 @@ import javax.annotation.Nullable;
 public class DefaultJavaLibraryTest {
   private static final String ANNOTATION_SCENARIO_TARGET =
       "//android/java/src/com/facebook:fb";
-  private static final String ANNOTATION_SCENARIO_GEN_PATH =
+  private static final String ANNOTATION_SCENARIO_GEN_PATH_POSTIX =
       BuckConstant.ANNOTATION_DIR + "/android/java/src/com/facebook/__fb_gen__";
 
   @Rule
   public TemporaryFolder tmp = new TemporaryFolder();
+  private String annotationScenarioGenPath;
 
   @Before
   public void stubOutBuildContext() {
     StepRunner stepRunner = createNiceMock(StepRunner.class);
     JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
     replay(packageFinder, stepRunner);
+
+    annotationScenarioGenPath = new File(
+        tmp.getRoot(),
+        ANNOTATION_SCENARIO_GEN_PATH_POSTIX).getAbsolutePath();
   }
 
   /** Make sure that when isAndroidLibrary is true, that the Android bootclasspath is used. */
@@ -234,16 +240,16 @@ public class DefaultJavaLibraryTest {
     MoreAsserts.assertContainsOne(parameters, "-processor");
     assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
-    MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
+    MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
 
     assertEquals(
         "Expected '-processor MyProcessor' parameters",
         parameters.indexOf("-processor") + 1,
         parameters.indexOf("MyProcessor," + AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME));
     assertEquals(
-        "Expected '-s " + ANNOTATION_SCENARIO_GEN_PATH + "' parameters",
+        "Expected '-s " + annotationScenarioGenPath + "' parameters",
         parameters.indexOf("-s") + 1,
-        parameters.indexOf(ANNOTATION_SCENARIO_GEN_PATH));
+        parameters.indexOf(annotationScenarioGenPath));
 
     for (String parameter : parameters) {
       assertTrue("Expected no custom annotation options.", !parameter.startsWith("-A") ||
@@ -268,7 +274,7 @@ public class DefaultJavaLibraryTest {
     MoreAsserts.assertContainsOne(parameters, "-processor");
     assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
-    MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
+    MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
   }
 
   /**
@@ -288,7 +294,7 @@ public class DefaultJavaLibraryTest {
     MoreAsserts.assertContainsOne(parameters, "-processor");
     assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
-    MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
+    MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
   }
 
   /**
@@ -310,7 +316,7 @@ public class DefaultJavaLibraryTest {
     MoreAsserts.assertContainsOne(parameters, "-processor");
     assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
-    MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
+    MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
   }
 
   @Test
@@ -439,7 +445,7 @@ public class DefaultJavaLibraryTest {
     MoreAsserts.assertContainsOne(parameters, "-processor");
     assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
-    MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
+    MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
     MoreAsserts.assertContainsOne(parameters, "-proc:only");
 
     assertEquals(
@@ -447,9 +453,9 @@ public class DefaultJavaLibraryTest {
         parameters.indexOf("-processor") + 1,
         parameters.indexOf("MyProcessor," + AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME));
     assertEquals(
-        "Expected '-s " + ANNOTATION_SCENARIO_GEN_PATH + "' parameters",
+        "Expected '-s " + annotationScenarioGenPath + "' parameters",
         parameters.indexOf("-s") + 1,
-        parameters.indexOf(ANNOTATION_SCENARIO_GEN_PATH));
+        parameters.indexOf(annotationScenarioGenPath));
 
     MoreAsserts.assertContainsOne(parameters, "-AMyParameter");
     MoreAsserts.assertContainsOne(parameters, "-AMyKey=MyValue");
@@ -1370,6 +1376,7 @@ public class DefaultJavaLibraryTest {
         throws IOException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);
       annotationProcessingParamsBuilder.setOwnerTarget(buildTarget);
+      annotationProcessingParamsBuilder.setProjectFilesystem(projectFilesystem);
 
       tmp.newFolder("android", "java", "src", "com", "facebook");
       String src = "android/java/src/com/facebook/Main.java";

@@ -10,12 +10,16 @@
       <root url="jar://$PROJECT_DIR$/lib/junit-4.11.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/hamcrest-core-1.3.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/hamcrest-library-1.3.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/guava-15.0.jar!/" />
+      <root url="file://$PROJECT_DIR$/lib" />
+      <root url="jar://$PROJECT_DIR$/lib/guava-17.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/lib/junit-4.11-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/guava-15.0-sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/lib" />
+      <root url="jar://$PROJECT_DIR$/lib/guava-17.0-sources.jar!/" />
     </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/lib" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/lib" recursive="false" type="SOURCES" />
   </library>
 </component>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,23 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.java.classes;
+import com.google.common.io.Closeables;
 
-import com.google.common.base.Preconditions;
-import com.google.common.io.InputSupplier;
+import java.io.Reader;
 
-import java.io.IOException;
-import java.io.InputStream;
+public class A {
 
-public class FileLikeInputSupplier implements InputSupplier<InputStream> {
-  private final FileLike fileLike;
-
-  public FileLikeInputSupplier(FileLike fileLike) {
-    this.fileLike = Preconditions.checkNotNull(fileLike);
-  }
-
-  @Override
-  public InputStream getInput() throws IOException {
-    return fileLike.getInput();
+  public void useOldGuavaMethod() {
+    // We just need a class that implements Closeable.
+    Reader reader = null;
+    // This is removed by guava 17
+    Closeables.closeQuietly(reader);
   }
 }

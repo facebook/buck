@@ -16,10 +16,7 @@
 
 package com.facebook.buck.testutil;
 
-import com.google.common.io.InputSupplier;
-
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 public class FakeInputStreams {
@@ -29,16 +26,6 @@ public class FakeInputStreams {
 
   public static InputStream createInputStreamFromString(String data) {
     return new ByteArrayInputStream(data.getBytes());
-  }
-
-  public static InputSupplier<? extends InputStream> createInputSupplierFromString(String data) {
-    final InputStream inputStream = createInputStreamFromString(data);
-    return new InputSupplier<InputStream>() {
-      @Override
-      public InputStream getInput() throws IOException {
-        return inputStream;
-      }
-    };
   }
 
 }

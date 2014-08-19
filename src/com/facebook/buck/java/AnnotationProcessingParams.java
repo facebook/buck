@@ -21,6 +21,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,7 +46,8 @@ import javax.annotation.Nullable;
  */
 public class AnnotationProcessingParams implements AnnotationProcessingData {
   public static final AnnotationProcessingParams EMPTY = new AnnotationProcessingParams(
-      null,
+      /* owner target */ null,
+      /* project filesystem */ null,
       ImmutableSet.<Path>of(),
       ImmutableSet.<String>of(),
       ImmutableSet.<String>of(),
@@ -53,6 +56,8 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
   @Nullable
   private final BuildTarget ownerTarget;
+  @Nullable
+  private final ProjectFilesystem filesystem;
   private final ImmutableSortedSet<Path> searchPathElements;
   private final ImmutableSortedSet<String> names;
   private final ImmutableSortedSet<String> parameters;
@@ -61,24 +66,33 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
   private AnnotationProcessingParams(
       @Nullable BuildTarget ownerTarget,
+      @Nullable ProjectFilesystem filesystem,
       Set<Path> searchPathElements,
       Set<String> names,
       Set<String> parameters,
       Set<BuildRule> rules,
       boolean processOnly) {
     this.ownerTarget = ownerTarget;
+    this.filesystem = filesystem;
     this.searchPathElements = ImmutableSortedSet.copyOf(searchPathElements);
     this.names = ImmutableSortedSet.copyOf(names);
     this.parameters = ImmutableSortedSet.copyOf(parameters);
     this.rules = ImmutableSortedSet.copyOf(rules);
     this.processOnly = processOnly;
+
+    if (!isEmpty() && ownerTarget != null) {
+      Preconditions.checkNotNull(filesystem);
+    }
   }
 
   private Path getGeneratedSrcFolder() {
-    return Paths.get(String.format("%s/%s__%s_gen__",
-        BuckConstant.ANNOTATION_DIR,
-        ownerTarget.getBasePathWithSlash(),
-        ownerTarget.getShortName()));
+    Preconditions.checkNotNull(filesystem);
+    return Paths.get(
+        String.format(
+            "%s/%s__%s_gen__",
+            BuckConstant.ANNOTATION_DIR,
+            ownerTarget.getBasePathWithSlash(),
+            ownerTarget.getShortName()));
   }
 
   @Override
@@ -139,13 +153,15 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
   public static class Builder {
     @Nullable
     private BuildTarget ownerTarget;
+    @Nullable
+    private ProjectFilesystem filesystem;
     private Set<BuildRule> rules = Sets.newHashSet();
     private Set<String> names = Sets.newHashSet();
     private Set<String> parameters = Sets.newHashSet();
     private boolean processOnly;
 
     public Builder setOwnerTarget(BuildTarget owner) {
-      ownerTarget = owner;
+      ownerTarget = Preconditions.checkNotNull(owner);
       return this;
     }
 
@@ -166,6 +182,11 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
     public Builder setProcessOnly(boolean processOnly) {
       this.processOnly = processOnly;
+      return this;
+    }
+
+    public Builder setProjectFilesystem(ProjectFilesystem filesystem) {
+      this.filesystem = Preconditions.checkNotNull(filesystem);
       return this;
     }
 
@@ -203,6 +224,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
       return new AnnotationProcessingParams(
           ownerTarget,
+          filesystem,
           searchPathElements,
           names,
           parameters,

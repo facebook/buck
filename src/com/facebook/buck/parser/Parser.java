@@ -54,6 +54,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -64,7 +65,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.io.InputSupplier;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -160,8 +160,8 @@ public class Parser {
    * TODO(user): refactor this as a generic CachingSupplier<T> when it's needed elsewhere.
    */
   @VisibleForTesting
-  static class BuildFileTreeCache implements InputSupplier<BuildFileTree> {
-    private final InputSupplier<BuildFileTree> supplier;
+  static class BuildFileTreeCache implements Supplier<BuildFileTree> {
+    private final Supplier<BuildFileTree> supplier;
     @Nullable private BuildFileTree buildFileTree;
     private BuildId currentBuildId = new BuildId();
     private BuildId buildTreeBuildId = new BuildId();
@@ -169,7 +169,7 @@ public class Parser {
     /**
      * @param buildFileTreeSupplier each call to get() must reconstruct the tree from disk.
      */
-    public BuildFileTreeCache(InputSupplier<BuildFileTree> buildFileTreeSupplier) {
+    public BuildFileTreeCache(Supplier<BuildFileTree> buildFileTreeSupplier) {
       this.supplier = Preconditions.checkNotNull(buildFileTreeSupplier);
     }
 
@@ -188,10 +188,10 @@ public class Parser {
      * @return the cached BuildFileTree, or a new lazily constructed BuildFileTree.
      */
     @Override
-    public synchronized BuildFileTree getInput() throws IOException {
+    public synchronized BuildFileTree get() {
       if (buildFileTree == null) {
         buildTreeBuildId = currentBuildId;
-        buildFileTree = supplier.getInput();
+        buildFileTree = supplier.get();
       }
       return buildFileTree;
     }
@@ -217,9 +217,10 @@ public class Parser {
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this(repository,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
-        new InputSupplier<BuildFileTree>() {
+        // TODO(simons): Consider momoizing the suppler.
+        new Supplier<BuildFileTree>() {
           @Override
-          public BuildFileTree getInput() throws IOException {
+          public BuildFileTree get() {
             return new FilesystemBackedBuildFileTree(repository.getFilesystem());
           }
         },
@@ -239,7 +240,7 @@ public class Parser {
   @VisibleForTesting
   Parser(
       Repository repository,
-      InputSupplier<BuildFileTree> buildFileTreeSupplier,
+      Supplier<BuildFileTree> buildFileTreeSupplier,
       BuildTargetParser buildTargetParser,
       ProjectBuildFileParserFactory buildFileParserFactory,
       ImmutableSet<Pattern> tempFilePatterns,
@@ -979,7 +980,7 @@ public class Parser {
    */
   private synchronized void invalidateContainingBuildFile(Path path) throws IOException {
     String packageBuildFilePath =
-        buildFileTreeCache.getInput().getBasePathOfAncestorTarget(path).toString();
+        buildFileTreeCache.get().getBasePathOfAncestorTarget(path).toString();
     invalidateDependents(
         repository.getFilesystem().getFileForRelativePath(
             packageBuildFilePath + '/' + BuckConstant.BUILD_RULES_FILE_NAME).toPath());

@@ -58,8 +58,9 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       A args) {
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
 
-    AnnotationProcessingParams annotationParams =
-        args.buildAnnotationProcessingParams(params.getBuildTarget());
+    AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
+        params.getBuildTarget(),
+        params.getProjectFilesystem());
     javacOptions.setAnnotationProcessingData(annotationParams);
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(

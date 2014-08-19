@@ -26,19 +26,19 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.io.InputSupplier;
 
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class TracesHelperTest extends EasyMockSupport {
 
   @Test
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public void testGetTraceAttributesForId() {
+  public void testGetTraceAttributesForId() throws IOException {
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
     File traceFile = createMock(File.class);
@@ -59,9 +59,8 @@ public class TracesHelperTest extends EasyMockSupport {
             "\"args\":{\"command_args\":\"buck\"}" +
           "}" +
         "]";
-    expect(projectFilesystem.getInputSupplierForRelativePath(
-        pathToTraceFile))
-        .andReturn((InputSupplier) FakeInputStreams.createInputSupplierFromString(buckBuildJson));
+    expect(projectFilesystem.getInputStreamForRelativePath(pathToTraceFile))
+        .andReturn(FakeInputStreams.createInputStreamFromString(buckBuildJson));
 
     replayAll();
 
@@ -82,7 +81,7 @@ public class TracesHelperTest extends EasyMockSupport {
 
   @Test
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public void testGetTraceAttributesForJsonWithoutName() {
+  public void testGetTraceAttributesForJsonWithoutName() throws IOException {
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
     File traceFile = createMock(File.class);
@@ -102,9 +101,8 @@ public class TracesHelperTest extends EasyMockSupport {
             "\"args\":{\"command_args\":\"buck\"}" +
           "}" +
         "]";
-    expect(projectFilesystem.getInputSupplierForRelativePath(
-        pathToTraceFile))
-        .andReturn((InputSupplier) FakeInputStreams.createInputSupplierFromString(buckBuildJson));
+    expect(projectFilesystem.getInputStreamForRelativePath(pathToTraceFile))
+        .andReturn(FakeInputStreams.createInputStreamFromString(buckBuildJson));
 
     replayAll();
 
@@ -122,7 +120,7 @@ public class TracesHelperTest extends EasyMockSupport {
 
   @Test
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public void testGetTraceAttributesForJsonWithoutCommandArgs() {
+  public void testGetTraceAttributesForJsonWithoutCommandArgs() throws IOException {
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
     File traceFile = createMock(File.class);
@@ -141,9 +139,8 @@ public class TracesHelperTest extends EasyMockSupport {
             "\"ts\":5621911884918" +
           "}" +
         "]";
-    expect(projectFilesystem.getInputSupplierForRelativePath(
-        pathToTraceFile))
-        .andReturn((InputSupplier) FakeInputStreams.createInputSupplierFromString(buckBuildJson));
+    expect(projectFilesystem.getInputStreamForRelativePath(pathToTraceFile))
+        .andReturn(FakeInputStreams.createInputStreamFromString(buckBuildJson));
 
     replayAll();
 

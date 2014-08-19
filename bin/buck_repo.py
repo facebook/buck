@@ -18,7 +18,7 @@ JAVA_CLASSPATHS = [
     "build/dx_classes",
     "lib/args4j-2.0.28.jar",
     "lib/ddmlib-22.5.3.jar",
-    "lib/guava-15.0.jar",
+    "lib/guava-17.0.jar",
     "lib/ini4j-0.5.2.jar",
     "lib/jackson-annotations-2.0.5.jar",
     "lib/jackson-core-2.0.5.jar",

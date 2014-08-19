@@ -176,8 +176,7 @@ public class ApkBuilderStep implements Step {
         pathToKeystorePropertiesFile,
         projectFilesystem);
     KeyStore keystore = KeyStore.getInstance(JARSIGNER_KEY_STORE_TYPE);
-    InputStream inputStream = projectFilesystem.getInputSupplierForRelativePath(pathToKeystore)
-        .getInput();
+    InputStream inputStream = projectFilesystem.getInputStreamForRelativePath(pathToKeystore);
     char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
     keystore.load(inputStream, keystorePassword);
 

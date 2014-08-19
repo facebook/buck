@@ -29,6 +29,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import org.junit.Assert;
@@ -144,7 +145,7 @@ public final class MoreAsserts {
   public static <Item, Container extends Iterable<Item>> void assertContainsOne(
       Container container,
       Item expectedItem) {
-    assertContainsOne(/* userMessage */ null, container, expectedItem);
+    assertContainsOne(/* userMessage */ Iterables.toString(container), container, expectedItem);
   }
 
   public static <Item, Container extends Iterable<Item>> void assertContainsOne(

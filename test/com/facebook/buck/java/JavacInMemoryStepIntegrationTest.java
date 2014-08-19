@@ -28,6 +28,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -38,7 +41,6 @@ import com.google.common.io.Files;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +49,7 @@ import java.nio.file.Paths;
 
 public class JavacInMemoryStepIntegrationTest {
   @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   private Path pathToSrcsList;
 
@@ -126,6 +128,26 @@ public class JavacInMemoryStepIntegrationTest {
     assertTrue(srcsListFile.exists());
     assertTrue(srcsListFile.isFile());
     assertEquals("Example.java", Files.toString(srcsListFile, Charsets.UTF_8).trim());
+  }
+
+  /**
+   * There was a bug caused by adding annotation processors and setting the processorpath for javac.
+   * In that case, Buck's version of guava would leak into the classpath of the annotation processor
+   * causing it to fail to run and all heck breaking loose.
+   */
+  @Test
+  public void testShouldNotPolluteClasspathWhenProcessorPathIsSet()
+      throws IOException, InterruptedException {
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "old_guava",
+        tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:example");
+
+    result.assertSuccess();
   }
 
   private JavacInMemoryStep createJavac(boolean withSyntaxError) throws IOException {

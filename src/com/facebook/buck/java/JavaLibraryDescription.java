@@ -87,7 +87,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
 
     AnnotationProcessingParams annotationParams =
-        args.buildAnnotationProcessingParams(target);
+        args.buildAnnotationProcessingParams(target, params.getProjectFilesystem());
     javacOptions.setAnnotationProcessingData(annotationParams);
 
     return new DefaultJavaLibrary(
@@ -154,7 +154,9 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<ImmutableSortedSet<BuildRule>> exportedDeps;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
 
-    public AnnotationProcessingParams buildAnnotationProcessingParams(BuildTarget owner) {
+    public AnnotationProcessingParams buildAnnotationProcessingParams(
+        BuildTarget owner,
+        ProjectFilesystem filesystem) {
       ImmutableSet<String> annotationProcessors =
           this.annotationProcessors.or(ImmutableSet.<String>of());
 
@@ -165,6 +167,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       AnnotationProcessingParams.Builder builder = new AnnotationProcessingParams.Builder();
       builder.setOwnerTarget(owner);
       builder.addAllProcessors(annotationProcessors);
+      builder.setProjectFilesystem(filesystem);
       ImmutableSortedSet<BuildRule> processorDeps =
           annotationProcessorDeps.or(ImmutableSortedSet.<BuildRule>of());
       for (BuildRule processorDep : processorDeps) {
