@@ -32,6 +32,7 @@ import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
@@ -185,6 +186,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleAssetCatalogDescription());
     builder.register(new AppleBundleDescription());
     builder.register(new AppleExtensionDescription());
+    builder.register(new AppleTestDescription());
     builder.register(new BuckExtensionDescription());
     builder.register(new CoreDataModelDescription());
     builder.register(new CxxBinaryDescription());
