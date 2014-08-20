@@ -21,6 +21,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
+import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule;
 import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
@@ -34,6 +35,8 @@ import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleLibrary;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleTest;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModel;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.FileExtensions;
@@ -407,6 +410,22 @@ public class ProjectGenerator {
           (PBXTarget) generateAppleBundleTarget(
               project, rule, bundle));
       nativeTargetRule = Optional.of((AbstractAppleNativeTargetBuildRule) bundle.getBinary());
+    } else if (rule.getType().equals(AppleTestDescription.TYPE)) {
+      AppleTest test = (AppleTest) rule;
+      if (test.getTestBundle().getType().equals(AppleBundleDescription.TYPE)) {
+        AppleBundle bundle = (AppleBundle) test.getTestBundle();
+        if (bundle.getExtensionValue().isPresent() &&
+            AppleBuildRules.isXcodeTargetTestBundleExtension(bundle.getExtensionValue().get())) {
+          result = Optional.of(
+              (PBXTarget) generateAppleBundleTarget(
+                  project, bundle, bundle));
+          nativeTargetRule = Optional.of((AbstractAppleNativeTargetBuildRule) bundle.getBinary());
+        } else {
+          throw new HumanReadableException("Incorrect extension: " + bundle.getExtensionString());
+        }
+      } else {
+        throw new HumanReadableException("Test bundle should be a bundle: " + test.getTestBundle());
+      }
     } else if (rule.getType().equals(IosTestDescription.TYPE)) {
       IosTest test = (IosTest) rule;
       result = Optional.of((PBXTarget) generateIosTestTarget(

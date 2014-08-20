@@ -43,6 +43,7 @@ import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
@@ -124,6 +125,7 @@ public class ProjectGeneratorTest {
   private FakeProjectFilesystem fakeProjectFilesystem;
   private ExecutionContext executionContext;
   private AppleLibraryDescription appleLibraryDescription;
+  private AppleTestDescription appleTestDescription;
   private IosTestDescription iosTestDescription;
   private IosBinaryDescription iosBinaryDescription;
   private IosPostprocessResourcesDescription iosPostprocessResourcesDescription;
@@ -143,6 +145,7 @@ public class ProjectGeneratorTest {
     projectFilesystem = fakeProjectFilesystem;
     executionContext = TestExecutionContext.newInstance();
     appleLibraryDescription = new AppleLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
+    appleTestDescription = new AppleTestDescription();
     iosTestDescription = new IosTestDescription();
     iosBinaryDescription = new IosBinaryDescription();
     iosPostprocessResourcesDescription = new IosPostprocessResourcesDescription();
@@ -1159,6 +1162,66 @@ public class ProjectGeneratorTest {
     assertEquals(
         copyFrameworksBuildPhase.getDstSubfolderSpec(),
         PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
+  }
+
+  @Test
+  public void testAppleTestRule() throws IOException {
+    BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
+        BuildTarget.builder("//dep", "dynamic").setFlavor(
+            AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
+        ImmutableSortedSet.<BuildRule>of(),
+        appleLibraryDescription
+    );
+
+    BuildRuleParams xctestParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "xctest").build())
+            .setDeps(ImmutableSortedSet.of(dynamicLibraryDep))
+            .setType(AppleBundleDescription.TYPE)
+            .build();
+
+    AppleBundleDescription.Arg xctestArg =
+        appleBundleDescription.createUnpopulatedConstructorArg();
+    xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
+    xctestArg.binary = dynamicLibraryDep;
+    xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
+    xctestArg.deps = Optional.absent();
+
+    BuildRule xctestRule = appleBundleDescription.createBuildRule(
+        xctestParams,
+        new BuildRuleResolver(),
+        xctestArg);
+
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
+            .setDeps(ImmutableSortedSet.of(xctestRule))
+            .setType(AppleTestDescription.TYPE)
+            .build();
+
+    AppleTestDescription.Arg arg =
+        appleTestDescription.createUnpopulatedConstructorArg();
+    arg.testBundle = xctestRule;
+    arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
+    arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(xctestRule));
+    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
+
+    BuildRule rule = appleTestDescription.createBuildRule(
+        params,
+        new BuildRuleResolver(),
+        arg);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:xctest");
+    assertEquals(target.getProductType(), PBXTarget.ProductType.UNIT_TEST);
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    PBXFileReference productReference = target.getProductReference();
+    assertEquals("xctest.xctest", productReference.getName());
   }
 
   @Test

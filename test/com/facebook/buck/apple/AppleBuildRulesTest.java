@@ -42,4 +42,14 @@ public class AppleBuildRulesTest {
   public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
     assertFalse(AppleBuildRules.isXcodeTargetTestBuildRuleType(AppleLibraryDescription.TYPE));
   }
+
+  @Test
+  public void testXctestIsTestBundleExtension() throws Exception {
+    assertTrue(AppleBuildRules.isXcodeTargetTestBundleExtension(AppleBundleExtension.XCTEST));
+  }
+
+  @Test
+  public void testOctestIsTestBundleExtension() throws Exception {
+    assertTrue(AppleBuildRules.isXcodeTargetTestBundleExtension(AppleBundleExtension.OCTEST));
+  }
 }

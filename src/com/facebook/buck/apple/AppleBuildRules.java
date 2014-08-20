@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRuleType;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -38,6 +39,9 @@ public final class AppleBuildRules {
   private static final ImmutableList<BuildRuleType> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
       ImmutableList.of(IosTestDescription.TYPE);
 
+  private static final ImmutableSet<AppleBundleExtension> XCODE_TARGET_TEST_BUNDLE_EXTENSIONS =
+      ImmutableSet.of(AppleBundleExtension.OCTEST, AppleBundleExtension.XCTEST);
+
   /**
    * Whether the build rule type is equivalent to some kind of Xcode target.
    */
@@ -50,5 +54,12 @@ public final class AppleBuildRules {
    */
   public static boolean isXcodeTargetTestBuildRuleType(BuildRuleType type) {
     return XCODE_TARGET_BUILD_RULE_TEST_TYPES.contains(type);
+  }
+
+  /**
+   * Whether the bundle extension is a test bundle extension.
+   */
+  public static boolean isXcodeTargetTestBundleExtension(AppleBundleExtension extension) {
+    return XCODE_TARGET_TEST_BUNDLE_EXTENSIONS.contains(extension);
   }
 }
