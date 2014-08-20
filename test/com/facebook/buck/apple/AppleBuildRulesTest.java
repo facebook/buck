@@ -24,8 +24,8 @@ import org.junit.Test;
 public class AppleBuildRulesTest {
 
   @Test
-  public void testIosLibraryIsXcodeTargetBuildRuleType() throws Exception {
-    assertTrue(AppleBuildRules.isXcodeTargetBuildRuleType(IosLibraryDescription.TYPE));
+  public void testAppleLibraryIsXcodeTargetBuildRuleType() throws Exception {
+    assertTrue(AppleBuildRules.isXcodeTargetBuildRuleType(AppleLibraryDescription.TYPE));
   }
 
   @Test
@@ -39,7 +39,7 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void testIosLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
-    assertFalse(AppleBuildRules.isXcodeTargetTestBuildRuleType(IosLibraryDescription.TYPE));
+  public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
+    assertFalse(AppleBuildRules.isXcodeTargetTestBuildRuleType(AppleLibraryDescription.TYPE));
   }
 }

@@ -13,7 +13,7 @@ EMPTY_CONFIGS = {
   ),
 }
 
-ios_library(
+apple_library(
   name = 'Dep3',
   configs = EMPTY_CONFIGS,
   srcs = [],

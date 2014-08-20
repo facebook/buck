@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.IosBinaryDescription;
-import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
@@ -65,8 +65,8 @@ import java.nio.file.Paths;
 public class SeparatedProjectsGeneratorTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private final ExecutionContext executionContext = TestExecutionContext.newInstance();
-  private final IosLibraryDescription iosLibraryDescription =
-      new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
+  private final AppleLibraryDescription appleLibraryDescription =
+      new AppleLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
   private final IosBinaryDescription iosBinaryDescription = new IosBinaryDescription();
   private final IosTestDescription iosTestDescription = new IosTestDescription();
   private final XcodeProjectConfigDescription xcodeProjectConfigDescription =
@@ -80,7 +80,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule rule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "thing").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(rule));
 
@@ -98,7 +98,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule rule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "thing").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("target not found");
 
@@ -118,7 +118,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule rule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo/bar", "somelib").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
     BuildRule configRule = createXcodeProjectConfigRule(
         "//foo/bar",
         "fooproject",
@@ -153,11 +153,11 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule depRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//elsewhere", "somedep").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
     BuildRule rule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo/bar", "somelib").build(),
         ImmutableSortedSet.of(depRule),
-        iosLibraryDescription);
+        appleLibraryDescription);
     BuildRule configRule = createXcodeProjectConfigRule(
         "//foo/bar",
         "fooproject",
@@ -186,7 +186,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule depRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//elsewhere", "somedep").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
     BuildRule rule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "bin").build(),
         ImmutableSortedSet.of(depRule),
@@ -217,7 +217,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule rule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "rule").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription,
+        appleLibraryDescription,
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
@@ -273,7 +273,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule rule1 = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "rule1").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription,
+        appleLibraryDescription,
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
@@ -295,7 +295,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule rule2 = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "rule2").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription,
+        appleLibraryDescription,
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
@@ -371,7 +371,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule rule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "rule").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription,
+        appleLibraryDescription,
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
@@ -401,7 +401,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule libraryRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "library").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
 
     BuildRule binaryRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "binary").build(),
@@ -444,7 +444,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule fooRule1 = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "rule1").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
 
     BuildRule fooConfigRule = createXcodeProjectConfigRule(
         "//foo",
@@ -454,7 +454,7 @@ public class SeparatedProjectsGeneratorTest {
     BuildRule barRule2 = createBuildRuleWithDefaults(
         BuildTarget.builder("//bar", "rule2").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
 
     BuildRule barConfigRule = createXcodeProjectConfigRule(
         "//bar",

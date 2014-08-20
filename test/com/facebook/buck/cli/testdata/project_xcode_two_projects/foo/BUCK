@@ -1,4 +1,4 @@
-ios_library(
+apple_library(
   name = 'foolib',
   configs = {},
   srcs = [],

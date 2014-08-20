@@ -31,6 +31,7 @@ import com.facebook.buck.apple.AppleBinary;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleExtension;
 import com.facebook.buck.apple.AppleExtensionDescription;
+import com.facebook.buck.apple.AppleLibrary;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.CoreDataModel;
@@ -40,8 +41,7 @@ import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.IosBinary;
 import com.facebook.buck.apple.IosBinaryDescription;
-import com.facebook.buck.apple.IosLibrary;
-import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.IosTest;
 import com.facebook.buck.apple.IosTestDescription;
@@ -389,10 +389,10 @@ public class ProjectGenerator {
         "should not generate rule if it shouldn't be built by current project");
     Optional<PBXTarget> result;
     Optional<AbstractAppleNativeTargetBuildRule> nativeTargetRule;
-    if (rule.getType().equals(IosLibraryDescription.TYPE)) {
-      IosLibrary library = (IosLibrary) rule;
+    if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
+      AppleLibrary library = (AppleLibrary) rule;
       result = Optional.of(
-          (PBXTarget) generateIosLibraryTarget(
+          (PBXTarget) generateAppleLibraryTarget(
               project, rule, library));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(library);
     } else if (rule.getType().equals(AppleBinaryDescription.TYPE)) {
@@ -476,7 +476,7 @@ public class ProjectGenerator {
     Iterable<BuildRule> copiedRules = getRecursiveRuleDependenciesOfType(
         RecursiveRuleDependenciesMode.COPYING,
         rule,
-        IosLibraryDescription.TYPE,
+        AppleLibraryDescription.TYPE,
         AppleBinaryDescription.TYPE,
         AppleBundleDescription.TYPE);
     generateCopyFilesBuildPhases(project, target, copiedRules);
@@ -507,10 +507,10 @@ public class ProjectGenerator {
     return target;
   }
 
-  private PBXNativeTarget generateIosLibraryTarget(
+  private PBXNativeTarget generateAppleLibraryTarget(
       PBXProject project,
       BuildRule rule,
-      IosLibrary buildable)
+      AppleLibrary buildable)
       throws IOException {
     PBXTarget.ProductType productType = buildable.getLinkedDynamically() ?
         PBXTarget.ProductType.DYNAMIC_LIBRARY : PBXTarget.ProductType.STATIC_LIBRARY;
@@ -519,7 +519,7 @@ public class ProjectGenerator {
         rule,
         buildable,
         productType,
-        IosLibrary.getOutputFileNameFormat(buildable.getLinkedDynamically()),
+        AppleLibrary.getOutputFileNameFormat(buildable.getLinkedDynamically()),
         Optional.<Path>absent(),
         /* includeFrameworks */ false,
         /* includeResources */ false);
@@ -1474,8 +1474,8 @@ public class ProjectGenerator {
         default:
           return Optional.of(PBXCopyFilesBuildPhase.Destination.PRODUCTS);
       }
-    } else if (rule.getType().equals(IosLibraryDescription.TYPE)) {
-      IosLibrary library = (IosLibrary) rule;
+    } else if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
+      AppleLibrary library = (AppleLibrary) rule;
       if (library.getLinkedDynamically()) {
         return Optional.of(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
       } else {
@@ -1819,7 +1819,7 @@ public class ProjectGenerator {
   }
 
   private String getHeaderSearchPathForRule(BuildRule rule) {
-    if (rule.getType().equals(IosLibraryDescription.TYPE)) {
+    if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
       return Joiner.on('/').join(
           "$SYMROOT",
           BaseEncoding
@@ -1835,7 +1835,7 @@ public class ProjectGenerator {
   }
 
   private String getObjectOutputPathForRule(BuildRule rule) {
-    if (rule.getType().equals(IosLibraryDescription.TYPE)) {
+    if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
       return Joiner.on('/').join(
           "$SYMROOT",
           BaseEncoding
@@ -1858,7 +1858,7 @@ public class ProjectGenerator {
             getRecursiveRuleDependenciesOfType(
                 RecursiveRuleDependenciesMode.BUILDING,
                 rule,
-                IosLibraryDescription.TYPE,
+                AppleLibraryDescription.TYPE,
                 XcodeNativeDescription.TYPE))
         .transform(
             new Function<BuildRule, String>() {
@@ -1879,7 +1879,7 @@ public class ProjectGenerator {
         getRecursiveRuleDependenciesOfType(
             RecursiveRuleDependenciesMode.BUILDING,
             rule,
-            IosLibraryDescription.TYPE)) {
+            AppleLibraryDescription.TYPE)) {
       builder.add(getHeaderMapRelativePathForRule(input, PUBLIC_HEADER_MAP_SUFFIX));
     }
 
@@ -1896,7 +1896,7 @@ public class ProjectGenerator {
             getRecursiveRuleDependenciesOfType(
                 RecursiveRuleDependenciesMode.LINKING,
                 rule,
-                IosLibraryDescription.TYPE,
+                AppleLibraryDescription.TYPE,
                 XcodeNativeDescription.TYPE))
         .transform(
             new Function<BuildRule, String>() {
@@ -1914,7 +1914,7 @@ public class ProjectGenerator {
             getRecursiveRuleDependenciesOfType(
                 RecursiveRuleDependenciesMode.LINKING,
                 rule,
-                IosLibraryDescription.TYPE,
+                AppleLibraryDescription.TYPE,
                 XcodeNativeDescription.TYPE))
         .transform(
             new Function<BuildRule, String>() {
@@ -1931,11 +1931,11 @@ public class ProjectGenerator {
       ImmutableSet.Builder<String> frameworksBuilder) {
     for (BuildRule ruleDependency :
            getRecursiveRuleDependenciesOfType(
-               RecursiveRuleDependenciesMode.LINKING, rule, IosLibraryDescription.TYPE)) {
+               RecursiveRuleDependenciesMode.LINKING, rule, AppleLibraryDescription.TYPE)) {
       // TODO(user): Add support to xcode_native rule for framework dependencies
-      IosLibrary iosLibrary =
-          (IosLibrary) Preconditions.checkNotNull(ruleDependency);
-      frameworksBuilder.addAll(iosLibrary.getFrameworks());
+      AppleLibrary appleLibrary =
+          (AppleLibrary) Preconditions.checkNotNull(ruleDependency);
+      frameworksBuilder.addAll(appleLibrary.getFrameworks());
     }
   }
 
@@ -1944,7 +1944,7 @@ public class ProjectGenerator {
         .from(getRecursiveRuleDependenciesOfType(
             RecursiveRuleDependenciesMode.LINKING,
             rule,
-            IosLibraryDescription.TYPE,
+            AppleLibraryDescription.TYPE,
             AppleBundleDescription.TYPE,
             XcodeNativeDescription.TYPE))
         .filter(
@@ -1974,10 +1974,10 @@ public class ProjectGenerator {
     String productName = getProductName(rule.getBuildTarget());
     String productOutputName;
 
-    if (rule.getType().equals(IosLibraryDescription.TYPE)) {
-      IosLibrary library = (IosLibrary) rule;
+    if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
+      AppleLibrary library = (AppleLibrary) rule;
       String productOutputFormat =
-          IosLibrary.getOutputFileNameFormat(library.getLinkedDynamically());
+          AppleLibrary.getOutputFileNameFormat(library.getLinkedDynamically());
       productOutputName = String.format(productOutputFormat, productName);
     } else if (rule.getType().equals(AppleBundleDescription.TYPE)) {
       AppleBundle bundle = (AppleBundle) rule;
@@ -1994,7 +1994,7 @@ public class ProjectGenerator {
   }
 
   private PBXFileReference getLibraryFileReferenceForRule(BuildRule rule) {
-    if (rule.getType().equals(IosLibraryDescription.TYPE) ||
+    if (rule.getType().equals(AppleLibraryDescription.TYPE) ||
         rule.getType().equals(AppleBundleDescription.TYPE)) {
       if (isBuiltByCurrentProject(rule)) {
         PBXNativeTarget target = (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(rule).get();
@@ -2130,8 +2130,8 @@ public class ProjectGenerator {
             if (node != rule && !isNodeBundleBinary(node)) {
               switch (mode) {
                 case LINKING:
-                  if (node.getType().equals(IosLibraryDescription.TYPE)) {
-                    IosLibrary library = (IosLibrary) node;
+                  if (node.getType().equals(AppleLibraryDescription.TYPE)) {
+                    AppleLibrary library = (AppleLibrary) node;
                     if (library.getLinkedDynamically()) {
                       deps = ImmutableSortedSet.of();
                     } else {
@@ -2189,8 +2189,8 @@ public class ProjectGenerator {
     if (bundle.getExtensionValue().isPresent()) {
       AppleBundleExtension extension = bundle.getExtensionValue().get();
 
-      if (binary.getType().equals(IosLibraryDescription.TYPE)) {
-        IosLibrary library = (IosLibrary) binary;
+      if (binary.getType().equals(AppleLibraryDescription.TYPE)) {
+        AppleLibrary library = (AppleLibrary) binary;
 
         if (library.getLinkedDynamically()) {
           switch (extension) {

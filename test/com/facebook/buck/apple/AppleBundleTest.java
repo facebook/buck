@@ -34,8 +34,8 @@ import org.junit.Test;
 public class AppleBundleTest {
 
   private AppleBundleDescription description = new AppleBundleDescription();
-  private IosLibraryDescription iosLibraryDescription =
-      new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
+  private AppleLibraryDescription appleLibraryDescription =
+      new AppleLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
 
   @Test
   public void getKnownBundleExtension() {
@@ -45,7 +45,7 @@ public class AppleBundleTest {
     arg.deps = Optional.absent();
 
     AppleNativeTargetDescriptionArg libraryArg =
-        iosLibraryDescription.createUnpopulatedConstructorArg();
+        appleLibraryDescription.createUnpopulatedConstructorArg();
     libraryArg.srcs = ImmutableList.of();
     libraryArg.configs = ImmutableMap.of();
     libraryArg.frameworks = ImmutableSortedSet.of();
@@ -56,7 +56,7 @@ public class AppleBundleTest {
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build()).build();
     arg.binary =
-        iosLibraryDescription.createBuildRule(libraryParams, new BuildRuleResolver(), libraryArg);
+        appleLibraryDescription.createBuildRule(libraryParams, new BuildRuleResolver(), libraryArg);
     arg.deps = Optional.of(ImmutableSortedSet.of(arg.binary));
 
     BuildRuleParams params =
@@ -74,7 +74,7 @@ public class AppleBundleTest {
     arg.infoPlist = Optional.absent();
 
     AppleNativeTargetDescriptionArg libraryArg =
-        iosLibraryDescription.createUnpopulatedConstructorArg();
+        appleLibraryDescription.createUnpopulatedConstructorArg();
     libraryArg.srcs = ImmutableList.of();
     libraryArg.configs = ImmutableMap.of();
     libraryArg.frameworks = ImmutableSortedSet.of();
@@ -86,7 +86,7 @@ public class AppleBundleTest {
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build()).build();
     arg.binary =
-        iosLibraryDescription.createBuildRule(libraryParams, new BuildRuleResolver(), libraryArg);
+        appleLibraryDescription.createBuildRule(libraryParams, new BuildRuleResolver(), libraryArg);
     arg.deps = Optional.of(ImmutableSortedSet.of(arg.binary));
 
     BuildRuleParams params =

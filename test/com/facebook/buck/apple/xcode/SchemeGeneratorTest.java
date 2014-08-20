@@ -25,7 +25,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.XcodeNativeDescription;
@@ -70,7 +70,7 @@ public class SchemeGeneratorTest {
 
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
-  private IosLibraryDescription iosLibraryDescription;
+  private AppleLibraryDescription appleLibraryDescription;
   private IosTestDescription iosTestDescription;
   private XcodeNativeDescription xcodeNativeDescription;
 
@@ -78,7 +78,7 @@ public class SchemeGeneratorTest {
   public void setUp() throws IOException {
     clock = new SettableFakeClock(0, 0);
     projectFilesystem = new FakeProjectFilesystem(clock);
-    iosLibraryDescription = new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
+    appleLibraryDescription = new AppleLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
     iosTestDescription = new IosTestDescription();
     xcodeNativeDescription = new XcodeNativeDescription();
   }
@@ -88,19 +88,19 @@ public class SchemeGeneratorTest {
     BuildRule rootRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "root").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
     BuildRule leftRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "left").build(),
         ImmutableSortedSet.of(rootRule),
-        iosLibraryDescription);
+        appleLibraryDescription);
     BuildRule rightRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "right").build(),
         ImmutableSortedSet.of(rootRule),
-        iosLibraryDescription);
+        appleLibraryDescription);
     BuildRule childRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "child").build(),
         ImmutableSortedSet.of(leftRule, rightRule),
-        iosLibraryDescription);
+        appleLibraryDescription);
 
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.<BuildRule>of(
@@ -194,7 +194,7 @@ public class SchemeGeneratorTest {
     BuildRule rootRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "root").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
     PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
@@ -221,7 +221,7 @@ public class SchemeGeneratorTest {
     BuildRule rootRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "root").build(),
         ImmutableSortedSet.of(xcodeNativeRule),
-        iosLibraryDescription);
+        appleLibraryDescription);
 
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(
@@ -293,7 +293,7 @@ public class SchemeGeneratorTest {
     BuildRule rootRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "root").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
     BuildRule testRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "test").build(),
         ImmutableSortedSet.of(rootRule),
@@ -390,7 +390,7 @@ public class SchemeGeneratorTest {
     BuildRule rootRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "root").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
 
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.<BuildRule>of(rootRule));
@@ -454,7 +454,7 @@ public class SchemeGeneratorTest {
     BuildRule rootRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "root").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosLibraryDescription);
+        appleLibraryDescription);
 
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.<BuildRule>of(rootRule));
@@ -544,7 +544,7 @@ public class SchemeGeneratorTest {
       BuildRule rootRule = createBuildRuleWithDefaults(
           BuildTarget.builder("//foo", "root").build(),
           ImmutableSortedSet.<BuildRule>of(),
-          iosLibraryDescription);
+          appleLibraryDescription);
 
       PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
 
@@ -584,7 +584,7 @@ public class SchemeGeneratorTest {
       BuildRule rootRule = createBuildRuleWithDefaults(
           BuildTarget.builder("//foo", "root2").build(),
           ImmutableSortedSet.<BuildRule>of(),
-          iosLibraryDescription);
+          appleLibraryDescription);
 
       PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
 
@@ -620,7 +620,7 @@ public class SchemeGeneratorTest {
       BuildRule rootRule = createBuildRuleWithDefaults(
           BuildTarget.builder("//foo", "root").build(),
           ImmutableSortedSet.<BuildRule>of(),
-          iosLibraryDescription);
+          appleLibraryDescription);
 
       PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
 
@@ -653,7 +653,7 @@ public class SchemeGeneratorTest {
       BuildRule rootRule = createBuildRuleWithDefaults(
           BuildTarget.builder("//foo", "root").build(),
           ImmutableSortedSet.<BuildRule>of(),
-          iosLibraryDescription);
+          appleLibraryDescription);
 
       PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
 

@@ -36,10 +36,10 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 
-public class IosLibraryTest {
+public class AppleLibraryTest {
 
-  private IosLibraryDescription description =
-      new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
+  private AppleLibraryDescription description =
+      new AppleLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
 
   @Test
   public void getInputsToCompareToOutput() {
@@ -56,7 +56,7 @@ public class IosLibraryTest {
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "foo").build()).build();
-    IosLibrary buildable = description.createBuildRule(params, new BuildRuleResolver(), arg);
+    AppleLibrary buildable = description.createBuildRule(params, new BuildRuleResolver(), arg);
 
     assertThat(buildable.getInputsToCompareToOutput(), containsInAnyOrder(
         Paths.get("some_header.h"),
@@ -75,10 +75,10 @@ public class IosLibraryTest {
     arg.useBuckHeaderMaps = Optional.absent();
 
     BuildTarget target = BuildTarget.builder("//foo", "foo")
-        .setFlavor(IosLibraryDescription.DYNAMIC_LIBRARY)
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
         .build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    IosLibrary buildable = description.createBuildRule(params, new BuildRuleResolver(), arg);
+    AppleLibrary buildable = description.createBuildRule(params, new BuildRuleResolver(), arg);
 
     assertEquals(Paths.get("buck-out/bin/foo/#dynamic/foo.dylib"), buildable.getPathToOutputFile());
   }

@@ -26,13 +26,13 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class IosLibrary extends AbstractAppleNativeTargetBuildRule {
+public class AppleLibrary extends AbstractAppleNativeTargetBuildRule {
 
   Path archiver;
 
   private final boolean linkedDynamically;
 
-  public IosLibrary(
+  public AppleLibrary(
       BuildRuleParams params,
       AppleNativeTargetDescriptionArg arg,
       TargetSources targetSources,

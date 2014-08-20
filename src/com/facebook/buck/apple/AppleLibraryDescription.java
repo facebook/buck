@@ -26,15 +26,15 @@ import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
-public class IosLibraryDescription implements
+public class AppleLibraryDescription implements
     Description<AppleNativeTargetDescriptionArg>, Flavored {
-  public static final BuildRuleType TYPE = new BuildRuleType("ios_library");
+  public static final BuildRuleType TYPE = new BuildRuleType("apple_library");
 
   public static final Flavor DYNAMIC_LIBRARY = new Flavor("dynamic");
 
   private final Path archiver;
 
-  public IosLibraryDescription(Path archiver) {
+  public AppleLibraryDescription(Path archiver) {
     this.archiver = Preconditions.checkNotNull(archiver);
   }
 
@@ -54,11 +54,11 @@ public class IosLibraryDescription implements
   }
 
   @Override
-  public <A extends AppleNativeTargetDescriptionArg> IosLibrary createBuildRule(
+  public <A extends AppleNativeTargetDescriptionArg> AppleLibrary createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new IosLibrary(
+    return new AppleLibrary(
         params,
         args,
         TargetSources.ofAppleSources(args.srcs),

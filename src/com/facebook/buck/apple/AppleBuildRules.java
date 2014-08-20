@@ -30,7 +30,7 @@ public final class AppleBuildRules {
   private static final ImmutableList<BuildRuleType> XCODE_TARGET_BUILD_RULE_TYPES =
       ImmutableList.of(
           IosBinaryDescription.TYPE,
-          IosLibraryDescription.TYPE,
+          AppleLibraryDescription.TYPE,
           IosTestDescription.TYPE,
           MacosxBinaryDescription.TYPE,
           MacosxFrameworkDescription.TYPE);
