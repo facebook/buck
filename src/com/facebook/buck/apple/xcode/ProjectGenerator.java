@@ -842,15 +842,20 @@ public class ProjectGenerator {
             mangledBuildTargetName(buildTarget) + "-" + configuration.getName() + ".xcconfig");
         String serializedConfiguration = serializeBuildConfiguration(
             configuration, searchPaths, overrideConfigs);
-        if (shouldGenerateReadOnlyFiles()) {
-          projectFilesystem.writeContentsToPath(
-              serializedConfiguration,
-              configurationFilePath,
-              READ_ONLY_FILE_ATTRIBUTE);
-        } else {
-          projectFilesystem.writeContentsToPath(
-              serializedConfiguration,
-              configurationFilePath);
+        if (MorePaths.fileContentsDiffer(
+            new ByteArrayInputStream(serializedConfiguration.getBytes(Charsets.UTF_8)),
+            configurationFilePath,
+            projectFilesystem)) {
+          if (shouldGenerateReadOnlyFiles()) {
+            projectFilesystem.writeContentsToPath(
+                serializedConfiguration,
+                configurationFilePath,
+                READ_ONLY_FILE_ATTRIBUTE);
+          } else {
+            projectFilesystem.writeContentsToPath(
+                serializedConfiguration,
+                configurationFilePath);
+          }
         }
 
         PBXFileReference fileReference =
@@ -1503,15 +1508,21 @@ public class ProjectGenerator {
       DOMSource source = new DOMSource(doc);
       StreamResult result = new StreamResult(outputStream);
       transformer.transform(source, result);
-      if (shouldGenerateReadOnlyFiles()) {
-        projectFilesystem.writeContentsToPath(
-            outputStream.toString(),
-            serializedWorkspace,
-            READ_ONLY_FILE_ATTRIBUTE);
-      } else {
-        projectFilesystem.writeContentsToPath(
-            outputStream.toString(),
-            serializedWorkspace);
+      String contentsToWrite = outputStream.toString();
+      if (MorePaths.fileContentsDiffer(
+          new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
+          serializedWorkspace,
+          projectFilesystem)) {
+        if (shouldGenerateReadOnlyFiles()) {
+          projectFilesystem.writeContentsToPath(
+              contentsToWrite,
+              serializedWorkspace,
+              READ_ONLY_FILE_ATTRIBUTE);
+        } else {
+          projectFilesystem.writeContentsToPath(
+              contentsToWrite,
+              serializedWorkspace);
+        }
       }
     } catch (TransformerException e) {
       throw new RuntimeException(e);

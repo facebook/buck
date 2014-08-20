@@ -17,13 +17,16 @@
 package com.facebook.buck.apple.xcode;
 
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -231,7 +234,13 @@ public class WorkspaceGenerator {
       DOMSource source = new DOMSource(doc);
       StreamResult result = new StreamResult(outputStream);
       transformer.transform(source, result);
-      projectFilesystem.writeContentsToPath(outputStream.toString(), serializedWorkspace);
+      String contentsToWrite = outputStream.toString();
+      if (MorePaths.fileContentsDiffer(
+          new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
+          serializedWorkspace,
+          projectFilesystem)) {
+        projectFilesystem.writeContentsToPath(contentsToWrite, serializedWorkspace);
+      }
     } catch (TransformerException e) {
       throw new RuntimeException(e);
     }

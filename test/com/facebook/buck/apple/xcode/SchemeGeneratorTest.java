@@ -38,6 +38,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -66,6 +67,7 @@ import javax.xml.xpath.XPathFactory;
 
 public class SchemeGeneratorTest {
 
+  private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private IosLibraryDescription iosLibraryDescription;
   private IosTestDescription iosTestDescription;
@@ -73,7 +75,8 @@ public class SchemeGeneratorTest {
 
   @Before
   public void setUp() throws IOException {
-    projectFilesystem = new FakeProjectFilesystem();
+    clock = new SettableFakeClock(0, 0);
+    projectFilesystem = new FakeProjectFilesystem(clock);
     iosLibraryDescription = new IosLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
     iosTestDescription = new IosTestDescription();
     xcodeNativeDescription = new XcodeNativeDescription();
@@ -495,5 +498,143 @@ public class SchemeGeneratorTest {
     assertThat(
         archiveAction.getAttributes().getNamedItem("buildConfiguration").getNodeValue(),
         equalTo("Release"));
+  }
+
+  @Test
+  public void schemeIsRewrittenIfContentsHaveChanged() throws IOException {
+    {
+      BuildRule rootRule = createBuildRuleWithDefaults(
+          BuildTarget.builder("//foo", "root").build(),
+          ImmutableSortedSet.<BuildRule>of(),
+          iosLibraryDescription);
+
+      PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
+
+      SchemeGenerator schemeGenerator = new SchemeGenerator(
+          projectFilesystem,
+          partialGraph,
+          rootRule,
+          ImmutableSet.of(rootRule),
+          ImmutableSet.<BuildRule>of(),
+          "TestScheme",
+          Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+          SchemeActionType.DEFAULT_CONFIG_NAMES);
+
+      PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+      rootTarget.setGlobalID("rootGID");
+      rootTarget.setProductReference(
+          new PBXFileReference(
+              "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+      schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
+
+      Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+      schemeGenerator.addTargetToProjectPathMap(rootTarget, pbxprojectPath);
+
+      clock.setCurrentTimeMillis(49152);
+      Path schemePath = schemeGenerator.writeScheme();
+      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(49152L));
+    }
+
+    {
+      BuildRule rootRule = createBuildRuleWithDefaults(
+          BuildTarget.builder("//foo", "root2").build(),
+          ImmutableSortedSet.<BuildRule>of(),
+          iosLibraryDescription);
+
+      PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
+
+      SchemeGenerator schemeGenerator = new SchemeGenerator(
+          projectFilesystem,
+          partialGraph,
+          rootRule,
+          ImmutableSet.of(rootRule),
+          ImmutableSet.<BuildRule>of(),
+          "TestScheme",
+          Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+          SchemeActionType.DEFAULT_CONFIG_NAMES);
+
+      PBXTarget rootTarget = new PBXNativeTarget("rootRule2");
+      rootTarget.setGlobalID("root2GID");
+      rootTarget.setProductReference(
+          new PBXFileReference(
+              "root2.a", "root2.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+      schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
+
+      Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+      schemeGenerator.addTargetToProjectPathMap(rootTarget, pbxprojectPath);
+
+      clock.setCurrentTimeMillis(64738);
+      Path schemePath = schemeGenerator.writeScheme();
+      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(64738L));
+    }
+  }
+
+  @Test
+  public void schemeIsNotRewrittenIfContentsHaveNotChanged() throws IOException {
+    {
+      BuildRule rootRule = createBuildRuleWithDefaults(
+          BuildTarget.builder("//foo", "root").build(),
+          ImmutableSortedSet.<BuildRule>of(),
+          iosLibraryDescription);
+
+      PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
+
+      SchemeGenerator schemeGenerator = new SchemeGenerator(
+          projectFilesystem,
+          partialGraph,
+          rootRule,
+          ImmutableSet.of(rootRule),
+          ImmutableSet.<BuildRule>of(),
+          "TestScheme",
+          Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+          SchemeActionType.DEFAULT_CONFIG_NAMES);
+
+      PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+      rootTarget.setGlobalID("rootGID");
+      rootTarget.setProductReference(
+          new PBXFileReference(
+              "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+      schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
+
+      Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+      schemeGenerator.addTargetToProjectPathMap(rootTarget, pbxprojectPath);
+
+      clock.setCurrentTimeMillis(49152);
+      Path schemePath = schemeGenerator.writeScheme();
+      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(49152L));
+    }
+
+    {
+      BuildRule rootRule = createBuildRuleWithDefaults(
+          BuildTarget.builder("//foo", "root").build(),
+          ImmutableSortedSet.<BuildRule>of(),
+          iosLibraryDescription);
+
+      PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
+
+      SchemeGenerator schemeGenerator = new SchemeGenerator(
+          projectFilesystem,
+          partialGraph,
+          rootRule,
+          ImmutableSet.of(rootRule),
+          ImmutableSet.<BuildRule>of(),
+          "TestScheme",
+          Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+          SchemeActionType.DEFAULT_CONFIG_NAMES);
+
+      PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+      rootTarget.setGlobalID("rootGID");
+      rootTarget.setProductReference(
+          new PBXFileReference(
+              "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+      schemeGenerator.addRuleToTargetMap(rootRule, rootTarget);
+
+      Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+      schemeGenerator.addTargetToProjectPathMap(rootTarget, pbxprojectPath);
+
+      clock.setCurrentTimeMillis(64738);
+      Path schemePath = schemeGenerator.writeScheme();
+      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(49152L));
+    }
   }
 }

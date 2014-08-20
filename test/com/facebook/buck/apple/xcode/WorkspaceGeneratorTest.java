@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.hasXPath;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
@@ -29,6 +30,7 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -36,15 +38,15 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 public class WorkspaceGeneratorTest {
-  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private SettableFakeClock clock;
+  private ProjectFilesystem projectFilesystem;
   private WorkspaceGenerator generator;
 
   @Before
   public void setUp() {
-    generator = new WorkspaceGenerator(
-        projectFilesystem,
-        "ws",
-        Paths.get("."));
+    clock = new SettableFakeClock(0, 0);
+    projectFilesystem = new FakeProjectFilesystem(clock);
+    generator = new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."));
   }
 
   @Test
@@ -124,5 +126,55 @@ public class WorkspaceGeneratorTest {
                 "container:2/parent/B.xcodeproj",
                 "container:2/parent/C.xcodeproj",
                 "container:2/parent/D.xcodeproj")));
+  }
+
+  @Test
+  public void workspaceIsRewrittenIfContentsHaveChanged() throws IOException {
+    {
+      generator.addFilePath(Paths.get("./Project.xcodeproj"));
+      clock.setCurrentTimeMillis(49152);
+      Path workspacePath = generator.writeWorkspace();
+      assertThat(
+          projectFilesystem.getLastModifiedTime(workspacePath.resolve("contents.xcworkspacedata")),
+          equalTo(49152L));
+    }
+
+    {
+      WorkspaceGenerator generator2 = new WorkspaceGenerator(
+          projectFilesystem,
+          "ws",
+          Paths.get("."));
+      generator2.addFilePath(Paths.get("./Project2.xcodeproj"));
+      clock.setCurrentTimeMillis(64738);
+      Path workspacePath2 = generator2.writeWorkspace();
+      assertThat(
+          projectFilesystem.getLastModifiedTime(workspacePath2.resolve("contents.xcworkspacedata")),
+          equalTo(64738L));
+    }
+  }
+
+  @Test
+  public void workspaceIsNotRewrittenIfContentsHaveNotChanged() throws IOException {
+    {
+      generator.addFilePath(Paths.get("./Project.xcodeproj"));
+      clock.setCurrentTimeMillis(49152);
+      Path workspacePath = generator.writeWorkspace();
+      assertThat(
+          projectFilesystem.getLastModifiedTime(workspacePath.resolve("contents.xcworkspacedata")),
+          equalTo(49152L));
+    }
+
+    {
+      WorkspaceGenerator generator2 = new WorkspaceGenerator(
+          projectFilesystem,
+          "ws",
+          Paths.get("."));
+      generator2.addFilePath(Paths.get("./Project.xcodeproj"));
+      clock.setCurrentTimeMillis(64738);
+      Path workspacePath2 = generator2.writeWorkspace();
+      assertThat(
+          projectFilesystem.getLastModifiedTime(workspacePath2.resolve("contents.xcworkspacedata")),
+          equalTo(49152L));
+    }
   }
 }

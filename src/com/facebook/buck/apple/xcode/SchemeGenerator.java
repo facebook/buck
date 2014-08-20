@@ -24,7 +24,9 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -36,6 +38,7 @@ import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -230,7 +233,13 @@ class SchemeGenerator {
     Path schemePath = schemeDirectory.resolve(schemeName + ".xcscheme");
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
       serializeScheme(scheme, outputStream);
-      projectFilesystem.writeContentsToPath(outputStream.toString(), schemePath);
+      String contentsToWrite = outputStream.toString();
+      if (MorePaths.fileContentsDiffer(
+          new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
+          schemePath,
+          projectFilesystem)) {
+        projectFilesystem.writeContentsToPath(outputStream.toString(), schemePath);
+      }
     }
     return schemePath;
   }
