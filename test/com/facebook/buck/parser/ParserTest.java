@@ -83,7 +83,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -168,7 +167,6 @@ public class ParserTest extends EasyMockSupport {
       @Override
       public ProjectBuildFileParser createParser(
           Iterable<String> commonIncludes,
-          EnumSet<ProjectBuildFileParser.Option> parseOptions,
           Console console, ImmutableMap<String, String> environment) {
         return mockBuildFileParser;
       }
@@ -562,7 +560,6 @@ public class ParserTest extends EasyMockSupport {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     try (ProjectBuildFileParser projectBuildFileParser = buildFileParserFactory.createParser(
         /* commonIncludes */ Lists.<String>newArrayList(),
-        EnumSet.noneOf(ProjectBuildFileParser.Option.class),
         new TestConsole(),
         ImmutableMap.<String, String>of())) {
       parser.parseBuildFile(
@@ -1268,7 +1265,6 @@ public class ParserTest extends EasyMockSupport {
     @Override
     public ProjectBuildFileParser createParser(
         Iterable<String> commonIncludes,
-        EnumSet<ProjectBuildFileParser.Option> parseOptions,
         Console console,
         ImmutableMap<String, String> environment) {
       return new TestProjectBuildFileParser("python" /* pythonInterpreter */);
@@ -1291,7 +1287,6 @@ public class ParserTest extends EasyMockSupport {
             ImmutableList.of("//java/com/facebook/defaultIncludeFile"),
             pythonInterpreter,
             buildRuleTypes.getAllDescriptions(),
-            EnumSet.noneOf(ProjectBuildFileParser.Option.class),
             new TestConsole(),
             ImmutableMap.<String, String>of());
       }

@@ -71,7 +71,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -366,7 +365,6 @@ public class Parser {
     try (ProjectBuildFileParser buildFileParser =
              buildFileParserFactory.createParser(
                  defaultIncludes,
-                 EnumSet.of(ProjectBuildFileParser.Option.STRIP_NULL),
                  console,
                  environment)) {
       if (!isCacheComplete(defaultIncludes, environment)) {
@@ -400,7 +398,6 @@ public class Parser {
       throws IOException, BuildFileParseException, InterruptedException {
     try (ProjectBuildFileParser parser = buildFileParserFactory.createParser(
         defaultIncludes,
-        EnumSet.noneOf(ProjectBuildFileParser.Option.class),
         console,
         environment)) {
       return findAllTransitiveDependencies(toExplore, defaultIncludes, parser, environment);
@@ -691,14 +688,12 @@ public class Parser {
   public synchronized List<Map<String, Object>> parseBuildFile(
       Path buildFile,
       Iterable<String> defaultIncludes,
-      EnumSet<ProjectBuildFileParser.Option> parseOptions,
       ImmutableMap<String, String> environment,
       Console console)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     try (ProjectBuildFileParser projectBuildFileParser =
         buildFileParserFactory.createParser(
             defaultIncludes,
-            parseOptions,
             console,
             environment)) {
       return parseBuildFile(buildFile, defaultIncludes, projectBuildFileParser, environment);

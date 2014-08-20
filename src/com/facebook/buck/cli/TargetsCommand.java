@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -46,7 +45,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -225,7 +223,6 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         rules = getParser().parseBuildFile(
             buildFile,
             defaultIncludes,
-            EnumSet.noneOf(ProjectBuildFileParser.Option.class),
             environment,
             console);
       } catch (BuildTargetException e) {
@@ -332,7 +329,6 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       ruleObjects = parser.parseBuildFile(
           getRepository().getAbsolutePathToBuildFile(buildTarget),
           options.getDefaultIncludes(),
-          EnumSet.noneOf(ProjectBuildFileParser.Option.class),
           environment,
           console);
     } catch (BuildTargetException | BuildFileParseException e) {

@@ -48,7 +48,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -59,12 +58,6 @@ import javax.annotation.Nullable;
  * parsing phase and must be closed afterward to free up resources.
  */
 public class ProjectBuildFileParser implements AutoCloseable {
-
-  /** Options for parsing build files. */
-  public enum Option {
-    /** Don't output null items from {@code buck.py}. */
-    STRIP_NULL,
-  }
 
   /** Path to the buck.py script that is used to evaluate a build file. */
   private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
@@ -85,7 +78,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final ImmutableSet<Description<?>> descriptions;
   private final ImmutableList<String> commonIncludes;
   private final String pythonInterpreter;
-  private final EnumSet<Option> parseOptions;
   private final Console console;
 
   private boolean isServerMode;
@@ -98,7 +90,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
       Iterable<String> commonIncludes,
       String pythonInterpreter,
       ImmutableSet<Description<?>> descriptions,
-      EnumSet<Option> parseOptions,
       Console console,
       ImmutableMap<String, String> environment) {
     this.projectRoot = projectFilesystem.getRootPath();
@@ -106,7 +97,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.ignorePaths = projectFilesystem.getIgnorePaths();
     this.commonIncludes = ImmutableList.copyOf(commonIncludes);
     this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
-    this.parseOptions = parseOptions;
     this.pathToBuckPy = Optional.absent();
     this.console = Preconditions.checkNotNull(console);
     this.environment = Preconditions.checkNotNull(environment);
@@ -201,10 +191,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add("--server");
     }
 
-    if (parseOptions.contains(Option.STRIP_NULL)) {
-      argBuilder.add("--strip_none");
-    }
-
     argBuilder.add("--project_root", projectRoot.toAbsolutePath().toString());
 
     // Add the --include flags.
@@ -235,7 +221,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     try (ProjectBuildFileParser buildFileParser =
              factory.createParser(
                  includes,
-                 EnumSet.of(Option.STRIP_NULL),
                  console,
                  environment)) {
       buildFileParser.setServerMode(false);

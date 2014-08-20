@@ -428,18 +428,11 @@ def add_deps(name, deps=[], build_env=None):
     rule['deps'] = rule['deps'] + deps
 
 
-def strip_none_entries(rules):
-    return [
-        dict((k, v) for k, v in rule.iteritems() if v is not None)
-        for rule in rules]
-
-
 class BuildFileProcessor:
-    def __init__(self, project_root, includes, server, strip_none):
+    def __init__(self, project_root, includes, server):
         self.project_root = project_root
         self.includes = includes
         self.server = server
-        self.strip_none = strip_none
         self.len_suffix = -len('/' + BUILD_RULES_FILE_NAME)
 
         # Create root_build_env
@@ -482,10 +475,8 @@ class BuildFileProcessor:
                  build_env['BUILD_FILE_SYMBOL_TABLE'])
 
         values = build_env['RULES'].values()
-        if self.strip_none:
-            # Filter out keys with a value of "None" from the final rule
-            # definition.
-            values = strip_none_entries(values)
+        # Filter out keys with a value of "None" from the final rule
+        # definition.
         values.append({"__includes": [build_file] + build_env['INCLUDES']})
         if self.server:
             print json.dumps(values)
@@ -530,11 +521,6 @@ def main():
         action='store_true',
         dest='server',
         help='Invoke as a server to parse individual BUCK files on demand.')
-    parser.add_option(
-        '--strip_none',
-        action='store_true',
-        dest='strip_none',
-        help='Invoke as a server to parse individual BUCK files on demand.')
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
@@ -569,8 +555,7 @@ def main():
     buildFileProcessor = BuildFileProcessor(
         project_root,
         options.include or [],
-        options.server,
-        options.strip_none)
+        options.server)
 
     for build_file in build_files:
         buildFileProcessor.process(build_file)

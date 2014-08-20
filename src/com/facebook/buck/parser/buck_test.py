@@ -5,7 +5,6 @@ from buck import glob_walk
 from buck import glob_match
 from buck import relpath
 from buck import path_join
-from buck import strip_none_entries
 from buck import symlink_aware_walk
 from buck import glob_module
 import fnmatch
@@ -295,27 +294,6 @@ class TestBuck(unittest.TestCase):
         finally:
             os.getcwd = real_getcwd
 
-    def test_strip_none_entries(self):
-        rule_with_none = {
-            'name': 'foo',
-            'type': 'prebuilt_jar',
-            'javadoc_url': None
-        }
-        rule_without_none = {
-            'name': 'foo',
-            'type': 'prebuilt_jar',
-            'javadoc_url': 'http://foo.bar.com'
-        }
-        actual_result = strip_none_entries([rule_with_none, rule_without_none])
-
-        expected_result = [
-            {
-                'name': 'foo',
-                'type': 'prebuilt_jar',
-            },
-            rule_without_none
-        ]
-        self.assertEqual(expected_result, actual_result)
 
     def test_symlink_aware_walk(self):
         real_walk = os.walk

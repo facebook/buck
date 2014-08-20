@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +98,6 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
     try (ProjectBuildFileParser parser =
              factory.createParser(
                  options.getBuckConfig().getDefaultIncludes(),
-                 EnumSet.noneOf(ProjectBuildFileParser.Option.class),
                  console,
                  environment)) {
       PrintStream out = console.getStdOut();

@@ -19,8 +19,6 @@ package com.facebook.buck.json;
 import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.EnumSet;
-
 /**
  * Simple concrete factory so that a parser can be constructed on demand of the parse phase
  * and be explicitly shut down afterward.
@@ -34,7 +32,6 @@ public interface ProjectBuildFileParserFactory {
    */
   public ProjectBuildFileParser createParser(
       Iterable<String> commonIncludes,
-      EnumSet<ProjectBuildFileParser.Option> parseOptions,
       Console console,
       ImmutableMap<String, String> environment);
 }

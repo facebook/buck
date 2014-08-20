@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.Parser;
@@ -42,7 +41,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -125,7 +123,6 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
           List<Map<String, Object>> buildFileTargets = parser.parseBuildFile(
               buckFile,
               options.getDefaultIncludes(),
-              EnumSet.of(ProjectBuildFileParser.Option.STRIP_NULL),
               environment,
               console);
 
