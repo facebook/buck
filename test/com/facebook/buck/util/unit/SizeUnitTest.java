@@ -96,4 +96,72 @@ public class SizeUnitTest {
     assertEquals(2048L, SizeUnit.TERABYTES.toGigabytes(2L));
     assertEquals(42L, SizeUnit.TERABYTES.toTerabytes(42L));
   }
+
+  @Test
+  public void testFormatBytes() {
+    assertEquals("0B", SizeUnit.formatBytes(0));
+    assertEquals("1B", SizeUnit.formatBytes(1));
+    assertEquals("-1B", SizeUnit.formatBytes(-1));
+    assertEquals("42B", SizeUnit.formatBytes(42));
+    assertEquals("-123B", SizeUnit.formatBytes(-123));
+    assertEquals("-1023B", SizeUnit.formatBytes(-1023));
+    assertEquals("1023B", SizeUnit.formatBytes(1023));
+  }
+
+  @Test
+  public void testFormatKilobytes() {
+    assertEquals("1KB", SizeUnit.formatBytes(1024));
+    assertEquals("-1KB", SizeUnit.formatBytes(-1024));
+    assertEquals("-1.1KB", SizeUnit.formatBytes(-1127));
+    assertEquals("1.1KB", SizeUnit.formatBytes(1127));
+    assertEquals("1.5KB", SizeUnit.formatBytes(1536));
+    assertEquals("-1.9KB", SizeUnit.formatBytes(-2047));
+    assertEquals("1.9KB", SizeUnit.formatBytes(2047));
+    assertEquals("-2KB", SizeUnit.formatBytes(-2048));
+    assertEquals("2KB", SizeUnit.formatBytes(2048));
+    assertEquals("1023.9KB", SizeUnit.formatBytes(1048575));
+    assertEquals("-1023.9KB", SizeUnit.formatBytes(-1048575));
+  }
+
+  @Test
+  public void testFormatMegabytes() {
+    assertEquals("1MB", SizeUnit.formatBytes(1048576));
+    assertEquals("-1MB", SizeUnit.formatBytes(-1048576));
+    assertEquals("1.5MB", SizeUnit.formatBytes(1572864));
+    assertEquals("-1.5MB", SizeUnit.formatBytes(-1572864));
+    assertEquals("512MB", SizeUnit.formatBytes(536870912));
+    assertEquals("-512MB", SizeUnit.formatBytes(-536870912));
+    assertEquals("1023.9MB", SizeUnit.formatBytes(1073741823));
+    assertEquals("-1023.9MB", SizeUnit.formatBytes(-1073741823));
+  }
+
+  @Test
+  public void testFormatGigabytes() {
+    assertEquals("1GB", SizeUnit.formatBytes(1073741824));
+    assertEquals("-1GB", SizeUnit.formatBytes(-1073741824));
+    assertEquals("1.5GB", SizeUnit.formatBytes(1610612736));
+    assertEquals("-1.5GB", SizeUnit.formatBytes(-1610612736));
+    assertEquals("512GB", SizeUnit.formatBytes(549755813888L));
+    assertEquals("-512GB", SizeUnit.formatBytes(-549755813888L));
+    assertEquals("1023.9GB", SizeUnit.formatBytes(1099511627775L));
+    assertEquals("-1023.9GB", SizeUnit.formatBytes(-1099511627775L));
+  }
+
+  @Test
+  public void testFormatTerabytes() {
+    assertEquals("1TB", SizeUnit.formatBytes(1099511627776L));
+    assertEquals("-1TB", SizeUnit.formatBytes(-1099511627776L));
+    assertEquals("1.5TB", SizeUnit.formatBytes(1649267441664L));
+    assertEquals("-1.5TB", SizeUnit.formatBytes(-1649267441664L));
+    assertEquals("512TB", SizeUnit.formatBytes(562949953421312L));
+    assertEquals("-512TB", SizeUnit.formatBytes(-562949953421312L));
+    assertEquals("1023.9TB", SizeUnit.formatBytes(1125899906842623L));
+    assertEquals("-1023.9TB", SizeUnit.formatBytes(-1125899906842623L));
+
+    // We don't yet go up to PB.
+    assertEquals("1024TB", SizeUnit.formatBytes(1125899906842624L));
+    assertEquals("-1024TB", SizeUnit.formatBytes(-1125899906842624L));
+    assertEquals("1048576TB", SizeUnit.formatBytes(1152921504606846976L));
+    assertEquals("-1048576TB", SizeUnit.formatBytes(-1152921504606846976L));
+  }
 }

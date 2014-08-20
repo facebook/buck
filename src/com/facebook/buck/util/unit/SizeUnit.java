@@ -20,24 +20,43 @@ import com.facebook.buck.util.MoreStrings;
 import com.google.common.collect.ImmutableMap;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.text.DecimalFormat;
 
 public enum SizeUnit {
-  BYTES(0),
-  KILOBYTES(1),
-  MEGABYTES(2),
-  GIGABYTES(3),
-  TERABYTES(4);
+  BYTES(0, "B"),
+  KILOBYTES(1, "KB"),
+  MEGABYTES(2, "MB"),
+  GIGABYTES(3, "GB"),
+  TERABYTES(4, "TB");
 
   private final int ordinal;
+  private final String abbreviation;
+  private static final ThreadLocal<DecimalFormat> SIZE_UNIT_FORMAT =
+    new ThreadLocal<DecimalFormat>() {
+      @Override
+      protected DecimalFormat initialValue() {
+          DecimalFormat result = new DecimalFormat();
+          result.setMaximumFractionDigits(1);
+          result.setRoundingMode(RoundingMode.DOWN);
+          result.setGroupingUsed(false);
+          return result;
+      }
+    };
 
-  private SizeUnit(int ordinal) {
+  private SizeUnit(int ordinal, String abbreviation) {
     this.ordinal = ordinal;
+    this.abbreviation = abbreviation;
   }
 
   public int getOrdinal() {
     return ordinal;
+  }
+
+  public String getAbbreviation() {
+    return abbreviation;
   }
 
   private static long multiplyByByteOrderOfMagnitude(double size, int magnitude) {
@@ -87,6 +106,16 @@ public enum SizeUnit {
       }
     }
     throw new NumberFormatException(String.format("%s is not a valid file size", input));
+  }
+
+  public static String formatBytes(long bytes) {
+    SizeUnit[] sizeUnits = SizeUnit.values();
+    int sizeUnitsIndex = Math.min(
+        sizeUnits.length - 1,
+        (int) Math.max(0, (Math.log10(Math.abs(bytes)) / Math.log10(1024))));
+    SizeUnit sizeUnit = sizeUnits[sizeUnitsIndex];
+    double valueInUnits = bytes / Math.pow(1024, sizeUnitsIndex);
+    return SIZE_UNIT_FORMAT.get().format(valueInUnits) + sizeUnit.getAbbreviation();
   }
 
   public long toBytes(double size) {
