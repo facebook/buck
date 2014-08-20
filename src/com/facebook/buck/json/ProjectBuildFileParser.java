@@ -165,7 +165,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
         ProjectBuildFileParser.class.getSimpleName(),
         new InputStreamConsumer(stderr,
             console.getStdErr(),
-            console.getAnsi()));
+            console.getAnsi(),
+            /* flagOutputWrittenToStream */ true));
     stderrConsumer.start();
 
     buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));

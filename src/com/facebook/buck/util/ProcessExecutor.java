@@ -19,10 +19,12 @@ package com.facebook.buck.util;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -30,6 +32,21 @@ import javax.annotation.Nullable;
  * Executes a {@link Process} and blocks until it is finished.
  */
 public class ProcessExecutor {
+
+  /**
+   * Options for {@link ProcessExecutor#execute(Process, Set, Optional)}.
+   */
+  public static enum Option {
+    PRINT_STD_OUT,
+    PRINT_STD_ERR,
+
+    /**
+     * If set, do not write output to stdout or stderr. However, if the process exits with a
+     * non-zero exit code, then the stdout and stderr from the process will be presented to the user
+     * to aid in debugging.
+     */
+    IS_SILENT,
+  }
 
   private final PrintStream stdOutStream;
   private final PrintStream stdErrStream;
@@ -47,51 +64,52 @@ public class ProcessExecutor {
   }
 
   /**
-   * Convenience method for {@link #execute(Process, boolean, boolean, boolean, Optional)}
+   * Convenience method for {@link #execute(Process, Set, Optional)}
    * with boolean values set to {@code false} and optional values set to absent.
    */
   public Result execute(Process process) throws InterruptedException {
     return execute(process,
-        /* shouldPrintStdOut */ false,
-        /* shouldPrintStdErr */ false,
-        /* isSilent */ false,
+        ImmutableSet.<Option>of(),
         /* stdin */ Optional.<String>absent());
   }
 
   /**
    * Executes the specified process.
-   * @param process The {@code Process} to execute.
-   * @param shouldPrintStdOut If {@code true}, then the stdout of the process will be written
-   *     directly to the stdout passed to the constructor of this executor. If {@code false}, then
-   *     the stdout of the process will be made available via {@link Result#getStdout()}.
-   * @param shouldPrintStdErr If {@code true}, then the stderr of the process will be written
-   *     directly to the stderr passed to the constructor of this executor. If {@code false}, then
-   *     the stderr of the process will be made available via {@link Result#getStderr()}.
+   * <p>
+   * If {@code options} contains {@link Option#PRINT_STD_OUT}, then the stdout of the process will
+   * be written directly to the stdout passed to the constructor of this executor. Otherwise,
+   * the stdout of the process will be made available via {@link Result#getStdout()}.
+   * <p>
+   * If {@code options} contains {@link Option#PRINT_STD_ERR}, then the stderr of the process will
+   * be written directly to the stderr passed to the constructor of this executor. Otherwise,
+   * the stderr of the process will be made available via {@link Result#getStderr()}.
    */
   public Result execute(
       Process process,
-      boolean shouldPrintStdOut,
-      boolean shouldPrintStdErr,
-      boolean isSilent,
+      Set<Option> options,
       Optional<String> stdin) throws InterruptedException {
 
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
+    boolean shouldPrintStdOut = options.contains(Option.PRINT_STD_OUT);
     @SuppressWarnings("resource")
     PrintStream stdOutToWriteTo = shouldPrintStdOut ?
         stdOutStream : new CapturingPrintStream();
     InputStreamConsumer stdOut = new InputStreamConsumer(
         process.getInputStream(),
         stdOutToWriteTo,
-        ansi);
+        ansi,
+        /* flagOutputWrittenToStream */ !shouldPrintStdOut);
 
+    boolean shouldPrintStdErr = options.contains(Option.PRINT_STD_ERR);
     @SuppressWarnings("resource")
     PrintStream stdErrToWriteTo = shouldPrintStdErr ?
         stdErrStream : new CapturingPrintStream();
     InputStreamConsumer stdErr = new InputStreamConsumer(
         process.getErrorStream(),
         stdErrToWriteTo,
-        ansi);
+        ansi,
+        /* flagOutputWrittenToStream */ !shouldPrintStdErr);
 
     // Consume the streams so they do not deadlock.
     Thread stdOutConsumer = Threads.namedThread("ProcessExecutor (stdOut)", stdOut);
@@ -134,7 +152,7 @@ public class ProcessExecutor {
 
     // If the command has failed and we're not being explicitly quiet, ensure everything gets
     // printed.
-    if (exitCode != 0 && !isSilent) {
+    if (exitCode != 0 && !options.contains(Option.IS_SILENT)) {
       if (!shouldPrintStdOut) {
         stdOutStream.print(stdoutText);
       }
@@ -158,7 +176,7 @@ public class ProcessExecutor {
 
   /**
    * Values from the result of
-   * {@link ProcessExecutor#execute(Process, boolean, boolean, boolean, Optional)}.
+   * {@link ProcessExecutor#execute(Process, Set, Optional)}.
    */
   public static class Result {
     private final int exitCode;

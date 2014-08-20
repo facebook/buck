@@ -22,6 +22,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 
+import java.util.Set;
 
 public class FakeProcessExecutor extends ProcessExecutor {
 
@@ -45,15 +46,8 @@ public class FakeProcessExecutor extends ProcessExecutor {
   }
 
   @Override
-  public Result execute(
-      Process process,
-      boolean shouldPrintStdOut,
-      boolean shouldPrintStdErr,
-      boolean isSilent,
-      Optional<String> stdin) {
-    return new Result(exitStatus,
-        expectedOut,
-        expectedErr);
+  public Result execute(Process process, Set<Option> options, Optional<String> stdin) {
+    return new Result(exitStatus, expectedOut, expectedErr);
   }
 
 }

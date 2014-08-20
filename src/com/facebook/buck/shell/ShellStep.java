@@ -21,16 +21,20 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -132,21 +136,26 @@ public abstract class ShellStep implements Step {
 
   @VisibleForTesting
   int interactWithProcess(ExecutionContext context, Process process) throws InterruptedException {
+    ImmutableSet.Builder<Option> options = ImmutableSet.builder();
+    if (shouldFlushStdOutErrAsProgressIsMade()) {
+      options.add(Option.PRINT_STD_OUT);
+      options.add(Option.PRINT_STD_ERR);
+    }
+    if (context.getVerbosity() == Verbosity.SILENT) {
+      options.add(Option.IS_SILENT);
+    }
+
     ProcessExecutor executor = context.getProcessExecutor();
-    ProcessExecutor.Result result = executor.execute(process,
-        /* shouldPrintStdOut */ false,
-        /* shouldPrintStdErr */ false,
-        context.getVerbosity() == Verbosity.SILENT,
-        getStdin());
+    ProcessExecutor.Result result = executor.execute(process, options.build(), getStdin());
     stdout = result.getStdout();
     stderr = result.getStderr();
 
     Verbosity verbosity = context.getVerbosity();
-    if (!stderr.isEmpty() && shouldPrintStderr(verbosity)) {
-      context.postEvent(ConsoleEvent.severe("%s", stderr));
-    }
-    if (!stdout.isEmpty() && shouldPrintStdout(verbosity)) {
+    if (!Strings.isNullOrEmpty(stdout) && shouldPrintStdout(verbosity)) {
       context.postEvent(ConsoleEvent.info("%s", stdout));
+    }
+    if (!Strings.isNullOrEmpty(stderr) && shouldPrintStderr(verbosity)) {
+      context.postEvent(ConsoleEvent.severe("%s", stderr));
     }
 
     return result.getExitCode();
@@ -253,5 +262,18 @@ public abstract class ShellStep implements Step {
     Preconditions.checkNotNull(this.stderr, "stderr was not set: " +
         "shouldPrintStdErr() must return false and execute() must have been invoked");
     return this.stderr;
+  }
+
+  /**
+   * By default, the output written to stdout and stderr will be buffered into individual
+   * {@link ByteArrayOutputStream}s and then converted into strings for easier consumption. This
+   * means that output from both streams that would normally be interleaved will now be displayed
+   * separately.
+   * <p>
+   * To disable this behavior and print to stdout and stderr directly, this method should be
+   * overridden to return {@code true}.
+   */
+  protected boolean shouldFlushStdOutErrAsProgressIsMade() {
+    return false;
   }
 }

@@ -79,11 +79,29 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
       return 1;
     }
 
+    // Ideally, we would take fullCommand, disconnect from NailGun, and run the command in the
+    // user's shell. Currently, if you use `buck run` with buckd and ctrl-C to kill the command
+    // being run, occasionally I get the following error when I try to run `buck run` again:
+    //
+    //   Daemon is busy, please wait or run "buckd --kill" to terminate it.
+    //
+    // Clearly something bad has happened here. If you are using `buck run` to start up a server
+    // or some other process that is meant to "run forever," then it's pretty common to do:
+    // `buck run`, test server, hit ctrl-C, edit server code, repeat. This should not wedge buckd.
     ImmutableList<String> fullCommand = new ImmutableList.Builder<String>()
         .addAll(binaryBuildRule.getExecutableCommand(getProjectFilesystem()))
         .addAll(options.getTargetArguments())
         .build();
-    ShellStep step = new DefaultShellStep(fullCommand);
+
+    ShellStep step = new DefaultShellStep(fullCommand) {
+      // Print the output from the step directly to stdout and stderr rather than buffering it and
+      // printing it as two individual strings. This preserves the expected behavior where output
+      // written to stdout and stderr may be interleaved when displayed in a terminal.
+      @Override
+      protected boolean shouldFlushStdOutErrAsProgressIsMade() {
+        return true;
+      }
+    };
     return step.execute(build.getExecutionContext());
   }
 
