@@ -38,6 +38,7 @@
     <orderEntry type="library" name="dd-plist" level="project" />
     <orderEntry type="library" name="gson-2.2.4" level="project" />
     <orderEntry type="library" name="high-scale-lib-1.1.2" level="project" />
+    <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jetty-all-9.0.4.v20130625" level="project" />
     <orderEntry type="library" name="joda-time-2.2" level="project" />
     <orderEntry type="library" name="libthrift-0.7.0" level="project" />
