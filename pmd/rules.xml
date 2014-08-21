@@ -42,6 +42,9 @@
       makes it easier to copy/paste them.
     -->
     <exclude name="UnusedModifier" />
+
+    <!-- This rule is buggy (http://sourceforge.net/p/pmd/bugs/792/ and others). -->
+    <exclude name="UnusedPrivateMethod" />
   </rule>
 
   <rule ref="rulesets/java/optimizations.xml">

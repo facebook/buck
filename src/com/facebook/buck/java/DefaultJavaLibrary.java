@@ -51,7 +51,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -499,7 +498,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   /**
    * Building a java_library() rule entails compiling the .java files specified in the srcs
-   * attribute. They are compiled into a directory under {@link BuckConstant#BIN_DIR}.
+   * attribute. They are compiled into a directory under
+   * {@link com.facebook.buck.util.BuckConstant#BIN_DIR}.
    */
   @Override
   public final ImmutableList<Step> getBuildSteps(
