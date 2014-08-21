@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -24,26 +25,26 @@ import java.util.List;
 
 public class XCScheme {
   private String name;
-  private BuildAction buildAction;
-  private TestAction testAction;
-  private LaunchAction launchAction;
-  private ProfileAction profileAction;
-  private AnalyzeAction analyzeAction;
-  private ArchiveAction archiveAction;
+  private Optional<BuildAction> buildAction;
+  private Optional<TestAction> testAction;
+  private Optional<LaunchAction> launchAction;
+  private Optional<ProfileAction> profileAction;
+  private Optional<AnalyzeAction> analyzeAction;
+  private Optional<ArchiveAction> archiveAction;
 
   public XCScheme(
       String name,
-      BuildAction buildAction,
-      TestAction testAction,
-      LaunchAction launchAction,
-      ProfileAction profileAction,
-      AnalyzeAction analyzeAction,
-      ArchiveAction archiveAction) {
-    this.name = name;
-    this.buildAction = buildAction;
-    this.testAction = testAction;
-    this.launchAction = launchAction;
-    this.profileAction = profileAction;
+      Optional<BuildAction> buildAction,
+      Optional<TestAction> testAction,
+      Optional<LaunchAction> launchAction,
+      Optional<ProfileAction> profileAction,
+      Optional<AnalyzeAction> analyzeAction,
+      Optional<ArchiveAction> archiveAction) {
+    this.name = Preconditions.checkNotNull(name);
+    this.buildAction = Preconditions.checkNotNull(buildAction);
+    this.testAction = Preconditions.checkNotNull(testAction);
+    this.launchAction = Preconditions.checkNotNull(launchAction);
+    this.profileAction = Preconditions.checkNotNull(profileAction);
     this.analyzeAction = Preconditions.checkNotNull(analyzeAction);
     this.archiveAction = Preconditions.checkNotNull(archiveAction);
   }
@@ -52,27 +53,27 @@ public class XCScheme {
     return name;
   }
 
-  public BuildAction getBuildAction() {
+  public Optional<BuildAction> getBuildAction() {
     return buildAction;
   }
 
-  public TestAction getTestAction() {
+  public Optional<TestAction> getTestAction() {
     return testAction;
   }
 
-  public LaunchAction getLaunchAction() {
+  public Optional<LaunchAction> getLaunchAction() {
     return launchAction;
   }
 
-  public ProfileAction getProfileAction() {
+  public Optional<ProfileAction> getProfileAction() {
     return profileAction;
   }
 
-  public AnalyzeAction getAnalyzeAction() {
+  public Optional<AnalyzeAction> getAnalyzeAction() {
     return analyzeAction;
   }
 
-  public ArchiveAction getArchiveAction() {
+  public Optional<ArchiveAction> getArchiveAction() {
     return archiveAction;
   }
 
@@ -145,7 +146,7 @@ public class XCScheme {
     public BuildActionEntry(
         BuildableReference buildableReference,
         EnumSet<BuildFor> buildFor) {
-      this.buildableReference = buildableReference;
+      this.buildableReference = Preconditions.checkNotNull(buildableReference);
       this.buildFor = Preconditions.checkNotNull(buildFor);
     }
 
@@ -163,7 +164,7 @@ public class XCScheme {
     private final String buildConfiguration;
 
     public LaunchAction(BuildableReference buildableReference, String buildConfiguration) {
-      this.buildableReference = buildableReference;
+      this.buildableReference = Preconditions.checkNotNull(buildableReference);
       this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
     }
 
@@ -181,7 +182,7 @@ public class XCScheme {
     private final String buildConfiguration;
 
     public ProfileAction(BuildableReference buildableReference, String buildConfiguration) {
-      this.buildableReference = buildableReference;
+      this.buildableReference = Preconditions.checkNotNull(buildableReference);
       this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
     }
 

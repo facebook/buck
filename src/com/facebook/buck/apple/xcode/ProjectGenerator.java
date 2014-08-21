@@ -76,7 +76,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
-import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
@@ -135,7 +134,6 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -339,6 +337,11 @@ public class ProjectGenerator {
           // Trigger the loading cache to call the generateTargetForBuildRule function.
           Optional<PBXTarget> target = buildRuleToXcodeTarget.getUnchecked(rule);
           if (target.isPresent()) {
+            // TODO(grp, t4964329): SchemeGenerator should look for the AppleTest rule itself.
+            if (rule.getType().equals(AppleTestDescription.TYPE)) {
+              AppleTest test = (AppleTest) rule;
+              rule = test.getTestBundle();
+            }
             buildRuleToGeneratedTargetBuilder.put(rule, target.get());
           }
         } else {
@@ -492,8 +495,8 @@ public class ProjectGenerator {
         /* includeResources */ true);
 
     // -- copy any binary and bundle targets into this bundle
-    Iterable<BuildRule> copiedRules = getRecursiveRuleDependenciesOfType(
-        RecursiveRuleDependenciesMode.COPYING,
+    Iterable<BuildRule> copiedRules = AppleBuildRules.getRecursiveRuleDependenciesOfType(
+        AppleBuildRules.RecursiveRuleDependenciesMode.COPYING,
         rule,
         AppleLibraryDescription.TYPE,
         AppleBinaryDescription.TYPE,
@@ -727,8 +730,8 @@ public class ProjectGenerator {
       // -- copy any extensions into this bundle
       ImmutableSet.Builder<SourceTreePath> extensionsSourceTreePathsBuilder =
           ImmutableSet.builder();
-      Iterable<BuildRule> extensions = getRecursiveRuleDependenciesOfType(
-          RecursiveRuleDependenciesMode.COPYING,
+      Iterable<BuildRule> extensions = AppleBuildRules.getRecursiveRuleDependenciesOfType(
+          AppleBuildRules.RecursiveRuleDependenciesMode.COPYING,
           rule,
           AppleExtensionDescription.TYPE);
       for (BuildRule extension : extensions) {
@@ -1874,8 +1877,8 @@ public class ProjectGenerator {
   private ImmutableSet<String> collectRecursiveHeaderSearchPaths(BuildRule rule) {
     return FluentIterable
         .from(
-            getRecursiveRuleDependenciesOfType(
-                RecursiveRuleDependenciesMode.BUILDING,
+            AppleBuildRules.getRecursiveRuleDependenciesOfType(
+                AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
                 rule,
                 AppleLibraryDescription.TYPE,
                 XcodeNativeDescription.TYPE))
@@ -1895,8 +1898,8 @@ public class ProjectGenerator {
     builder.add(getHeaderMapRelativePathForRule(rule, TARGET_HEADER_MAP_SUFFIX));
 
     for (BuildRule input :
-        getRecursiveRuleDependenciesOfType(
-            RecursiveRuleDependenciesMode.BUILDING,
+        AppleBuildRules.getRecursiveRuleDependenciesOfType(
+            AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
             rule,
             AppleLibraryDescription.TYPE)) {
       builder.add(getHeaderMapRelativePathForRule(input, PUBLIC_HEADER_MAP_SUFFIX));
@@ -1912,8 +1915,8 @@ public class ProjectGenerator {
   private ImmutableSet<String> collectRecursiveLibrarySearchPaths(BuildRule rule) {
     return FluentIterable
         .from(
-            getRecursiveRuleDependenciesOfType(
-                RecursiveRuleDependenciesMode.LINKING,
+            AppleBuildRules.getRecursiveRuleDependenciesOfType(
+                AppleBuildRules.RecursiveRuleDependenciesMode.LINKING,
                 rule,
                 AppleLibraryDescription.TYPE,
                 XcodeNativeDescription.TYPE))
@@ -1930,8 +1933,8 @@ public class ProjectGenerator {
   private ImmutableSet<String> collectRecursiveFrameworkSearchPaths(BuildRule rule) {
     return FluentIterable
         .from(
-            getRecursiveRuleDependenciesOfType(
-                RecursiveRuleDependenciesMode.LINKING,
+            AppleBuildRules.getRecursiveRuleDependenciesOfType(
+                AppleBuildRules.RecursiveRuleDependenciesMode.LINKING,
                 rule,
                 AppleLibraryDescription.TYPE,
                 XcodeNativeDescription.TYPE))
@@ -1949,8 +1952,10 @@ public class ProjectGenerator {
       BuildRule rule,
       ImmutableSet.Builder<String> frameworksBuilder) {
     for (BuildRule ruleDependency :
-           getRecursiveRuleDependenciesOfType(
-               RecursiveRuleDependenciesMode.LINKING, rule, AppleLibraryDescription.TYPE)) {
+           AppleBuildRules.getRecursiveRuleDependenciesOfType(
+               AppleBuildRules.RecursiveRuleDependenciesMode.LINKING,
+               rule,
+               AppleLibraryDescription.TYPE)) {
       // TODO(user): Add support to xcode_native rule for framework dependencies
       AppleLibrary appleLibrary =
           (AppleLibrary) Preconditions.checkNotNull(ruleDependency);
@@ -1960,8 +1965,8 @@ public class ProjectGenerator {
 
   private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(BuildRule rule) {
     return FluentIterable
-        .from(getRecursiveRuleDependenciesOfType(
-            RecursiveRuleDependenciesMode.LINKING,
+        .from(AppleBuildRules.getRecursiveRuleDependenciesOfType(
+            AppleBuildRules.RecursiveRuleDependenciesMode.LINKING,
             rule,
             AppleLibraryDescription.TYPE,
             AppleBundleDescription.TYPE,
@@ -2065,8 +2070,8 @@ public class ProjectGenerator {
   private Iterable<AppleResource> collectRecursiveResources(
       BuildRule rule,
       BuildRuleType resourceRuleType) {
-    Iterable<BuildRule> resourceRules = getRecursiveRuleDependenciesOfType(
-        RecursiveRuleDependenciesMode.COPYING,
+    Iterable<BuildRule> resourceRules = AppleBuildRules.getRecursiveRuleDependenciesOfType(
+        AppleBuildRules.RecursiveRuleDependenciesMode.COPYING,
         rule,
         resourceRuleType);
     ImmutableSet.Builder<AppleResource> resources = ImmutableSet.builder();
@@ -2082,8 +2087,8 @@ public class ProjectGenerator {
    * Collect asset catalogs from recursive dependencies.
    */
   private Iterable<AppleAssetCatalog> collectRecursiveAssetCatalogs(BuildRule rule) {
-    Iterable<BuildRule> assetCatalogRules = getRecursiveRuleDependenciesOfType(
-        RecursiveRuleDependenciesMode.COPYING,
+    Iterable<BuildRule> assetCatalogRules = AppleBuildRules.getRecursiveRuleDependenciesOfType(
+        AppleBuildRules.RecursiveRuleDependenciesMode.COPYING,
         rule,
         AppleAssetCatalogDescription.TYPE);
     ImmutableSet.Builder<AppleAssetCatalog> assetCatalogs = ImmutableSet.builder();
@@ -2106,100 +2111,6 @@ public class ProjectGenerator {
             return requestedTypes.contains(input.getType());
           }
         });
-  }
-
-  private enum RecursiveRuleDependenciesMode {
-    /**
-     * Will always traverse dependencies.
-     */
-    COMPLETE,
-    /**
-     * Will traverse all rules that are built.
-     */
-    BUILDING,
-    /**
-     * Will also not traverse the dependencies of bundles, as those are copied inside the bundle.
-     */
-    COPYING,
-    /**
-     * Will also not traverse the dependencies of dynamic libraries, as those are linked already.
-     */
-    LINKING,
-  };
-
-  private Iterable<BuildRule> getRecursiveRuleDependenciesOfType(
-      final RecursiveRuleDependenciesMode mode, final BuildRule rule, BuildRuleType... types) {
-    final ImmutableSet<BuildRuleType> requestedTypes = ImmutableSet.copyOf(types);
-    final ImmutableList.Builder<BuildRule> filteredRules = ImmutableList.builder();
-    AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule> traversal =
-        new AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule>() {
-          private boolean isNodeBundleBinary(BuildRule node) {
-            if (rule.getType().equals(AppleBundleDescription.TYPE)) {
-              AppleBundle bundle = (AppleBundle) rule;
-              return node == bundle.getBinary();
-            } else {
-              return false;
-            }
-          }
-
-          @Override
-          protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
-            ImmutableSortedSet<BuildRule> deps;
-
-            if (node != rule && !isNodeBundleBinary(node)) {
-              switch (mode) {
-                case LINKING:
-                  if (node.getType().equals(AppleLibraryDescription.TYPE)) {
-                    AppleLibrary library = (AppleLibrary) node;
-                    if (library.getLinkedDynamically()) {
-                      deps = ImmutableSortedSet.of();
-                    } else {
-                      deps = node.getDeps();
-                    }
-                  } else if (node.getType().equals(AppleBundleDescription.TYPE)) {
-                    deps = ImmutableSortedSet.of();
-                  } else {
-                    deps = node.getDeps();
-                  }
-                  break;
-                case COPYING:
-                  if (node.getType().equals(AppleBundleDescription.TYPE)) {
-                    deps = ImmutableSortedSet.of();
-                  } else {
-                    deps = node.getDeps();
-                  }
-                  break;
-                case BUILDING:
-                default:
-                  deps = node.getDeps();
-                  break;
-              }
-            } else {
-              deps = node.getDeps();
-            }
-
-            return deps.iterator();
-          }
-
-          @Override
-          protected void onNodeExplored(BuildRule node) {
-            if (node != rule && requestedTypes.contains(node.getType()) &&
-                (!isNodeBundleBinary(node) || mode == RecursiveRuleDependenciesMode.COMPLETE)) {
-              filteredRules.add(node);
-            }
-          }
-
-          @Override
-          protected void onTraversalComplete(Iterable<BuildRule> nodesInExplorationOrder) {
-          }
-        };
-    try {
-      traversal.traverse(ImmutableList.of(rule));
-    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException | IOException e) {
-      // actual load failures and cycle exceptions should have been caught at an earlier stage
-      throw new RuntimeException(e);
-    }
-    return filteredRules.build();
   }
 
   private static PBXTarget.ProductType bundleToTargetProductType(AppleBundle bundle) {

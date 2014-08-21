@@ -17,6 +17,8 @@
 package com.facebook.buck.apple.xcode;
 
 import com.dd.plist.NSDictionary;
+import com.facebook.buck.apple.AppleTest;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfig;
@@ -111,6 +113,12 @@ public class WorkspaceAndProjectGenerator {
       for (BuildRule buildRule : testTargetGraph.get().getActionGraph().getNodes()) {
         if (mainRules.contains(buildRule)) {
           continue;
+        }
+        if (buildRule.getType().equals(AppleTestDescription.TYPE)) {
+          AppleTest test = (AppleTest) buildRule;
+          if (mainRules.contains(test.getTestBundle())) {
+            continue;
+          }
         }
         testRulesBuilder.add(buildRule);
       }
@@ -228,7 +236,6 @@ public class WorkspaceAndProjectGenerator {
         projectFilesystem,
         projectTargetGraph,
         workspaceBuildable.getSrcTarget(),
-        mainRules,
         testRules,
         workspaceName,
         outputDirectory.resolve(workspaceName + ".xcworkspace"),

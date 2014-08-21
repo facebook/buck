@@ -23,13 +23,16 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -72,7 +75,6 @@ class SchemeGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final PartialGraph partialGraph;
   private final BuildRule primaryRule;
-  private final ImmutableSet<BuildRule> includedRules;
   private final ImmutableSet<BuildRule> testRules;
   private final String schemeName;
   private final Path outputDirectory;
@@ -84,7 +86,6 @@ class SchemeGenerator {
       ProjectFilesystem projectFilesystem,
       PartialGraph partialGraph,
       BuildRule primaryRule,
-      ImmutableSet<BuildRule> includedRules,
       ImmutableSet<BuildRule> testRules,
       String schemeName,
       Path outputDirectory,
@@ -94,7 +95,6 @@ class SchemeGenerator {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.primaryRule = Preconditions.checkNotNull(primaryRule);
-    this.includedRules = Preconditions.checkNotNull(includedRules);
     this.testRules = Preconditions.checkNotNull(testRules);
     this.schemeName = Preconditions.checkNotNull(schemeName);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
@@ -105,9 +105,9 @@ class SchemeGenerator {
 
   public Path writeScheme() throws IOException {
     class XcodeTargetPredicate implements Predicate<BuildRule> {
-      private final ImmutableSet<BuildRule> matches;
+      private final Optional<ImmutableSet<BuildRule>> matches;
 
-      public XcodeTargetPredicate(ImmutableSet<BuildRule> matches) {
+      public XcodeTargetPredicate(Optional<ImmutableSet<BuildRule>> matches) {
         this.matches = Preconditions.checkNotNull(matches);
       }
 
@@ -117,7 +117,7 @@ class SchemeGenerator {
             XcodeNativeDescription.TYPE != input.getType()) {
           return false;
         }
-        if (!matches.contains(input)) {
+        if (matches.isPresent() && !matches.get().contains(input)) {
           return false;
         }
         if (!buildRuleToTargetMap.containsKey(input)) {
@@ -129,12 +129,20 @@ class SchemeGenerator {
       }
     }
 
-    List<BuildRule> orderedBuildRules = TopologicalSort.sort(
-        partialGraph.getActionGraph(),
-        new XcodeTargetPredicate(includedRules));
+    Iterable<BuildRule> buildRulesIterable = Iterables.concat(
+        AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
+            AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
+            this.primaryRule,
+            Optional.<ImmutableSet<BuildRuleType>>absent()),
+        ImmutableSet.of(this.primaryRule));
+
+    List<BuildRule> orderedBuildRules = ImmutableList.copyOf(Iterables.filter(
+            buildRulesIterable,
+            new XcodeTargetPredicate(Optional.<ImmutableSet<BuildRule>>absent())));
+
     List<BuildRule> orderedTestRules = TopologicalSort.sort(
         partialGraph.getActionGraph(),
-        new XcodeTargetPredicate(testRules));
+        new XcodeTargetPredicate(Optional.of(testRules)));
 
     Map<BuildRule, XCScheme.BuildableReference>
         buildRuleToBuildableReferenceMap = Maps.newHashMap();
@@ -178,7 +186,7 @@ class SchemeGenerator {
     XCScheme.TestAction testAction = new XCScheme.TestAction(
         actionConfigNames.get(SchemeActionType.TEST));
     for (BuildRule rule : orderedTestRules) {
-      if (!AppleBuildRules.isXcodeTargetTestBuildRuleType(rule.getType())) {
+      if (!AppleBuildRules.isXcodeTargetTestBuildRule(rule)) {
         continue;
       }
       XCScheme.BuildableReference buildableReference = buildRuleToBuildableReferenceMap.get(rule);
@@ -187,14 +195,19 @@ class SchemeGenerator {
       testAction.addTestableReference(testableReference);
     }
 
+    Optional<XCScheme.LaunchAction> launchAction = Optional.absent();
+    Optional<XCScheme.ProfileAction> profileAction = Optional.absent();
+
     XCScheme.BuildableReference primaryBuildableReference =
         buildRuleToBuildableReferenceMap.get(primaryRule);
-    XCScheme.LaunchAction launchAction = new XCScheme.LaunchAction(
-        primaryBuildableReference,
-        actionConfigNames.get(SchemeActionType.LAUNCH));
-    XCScheme.ProfileAction profileAction = new XCScheme.ProfileAction(
-        primaryBuildableReference,
-        actionConfigNames.get(SchemeActionType.PROFILE));
+    if (primaryBuildableReference != null) {
+      launchAction = Optional.of(new XCScheme.LaunchAction(
+          primaryBuildableReference,
+          actionConfigNames.get(SchemeActionType.LAUNCH)));
+      profileAction = Optional.of(new XCScheme.ProfileAction(
+          primaryBuildableReference,
+          actionConfigNames.get(SchemeActionType.PROFILE)));
+    }
     XCScheme.AnalyzeAction analyzeAction = new XCScheme.AnalyzeAction(
         actionConfigNames.get(SchemeActionType.ANALYZE));
     XCScheme.ArchiveAction archiveAction = new XCScheme.ArchiveAction(
@@ -202,12 +215,12 @@ class SchemeGenerator {
 
     XCScheme scheme = new XCScheme(
         schemeName,
-        buildAction,
-        testAction,
+        Optional.of(buildAction),
+        Optional.of(testAction),
         launchAction,
         profileAction,
-        analyzeAction,
-        archiveAction);
+        Optional.of(analyzeAction),
+        Optional.of(archiveAction));
 
     Path schemeDirectory = outputDirectory.resolve("xcshareddata/xcschemes");
     projectFilesystem.mkdirs(schemeDirectory);
@@ -330,34 +343,52 @@ class SchemeGenerator {
     rootElem.setAttribute("LastUpgradeVersion", "0500");
     rootElem.setAttribute("version", "1.7");
 
-    Element buildActionElem = serializeBuildAction(doc, scheme.getBuildAction());
-    rootElem.appendChild(buildActionElem);
+    Optional<XCScheme.BuildAction> buildAction = scheme.getBuildAction();
+    if (buildAction.isPresent()) {
+      Element buildActionElem = serializeBuildAction(doc, buildAction.get());
+      rootElem.appendChild(buildActionElem);
+    }
 
-    Element testActionElem = serializeTestAction(doc, scheme.getTestAction());
-    testActionElem.setAttribute(
-        "buildConfiguration", scheme.getTestAction().getBuildConfiguration());
-    rootElem.appendChild(testActionElem);
+    Optional<XCScheme.TestAction> testAction = scheme.getTestAction();
+    if (testAction.isPresent()) {
+      Element testActionElem = serializeTestAction(doc, testAction.get());
+      testActionElem.setAttribute(
+          "buildConfiguration", scheme.getTestAction().get().getBuildConfiguration());
+      rootElem.appendChild(testActionElem);
+    }
 
-    Element launchActionElem = serializeLaunchAction(doc, scheme.getLaunchAction());
-    launchActionElem.setAttribute(
-        "buildConfiguration", scheme.getLaunchAction().getBuildConfiguration());
-    rootElem.appendChild(launchActionElem);
+    Optional<XCScheme.LaunchAction> launchAction = scheme.getLaunchAction();
+    if (launchAction.isPresent()) {
+      Element launchActionElem = serializeLaunchAction(doc, launchAction.get());
+      launchActionElem.setAttribute(
+          "buildConfiguration", launchAction.get().getBuildConfiguration());
+      rootElem.appendChild(launchActionElem);
+    }
 
-    Element profileActionElem = serializeProfileAction(doc, scheme.getProfileAction());
-    profileActionElem.setAttribute(
-        "buildConfiguration", scheme.getProfileAction().getBuildConfiguration());
-    rootElem.appendChild(profileActionElem);
+    Optional<XCScheme.ProfileAction> profileAction = scheme.getProfileAction();
+    if (profileAction.isPresent()) {
+      Element profileActionElem = serializeProfileAction(doc, profileAction.get());
+      profileActionElem.setAttribute(
+          "buildConfiguration", profileAction.get().getBuildConfiguration());
+      rootElem.appendChild(profileActionElem);
+    }
 
-    Element analyzeActionElem = doc.createElement("AnalyzeAction");
-    analyzeActionElem.setAttribute(
-        "buildConfiguration", scheme.getAnalyzeAction().getBuildConfiguration());
-    rootElem.appendChild(analyzeActionElem);
+    Optional<XCScheme.AnalyzeAction> analyzeAction = scheme.getAnalyzeAction();
+    if (analyzeAction.isPresent()) {
+      Element analyzeActionElem = doc.createElement("AnalyzeAction");
+      analyzeActionElem.setAttribute(
+          "buildConfiguration", analyzeAction.get().getBuildConfiguration());
+      rootElem.appendChild(analyzeActionElem);
+    }
 
-    Element archiveActionElem = doc.createElement("ArchiveAction");
-    archiveActionElem.setAttribute(
-        "buildConfiguration", scheme.getArchiveAction().getBuildConfiguration());
-    archiveActionElem.setAttribute("revealArchiveInOrganizer", "YES");
-    rootElem.appendChild(archiveActionElem);
+    Optional<XCScheme.ArchiveAction> archiveAction = scheme.getArchiveAction();
+    if (archiveAction.isPresent()) {
+      Element archiveActionElem = doc.createElement("ArchiveAction");
+      archiveActionElem.setAttribute(
+          "buildConfiguration", archiveAction.get().getBuildConfiguration());
+      archiveActionElem.setAttribute("revealArchiveInOrganizer", "YES");
+      rootElem.appendChild(archiveActionElem);
+    }
 
     // write out
 

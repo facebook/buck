@@ -16,9 +16,16 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+
+import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * Helpers for reading properties of Apple target build rules.
@@ -28,16 +35,18 @@ public final class AppleBuildRules {
   // Utility class not to be instantiated.
   private AppleBuildRules() { }
 
-  private static final ImmutableList<BuildRuleType> XCODE_TARGET_BUILD_RULE_TYPES =
-      ImmutableList.of(
+  private static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TYPES =
+      ImmutableSet.of(
           IosBinaryDescription.TYPE,
           AppleLibraryDescription.TYPE,
+          AppleBinaryDescription.TYPE,
+          AppleBundleDescription.TYPE,
           IosTestDescription.TYPE,
           MacosxBinaryDescription.TYPE,
           MacosxFrameworkDescription.TYPE);
 
-  private static final ImmutableList<BuildRuleType> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
-      ImmutableList.of(IosTestDescription.TYPE);
+  private static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
+      ImmutableSet.of(IosTestDescription.TYPE, AppleTestDescription.TYPE);
 
   private static final ImmutableSet<AppleBundleExtension> XCODE_TARGET_TEST_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.OCTEST, AppleBundleExtension.XCTEST);
@@ -52,8 +61,20 @@ public final class AppleBuildRules {
   /**
    * Whether the build rule type is a test target.
    */
-  public static boolean isXcodeTargetTestBuildRuleType(BuildRuleType type) {
-    return XCODE_TARGET_BUILD_RULE_TEST_TYPES.contains(type);
+  public static boolean isXcodeTargetTestBuildRule(BuildRule rule) {
+    if (XCODE_TARGET_BUILD_RULE_TEST_TYPES.contains(rule.getType())) {
+      return true;
+    } else if (rule.getType().equals(AppleBundleDescription.TYPE)) {
+      AppleBundle bundle = (AppleBundle) rule;
+      Optional<AppleBundleExtension> extension = bundle.getExtensionValue();
+      if (extension.isPresent()) {
+        return isXcodeTargetTestBundleExtension(extension.get());
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -61,5 +82,113 @@ public final class AppleBuildRules {
    */
   public static boolean isXcodeTargetTestBundleExtension(AppleBundleExtension extension) {
     return XCODE_TARGET_TEST_BUNDLE_EXTENSIONS.contains(extension);
+  }
+
+  public enum RecursiveRuleDependenciesMode {
+    /**
+     * Will always traverse dependencies.
+     */
+    COMPLETE,
+    /**
+     * Will traverse all rules that are built.
+     */
+    BUILDING,
+    /**
+     * Will also not traverse the dependencies of bundles, as those are copied inside the bundle.
+     */
+    COPYING,
+    /**
+     * Will also not traverse the dependencies of dynamic libraries, as those are linked already.
+     */
+    LINKING,
+  };
+
+  public static Iterable<BuildRule> getRecursiveRuleDependenciesOfType(
+      final RecursiveRuleDependenciesMode mode, final BuildRule rule, BuildRuleType... types) {
+    return getRecursiveRuleDependenciesOfTypes(mode, rule, Optional.of(ImmutableSet.copyOf(types)));
+  }
+
+  public static Iterable<BuildRule> getRecursiveRuleDependenciesOfTypes(
+      final RecursiveRuleDependenciesMode mode,
+      final BuildRule rule,
+      final Optional<ImmutableSet<BuildRuleType>> types) {
+    final ImmutableList.Builder<BuildRule> filteredRules = ImmutableList.builder();
+    AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule> traversal =
+        new AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule>() {
+          @Override
+          protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
+            ImmutableSortedSet<BuildRule> defaultDeps = node.getDeps();
+
+            if (node.getType().equals(AppleBundleDescription.TYPE) &&
+                mode != RecursiveRuleDependenciesMode.COMPLETE) {
+              AppleBundle bundle = (AppleBundle) node;
+
+              ImmutableSortedSet.Builder<BuildRule> editedDeps = ImmutableSortedSet.naturalOrder();
+              for (BuildRule rule : defaultDeps) {
+                if (rule != bundle.getBinary()) {
+                  editedDeps.add(rule);
+                } else {
+                  editedDeps.addAll(bundle.getBinary().getDeps());
+                }
+              }
+
+              defaultDeps = editedDeps.build();
+            }
+
+            ImmutableSortedSet<BuildRule> deps;
+
+            if (node != rule) {
+              switch (mode) {
+                case LINKING:
+                  if (node.getType().equals(AppleLibraryDescription.TYPE)) {
+                    AppleLibrary library = (AppleLibrary) node;
+                    if (library.getLinkedDynamically()) {
+                      deps = ImmutableSortedSet.of();
+                    } else {
+                      deps = defaultDeps;
+                    }
+                  } else if (node.getType().equals(AppleBundleDescription.TYPE)) {
+                    deps = ImmutableSortedSet.of();
+                  } else {
+                    deps = defaultDeps;
+                  }
+                  break;
+                case COPYING:
+                  if (node.getType().equals(AppleBundleDescription.TYPE)) {
+                    deps = ImmutableSortedSet.of();
+                  } else {
+                    deps = defaultDeps;
+                  }
+                  break;
+                case BUILDING:
+                default:
+                  deps = defaultDeps;
+                  break;
+              }
+            } else {
+              deps = defaultDeps;
+            }
+
+            return deps.iterator();
+          }
+
+          @Override
+          protected void onNodeExplored(BuildRule node) {
+            if (node != rule && (!types.isPresent() || types.get().contains(node.getType()))) {
+              filteredRules.add(node);
+            }
+          }
+
+          @Override
+          protected void onTraversalComplete(Iterable<BuildRule> nodesInExplorationOrder) {
+          }
+        };
+    try {
+      traversal.traverse(ImmutableList.of(rule));
+    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException | IOException e) {
+      // actual load failures and cycle exceptions should have been caught at an earlier stage
+      throw new RuntimeException(e);
+    }
+    return filteredRules.build();
   }
 }
