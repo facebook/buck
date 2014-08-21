@@ -77,8 +77,8 @@ class SchemeGenerator {
   private final String schemeName;
   private final Path outputDirectory;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
-  private final ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder;
-  private final ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder;
+  private final ImmutableMap<BuildRule, PBXTarget> buildRuleToTargetMap;
+  private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -88,7 +88,9 @@ class SchemeGenerator {
       ImmutableSet<BuildRule> testRules,
       String schemeName,
       Path outputDirectory,
-      Map<SchemeActionType, String> actionConfigNames) {
+      Map<SchemeActionType, String> actionConfigNames,
+      Map<BuildRule, PBXTarget> buildRuleToTargetMap,
+      Map<PBXTarget, Path> targetToProjectPathMap) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.primaryRule = Preconditions.checkNotNull(primaryRule);
@@ -97,32 +99,11 @@ class SchemeGenerator {
     this.schemeName = Preconditions.checkNotNull(schemeName);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
-    buildRuleToTargetMapBuilder = ImmutableMap.builder();
-    targetToProjectPathMapBuilder = ImmutableMap.builder();
-  }
-
-  public void addRuleToTargetMap(Map<BuildRule, PBXTarget> ruleToTargetMap) {
-    buildRuleToTargetMapBuilder.putAll(ruleToTargetMap);
-  }
-
-  public void addRuleToTargetMap(BuildRule rule, PBXTarget target) {
-    buildRuleToTargetMapBuilder.put(rule, target);
-  }
-
-  public void addTargetToProjectPathMap(Map<PBXTarget, Path> targetToProjectPathMap) {
-    targetToProjectPathMapBuilder.putAll(targetToProjectPathMap);
-  }
-
-  public void addTargetToProjectPathMap(PBXTarget target, Path projectPath) {
-    targetToProjectPathMapBuilder.put(target, projectPath);
+    this.buildRuleToTargetMap = ImmutableMap.copyOf(buildRuleToTargetMap);
+    this.targetToProjectPathMap = ImmutableMap.copyOf(targetToProjectPathMap);
   }
 
   public Path writeScheme() throws IOException {
-    final ImmutableMap<BuildRule, PBXTarget> buildRuleToTargetMap =
-        buildRuleToTargetMapBuilder.build();
-    ImmutableMap<PBXTarget, Path> targetToProjectPathMap =
-        targetToProjectPathMapBuilder.build();
-
     class XcodeTargetPredicate implements Predicate<BuildRule> {
       private final ImmutableSet<BuildRule> matches;
 

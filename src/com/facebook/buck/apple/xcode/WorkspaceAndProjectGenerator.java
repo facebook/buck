@@ -93,7 +93,6 @@ public class WorkspaceAndProjectGenerator {
     LOG.debug("Generating workspace for config target %s", workspaceConfigTarget);
     XcodeWorkspaceConfig workspaceBuildable =
         (XcodeWorkspaceConfig) workspaceTargetRule;
-    BuildRule actualTargetRule = workspaceBuildable.getSrcTarget();
 
     String workspaceName = workspaceBuildable.getSrcTarget().getBuildTarget().getShortName();
 
@@ -118,15 +117,10 @@ public class WorkspaceAndProjectGenerator {
     }
     ImmutableSet<BuildRule> testRules = testRulesBuilder.build();
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        projectTargetGraph,
-        actualTargetRule,
-        mainRules,
-        testRules,
-        workspaceName,
-        outputDirectory.resolve(workspaceName + ".xcworkspace"),
-        workspaceBuildable.getActionConfigNames());
+    ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
+      ImmutableMap.builder();
+    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
+      ImmutableMap.builder();
 
     Multimap<Path, BuildRule> buildRulesByTargetBasePath =
         BuildRules.buildRulesByTargetBasePath(Iterables.concat(mainRules, testRules));
@@ -167,9 +161,9 @@ public class WorkspaceAndProjectGenerator {
 
         workspaceGenerator.addFilePath(generator.getProjectPath());
 
-        schemeGenerator.addRuleToTargetMap(generator.getBuildRuleToGeneratedTargetMap());
+        buildRuleToTargetMapBuilder.putAll(generator.getBuildRuleToGeneratedTargetMap());
         for (PBXTarget target : generator.getBuildRuleToGeneratedTargetMap().values()) {
-          schemeGenerator.addTargetToProjectPathMap(target, generator.getProjectPath());
+          targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
         }
       }
 
@@ -224,12 +218,23 @@ public class WorkspaceAndProjectGenerator {
               targetFileName,
               PBXFileReference.SourceTree.BUILT_PRODUCTS_DIR);
           fakeTarget.setProductReference(fakeProductReference);
-          schemeGenerator.addRuleToTargetMap(ImmutableMap.of(rule, fakeTarget));
-          schemeGenerator.addTargetToProjectPathMap(fakeTarget, projectPath);
+          buildRuleToTargetMapBuilder.put(rule, fakeTarget);
+          targetToProjectPathMapBuilder.put(fakeTarget, projectPath);
         }
       }
     }
     Path workspacePath = workspaceGenerator.writeWorkspace();
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        projectTargetGraph,
+        workspaceBuildable.getSrcTarget(),
+        mainRules,
+        testRules,
+        workspaceName,
+        outputDirectory.resolve(workspaceName + ".xcworkspace"),
+        workspaceBuildable.getActionConfigNames(),
+        buildRuleToTargetMapBuilder.build(),
+        targetToProjectPathMapBuilder.build());
     schemeGenerator.writeScheme();
 
     return workspacePath;
