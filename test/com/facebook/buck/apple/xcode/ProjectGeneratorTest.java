@@ -470,9 +470,9 @@ public class ProjectGeneratorTest {
             )
     );
 
-    assertEquals("buck-out/foo/lib-target-flat-headers.hmap", headerMaps.get(2).toString());
+    assertEquals("buck-out/foo/lib-target-user-headers.hmap", headerMaps.get(2).toString());
     assertThatHeaderMapFileContains(
-        "buck-out/foo/lib-target-flat-headers.hmap",
+        "buck-out/foo/lib-target-user-headers.hmap",
         ImmutableMap.<String, String>of(
             "foo.h", "foo.h",
             "bar.h", "bar.h",
@@ -796,8 +796,8 @@ public class ProjectGeneratorTest {
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
-            "../buck-out/foo/test-target-flat-headers.hmap"),
-        settings.get("FLAT_HEADER_SEARCH_PATHS"));
+            "../buck-out/foo/test-target-user-headers.hmap"),
+        settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
             "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
@@ -821,8 +821,8 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(
             "HEADER_SEARCH_PATHS",
             "headers",
-            "FLAT_HEADER_SEARCH_PATHS",
-            "flat_headers",
+            "USER_HEADER_SEARCH_PATHS",
+            "user_headers",
             "LIBRARY_SEARCH_PATHS",
             "libraries",
             "FRAMEWORK_SEARCH_PATHS",
@@ -897,9 +897,9 @@ public class ProjectGeneratorTest {
             "../buck-out/foo/lib-public-headers.hmap"),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        new NSString("flat_headers " +
-            "../buck-out/foo/test-target-flat-headers.hmap"),
-        settings.get("FLAT_HEADER_SEARCH_PATHS"));
+        new NSString("user_headers " +
+            "../buck-out/foo/test-target-user-headers.hmap"),
+        settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("libraries " +
             "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
@@ -1011,8 +1011,8 @@ public class ProjectGeneratorTest {
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
-            "../buck-out/foo/test-target-flat-headers.hmap"),
-        settings.get("FLAT_HEADER_SEARCH_PATHS"));
+            "../buck-out/foo/test-target-user-headers.hmap"),
+        settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
             "$SYMROOT/F4XWEYLSHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME " +

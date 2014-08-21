@@ -210,7 +210,7 @@ public class ProjectGenerator {
 
   private static final String PUBLIC_HEADER_MAP_SUFFIX = "-public-headers.hmap";
   private static final String TARGET_HEADER_MAP_SUFFIX = "-target-headers.hmap";
-  private static final String TARGET_FLAT_HEADER_MAP_SUFFIX = "-target-flat-headers.hmap";
+  private static final String TARGET_USER_HEADER_MAP_SUFFIX = "-target-user-headers.hmap";
 
   private static final FileAttribute<?> READ_ONLY_FILE_ATTRIBUTE =
     PosixFilePermissions.asFileAttribute(
@@ -760,8 +760,8 @@ public class ProjectGenerator {
                 collectRecursiveHeaderSearchPaths(buildRule).iterator(),
                 collectRecursiveHeaderMaps(buildRule).iterator())))
         .put(
-            "FLAT_HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveFlatHeaderMaps(buildRule)))
+            "USER_HEADER_SEARCH_PATHS",
+            Joiner.on(' ').join(collectRecursiveUserHeaderMaps(buildRule)))
         .put(
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(buildRule)))
@@ -985,17 +985,17 @@ public class ProjectGenerator {
     if (useBuckHeaderMaps) {
       HeaderMap.Builder publicMapBuilder = HeaderMap.builder();
       HeaderMap.Builder targetMapBuilder = HeaderMap.builder();
-      HeaderMap.Builder targetFlatMapBuilder = HeaderMap.builder();
+      HeaderMap.Builder targetUserMapBuilder = HeaderMap.builder();
       addGroupedSourcesToHeaderMaps(
           publicMapBuilder,
           targetMapBuilder,
-          targetFlatMapBuilder,
+          targetUserMapBuilder,
           Paths.get(headerPathPrefix.or(getProductName(buildTarget))),
           groupedSources,
           sourceFlags);
       writeHeaderMap(publicMapBuilder.build(), buildTarget, PUBLIC_HEADER_MAP_SUFFIX);
       writeHeaderMap(targetMapBuilder.build(), buildTarget, TARGET_HEADER_MAP_SUFFIX);
-      writeHeaderMap(targetFlatMapBuilder.build(), buildTarget, TARGET_FLAT_HEADER_MAP_SUFFIX);
+      writeHeaderMap(targetUserMapBuilder.build(), buildTarget, TARGET_USER_HEADER_MAP_SUFFIX);
     }
 
   }
@@ -1003,7 +1003,7 @@ public class ProjectGenerator {
   private void addGroupedSourcesToHeaderMaps(
       HeaderMap.Builder publicHeaderMap,
       HeaderMap.Builder targetHeaderMap,
-      HeaderMap.Builder targetFlatHeaderMap,
+      HeaderMap.Builder targetUserHeaderMap,
       Path prefix,
       Iterable<GroupedSource> groupedSources,
       ImmutableMap<SourcePath, String> sourceFlags) {
@@ -1018,7 +1018,7 @@ public class ProjectGenerator {
                 prefix,
                 publicHeaderMap,
                 targetHeaderMap,
-                targetFlatHeaderMap,
+                targetUserHeaderMap,
                 sourceFlags);
           }
           break;
@@ -1026,7 +1026,7 @@ public class ProjectGenerator {
           addGroupedSourcesToHeaderMaps(
               publicHeaderMap,
               targetHeaderMap,
-              targetFlatHeaderMap,
+              targetUserHeaderMap,
               prefix,
               groupedSource.getSourceGroup(),
               sourceFlags);
@@ -1124,7 +1124,7 @@ public class ProjectGenerator {
       Path prefix,
       HeaderMap.Builder publicHeaderMap,
       HeaderMap.Builder targetHeaderMap,
-      HeaderMap.Builder targetFlatHeaderMap,
+      HeaderMap.Builder targetUserHeaderMap,
       ImmutableMap<SourcePath, String> sourceFlags) {
     HeaderVisibility visibility = HeaderVisibility.PROJECT;
     String headerFlags = sourceFlags.get(headerPath);
@@ -1145,8 +1145,8 @@ public class ProjectGenerator {
     }
 
     // Add an entry File.h -> AbsolutePathTo/File.h
-    // to targetFlatHeaderMap
-    addHeaderMapEntry(targetFlatHeaderMap, "target-flat", fileName, value);
+    // to targetUserHeaderMap
+    addHeaderMapEntry(targetUserHeaderMap, "target-user", fileName, value);
     if (visibility == HeaderVisibility.PRIVATE) {
       throw new HumanReadableException(
           "Xcode's so-called 'private' headers have been deprecated in the new header map mode. " +
@@ -1760,8 +1760,8 @@ public class ProjectGenerator {
     return builder.build();
   }
 
-  private ImmutableSet<String> collectRecursiveFlatHeaderMaps(BuildRule rule) {
-    return ImmutableSet.of(getHeaderMapRelativePathForRule(rule, TARGET_FLAT_HEADER_MAP_SUFFIX));
+  private ImmutableSet<String> collectRecursiveUserHeaderMaps(BuildRule rule) {
+    return ImmutableSet.of(getHeaderMapRelativePathForRule(rule, TARGET_USER_HEADER_MAP_SUFFIX));
   }
 
   private ImmutableSet<String> collectRecursiveLibrarySearchPaths(BuildRule rule) {
