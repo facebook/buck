@@ -14,7 +14,8 @@ def get_file_contents_if_exists(path, default=None):
     if not os.path.exists(path):
         return default
     with open(path) as f:
-        return f.read().strip()
+        contents = f.read().strip()
+        return default if not contents else contents
 
 
 def write_contents_to_file(path, contents):
