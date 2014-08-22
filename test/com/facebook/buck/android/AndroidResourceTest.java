@@ -137,7 +137,7 @@ public class AndroidResourceTest {
   }
 
   @Test
-  public void testAbiKeyIsAbiKeyForDepsWhenResourcesAreAbsent() throws IOException {
+  public void testAbiKeyExcludesEmptyResources() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     BuildRule resourceRule1 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
@@ -150,7 +150,6 @@ public class AndroidResourceTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res2"))
             .build());
     setAndroidResourceBuildOutput(resourceRule2, "b");
     BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/example:res3");
@@ -173,13 +172,8 @@ public class AndroidResourceTest {
                 buildableContext)
             .isEmpty());
 
-    // The resources come from UberRDotJavaUtil.getAndroidResourceDeps returns the resources in the
-    // reverse alphabetical order (because there's no complex dependency graph) See
-    // testGetAndroidResourceDeps in this class for why this is the expected ordering.
     Sha1HashCode expectedSha1 = HasAndroidResourceDeps.ABI_HASHER.apply(
-        ImmutableList.of(
-            (HasAndroidResourceDeps) resourceRule2,
-            (HasAndroidResourceDeps) resourceRule1));
+        ImmutableList.of((HasAndroidResourceDeps) resourceRule1));
     buildableContext.assertContainsMetadataMapping(
         AndroidResource.METADATA_KEY_FOR_ABI,
         expectedSha1.getHash());

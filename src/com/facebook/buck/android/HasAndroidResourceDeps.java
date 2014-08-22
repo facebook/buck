@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
@@ -54,6 +55,23 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
         @Override
         public String apply(HasAndroidResourceDeps input) {
           return input.getRDotJavaPackage();
+        }
+      };
+
+  public static final Predicate<HasAndroidResourceDeps> NON_EMPTY_RESOURCE =
+      new Predicate<HasAndroidResourceDeps>() {
+        @Override
+        public boolean apply(HasAndroidResourceDeps input) {
+          return input.getRes() != null;
+        }
+      };
+
+  public static final Function<HasAndroidResourceDeps, Path> GET_RES_SYMBOLS_TXT =
+      new Function<HasAndroidResourceDeps, Path>() {
+        @Nullable
+        @Override
+        public Path apply(HasAndroidResourceDeps input) {
+          return input.getPathToTextSymbolsFile();
         }
       };
 

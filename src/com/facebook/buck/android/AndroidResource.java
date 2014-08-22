@@ -19,8 +19,10 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -44,17 +46,14 @@ import com.facebook.buck.util.AndroidManifestReader;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -90,16 +89,6 @@ public class AndroidResource extends AbstractBuildRule
   @VisibleForTesting
   static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE";
 
-  /** {@link Function} that invokes {@link #getRes()} on an {@link AndroidResource}. */
-  private static final Function<HasAndroidResourceDeps, Path> GET_RES_FOR_RULE =
-      new Function<HasAndroidResourceDeps, Path>() {
-    @Override
-    @Nullable
-    public Path apply(HasAndroidResourceDeps rule) {
-      return rule.getRes();
-    }
-  };
-
   @Nullable
   private final Path res;
 
@@ -124,7 +113,6 @@ public class AndroidResource extends AbstractBuildRule
   private final boolean hasWhitelistedStrings;
 
   private final ImmutableSortedSet<BuildRule> deps;
-  private final Supplier<ImmutableList<HasAndroidResourceDeps>> transitiveAndroidResourceDeps;
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -185,18 +173,6 @@ public class AndroidResource extends AbstractBuildRule
     }
 
     this.deps = Preconditions.checkNotNull(deps);
-    this.transitiveAndroidResourceDeps = Suppliers.memoize(
-        new Supplier<ImmutableList<HasAndroidResourceDeps>>() {
-          @Override
-          public ImmutableList<HasAndroidResourceDeps> get() {
-            ImmutableList.Builder<HasAndroidResourceDeps> resDeps = ImmutableList.builder();
-            if (res != null) {
-              resDeps.add(AndroidResource.this);
-            }
-            resDeps.addAll(UberRDotJavaUtil.getAndroidResourceDeps(getDeps()));
-            return resDeps.build();
-          }
-        });
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
 
@@ -314,19 +290,11 @@ public class AndroidResource extends AbstractBuildRule
       });
     }
 
-    // Searching through the deps, find any additional res directories to pass to aapt.
-    ImmutableList<Path> resDirectories = FluentIterable.from(transitiveAndroidResourceDeps.get())
-        .transform(GET_RES_FOR_RULE)
-        .toList();
+    ImmutableSet<Path> pathsToSymbolsOfDeps = FluentIterable.from(getNonEmptyResourceDeps())
+        .transform(GET_RES_SYMBOLS_TXT)
+        .toSet();
 
-    Path dummyManifestFile = BuildTargets.getGenPath(
-        getBuildTarget(), "__%s_dummy_manifest/AndroidManifest.xml");
-    steps.addAll(GenRDotTxtUtil.createSteps(
-        resDirectories,
-        pathToTextSymbolsDir,
-        rDotJavaPackageSupplier,
-        /* isTempRDotJava */ true,
-        dummyManifestFile));
+    steps.add(new MiniAapt(res, pathToTextSymbolsFile, pathsToSymbolsOfDeps));
 
     buildableContext.recordArtifact(pathToTextSymbolsFile);
 
@@ -378,13 +346,15 @@ public class AndroidResource extends AbstractBuildRule
 
   @Override
   public Sha1HashCode getAbiKeyForDeps() {
-    // We hash the transitive dependencies and not just the first order deps because we pass these
-    // to aapt to generate R.java/R.txt.
-    // Transitive dependencies includes this rule itself; filter it out.
-    return HasAndroidResourceDeps.ABI_HASHER.apply(Iterables.filter(
-        transitiveAndroidResourceDeps.get(),
-        Predicates.not(
-            Predicates.equalTo((HasAndroidResourceDeps) AndroidResource.this))));
+    return HasAndroidResourceDeps.ABI_HASHER.apply(
+        FluentIterable.from(getNonEmptyResourceDeps())
+            .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR));
+  }
+
+  private Iterable<HasAndroidResourceDeps> getNonEmptyResourceDeps() {
+    return FluentIterable.from(getDeps())
+        .filter(HasAndroidResourceDeps.class)
+        .filter(NON_EMPTY_RESOURCE);
   }
 
   @Override
