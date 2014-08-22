@@ -43,6 +43,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Console that provides rich, updating ansi output about the current build.
@@ -60,6 +61,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>> threadsToRunningEvent;
   private final ConcurrentMap<Long, Optional<? extends LeafEvent>> threadsToRunningStep;
+  private final AtomicInteger numRulesCompleted = new AtomicInteger();
 
   private final ConcurrentLinkedQueue<ConsoleEvent> logEvents;
 
@@ -135,6 +137,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
     long parseTime = logEventPair("PARSING BUILD FILES",
+        /* suffix */ Optional.<String>absent(),
         currentTimeMillis,
         0L,
         parseStarted,
@@ -144,7 +147,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // If parsing has not finished, then there is no build rule information to print yet.
     if (parseTime != UNFINISHED_EVENT_PAIR) {
       // Log build time, excluding time spent in parsing.
+      Optional<String> suffix = Optional.absent();
+      if (buildStarted != null && buildStarted.getNumRulesToBuild().isPresent()) {
+        suffix = Optional.of(
+            "(" + numRulesCompleted + "/" + buildStarted.getNumRulesToBuild().get() + " JOBS RUN)");
+      }
       long buildTime = logEventPair("BUILDING",
+          suffix,
           currentTimeMillis,
           parseTime,
           buildStarted,
@@ -155,7 +164,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         renderRules(currentTimeMillis, lines);
       }
 
-      logEventPair("INSTALLING", currentTimeMillis,  0L, installStarted, installFinished, lines);
+      logEventPair("INSTALLING",
+          /* suffix */ Optional.<String>absent(),
+          currentTimeMillis,
+          0L,
+          installStarted,
+          installFinished,
+          lines);
     }
     renderLogMessages(lines);
     return lines.build();
@@ -254,6 +269,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     threadsToRunningEvent.put(finished.getThreadId(), Optional.<BuildRuleEvent>absent());
+    numRulesCompleted.getAndIncrement();
   }
 
   @Subscribe

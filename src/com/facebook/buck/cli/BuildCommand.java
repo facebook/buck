@@ -39,7 +39,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
@@ -94,15 +96,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
-    // Post the build started event, setting it to the Parser recorded start time if appropriate.
-    if (getParser().getParseStartTime().isPresent()) {
-      getBuckEventBus().post(
-          BuildEvent.started(buildTargets),
-          getParser().getParseStartTime().get());
-    } else {
-      getBuckEventBus().post(BuildEvent.started(buildTargets));
-    }
-
     // Parse the build files to create a ActionGraph.
     ActionGraph actionGraph;
     try {
@@ -114,6 +107,16 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
+    }
+
+    // Post the build started event, setting it to the Parser recorded start time if appropriate.
+    int numRulesToBuild = getNumRulesToBuild(buildTargets, actionGraph);
+    if (getParser().getParseStartTime().isPresent()) {
+      getBuckEventBus().post(
+          BuildEvent.started(buildTargets, numRulesToBuild),
+          getParser().getParseStartTime().get());
+    } else {
+      getBuckEventBus().post(BuildEvent.started(buildTargets, numRulesToBuild));
     }
 
     // Create and execute the build.
@@ -138,6 +141,42 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
 
     return exitCode;
+  }
+
+  private static int getNumRulesToBuild(
+      ImmutableSet<BuildTarget> buildTargets,
+      final ActionGraph actionGraph) {
+    Set<BuildRule> baseBuildRules = FluentIterable
+        .from(buildTargets)
+        .transform(new Function<HasBuildTarget, BuildRule>() {
+                     @Override
+                     public BuildRule apply(HasBuildTarget hasBuildTarget) {
+                       return actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget());
+                     }
+                   })
+        .toSet();
+
+    Set<BuildRule> allBuildRules = Sets.newHashSet();
+    for (BuildRule rule : baseBuildRules) {
+      addTransitiveDepsForRule(rule, allBuildRules);
+    }
+    allBuildRules.addAll(baseBuildRules);
+    return allBuildRules.size();
+  }
+
+  private static void addTransitiveDepsForRule(
+      BuildRule buildRule,
+      Set<BuildRule> transitiveDeps) {
+    ImmutableSortedSet<BuildRule> deps = buildRule.getDeps();
+    if (deps.isEmpty()) {
+      return;
+    }
+    for (BuildRule dep : deps) {
+      if (!transitiveDeps.contains(dep)) {
+        transitiveDeps.add(dep);
+        addTransitiveDepsForRule(dep, transitiveDeps);
+      }
+    }
   }
 
   @SuppressWarnings("PMD.EmptyCatchBlock")

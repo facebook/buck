@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
@@ -90,6 +91,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * Adds a line about a pair of start and finished events to lines.
    *
    * @param prefix Prefix to print for this event pair.
+   * @param suffix Suffix to print for this event pair.
    * @param currentMillis The current time in milliseconds.
    * @param offsetMs Offset to remove from calculated time.  Set this to a non-zero value if the
    *     event pair would contain another event.  For example, build time includes parse time, but
@@ -102,19 +104,19 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    *    otherwise {@link AbstractConsoleEventBusListener#UNFINISHED_EVENT_PAIR}.
    */
   protected long logEventPair(String prefix,
+      Optional<String> suffix,
       long currentMillis,
       long offsetMs,
-      BuckEvent startEvent,
-      BuckEvent finishedEvent,
+      @Nullable BuckEvent startEvent,
+      @Nullable BuckEvent finishedEvent,
       ImmutableList.Builder<String> lines) {
     long result = UNFINISHED_EVENT_PAIR;
     if (startEvent == null) {
       return result;
     }
-    boolean isEventFinished = finishedEvent != null;
-    String parseLine = (isEventFinished ? "[-] " : "[+] ") + prefix + "...";
+    String parseLine = (finishedEvent != null ? "[-] " : "[+] ") + prefix + "...";
     long elapsedTimeMs;
-    if (isEventFinished) {
+    if (finishedEvent != null) {
       elapsedTimeMs = finishedEvent.getTimestamp() - startEvent.getTimestamp();
       parseLine += "FINISHED ";
       result = elapsedTimeMs;
@@ -122,6 +124,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       elapsedTimeMs = currentMillis - startEvent.getTimestamp();
     }
     parseLine += formatElapsedTime(elapsedTimeMs - offsetMs);
+    if (suffix.isPresent()) {
+      parseLine += " " + suffix.get();
+    }
     lines.add(parseLine);
 
     return result;

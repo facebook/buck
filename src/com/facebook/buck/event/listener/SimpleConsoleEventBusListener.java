@@ -24,6 +24,7 @@ import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 
@@ -52,6 +53,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     super.parseFinished(finished);
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     this.parseTime.set(logEventPair("PARSING BUILD FILES",
+        /* suffix */ Optional.<String>absent(),
         clock.currentTimeMillis(),
         0L,
         parseStarted,
@@ -66,6 +68,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     super.buildFinished(finished);
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     logEventPair("BUILDING",
+        /* suffix */ Optional.<String>absent(),
         clock.currentTimeMillis(),
         parseTime.get(),
         buildStarted,
@@ -80,6 +83,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     super.installFinished(finished);
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     logEventPair("INSTALLING",
+        /* suffix */ Optional.<String>absent(),
         clock.currentTimeMillis(),
         0L,
         installStarted,
