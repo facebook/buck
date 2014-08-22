@@ -89,44 +89,14 @@ public class Parser {
 
   private final BuildTargetParser buildTargetParser;
 
-  /**
-   * The build files that have been parsed and whose build rules are in
-   * {@link #memoizedTargetNodes}.
-   */
-  private final ListMultimap<Path, Map<String, Object>> parsedBuildFiles;
+  private final CachedState state;
 
-  /**
-   * We parse a build file in search for one particular rule; however, we also keep track of the
-   * other rules that were also parsed from it.
-   */
-  private final Map<BuildTarget, TargetNode<?>> memoizedTargetNodes;
-
-
-  private final Map<BuildTarget, Path> targetsToFile;
   private final ImmutableSet<Pattern> tempFilePatterns;
 
   /**
-   * True if all build files have been parsed and so all rules are in {@link #memoizedTargetNodes}.
+   * True if all build files have been parsed and so all rules are in the {@link CachedState}.
    */
   private boolean allBuildFilesParsed;
-
-  /**
-   * Files included by build files. If the default includes are changed, then build files need to be
-   * reevaluated with the new includes, so the includes used when populating the rule cache are
-   * stored between requests to parse build files and the cache is invalidated and build files
-   * reevaluated if the includes change.
-   */
-  @Nullable
-  private List<String> cacheDefaultIncludes;
-
-  /**
-   * Environment used by build files. If the environment is changed, then build files need to be
-   * reevaluated with the new environment, so the environment used when populating the rule cache
-   * is stored between requests to parse build files and the cache is invalidated and build files
-   * reevaluated if the environment changes.
-   */
-  @Nullable
-  private ImmutableMap<String, String> cacheEnvironment;
 
   private final Repository repository;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
@@ -247,14 +217,12 @@ public class Parser {
     this.repository = Preconditions.checkNotNull(repository);
     this.buildFileTreeCache = new BuildFileTreeCache(
         Preconditions.checkNotNull(buildFileTreeSupplier));
-    this.memoizedTargetNodes = Maps.newHashMap();
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
     this.buildFileParserFactory = Preconditions.checkNotNull(buildFileParserFactory);
     this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
-    this.parsedBuildFiles = ArrayListMultimap.create();
-    this.targetsToFile = Maps.newHashMap();
     this.buildFileDependents = ArrayListMultimap.create();
     this.tempFilePatterns = tempFilePatterns;
+    this.state = new CachedState();
   }
 
   public BuildTargetParser getBuildTargetParser() {
@@ -270,7 +238,7 @@ public class Parser {
    * files in the project were parsed and the includes and environment haven't changed since the
    * rules were cached.
    *
-   * @param buildFile the build file to look up in the {@link #parsedBuildFiles} cache.
+   * @param buildFile the build file to look up in the {@link CachedState}.
    * @param includes the files to include before executing the build file.
    * @param env the environment to execute the build file in.
    * @return true if the build file has already been parsed and its rules are cached.
@@ -279,9 +247,9 @@ public class Parser {
       Path buildFile,
       Iterable<String> includes,
       ImmutableMap<String, String> env) {
-    boolean includesChanged = invalidateCacheOnIncludeChange(includes);
-    boolean environmentChanged = invalidateCacheOnEnvironmentChange(env);
-    boolean fileParsed = parsedBuildFiles.containsKey(normalize(buildFile));
+    boolean includesChanged = state.invalidateCacheOnIncludeChange(includes);
+    boolean environmentChanged = state.invalidateCacheOnEnvironmentChange(env);
+    boolean fileParsed = state.isParsed(buildFile);
     return !includesChanged && !environmentChanged && (allBuildFilesParsed || fileParsed);
   }
 
@@ -296,50 +264,13 @@ public class Parser {
   private synchronized boolean isCacheComplete(
       Iterable<String> includes,
       ImmutableMap<String, String> env) {
-    boolean includesChanged = invalidateCacheOnIncludeChange(includes);
-    boolean environmentChanged = invalidateCacheOnEnvironmentChange(env);
+    boolean includesChanged = state.invalidateCacheOnIncludeChange(includes);
+    boolean environmentChanged = state.invalidateCacheOnEnvironmentChange(env);
     return !includesChanged && !environmentChanged && allBuildFilesParsed;
   }
 
-  /**
-   * Invalidates the cached build rules if {@code includes} have changed since the last call.
-   * If the cache is invalidated the new {@code includes} used to build the new cache are stored.
-   *
-   * @param includes the files to include before executing the build file.
-   * @return true if the cache was invalidated, false if the cache is still valid.
-   */
-  private synchronized boolean invalidateCacheOnIncludeChange(Iterable<String> includes) {
-    List<String> includesList = Lists.newArrayList(Preconditions.checkNotNull(includes));
-    if (!includesList.equals(this.cacheDefaultIncludes)) {
-      LOG.debug("Parser invalidating entire cache on default include change.");
-      invalidateCache();
-      this.cacheDefaultIncludes = includesList;
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Invalidates the cached build rules if {@code environment} has changed since the last call.
-   * If the cache is invalidated the new {@code environment} used to build the new cache is stored.
-   *
-   * @param environment the environment to execute the build file in.
-   * @return true if the cache was invalidated, false if the cache is still valid.
-   */
-  private synchronized boolean invalidateCacheOnEnvironmentChange(
-      ImmutableMap<String, String> environment) {
-    if (!Preconditions.checkNotNull(environment).equals(cacheEnvironment)) {
-      LOG.debug("Parser invalidating entire cache on environment change.");
-      invalidateCache();
-      this.cacheEnvironment = environment;
-      return true;
-    }
-    return false;
-  }
-
   private synchronized void invalidateCache() {
-    parsedBuildFiles.clear();
-    memoizedTargetNodes.clear();
+    state.invalidateAll();
     allBuildFilesParsed = false;
   }
 
@@ -425,68 +356,7 @@ public class Parser {
 
   @Nullable
   public synchronized TargetNode<?> getTargetNode(BuildTarget buildTarget) {
-    // Fast path.
-    TargetNode<?> toReturn = memoizedTargetNodes.get(buildTarget);
-    if (toReturn != null) {
-      return toReturn;
-    }
-
-    BuildTarget unflavored = buildTarget.getUnflavoredTarget();
-    List<Map<String, Object>> rules =
-        Preconditions.checkNotNull(parsedBuildFiles.get(normalize(unflavored.getBuildFilePath())));
-    for (Map<String, Object> map : rules) {
-
-      if (!buildTarget.getShortNameOnly().equals(map.get("name"))) {
-        continue;
-      }
-
-      BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
-      targetsToFile.put(
-          unflavored,
-          normalize(Paths.get((String) map.get("buck.base_path")))
-              .resolve("BUCK").toAbsolutePath());
-
-      Description<?> description = repository.getDescription(buildRuleType);
-      if (description == null) {
-        throw new HumanReadableException("Unrecognized rule %s while parsing %s%s.",
-            buildRuleType,
-            BuildTarget.BUILD_TARGET_PREFIX,
-            unflavored.getBuildFilePath());
-      }
-
-      if ((description instanceof Flavored) &&
-          !((Flavored) description).hasFlavor(buildTarget.getFlavor())) {
-          throw new HumanReadableException("Unrecognized flavor in target %s while parsing %s%s.",
-            buildTarget,
-            BuildTarget.BUILD_TARGET_PREFIX,
-            buildTarget.getBuildFilePath());
-      }
-
-      BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
-          map,
-          repository.getFilesystem(),
-          buildTargetParser,
-          // Although we store the rule by its unflavoured name, when we construct it, we need the
-          // flavour.
-          buildTarget,
-          ruleKeyBuilderFactory);
-      TargetNode<?> targetNode;
-      try {
-        targetNode = new TargetNode<>(description, factoryParams);
-      } catch (NoSuchBuildTargetException e) {
-        //
-        throw new HumanReadableException(e);
-      }
-
-      TargetNode<?> existingTargetNode = memoizedTargetNodes.put(buildTarget, targetNode);
-      if (existingTargetNode != null) {
-        throw new HumanReadableException("Duplicate definition for " + unflavored);
-      }
-
-      // PMD considers it bad form to return while in a loop.
-    }
-
-    return memoizedTargetNodes.get(buildTarget);
+    return state.get(buildTarget);
   }
 
   /**
@@ -722,7 +592,7 @@ public class Parser {
     } else {
       LOG.debug("Not parsing %s file (already in cache)", BuckConstant.BUILD_RULES_FILE_NAME);
     }
-    return parsedBuildFiles.get(normalize(buildFile));
+    return state.getRawRules(buildFile);
   }
 
   /**
@@ -747,14 +617,7 @@ public class Parser {
             repository.getAbsolutePathToBuildFile(target));
       }
 
-      targetsToFile.put(
-          target,
-          normalize(Paths.get((String) map.get("buck.base_path")))
-              .resolve("BUCK").toAbsolutePath());
-
-      parsedBuildFiles.put(
-          normalize(target.getBuildFilePath()),
-          map);
+      state.put(target, map);
     }
   }
 
@@ -792,16 +655,7 @@ public class Parser {
   ImmutableSet<BuildTarget> filterTargets(RuleJsonPredicate filter)
       throws NoSuchBuildTargetException {
 
-    ImmutableSet.Builder<BuildTarget> matchingTargets = ImmutableSet.builder();
-    for (Map<String, Object> map : parsedBuildFiles.values()) {
-      BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
-      BuildTarget target = parseBuildTargetFromRawRule(map);
-      if (filter.isMatch(map, buildRuleType, target)) {
-        matchingTargets.add(target);
-      }
-    }
-
-    return matchingTargets.build();
+    return state.filterTargets(filter);
   }
 
   /**
@@ -849,8 +703,7 @@ public class Parser {
           projectFilesystem.getRootPath(), filesystem.getRootPath()));
     }
     if (!isCacheComplete(includes, environment)) {
-      memoizedTargetNodes.clear();
-      parsedBuildFiles.clear();
+      state.invalidateAll();
       parseRawRulesInternal(
           ProjectBuildFileParser.getAllRulesInProject(
               buildFileParserFactory,
@@ -942,7 +795,7 @@ public class Parser {
       }
 
       // Invalidate the raw rules and targets dependent on this file.
-      invalidateDependents(path);
+      state.invalidateDependents(path);
 
     } else {
       // Non-path change event, likely an overflow due to many change events: invalidate everything.
@@ -976,7 +829,7 @@ public class Parser {
   private synchronized void invalidateContainingBuildFile(Path path) throws IOException {
     String packageBuildFilePath =
         buildFileTreeCache.get().getBasePathOfAncestorTarget(path).toString();
-    invalidateDependents(
+    state.invalidateDependents(
         repository.getFilesystem().getFileForRelativePath(
             packageBuildFilePath + '/' + BuckConstant.BUILD_RULES_FILE_NAME).toPath());
   }
@@ -984,43 +837,6 @@ public class Parser {
   private boolean isPathCreateOrDeleteEvent(WatchEvent<?> event) {
     return event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
         event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
-  }
-
-  /**
-   * Remove the targets and rules defined by {@code path} from the cache and recursively remove the
-   * targets and rules defined by files that transitively include {@code path} from the cache.
-   * @param path The File that has changed.
-   */
-  private synchronized void invalidateDependents(Path path) {
-    // Normalize path to ensure it hashes equally with map keys.
-    path = normalize(path);
-
-    if (parsedBuildFiles.containsKey(path)) {
-      LOG.debug("Parser invalidating %s cache", path.toAbsolutePath());
-
-      // Remove all targets defined by path from cache.
-      for (Map<String, Object> rawRule : parsedBuildFiles.get(path)) {
-        BuildTarget target = parseBuildTargetFromRawRule(rawRule);
-        memoizedTargetNodes.remove(target);
-      }
-
-      // Remove all rules defined in path from cache.
-      parsedBuildFiles.removeAll(path);
-
-      // All targets have no longer been parsed and cached.
-      allBuildFilesParsed = false;
-    }
-
-    // Recursively invalidate dependents.
-    for (Path dependent : buildFileDependents.get(path)) {
-
-      if (!dependent.equals(path)) {
-        invalidateDependents(dependent);
-      }
-    }
-
-    // Dependencies will be repopulated when files are re-parsed.
-    buildFileDependents.removeAll(path);
   }
 
   /**
@@ -1075,6 +891,222 @@ public class Parser {
       eventBus.post(ParseEvent.started(buildTargets), parseStartEvent.get());
     } else {
       eventBus.post(ParseEvent.started(buildTargets));
+    }
+  }
+
+  private class CachedState {
+
+    /**
+     * The build files that have been parsed and whose build rules are in
+     * {@link #memoizedTargetNodes}.
+     */
+    private final ListMultimap<Path, Map<String, Object>> parsedBuildFiles;
+
+    /**
+     * We parse a build file in search for one particular rule; however, we also keep track of the
+     * other rules that were also parsed from it.
+     */
+    private final Map<BuildTarget, TargetNode<?>> memoizedTargetNodes;
+
+    /**
+     * Environment used by build files. If the environment is changed, then build files need to be
+     * reevaluated with the new environment, so the environment used when populating the rule cache
+     * is stored between requests to parse build files and the cache is invalidated and build files
+     * reevaluated if the environment changes.
+     */
+    @Nullable
+    private ImmutableMap<String, String> cacheEnvironment;
+
+    /**
+     * Files included by build files. If the default includes are changed, then build files need to
+     * be reevaluated with the new includes, so the includes used when populating the rule cache are
+     * stored between requests to parse build files and the cache is invalidated and build files
+     * reevaluated if the includes change.
+     */
+    @Nullable
+    private List<String> cacheDefaultIncludes;
+
+    private final Map<BuildTarget, Path> targetsToFile;
+
+    public CachedState() {
+      this.memoizedTargetNodes = Maps.newHashMap();
+      this.parsedBuildFiles = ArrayListMultimap.create();
+      this.targetsToFile = Maps.newHashMap();
+    }
+
+    public void invalidateAll() {
+      parsedBuildFiles.clear();
+      memoizedTargetNodes.clear();
+      targetsToFile.clear();
+    }
+
+    /**
+     * Invalidates the cached build rules if {@code environment} has changed since the last call.
+     * If the cache is invalidated the new {@code environment} used to build the new cache is
+     * stored.
+     *
+     * @param environment the environment to execute the build file in.
+     * @return true if the cache was invalidated, false if the cache is still valid.
+     */
+    private synchronized boolean invalidateCacheOnEnvironmentChange(
+        ImmutableMap<String, String> environment) {
+      if (!Preconditions.checkNotNull(environment).equals(cacheEnvironment)) {
+        LOG.debug("Parser invalidating entire cache on environment change.");
+        invalidateCache();
+        this.cacheEnvironment = environment;
+        return true;
+      }
+      return false;
+    }
+
+    /**
+     * Invalidates the cached build rules if {@code includes} have changed since the last call.
+     * If the cache is invalidated the new {@code includes} used to build the new cache are stored.
+     *
+     * @param includes the files to include before executing the build file.
+     * @return true if the cache was invalidated, false if the cache is still valid.
+     */
+    private synchronized boolean invalidateCacheOnIncludeChange(Iterable<String> includes) {
+      List<String> includesList = Lists.newArrayList(Preconditions.checkNotNull(includes));
+      if (!includesList.equals(this.cacheDefaultIncludes)) {
+        LOG.debug("Parser invalidating entire cache on default include change.");
+        invalidateCache();
+        this.cacheDefaultIncludes = includesList;
+        return true;
+      }
+      return false;
+    }
+
+    /**
+     * Remove the targets and rules defined by {@code path} from the cache and recursively remove
+     * the targets and rules defined by files that transitively include {@code path} from the cache.
+     * @param path The File that has changed.
+     */
+    synchronized void invalidateDependents(Path path) {
+      // Normalize path to ensure it hashes equally with map keys.
+      path = normalize(path);
+
+      if (parsedBuildFiles.containsKey(path)) {
+        LOG.debug("Parser invalidating %s cache", path.toAbsolutePath());
+
+        // Remove all targets defined by path from cache.
+        for (Map<String, Object> rawRule : parsedBuildFiles.get(path)) {
+          BuildTarget target = parseBuildTargetFromRawRule(rawRule);
+          memoizedTargetNodes.remove(target);
+        }
+
+        // Remove all rules defined in path from cache.
+        parsedBuildFiles.removeAll(path);
+
+        // All targets have no longer been parsed and cached.
+        allBuildFilesParsed = false;
+      }
+
+      // Recursively invalidate dependents.
+      for (Path dependent : buildFileDependents.get(path)) {
+
+        if (!dependent.equals(path)) {
+          invalidateDependents(dependent);
+        }
+      }
+
+      // Dependencies will be repopulated when files are re-parsed.
+      buildFileDependents.removeAll(path);
+    }
+
+    public boolean isParsed(Path buildFile) {
+      return parsedBuildFiles.containsKey(normalize(buildFile));
+    }
+
+    public List<Map<String, Object>> getRawRules(Path buildFile) {
+      return Preconditions.checkNotNull(parsedBuildFiles.get(normalize(buildFile)));
+    }
+
+    public void put(BuildTarget target, Map<String, Object> rawRules) {
+      parsedBuildFiles.put(normalize(target.getBuildFilePath()), rawRules);
+
+      targetsToFile.put(
+          target,
+          normalize(Paths.get((String) rawRules.get("buck.base_path")))
+              .resolve("BUCK").toAbsolutePath());
+    }
+
+    public ImmutableSet<BuildTarget> filterTargets(RuleJsonPredicate filter) {
+      ImmutableSet.Builder<BuildTarget> matchingTargets = ImmutableSet.builder();
+      for (Map<String, Object> map : parsedBuildFiles.values()) {
+        BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
+        BuildTarget target = parseBuildTargetFromRawRule(map);
+        if (filter.isMatch(map, buildRuleType, target)) {
+          matchingTargets.add(target);
+        }
+      }
+
+      return matchingTargets.build();
+    }
+
+    @Nullable
+    public TargetNode<?> get(BuildTarget buildTarget) {
+      // Fast path.
+      TargetNode<?> toReturn = memoizedTargetNodes.get(buildTarget);
+      if (toReturn != null) {
+        return toReturn;
+      }
+
+      BuildTarget unflavored = buildTarget.getUnflavoredTarget();
+      List<Map<String, Object>> rules = state.getRawRules(unflavored.getBuildFilePath());
+      for (Map<String, Object> map : rules) {
+
+        if (!buildTarget.getShortNameOnly().equals(map.get("name"))) {
+          continue;
+        }
+
+        BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
+        targetsToFile.put(
+            unflavored,
+            normalize(Paths.get((String) map.get("buck.base_path")))
+                .resolve("BUCK").toAbsolutePath());
+
+        Description<?> description = repository.getDescription(buildRuleType);
+        if (description == null) {
+          throw new HumanReadableException("Unrecognized rule %s while parsing %s%s.",
+              buildRuleType,
+              BuildTarget.BUILD_TARGET_PREFIX,
+              unflavored.getBuildFilePath());
+        }
+
+        if ((description instanceof Flavored) &&
+            !((Flavored) description).hasFlavor(buildTarget.getFlavor())) {
+          throw new HumanReadableException("Unrecognized flavor in target %s while parsing %s%s.",
+              buildTarget,
+              BuildTarget.BUILD_TARGET_PREFIX,
+              buildTarget.getBuildFilePath());
+        }
+
+        BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
+            map,
+            repository.getFilesystem(),
+            buildTargetParser,
+            // Although we store the rule by its unflavoured name, when we construct it, we need the
+            // flavour.
+            buildTarget,
+            ruleKeyBuilderFactory);
+        TargetNode<?> targetNode;
+        try {
+          targetNode = new TargetNode<>(description, factoryParams);
+        } catch (NoSuchBuildTargetException e) {
+          //
+          throw new HumanReadableException(e);
+        }
+
+        TargetNode<?> existingTargetNode = memoizedTargetNodes.put(buildTarget, targetNode);
+        if (existingTargetNode != null) {
+          throw new HumanReadableException("Duplicate definition for " + unflavored);
+        }
+
+        // PMD considers it bad form to return while in a loop.
+      }
+
+      return memoizedTargetNodes.get(buildTarget);
     }
   }
 }
