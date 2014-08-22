@@ -17,9 +17,8 @@
 package com.facebook.buck.apple.xcode;
 
 import com.dd.plist.NSDictionary;
-import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleTest;
-import com.facebook.buck.apple.AppleTestDescription;
+import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfig;
@@ -27,10 +26,13 @@ import com.facebook.buck.apple.XcodeWorkspaceConfig;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -50,6 +52,8 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
@@ -106,33 +110,28 @@ public class WorkspaceAndProjectGenerator {
         workspaceName,
         outputDirectory);
 
-    ImmutableSet<BuildRule> mainRules = ImmutableSet.copyOf(
-        mainTargetGraph.getActionGraph().getNodes());
+    ImmutableSet<BuildRule> orderedBuildRules =
+      AppleBuildRules.getSchemeBuildableRules(workspaceBuildable.getSrcTarget());
+    ImmutableSet.Builder<BuildRule> orderedTestBuildRulesBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder = ImmutableSet.builder();
 
-    ImmutableSet.Builder<BuildRule> testRulesBuilder = ImmutableSet.builder();
-    if (testTargetGraph.isPresent()) {
-      for (BuildRule buildRule : testTargetGraph.get().getActionGraph().getNodes()) {
-        if (mainRules.contains(buildRule)) {
-          continue;
-        }
-        if (buildRule.getType().equals(AppleTestDescription.TYPE)) {
-          AppleTest test = (AppleTest) buildRule;
-          if (mainRules.contains(test.getTestBundle())) {
-            continue;
-          }
-        }
-        testRulesBuilder.add(buildRule);
-      }
-    }
-    ImmutableSet<BuildRule> testRules = testRulesBuilder.build();
+    getOrderedTestRules(
+        projectTargetGraph.getActionGraph(),
+        testTargetGraph,
+        orderedBuildRules,
+        orderedTestBuildRulesBuilder,
+        orderedTestBundleRulesBuilder);
+
+    ImmutableSet<BuildRule> orderedTestBuildRules = orderedTestBuildRulesBuilder.build();
+
+    Multimap<Path, BuildRule> buildRulesByTargetBasePath =
+      BuildRules.buildRulesByTargetBasePath(
+          Iterables.concat(orderedBuildRules, orderedTestBuildRules));
 
     ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
       ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
       ImmutableMap.builder();
-
-    Multimap<Path, BuildRule> buildRulesByTargetBasePath =
-        BuildRules.buildRulesByTargetBasePath(Iterables.concat(mainRules, testRules));
 
     for (Path basePath : buildRulesByTargetBasePath.keySet()) {
       // From each target we find that package's xcode_project_config rule and generate it if
@@ -233,12 +232,14 @@ public class WorkspaceAndProjectGenerator {
       }
     }
     Path workspacePath = workspaceGenerator.writeWorkspace();
+
+    ImmutableSet<BuildRule> orderedTestBundleRules = orderedTestBundleRulesBuilder.build();
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        projectTargetGraph,
         workspaceBuildable.getSrcTarget(),
-        AppleBuildRules.getSchemeBuildableRules(workspaceBuildable.getSrcTarget()),
-        testRules,
+        orderedBuildRules,
+        orderedTestBuildRules,
+        orderedTestBundleRules,
         workspaceName,
         outputDirectory.resolve(workspaceName + ".xcworkspace"),
         workspaceBuildable.getActionConfigNames(),
@@ -247,5 +248,60 @@ public class WorkspaceAndProjectGenerator {
     schemeGenerator.writeScheme();
 
     return workspacePath;
+  }
+
+  private static final void getOrderedTestRules(
+      ActionGraph actionGraph,
+      Optional<PartialGraph> testTargetGraph,
+      final ImmutableSet<BuildRule> orderedBuildRules,
+      final ImmutableSet.Builder<BuildRule> orderedTestBuildRulesBuilder,
+      final ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder) {
+    ImmutableSet.Builder<BuildRule> xcodeTargetTestRulesBuilder = ImmutableSet.builder();
+    if (testTargetGraph.isPresent()) {
+      xcodeTargetTestRulesBuilder.addAll(
+          TopologicalSort.sort(
+              testTargetGraph.get().getActionGraph(),
+              new Predicate<BuildRule>() {
+                @Override
+                public boolean apply(@Nullable BuildRule input) {
+                  return AppleBuildRules.isXcodeTargetTestBuildRule(input);
+                }
+              }));
+    }
+    final ImmutableSet<BuildRule> xcodeTargetTestRules = xcodeTargetTestRulesBuilder.build();
+
+    for (BuildRule buildRule : xcodeTargetTestRules) {
+      AppleTest testRule = (AppleTest) buildRule;
+      orderedTestBundleRulesBuilder.add(testRule.getTestBundle());
+    }
+
+    ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder = ImmutableSet.builder();
+    for (BuildRule testRule : xcodeTargetTestRules) {
+      Iterable<BuildRule> testRulesIterable = Iterables.concat(
+          AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
+              AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
+              testRule,
+              Optional.<ImmutableSet<BuildRuleType>>absent()),
+          ImmutableSet.of(testRule));
+
+      recursiveTestRulesBuilder.addAll(testRulesIterable);
+    }
+
+    final Set<BuildRule> includedTestRules =
+        Sets.difference(recursiveTestRulesBuilder.build(), orderedBuildRules);
+
+    orderedTestBuildRulesBuilder.addAll(TopologicalSort.sort(
+        actionGraph,
+        new Predicate<BuildRule>() {
+          @Override
+          public boolean apply(@Nullable BuildRule input) {
+            if (!includedTestRules.contains(input) ||
+                !AppleBuildRules.isXcodeTargetBuildRuleType(input.getType())) {
+              return false;
+            }
+
+            return true;
+          }
+        }));
   }
 }

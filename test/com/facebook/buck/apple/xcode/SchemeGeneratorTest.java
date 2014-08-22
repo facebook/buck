@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode;
 
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -37,7 +36,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -114,13 +112,6 @@ public class SchemeGeneratorTest {
         ImmutableSortedSet.of(leftRule, rightRule),
         appleLibraryDescription);
 
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(
-        ImmutableSet.<BuildRule>of(
-            rootRule,
-            leftRule,
-            rightRule,
-            childRule));
-
     ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
       ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
@@ -159,9 +150,9 @@ public class SchemeGeneratorTest {
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        partialGraph,
         childRule,
         ImmutableSet.of(rootRule, leftRule, rightRule, childRule),
+        ImmutableSet.<BuildRule>of(),
         ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -202,13 +193,12 @@ public class SchemeGeneratorTest {
         BuildTarget.builder("//foo", "root").build(),
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription);
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        partialGraph,
         rootRule,
         ImmutableSet.<BuildRule>of(rootRule),
+        ImmutableSet.<BuildRule>of(),
         ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -229,10 +219,6 @@ public class SchemeGeneratorTest {
         BuildTarget.builder("//foo", "root").build(),
         ImmutableSortedSet.of(xcodeNativeRule),
         appleLibraryDescription);
-
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(
-        ImmutableSet.of(
-            rootRule));
 
     ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
       ImmutableMap.builder();
@@ -260,9 +246,9 @@ public class SchemeGeneratorTest {
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        partialGraph,
         rootRule,
         ImmutableSet.<BuildRule>of(xcodeNativeRule, rootRule),
+        ImmutableSet.<BuildRule>of(),
         ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -297,6 +283,22 @@ public class SchemeGeneratorTest {
 
   @Test
   public void schemeBuildsAndTestsAppleTestTargets() throws Exception {
+    BuildRuleParams testDepParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "testDep").build())
+            .setType(AppleLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg testDepArg =
+        appleLibraryDescription.createUnpopulatedConstructorArg();
+    testDepArg.configs = ImmutableMap.of();
+    testDepArg.srcs = ImmutableList.of();
+    testDepArg.frameworks = ImmutableSortedSet.of();
+    testDepArg.deps = Optional.absent();
+    testDepArg.gid = Optional.absent();
+    testDepArg.headerPathPrefix = Optional.absent();
+    testDepArg.useBuckHeaderMaps = Optional.absent();
+    BuildRule testDepRule =
+        appleLibraryDescription.createBuildRule(testDepParams, new BuildRuleResolver(), testDepArg);
+
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
@@ -306,7 +308,7 @@ public class SchemeGeneratorTest {
     libraryArg.configs = ImmutableMap.of();
     libraryArg.srcs = ImmutableList.of();
     libraryArg.frameworks = ImmutableSortedSet.of();
-    libraryArg.deps = Optional.absent();
+    libraryArg.deps = Optional.of(ImmutableSortedSet.of(testDepRule));
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
     libraryArg.useBuckHeaderMaps = Optional.absent();
@@ -355,20 +357,31 @@ public class SchemeGeneratorTest {
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription);
 
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(
-        ImmutableSet.of(testRule, xctestRule, libraryRule));
-
     ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
         ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
         ImmutableMap.builder();
+
+    PBXTarget testDepTarget = new PBXNativeTarget("testDep");
+    testDepTarget.setGlobalID("testDepGID");
+    testDepTarget.setProductReference(
+        new PBXFileReference(
+            "libDep.a", "libDep.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+    buildRuleToTargetMapBuilder.put(testDepRule, testDepTarget);
+
+    PBXTarget testLibraryTarget = new PBXNativeTarget("testLibrary");
+    testLibraryTarget.setGlobalID("testLibraryGID");
+    testLibraryTarget.setProductReference(
+        new PBXFileReference(
+            "lib.a", "lib.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+    buildRuleToTargetMapBuilder.put(libraryRule, testLibraryTarget);
 
     PBXTarget testTarget = new PBXNativeTarget("test");
     testTarget.setGlobalID("testGID");
     testTarget.setProductReference(
         new PBXFileReference(
             "test.xctest", "test.xctest", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
-    buildRuleToTargetMapBuilder.put(xctestRule, testTarget);
+    buildRuleToTargetMapBuilder.put(testRule, testTarget);
 
     PBXTarget rootTarget = new PBXNativeTarget("root");
     rootTarget.setGlobalID("rootGID");
@@ -379,13 +392,15 @@ public class SchemeGeneratorTest {
 
     Path projectPath = Paths.get("foo/test.xcodeproj/project.pbxproj");
     targetToProjectPathMapBuilder.put(testTarget, projectPath);
+    targetToProjectPathMapBuilder.put(testDepTarget, projectPath);
+    targetToProjectPathMapBuilder.put(testLibraryTarget, projectPath);
     targetToProjectPathMapBuilder.put(rootTarget, projectPath);
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        partialGraph,
         rootRule,
         ImmutableSet.of(rootRule),
+        ImmutableSet.of(testDepRule, testRule),
         ImmutableSet.of(testRule),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -408,7 +423,7 @@ public class SchemeGeneratorTest {
         buildXpath.compile("//BuildAction//BuildableReference/@BlueprintIdentifier");
     NodeList buildNodes = (NodeList) buildExpr.evaluate(scheme, XPathConstants.NODESET);
 
-    List<String> expectedBuildOrdering = ImmutableList.of("rootGID", "testGID");
+    List<String> expectedBuildOrdering = ImmutableList.of("rootGID", "testDepGID", "testGID");
 
     List<String> actualBuildOrdering = Lists.newArrayList();
     for (int i = 0; i < buildNodes.getLength(); i++) {
@@ -490,11 +505,6 @@ public class SchemeGeneratorTest {
         new BuildRuleResolver(),
         arg);
 
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(
-        ImmutableSet.<BuildRule>of(
-            rootRule,
-            testRule));
-
     ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
       ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
@@ -511,18 +521,25 @@ public class SchemeGeneratorTest {
     testTarget.setProductReference(
         new PBXFileReference(
             "test.a", "test.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
-    buildRuleToTargetMapBuilder.put(xctestRule, testTarget);
+    buildRuleToTargetMapBuilder.put(testRule, testTarget);
+    PBXTarget testBundleTarget = new PBXNativeTarget("testBundleRule");
+    testBundleTarget.setGlobalID("testBundleGID");
+    testBundleTarget.setProductReference(
+        new PBXFileReference(
+            "test.xctest", "test.xctest", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+    buildRuleToTargetMapBuilder.put(xctestRule, testBundleTarget);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
     targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
     targetToProjectPathMapBuilder.put(testTarget, pbxprojectPath);
+    targetToProjectPathMapBuilder.put(testBundleTarget, pbxprojectPath);
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        partialGraph,
         rootRule,
         ImmutableSet.of(rootRule),
-        ImmutableSet.of(testRule),
+        ImmutableSet.of(xctestRule),
+        ImmutableSet.of(xctestRule),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -546,7 +563,7 @@ public class SchemeGeneratorTest {
 
     List<String> expectedOrdering = ImmutableList.of(
         "rootGID",
-        "testGID");
+        "testBundleGID");
 
     List<String> actualOrdering = Lists.newArrayList();
     for (int i = 0; i < buildActionNodes.getLength(); i++) {
@@ -559,7 +576,7 @@ public class SchemeGeneratorTest {
         testActionXpath.compile("//TestAction//BuildableReference/@BlueprintIdentifier");
     String testActionBlueprintIdentifier =
         (String) testActionExpr.evaluate(scheme, XPathConstants.STRING);
-    assertThat(testActionBlueprintIdentifier, equalTo("testGID"));
+    assertThat(testActionBlueprintIdentifier, equalTo("testBundleGID"));
 
     XPath launchActionXpath = xpathFactory.newXPath();
     XPathExpression launchActionExpr =
@@ -583,9 +600,6 @@ public class SchemeGeneratorTest {
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription);
 
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(
-        ImmutableSet.<BuildRule>of(rootRule));
-
     ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
       ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
@@ -603,9 +617,9 @@ public class SchemeGeneratorTest {
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        partialGraph,
         rootRule,
         ImmutableSet.of(rootRule),
+        ImmutableSet.<BuildRule>of(),
         ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -647,9 +661,6 @@ public class SchemeGeneratorTest {
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription);
 
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(
-        ImmutableSet.<BuildRule>of(rootRule));
-
     ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
       ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
@@ -667,9 +678,9 @@ public class SchemeGeneratorTest {
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        partialGraph,
         rootRule,
         ImmutableSet.of(rootRule),
+        ImmutableSet.<BuildRule>of(),
         ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -737,8 +748,6 @@ public class SchemeGeneratorTest {
           ImmutableSortedSet.<BuildRule>of(),
           appleLibraryDescription);
 
-      PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
-
       ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
         ImmutableMap.builder();
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
@@ -757,9 +766,9 @@ public class SchemeGeneratorTest {
       clock.setCurrentTimeMillis(49152);
       SchemeGenerator schemeGenerator = new SchemeGenerator(
           projectFilesystem,
-          partialGraph,
           rootRule,
-        ImmutableSet.of(rootRule),
+          ImmutableSet.of(rootRule),
+          ImmutableSet.<BuildRule>of(),
           ImmutableSet.<BuildRule>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -777,8 +786,6 @@ public class SchemeGeneratorTest {
           ImmutableSortedSet.<BuildRule>of(),
           appleLibraryDescription);
 
-      PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
-
       PBXTarget rootTarget = new PBXNativeTarget("rootRule2");
       rootTarget.setGlobalID("root2GID");
       rootTarget.setProductReference(
@@ -790,9 +797,9 @@ public class SchemeGeneratorTest {
       clock.setCurrentTimeMillis(64738);
       SchemeGenerator schemeGenerator = new SchemeGenerator(
           projectFilesystem,
-          partialGraph,
           rootRule,
           ImmutableSet.of(rootRule),
+          ImmutableSet.<BuildRule>of(),
           ImmutableSet.<BuildRule>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -813,8 +820,6 @@ public class SchemeGeneratorTest {
           ImmutableSortedSet.<BuildRule>of(),
           appleLibraryDescription);
 
-      PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
-
       PBXTarget rootTarget = new PBXNativeTarget("rootRule");
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
@@ -826,9 +831,9 @@ public class SchemeGeneratorTest {
       clock.setCurrentTimeMillis(49152);
       SchemeGenerator schemeGenerator = new SchemeGenerator(
           projectFilesystem,
-          partialGraph,
           rootRule,
           ImmutableSet.of(rootRule),
+          ImmutableSet.<BuildRule>of(),
           ImmutableSet.<BuildRule>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -846,8 +851,6 @@ public class SchemeGeneratorTest {
           ImmutableSortedSet.<BuildRule>of(),
           appleLibraryDescription);
 
-      PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.of(rootRule));
-
       PBXTarget rootTarget = new PBXNativeTarget("rootRule");
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
@@ -859,9 +862,9 @@ public class SchemeGeneratorTest {
       clock.setCurrentTimeMillis(64738);
       SchemeGenerator schemeGenerator = new SchemeGenerator(
           projectFilesystem,
-          partialGraph,
           rootRule,
           ImmutableSet.of(rootRule),
+          ImmutableSet.<BuildRule>of(),
           ImmutableSet.<BuildRule>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),

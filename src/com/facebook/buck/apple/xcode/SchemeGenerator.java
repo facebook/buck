@@ -16,27 +16,20 @@
 
 package com.facebook.buck.apple.xcode;
 
-import com.facebook.buck.apple.AppleBuildRules;
-import com.facebook.buck.apple.AppleTest;
-import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.graph.TopologicalSort;
-import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -48,10 +41,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -74,11 +65,13 @@ import javax.xml.transform.stream.StreamResult;
  * Both of these values can be pulled out of {@link ProjectGenerator}.
  */
 class SchemeGenerator {
+  private static final Logger LOG = Logger.get(SchemeGenerator.class);
+
   private final ProjectFilesystem projectFilesystem;
-  private final PartialGraph partialGraph;
   private final BuildRule primaryRule;
   private final ImmutableSet<BuildRule> orderedBuildRules;
-  private final ImmutableSet<BuildRule> testRules;
+  private final ImmutableSet<BuildRule> orderedTestBuildRules;
+  private final ImmutableSet<BuildRule> orderedTestBundleRules;
   private final String schemeName;
   private final Path outputDirectory;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
@@ -87,27 +80,41 @@ class SchemeGenerator {
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
-      PartialGraph partialGraph,
       BuildRule primaryRule,
       Iterable<BuildRule> orderedBuildRules,
-      ImmutableSet<BuildRule> testRules,
+      Iterable<BuildRule> orderedTestBuildRules,
+      Iterable<BuildRule> orderedTestBundleRules,
       String schemeName,
       Path outputDirectory,
       Map<SchemeActionType, String> actionConfigNames,
       Map<BuildRule, PBXTarget> buildRuleToTargetMap,
       Map<PBXTarget, Path> targetToProjectPathMap) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.primaryRule = Preconditions.checkNotNull(primaryRule);
     this.orderedBuildRules = ImmutableSet.copyOf(orderedBuildRules);
-    this.testRules = Preconditions.checkNotNull(testRules);
+    this.orderedTestBuildRules = ImmutableSet.copyOf(orderedTestBuildRules);
+    this.orderedTestBundleRules = ImmutableSet.copyOf(orderedTestBundleRules);
     this.schemeName = Preconditions.checkNotNull(schemeName);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
     this.buildRuleToTargetMap = ImmutableMap.copyOf(buildRuleToTargetMap);
     this.targetToProjectPathMap = ImmutableMap.copyOf(targetToProjectPathMap);
 
+    LOG.debug(
+        "Generating scheme with build rules %s, test build rules %s, test bundle rules %s",
+        orderedBuildRules,
+        orderedTestBuildRules,
+        orderedTestBundleRules);
+
     for (BuildRule rule : orderedBuildRules) {
+      expectTargetMapContainsRule(rule);
+    }
+
+    for (BuildRule rule : orderedTestBuildRules) {
+      expectTargetMapContainsRule(rule);
+    }
+
+    for (BuildRule rule : orderedTestBundleRules) {
       expectTargetMapContainsRule(rule);
     }
   }
@@ -121,57 +128,10 @@ class SchemeGenerator {
   }
 
   public Path writeScheme() throws IOException {
-    final ImmutableSet<BuildRule> realTestRules = ImmutableSet.copyOf(
-        Iterables.filter(testRules, new Predicate<BuildRule>() {
-          @Override
-          public boolean apply(@Nullable BuildRule input) {
-            return AppleBuildRules.isXcodeTargetTestBuildRule(input);
-          }
-        }));
-
-    final List<BuildRule> orderedRealTestRules = TopologicalSort.sort(
-        partialGraph.getActionGraph(),
-        new Predicate<BuildRule>() {
-          @Override
-          public boolean apply(@Nullable BuildRule input) {
-            return realTestRules.contains(input);
-          }
-        });
-
-    ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder = ImmutableSet.builder();
-    for (BuildRule testRule : realTestRules) {
-      Iterable<BuildRule> testRulesIterable = Iterables.concat(
-          AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
-              AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
-              testRule,
-              Optional.<ImmutableSet<BuildRuleType>>absent()),
-          ImmutableSet.of(testRule));
-
-      recursiveTestRulesBuilder.addAll(testRulesIterable);
-    }
-
-    final ImmutableSet<BuildRule> includedTestRules = ImmutableSet.copyOf(
-        Sets.difference(recursiveTestRulesBuilder.build(), ImmutableSet.copyOf(orderedBuildRules)));
-
-    List<BuildRule> orderedTestRules = TopologicalSort.sort(
-        partialGraph.getActionGraph(),
-        new Predicate<BuildRule>() {
-          @Override
-          public boolean apply(@Nullable BuildRule input) {
-            if (!includedTestRules.contains(input) ||
-                !AppleBuildRules.isXcodeTargetBuildRuleType(input.getType())) {
-              return false;
-            }
-
-            expectTargetMapContainsRule(input);
-            return true;
-          }
-        });
-
     Map<BuildRule, XCScheme.BuildableReference>
         buildRuleToBuildableReferenceMap = Maps.newHashMap();
 
-    for (BuildRule rule : Iterables.concat(orderedBuildRules, orderedTestRules)) {
+    for (BuildRule rule : Iterables.concat(orderedBuildRules, orderedTestBuildRules)) {
       PBXTarget target = buildRuleToTargetMap.get(rule);
 
       String blueprintName = target.getProductName();
@@ -191,28 +151,23 @@ class SchemeGenerator {
     XCScheme.BuildAction buildAction = new XCScheme.BuildAction();
 
     // For aesthetic reasons put all non-test build actions before all test build actions.
-    for (BuildRule rule : Iterables.concat(orderedBuildRules, orderedTestRules)) {
-      EnumSet<XCScheme.BuildActionEntry.BuildFor> buildFor;
-      if (testRules.contains(rule)) {
-        buildFor = XCScheme.BuildActionEntry.BuildFor.TEST_ONLY;
-      } else {
-        buildFor = XCScheme.BuildActionEntry.BuildFor.DEFAULT;
-      }
+    for (BuildRule rule : orderedBuildRules) {
+      addBuildActionForRule(
+          buildRuleToBuildableReferenceMap.get(rule),
+          XCScheme.BuildActionEntry.BuildFor.DEFAULT,
+          buildAction);
+    }
 
-      XCScheme.BuildableReference buildableReference = buildRuleToBuildableReferenceMap.get(rule);
-      XCScheme.BuildActionEntry entry = new XCScheme.BuildActionEntry(
-          buildableReference,
-          buildFor);
-      buildAction.addBuildAction(entry);
+    for (BuildRule rule : orderedTestBuildRules) {
+      addBuildActionForRule(
+          buildRuleToBuildableReferenceMap.get(rule),
+          XCScheme.BuildActionEntry.BuildFor.TEST_ONLY,
+          buildAction);
     }
 
     XCScheme.TestAction testAction = new XCScheme.TestAction(
         actionConfigNames.get(SchemeActionType.TEST));
-    for (BuildRule rule : orderedRealTestRules) {
-      if (rule.getType().equals(AppleTestDescription.TYPE)) {
-        AppleTest test = (AppleTest) rule;
-        rule = test.getTestBundle();
-      }
+    for (BuildRule rule : orderedTestBundleRules) {
       XCScheme.BuildableReference buildableReference = buildRuleToBuildableReferenceMap.get(rule);
       XCScheme.TestableReference testableReference =
           new XCScheme.TestableReference(buildableReference);
@@ -261,6 +216,17 @@ class SchemeGenerator {
     }
     return schemePath;
   }
+
+  private static void addBuildActionForRule(
+      XCScheme.BuildableReference buildableReference,
+      EnumSet<XCScheme.BuildActionEntry.BuildFor> buildFor,
+      XCScheme.BuildAction buildAction) {
+      XCScheme.BuildActionEntry entry = new XCScheme.BuildActionEntry(
+          buildableReference,
+          buildFor);
+      buildAction.addBuildAction(entry);
+    }
+
 
   public static Element serializeBuildableReference(
       Document doc,
