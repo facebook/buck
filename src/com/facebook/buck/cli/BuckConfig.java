@@ -573,7 +573,7 @@ public class BuckConfig {
         return Ansi.forceTty();
       case "auto":
       default:
-        return new Ansi(platform);
+        return new Ansi(platform, Optional.fromNullable(environment.get("TERM")));
     }
   }
 

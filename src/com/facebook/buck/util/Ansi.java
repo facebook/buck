@@ -17,9 +17,12 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.environment.Platform;
-
+import com.google.common.base.Optional;
 import java.io.PrintStream;
 
+/**
+ * Encapsulates the specifics of writing to a particular kind of terminal.
+ */
 public final class Ansi {
 
   private static final String RESET = "\u001B[0m";
@@ -60,8 +63,17 @@ public final class Ansi {
   private static final Ansi noTtyAnsi = new Ansi(false /* isAnsiTerminal */);
   private static final Ansi forceTtyAnsi = new Ansi(true /* isAnsiTerminal */);
 
-  public Ansi(Platform platform) {
-    this(isConnectedToTty() && platform != Platform.WINDOWS);
+  /**
+   * Construct an Ansi object and automatically detect whether the current environment supports
+   * fancylike escape sequences.
+   *
+   * @param platform Detected platform
+   * @param termEnvVar The value of the TERM environment variable or Optional.absent() when TERM is
+   *                    unavailable.
+   */
+  public Ansi(Platform platform, Optional<String> termEnvVar) {
+    this(isConnectedToTty() && platform != Platform.WINDOWS &&
+        termEnvVar.isPresent() && !termEnvVar.get().equals("dumb"));
   }
 
   private Ansi(boolean isAnsiTerminal) {

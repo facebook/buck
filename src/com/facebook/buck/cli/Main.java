@@ -837,7 +837,7 @@ public final class Main {
       Console console = new Console(Verbosity.STANDARD_INFORMATION,
           stdOut,
           stdErr,
-          new Ansi(platform));
+          new Ansi(platform, Optional.<String>absent()));
       console.printBuildFailure(e.getHumanReadableErrorMessage());
       return FAIL_EXIT_CODE;
     } catch (InterruptionFailedException e) { // Command could not be interrupted.
