@@ -47,8 +47,6 @@ import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.IosTest;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.IosTestType;
-import com.facebook.buck.apple.MacosxFramework;
-import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
@@ -435,11 +433,6 @@ public class ProjectGenerator {
       result = Optional.of((PBXTarget) generateIOSBinaryTarget(
               project, rule, binary));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
-    } else if (rule.getType().equals(MacosxFrameworkDescription.TYPE)) {
-      MacosxFramework framework = (MacosxFramework) rule;
-      result = Optional.of((PBXTarget) generateMacosxFrameworkTarget(
-              project, rule, framework));
-      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(framework);
     } else {
       result = Optional.absent();
       nativeTargetRule = Optional.absent();
@@ -589,25 +582,6 @@ public class ProjectGenerator {
 
     project.getTargets().add(target);
     LOG.debug("Generated iOS binary target %s", target);
-    return target;
-  }
-
-  private PBXNativeTarget generateMacosxFrameworkTarget(
-      PBXProject project,
-      BuildRule rule,
-      MacosxFramework buildable)
-      throws IOException {
-    PBXNativeTarget target = generateBinaryTarget(
-        project,
-        rule,
-        buildable,
-        PBXTarget.ProductType.FRAMEWORK,
-        "%s.framework",
-        buildable.getInfoPlist(),
-        /* includeFrameworks */ true,
-        /* includeResources */ true);
-    project.getTargets().add(target);
-    LOG.debug("Generated OS X framework target %s", target);
     return target;
   }
 

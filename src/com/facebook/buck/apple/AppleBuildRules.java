@@ -41,8 +41,7 @@ public final class AppleBuildRules {
           AppleLibraryDescription.TYPE,
           AppleBinaryDescription.TYPE,
           AppleBundleDescription.TYPE,
-          IosTestDescription.TYPE,
-          MacosxFrameworkDescription.TYPE);
+          IosTestDescription.TYPE);
 
   private static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
       ImmutableSet.of(IosTestDescription.TYPE, AppleTestDescription.TYPE);
