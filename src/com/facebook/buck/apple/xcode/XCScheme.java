@@ -221,7 +221,7 @@ public class XCScheme {
     private BuildableReference buildableReference;
 
     public TestableReference(BuildableReference buildableReference) {
-      this.buildableReference = buildableReference;
+      this.buildableReference = Preconditions.checkNotNull(buildableReference);
     }
 
     public BuildableReference getBuildableReference() {

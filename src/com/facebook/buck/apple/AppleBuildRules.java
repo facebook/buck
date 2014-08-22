@@ -62,19 +62,7 @@ public final class AppleBuildRules {
    * Whether the build rule type is a test target.
    */
   public static boolean isXcodeTargetTestBuildRule(BuildRule rule) {
-    if (XCODE_TARGET_BUILD_RULE_TEST_TYPES.contains(rule.getType())) {
-      return true;
-    } else if (rule.getType().equals(AppleBundleDescription.TYPE)) {
-      AppleBundle bundle = (AppleBundle) rule;
-      Optional<AppleBundleExtension> extension = bundle.getExtensionValue();
-      if (extension.isPresent()) {
-        return isXcodeTargetTestBundleExtension(extension.get());
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
+    return XCODE_TARGET_BUILD_RULE_TEST_TYPES.contains(rule.getType());
   }
 
   /**

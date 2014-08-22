@@ -391,7 +391,7 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         rootRule,
-        ImmutableSet.of(xctestRule),
+        ImmutableSet.of(testRule),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         SchemeActionType.DEFAULT_CONFIG_NAMES,

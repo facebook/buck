@@ -17,6 +17,8 @@
 package com.facebook.buck.apple.xcode;
 
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleTest;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
@@ -36,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -50,6 +53,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -103,32 +107,15 @@ class SchemeGenerator {
     this.targetToProjectPathMap = ImmutableMap.copyOf(targetToProjectPathMap);
   }
 
-  public Path writeScheme() throws IOException {
-    class XcodeTargetPredicate implements Predicate<BuildRule> {
-      private final Optional<ImmutableSet<BuildRule>> matches;
-
-      public XcodeTargetPredicate(Optional<ImmutableSet<BuildRule>> matches) {
-        this.matches = Preconditions.checkNotNull(matches);
-      }
-
-      @Override
-      public boolean apply(BuildRule input) {
-        if (!AppleBuildRules.isXcodeTargetBuildRuleType(input.getType()) &&
-            XcodeNativeDescription.TYPE != input.getType()) {
-          return false;
-        }
-        if (matches.isPresent() && !matches.get().contains(input)) {
-          return false;
-        }
-        if (!buildRuleToTargetMap.containsKey(input)) {
-          throw new HumanReadableException(
-              "Scheme generation failed: No project containing required target %s was found.",
-              input.getFullyQualifiedName());
-        }
-        return true;
-      }
+  private void expectTargetMapContainsRule(BuildRule rule) {
+    if (!buildRuleToTargetMap.containsKey(rule)) {
+      throw new HumanReadableException(
+          "Scheme generation failed: No project containing required target %s was found.",
+          rule.getFullyQualifiedName());
     }
+  }
 
+  public Path writeScheme() throws IOException {
     Iterable<BuildRule> buildRulesIterable = Iterables.concat(
         AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
             AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
@@ -138,11 +125,65 @@ class SchemeGenerator {
 
     List<BuildRule> orderedBuildRules = ImmutableList.copyOf(Iterables.filter(
             buildRulesIterable,
-            new XcodeTargetPredicate(Optional.<ImmutableSet<BuildRule>>absent())));
+            new Predicate<BuildRule>() {
+              @Override
+              public boolean apply(@Nullable BuildRule input) {
+                if (!AppleBuildRules.isXcodeTargetBuildRuleType(input.getType()) &&
+                    XcodeNativeDescription.TYPE != input.getType()) {
+                  return false;
+                }
+
+                expectTargetMapContainsRule(input);
+                return true;
+              }
+            }));
+
+    final ImmutableSet<BuildRule> realTestRules = ImmutableSet.copyOf(
+        Iterables.filter(testRules, new Predicate<BuildRule>() {
+          @Override
+          public boolean apply(@Nullable BuildRule input) {
+            return AppleBuildRules.isXcodeTargetTestBuildRule(input);
+          }
+        }));
+
+    final List<BuildRule> orderedRealTestRules = TopologicalSort.sort(
+        partialGraph.getActionGraph(),
+        new Predicate<BuildRule>() {
+          @Override
+          public boolean apply(@Nullable BuildRule input) {
+            return realTestRules.contains(input);
+          }
+        });
+
+    ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder = ImmutableSet.builder();
+    for (BuildRule testRule : realTestRules) {
+      Iterable<BuildRule> testRulesIterable = Iterables.concat(
+          AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
+              AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
+              testRule,
+              Optional.<ImmutableSet<BuildRuleType>>absent()),
+          ImmutableSet.of(testRule));
+
+      recursiveTestRulesBuilder.addAll(testRulesIterable);
+    }
+
+    final ImmutableSet<BuildRule> includedTestRules = ImmutableSet.copyOf(
+        Sets.difference(recursiveTestRulesBuilder.build(), ImmutableSet.copyOf(orderedBuildRules)));
 
     List<BuildRule> orderedTestRules = TopologicalSort.sort(
         partialGraph.getActionGraph(),
-        new XcodeTargetPredicate(Optional.of(testRules)));
+        new Predicate<BuildRule>() {
+          @Override
+          public boolean apply(@Nullable BuildRule input) {
+            if (!includedTestRules.contains(input) ||
+                !AppleBuildRules.isXcodeTargetBuildRuleType(input.getType())) {
+              return false;
+            }
+
+            expectTargetMapContainsRule(input);
+            return true;
+          }
+        });
 
     Map<BuildRule, XCScheme.BuildableReference>
         buildRuleToBuildableReferenceMap = Maps.newHashMap();
@@ -160,8 +201,7 @@ class SchemeGenerator {
           ).toString(),
           target.getGlobalID(),
           target.getProductReference().getName(),
-          blueprintName
-      );
+          blueprintName);
       buildRuleToBuildableReferenceMap.put(rule, buildableReference);
     }
 
@@ -185,9 +225,10 @@ class SchemeGenerator {
 
     XCScheme.TestAction testAction = new XCScheme.TestAction(
         actionConfigNames.get(SchemeActionType.TEST));
-    for (BuildRule rule : orderedTestRules) {
-      if (!AppleBuildRules.isXcodeTargetTestBuildRule(rule)) {
-        continue;
+    for (BuildRule rule : orderedRealTestRules) {
+      if (rule.getType().equals(AppleTestDescription.TYPE)) {
+        AppleTest test = (AppleTest) rule;
+        rule = test.getTestBundle();
       }
       XCScheme.BuildableReference buildableReference = buildRuleToBuildableReferenceMap.get(rule);
       XCScheme.TestableReference testableReference =
