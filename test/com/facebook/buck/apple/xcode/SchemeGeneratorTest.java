@@ -18,7 +18,6 @@ package com.facebook.buck.apple.xcode;
 
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
-import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -162,6 +161,7 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         childRule,
+        ImmutableSet.of(rootRule, leftRule, rightRule, childRule),
         ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -183,22 +183,17 @@ public class SchemeGeneratorTest {
         xpath.compile("//BuildAction//BuildableReference/@BlueprintIdentifier");
     NodeList nodes = (NodeList) expr.evaluate(scheme, XPathConstants.NODESET);
 
-    List<String> expectedOrdering1 = ImmutableList.of(
+    List<String> expectedOrdering = ImmutableList.of(
         "rootGID",
         "leftGID",
         "rightGID",
-        "childGID");
-    List<String> expectedOrdering2 = ImmutableList.of(
-        "rootGID",
-        "rightGID",
-        "leftGID",
         "childGID");
 
     List<String> actualOrdering = Lists.newArrayList();
     for (int i = 0; i < nodes.getLength(); i++) {
       actualOrdering.add(nodes.item(i).getNodeValue());
     }
-    assertThat(actualOrdering, either(equalTo(expectedOrdering1)).or(equalTo(expectedOrdering2)));
+    assertThat(actualOrdering, equalTo(expectedOrdering));
   }
 
   @Test(expected = HumanReadableException.class)
@@ -213,6 +208,7 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         rootRule,
+        ImmutableSet.<BuildRule>of(rootRule),
         ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -266,6 +262,7 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         rootRule,
+        ImmutableSet.<BuildRule>of(xcodeNativeRule, rootRule),
         ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -388,6 +385,7 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         rootRule,
+        ImmutableSet.of(rootRule),
         ImmutableSet.of(testRule),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -523,6 +521,7 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         rootRule,
+        ImmutableSet.of(rootRule),
         ImmutableSet.of(testRule),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -606,6 +605,7 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         rootRule,
+        ImmutableSet.of(rootRule),
         ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -669,6 +669,7 @@ public class SchemeGeneratorTest {
         projectFilesystem,
         partialGraph,
         rootRule,
+        ImmutableSet.of(rootRule),
         ImmutableSet.<BuildRule>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -758,6 +759,7 @@ public class SchemeGeneratorTest {
           projectFilesystem,
           partialGraph,
           rootRule,
+        ImmutableSet.of(rootRule),
           ImmutableSet.<BuildRule>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -790,6 +792,7 @@ public class SchemeGeneratorTest {
           projectFilesystem,
           partialGraph,
           rootRule,
+          ImmutableSet.of(rootRule),
           ImmutableSet.<BuildRule>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -825,6 +828,7 @@ public class SchemeGeneratorTest {
           projectFilesystem,
           partialGraph,
           rootRule,
+          ImmutableSet.of(rootRule),
           ImmutableSet.<BuildRule>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
@@ -857,6 +861,7 @@ public class SchemeGeneratorTest {
           projectFilesystem,
           partialGraph,
           rootRule,
+          ImmutableSet.of(rootRule),
           ImmutableSet.<BuildRule>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),

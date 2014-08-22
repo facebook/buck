@@ -20,7 +20,6 @@ import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleTest;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.SchemeActionType;
-import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.parser.PartialGraph;
@@ -34,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -79,6 +77,7 @@ class SchemeGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final PartialGraph partialGraph;
   private final BuildRule primaryRule;
+  private final ImmutableSet<BuildRule> orderedBuildRules;
   private final ImmutableSet<BuildRule> testRules;
   private final String schemeName;
   private final Path outputDirectory;
@@ -90,6 +89,7 @@ class SchemeGenerator {
       ProjectFilesystem projectFilesystem,
       PartialGraph partialGraph,
       BuildRule primaryRule,
+      Iterable<BuildRule> orderedBuildRules,
       ImmutableSet<BuildRule> testRules,
       String schemeName,
       Path outputDirectory,
@@ -99,12 +99,17 @@ class SchemeGenerator {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.primaryRule = Preconditions.checkNotNull(primaryRule);
+    this.orderedBuildRules = ImmutableSet.copyOf(orderedBuildRules);
     this.testRules = Preconditions.checkNotNull(testRules);
     this.schemeName = Preconditions.checkNotNull(schemeName);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
     this.buildRuleToTargetMap = ImmutableMap.copyOf(buildRuleToTargetMap);
     this.targetToProjectPathMap = ImmutableMap.copyOf(targetToProjectPathMap);
+
+    for (BuildRule rule : orderedBuildRules) {
+      expectTargetMapContainsRule(rule);
+    }
   }
 
   private void expectTargetMapContainsRule(BuildRule rule) {
@@ -116,28 +121,6 @@ class SchemeGenerator {
   }
 
   public Path writeScheme() throws IOException {
-    Iterable<BuildRule> buildRulesIterable = Iterables.concat(
-        AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
-            AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
-            this.primaryRule,
-            Optional.<ImmutableSet<BuildRuleType>>absent()),
-        ImmutableSet.of(this.primaryRule));
-
-    List<BuildRule> orderedBuildRules = ImmutableList.copyOf(Iterables.filter(
-            buildRulesIterable,
-            new Predicate<BuildRule>() {
-              @Override
-              public boolean apply(@Nullable BuildRule input) {
-                if (!AppleBuildRules.isXcodeTargetBuildRuleType(input.getType()) &&
-                    XcodeNativeDescription.TYPE != input.getType()) {
-                  return false;
-                }
-
-                expectTargetMapContainsRule(input);
-                return true;
-              }
-            }));
-
     final ImmutableSet<BuildRule> realTestRules = ImmutableSet.copyOf(
         Iterables.filter(testRules, new Predicate<BuildRule>() {
           @Override

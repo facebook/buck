@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.xcode;
 
 import com.dd.plist.NSDictionary;
+import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleTest;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeNative;
@@ -236,6 +237,7 @@ public class WorkspaceAndProjectGenerator {
         projectFilesystem,
         projectTargetGraph,
         workspaceBuildable.getSrcTarget(),
+        AppleBuildRules.getSchemeBuildableRules(workspaceBuildable.getSrcTarget()),
         testRules,
         workspaceName,
         outputDirectory.resolve(workspaceName + ".xcworkspace"),
