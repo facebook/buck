@@ -47,8 +47,6 @@ import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.IosTest;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.IosTestType;
-import com.facebook.buck.apple.MacosxBinary;
-import com.facebook.buck.apple.MacosxBinaryDescription;
 import com.facebook.buck.apple.MacosxFramework;
 import com.facebook.buck.apple.MacosxFrameworkDescription;
 import com.facebook.buck.apple.XcodeNative;
@@ -442,11 +440,6 @@ public class ProjectGenerator {
       result = Optional.of((PBXTarget) generateMacosxFrameworkTarget(
               project, rule, framework));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(framework);
-    } else if (rule.getType().equals(MacosxBinaryDescription.TYPE)) {
-      MacosxBinary binary = (MacosxBinary) rule;
-      result = Optional.of((PBXTarget) generateMacosxBinaryTarget(
-              project, rule, binary));
-      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
     } else {
       result = Optional.absent();
       nativeTargetRule = Optional.absent();
@@ -713,35 +706,6 @@ public class ProjectGenerator {
     target.setProductName(productName);
     target.setProductReference(productReference);
 
-    return target;
-  }
-
-  private PBXNativeTarget generateMacosxBinaryTarget(
-      PBXProject project, BuildRule rule, MacosxBinary buildable)
-      throws IOException {
-    PBXNativeTarget target = generateBinaryTarget(
-        project,
-        rule,
-        buildable,
-        PBXTarget.ProductType.APPLICATION,
-        "%s.app",
-        buildable.getInfoPlist(),
-        /* includeFrameworks */ true,
-        /* includeResources */ true);
-
-    // Unlike an ios target, macosx targets collect their frameworks and copy them in.
-    ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
-    frameworksBuilder.addAll(buildable.getFrameworks());
-    collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
-
-    addCopyFrameworksBuildPhase(
-        rule.getBuildTarget(),
-        target,
-        project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
-        frameworksBuilder.build());
-
-    project.getTargets().add(target);
-    LOG.debug("Generated OS X binary target %s", target);
     return target;
   }
 
@@ -1558,45 +1522,6 @@ public class ProjectGenerator {
     for (PBXFileReference archive : archives) {
       frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
     }
-  }
-
-  private void addCopyFrameworksBuildPhase(
-      BuildTarget buildTarget,
-      PBXNativeTarget target,
-      PBXGroup sharedFrameworksGroup,
-      Iterable<String> frameworks) {
-
-    ImmutableList.Builder<SourceTreePath> sourceTreePathBuilder = ImmutableList.builder();
-    for (String framework : frameworks) {
-      Path path = Paths.get(framework);
-
-      String firstElement =
-        Preconditions.checkNotNull(Iterables.getFirst(path, Paths.get(""))).toString();
-
-      if (firstElement.charAt(0) == '$') {
-        Optional<PBXReference.SourceTree> sourceTree =
-            PBXReference.SourceTree.fromBuildSetting(firstElement);
-        if (sourceTree.isPresent() &&
-            (sourceTree.get() == PBXReference.SourceTree.BUILT_PRODUCTS_DIR ||
-            sourceTree.get() == PBXReference.SourceTree.ABSOLUTE)) {
-          Path sdkRootRelativePath = path.subpath(1, path.getNameCount());
-          sourceTreePathBuilder.add(
-              new SourceTreePath(sourceTree.get(), sdkRootRelativePath));
-        }
-      } else {
-        // regular path
-        sourceTreePathBuilder.add(
-            new SourceTreePath(
-                PBXReference.SourceTree.GROUP,
-                relativizeBuckRelativePathToGeneratedProject(buildTarget, path.toString())));
-      }
-    }
-    addCopyFilesBuildPhase(
-        target,
-        sharedFrameworksGroup,
-        PBXCopyFilesBuildPhase.Destination.FRAMEWORKS,
-        "",
-        sourceTreePathBuilder.build());
   }
 
   private void addCopyFilesBuildPhase(
