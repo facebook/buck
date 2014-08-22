@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSet;
 
 public class XcodeProjectConfigDescription
@@ -46,6 +47,7 @@ public class XcodeProjectConfigDescription
     return new XcodeProjectConfig(params, args);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public String projectName;
     public ImmutableSet<BuildRule> rules;

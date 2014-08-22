@@ -34,6 +34,7 @@ import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -130,6 +131,7 @@ public class JavaThriftLibraryDescription
     return ImmutableSet.copyOf(javaBuckConfig.getJavaThriftDep().asSet());
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public String name;
     public ImmutableSortedSet<SourcePath> srcs;

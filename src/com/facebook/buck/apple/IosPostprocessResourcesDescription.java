@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -59,6 +60,7 @@ public class IosPostprocessResourcesDescription
       params.getPathAbsolutifier());
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Optional<String> cmd;
   }

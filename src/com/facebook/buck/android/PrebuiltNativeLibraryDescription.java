@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -65,6 +66,7 @@ public class PrebuiltNativeLibraryDescription
     );
   }
 
+  @SuppressFieldNotInitialized
   public static class Args implements ConstructorArg {
     public Optional<Boolean> isAsset;
     public Path nativeLibs;

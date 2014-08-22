@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -31,6 +32,7 @@ public class PythonLibraryDescription implements Description<Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("python_library");
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Optional<ImmutableSortedSet<SourcePath>> srcs;
     public Optional<ImmutableSortedSet<BuildRule>> deps;

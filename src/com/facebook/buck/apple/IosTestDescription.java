@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -48,6 +49,7 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
     return new IosTest(params, args, TargetSources.ofAppleSources(args.srcs));
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg extends AppleNativeTargetDescriptionArg {
     public Optional<Path> infoPlist;
     public Optional<ImmutableSortedSet<String>> contacts;

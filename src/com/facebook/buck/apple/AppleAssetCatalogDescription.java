@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
@@ -57,6 +58,7 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
     return new AppleAssetCatalog(params, inputPathsSupplier, args);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Set<Path> dirs;
     public Optional<Boolean> copyToBundles;

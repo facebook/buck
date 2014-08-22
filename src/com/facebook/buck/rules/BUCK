@@ -204,6 +204,7 @@ java_library(
     '//third-party/java/astyanax:log4j',
     '//third-party/java/astyanax:slf4j-api',
     '//third-party/java/astyanax:slf4j-log4j12',
+    '//third-party/java/infer-annotations:infer-annotations',
   ],
   visibility = ['PUBLIC'],
 )

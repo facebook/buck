@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
@@ -47,6 +48,7 @@ import java.util.Collections;
 public class PrebuiltJarDescription implements Description<PrebuiltJarDescription.Arg>,
     FlavorableDescription<PrebuiltJarDescription.Arg>{
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public SourcePath binaryJar;
     public Optional<SourcePath> sourceJar;

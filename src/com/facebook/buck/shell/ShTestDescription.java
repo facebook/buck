@@ -24,6 +24,7 @@ import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -49,6 +50,7 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
     return new ShTest(params, args.test, args.labels.get());
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public SourcePath test;
     public Optional<ImmutableSortedSet<Label>> labels;

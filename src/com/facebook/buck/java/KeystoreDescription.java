@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -49,6 +50,7 @@ public class KeystoreDescription implements Description<KeystoreDescription.Arg>
     return new Keystore(params, args.store, args.properties);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Path store;
     public Path properties;

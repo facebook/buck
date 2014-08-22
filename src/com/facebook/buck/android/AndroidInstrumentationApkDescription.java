@@ -35,6 +35,7 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -133,6 +134,7 @@ public class AndroidInstrumentationApkDescription
     }
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public SourcePath manifest;
     public BuildRule apk;

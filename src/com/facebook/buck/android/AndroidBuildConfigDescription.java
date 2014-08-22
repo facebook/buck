@@ -28,6 +28,7 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -102,6 +103,7 @@ public class AndroidBuildConfigDescription
         androidBuildConfig);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     @Hint(name = "package")
     public String javaPackage;

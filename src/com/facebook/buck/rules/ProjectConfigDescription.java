@@ -17,6 +17,7 @@ package com.facebook.buck.rules;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 public class ProjectConfigDescription implements Description<ProjectConfigDescription.Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("project_config");
@@ -46,6 +47,7 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
   }
 
   @TargetName(name = "project_config")
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Optional<BuildRule> srcTarget;
     public Optional<ImmutableList<String>> srcRoots;

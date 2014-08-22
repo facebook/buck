@@ -24,6 +24,7 @@ import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -72,6 +73,7 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
         manifestFiles);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public SourcePath skeleton;
 

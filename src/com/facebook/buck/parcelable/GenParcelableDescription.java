@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -48,6 +49,7 @@ public class GenParcelableDescription implements Description<GenParcelableDescri
     return new GenParcelable(params, args.srcs);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public ImmutableSortedSet<SourcePath> srcs;
     public Optional<ImmutableSortedSet<BuildRule>> deps;

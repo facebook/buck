@@ -16,6 +16,7 @@ java_library(
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
+    '//third-party/java/infer-annotations:infer-annotations',
   ],
   visibility = [
     '//src/com/facebook/buck/rules:types',

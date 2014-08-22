@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -49,6 +50,7 @@ public class XcodeWorkspaceConfigDescription
     return new XcodeWorkspaceConfig(params, args);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public BuildRule srcTarget;
     public Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames;

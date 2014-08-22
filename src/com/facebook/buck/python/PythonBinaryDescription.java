@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -49,6 +50,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     return new PythonBinary(params, args.main);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Path main;
 

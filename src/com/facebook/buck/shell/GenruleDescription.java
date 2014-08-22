@@ -27,6 +27,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -93,6 +94,7 @@ public class GenruleDescription
     }
   }
 
+  @SuppressFieldNotInitialized
   public class Arg implements ConstructorArg {
     public String out;
     public Optional<String> bash;

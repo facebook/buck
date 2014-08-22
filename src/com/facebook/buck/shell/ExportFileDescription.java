@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 
 public class ExportFileDescription implements Description<ExportFileDescription.Arg> {
@@ -46,6 +47,7 @@ public class ExportFileDescription implements Description<ExportFileDescription.
     return new ExportFile(params, args);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Optional<? extends SourcePath> src;
     public Optional<String> out;

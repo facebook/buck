@@ -26,6 +26,7 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -188,6 +189,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     return paths.build();
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Optional<Path> res;
     public Optional<Path> assets;

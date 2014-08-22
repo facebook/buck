@@ -24,6 +24,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.MoreStrings;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -101,6 +102,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         ndkVersion);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Optional<ImmutableList<String>> flags;
     public Optional<Boolean> isAsset;

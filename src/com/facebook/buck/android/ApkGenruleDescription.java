@@ -26,6 +26,7 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -75,6 +76,7 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
         installableApk);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public BuildRule apk;
 

@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -137,6 +138,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     return javacOptions;
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Optional<ImmutableSortedSet<SourcePath>> srcs;
     public Optional<ImmutableSortedSet<SourcePath>> resources;

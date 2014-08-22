@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
@@ -57,6 +58,7 @@ public class CoreDataModelDescription implements Description<CoreDataModelDescri
     return new CoreDataModel(params, inputPathsSupplier, args);
   }
 
+  @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     /**
      * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
