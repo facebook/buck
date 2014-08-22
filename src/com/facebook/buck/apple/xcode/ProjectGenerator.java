@@ -675,7 +675,7 @@ public class ProjectGenerator {
                 collectRecursiveHeaderMaps(buildRule).iterator())))
         .put(
             "USER_HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveUserHeaderMaps(buildRule)))
+            Joiner.on(' ').join(collectUserHeaderMaps(buildRule)))
         .put(
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(buildRule)))
@@ -1677,6 +1677,11 @@ public class ProjectGenerator {
     }
   }
 
+  private static boolean hasBuckHeaderMaps(BuildRule rule) {
+    return (rule instanceof AbstractAppleNativeTargetBuildRule) &&
+        ((AbstractAppleNativeTargetBuildRule) rule).getUseBuckHeaderMaps();
+  }
+
   private ImmutableSet<String> collectRecursiveHeaderSearchPaths(BuildRule rule) {
     return FluentIterable
         .from(
@@ -1685,6 +1690,12 @@ public class ProjectGenerator {
                 rule,
                 AppleLibraryDescription.TYPE,
                 XcodeNativeDescription.TYPE))
+        .filter(new Predicate<BuildRule>() {
+          @Override
+          public boolean apply(BuildRule input) {
+            return !hasBuckHeaderMaps(input);
+          }
+        })
         .transform(
             new Function<BuildRule, String>() {
               @Override
@@ -1698,21 +1709,30 @@ public class ProjectGenerator {
   private ImmutableSet<String> collectRecursiveHeaderMaps(BuildRule rule) {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
-    builder.add(getHeaderMapRelativePathForRule(rule, TARGET_HEADER_MAP_SUFFIX));
+    if (hasBuckHeaderMaps(rule)) {
+      builder.add(getHeaderMapRelativePathForRule(rule, TARGET_HEADER_MAP_SUFFIX));
+    }
 
     for (BuildRule input :
         AppleBuildRules.getRecursiveRuleDependenciesOfType(
             AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
             rule,
             AppleLibraryDescription.TYPE)) {
-      builder.add(getHeaderMapRelativePathForRule(input, PUBLIC_HEADER_MAP_SUFFIX));
+      if (hasBuckHeaderMaps(input)) {
+        builder.add(getHeaderMapRelativePathForRule(input, PUBLIC_HEADER_MAP_SUFFIX));
+      }
     }
 
     return builder.build();
   }
 
-  private ImmutableSet<String> collectRecursiveUserHeaderMaps(BuildRule rule) {
-    return ImmutableSet.of(getHeaderMapRelativePathForRule(rule, TARGET_USER_HEADER_MAP_SUFFIX));
+  private ImmutableSet<String> collectUserHeaderMaps(BuildRule rule) {
+    if (hasBuckHeaderMaps(rule)) {
+      return ImmutableSet.of(getHeaderMapRelativePathForRule(rule,
+          TARGET_USER_HEADER_MAP_SUFFIX));
+    } else {
+      return ImmutableSet.of();
+    }
   }
 
   private ImmutableSet<String> collectRecursiveLibrarySearchPaths(BuildRule rule) {

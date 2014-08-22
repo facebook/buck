@@ -820,13 +820,10 @@ public class ProjectGeneratorTest {
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
         new NSString("$(inherited) " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/Headers " +
-            "../buck-out/foo/xctest-target-headers.hmap " +
-            "../buck-out/foo/lib-public-headers.hmap"),
+            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        new NSString("$(inherited) " +
-            "../buck-out/foo/xctest-target-user-headers.hmap"),
+        new NSString("$(inherited) "),
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
@@ -961,13 +958,10 @@ public class ProjectGeneratorTest {
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
         new NSString("headers " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/Headers " +
-            "../buck-out/foo/xctest-target-headers.hmap " +
-            "../buck-out/foo/lib-public-headers.hmap"),
+            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        new NSString("user_headers " +
-            "../buck-out/foo/xctest-target-user-headers.hmap"),
+        new NSString("user_headers "),
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("libraries " +
@@ -1114,14 +1108,10 @@ public class ProjectGeneratorTest {
     assertEquals(
         new NSString("$(inherited) " +
             "$SYMROOT/F4XWEYLSHJWGSYQ/Headers " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/Headers " +
-            "../buck-out/foo/xctest-target-headers.hmap " +
-            "../buck-out/bar/lib-public-headers.hmap " +
-            "../buck-out/foo/lib-public-headers.hmap"),
+            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        new NSString("$(inherited) " +
-            "../buck-out/foo/xctest-target-user-headers.hmap"),
+        new NSString("$(inherited) "),
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
