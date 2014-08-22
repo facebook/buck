@@ -2766,7 +2766,7 @@ public class ProjectGeneratorTest {
         .build();
 
     return new ProjectGenerator(
-        partialGraph,
+        partialGraph.getActionGraph().getNodes(),
         initialBuildTargets,
         projectFilesystem,
         executionContext,

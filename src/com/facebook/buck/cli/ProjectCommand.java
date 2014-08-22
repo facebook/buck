@@ -294,7 +294,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     if (options.getCombinedProject() != null) {
       // Generate a single project containing a target and all its dependencies and tests.
       ProjectGenerator projectGenerator = new ProjectGenerator(
-          partialGraphs.getProjectGraph(),
+          partialGraphs.getProjectGraph().getActionGraph().getNodes(),
           passedInTargetsSet,
           getProjectFilesystem(),
           executionContext,

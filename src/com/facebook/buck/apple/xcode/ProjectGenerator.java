@@ -67,7 +67,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
@@ -211,7 +210,7 @@ public class ProjectGenerator {
           PosixFilePermission.GROUP_READ,
           PosixFilePermission.OTHERS_READ));
 
-  private final PartialGraph partialGraph;
+  private final ImmutableSet<BuildRule> rulesToBuild;
   private final ProjectFilesystem projectFilesystem;
   private final ExecutionContext executionContext;
   private final Path outputDirectory;
@@ -243,14 +242,14 @@ public class ProjectGenerator {
   private Set<String> nativeTargetGIDs;
 
   public ProjectGenerator(
-      PartialGraph partialGraph,
+      Iterable<BuildRule> rulesToBuild,
       Set<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
       ExecutionContext executionContext,
       Path outputDirectory,
       String projectName,
       Set<Option> options) {
-    this.partialGraph = Preconditions.checkNotNull(partialGraph);
+    this.rulesToBuild = ImmutableSet.copyOf(rulesToBuild);
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.executionContext = Preconditions.checkNotNull(executionContext);
@@ -318,9 +317,7 @@ public class ProjectGenerator {
     LOG.debug("Creating projects for targets %s", initialTargets);
 
     try {
-      Iterable<BuildRule> allRules = partialGraph.getActionGraph().getNodes();
-
-      for (BuildRule rule : allRules) {
+      for (BuildRule rule : rulesToBuild) {
         if (isBuiltByCurrentProject(rule)) {
           LOG.debug("Including rule %s in project", rule);
           // Trigger the loading cache to call the generateTargetForBuildRule function.

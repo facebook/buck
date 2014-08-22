@@ -93,7 +93,7 @@ public class SeparatedProjectsGenerator {
         initialTargetsBuilder.add(memberRule.getBuildTarget());
       }
       ProjectGenerator generator = new ProjectGenerator(
-          partialGraph,
+          partialGraph.getActionGraph().getNodes(),
           initialTargetsBuilder.build(),
           projectFilesystem,
           executionContext,
