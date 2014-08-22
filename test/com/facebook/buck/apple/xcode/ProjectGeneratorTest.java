@@ -38,7 +38,6 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
@@ -132,7 +131,6 @@ public class ProjectGeneratorTest {
   private AppleResourceDescription appleResourceDescription;
   private MacosxFrameworkDescription macosxFrameworkDescription;
   private MacosxBinaryDescription macosxBinaryDescription;
-  private AppleExtensionDescription appleExtensionDescription;
   private AppleBundleDescription appleBundleDescription;
   private AppleBinaryDescription appleBinaryDescription;
   private CoreDataModelDescription coreDataModelDescription;
@@ -152,7 +150,6 @@ public class ProjectGeneratorTest {
     appleResourceDescription = new AppleResourceDescription();
     macosxFrameworkDescription = new MacosxFrameworkDescription();
     macosxBinaryDescription = new MacosxBinaryDescription();
-    appleExtensionDescription = new AppleExtensionDescription();
     appleBundleDescription = new AppleBundleDescription();
     appleBinaryDescription = new AppleBinaryDescription();
     coreDataModelDescription = new CoreDataModelDescription();
@@ -1707,74 +1704,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleExtensionRule() throws IOException {
-    BuildRule staticLibraryDep = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "static").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription);
-    BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "dynamic").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        macosxFrameworkDescription);
-
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "extension").build())
-            .setDeps(ImmutableSortedSet.of(staticLibraryDep, dynamicLibraryDep))
-            .setType(AppleExtensionDescription.TYPE)
-            .build();
-
-    AppleExtensionDescription.Arg arg =
-        appleExtensionDescription.createUnpopulatedConstructorArg();
-    arg.infoPlist = Optional.of(Paths.get("Info.plist"));
-    arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.srcs = ImmutableList.of(
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
-        AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
-    arg.frameworks = ImmutableSortedSet.of(
-        "$SDKROOT/SystemFramework.framework",
-        "$BUILT_PRODUCTS_DIR/dynamic.framework");
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
-
-    BuildRule rule = appleExtensionDescription.createBuildRule(
-        params,
-        new BuildRuleResolver(),
-        arg);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "//foo:extension");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.APP_EXTENSION);
-    assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    PBXFileReference productReference = target.getProductReference();
-    assertEquals("extension.appex", productReference.getName());
-    assertEquals(Optional.of("wrapper.app-extension"), productReference.getExplicitFileType());
-
-    assertHasConfigurations(target, "Debug");
-    assertEquals("Should have exact number of build phases", 4, target.getBuildPhases().size());
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
-        target,
-        ImmutableMap.of(
-            "foo.m", Optional.of("-foo")));
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
-        target,
-        ImmutableList.of(
-            "$SDKROOT/SystemFramework.framework",
-            // Propagated libraries from deps.
-            "$BUILT_PRODUCTS_DIR/libstatic.a",
-            "$BUILT_PRODUCTS_DIR/dynamic.framework"));
-  }
-
-  @Test
   public void testAppleBundleRuleForDynamicFramework() throws IOException {
     BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "dynamic").setFlavor(
@@ -1814,58 +1743,6 @@ public class ProjectGeneratorTest {
     PBXFileReference productReference = target.getProductReference();
     assertEquals("bundle.framework", productReference.getName());
     assertEquals(Optional.of("wrapper.framework"), productReference.getExplicitFileType());
-  }
-
-  @Test
-  public void testIosBinaryRuleWithAppleExtension() throws IOException {
-    BuildRule depRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "extension").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleExtensionDescription);
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "binary").build())
-            .setDeps(ImmutableSortedSet.of(depRule))
-            .setType(IosBinaryDescription.TYPE)
-            .build();
-    IosBinaryDescription.Arg arg = iosBinaryDescription.createUnpopulatedConstructorArg();
-    arg.infoPlist = Optional.of(Paths.get("Info.plist"));
-    arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.srcs = ImmutableList.of(
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
-        AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
-    arg.frameworks = ImmutableSortedSet.of();
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
-
-    BuildRule rule = iosBinaryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "//foo:binary");
-    assertHasConfigurations(target, "Debug");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.APPLICATION);
-    assertEquals("Should have exact number of build phases", 5, target.getBuildPhases().size());
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
-        target,
-        ImmutableMap.of(
-            "foo.m", Optional.of("-foo")));
-    ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
-        target,
-        ImmutableList.of(
-            "$BUILT_PRODUCTS_DIR/extension.appex"));
-
-    // this test does not have a dependency on any asset catalogs, so verify no build phase for them
-    // exists.
-    assertFalse(hasShellScriptPhaseToCompileAssetCatalogs(target));
   }
 
   @Test

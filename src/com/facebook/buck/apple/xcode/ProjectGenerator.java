@@ -30,8 +30,6 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleBinary;
 import com.facebook.buck.apple.AppleBinaryDescription;
-import com.facebook.buck.apple.AppleExtension;
-import com.facebook.buck.apple.AppleExtensionDescription;
 import com.facebook.buck.apple.AppleLibrary;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.AppleResourceDescription;
@@ -449,11 +447,6 @@ public class ProjectGenerator {
       result = Optional.of((PBXTarget) generateMacosxBinaryTarget(
               project, rule, binary));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
-    } else if (rule.getType().equals(AppleExtensionDescription.TYPE)) {
-      AppleExtension binary = (AppleExtension) rule;
-      result = Optional.of((PBXTarget) generateExtensionTarget(
-              project, rule, binary));
-      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
     } else {
       result = Optional.absent();
       nativeTargetRule = Optional.absent();
@@ -634,24 +627,6 @@ public class ProjectGenerator {
     }
   }
 
-  private PBXNativeTarget generateExtensionTarget(
-      PBXProject project,
-      BuildRule rule,
-      AppleExtension buildable)
-      throws IOException {
-    PBXNativeTarget target = generateBinaryTarget(
-        project,
-        rule,
-        buildable,
-        PBXTarget.ProductType.APP_EXTENSION,
-        "%s.appex",
-        buildable.getInfoPlist(),
-        /* includeFrameworks */ true,
-        /* includeResources */ true);
-    project.getTargets().add(target);
-    return target;
-  }
-
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       BuildRule rule,
@@ -728,29 +703,6 @@ public class ProjectGenerator {
     addCoreDataModelBuildPhase(
         targetGroup,
         collectCoreDataModels(rule.getDeps()));
-
-    if (includeResources) {
-      // -- copy any extensions into this bundle
-      ImmutableSet.Builder<SourceTreePath> extensionsSourceTreePathsBuilder =
-          ImmutableSet.builder();
-      Iterable<BuildRule> extensions = AppleBuildRules.getRecursiveRuleDependenciesOfType(
-          AppleBuildRules.RecursiveRuleDependenciesMode.COPYING,
-          rule,
-          AppleExtensionDescription.TYPE);
-      for (BuildRule extension : extensions) {
-
-        extensionsSourceTreePathsBuilder.add(
-            new SourceTreePath(
-                PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                extension.getPathToOutputFile().getFileName()));
-      }
-      addCopyFilesBuildPhase(
-          target,
-          project.getMainGroup().getOrCreateChildGroupByName("Products"),
-          PBXCopyFilesBuildPhase.Destination.PLUGINS,
-          "",
-          extensionsSourceTreePathsBuilder.build());
-    }
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
