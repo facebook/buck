@@ -205,12 +205,10 @@ public class AndroidBinary extends AbstractBuildRule implements
     this.enhancementResult = Preconditions.checkNotNull(enhancementResult);
     this.primaryDexPath = getPrimaryDexPath(params.getBuildTarget());
 
-    if (exopackage && !enhancementResult.getPreDexMerge().isPresent()) {
-      throw new IllegalArgumentException(getBuildTarget() +
-          " specified exopackage without pre-dexing, which is invalid.");
-    }
-
     if (exopackage) {
+      Preconditions.checkArgument(enhancementResult.getPreDexMerge().isPresent(),
+          "%s specified exopackage without pre-dexing, which is invalid.",
+          getBuildTarget());
       Preconditions.checkArgument(dexSplitMode.getDexStore() == DexStore.JAR,
           "%s specified exopackage with secondary dex mode %s, " +
               "which is invalid.  (Only JAR is allowed.)",
