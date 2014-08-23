@@ -16,11 +16,14 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.testutil.integration.ZipInspector;
+import static org.junit.Assert.assertEquals;
+
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -29,6 +32,10 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 public class AndroidBinaryIntegrationTest {
 
@@ -90,6 +97,19 @@ public class AndroidBinaryIntegrationTest {
 
     zipInspector.assertFileExists("classes.dex");
     zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
+
+    // It would be better if we could call getExopackageInfo on the app rule.
+    Path secondaryDir = workspace.resolve(
+        Paths.get(
+            "buck-out/bin/apps/multidex/_app-exo#dex_merge_output" +
+                "/jarfiles/assets/secondary-program-dex-jars"));
+
+    try (DirectoryStream<Path> stream = java.nio.file.Files.newDirectoryStream(secondaryDir)) {
+      List<Path> files = ImmutableList.copyOf(stream);
+      assertEquals(1, files.size());
+      Path secondaryJar = files.get(0);
+      new ZipInspector(secondaryJar.toFile()).assertFileExists("classes.dex");
+    }
   }
 
   @Test
