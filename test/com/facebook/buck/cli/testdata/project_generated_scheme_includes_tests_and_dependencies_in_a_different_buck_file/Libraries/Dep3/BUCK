@@ -22,17 +22,30 @@ apple_library(
   visibility = ['PUBLIC'],
 )
 
-ios_test(
-  name = 'Dep3Tests',
+apple_library(
+  name = 'Dep3TestsLibrary',
   configs = EMPTY_CONFIGS,
   srcs = [],
   frameworks = [],
   deps = [
     ':Dep3',
   ],
+)
+
+apple_bundle(
+  name = 'Dep3Tests',
+  extension = 'octest',
+  deps = [':Dep3TestsLibrary#dynamic'],
+  binary = ':Dep3TestsLibrary#dynamic',
+)
+
+apple_test(
+  name = 'Dep3TestsTest',
   source_under_test = [
     ':Dep3',
   ],
+  deps = [':Dep3Tests'],
+  test_bundle = ':Dep3Tests',
 )
 
 xcode_project_config(

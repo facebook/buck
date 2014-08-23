@@ -24,8 +24,8 @@ ios_binary(
   ],
 )
 
-ios_test(
-  name = 'TestAppTests',
+apple_library(
+  name = 'TestAppTestsLibrary',
   configs = EMPTY_CONFIGS,
   srcs = [],
   frameworks = [],
@@ -33,6 +33,19 @@ ios_test(
     '//Libraries/Dep1:Dep1',
     '//Libraries/Dep3:Dep3',
   ],
+)
+
+apple_bundle(
+  name = 'TestAppTests',
+  extension = 'octest',
+  deps = [':TestAppTestsLibrary#dynamic'],
+  binary = ':TestAppTestsLibrary#dynamic',
+)
+
+apple_test(
+  name = 'TestAppTestsTest',
+  test_bundle = ':TestAppTests',
+  deps = [':TestAppTests'],
   source_under_test = [
     ':TestApp',
   ],

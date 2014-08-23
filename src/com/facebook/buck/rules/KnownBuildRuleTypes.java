@@ -37,7 +37,6 @@ import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
-import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
@@ -205,7 +204,6 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleBinaryDescription());
     builder.register(new IosPostprocessResourcesDescription());
     builder.register(new AppleResourceDescription());
-    builder.register(new IosTestDescription());
     builder.register(new JavaBinaryDescription());
     builder.register(new JavaThriftLibraryDescription(javacEnv, new JavaBuckConfig(config)));
     builder.register(new NdkLibraryDescription(ndkVersion));

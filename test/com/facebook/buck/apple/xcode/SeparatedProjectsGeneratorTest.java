@@ -33,7 +33,6 @@ import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
-import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
@@ -68,7 +67,6 @@ public class SeparatedProjectsGeneratorTest {
   private final AppleLibraryDescription appleLibraryDescription =
       new AppleLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
   private final IosBinaryDescription iosBinaryDescription = new IosBinaryDescription();
-  private final IosTestDescription iosTestDescription = new IosTestDescription();
   private final XcodeProjectConfigDescription xcodeProjectConfigDescription =
       new XcodeProjectConfigDescription();
 
@@ -408,25 +406,20 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSortedSet.<BuildRule>of(),
         iosBinaryDescription);
 
-    BuildRule testRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "test").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        iosTestDescription);
-
     BuildRule nativeRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "native").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosTestDescription);
+        appleLibraryDescription);
 
     BuildRule configRule = createXcodeProjectConfigRule(
         "//foo",
         "fooproject",
-        ImmutableSet.of(libraryRule, binaryRule, testRule, nativeRule));
+        ImmutableSet.of(libraryRule, binaryRule, nativeRule));
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         createPartialGraphFromBuildRules(
-            ImmutableSet.of(configRule, libraryRule, binaryRule, testRule, nativeRule)),
+            ImmutableSet.of(configRule, libraryRule, binaryRule, nativeRule)),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -435,7 +428,6 @@ public class SeparatedProjectsGeneratorTest {
     PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
     assertTargetExistsAndReturnTarget(project, "library");
     assertTargetExistsAndReturnTarget(project, "binary");
-    assertTargetExistsAndReturnTarget(project, "test");
     assertTargetExistsAndReturnTarget(project, "native");
   }
 

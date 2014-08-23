@@ -40,11 +40,10 @@ public final class AppleBuildRules {
           IosBinaryDescription.TYPE,
           AppleLibraryDescription.TYPE,
           AppleBinaryDescription.TYPE,
-          AppleBundleDescription.TYPE,
-          IosTestDescription.TYPE);
+          AppleBundleDescription.TYPE);
 
   private static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
-      ImmutableSet.of(IosTestDescription.TYPE, AppleTestDescription.TYPE);
+      ImmutableSet.of(AppleTestDescription.TYPE);
 
   private static final ImmutableSet<AppleBundleExtension> XCODE_TARGET_TEST_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.OCTEST, AppleBundleExtension.XCTEST);

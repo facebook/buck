@@ -44,9 +44,6 @@ import com.facebook.buck.apple.IosBinary;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
-import com.facebook.buck.apple.IosTest;
-import com.facebook.buck.apple.IosTestDescription;
-import com.facebook.buck.apple.IosTestType;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
@@ -423,11 +420,6 @@ public class ProjectGenerator {
       } else {
         throw new HumanReadableException("Test bundle should be a bundle: " + test.getTestBundle());
       }
-    } else if (rule.getType().equals(IosTestDescription.TYPE)) {
-      IosTest test = (IosTest) rule;
-      result = Optional.of((PBXTarget) generateIosTestTarget(
-              project, rule, test));
-      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(test);
     } else if (rule.getType().equals(IosBinaryDescription.TYPE)) {
       IosBinary binary = (IosBinary) rule;
       result = Optional.of((PBXTarget) generateIOSBinaryTarget(
@@ -522,7 +514,7 @@ public class ProjectGenerator {
         productType,
         AppleLibrary.getOutputFileNameFormat(buildable.getLinkedDynamically()),
         Optional.<Path>absent(),
-        /* includeFrameworks */ false,
+        /* includeFrameworks */ buildable.getLinkedDynamically(),
         /* includeResources */ false);
     project.getTargets().add(target);
     LOG.debug("Generated iOS library target %s", target);
@@ -547,22 +539,6 @@ public class ProjectGenerator {
           headerMap.getBytes(),
           headerMapFile);
     }
-  }
-
-  private PBXNativeTarget generateIosTestTarget(
-      PBXProject project, BuildRule rule, IosTest buildable) throws IOException {
-    PBXNativeTarget target = generateBinaryTarget(
-        project,
-        rule,
-        buildable,
-        testTypeToTargetProductType(buildable.getTestType()),
-        "%s." + buildable.getTestType().toFileExtension(),
-        buildable.getInfoPlist(),
-        /* includeFrameworks */ true,
-        /* includeResources */ true);
-    project.getTargets().add(target);
-    LOG.debug("Generated iOS test target %s", target);
-    return target;
   }
 
   private PBXNativeTarget generateIOSBinaryTarget(
@@ -622,7 +598,7 @@ public class ProjectGenerator {
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
     defaultSettingsBuilder.put("PUBLIC_HEADERS_FOLDER_PATH",
         getHeaderOutputPathForRule(buildable.getHeaderPathPrefix()));
-    if (!includeFrameworks) {
+    if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
       defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", getObjectOutputPathForRule(rule));
     }
     setTargetBuildConfigurations(
@@ -2004,17 +1980,6 @@ public class ProjectGenerator {
     }
 
     return PBXTarget.ProductType.BUNDLE;
-  }
-
-  private static PBXTarget.ProductType testTypeToTargetProductType(IosTestType testType) {
-      switch (testType) {
-        case OCTEST:
-          return PBXTarget.ProductType.BUNDLE;
-        case XCTEST:
-          return PBXTarget.ProductType.UNIT_TEST;
-        default:
-          throw new IllegalStateException("Invalid test type value: " + testType.toString());
-      }
   }
 
   /**
