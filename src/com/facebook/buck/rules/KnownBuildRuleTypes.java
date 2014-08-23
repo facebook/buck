@@ -33,7 +33,6 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
-import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
@@ -199,7 +198,6 @@ public class KnownBuildRuleTypes {
     builder.register(new JavaBinaryDescription());
     builder.register(new JavaLibraryDescription(javacEnv));
     builder.register(new JavaTestDescription(javacEnv));
-    builder.register(new IosBinaryDescription());
     builder.register(new AppleLibraryDescription(archiver));
     builder.register(new AppleBinaryDescription());
     builder.register(new IosPostprocessResourcesDescription());

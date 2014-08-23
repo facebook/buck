@@ -13,8 +13,8 @@ EMPTY_CONFIGS = {
   ),
 }
 
-ios_binary(
-  name = 'TestApp',
+apple_binary(
+  name = 'TestAppBinary',
   configs = EMPTY_CONFIGS,
   srcs = [],
   frameworks = [],
@@ -22,6 +22,13 @@ ios_binary(
     '//Libraries/Dep1:Dep1',
     '//Libraries/Dep2:Dep2',
   ],
+)
+
+apple_bundle(
+  name = 'TestApp',
+  deps = [':TestAppBinary'],
+  binary = ':TestAppBinary',
+  extension = 'app',
 )
 
 apple_library(

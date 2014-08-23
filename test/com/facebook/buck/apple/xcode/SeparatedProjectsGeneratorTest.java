@@ -30,8 +30,10 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleBinaryDescription;
+import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
-import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
@@ -41,6 +43,11 @@ import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -48,6 +55,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,7 +74,8 @@ public class SeparatedProjectsGeneratorTest {
   private final ExecutionContext executionContext = TestExecutionContext.newInstance();
   private final AppleLibraryDescription appleLibraryDescription =
       new AppleLibraryDescription(Archives.DEFAULT_ARCHIVE_PATH);
-  private final IosBinaryDescription iosBinaryDescription = new IosBinaryDescription();
+  private final AppleBinaryDescription appleBinaryDescription = new AppleBinaryDescription();
+  private final AppleBundleDescription appleBundleDescription = new AppleBundleDescription();
   private final XcodeProjectConfigDescription xcodeProjectConfigDescription =
       new XcodeProjectConfigDescription();
 
@@ -185,10 +194,31 @@ public class SeparatedProjectsGeneratorTest {
         BuildTarget.builder("//elsewhere", "somedep").build(),
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription);
-    BuildRule rule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "bin").build(),
+
+    BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
+        BuildTarget.builder("//dep", "dynamic").setFlavor(
+            AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
         ImmutableSortedSet.of(depRule),
-        iosBinaryDescription);
+        appleLibraryDescription);
+
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bin").build())
+            .setDeps(ImmutableSortedSet.of(dynamicLibraryDep))
+            .setType(AppleBundleDescription.TYPE)
+            .build();
+
+    AppleBundleDescription.Arg arg =
+        appleBundleDescription.createUnpopulatedConstructorArg();
+    arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
+    arg.binary = dynamicLibraryDep;
+    arg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
+    arg.deps = Optional.absent();
+
+    BuildRule rule = appleBundleDescription.createBuildRule(
+        params,
+        new BuildRuleResolver(),
+        arg);
+
     BuildRule configRule = createXcodeProjectConfigRule(
         "//foo/bar",
         "fooproject",
@@ -401,10 +431,29 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription);
 
-    BuildRule binaryRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "binary").build(),
+    BuildRule binaryDep = createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "binarybin").setFlavor(
+            AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
         ImmutableSortedSet.<BuildRule>of(),
-        iosBinaryDescription);
+        appleBinaryDescription);
+
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "binary").build())
+            .setDeps(ImmutableSortedSet.of(binaryDep))
+            .setType(AppleBundleDescription.TYPE)
+            .build();
+
+    AppleBundleDescription.Arg arg =
+        appleBundleDescription.createUnpopulatedConstructorArg();
+    arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
+    arg.binary = binaryDep;
+    arg.extension = Either.ofLeft(AppleBundleExtension.APP);
+    arg.deps = Optional.absent();
+
+    BuildRule binaryRule = appleBundleDescription.createBuildRule(
+        params,
+        new BuildRuleResolver(),
+        arg);
 
     BuildRule nativeRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "native").build(),

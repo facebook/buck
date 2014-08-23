@@ -40,8 +40,6 @@ import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
-import com.facebook.buck.apple.IosBinary;
-import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.XcodeNative;
@@ -420,11 +418,6 @@ public class ProjectGenerator {
       } else {
         throw new HumanReadableException("Test bundle should be a bundle: " + test.getTestBundle());
       }
-    } else if (rule.getType().equals(IosBinaryDescription.TYPE)) {
-      IosBinary binary = (IosBinary) rule;
-      result = Optional.of((PBXTarget) generateIOSBinaryTarget(
-              project, rule, binary));
-      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
     } else {
       result = Optional.absent();
       nativeTargetRule = Optional.absent();
@@ -539,26 +532,6 @@ public class ProjectGenerator {
           headerMap.getBytes(),
           headerMapFile);
     }
-  }
-
-  private PBXNativeTarget generateIOSBinaryTarget(
-      PBXProject project, BuildRule rule, IosBinary buildable)
-      throws IOException {
-    PBXNativeTarget target = generateBinaryTarget(
-        project,
-        rule,
-        buildable,
-        PBXTarget.ProductType.APPLICATION,
-        "%s.app",
-        buildable.getInfoPlist(),
-        /* includeFrameworks */ true,
-        /* includeResources */ true);
-
-    addPostBuildScriptPhasesForDependencies(rule, target);
-
-    project.getTargets().add(target);
-    LOG.debug("Generated iOS binary target %s", target);
-    return target;
   }
 
   private void setNativeTargetGid(
