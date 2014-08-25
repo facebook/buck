@@ -21,7 +21,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -43,17 +42,17 @@ public abstract class BuildEvent extends AbstractBuckEvent {
   }
 
   public static Started started(ImmutableSet<BuildTarget> buildTargets) {
-    return new Started(buildTargets, Optional.<Integer>absent());
-  }
-
-  public static Started started(
-      ImmutableSet<BuildTarget> buildTargets,
-      int numRulesToBuild) {
-    return new Started(buildTargets, Optional.of(numRulesToBuild));
+    return new Started(buildTargets);
   }
 
   public static Finished finished(ImmutableSet<BuildTarget> buildTargets, int exitCode) {
     return new Finished(buildTargets, exitCode);
+  }
+
+  public static RuleCountCalculated ruleCountCalculated(
+      ImmutableSet<BuildTarget> buildTargets,
+      int ruleCount) {
+    return new RuleCountCalculated(buildTargets, ruleCount);
   }
 
   @Override
@@ -79,22 +78,13 @@ public abstract class BuildEvent extends AbstractBuckEvent {
   }
 
   public static class Started extends BuildEvent {
-    private final Optional<Integer> numRulesToBuild;
-
-    protected Started(
-        ImmutableSet<BuildTarget> buildTargets,
-        Optional<Integer> numRulesToBuild) {
+    protected Started(ImmutableSet<BuildTarget> buildTargets) {
       super(buildTargets);
-      this.numRulesToBuild = numRulesToBuild;
     }
 
     @Override
     public String getEventName() {
       return "BuildStarted";
-    }
-
-    public Optional<Integer> getNumRulesToBuild() {
-      return numRulesToBuild;
     }
   }
 
@@ -128,6 +118,39 @@ public abstract class BuildEvent extends AbstractBuckEvent {
     @Override
     public int hashCode() {
       return Objects.hashCode(getBuildTargets(), getExitCode());
+    }
+  }
+
+  public static class RuleCountCalculated extends BuildEvent {
+    private final int numRules;
+
+    protected RuleCountCalculated(ImmutableSet<BuildTarget> buildRules, int numRulesToBuild) {
+      super(buildRules);
+      this.numRules = numRulesToBuild;
+    }
+
+    public int getNumRules() {
+      return numRules;
+    }
+
+    @Override
+    public String getEventName() {
+      return "RuleCountCalculated";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      RuleCountCalculated that = (RuleCountCalculated) o;
+      return that.getNumRules() == getNumRules();
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(getBuildTargets(), getNumRules());
     }
   }
 }

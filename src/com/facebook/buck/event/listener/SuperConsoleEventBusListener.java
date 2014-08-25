@@ -148,9 +148,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (parseTime != UNFINISHED_EVENT_PAIR) {
       // Log build time, excluding time spent in parsing.
       Optional<String> suffix = Optional.absent();
-      if (buildStarted != null && buildStarted.getNumRulesToBuild().isPresent()) {
-        suffix = Optional.of(
-            "(" + numRulesCompleted + "/" + buildStarted.getNumRulesToBuild().get() + " JOBS RUN)");
+      if (ruleCount.isPresent()) {
+        suffix = Optional.of(String.format(
+                "(%d/%d JOBS)",
+                numRulesCompleted.get(),
+                ruleCount.get()));
       }
       long buildTime = logEventPair("BUILDING",
           suffix,

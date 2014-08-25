@@ -96,13 +96,12 @@ public class EventSerializationTest {
   @Test
   public void testBuildEventStarted() throws IOException {
     BuildEvent.Started event = BuildEvent.started(ImmutableSet.<BuildTarget>of(
-        BuildTarget.builder("//base", "short").build()), 10);
+        BuildTarget.builder("//base", "short").build()));
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"buildTargets\":[{\"repository\":{\"present\":false},\"baseName\":\"//base\"," +
-        "\"shortName\":\"short\",\"flavor\":\"\"}]," +
-        "\"numRulesToBuild\":{\"present\":true},\"type\":\"BuildStarted\"}", message);
+        "\"shortName\":\"short\",\"flavor\":\"\"}],\"type\":\"BuildStarted\"}", message);
   }
 
   @Test

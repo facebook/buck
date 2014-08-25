@@ -65,6 +65,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Nullable
   protected volatile InstallEvent.Finished installFinished;
 
+  protected volatile Optional<Integer> ruleCount = Optional.absent();
+
   public AbstractConsoleEventBusListener(Console console, Clock clock) {
     this.console = console;
     this.clock = clock;
@@ -164,6 +166,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void buildStarted(BuildEvent.Started started) {
     buildStarted = started;
+  }
+
+  @Subscribe
+  public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
+    ruleCount = Optional.of(calculated.getNumRules());
   }
 
   @Subscribe

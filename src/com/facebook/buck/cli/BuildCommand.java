@@ -96,6 +96,15 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
+    // Post the build started event, setting it to the Parser recorded start time if appropriate.
+    if (getParser().getParseStartTime().isPresent()) {
+      getBuckEventBus().post(
+          BuildEvent.started(buildTargets),
+          getParser().getParseStartTime().get());
+    } else {
+      getBuckEventBus().post(BuildEvent.started(buildTargets));
+    }
+
     // Parse the build files to create a ActionGraph.
     ActionGraph actionGraph;
     try {
@@ -109,15 +118,9 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
-    // Post the build started event, setting it to the Parser recorded start time if appropriate.
-    int numRulesToBuild = getNumRulesToBuild(buildTargets, actionGraph);
-    if (getParser().getParseStartTime().isPresent()) {
-      getBuckEventBus().post(
-          BuildEvent.started(buildTargets, numRulesToBuild),
-          getParser().getParseStartTime().get());
-    } else {
-      getBuckEventBus().post(BuildEvent.started(buildTargets, numRulesToBuild));
-    }
+    // Calculate and post the number of rules that need to built.
+    int numRules = getNumRulesToBuild(buildTargets, actionGraph);
+    getBuckEventBus().post(BuildEvent.ruleCountCalculated(buildTargets, numRules));
 
     // Create and execute the build.
     build = options.createBuild(
