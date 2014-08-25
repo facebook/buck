@@ -74,4 +74,15 @@ public class BuildRuleSourcePathTest {
 
     assertEquals(rule, path.asReference());
   }
+
+  @Test
+  public void explicitlySetPath() {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
+    FakeBuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target);
+    Path path = Paths.get("blah");
+    BuildRuleSourcePath buildRuleSourcePath = new BuildRuleSourcePath(rule, path);
+    assertEquals(rule, buildRuleSourcePath.asReference());
+    assertEquals(path, buildRuleSourcePath.resolve());
+  }
+
 }
