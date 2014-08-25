@@ -17,14 +17,20 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class CxxBuckConfig {
+
+  private static final Path DEFAULT_LEX = Paths.get("/usr/bin/flex");
+  private static final Path DEFAULT_YACC = Paths.get("/usr/bin/bison");
+  private static final ImmutableList<String> DEFAULT_YACC_FLAGS = ImmutableList.of("-y");
 
   private final BuckConfig delegate;
 
@@ -74,6 +80,30 @@ public class CxxBuckConfig {
 
   public ImmutableList<String> getCxxLdFlags() {
     return maybeSplit(delegate.getValue("cxx", "cxxldflags"));
+  }
+
+  public Path getLex() {
+    return delegate.getPath("cxx", "lex").or(DEFAULT_LEX);
+  }
+
+  public ImmutableList<String> getLexFlags() {
+    return maybeSplit(delegate.getValue("cxx", "lexflags"));
+  }
+
+  public BuildTarget getLexDep() {
+    return delegate.getRequiredBuildTarget("cxx", "lex_dep");
+  }
+
+  public Path getYacc() {
+    return delegate.getPath("cxx", "yacc").or(DEFAULT_YACC);
+  }
+
+  public ImmutableList<String> getYaccFlags() {
+    Optional<String> value = delegate.getValue("cxx", "yaccflags");
+    if (!value.isPresent()) {
+      return DEFAULT_YACC_FLAGS;
+    }
+    return maybeSplit(value);
   }
 
 }

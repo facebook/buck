@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,6 +43,35 @@ public class CxxHeaderSourceSpec {
 
   public ImmutableList<CxxSource> getCxxSources() {
     return cxxSources;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+
+    if (this == o) {
+      return true;
+    }
+
+    if (!(o instanceof CxxHeaderSourceSpec)) {
+      return false;
+    }
+
+    CxxHeaderSourceSpec that = (CxxHeaderSourceSpec) o;
+
+    if (!cxxHeaders.equals(that.cxxHeaders)) {
+      return false;
+    }
+
+    if (!cxxSources.equals(that.cxxSources)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(cxxHeaders, cxxSources);
   }
 
 }

@@ -42,12 +42,14 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public class CxxDescriptionEnhancerTest {
 
@@ -59,6 +61,89 @@ public class CxxDescriptionEnhancerTest {
             .setDeps(ImmutableSortedSet.copyOf(deps))
             .build());
   }
+
+  @Test
+  public void createLexYaccBuildRules() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
+    // Setup our C++ buck config with the paths to the lex/yacc binaries.
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path lexPath = Paths.get("lex");
+    filesystem.touch(lexPath);
+    Path yaccPath = Paths.get("yacc");
+    filesystem.touch(yaccPath);
+    FakeBuckConfig buckConfig = new FakeBuckConfig(
+        ImmutableMap.<String, Map<String, String>>of(
+            "cxx", ImmutableMap.of(
+                "lex", lexPath.toString(),
+                "yacc", yaccPath.toString())),
+        filesystem);
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+
+    // Setup the target name and build params.
+    BuildTarget target = BuildTargetFactory.newInstance("//:test");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+
+    // Setup a genrule that generates our lex source.
+    String lexSourceName = "test.ll";
+    BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:genrule_lex");
+    Genrule genrule = GenruleBuilder.createGenrule(genruleTarget)
+        .setOut(lexSourceName)
+        .build();
+    SourcePath lexSource = new BuildRuleSourcePath(genrule);
+
+    // Use a regular path for our yacc source.
+    String yaccSourceName = "test.yy";
+    SourcePath yaccSource = new TestSourcePath(yaccSourceName);
+
+    // Build the rules.
+    CxxHeaderSourceSpec actual = CxxDescriptionEnhancer.createLexYaccBuildRules(
+        params,
+        resolver,
+        cxxBuckConfig,
+        ImmutableList.<String>of(),
+        ImmutableMap.of(lexSourceName, lexSource),
+        ImmutableList.<String>of(),
+        ImmutableMap.of(yaccSourceName, yaccSource));
+
+    // Grab the generated lex rule and verify it has the genrule as a dep.
+    Lex lex = (Lex) resolver.get(
+        CxxDescriptionEnhancer.createLexBuildTarget(target, lexSourceName));
+    assertNotNull(lex);
+    assertEquals(
+        ImmutableSortedSet.<BuildRule>of(genrule),
+        lex.getDeps());
+
+    // Grab the generated yacc rule and verify it has no deps.
+    Yacc yacc = (Yacc) resolver.get(
+        CxxDescriptionEnhancer.createYaccBuildTarget(target, yaccSourceName));
+    assertNotNull(yacc);
+    assertEquals(
+        ImmutableSortedSet.<BuildRule>of(),
+        yacc.getDeps());
+
+    // Check the header/source spec is correct.
+    Path lexOutputSource = CxxDescriptionEnhancer.getLexSourceOutputPath(target, lexSourceName);
+    Path lexOutputHeader = CxxDescriptionEnhancer.getLexHeaderOutputPath(target, lexSourceName);
+    Path yaccOutputPrefix = CxxDescriptionEnhancer.getYaccOutputPrefix(target, yaccSourceName);
+    Path yaccOutputSource = Yacc.getSourceOutputPath(yaccOutputPrefix);
+    Path yaccOutputHeader = Yacc.getHeaderOutputPath(yaccOutputPrefix);
+    CxxHeaderSourceSpec expected = new CxxHeaderSourceSpec(
+        ImmutableMap.<Path, SourcePath>of(
+            target.getBasePath().resolve(lexSourceName + ".h"),
+            new BuildRuleSourcePath(lex, lexOutputHeader),
+            target.getBasePath().resolve(yaccSourceName + ".h"),
+            new BuildRuleSourcePath(yacc, yaccOutputHeader)),
+        ImmutableList.of(
+            new CxxSource(
+                lexSourceName + ".cc",
+                new BuildRuleSourcePath(lex, lexOutputSource)),
+            new CxxSource(
+                yaccSourceName + ".cc",
+                new BuildRuleSourcePath(yacc, yaccOutputSource))));
+    assertEquals(expected, actual);
+  }
+
 
   @Test
   public void linkWhole() {

@@ -439,6 +439,30 @@ public class BuckConfig {
   }
 
   /**
+   * @return the parsed BuildTarget in the given section and field, if set.
+   */
+  public Optional<BuildTarget> getBuildTarget(String section, String field) {
+    Optional<String> target = getValue(section, field);
+    return target.isPresent() ?
+        Optional.of(getBuildTargetForFullyQualifiedTarget(target.get())) :
+        Optional.<BuildTarget>absent();
+  }
+
+  /**
+   * @return the parsed BuildTarget in the given section and field.
+   */
+  public BuildTarget getRequiredBuildTarget(String section, String field) {
+    Optional<BuildTarget> target = getBuildTarget(section, field);
+    if (!target.isPresent()) {
+      throw new HumanReadableException(String.format(
+          ".buckconfig: %s:%s must be set",
+          section,
+          field));
+    }
+    return target.get();
+  }
+
+  /**
    * In a {@link BuckConfig}, an alias can either refer to a fully-qualified build target, or an
    * alias defined earlier in the {@code alias} section. The mapping produced by this method
    * reflects the result of resolving all aliases as values in the {@code alias} section.

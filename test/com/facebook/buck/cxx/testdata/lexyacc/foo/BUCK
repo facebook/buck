@@ -1,0 +1,9 @@
+cxx_binary(
+  name='main',
+  srcs=[
+    'main.cpp',
+  ],
+  yacc_srcs=[
+    'mainy.yy',
+  ],
+)

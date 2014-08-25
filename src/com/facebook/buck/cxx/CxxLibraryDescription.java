@@ -17,22 +17,28 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class CxxLibraryDescription implements Description<CxxLibraryDescription.Arg> {
+public class CxxLibraryDescription implements
+    Description<CxxLibraryDescription.Arg>,
+    ImplicitDepsInferringDescription {
 
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_library");
 
@@ -65,21 +71,65 @@ public class CxxLibraryDescription implements Description<CxxLibraryDescription.
             params.getBuildTarget(),
             args.headers.or((ImmutableList.<SourcePath>of())));
 
+    // Extract the lex sources.
+    ImmutableMap<String, SourcePath> lexSrcs =
+        SourcePaths.getSourcePathNames(
+            params.getBuildTarget(),
+            "lexSrcs",
+            args.lexSrcs.or(ImmutableList.<SourcePath>of()));
+
+    // Extract the yacc sources.
+    ImmutableMap<String, SourcePath> yaccSrcs =
+        SourcePaths.getSourcePathNames(
+            params.getBuildTarget(),
+            "yaccSrcs",
+            args.yaccSrcs.or(ImmutableList.<SourcePath>of()));
+
+    // Setup the rules to run lex/yacc.
+    CxxHeaderSourceSpec lexYaccSources =
+        CxxDescriptionEnhancer.createLexYaccBuildRules(
+            params,
+            resolver,
+            cxxBuckConfig,
+            ImmutableList.<String>of(),
+            lexSrcs,
+            ImmutableList.<String>of(),
+            yaccSrcs);
+
+    // Generate all the build rules necessary for the C/C++ library, including
+    // all user specified sources, and sources passed in via lex/yacc.
     return CxxDescriptionEnhancer.createCxxLibraryBuildRules(
         params,
         resolver,
         cxxBuckConfig,
         args.preprocessorFlags.or(ImmutableList.<String>of()),
         args.propagatedPpFlags.or(ImmutableList.<String>of()),
-        headers,
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(headers)
+            .putAll(lexYaccSources.getCxxHeaders())
+            .build(),
         args.compilerFlags.or(ImmutableList.<String>of()),
-        srcs,
+        ImmutableList.<CxxSource>builder()
+            .addAll(srcs)
+            .addAll(lexYaccSources.getCxxSources())
+            .build(),
         args.linkWhole.or(false));
   }
 
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
+  }
+
+  @Override
+  public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params) {
+    ImmutableSet.Builder<String> deps = ImmutableSet.builder();
+
+    if (!params.getOptionalListAttribute("lexSrcs").isEmpty()) {
+      deps.add(cxxBuckConfig.getLexDep().toString());
+    }
+
+    return deps.build();
   }
 
   @SuppressFieldNotInitialized
@@ -91,6 +141,8 @@ public class CxxLibraryDescription implements Description<CxxLibraryDescription.
     public Optional<ImmutableList<String>> preprocessorFlags;
     public Optional<ImmutableList<String>> propagatedPpFlags;
     public Optional<Boolean> linkWhole;
+    public Optional<ImmutableList<SourcePath>> lexSrcs;
+    public Optional<ImmutableList<SourcePath>> yaccSrcs;
   }
 
 }

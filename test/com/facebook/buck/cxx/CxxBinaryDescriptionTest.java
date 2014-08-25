@@ -134,6 +134,8 @@ public class CxxBinaryDescriptionTest {
         new BuildRuleSourcePath(genHeader)));
     arg.compilerFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
+    arg.lexSrcs = Optional.absent();
+    arg.yaccSrcs = Optional.absent();
 
     // Instantiate a description and call its `createBuildRule` method.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
