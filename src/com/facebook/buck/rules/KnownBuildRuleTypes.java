@@ -64,8 +64,8 @@ import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
 import com.facebook.buck.shell.ShTestDescription;
 import com.facebook.buck.thrift.ThriftBuckConfig;
+import com.facebook.buck.thrift.ThriftCxxEnhancer;
 import com.facebook.buck.thrift.ThriftJavaEnhancer;
-import com.facebook.buck.thrift.ThriftLanguageSpecificEnhancer;
 import com.facebook.buck.thrift.ThriftLibraryDescription;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -226,8 +226,10 @@ public class KnownBuildRuleTypes {
     builder.register(new JavaBinaryDescription());
     builder.register(new ThriftLibraryDescription(
         thriftBuckConfig,
-        ImmutableList.<ThriftLanguageSpecificEnhancer>of(
-            new ThriftJavaEnhancer(thriftBuckConfig, javacEnv))));
+        ImmutableList.of(
+            new ThriftJavaEnhancer(thriftBuckConfig, javacEnv),
+            new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ false),
+            new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ true))));
     builder.register(new NdkLibraryDescription(ndkVersion));
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());

@@ -37,4 +37,9 @@ public class ThriftConstructorArg implements ConstructorArg {
 
   public Optional<ImmutableSet<String>> javaOptions;
 
+  public Optional<ImmutableSortedSet<BuildRule>> cppDeps;
+  public Optional<ImmutableSortedSet<BuildRule>> cpp2Deps;
+  public Optional<ImmutableSet<String>> cppOptions;
+  public Optional<ImmutableSet<String>> cpp2Options;
+
 }

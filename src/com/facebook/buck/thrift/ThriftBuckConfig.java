@@ -101,4 +101,28 @@ public class ThriftBuckConfig {
     return getRequiredBuildTarget("thrift", "java_library");
   }
 
+  public BuildTarget getCppDep() {
+    return getRequiredBuildTarget("thrift", "cpp_library");
+  }
+
+  public BuildTarget getCpp2Dep() {
+    return getRequiredBuildTarget("thrift", "cpp2_library");
+  }
+
+  public BuildTarget getCppAyncDep() {
+    return getRequiredBuildTarget("thrift", "cpp_async_library");
+  }
+
+  public BuildTarget getCppReflectionDep() {
+    return getRequiredBuildTarget("thrift", "cpp_reflection_library");
+  }
+
+  public BuildTarget getCppFrozenDep() {
+    return getRequiredBuildTarget("thrift", "cpp_frozen_library");
+  }
+
+  public BuildTarget getCppJsonDep() {
+    return getRequiredBuildTarget("thrift", "cpp_json_library");
+  }
+
 }
