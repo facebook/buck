@@ -48,7 +48,6 @@ import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.java.JavaBinaryDescription;
-import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
@@ -64,12 +63,16 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
 import com.facebook.buck.shell.ShTestDescription;
-import com.facebook.buck.thrift.JavaThriftLibraryDescription;
+import com.facebook.buck.thrift.ThriftBuckConfig;
+import com.facebook.buck.thrift.ThriftJavaEnhancer;
+import com.facebook.buck.thrift.ThriftLanguageSpecificEnhancer;
+import com.facebook.buck.thrift.ThriftLibraryDescription;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -167,6 +170,9 @@ public class KnownBuildRuleTypes {
       ndkVersion = androidDirectoryResolver.getNdkVersion();
     }
 
+    // Construct the thrift config wrapping the buck config.
+    ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
+
     // Construct the C/C++ config wrapping the buck config.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
@@ -218,7 +224,10 @@ public class KnownBuildRuleTypes {
     builder.register(new IosPostprocessResourcesDescription());
     builder.register(new AppleResourceDescription());
     builder.register(new JavaBinaryDescription());
-    builder.register(new JavaThriftLibraryDescription(javacEnv, new JavaBuckConfig(config)));
+    builder.register(new ThriftLibraryDescription(
+        thriftBuckConfig,
+        ImmutableList.<ThriftLanguageSpecificEnhancer>of(
+            new ThriftJavaEnhancer(thriftBuckConfig, javacEnv))));
     builder.register(new NdkLibraryDescription(ndkVersion));
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());

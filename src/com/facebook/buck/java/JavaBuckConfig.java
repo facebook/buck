@@ -91,7 +91,4 @@ public class JavaBuckConfig {
     }
   }
 
-  public Optional<String> getJavaThriftDep() {
-    return delegate.getValue("java", "thrift_library");
-  }
 }

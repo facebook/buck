@@ -48,6 +48,7 @@ java_library(
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/python:config',
     '//src/com/facebook/buck/command:command',
+    '//src/com/facebook/buck/thrift:rules',
     '//test/com/facebook/buck/...',
   ]
 )

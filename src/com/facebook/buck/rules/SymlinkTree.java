@@ -101,4 +101,8 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
     return Sha1HashCode.fromHashCode(HashCode.fromInt(0));
   }
 
+  public Path getRoot() {
+    return root;
+  }
+
 }

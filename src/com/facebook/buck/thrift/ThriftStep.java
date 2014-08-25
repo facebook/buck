@@ -89,4 +89,5 @@ public class ThriftStep extends ShellStep {
   public String getShortName() {
     return "thrift";
   }
+
 }

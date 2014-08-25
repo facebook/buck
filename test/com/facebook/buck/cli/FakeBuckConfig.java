@@ -49,6 +49,10 @@ public class FakeBuckConfig extends BuckConfig {
     this(sections, Platform.detect(), null, ImmutableMap.copyOf(System.getenv()));
   }
 
+  public FakeBuckConfig(Map<String, Map<String, String>> sections, ProjectFilesystem filesystem) {
+    this(sections, Platform.detect(), filesystem, ImmutableMap.copyOf(System.getenv()));
+  }
+
   public FakeBuckConfig(Platform platform) {
     this(EMPTY_SECTIONS, platform, null, ImmutableMap.copyOf(System.getenv()));
   }
@@ -65,7 +69,7 @@ public class FakeBuckConfig extends BuckConfig {
     super(
         sections,
         filesystem == null ? EasyMock.createMock(ProjectFilesystem.class) : filesystem,
-        EasyMock.createMock(BuildTargetParser.class),
+        new BuildTargetParser(),
         platform,
         environment,
         ImmutableMap.<String, Path>of());
