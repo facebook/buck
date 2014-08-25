@@ -37,7 +37,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   public static final String BUILD_TARGET_PREFIX = "//";
 
-  private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z_]+");
+  private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z0-9_]+");
 
   private final Optional<String> repository;
   private final String baseName;
