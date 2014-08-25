@@ -36,4 +36,23 @@ public class BuildTargetsTest {
     BuildTarget fooBarBaz = BuildTarget.builder("//foo", "bar").setFlavor("baz").build();
     BuildTargets.createFlavoredBuildTarget(fooBarBaz, new Flavor("buzz"));
   }
+
+  @Test
+  public void testExtendFlavoredBuildTargetOnFlavorlessTarget() {
+    BuildTarget fooBar = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget fooBarBaz = BuildTargets.extendFlavoredBuildTarget(fooBar, new Flavor("baz"));
+    assertTrue(fooBarBaz.isFlavored());
+    assertEquals("//foo:bar#baz", fooBarBaz.getFullyQualifiedName());
+  }
+
+  @Test
+  public void testExtendFlavoredBuildTargetOnFlavoredTarget() {
+    BuildTarget fooBar = BuildTarget.builder("//foo", "bar")
+        .setFlavor(new Flavor("hello"))
+        .build();
+    BuildTarget fooBarBaz = BuildTargets.extendFlavoredBuildTarget(fooBar, new Flavor("baz"));
+    assertTrue(fooBarBaz.isFlavored());
+    assertEquals("//foo:bar#hello-baz", fooBarBaz.getFullyQualifiedName());
+  }
+
 }

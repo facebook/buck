@@ -111,4 +111,15 @@ public class BuildTargets {
     return false;
   }
 
+  /**
+   * @return a new flavored {@link BuildTarget} by merging any existing flavor with the
+   *         given flavor.
+   */
+  public static BuildTarget extendFlavoredBuildTarget(BuildTarget target, Flavor flavor) {
+    if (target.isFlavored()) {
+      flavor = new Flavor(String.format("%s-%s", target.getFlavor(), flavor));
+    }
+    return BuildTargets.createFlavoredBuildTarget(target.getUnflavoredTarget(), flavor);
+  }
+
 }
