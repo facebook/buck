@@ -176,7 +176,8 @@ public class CxxDescriptionEnhancer {
       final ImmutableList<String> propagatedPpFlags,
       ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
-      ImmutableList<CxxSource> sources) {
+      ImmutableList<CxxSource> sources,
+      final boolean linkWhole) {
 
     // Create rules for compiling the non-PIC object files.
     ImmutableList<SourcePath> objects = createPreprocessAndCompileBuildRules(
@@ -220,10 +221,23 @@ public class CxxDescriptionEnhancer {
 
       @Override
       public NativeLinkableInput getNativeLinkableInput() {
+
+        // Build up the arguments used to link this library.  If we're linking the
+        // whole archive, wrap the library argument in the necessary "ld" flags.
+        ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
+        if (linkWhole) {
+          linkerArgsBuilder.add("--whole-archive");
+        }
+        linkerArgsBuilder.add(staticLibraryPath.toString());
+        if (linkWhole) {
+          linkerArgsBuilder.add("--no-whole-archive");
+        }
+        final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
+
         return new NativeLinkableInput(
             ImmutableSet.of(staticLibraryTarget),
             ImmutableList.<Path>of(),
-            ImmutableList.of(staticLibraryPath.toString()));
+            linkerArgs);
       }
 
     };

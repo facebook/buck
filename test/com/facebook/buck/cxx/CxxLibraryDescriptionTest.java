@@ -125,6 +125,7 @@ public class CxxLibraryDescriptionTest {
     arg.compilerFlags = Optional.absent();
     arg.propagatedPpFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
+    arg.linkWhole = Optional.absent();
 
     // Instantiate a description and call its `createBuildRule` method.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());

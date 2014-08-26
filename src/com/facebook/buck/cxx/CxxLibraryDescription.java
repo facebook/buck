@@ -73,7 +73,8 @@ public class CxxLibraryDescription implements Description<CxxLibraryDescription.
         args.propagatedPpFlags.or(ImmutableList.<String>of()),
         headers,
         args.compilerFlags.or(ImmutableList.<String>of()),
-        srcs);
+        srcs,
+        args.linkWhole.or(false));
   }
 
   @Override
@@ -89,6 +90,7 @@ public class CxxLibraryDescription implements Description<CxxLibraryDescription.
     public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableList<String>> preprocessorFlags;
     public Optional<ImmutableList<String>> propagatedPpFlags;
+    public Optional<Boolean> linkWhole;
   }
 
 }
