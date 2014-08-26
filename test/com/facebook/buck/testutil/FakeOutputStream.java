@@ -24,6 +24,7 @@ import java.io.IOException;
  */
 public class FakeOutputStream extends ByteArrayOutputStream {
   private boolean isClosed = false;
+  private int lastFlushSize = 0;
 
   @Override
   public void close() throws IOException {
@@ -31,7 +32,17 @@ public class FakeOutputStream extends ByteArrayOutputStream {
     isClosed = true;
   }
 
+  @Override
+  public void flush() throws IOException {
+    super.flush();
+    lastFlushSize = size();
+  }
+
   public boolean isClosed() {
     return isClosed;
+  }
+
+  public int getLastFlushSize() {
+    return lastFlushSize;
   }
 }
