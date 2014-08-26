@@ -684,7 +684,7 @@ public class ProjectGenerator {
       defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", getObjectOutputPathForRule(rule));
     }
     setTargetBuildConfigurations(
-        rule,
+        buildable,
         target,
         targetGroup,
         buildable.getConfigurations(),
@@ -801,7 +801,7 @@ public class ProjectGenerator {
    * effectively laid out in layers.
    */
   private void setTargetBuildConfigurations(
-      BuildRule buildRule,
+      AbstractAppleNativeTargetBuildRule buildRule,
       PBXTarget target,
       PBXGroup targetGroup,
       ImmutableSet<XcodeRuleConfiguration> configurations,
