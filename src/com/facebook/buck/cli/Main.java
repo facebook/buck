@@ -26,8 +26,8 @@ import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.log.CommandThreadAssociation;
 import com.facebook.buck.log.LogConfig;
-import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
@@ -854,13 +854,15 @@ public final class Main {
     File projectRoot = new File(".");
     int exitCode = FAIL_EXIT_CODE;
     BuildId buildId = new BuildId();
-    try (LogFormatter.CommandThreadAssociation commandThreadAssociation =
-             new LogFormatter.CommandThreadAssociation(buildId.toString())) {
+    CommandThreadAssociation commandThreadAssociation =
+      new CommandThreadAssociation(buildId.toString());
+    try {
       exitCode = tryRunMainWithExitCode(buildId, projectRoot, context, args);
     } catch (Throwable t) {
       LOG.error(t, "Uncaught exception at top level");
     } finally {
       LogConfig.flushLogs();
+      commandThreadAssociation.stop();
       // Exit explicitly so that non-daemon threads (of which we use many) don't
       // keep the VM alive.
       System.exit(exitCode);

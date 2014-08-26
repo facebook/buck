@@ -16,7 +16,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.LogFormatter;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.LoggingArtifactCacheDecorator;
@@ -71,7 +71,7 @@ public class LoggingArtifactCacheFactory implements ArtifactCacheFactory {
   public void closeCreatedArtifactCaches(int timeoutInSeconds) throws InterruptedException {
     ExecutorService cachesTerminationService =
         MoreExecutors.newSingleThreadExecutor(
-            new LogFormatter.CommandThreadFactory("close_artifact_caches"));
+            new CommandThreadFactory("close_artifact_caches"));
     for (final ArtifactCache cache : createdArtifactCaches) {
       cachesTerminationService.submit(new Callable<Void>() {
         @Override
