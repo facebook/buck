@@ -125,4 +125,12 @@ public class ThriftBuckConfig {
     return getRequiredBuildTarget("thrift", "cpp_json_library");
   }
 
+  public BuildTarget getPythonDep() {
+    return getRequiredBuildTarget("thrift", "python_library");
+  }
+
+  public BuildTarget getPythonTwistedDep() {
+    return getRequiredBuildTarget("thrift", "python_twisted_library");
+  }
+
 }

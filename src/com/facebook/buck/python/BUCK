@@ -56,5 +56,7 @@ java_library(
     '//src/com/facebook/buck/cxx:rules',
     '//test/com/facebook/buck/python:',
     '//test/com/facebook/buck/cxx:cpp',
+    '//src/com/facebook/buck/thrift:rules',
+    '//test/com/facebook/buck/thrift:thrift',
   ],
 )

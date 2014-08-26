@@ -42,4 +42,6 @@ public class ThriftConstructorArg implements ConstructorArg {
   public Optional<ImmutableSet<String>> cppOptions;
   public Optional<ImmutableSet<String>> cpp2Options;
 
+  public Optional<ImmutableSet<String>> pyOptions;
+
 }

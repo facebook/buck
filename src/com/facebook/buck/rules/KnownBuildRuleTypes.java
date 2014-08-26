@@ -67,6 +67,7 @@ import com.facebook.buck.thrift.ThriftBuckConfig;
 import com.facebook.buck.thrift.ThriftCxxEnhancer;
 import com.facebook.buck.thrift.ThriftJavaEnhancer;
 import com.facebook.buck.thrift.ThriftLibraryDescription;
+import com.facebook.buck.thrift.ThriftPythonEnhancer;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -229,7 +230,9 @@ public class KnownBuildRuleTypes {
         ImmutableList.of(
             new ThriftJavaEnhancer(thriftBuckConfig, javacEnv),
             new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ false),
-            new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ true))));
+            new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ true),
+            new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
+            new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED))));
     builder.register(new NdkLibraryDescription(ndkVersion));
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());
