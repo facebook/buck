@@ -19,9 +19,11 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Optional;
@@ -33,6 +35,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class CxxDescriptionEnhancer {
 
@@ -182,6 +185,18 @@ public class CxxDescriptionEnhancer {
     return BuildTargets.extendFlavoredBuildTarget(target, SHARED_FLAVOR);
   }
 
+  public static String getSharedLibrarySoname(BuildTarget target) {
+    return String.format(
+        "lib%s_%s.so",
+        target.getBaseName().substring(2).replace('/', '_'),
+        target.getShortNameOnly());
+  }
+
+  public static Path getSharedLibraryOutputPath(BuildTarget target) {
+    String name = String.format("lib%s.so", target.getShortNameOnly());
+    return BuildTargets.getBinPath(target, "%s/" + name);
+  }
+
   public static CxxLibrary createCxxLibraryBuildRules(
       final BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -233,14 +248,8 @@ public class CxxDescriptionEnhancer {
 
     // Setup the rules to link the shared library.
     final BuildTarget sharedLibraryTarget = createSharedLibraryBuildTarget(params.getBuildTarget());
-    String sharedLibraryName = String.format("lib%s.so", sharedLibraryTarget.getShortNameOnly());
-    final String sharedLibrarySoname = String.format(
-        "lib%s_%s.so",
-        params.getBuildTarget().getBaseName().substring(2).replace('/', '_'),
-        params.getBuildTarget().getShortNameOnly());
-    final Path sharedLibraryPath = BuildTargets.getBinPath(
-        sharedLibraryTarget,
-        "%s/" + sharedLibraryName);
+    final String sharedLibrarySoname = getSharedLibrarySoname(params.getBuildTarget());
+    final Path sharedLibraryPath = getSharedLibraryOutputPath(params.getBuildTarget());
     final CxxLink sharedLibraryBuildRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
         resolver,
@@ -297,6 +306,16 @@ public class CxxDescriptionEnhancer {
             ImmutableSet.of(type == Type.STATIC ? staticLibraryTarget : sharedLibraryTarget),
             ImmutableList.<Path>of(),
             linkerArgs);
+      }
+
+      @Override
+      public PythonPackageComponents getPythonPackageComponents() {
+        return new PythonPackageComponents(
+            ImmutableMap.<Path, SourcePath>of(),
+            ImmutableMap.<Path, SourcePath>of(),
+            ImmutableMap.<Path, SourcePath>of(
+                Paths.get(sharedLibrarySoname),
+                new BuildRuleSourcePath(sharedLibraryBuildRule)));
       }
 
     };

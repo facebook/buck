@@ -25,6 +25,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
@@ -139,6 +141,7 @@ public class CxxDescriptionEnhancerTest {
     final Path staticLibraryOutput = Paths.get("output/path/lib.a");
     final BuildRule sharedLibraryDep = createFakeBuildRule("//:shared");
     final Path sharedLibraryOutput = Paths.get("output/path/lib.so");
+    final String sharedLibrarySoname = "soname";
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     BuildRuleParams depParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(depTarget);
     CxxLibrary dep = new CxxLibrary(depParams) {
@@ -166,6 +169,15 @@ public class CxxDescriptionEnhancerTest {
                 ImmutableSet.of(sharedLibraryDep.getBuildTarget()),
                 ImmutableList.of(sharedLibraryOutput),
                 ImmutableList.of(sharedLibraryOutput.toString()));
+      }
+
+      @Override
+      public PythonPackageComponents getPythonPackageComponents() {
+        return new PythonPackageComponents(
+            ImmutableMap.<Path, SourcePath>of(),
+            ImmutableMap.<Path, SourcePath>of(),
+            ImmutableMap.<Path, SourcePath>of(
+                Paths.get(sharedLibrarySoname), new PathSourcePath(sharedLibraryOutput)));
       }
 
     };
@@ -321,6 +333,17 @@ public class CxxDescriptionEnhancerTest {
         FluentIterable.from(sharedCompileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
+
+    // Check the python interface returning by this C++ library.
+    PythonPackageComponents expectedPythonPackageComponents = new PythonPackageComponents(
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableMap.<Path, SourcePath>of(
+            Paths.get(CxxDescriptionEnhancer.getSharedLibrarySoname(target)),
+            new BuildRuleSourcePath(sharedRule)));
+    assertEquals(
+        expectedPythonPackageComponents,
+        rule.getPythonPackageComponents());
   }
 
 }

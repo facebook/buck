@@ -22,6 +22,8 @@ java_library(
   ],
   visibility = [
     '//src/com/facebook/buck/rules:types',
+    '//src/com/facebook/buck/cxx:rules',
     '//test/com/facebook/buck/python:',
+    '//test/com/facebook/buck/cxx:cpp',
   ],
 )

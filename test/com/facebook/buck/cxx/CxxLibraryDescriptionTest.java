@@ -23,6 +23,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
@@ -37,6 +38,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -100,9 +102,17 @@ public class CxxLibraryDescriptionTest {
       @Override
       public NativeLinkableInput getNativeLinkableInput(Type type) {
         return new NativeLinkableInput(
-            ImmutableSet.<BuildTarget>of(archive.getBuildTarget()),
-            ImmutableList.<Path>of(archiveOutput),
-            ImmutableList.<String>of(archiveOutput.toString()));
+            ImmutableSet.of(archive.getBuildTarget()),
+            ImmutableList.of(archiveOutput),
+            ImmutableList.of(archiveOutput.toString()));
+      }
+
+      @Override
+      public PythonPackageComponents getPythonPackageComponents() {
+        return new PythonPackageComponents(
+            ImmutableMap.<Path, SourcePath>of(),
+            ImmutableMap.<Path, SourcePath>of(),
+            ImmutableMap.<Path, SourcePath>of());
       }
 
     };

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,7 +34,7 @@ import javax.annotation.Nullable;
  * various interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
 public abstract class CxxLibrary extends AbstractBuildRule
-    implements CxxPreprocessorDep, NativeLinkable {
+    implements CxxPreprocessorDep, NativeLinkable, PythonPackagable {
 
   public CxxLibrary(BuildRuleParams params) {
     super(params);

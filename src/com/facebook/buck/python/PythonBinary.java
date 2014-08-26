@@ -132,7 +132,8 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
         binPath,
         PythonUtil.toModuleName(getBuildTarget(), main.toString()),
         PythonUtil.getPathMapFromSourcePaths(components.getModules()),
-        PythonUtil.getPathMapFromSourcePaths(components.getResources())));
+        PythonUtil.getPathMapFromSourcePaths(components.getResources()),
+        PythonUtil.getPathMapFromSourcePaths(components.getNativeLibraries())));
 
     // Record the executable package for caching.
     buildableContext.recordArtifact(getBinPath());

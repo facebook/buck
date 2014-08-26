@@ -47,17 +47,22 @@ public class PexStep extends ShellStep {
   // The map of resources to include in the PEX.
   private final ImmutableMap<Path, Path> resources;
 
+  // The map of native libraries to include in the PEX.
+  private final ImmutableMap<Path, Path> nativeLibraries;
+
   public PexStep(
       Path pathToPex,
       Path destination,
       String entry,
       ImmutableMap<Path, Path> modules,
-      ImmutableMap<Path, Path> resources) {
+      ImmutableMap<Path, Path> resources,
+      ImmutableMap<Path, Path> nativeLibraries) {
     this.pathToPex = Preconditions.checkNotNull(pathToPex);
     this.destination = Preconditions.checkNotNull(destination);
     this.entry = Preconditions.checkNotNull(entry);
     this.modules = Preconditions.checkNotNull(modules);
     this.resources = Preconditions.checkNotNull(resources);
+    this.nativeLibraries = Preconditions.checkNotNull(nativeLibraries);
   }
 
   @Override
@@ -82,10 +87,15 @@ public class PexStep extends ShellStep {
     for (ImmutableMap.Entry<Path, Path> ent : resources.entrySet()) {
       resourcesBuilder.put(ent.getKey().toString(), ent.getValue().toString());
     }
+    ImmutableMap.Builder<String, String> nativeLibrariesBuilder = ImmutableMap.builder();
+    for (ImmutableMap.Entry<Path, Path> ent : nativeLibraries.entrySet()) {
+      nativeLibrariesBuilder.put(ent.getKey().toString(), ent.getValue().toString());
+    }
     try {
       return Optional.of(MAPPER.writeValueAsString(ImmutableMap.of(
           "modules", modulesBuilder.build(),
-          "resources", resourcesBuilder.build())));
+          "resources", resourcesBuilder.build(),
+          "nativeLibraries", nativeLibrariesBuilder.build())));
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
