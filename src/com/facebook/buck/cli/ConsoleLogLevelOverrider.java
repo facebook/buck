@@ -20,6 +20,7 @@ import com.facebook.buck.log.ConsoleHandler;
 import com.facebook.buck.util.Verbosity;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import java.util.logging.Level;
 
@@ -29,26 +30,26 @@ import java.util.logging.Level;
  */
 public class ConsoleLogLevelOverrider implements AutoCloseable {
 
+  private final String commandId;
   private final Optional<ConsoleHandler> consoleHandler;
-  private final Optional<Level> originalConsoleLevel;
+  private final boolean shouldUnregister;
 
-  public ConsoleLogLevelOverrider(Verbosity verbosity) {
-
+  public ConsoleLogLevelOverrider(String commandId, Verbosity verbosity) {
+    this.commandId = Preconditions.checkNotNull(commandId);
     consoleHandler = JavaUtilLogHandlers.getConsoleHandler();
     if (consoleHandler.isPresent() &&
-        verbosity == Verbosity.ALL &&
-        !consoleHandler.get().getLevel().equals(Level.ALL)) {
-      this.originalConsoleLevel = Optional.of(consoleHandler.get().getLevel());
-      consoleHandler.get().setLevel(Level.ALL);
+        verbosity == Verbosity.ALL) {
+      consoleHandler.get().registerLogLevel(this.commandId, Level.ALL);
+      shouldUnregister = true;
     } else {
-      this.originalConsoleLevel = Optional.absent();
+      shouldUnregister = false;
     }
   }
 
   @Override
   public void close() {
-    if (consoleHandler.isPresent() && originalConsoleLevel.isPresent()) {
-      consoleHandler.get().setLevel(originalConsoleLevel.get());
+    if (consoleHandler.isPresent() && shouldUnregister) {
+      consoleHandler.get().unregisterLogLevel(commandId);
     }
   }
 }

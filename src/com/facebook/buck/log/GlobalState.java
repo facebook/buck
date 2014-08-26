@@ -16,8 +16,10 @@
 
 package com.facebook.buck.log;
 
+import java.io.OutputStreamWriter;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 /**
  * Package-private utility class which holds various process-wide
@@ -35,4 +37,16 @@ class GlobalState {
    */
   public static final ConcurrentMap<Long, String> THREAD_ID_TO_COMMAND_ID =
     new ConcurrentHashMap<>();
+
+  /**
+   * Map of (command ID: console writer) pairs.
+   */
+  public static final ConcurrentMap<String, OutputStreamWriter>
+      COMMAND_ID_TO_CONSOLE_WRITER = new ConcurrentHashMap<>();
+
+  /**
+   * Map of (command ID: level override) pairs.
+   */
+  public static final ConcurrentMap<String, Level>
+      COMMAND_ID_TO_LEVEL = new ConcurrentHashMap<>();
 }

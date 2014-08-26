@@ -30,34 +30,46 @@ import java.io.OutputStream;
  * Restores the original output stream when closed.
  */
 public class ConsoleHandlerRedirector implements AutoCloseable {
+  private final String commandId;
   private final OutputStream redirectedOutputStream;
-  private final OutputStream originalOutputStream;
+  private final Optional<OutputStream> originalOutputStream;
   private final Optional<ConsoleHandler> consoleHandler;
 
   public ConsoleHandlerRedirector(
+      String commandId,
       OutputStream redirectedOutputStream,
-      OutputStream originalOutputStream) {
-    this(redirectedOutputStream, originalOutputStream, JavaUtilLogHandlers.getConsoleHandler());
+      Optional<OutputStream> originalOutputStream) {
+    this(
+        commandId,
+        redirectedOutputStream,
+        originalOutputStream,
+        JavaUtilLogHandlers.getConsoleHandler());
   }
 
   @VisibleForTesting
   ConsoleHandlerRedirector(
+      String commandId,
       OutputStream redirectedOutputStream,
-      OutputStream originalOutputStream,
+      Optional<OutputStream> originalOutputStream,
       Optional<ConsoleHandler> consoleHandler) {
+    this.commandId = Preconditions.checkNotNull(commandId);
     this.redirectedOutputStream = Preconditions.checkNotNull(redirectedOutputStream);
     this.originalOutputStream = Preconditions.checkNotNull(originalOutputStream);
     this.consoleHandler = Preconditions.checkNotNull(consoleHandler);
 
     if (this.consoleHandler.isPresent()) {
-      this.consoleHandler.get().setOutputStream(this.redirectedOutputStream);
+      this.consoleHandler.get().registerOutputStream(this.commandId, this.redirectedOutputStream);
     }
   }
 
   @Override
   public void close() {
     if (consoleHandler.isPresent()) {
-      consoleHandler.get().setOutputStream(originalOutputStream);
+      if (originalOutputStream.isPresent()) {
+        consoleHandler.get().registerOutputStream(commandId, originalOutputStream.get());
+      } else {
+        consoleHandler.get().unregisterOutputStream(commandId);
+      }
     }
   }
 }

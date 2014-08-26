@@ -76,6 +76,7 @@ import com.martiansoftware.nailgun.NGContext;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -521,9 +522,12 @@ public final class Main {
     // be the last resource, so that it is closed first and can deliver its queued events to the
     // other resources before they are closed.
     try (ConsoleLogLevelOverrider consoleLogLevelOverrider =
-             new ConsoleLogLevelOverrider(verbosity);
+             new ConsoleLogLevelOverrider(buildId.toString(), verbosity);
          ConsoleHandlerRedirector consoleHandlerRedirector =
-           new ConsoleHandlerRedirector(console.getStdErr(), stdErr);
+             new ConsoleHandlerRedirector(
+                 buildId.toString(),
+                 console.getStdErr(),
+                 Optional.<OutputStream>of(stdErr));
          AbstractConsoleEventBusListener consoleListener =
              createConsoleEventListener(
                  clock,
@@ -854,15 +858,34 @@ public final class Main {
     File projectRoot = new File(".");
     int exitCode = FAIL_EXIT_CODE;
     BuildId buildId = new BuildId();
-    CommandThreadAssociation commandThreadAssociation =
-      new CommandThreadAssociation(buildId.toString());
+
+    // Note that try-with-resources blocks close their resources *before*
+    // executing catch or finally blocks. That means we can't use one here,
+    // since those blocks may need to log.
+    CommandThreadAssociation commandThreadAssociation = null;
+    ConsoleHandlerRedirector consoleHandlerRedirector = null;
+
     try {
+      commandThreadAssociation =
+        new CommandThreadAssociation(buildId.toString());
+      // Redirect console logs to the (possibly remote) stderr stream.
+      // We do this for both the daemon and non-daemon case so we can
+      // unregister the stream when finished.
+      consoleHandlerRedirector = new ConsoleHandlerRedirector(
+          buildId.toString(),
+          stdErr,
+          Optional.<OutputStream>absent() /* originalOutputStream */);
       exitCode = tryRunMainWithExitCode(buildId, projectRoot, context, args);
     } catch (Throwable t) {
       LOG.error(t, "Uncaught exception at top level");
     } finally {
       LogConfig.flushLogs();
-      commandThreadAssociation.stop();
+      if (commandThreadAssociation != null) {
+        commandThreadAssociation.stop();
+      }
+      if (consoleHandlerRedirector != null) {
+        consoleHandlerRedirector.close();
+      }
       // Exit explicitly so that non-daemon threads (of which we use many) don't
       // keep the VM alive.
       System.exit(exitCode);
