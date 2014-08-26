@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,7 +45,6 @@ public class CxxCompilableEnhancer {
    * Resolve the map of names to SourcePaths to a list of CxxSource objects.
    */
   public static ImmutableList<CxxSource> resolveCxxSources(
-      BuildTarget target,
       ImmutableMap<String, SourcePath> sources) {
 
     ImmutableList.Builder<CxxSource> cxxSources = ImmutableList.builder();
@@ -55,8 +55,7 @@ public class CxxCompilableEnhancer {
       cxxSources.add(
           new CxxSource(
               ent.getKey(),
-              ent.getValue(),
-              getCompileOutputPath(target, ent.getKey())));
+              ent.getValue()));
     }
 
     return cxxSources.build();
@@ -77,11 +76,13 @@ public class CxxCompilableEnhancer {
    */
   public static BuildTarget createCompileBuildTarget(
       BuildTarget target,
-      String name) {
+      String name,
+      boolean pic) {
     return BuildTargets.extendFlavoredBuildTarget(
         target,
         new Flavor(String.format(
-            "compile-%s",
+            "compile-%s%s",
+            pic ? "pic-" : "",
             getOutputName(name).replace('/', '-').replace('.', '-'))));
   }
 
@@ -102,11 +103,13 @@ public class CxxCompilableEnhancer {
       Path compiler,
       CxxPreprocessorInput preprocessorInput,
       ImmutableList<String> compilerFlags,
+      boolean pic,
       CxxSource source) {
 
     BuildTarget target = createCompileBuildTarget(
         params.getBuildTarget(),
-        source.getName());
+        source.getName(),
+        pic);
 
     boolean cxx = !Files.getFileExtension(source.getName()).equals("c");
 
@@ -134,10 +137,11 @@ public class CxxCompilableEnhancer {
         compiler,
         ImmutableList.<String>builder()
             .add("-x", cxx ? "c++" : "c")
+            .addAll((pic ? Optional.of("-fPIC") : Optional.<String>absent()).asSet())
             .addAll(cxx ? preprocessorInput.getCxxppflags() : preprocessorInput.getCppflags())
             .addAll(compilerFlags)
             .build(),
-        source.getObject(),
+        getCompileOutputPath(target, source.getName()),
         source.getSource(),
         preprocessorInput.getIncludes(),
         preprocessorInput.getSystemIncludes());
@@ -153,6 +157,7 @@ public class CxxCompilableEnhancer {
       Path compiler,
       CxxPreprocessorInput preprocessorInput,
       ImmutableList<String> compilerFlags,
+      boolean pic,
       Iterable<CxxSource> sources) {
 
     ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
@@ -166,6 +171,7 @@ public class CxxCompilableEnhancer {
           compiler,
           preprocessorInput,
           compilerFlags,
+          pic,
           source));
     }
 

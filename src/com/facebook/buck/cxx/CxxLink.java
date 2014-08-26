@@ -79,4 +79,16 @@ public class CxxLink extends AbstractBuildRule {
     return output;
   }
 
+  public Path getLinker() {
+    return linker;
+  }
+
+  public Path getOutput() {
+    return output;
+  }
+
+  public ImmutableList<String> getArgs() {
+    return args;
+  }
+
 }

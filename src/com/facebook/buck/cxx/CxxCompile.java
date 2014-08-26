@@ -85,4 +85,28 @@ public class CxxCompile extends AbstractBuildRule {
     return output;
   }
 
+  public Path getCompiler() {
+    return compiler;
+  }
+
+  public ImmutableList<String> getFlags() {
+    return flags;
+  }
+
+  public Path getOutput() {
+    return output;
+  }
+
+  public SourcePath getInput() {
+    return input;
+  }
+
+  public ImmutableList<Path> getIncludes() {
+    return includes;
+  }
+
+  public ImmutableList<Path> getSystemIncludes() {
+    return systemIncludes;
+  }
+
 }

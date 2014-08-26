@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,26 +56,33 @@ public class CxxLinkableEnhancerTest {
 
   private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
 
-    private final NativeLinkableInput input;
+    private final NativeLinkableInput staticInput;
+    private final NativeLinkableInput sharedInput;
 
-    public FakeNativeLinkable(BuildRuleParams params, NativeLinkableInput input) {
+    public FakeNativeLinkable(
+        BuildRuleParams params,
+        NativeLinkableInput staticInput,
+        NativeLinkableInput sharedInput) {
       super(params);
-      this.input = Preconditions.checkNotNull(input);
+      this.staticInput = Preconditions.checkNotNull(staticInput);
+      this.sharedInput = Preconditions.checkNotNull(sharedInput);
     }
 
     @Override
-    public NativeLinkableInput getNativeLinkableInput() {
-      return input;
+    public NativeLinkableInput getNativeLinkableInput(Type type) {
+      return type == Type.STATIC ? staticInput : sharedInput;
     }
 
   }
 
   private static FakeNativeLinkable createNativeLinkable(
       String target,
-      NativeLinkableInput nativeLinkableInput) {
+      NativeLinkableInput staticNativeLinkableInput,
+      NativeLinkableInput sharedNativeLinkableInput) {
     return new FakeNativeLinkable(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
-        nativeLinkableInput);
+        staticNativeLinkableInput,
+        sharedNativeLinkableInput);
   }
 
   @Test
@@ -100,11 +109,14 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
+        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Optional.<String>absent(),
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(
             new TestSourcePath("simple.o"),
             new BuildRuleSourcePath(genrule1),
             new BuildRuleSourcePath(genrule2)),
+        NativeLinkable.Type.STATIC,
         EMPTY_DEPS);
 
     // Verify that the archive dependencies include the genrules providing the
@@ -146,8 +158,11 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
+        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
+        NativeLinkable.Type.STATIC,
         EMPTY_DEPS);
 
     // Verify that the archive rules dependencies are empty.
@@ -168,12 +183,14 @@ public class CxxLinkableEnhancerTest {
 
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency.
+    NativeLinkableInput nativeLinkableInput = new NativeLinkableInput(
+        ImmutableSet.of(fakeBuildTarget),
+        ImmutableList.<Path>of(),
+        ImmutableList.<String>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(
         "//:dep",
-        new NativeLinkableInput(
-            ImmutableSet.of(fakeBuildTarget),
-            ImmutableList.<Path>of(),
-            ImmutableList.<String>of()));
+        nativeLinkableInput,
+        nativeLinkableInput);
 
     // Construct a CxxLink object and pass the native linkable above as the dep.
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -183,12 +200,131 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
+        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
+        NativeLinkable.Type.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable));
 
     // Verify that the fake build rule made it in as a dep.
     assertTrue(cxxLink.getDeps().contains(fakeBuildRule));
+  }
+
+  @Test
+  public void createCxxLinkableBuildRuleExecutableVsShared() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+
+    String soname = "soname";
+    String sonameFlag = "-soname=" + soname;
+
+    // Construct a CxxLink object which links as an executable.
+    CxxLink executable = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        params,
+        resolver,
+        DEFAULT_LINKER,
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
+        target,
+        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Optional.<String>absent(),
+        DEFAULT_OUTPUT,
+        DEFAULT_INPUTS,
+        NativeLinkable.Type.STATIC,
+        ImmutableSortedSet.<BuildRule>of());
+    assertFalse(executable.getArgs().contains("-shared"));
+    assertFalse(executable.getArgs().contains(sonameFlag));
+
+    // Construct a CxxLink object which links as a shared lib.
+    CxxLink shared = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        params,
+        resolver,
+        DEFAULT_LINKER,
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
+        target,
+        CxxLinkableEnhancer.LinkType.SHARED,
+        Optional.<String>absent(),
+        DEFAULT_OUTPUT,
+        DEFAULT_INPUTS,
+        NativeLinkable.Type.STATIC,
+        ImmutableSortedSet.<BuildRule>of());
+    assertTrue(shared.getArgs().contains("-shared"));
+    assertFalse(shared.getArgs().contains(sonameFlag));
+
+    // Construct a CxxLink object which links as a shared lib with a SONAME.
+    CxxLink sharedWithSoname = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        params,
+        resolver,
+        DEFAULT_LINKER,
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
+        target,
+        CxxLinkableEnhancer.LinkType.SHARED,
+        Optional.of("soname"),
+        DEFAULT_OUTPUT,
+        DEFAULT_INPUTS,
+        NativeLinkable.Type.STATIC,
+        ImmutableSortedSet.<BuildRule>of());
+    assertTrue(sharedWithSoname.getArgs().contains("-shared"));
+    assertTrue(sharedWithSoname.getArgs().contains(sonameFlag));
+  }
+
+  @Test
+  public void createCxxLinkableBuildRuleStaticVsSharedDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+
+    // Create a native linkable dep and have it list the fake build rule above as a link
+    // time dependency
+    String staticArg = "static";
+    NativeLinkableInput staticInput = new NativeLinkableInput(
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableList.<Path>of(),
+        ImmutableList.of(staticArg));
+    String sharedArg = "shared";
+    NativeLinkableInput sharedInput = new NativeLinkableInput(
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableList.<Path>of(),
+        ImmutableList.of(sharedArg));
+    FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep", staticInput, sharedInput);
+
+    // Construct a CxxLink object which links using static dependencies.
+    CxxLink staticLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        params,
+        resolver,
+        DEFAULT_LINKER,
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
+        target,
+        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Optional.<String>absent(),
+        DEFAULT_OUTPUT,
+        DEFAULT_INPUTS,
+        NativeLinkable.Type.STATIC,
+        ImmutableSortedSet.<BuildRule>of(nativeLinkable));
+    assertTrue(staticLink.getArgs().contains(staticArg));
+    assertFalse(staticLink.getArgs().contains(sharedArg));
+
+    // Construct a CxxLink object which links using shared dependencies.
+    CxxLink sharedLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        params,
+        resolver,
+        DEFAULT_LINKER,
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
+        target,
+        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Optional.<String>absent(),
+        DEFAULT_OUTPUT,
+        DEFAULT_INPUTS,
+        NativeLinkable.Type.SHARED,
+        ImmutableSortedSet.<BuildRule>of(nativeLinkable));
+    assertFalse(sharedLink.getArgs().contains(staticArg));
+    assertTrue(sharedLink.getArgs().contains(sharedArg));
   }
 
 }

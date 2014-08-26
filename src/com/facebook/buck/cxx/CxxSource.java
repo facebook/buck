@@ -17,9 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-
-import java.nio.file.Path;
 
 /**
  * Describes a C/C++ source and the various paths it uses from input to output.
@@ -32,13 +31,9 @@ public class CxxSource {
   // The path to the source file.
   private final SourcePath source;
 
-  // The path to the object file after compilation.
-  private final Path object;
-
-  public CxxSource(String name, SourcePath source, Path object) {
+  public CxxSource(String name, SourcePath source) {
     this.name = Preconditions.checkNotNull(name);
     this.source = Preconditions.checkNotNull(source);
-    this.object = Preconditions.checkNotNull(object);
   }
 
   public String getName() {
@@ -49,8 +44,33 @@ public class CxxSource {
     return source;
   }
 
-  public Path getObject() {
-    return object;
+  @Override
+  public boolean equals(Object o) {
+
+    if (this == o) {
+      return true;
+    }
+
+    if (!(o instanceof CxxSource)) {
+      return false;
+    }
+
+    CxxSource cxxSource = (CxxSource) o;
+
+    if (!name.equals(cxxSource.name)) {
+      return false;
+    }
+
+    if (!source.equals(cxxSource.source)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(name, source);
   }
 
 }

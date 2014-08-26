@@ -71,6 +71,13 @@ public class CxxBinaryDescription implements Description<CxxBinaryDescription.Ar
             params.getBuildTarget(),
             args.headers.or((ImmutableList.<SourcePath>of())));
 
+    CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.createHeaderBuildRules(
+        params,
+        resolver,
+        cxxBuckConfig,
+        args.preprocessorFlags.or(ImmutableList.<String>of()),
+        headers);
+
     // Generate the rules for setting up and headers, preprocessing, and compiling the input
     // sources and return the source paths for the object files.
     ImmutableList<SourcePath> objects =
@@ -78,9 +85,9 @@ public class CxxBinaryDescription implements Description<CxxBinaryDescription.Ar
             params,
             resolver,
             cxxBuckConfig,
-            args.preprocessorFlags.or(ImmutableList.<String>of()),
-            headers,
+            cxxPreprocessorInput,
             args.compilerFlags.or(ImmutableList.<String>of()),
+            /* pic */ false,
             srcs);
 
     // Generate the final link rule.  We use the top-level target as the link rule's
@@ -92,8 +99,11 @@ public class CxxBinaryDescription implements Description<CxxBinaryDescription.Ar
         cxxBuckConfig.getCxxLdFlags(),
         cxxBuckConfig.getLdFlags(),
         params.getBuildTarget(),
+        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Optional.<String>absent(),
         getOutputPath(params.getBuildTarget()),
         objects,
+        NativeLinkable.Type.STATIC,
         params.getDeps());
   }
 

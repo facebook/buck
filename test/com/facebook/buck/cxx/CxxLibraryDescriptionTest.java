@@ -57,6 +57,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
+  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void createBuildRule() {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
@@ -97,7 +98,7 @@ public class CxxLibraryDescriptionTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput() {
+      public NativeLinkableInput getNativeLinkableInput(Type type) {
         return new NativeLinkableInput(
             ImmutableSet.<BuildTarget>of(archive.getBuildTarget()),
             ImmutableList.<Path>of(archiveOutput),
@@ -150,8 +151,14 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(archiveRule);
     assertEquals(
         ImmutableSet.of(
-            CxxCompilableEnhancer.createCompileBuildTarget(target, "test/bar.cpp"),
-            CxxCompilableEnhancer.createCompileBuildTarget(target, genSourceName)),
+            CxxCompilableEnhancer.createCompileBuildTarget(
+                target,
+                "test/bar.cpp",
+                /* pic */ false),
+            CxxCompilableEnhancer.createCompileBuildTarget(
+                target,
+                genSourceName,
+                /* pic */ false)),
         FluentIterable.from(archiveRule.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -159,7 +166,10 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule compileRule1 = resolver.get(
-        CxxCompilableEnhancer.createCompileBuildTarget(target, "test/bar.cpp"));
+        CxxCompilableEnhancer.createCompileBuildTarget(
+            target,
+            "test/bar.cpp",
+            /* pic */ false));
     assertNotNull(compileRule1);
     assertEquals(
         ImmutableSet.of(
@@ -174,7 +184,10 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
     BuildRule compileRule2 = resolver.get(
-        CxxCompilableEnhancer.createCompileBuildTarget(target, genSourceName));
+        CxxCompilableEnhancer.createCompileBuildTarget(
+            target,
+            genSourceName,
+            /* pic */ false));
     assertNotNull(compileRule2);
     assertEquals(
         ImmutableSet.of(

@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRuleType;
-import com.google.common.base.Function;
 
 /**
  * Interface for {@link com.facebook.buck.rules.BuildRule} objects (e.g. C++ libraries) which can
@@ -25,20 +24,21 @@ import com.google.common.base.Function;
  */
 public interface NativeLinkable {
 
-  /**
-   * A helper function object that grabs the {@link NativeLinkableInput} object from a
-   * {@link NativeLinkable}.
-   */
-  final Function<NativeLinkable, NativeLinkableInput> GET_NATIVE_LINKABLE_INPUT =
-      new Function<NativeLinkable, NativeLinkableInput>() {
-        @Override
-        public NativeLinkableInput apply(NativeLinkable input) {
-          return input.getNativeLinkableInput();
-        }
-      };
+  // The style of linking for which this native linkable should provide input for.
+  public static enum Type {
+
+    // Provide input suitable for statically linking this linkable (e.g. return references to
+    // static libraries, libfoo.a).
+    STATIC,
+
+    // Provide input suitable for dynamically linking this linkable (e.g. return references to
+    // shared libraries, libfoo.so).
+    SHARED
+
+  }
 
   final BuildRuleType NATIVE_LINKABLE_TYPE = new BuildRuleType("link");
 
-  NativeLinkableInput getNativeLinkableInput();
+  NativeLinkableInput getNativeLinkableInput(Type type);
 
 }

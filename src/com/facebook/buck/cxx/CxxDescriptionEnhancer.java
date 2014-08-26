@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -90,28 +91,18 @@ public class CxxDescriptionEnhancer {
       Iterable<SourcePath> inputs) {
 
     return CxxCompilableEnhancer.resolveCxxSources(
-        target,
         SourcePaths.getSourcePathNames(
             target,
             "srcs",
             inputs));
   }
 
-  /**
-   * Build up the rules to track headers and compile sources for descriptions which handle C/C++
-   * sources and headers.
-   *
-   * @return a list of {@link SourcePath} objects representing the object files from the result of
-   *    compiling the given C/C++ source.
-   */
-  public static ImmutableList<SourcePath> createPreprocessAndCompileBuildRules(
+  public static CxxPreprocessorInput createHeaderBuildRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxBuckConfig config,
       ImmutableList<String> preprocessorFlags,
-      ImmutableMap<Path, SourcePath> headers,
-      ImmutableList<String> compilerFlags,
-      ImmutableList<CxxSource> sources) {
+      ImmutableMap<Path, SourcePath> headers) {
 
     // Setup the header and symlink tree rules
     BuildTarget headerTarget = createHeaderTarget(params.getBuildTarget());
@@ -131,22 +122,39 @@ public class CxxDescriptionEnhancer {
             FluentIterable.from(params.getDeps())
                 .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
 
-    CxxPreprocessorInput cxxPreprocessorInput =
-        CxxPreprocessorInput.concat(
-            ImmutableList.of(
-                new CxxPreprocessorInput(
-                    ImmutableSet.of(headerTarget, headerSymlinkTreeTarget),
-                    /* cppflags */ ImmutableList.<String>builder()
-                        .addAll(config.getCppFlags())
-                        .addAll(preprocessorFlags)
-                        .build(),
-                    /* cxxppflags */ ImmutableList.<String>builder()
-                        .addAll(config.getCxxppFlags())
-                        .addAll(preprocessorFlags)
-                        .build(),
-                    /* includes */ ImmutableList.of(headerSymlinkTreeRoot),
-                    /* systemIncludes */ ImmutableList.<Path>of()),
-                cxxPreprocessorInputFromDeps));
+    return CxxPreprocessorInput.concat(
+        ImmutableList.of(
+            new CxxPreprocessorInput(
+                ImmutableSet.of(headerTarget, headerSymlinkTreeTarget),
+                /* cppflags */ ImmutableList.<String>builder()
+                .addAll(config.getCppFlags())
+                .addAll(preprocessorFlags)
+                .build(),
+                /* cxxppflags */ ImmutableList.<String>builder()
+                .addAll(config.getCxxppFlags())
+                .addAll(preprocessorFlags)
+                .build(),
+                /* includes */ ImmutableList.of(headerSymlinkTreeRoot),
+                /* systemIncludes */ ImmutableList.<Path>of()),
+            cxxPreprocessorInputFromDeps));
+
+  }
+
+  /**
+   * Build up the rules to track headers and compile sources for descriptions which handle C/C++
+   * sources and headers.
+   *
+   * @return a list of {@link SourcePath} objects representing the object files from the result of
+   *    compiling the given C/C++ source.
+   */
+  public static ImmutableList<SourcePath> createPreprocessAndCompileBuildRules(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxBuckConfig config,
+      CxxPreprocessorInput cxxPreprocessorInput,
+      ImmutableList<String> compilerFlags,
+      boolean pic,
+      ImmutableList<CxxSource> sources) {
 
     ImmutableSortedSet<BuildRule> objectRules = CxxCompilableEnhancer.createCompileBuildRules(
         params,
@@ -154,6 +162,7 @@ public class CxxDescriptionEnhancer {
         config.getCompiler().or(CxxCompilables.DEFAULT_CXX_COMPILER),
         cxxPreprocessorInput,
         compilerFlags,
+        pic,
         sources);
     resolver.addAllToIndex(objectRules);
 
@@ -163,9 +172,14 @@ public class CxxDescriptionEnhancer {
   }
 
   private static final Flavor STATIC_FLAVOR = new Flavor("static");
+  private static final Flavor SHARED_FLAVOR = new Flavor("shared");
 
   public static BuildTarget createStaticLibraryBuildTarget(BuildTarget target) {
     return BuildTargets.extendFlavoredBuildTarget(target, STATIC_FLAVOR);
+  }
+
+  public static BuildTarget createSharedLibraryBuildTarget(BuildTarget target) {
+    return BuildTargets.extendFlavoredBuildTarget(target, SHARED_FLAVOR);
   }
 
   public static CxxLibrary createCxxLibraryBuildRules(
@@ -179,14 +193,21 @@ public class CxxDescriptionEnhancer {
       ImmutableList<CxxSource> sources,
       final boolean linkWhole) {
 
+    CxxPreprocessorInput cxxPreprocessorInput = createHeaderBuildRules(
+        params,
+        resolver,
+        cxxBuckConfig,
+        preprocessorFlags,
+        headers);
+
     // Create rules for compiling the non-PIC object files.
     ImmutableList<SourcePath> objects = createPreprocessAndCompileBuildRules(
         params,
         resolver,
         cxxBuckConfig,
-        preprocessorFlags,
-        headers,
+        cxxPreprocessorInput,
         compilerFlags,
+        /* pic */ false,
         sources);
 
     // Write a build rule to create the archive for this C/C++ library.
@@ -199,6 +220,41 @@ public class CxxDescriptionEnhancer {
         staticLibraryPath,
         objects);
     resolver.addToIndex(archive);
+
+    // Create rules for compiling the PIC object files.
+    ImmutableList<SourcePath> picObjects = createPreprocessAndCompileBuildRules(
+        params,
+        resolver,
+        cxxBuckConfig,
+        cxxPreprocessorInput,
+        compilerFlags,
+        /* pic */ true,
+        sources);
+
+    // Setup the rules to link the shared library.
+    final BuildTarget sharedLibraryTarget = createSharedLibraryBuildTarget(params.getBuildTarget());
+    String sharedLibraryName = String.format("lib%s.so", sharedLibraryTarget.getShortNameOnly());
+    final String sharedLibrarySoname = String.format(
+        "lib%s_%s.so",
+        params.getBuildTarget().getBaseName().substring(2).replace('/', '_'),
+        params.getBuildTarget().getShortNameOnly());
+    final Path sharedLibraryPath = BuildTargets.getBinPath(
+        sharedLibraryTarget,
+        "%s/" + sharedLibraryName);
+    final CxxLink sharedLibraryBuildRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        params,
+        resolver,
+        cxxBuckConfig.getLd().or(CxxLinkables.DEFAULT_LINKER_PATH),
+        cxxBuckConfig.getCxxLdFlags(),
+        cxxBuckConfig.getLdFlags(),
+        sharedLibraryTarget,
+        CxxLinkableEnhancer.LinkType.SHARED,
+        Optional.of(sharedLibrarySoname),
+        sharedLibraryPath,
+        picObjects,
+        NativeLinkable.Type.SHARED,
+        params.getDeps());
+    resolver.addToIndex(sharedLibraryBuildRule);
 
     // Create the CppLibrary rule that dependents can references from the action graph
     // to get information about this rule (e.g. how this rule contributes to the C/C++
@@ -220,22 +276,25 @@ public class CxxDescriptionEnhancer {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput() {
+      public NativeLinkableInput getNativeLinkableInput(NativeLinkable.Type type) {
 
         // Build up the arguments used to link this library.  If we're linking the
         // whole archive, wrap the library argument in the necessary "ld" flags.
         ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-        if (linkWhole) {
+        if (linkWhole && type == Type.STATIC) {
           linkerArgsBuilder.add("--whole-archive");
         }
-        linkerArgsBuilder.add(staticLibraryPath.toString());
-        if (linkWhole) {
+        linkerArgsBuilder.add(
+            type == Type.STATIC ?
+                staticLibraryPath.toString() :
+                sharedLibraryPath.toString());
+        if (linkWhole && type == Type.STATIC) {
           linkerArgsBuilder.add("--no-whole-archive");
         }
         final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
         return new NativeLinkableInput(
-            ImmutableSet.of(staticLibraryTarget),
+            ImmutableSet.of(type == Type.STATIC ? staticLibraryTarget : sharedLibraryTarget),
             ImmutableList.<Path>of(),
             linkerArgs);
       }

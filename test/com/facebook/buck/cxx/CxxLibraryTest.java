@@ -49,6 +49,10 @@ public class CxxLibraryTest {
     final BuildTarget archiveTarget = BuildTargetFactory.newInstance("//:archive");
     final Path archiveOutput = Paths.get("output/path/lib.a");
 
+    // Setup some dummy values for the library archive info.
+    final BuildTarget sharedLibraryTarget = BuildTargetFactory.newInstance("//:shared");
+    final Path sharedLibraryOutput = Paths.get("output/path/lib.so");
+
     // Construct a CxxLibrary object to test.
     CxxLibrary cxxLibrary = new CxxLibrary(params) {
 
@@ -63,11 +67,16 @@ public class CxxLibraryTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput() {
-        return new NativeLinkableInput(
-            ImmutableSet.of(archiveTarget),
-            ImmutableList.of(archiveOutput),
-            ImmutableList.of(archiveOutput.toString()));
+      public NativeLinkableInput getNativeLinkableInput(Type type) {
+        return type == Type.STATIC ?
+            new NativeLinkableInput(
+                ImmutableSet.of(archiveTarget),
+                ImmutableList.of(archiveOutput),
+                ImmutableList.of(archiveOutput.toString())) :
+            new NativeLinkableInput(
+                ImmutableSet.of(sharedLibraryTarget),
+                ImmutableList.of(sharedLibraryOutput),
+                ImmutableList.of(sharedLibraryOutput.toString()));
       }
 
     };
@@ -84,11 +93,23 @@ public class CxxLibraryTest {
 
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
-    NativeLinkableInput expectedNativeLinkableInput = new NativeLinkableInput(
+    NativeLinkableInput expectedStaticNativeLinkableInput = new NativeLinkableInput(
         ImmutableSet.of(archiveTarget),
         ImmutableList.of(archiveOutput),
         ImmutableList.of(archiveOutput.toString()));
-    assertEquals(expectedNativeLinkableInput, cxxLibrary.getNativeLinkableInput());
+    assertEquals(
+        expectedStaticNativeLinkableInput,
+        cxxLibrary.getNativeLinkableInput(NativeLinkable.Type.STATIC));
+
+    // Verify that we get the static archive and it's build target via the NativeLinkable
+    // interface.
+    NativeLinkableInput expectedSharedNativeLinkableInput = new NativeLinkableInput(
+        ImmutableSet.of(sharedLibraryTarget),
+        ImmutableList.of(sharedLibraryOutput),
+        ImmutableList.of(sharedLibraryOutput.toString()));
+    assertEquals(
+        expectedSharedNativeLinkableInput,
+        cxxLibrary.getNativeLinkableInput(NativeLinkable.Type.SHARED));
 
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));

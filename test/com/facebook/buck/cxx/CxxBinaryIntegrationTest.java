@@ -45,7 +45,10 @@ public class CxxBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
     String sourceName = "simple.cpp";
     String sourceFull = "foo/" + sourceName;
-    BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(target, sourceName);
+    BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
+        target,
+        sourceName,
+        /* pic */ false);
     BuildTarget headerTarget = CxxDescriptionEnhancer.createHeaderTarget(target);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target);
@@ -131,7 +134,10 @@ public class CxxBinaryIntegrationTest {
     String sourceName = "simple_with_header.cpp";
     String headerName = "simple_with_header.h";
     String headerFull = "foo/" + headerName;
-    BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(target, sourceName);
+    BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
+        target,
+        sourceName,
+        /* pic */ false);
     BuildTarget headerTarget = CxxDescriptionEnhancer.createHeaderTarget(target);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target);
@@ -184,7 +190,10 @@ public class CxxBinaryIntegrationTest {
     // Setup variables pointing to the sources and targets of the top-level binary rule.
     BuildTarget target = BuildTargetFactory.newInstance("//foo:binary_with_dep");
     String sourceName = "foo.cpp";
-    BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(target, sourceName);
+    BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
+        target,
+        sourceName,
+        /* pic */ false);
     BuildTarget headerTarget = CxxDescriptionEnhancer.createHeaderTarget(target);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target);
@@ -196,7 +205,10 @@ public class CxxBinaryIntegrationTest {
     String depHeaderName = "bar.h";
     String depHeaderFull = "foo/" + depHeaderName;
     BuildTarget depCompileTarget =
-        CxxCompilableEnhancer.createCompileBuildTarget(depTarget, depSourceName);
+        CxxCompilableEnhancer.createCompileBuildTarget(
+            depTarget,
+            depSourceName,
+            /* pic */ false);
     BuildTarget depHeaderTarget = CxxDescriptionEnhancer.createHeaderTarget(depTarget);
     BuildTarget depHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(depTarget);

@@ -28,6 +28,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -70,6 +72,19 @@ public class CxxLinkableEnhancer {
   }
 
   /**
+   * Represents the link types.
+   */
+  public static enum LinkType {
+
+    // Link as standalone executable.
+    EXECUTABLE,
+
+    // Link as shared library, which can be loaded into a process image.
+    SHARED,
+
+  }
+
+  /**
    * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects
    * and a dependency tree of {@link NativeLinkable} dependencies.
    */
@@ -80,16 +95,22 @@ public class CxxLinkableEnhancer {
       ImmutableList<String> cxxLdFlags,
       ImmutableList<String> ldFlags,
       BuildTarget target,
+      LinkType linkType,
+      Optional<String> soname,
       Path output,
       Iterable<SourcePath> objects,
+      NativeLinkable.Type depType,
       Iterable<BuildRule> nativeLinkableDeps) {
+
+    // Soname should only ever be set when linking a "shared" library.
+    Preconditions.checkState(!soname.isPresent() || linkType.equals(LinkType.SHARED));
 
     // Collect and topologically sort our deps that contribute to the link.
     NativeLinkableInput linkableInput = NativeLinkableInput.concat(
         FluentIterable
             .from(topoSort(nativeLinkableDeps).reverse())
             .filter(NativeLinkable.class)
-            .transform(NativeLinkable.GET_NATIVE_LINKABLE_INPUT));
+            .transform(NativeLinkables.getNativeLinkableInput(depType)));
 
     // Construct our link build rule params.  The important part here is combining the build rules
     // that construct our object file inputs and also the deps that build our dependencies.
@@ -106,21 +127,27 @@ public class CxxLinkableEnhancer {
         ImmutableSortedSet.<BuildRule>of());
 
     // Build up the arguments to pass to the linker.
-    ImmutableList<String> args = ImmutableList.<String>builder()
-        .addAll(cxxLdFlags)
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-Xlinker"),
-                ldFlags))
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-Xlinker"),
-                Iterables.concat(
-                    FluentIterable.from(objects)
-                        .transform(SourcePaths.TO_PATH)
-                        .transform(Functions.toStringFunction()),
-                    linkableInput.getArgs())))
-        .build();
+    ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
+    if (linkType == LinkType.SHARED) {
+      argsBuilder.add("-shared");
+    }
+    if (soname.isPresent()) {
+      argsBuilder.add("-Xlinker", "-soname=" + soname.get());
+    }
+    argsBuilder.addAll(cxxLdFlags);
+    argsBuilder.addAll(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle("-Xlinker"),
+            ldFlags));
+    argsBuilder.addAll(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle("-Xlinker"),
+            Iterables.concat(
+                FluentIterable.from(objects)
+                    .transform(SourcePaths.TO_PATH)
+                    .transform(Functions.toStringFunction()),
+                linkableInput.getArgs())));
+    ImmutableList<String> args = argsBuilder.build();
 
     // Build the C/C++ link step.
     return new CxxLink(
