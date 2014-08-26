@@ -44,6 +44,7 @@ import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.java.JavaBinaryDescription;
@@ -197,6 +198,7 @@ public class KnownBuildRuleTypes {
     builder.register(new CoreDataModelDescription());
     builder.register(new CxxBinaryDescription(cxxBuckConfig));
     builder.register(new CxxLibraryDescription(cxxBuckConfig));
+    builder.register(new PrebuiltCxxLibraryDescription());
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
