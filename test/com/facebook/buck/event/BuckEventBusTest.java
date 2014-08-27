@@ -137,7 +137,7 @@ public class BuckEventBusTest {
     }
 
     @Override
-    public boolean eventsArePair(BuckEvent event) {
+    public boolean isRelatedTo(BuckEvent event) {
       return false;
     }
 
@@ -162,7 +162,7 @@ public class BuckEventBusTest {
     }
 
     @Override
-    public boolean eventsArePair(BuckEvent event) {
+    public boolean isRelatedTo(BuckEvent event) {
       return false;
     }
 

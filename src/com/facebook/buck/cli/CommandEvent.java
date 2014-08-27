@@ -61,7 +61,7 @@ public abstract class CommandEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     if (!(event instanceof CommandEvent)) {
       return false;
     }

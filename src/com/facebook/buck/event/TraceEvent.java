@@ -53,7 +53,7 @@ public class TraceEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     return false;
   }
 

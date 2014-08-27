@@ -55,7 +55,7 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     if (!(event instanceof StartActivityEvent)) {
       return false;
     }

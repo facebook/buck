@@ -46,7 +46,7 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     if (!(event instanceof InstallEvent)) {
       return false;
     }

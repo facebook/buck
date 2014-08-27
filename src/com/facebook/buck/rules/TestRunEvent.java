@@ -55,7 +55,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     if (!(event instanceof TestRunEvent)) {
       return false;
     }

@@ -83,7 +83,7 @@ public class ConsoleEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     if (!(event instanceof ConsoleEvent)) {
       return false;
     }

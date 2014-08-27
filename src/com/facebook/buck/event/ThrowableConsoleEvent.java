@@ -49,14 +49,14 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     if (!(event instanceof ThrowableConsoleEvent)) {
       return false;
     }
 
     ThrowableConsoleEvent that = (ThrowableConsoleEvent) event;
 
-    return super.eventsArePair(that) &&
+    return super.isRelatedTo(that) &&
         Objects.equal(getThrowable(), that.getThrowable());
   }
 

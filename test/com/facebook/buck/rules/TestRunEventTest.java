@@ -29,7 +29,7 @@ import org.junit.Test;
 public class TestRunEventTest {
 
   @Test
-  public void startAndStopShouldPairUpProperlyBasedOnHash() {
+  public void startAndStopShouldRelateProperlyBasedOnHash() {
     ImmutableSet<String> tests = ImmutableSet.of("//exmaple:other", "//thing/made/of:cheese");
 
     TestRunEvent.Started started = TestRunEvent.started(
@@ -37,12 +37,12 @@ public class TestRunEventTest {
     TestRunEvent.Finished finished = TestRunEvent.finished(
         tests, ImmutableList.<TestResults>of());
 
-    assertTrue(started.eventsArePair(finished));
-    assertTrue(finished.eventsArePair(started));
+    assertTrue(started.isRelatedTo(finished));
+    assertTrue(finished.isRelatedTo(started));
   }
 
   @Test
-  public void shouldNotBelieveThatEventsThatAreNotPairsArePairs() {
+  public void shouldNotBelieveThatEventsThatAreNotRelatedAreRelated() {
     ImmutableSet<String> tests = ImmutableSet.of("//exmaple:other", "//thing/made/of:cheese");
     ImmutableSet<String> otherTests = ImmutableSet.of("//example:test");
 
@@ -51,8 +51,8 @@ public class TestRunEventTest {
     TestRunEvent.Finished finished = TestRunEvent.finished(
         otherTests, ImmutableList.<TestResults>of());
 
-    assertFalse(started.eventsArePair(finished));
-    assertFalse(finished.eventsArePair(started));
+    assertFalse(started.isRelatedTo(finished));
+    assertFalse(finished.isRelatedTo(started));
   }
 
 }

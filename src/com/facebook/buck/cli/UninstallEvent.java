@@ -45,7 +45,7 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     if (!(event instanceof UninstallEvent)) {
       return false;
     }

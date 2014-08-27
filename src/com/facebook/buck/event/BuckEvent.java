@@ -38,19 +38,18 @@ public interface BuckEvent {
   BuildId getBuildId();
 
   /**
-   * @return Whether or not this event is a pair of another event.  Events that are pairs if they
+   * @return Whether or not this event is related to another event.  Events are related if they
    * pertain to the same event, for example if they are measuring the start and stop of some phase.
    * For example,
    * <pre>
    *   <code>
-   *    (CommandEvent.started("build")).eventsArePair(CommandEvent.finished("build")) == true
-   *    (CommandEvent.started("build")).eventsArePair(CommandEvent.started("build")) == true
-   *    (CommandEvent.started("build")).eventsArePair(CommandEvent.finished("install")) == false
+   *    (CommandEvent.started("build")).isRelatedTo(CommandEvent.finished("build")) == true
+   *    (CommandEvent.started("build")).isRelatedTo(CommandEvent.started("build")) == true
+   *    (CommandEvent.started("build")).isRelatedTo(CommandEvent.finished("install")) == false
    *   </code>
    * </pre>
-   * This should be used to pair start events to finished events.
    */
-  boolean eventsArePair(BuckEvent event);
+  boolean isRelatedTo(BuckEvent event);
 
   @JsonProperty("type")
   public String getEventName();

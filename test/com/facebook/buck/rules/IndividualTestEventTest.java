@@ -27,19 +27,19 @@ import org.junit.Test;
 
 public class IndividualTestEventTest {
   @Test
-  public void startAndStopShouldPairUpProperlyBasedOnHash() {
+  public void startAndStopShouldRelateProperlyBasedOnHash() {
     ImmutableList<String> tests = ImmutableList.of("//exmaple:other", "//thing/made/of:cheese");
 
     IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
     IndividualTestEvent.Finished finished = IndividualTestEvent.finished(
         tests, new TestResults(ImmutableList.<TestCaseSummary>of()));
 
-    assertTrue(started.eventsArePair(finished));
-    assertTrue(finished.eventsArePair(started));
+    assertTrue(started.isRelatedTo(finished));
+    assertTrue(finished.isRelatedTo(started));
   }
 
   @Test
-  public void shouldNotBelieveThatEventsThatAreNotPairsArePairs() {
+  public void shouldNotBelieveThatEventsThatAreNotRelatedAreRelated() {
     ImmutableList<String> tests = ImmutableList.of("//exmaple:other", "//thing/made/of:cheese");
     ImmutableList<String> otherTests = ImmutableList.of("//example:test");
 
@@ -47,7 +47,7 @@ public class IndividualTestEventTest {
     IndividualTestEvent.Finished finished = IndividualTestEvent.finished(
         otherTests, new TestResults(ImmutableList.<TestCaseSummary>of()));
 
-    assertFalse(started.eventsArePair(finished));
-    assertFalse(finished.eventsArePair(started));
+    assertFalse(started.isRelatedTo(finished));
+    assertFalse(finished.isRelatedTo(started));
   }
 }

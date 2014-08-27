@@ -54,7 +54,7 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     if (!(event instanceof StepEvent)) {
       return false;
     }

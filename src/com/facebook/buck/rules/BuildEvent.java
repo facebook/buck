@@ -61,7 +61,7 @@ public abstract class BuildEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     if (!(event instanceof BuildEvent)) {
       return false;
     }

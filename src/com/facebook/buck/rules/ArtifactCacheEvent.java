@@ -57,7 +57,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   }
 
   @Override
-  public boolean eventsArePair(BuckEvent event) {
+  public boolean isRelatedTo(BuckEvent event) {
     if (!(event instanceof ArtifactCacheEvent)) {
       return false;
     }

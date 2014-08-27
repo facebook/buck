@@ -93,9 +93,9 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   protected abstract String getValueString();
 
   /**
-   * The default implementation of equals checks to see if two events are pairs, are on the same
-   * thread, and are the same concrete class.  Subclasses therefore can simply override
-   * eventsArePair, and the equals method will work correctly.
+   * The default implementation of equals checks to see if two events are related, are on the same
+   * thread, and are the same concrete class.  Subclasses therefore can simply override isRelatedTo,
+   * and the equals method will work correctly.
    */
   @Override
   public boolean equals(Object o) {
@@ -105,7 +105,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
 
     AbstractBuckEvent that = (AbstractBuckEvent) o;
 
-    return eventsArePair(that) &&
+    return isRelatedTo(that) &&
         getThreadId() == that.getThreadId() &&
         Objects.equals(getClass(), that.getClass());
   }
