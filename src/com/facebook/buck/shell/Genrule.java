@@ -219,6 +219,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
       AndroidPlatformTarget android = optionalAndroid.get();
 
       environmentVariablesBuilder.put("DX", android.getDxExecutable().toString());
+      environmentVariablesBuilder.put("ZIPALIGN", android.getZipalignExecutable().toString());
     }
   }
 

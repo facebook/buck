@@ -494,6 +494,7 @@ public class GenruleTest {
   public void testShouldIncludeDxInEnvironmentIfPresent() {
     AndroidPlatformTarget android = EasyMock.createNiceMock(AndroidPlatformTarget.class);
     EasyMock.expect(android.getDxExecutable()).andStubReturn(Paths.get("."));
+    EasyMock.expect(android.getZipalignExecutable()).andStubReturn(Paths.get("zipalign"));
     EasyMock.replay(android);
 
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
@@ -511,6 +512,7 @@ public class GenruleTest {
     ImmutableMap<String, String> env = builder.build();
 
     assertEquals(Paths.get(".").toString(), env.get("DX"));
+    assertEquals(Paths.get("zipalign").toString(), env.get("ZIPALIGN"));
 
     EasyMock.verify(android);
   }
