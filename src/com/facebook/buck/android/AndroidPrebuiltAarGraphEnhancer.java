@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.java.JarDirectoryStepHelper;
-import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.model.BuildTarget;
@@ -82,7 +81,7 @@ class AndroidPrebuiltAarGraphEnhancer {
    * </ul>
    * Therefore, the return value is an {link AndroidLibrary} with no {@code srcs}.
    */
-  static BuildRule enhance(
+  static AndroidPrebuiltAar enhance(
       BuildRuleParams originalBuildRuleParams,
       SourcePath aarFile,
       BuildRuleResolver ruleResolver) {
@@ -162,21 +161,11 @@ class AndroidPrebuiltAarGraphEnhancer {
             prebuiltJar,
             unzipAar),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
-    AndroidLibrary library = new AndroidLibrary(
+    return new AndroidPrebuiltAar(
         androidLibraryParams,
-        /* srcs */ ImmutableSortedSet.<SourcePath>of(),
-        /* resources */ ImmutableSortedSet.<SourcePath>of(),
-        Optional.of(unzipAar.getProguardConfig()),
-        /* postprocessClassesCommands */ ImmutableList.<String>of(),
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(prebuiltJar),
-        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        /* javacOptions */ JavacOptions.DEFAULTS,
-        /* resourcesRoot */ Optional.<Path>absent(),
-        /* manifestFile */ Optional.<SourcePath>absent(),
-        /* isPrebuiltAar */ true);
-
-    return library;
+        unzipAar.getProguardConfig(),
+        prebuiltJar,
+        androidResource);
   }
 
   private static class UnzipAar extends AbstractBuildRule {

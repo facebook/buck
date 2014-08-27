@@ -85,7 +85,7 @@ public class AndroidXmlFileIntegrationTest {
   }
 
   @Test
-  public void testAddingAStringBuildsAllRules() throws IOException {
+  public void testAddingAStringToTransitiveDepResultsInAbiMatch() throws IOException {
     workspace.replaceFileContents(PATH_TO_STRINGS_XML,
         "</resources>",
         "<string name=\"base_text\">Goodbye!</string></resources>");
@@ -98,12 +98,12 @@ public class AndroidXmlFileIntegrationTest {
 
     buildLog.assertTargetBuiltLocally("//res/com/sample/base:base");
     buildLog.assertTargetBuiltLocally("//res/com/sample/top:top");
-    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dummy_r_dot_java");
-    buildLog.assertTargetBuiltLocally(MAIN_BUILD_TARGET);
+    buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dummy_r_dot_java");
+    buildLog.assertTargetHadMatchingDepsAbi(MAIN_BUILD_TARGET);
   }
 
   @Test
-  public void testRenamingAStringBuildsAllRules() throws IOException {
+  public void testRenamingAStringInTransitiveDepResultsInAbiMatch() throws IOException {
     workspace.replaceFileContents(PATH_TO_STRINGS_XML, "base_button", "base_text");
     workspace.replaceFileContents(PATH_TO_LAYOUT_XML, "base_button", "base_text");
 
@@ -115,24 +115,8 @@ public class AndroidXmlFileIntegrationTest {
 
     buildLog.assertTargetBuiltLocally("//res/com/sample/base:base");
     buildLog.assertTargetBuiltLocally("//res/com/sample/top:top");
-    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dummy_r_dot_java");
-    buildLog.assertTargetBuiltLocally(MAIN_BUILD_TARGET);
-  }
-
-  @Test
-  public void testTransitiveResourceRuleAbi() throws IOException {
-    workspace.replaceFileContents(PATH_TO_STRINGS_XML,
-        "</resources>",
-        "<string name=\"base_text\">Goodbye!</string></resources>");
-
-    workspace.resetBuildLogFile();
-    workspace.runBuckBuild("//java/com/sample/lib:lib_using_transitive_empty_res");
-
-    BuckBuildLog buildLog = workspace.getBuildLog();
-
-    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib_using_transitive_empty_res");
-    buildLog.assertTargetBuiltLocally(
-        "//java/com/sample/lib:lib_using_transitive_empty_res#dummy_r_dot_java");
+    buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dummy_r_dot_java");
+    buildLog.assertTargetHadMatchingDepsAbi(MAIN_BUILD_TARGET);
   }
 
   @Test

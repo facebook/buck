@@ -35,6 +35,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 
@@ -43,6 +44,7 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class MergeAndroidResourcesStep implements Step {
 
@@ -105,9 +107,11 @@ public class MergeAndroidResourcesStep implements Step {
     // though Robolectric doesn't read resources.arsc, it does assert that all the R.java resource
     // ids are unique.  This forces us to re-enumerate new unique ids.
     ProjectFilesystem filesystem = context.getProjectFilesystem();
-    ImmutableMap.Builder<Path, String> symbolsFileToRDotJavaPackage = ImmutableMap.builder();
+    ImmutableMap.Builder<Path, String> rDotTxtToPackage = ImmutableMap.builder();
     for (HasAndroidResourceDeps res : androidResourceDeps) {
-      symbolsFileToRDotJavaPackage.put(res.getPathToTextSymbolsFile(),  res.getRDotJavaPackage());
+      rDotTxtToPackage.put(
+          res.getPathToTextSymbolsFile(),
+          res.getRDotJavaPackage());
     }
     Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds;
     if (uberRDotTxt.isPresent()) {
@@ -125,12 +129,33 @@ public class MergeAndroidResourcesStep implements Step {
       uberRDotTxtIds = Optional.absent();
     }
 
+    ImmutableMap<Path, String> symbolsFileToRDotJavaPackage = rDotTxtToPackage.build();
+
     SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToResources = sortSymbols(
-        symbolsFileToRDotJavaPackage.build(),
+        symbolsFileToRDotJavaPackage,
         uberRDotTxtIds,
         context);
 
     writePerPackageRDotJava(rDotJavaPackageToResources, filesystem);
+    Set<String> emptyPackages = Sets.difference(
+        ImmutableSet.copyOf(symbolsFileToRDotJavaPackage.values()),
+        rDotJavaPackageToResources.keySet());
+
+    if (!emptyPackages.isEmpty()) {
+      writeEmptyRDotJavaForPackages(emptyPackages, filesystem);
+    }
+  }
+
+  private void writeEmptyRDotJavaForPackages(
+      Set<String> rDotJavaPackages,
+      ProjectFilesystem filesystem) throws IOException {
+    for (String rDotJavaPackage : rDotJavaPackages) {
+      Path outputFile = getPathToRDotJava(rDotJavaPackage);
+      filesystem.mkdirs(outputFile.getParent());
+      filesystem.writeContentsToPath(
+          String.format("package %s;\n\npublic class R {}\n", rDotJavaPackage),
+          outputFile);
+    }
   }
 
   @VisibleForTesting

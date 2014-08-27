@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.UnsortedAndroidResourceDeps.Callback;
-
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -27,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -61,8 +60,10 @@ public class AndroidLibraryGraphEnhancer {
       boolean createBuildableIfEmptyDeps) {
     ImmutableSortedSet<BuildRule> originalDeps = originalBuildRuleParams.getDeps();
     ImmutableSet<HasAndroidResourceDeps> androidResourceDeps =
-        UnsortedAndroidResourceDeps.createFrom(originalDeps, Optional.<Callback>absent())
-            .getResourceDeps();
+        FluentIterable.from(originalDeps)
+            .filter(HasAndroidResourceDeps.class)
+            .filter(HasAndroidResourceDeps.NON_EMPTY_RESOURCE)
+            .toSet();
 
     if (androidResourceDeps.isEmpty() && !createBuildableIfEmptyDeps) {
       return Optional.absent();
