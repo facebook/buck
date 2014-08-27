@@ -4,7 +4,6 @@
   <property name="src.dir" value="${basedir}/src" />
   <property name="aosp.src.dir" value="third-party/java/aosp/src" />
   <property name="test.dir" value="${basedir}/test" />
-  <property name="plugin.dir" value="${basedir}/plugin" />
   <property name="lib.dir" value="${basedir}/lib" />
   <property name="third-party.dir" value="${basedir}/third-party" />
   <property name="build.dir" value="${basedir}/build" />
@@ -362,7 +361,7 @@
   </target>
 
   <!--
-  Runs pmd on all source, test, and plugin files.
+  Runs pmd on all source and test files.
   -->
   <target name="pmd">
     <taskdef name="pmd"
@@ -377,9 +376,6 @@
       <fileset dir="${test.dir}">
         <include name="**/*.java"/>
         <exclude name="**/testdata/**"/>
-      </fileset>
-      <fileset dir="${plugin.dir}">
-        <include name="**/*.java"/>
       </fileset>
     </pmd>
   </target>

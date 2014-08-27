@@ -5,7 +5,6 @@
       <module fileurl="file://$PROJECT_DIR$/third-party/java/aosp/aosp.iml" filepath="$PROJECT_DIR$/third-party/java/aosp/aosp.iml" />
       <module fileurl="file://$PROJECT_DIR$/bin/bin.iml" filepath="$PROJECT_DIR$/bin/bin.iml" />
       <module fileurl="file://$PROJECT_DIR$/buck.iml" filepath="$PROJECT_DIR$/buck.iml" />
-      <module fileurl="file://$PROJECT_DIR$/plugin/plugin.iml" filepath="$PROJECT_DIR$/plugin/plugin.iml" />
       <module fileurl="file://$PROJECT_DIR$/scripts/scripts.iml" filepath="$PROJECT_DIR$/scripts/scripts.iml" />
       <module fileurl="file://$PROJECT_DIR$/src/com/facebook/buck/junit/testrunner.iml" filepath="$PROJECT_DIR$/src/com/facebook/buck/junit/testrunner.iml" />
     </modules>
