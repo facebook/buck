@@ -95,7 +95,7 @@ public class BlockingHttpEndpoint implements HttpEndpoint, Closeable {
           InputStream inputStream = connection.getInputStream();
           String response = CharStreams.toString(
               new InputStreamReader(inputStream, Charsets.UTF_8));
-          return new HttpResponse(content, response);
+          return new HttpResponse(response);
         } catch (IOException e) {
           throw new RuntimeException(e);
         } finally {

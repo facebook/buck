@@ -19,16 +19,10 @@ import com.google.common.base.Preconditions;
 
 public class HttpResponse {
 
-  private final String postBody;
   private final String responseBody;
 
-  public HttpResponse(String body, String response) {
-    this.postBody = Preconditions.checkNotNull(body);
+  public HttpResponse(String response) {
     this.responseBody = Preconditions.checkNotNull(response);
-  }
-
-  public String getPostBody() {
-    return postBody;
   }
 
   public String getResponseBody() {
