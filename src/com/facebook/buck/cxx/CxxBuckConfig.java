@@ -106,4 +106,8 @@ public class CxxBuckConfig {
     return maybeSplit(value);
   }
 
+  public BuildTarget getPythonDep() {
+    return delegate.getRequiredBuildTarget("cxx", "python_dep");
+  }
+
 }

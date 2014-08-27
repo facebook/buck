@@ -45,6 +45,7 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
+import com.facebook.buck.cxx.CxxPythonExtensionDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
@@ -219,6 +220,7 @@ public class KnownBuildRuleTypes {
     builder.register(new CxxBinaryDescription(cxxBuckConfig));
     builder.register(new CxxLibraryDescription(cxxBuckConfig));
     builder.register(new PrebuiltCxxLibraryDescription());
+    builder.register(new CxxPythonExtensionDescription(cxxBuckConfig));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
