@@ -41,6 +41,16 @@ files that contain tests to run via the <a href="https://docs.python.org/2/libra
 {/call}
 
 {call buck.arg}
+  {param name: 'base_module' /}
+  {param default : 'None' /}
+  {param desc}
+  The package for which the given specified sources and resources should reside in their final
+  location in the top-level binary. If unset, the project relative directory that houses the
+  BUCK file is used.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}

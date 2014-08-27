@@ -17,6 +17,7 @@
 package com.facebook.buck.thrift;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
@@ -215,6 +216,7 @@ public class ThriftPythonEnhancerTest {
     // Add a dummy dependency to the constructor arg to make sure it gets through.
     ThriftConstructorArg arg = new ThriftConstructorArg();
     arg.pyOptions = Optional.absent();
+    arg.pyBaseModule = Optional.absent();
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
@@ -241,6 +243,49 @@ public class ThriftPythonEnhancerTest {
 
     // Verify that the top-level default python lib has correct deps.
     assertEquals(deps, library.getDeps());
+  }
+
+  @Test
+  public void baseModule() {
+    BuildTarget target = BuildTargetFactory.newInstance("//test:test");
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRuleParams flavoredParams =
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+
+    // Add a dummy dependency to the constructor arg to make sure it gets through.
+    ThriftConstructorArg arg = new ThriftConstructorArg();
+    arg.pyOptions = Optional.absent();
+
+    // Setup up some thrift inputs to pass to the createBuildRule method.
+    ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
+        "test.thrift", new ThriftSource(
+            createFakeThriftCompiler("//:thrift_source"),
+            ImmutableList.<String>of(),
+            Paths.get("output")));
+
+    // Verify that not setting the base module parameter defaults to the build target base path.
+    arg.pyBaseModule = Optional.absent();
+    PythonLibrary normal = ENHANCER.createBuildRule(
+        flavoredParams,
+        resolver,
+        arg,
+        sources,
+        ImmutableSortedSet.<BuildRule>of());
+    for (ImmutableMap.Entry<Path, SourcePath> ent : normal.getSrcs().entrySet()) {
+      assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
+    }
+
+    // Verify that setting the base module uses it correctly.
+    arg.pyBaseModule = Optional.of("blah");
+    PythonLibrary baseModule = ENHANCER.createBuildRule(
+        flavoredParams,
+        resolver,
+        arg,
+        sources,
+        ImmutableSortedSet.<BuildRule>of());
+    for (ImmutableMap.Entry<Path, SourcePath> ent : baseModule.getSrcs().entrySet()) {
+      assertTrue(ent.getKey().startsWith(Paths.get(arg.pyBaseModule.get())));
+    }
   }
 
 }

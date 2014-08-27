@@ -64,8 +64,9 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       BuildRuleResolver resolver,
       A args) {
 
+    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
     String mainName = args.main.getName();
-    Path mainModule = params.getBuildTarget().getBasePath().resolve(mainName);
+    Path mainModule = baseModule.resolve(mainName);
 
     // Build up the list of all components going into the python binary.
     PythonPackageComponents binaryPackageComponents = new PythonPackageComponents(
@@ -93,6 +94,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
   public static class Arg implements ConstructorArg {
     public SourcePath main;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<String> baseModule;
   }
 
 }

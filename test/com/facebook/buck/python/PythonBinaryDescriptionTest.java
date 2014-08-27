@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -67,6 +68,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
     arg.main = new TestSourcePath("blah.py");
+    arg.baseModule = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);
 
     assertEquals(
@@ -89,10 +91,41 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
     arg.main = new BuildRuleSourcePath(genrule);
+    arg.baseModule = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);
     assertEquals(
         ImmutableSortedSet.<BuildRule>of(genrule),
         rule.getDeps());
+  }
+
+  @Test
+  public void baseModule() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    String mainName = "main.py";
+    PythonBinaryDescription desc = new PythonBinaryDescription(
+        PEX_PATH,
+        new PythonEnvironment(Paths.get("python"), new PythonVersion("2.5")));
+    PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.main = new TestSourcePath("foo/" + mainName, mainName);
+
+    // Run without a base module set and verify it defaults to using the build target
+    // base name.
+    arg.baseModule = Optional.absent();
+    PythonBinary normalRule = desc.createBuildRule(params, resolver, arg);
+    assertEquals(
+        target.getBasePath().resolve(mainName),
+        normalRule.getMain());
+
+    // Run *with* a base module set and verify it gets used to build the main module path.
+    arg.baseModule = Optional.of("blah");
+    PythonBinary baseModuleRule = desc.createBuildRule(params, resolver, arg);
+    assertEquals(
+        Paths.get(arg.baseModule.get()).resolve(mainName),
+        baseModuleRule.getMain());
   }
 
 }

@@ -90,4 +90,12 @@ public class PythonLibrary extends AbstractBuildRule implements PythonPackagable
     return OUTPUT_TYPE;
   }
 
+  public ImmutableMap<Path, SourcePath> getSrcs() {
+    return srcs;
+  }
+
+  public ImmutableMap<Path, SourcePath> getResources() {
+    return resources;
+  }
+
 }

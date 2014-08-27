@@ -28,6 +28,8 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 public class PythonLibraryDescription implements Description<Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("python_library");
@@ -37,6 +39,7 @@ public class PythonLibraryDescription implements Description<Arg> {
     public Optional<ImmutableSortedSet<SourcePath>> srcs;
     public Optional<ImmutableSortedSet<SourcePath>> resources;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<String> baseModule;
   }
 
   @Override
@@ -54,17 +57,18 @@ public class PythonLibraryDescription implements Description<Arg> {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
     return new PythonLibrary(
         params,
         PythonUtil.toModuleMap(
             params.getBuildTarget(),
             "srcs",
-            params.getBuildTarget().getBasePath(),
+            baseModule,
             args.srcs.or(ImmutableSortedSet.<SourcePath>of())),
         PythonUtil.toModuleMap(
             params.getBuildTarget(),
             "resources",
-            params.getBuildTarget().getBasePath(),
+            baseModule,
             args.resources.or(ImmutableSortedSet.<SourcePath>of())));
   }
 

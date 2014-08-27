@@ -33,6 +33,16 @@ from all transitive {call buck.python_library /} dependencies.
 {/call}
 
 {call buck.arg}
+  {param name: 'base_module' /}
+  {param default : 'None' /}
+  {param desc}
+  The package for which the main module should reside under in it's final location
+  in the binary.  If unset, the project relative directory that houses the BUCK file
+  is used.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}

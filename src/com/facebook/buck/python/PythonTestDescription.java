@@ -172,16 +172,18 @@ public class PythonTestDescription implements Description<PythonTestDescription.
       BuildRuleResolver resolver,
       A args) {
 
+    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
+
     ImmutableMap<Path, SourcePath> srcs = PythonUtil.toModuleMap(
         params.getBuildTarget(),
         "srcs",
-        params.getBuildTarget().getBasePath(),
+        baseModule,
         args.srcs.or(ImmutableSortedSet.<SourcePath>of()));
 
     ImmutableMap<Path, SourcePath> resources = PythonUtil.toModuleMap(
         params.getBuildTarget(),
         "resources",
-        params.getBuildTarget().getBasePath(),
+        baseModule,
         args.resources.or(ImmutableSortedSet.<SourcePath>of()));
 
     // Convert the passed in module paths into test module names.

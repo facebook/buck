@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.python.PythonLibraryDescription;
+import com.facebook.buck.python.PythonUtil;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -85,7 +86,7 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
       ImmutableMap<String, ThriftSource> sources,
       ImmutableSortedSet<BuildRule> deps) {
 
-    Path baseModule = params.getBuildTarget().getBasePath();
+    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.pyBaseModule);
 
     ImmutableMap.Builder<Path, SourcePath> modulesBuilder = ImmutableMap.builder();
 

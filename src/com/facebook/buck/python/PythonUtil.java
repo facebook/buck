@@ -24,10 +24,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class PythonUtil {
 
@@ -123,6 +125,12 @@ public class PythonUtil {
     }.start();
 
     return components.build();
+  }
+
+  public static Path getBasePath(BuildTarget target, Optional<String> override) {
+    return override.isPresent()
+        ? Paths.get(override.get().replace('.', '/'))
+        : target.getBasePath();
   }
 
 }
