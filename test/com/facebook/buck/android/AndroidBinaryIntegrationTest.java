@@ -99,9 +99,9 @@ public class AndroidBinaryIntegrationTest {
         workspace.getFile(
             "buck-out/gen/apps/multidex/app-art.apk"));
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
+
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/secondary-1.dex.jar");
     zipInspector.assertFileExists("classes2.dex");
-
 
     zipInspector.assertFileExists("classes.dex");
     zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
