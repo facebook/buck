@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
+import com.facebook.buck.java.JUnitStep;
 import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.rules.BuildRule;
@@ -88,6 +89,7 @@ public class RobolectricTest extends JavaTest {
         contacts,
         proguardConfig,
         additionalClasspathEntries,
+        JUnitStep.TYPE_JUNIT,
         javacOptions,
         vmArgs,
         sourceTargetsUnderTest,
