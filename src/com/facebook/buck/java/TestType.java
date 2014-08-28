@@ -14,26 +14,9 @@
  * under the License.
  */
 
-package com.example;
+package com.facebook.buck.java;
 
-import org.junit.Assume;
-import org.junit.Test;
-import org.junit.internal.AssumptionViolatedException;
-
-public class SomeAssumptionViolationsTest {
-
-  @Test
-  public void assumptionFailureA() {
-    Assume.assumeTrue("False is true!", false);
-  }
-
-  @Test
-  public void thrownAssumptionViolatedException() {
-    throw new AssumptionViolatedException("Assumption violated!");
-  }
-
-  @Test
-  public void nothingWrong() {
-    // empty
-  }
+public enum TestType {
+  JUNIT,
+  TESTNG,
 }

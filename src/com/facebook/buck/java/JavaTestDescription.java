@@ -74,6 +74,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         args.contacts.get(),
         args.proguardConfig,
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+        args.testType.or(TestType.JUNIT),
         javacOptions.build(),
         args.vmArgs.get(),
         validateAndGetSourcesUnderTest(
@@ -117,5 +118,6 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<ImmutableList<String>> vmArgs;
+    public Optional<TestType> testType;
   }
 }

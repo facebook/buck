@@ -52,22 +52,57 @@ public class AssumptionViolationsTest {
   @Before
   public void setupWorkspace() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "ignored_tests", temporaryFolder);
+        this, "assumption_violations", temporaryFolder);
     workspace.setUp();
   }
 
   @Test
-  public void shouldPassWithASimplePassingTest() throws IOException {
+  public void shouldPassWithASimplePassingTestTestNG() throws IOException {
+    shouldPassWithASimplePassingTest("TestNG");
+  }
+
+  @Test
+  public void shouldPassWithASimplePassingTestJunit() throws IOException {
+    shouldPassWithASimplePassingTest("Junit");
+  }
+
+  private void shouldPassWithASimplePassingTest(String type) throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "test",
         "--all",
-        "--filter", "com.example.PassingTest");
+        "--filter", "com.example.PassingTest" + type);
     result.assertSuccess();
     String output = result.getStderr();
     assertThat(output, containsRegex(createBuckTestOutputLineRegex(
-        "PASS", 1, 0, 0, "com.example.PassingTest")));
+        "PASS", 1, 0, 0, "com.example.PassingTest" + type)));
     assertThat(output, containsString(
         "TESTS PASSED"));
+  }
+
+  @Test
+  public void shouldFailIfOneTestFailsJunit() throws IOException {
+    shouldFailIfOneTestFails("Junit", 1);
+  }
+
+  @Test
+  public void shouldFailIfOneTestFailsTestNG() throws IOException {
+    shouldFailIfOneTestFails("TestNG", 0);
+  }
+
+  private void shouldFailIfOneTestFails(String type, int numSkipped) throws IOException {
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test",
+        "--all",
+        "--filter", "com.example.FailingTest" + type,
+        "--filter", "com.example.PassingTest" + type);
+    result.assertTestFailure();
+    String output = result.getStderr();
+    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
+        "FAIL", 0, numSkipped, 1, "com.example.FailingTest" + type)));
+    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
+        "PASS", 1, 0, 0, "com.example.PassingTest" + type)));
+    assertThat(output,
+        containsString("TESTS FAILED"));
   }
 
   @Test
@@ -75,94 +110,75 @@ public class AssumptionViolationsTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "test",
         "--all",
-        "--filter", "com.example.SomeAssumptionViolationsTest",
-        "--filter", "com.example.PassingTest");
+        "--filter", "com.example.SomeAssumptionViolationsTestJunit",
+        "--filter", "com.example.PassingTestJunit");
     result.assertSuccess();
     String output = result.getStderr();
     assertThat(output, containsRegex(createBuckTestOutputLineRegex(
-        "ASSUME", 1, 2, 0, "com.example.SomeAssumptionViolationsTest")));
-    assertThat(output, containsRegex(
-        createBuckTestOutputLineRegex(
-            "PASS", 1, 0, 0, "com.example.PassingTest")));
+        "ASSUME", 1, 2, 0, "com.example.SomeAssumptionViolationsTestJunit")));
+    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
+        "PASS", 1, 0, 0, "com.example.PassingTestJunit")));
     assertThat(output, containsString(
         "TESTS PASSED (with some assumption violations)"));
   }
 
   @Test
-  public void shouldFailIfOneTestFails() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test",
-        "--all",
-        "--filter", "com.example.FailingTest",
-        "--filter", "com.example.PassingTest");
-    result.assertTestFailure();
-    String output = result.getStderr();
-    assertThat(output, containsRegex(
-        createBuckTestOutputLineRegex(
-            "FAIL", 0, 1, 1, "com.example.FailingTest")));
-    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
-        "PASS", 1, 0, 0, "com.example.PassingTest")));
-    assertThat(output,
-        containsString("TESTS FAILED"));
-  }
-
-  @Test
   public void shouldSkipIndividualTestsWithDistinctErrorMessages() throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test", "--all", "--filter", "Test(A|B)");
+        "test", "--all", "--filter", "Test(A|B)Junit");
     List<BuckEvent> capturedEvents = result.getCapturedEvents();
 
+    Map<String, String> output = Maps.newHashMap();
     IndividualTestEvent.Finished resultsEvent = null;
     for (BuckEvent event : capturedEvents) {
-      if (event instanceof IndividualTestEvent.Finished) {
-        resultsEvent = (IndividualTestEvent.Finished) event;
+      if (!(event instanceof IndividualTestEvent.Finished)) {
+        continue;
       }
-    }
-
-    Map<String, String> output = Maps.newHashMap();
-    assertThat("There should have been a test-results event", resultsEvent, notNullValue());
-    for (TestCaseSummary testCaseSummary : resultsEvent.getResults().getTestCases()) {
-      for (TestResultSummary testResultSummary : testCaseSummary.getTestResults()) {
-        String id = String.format(
-            "%s#%s",
-            testResultSummary.getTestCaseName(),
-            testResultSummary.getTestName());
-        // null for success
-        // "A1:FAIL" for other types of result
-        String message = null;
-        if (testResultSummary.getType() != ResultType.SUCCESS) {
-          StringBuilder builder = new StringBuilder();
-          builder.append(testResultSummary.getMessage());
-          builder.append(':');
-          builder.append(testResultSummary.getType());
-          message = builder.toString();
+      resultsEvent = (IndividualTestEvent.Finished) event;
+      for (TestCaseSummary testCaseSummary : resultsEvent.getResults().getTestCases()) {
+        for (TestResultSummary testResultSummary : testCaseSummary.getTestResults()) {
+          String id = String.format(
+              "%s#%s",
+              testResultSummary.getTestCaseName(),
+              testResultSummary.getTestName());
+          // null for success
+          // "A1:FAIL" for other types of result
+          String message = null;
+          if (testResultSummary.getType() != ResultType.SUCCESS) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(testResultSummary.getMessage());
+            builder.append(':');
+            builder.append(testResultSummary.getType());
+            message = builder.toString();
+          }
+          output.put(id, message);
         }
-        output.put(id, message);
       }
     }
+    assertThat("There should have been a test-results event", resultsEvent, notNullValue());
 
-    assertThat("A1 should pass", output.get("com.example.AssumptionTestA#test1"), nullValue());
-    assertThat("A2 should pass", output.get("com.example.AssumptionTestA#test2"), nullValue());
-    assertThat("B3 should pass", output.get("com.example.AssumptionTestB#test3"), nullValue());
+    assertThat("A1 should pass", output.get("com.example.AssumptionTestAJunit#test1"), nullValue());
+    assertThat("A2 should pass", output.get("com.example.AssumptionTestAJunit#test2"), nullValue());
+    assertThat("B3 should pass", output.get("com.example.AssumptionTestBJunit#test3"), nullValue());
 
     assertThat(
         "A3 should skip",
-        output.get("com.example.AssumptionTestA#test3"),
+        output.get("com.example.AssumptionTestAJunit#test3"),
         equalTo("A3:ASSUMPTION_VIOLATION"));
 
     assertThat(
         "B1 should skip",
-        output.get("com.example.AssumptionTestB#test1"),
+        output.get("com.example.AssumptionTestBJunit#test1"),
         equalTo("B1:ASSUMPTION_VIOLATION"));
 
     assertThat(
         "B2 should skip",
-        output.get("com.example.AssumptionTestB#test2"),
+        output.get("com.example.AssumptionTestBJunit#test2"),
         equalTo("B2:ASSUMPTION_VIOLATION"));
 
     assertThat(
         "B4 should fail",
-        output.get("com.example.AssumptionTestB#test4"),
+        output.get("com.example.AssumptionTestBJunit#test4"),
         equalTo("B4:FAILURE"));
   }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.junit;
 
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestDescription;
-import com.facebook.buck.test.selectors.TestSelectorList;
 
 import org.junit.Ignore;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
@@ -28,33 +27,18 @@ import org.junit.runner.Computer;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
+import org.junit.runner.Result;
 import org.junit.runner.Runner;
 import org.junit.runner.manipulation.Filter;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 import org.junit.runners.model.RunnerBuilder;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 /**
  * Class that runs a set of JUnit tests and writes the results to a directory.
@@ -63,30 +47,11 @@ import javax.xml.transform.stream.StreamResult;
  * API. The objective is to limit the set of files added to the ClassLoader that runs the test, as
  * not to interfere with the results of the test.
  */
-public final class JUnitRunner {
-
-  private static final String FILTER_DESCRIPTION = "TestSelectorList-filter";
-
-  private final File outputDirectory;
-  private final List<String> testClassNames;
-  private final long defaultTestTimeoutMillis;
-  private final TestSelectorList testSelectorList;
-  private final boolean isDryRun;
-  private final Set<TestDescription> seenDescriptions = new HashSet<>();
-
-  public JUnitRunner(
-      File outputDirectory,
-      List<String> testClassNames,
-      long defaultTestTimeoutMillis,
-      TestSelectorList testSelectorList,
-      boolean isDryRun) {
-    this.outputDirectory = outputDirectory;
-    this.testClassNames = testClassNames;
-    this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
-    this.testSelectorList = testSelectorList;
-    this.isDryRun = isDryRun;
+public final class JUnitRunner extends BaseRunner {
+  public JUnitRunner() {
   }
 
+  @Override
   public void run() throws Throwable {
     Filter filter = new Filter() {
       @Override
@@ -135,7 +100,7 @@ public final class JUnitRunner {
         Request request = Request.runner(suite);
         request = request.filterWith(filter);
 
-        jUnitCore.addListener(TestResult.createSingleTestResultRunListener(results));
+        jUnitCore.addListener(new TestListener(results));
         jUnitCore.run(request);
       }
 
@@ -289,86 +254,155 @@ public final class JUnitRunner {
   }
 
   /**
-   * The test result file is written as XML to avoid introducing a dependency on JSON (see class
-   * overview).
+   * Creates RunListener that will prepare individual result for each test
+   * and store it to results list afterwards.
    */
-  private void writeResult(String testClassName, List<TestResult> results)
-      throws IOException, ParserConfigurationException, TransformerException {
-    // XML writer logic taken from:
-    // http://www.genedavis.com/library/xml/java_dom_xml_creation.jsp
+  private static class TestListener extends RunListener {
+    private final List<TestResult> results;
+    private PrintStream originalOut, originalErr, stdOutStream, stdErrStream;
+    private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
+    private Result result;
+    private RunListener resultListener;
+    private Failure assumptionFailure;
 
-    DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-    Document doc = docBuilder.newDocument();
-    doc.setXmlVersion("1.1");
+    // To help give a reasonable (though imprecise) guess at the runtime for unpaired failures
+    private long startTime = System.currentTimeMillis();
 
-    Element root = doc.createElement("testcase");
-    root.setAttribute("name", testClassName);
-    doc.appendChild(root);
-
-    for (TestResult result : results) {
-      Element test = doc.createElement("test");
-
-      // name attribute
-      test.setAttribute("name", result.testMethodName);
-
-      // success attribute
-      boolean isSuccess = result.isSuccess();
-      test.setAttribute("success", Boolean.toString(isSuccess));
-
-      // type attribute
-      test.setAttribute("type", result.type.toString());
-
-      // time attribute
-      long runTime = result.runTime;
-      test.setAttribute("time", String.valueOf(runTime));
-
-      // Include failure details, if appropriate.
-      Failure failure = result.failure;
-      if (failure != null) {
-        String message = failure.getMessage();
-        test.setAttribute("message", message);
-
-        String stacktrace = failure.getTrace();
-        test.setAttribute("stacktrace", stacktrace);
-      }
-
-      // stdout, if non-empty.
-      if (result.stdOut != null) {
-        Element stdOutEl = doc.createElement("stdout");
-        stdOutEl.appendChild(doc.createTextNode(result.stdOut));
-        test.appendChild(stdOutEl);
-      }
-
-      // stderr, if non-empty.
-      if (result.stdErr != null) {
-        Element stdErrEl = doc.createElement("stderr");
-        stdErrEl.appendChild(doc.createTextNode(result.stdErr));
-        test.appendChild(stdErrEl);
-      }
-
-      root.appendChild(test);
+    public TestListener(List<TestResult> results) {
+      this.results = results;
     }
 
-    // Create an XML transformer that pretty-prints with a 2-space indent.
-    TransformerFactory transformerFactory = TransformerFactory.newInstance();
-    Transformer trans = transformerFactory.newTransformer();
-    trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-    trans.setOutputProperty(OutputKeys.INDENT, "yes");
-    trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+    @Override
+    public void testStarted(Description description) throws Exception {
+      // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
+      // form of System.out.println) the developer is using to debug the test.
+      originalOut = System.out;
+      originalErr = System.err;
+      rawStdOutBytes = new ByteArrayOutputStream();
+      rawStdErrBytes = new ByteArrayOutputStream();
+      stdOutStream = new PrintStream(
+          rawStdOutBytes, true /* autoFlush */, ENCODING);
+      stdErrStream = new PrintStream(
+          rawStdErrBytes, true /* autoFlush */, ENCODING);
+      System.setOut(stdOutStream);
+      System.setErr(stdErrStream);
 
-    // Write the result to a file.
-    String testSelectorSuffix = "";
-    if (!testSelectorList.isEmpty()) {
-      testSelectorSuffix += ".test_selectors";
+      // Prepare single-test result.
+      result = new Result();
+      resultListener = result.createListener();
+      resultListener.testRunStarted(description);
+      resultListener.testStarted(description);
     }
-    if (isDryRun) {
-      testSelectorSuffix += ".dry_run";
+
+    @Override
+    public void testFinished(Description description) throws Exception {
+      // Shutdown single-test result.
+      resultListener.testFinished(description);
+      resultListener.testRunFinished(result);
+      resultListener = null;
+
+      // Restore the original stdout/stderr.
+      System.setOut(originalOut);
+      System.setErr(originalErr);
+
+      // Get the stdout/stderr written during the test as strings.
+      stdOutStream.flush();
+      stdErrStream.flush();
+
+      int numFailures = result.getFailureCount();
+      String className = description.getClassName();
+      String methodName = description.getMethodName();
+      // In practice, I have seen one case of a test having more than one failure:
+      // com.xtremelabs.robolectric.shadows.H2DatabaseTest#shouldUseH2DatabaseMap() had 2
+      // failures. However, I am not sure what to make of it, so we let it through.
+      if (numFailures < 0) {
+        throw new IllegalStateException(String.format(
+            "Unexpected number of failures while testing %s#%s(): %d (%s)",
+            className,
+            methodName,
+            numFailures,
+            result.getFailures()));
+      }
+
+      Failure failure;
+      ResultType type;
+      if (assumptionFailure != null) {
+        failure = assumptionFailure;
+        type = ResultType.ASSUMPTION_VIOLATION;
+        // Clear the assumption-failure field before the next test result appears.
+        assumptionFailure = null;
+      } else if (numFailures == 0) {
+        failure = null;
+        type = ResultType.SUCCESS;
+      } else {
+        failure = result.getFailures().get(0);
+        type = ResultType.FAILURE;
+      }
+
+      String stdOut = rawStdOutBytes.size() == 0 ? null : rawStdOutBytes.toString(ENCODING);
+      String stdErr = rawStdErrBytes.size() == 0 ? null : rawStdErrBytes.toString(ENCODING);
+
+      results.add(new TestResult(className,
+          methodName,
+          result.getRunTime(),
+          type,
+          failure == null ? null : failure.getException(),
+          stdOut,
+          stdErr));
     }
-    File outputFile = new File(outputDirectory, testClassName + testSelectorSuffix + ".xml");
-    OutputStream output = new BufferedOutputStream(new FileOutputStream(outputFile));
-    StreamResult streamResult = new StreamResult(output);
-    DOMSource source = new DOMSource(doc);
-    trans.transform(source, streamResult);
-    output.close();
+
+    /**
+     * The regular listener we created from the singular result, in this class, will not by
+     * default treat assumption failures as regular failures, and will not store them.  As a
+     * consequence, we store them ourselves!
+     *
+     * We store the assumption-failure in a temporary field, which we'll make sure we clear each
+     * time we write results.
+     */
+    @Override
+    public void testAssumptionFailure(Failure failure) {
+      assumptionFailure = failure;
+      if (resultListener != null) {
+        // Left in only to help catch future bugs -- right now this does nothing.
+        resultListener.testAssumptionFailure(failure);
+      }
+    }
+
+    @Override
+    public void testFailure(Failure failure) throws Exception {
+      if (resultListener == null) {
+        recordUnpairedFailure(failure);
+      } else {
+        resultListener.testFailure(failure);
+      }
+    }
+
+    @Override
+    public void testIgnored(Description description) throws Exception {
+      if (resultListener != null) {
+        resultListener.testIgnored(description);
+      }
+    }
+
+    /**
+     * It's possible to encounter a Failure before we've started any tests (and therefore before
+     * testStarted() has been called).  The known example is a @BeforeClass that throws an
+     * exception, but there may be others.
+     * <p>
+     * Recording these unexpected failures helps us propagate failures back up to the "buck test"
+     * process.
+     */
+    private void recordUnpairedFailure(Failure failure) {
+      long runtime = System.currentTimeMillis() - startTime;
+      Description description = failure.getDescription();
+      results.add(new TestResult(
+          description.getClassName(),
+          description.getMethodName(),
+          runtime,
+          ResultType.FAILURE,
+          failure.getException(),
+          null,
+          null));
+    }
   }
 }

@@ -72,6 +72,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
   private final ImmutableSet<Path> additionalClasspathEntries;
 
+  private final TestType testType;
+
   protected JavaTest(
       BuildRuleParams params,
       Set<SourcePath> srcs,
@@ -80,6 +82,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       Set<String> contacts,
       Optional<Path> proguardConfig,
       ImmutableSet<Path> addtionalClasspathEntries,
+      TestType testType,
       JavacOptions javacOptions,
       List<String> vmArgs,
       ImmutableSet<BuildRule> sourceUnderTest,
@@ -100,6 +103,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
     this.additionalClasspathEntries = Preconditions.checkNotNull(addtionalClasspathEntries);
+    this.testType = testType;
   }
 
   @Override
@@ -182,7 +186,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         executionContext.isDebugEnabled(),
         executionContext.getBuckEventBus().getBuildId(),
         testSelectorList,
-        isDryRun);
+        isDryRun,
+        testType);
     steps.add(junit);
 
     return steps.build();

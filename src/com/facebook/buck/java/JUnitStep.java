@@ -38,10 +38,12 @@ import java.util.Set;
 public class JUnitStep extends ShellStep {
 
   // Note that the default value is used when `buck test --all` is run on Buck itself.
-
   @VisibleForTesting
   static final String JUNIT_TEST_RUNNER_CLASS_NAME =
-      "com.facebook.buck.junit.Main";
+      "com.facebook.buck.junit.JUnitMain";
+  @VisibleForTesting
+  static final String TESTNG_TEST_RUNNER_CLASS_NAME =
+      "com.facebook.buck.junit.TestNGMain";
 
   @VisibleForTesting
   public static final String BUILD_ID_PROPERTY = "com.facebook.buck.buildId";
@@ -57,6 +59,7 @@ public class JUnitStep extends ShellStep {
   private final BuildId buildId;
   private TestSelectorList testSelectorList;
   private final boolean isDryRun;
+  private final TestType type;
 
   /**
    *  JaCoco is enabled for the code-coverage analysis.
@@ -92,7 +95,8 @@ public class JUnitStep extends ShellStep {
       boolean isDebugEnabled,
       BuildId buildId,
       TestSelectorList testSelectorList,
-      boolean isDryRun) {
+      boolean isDryRun,
+      TestType type) {
     this(classpathEntries,
         testClassNames,
         vmArgs,
@@ -103,6 +107,7 @@ public class JUnitStep extends ShellStep {
         buildId,
         testSelectorList,
         isDryRun,
+        type,
         Paths.get(System.getProperty(
                 "buck.testrunner_classes",
                 new File("build/testrunner/classes").getAbsolutePath())));
@@ -120,6 +125,7 @@ public class JUnitStep extends ShellStep {
       BuildId buildId,
       TestSelectorList testSelectorList,
       boolean isDryRun,
+      TestType type,
       Path testRunnerClassesDirectory) {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.testClassNames = ImmutableSet.copyOf(testClassNames);
@@ -131,6 +137,7 @@ public class JUnitStep extends ShellStep {
     this.buildId = buildId;
     this.testSelectorList = Preconditions.checkNotNull(testSelectorList);
     this.isDryRun = isDryRun;
+    this.type = type;
     this.testRunnerClassesDirectory = Preconditions.checkNotNull(testRunnerClassesDirectory);
   }
 
@@ -183,7 +190,14 @@ public class JUnitStep extends ShellStep {
 
     // Specify the Java class whose main() method should be run. This is the class that is
     // responsible for running the tests.
-    args.add(JUNIT_TEST_RUNNER_CLASS_NAME);
+    if (TestType.JUNIT == type) {
+      args.add(JUNIT_TEST_RUNNER_CLASS_NAME);
+    } else if (TestType.TESTNG == type) {
+      args.add(TESTNG_TEST_RUNNER_CLASS_NAME);
+    } else {
+      throw new IllegalArgumentException(
+          "java_test: unrecognized type " + type + ", expected eg. junit or testng");
+    }
 
     // The first argument to the test runner is where the test results should be written. It is not
     // reliable to write test results to stdout or stderr because there may be output from the unit

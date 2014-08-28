@@ -46,5 +46,6 @@
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.jdt.core_3.9.2.v20140114-1555.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.osgi_3.9.1.v20140110-1610.jar"/>
+	<classpathentry kind="lib" path="third-party/java/testng/testng-6.8.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

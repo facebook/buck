@@ -10,7 +10,7 @@ java_library(
     '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/java:steps',
     '//src/com/facebook/buck/java:rules',
-    '//src/com/facebook/buck/junit:junit',
+    '//src/com/facebook/buck/junit:base',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/python:rules',

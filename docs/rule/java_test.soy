@@ -107,6 +107,15 @@ A <code>java_test()</code> rule is used to define a set of
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'test_type' /}
+  {param default : 'junit' /}
+  {param desc}
+  Specifies which test framework to use.
+  The currently supported options are 'junit' and 'testng'.
+  {/param}
+{/call}
+
 {call buck.visibility_arg /}
 
 {/param} // close args

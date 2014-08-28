@@ -1,0 +1,8 @@
+java_test(
+  name = 'test',
+  test_type = 'testng',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:testng',
+  ],
+)

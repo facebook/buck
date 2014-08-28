@@ -98,6 +98,7 @@
     <pathelement location="${lib.dir}/junit-4.11.jar" />
     <pathelement location="${lib.dir}/hamcrest-core-1.3.jar" />
     <pathelement location="${lib.dir}/hamcrest-library-1.3.jar" />
+    <pathelement location="${third-party.dir}/java/testng/testng-6.8.jar" />
   </path>
 
   <target name="clean" description="remove all generated files">
@@ -615,8 +616,9 @@
 
   <path id="javadoc.classpath">
     <path refid="classpath" />
-    <!-- Buck test runner has references to JUnit. -->
+    <!-- Buck test runner has references to JUnit and TestNG. -->
     <pathelement location="${lib.dir}/junit-4.11.jar" />
+    <pathelement location="${third-party.dir}/java/testng/testng-6.8.jar" />
   </path>
 
   <target name="javadoc"

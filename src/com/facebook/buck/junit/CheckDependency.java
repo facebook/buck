@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,18 +16,19 @@
 
 package com.facebook.buck.junit;
 
-import org.junit.runner.Description;
+class CheckDependency {
 
-class ParsedDescription {
+  private CheckDependency() {
+    // Utility class.
+  }
 
-  public final String testCaseName;
-  public final String testName;
-
-  public ParsedDescription(Description description) {
-    // The format of displayName is: "testMethodName(fullyQualifiedTestClassName)".
-    String displayName = description.getDisplayName();
-    int openParenIndex = displayName.indexOf('(');
-    testCaseName = displayName.substring(openParenIndex + 1, displayName.length() - 1);
-    testName = displayName.substring(0, openParenIndex);
+  public static void isPresent(String name, String classToLoad) {
+    try {
+      Class.forName(classToLoad);
+    } catch (ClassNotFoundException e) {
+      System.err.println(
+          "Unable to locate " + name + " on the classpath. Please add as a test dependency.");
+      System.exit(1);
+    }
   }
 }

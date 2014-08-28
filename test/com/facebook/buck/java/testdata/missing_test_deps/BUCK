@@ -18,6 +18,17 @@ java_test(
   ],
 )
 
+java_test(
+  name = 'no-testng',
+  test_type = 'testng',
+  srcs = [
+    'A.java',
+  ],
+  deps = [
+    ':hamcrest',
+  ],
+)
+
 prebuilt_jar(
   name = 'hamcrest',
   binary_jar = 'hamcrest.jar',
@@ -26,4 +37,9 @@ prebuilt_jar(
 prebuilt_jar(
   name = 'junit',
   binary_jar = 'junit.jar',
+)
+
+prebuilt_jar(
+  name = 'testng',
+  binary_jar = 'testng.jar',
 )

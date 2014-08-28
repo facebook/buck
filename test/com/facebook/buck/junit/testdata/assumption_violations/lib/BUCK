@@ -9,6 +9,17 @@ prebuilt_jar(
     '//test/...',
   ]
 )
+prebuilt_jar(
+  name = 'testng',
+  binary_jar = 'testng-6.8.jar',
+  deps = [
+    ':hamcrest-core',
+    ':hamcrest-library',
+  ],
+  visibility = [
+    '//test/...',
+  ]
+)
 
 prebuilt_jar(
   name = 'hamcrest-core',

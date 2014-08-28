@@ -16,18 +16,17 @@
 
 package com.example;
 
-import org.junit.Test;
-import org.junit.internal.AssumptionViolatedException;
+import org.testng.annotations.Test;
 
-public class FailingTest {
+public class DryRunTestNGTest {
 
-  @Test
-  public void assumptionFailure() {
-    throw new AssumptionViolatedException("Assumption violated!!");
+  @Test(enabled = false)
+  public void testThatIsIgnored() {
+    // empty
   }
 
   @Test
-  public void completeFailure() {
-    throw new RuntimeException("DOOM!");
+  public void testThatIsNotIgnored() {
+    // empty
   }
 }

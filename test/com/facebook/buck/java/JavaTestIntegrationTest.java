@@ -73,6 +73,25 @@ public class JavaTestIntegrationTest {
             "Unable to locate junit on the classpath. Please add as a test dependency."));
   }
 
+  @Test
+  public void shouldRefuseToRunTestNgTestsIfTestNgNotOnClasspath() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "missing_test_deps",
+        temp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:no-testng");
+
+    result.assertFailure();
+    String stderr = result.getStderr();
+    assertTrue(
+        stderr,
+        stderr.contains(
+            "Unable to locate testng on the classpath. Please add as a test dependency."));
+  }
+
+
   /**
    * There's a requirement that the JUnitRunner creates and runs tests on the same thread (thanks to
    * jmock having a thread guard), but we don't want to create lots of threads. Because of this the
