@@ -124,7 +124,8 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
               buckFile,
               options.getDefaultIncludes(),
               environment,
-              console);
+              console,
+              getBuckEventBus());
 
           for (Map<String, Object> buildFileTarget : buildFileTargets) {
             if (!buildFileTarget.containsKey("name")) {

@@ -224,7 +224,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
             buildFile,
             defaultIncludes,
             environment,
-            console);
+            console,
+            getBuckEventBus());
       } catch (BuildTargetException e) {
         console.printErrorText(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
@@ -330,7 +331,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           getRepository().getAbsolutePathToBuildFile(buildTarget),
           options.getDefaultIncludes(),
           environment,
-          console);
+          console,
+          getBuckEventBus());
     } catch (BuildTargetException | BuildFileParseException e) {
       // TODO(devjasta): this doesn't smell right!
       return null;

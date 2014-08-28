@@ -16,6 +16,7 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -41,13 +42,15 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   public ProjectBuildFileParser createParser(
       Iterable<String> commonIncludes,
       Console console,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      BuckEventBus buckEventBus) {
     return new ProjectBuildFileParser(
         projectFilesystem,
         commonIncludes,
         pythonInterpreter,
         descriptions,
         console,
-        environment);
+        environment,
+        buckEventBus);
   }
 }

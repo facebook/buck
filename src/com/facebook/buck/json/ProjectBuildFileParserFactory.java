@@ -16,6 +16,7 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableMap;
 
@@ -33,5 +34,6 @@ public interface ProjectBuildFileParserFactory {
   public ProjectBuildFileParser createParser(
       Iterable<String> commonIncludes,
       Console console,
-      ImmutableMap<String, String> environment);
+      ImmutableMap<String, String> environment,
+      BuckEventBus buckEventBus);
 }

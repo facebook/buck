@@ -19,6 +19,7 @@ package com.facebook.buck.json;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
@@ -79,6 +80,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final ImmutableList<String> commonIncludes;
   private final String pythonInterpreter;
   private final Console console;
+  private final BuckEventBus buckEventBus;
 
   private boolean isServerMode;
 
@@ -91,7 +93,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       String pythonInterpreter,
       ImmutableSet<Description<?>> descriptions,
       Console console,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      BuckEventBus buckEventBus) {
     this.projectRoot = projectFilesystem.getRootPath();
     this.descriptions = Preconditions.checkNotNull(descriptions);
     this.ignorePaths = projectFilesystem.getIgnorePaths();
@@ -100,6 +103,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.pathToBuckPy = Optional.absent();
     this.console = Preconditions.checkNotNull(console);
     this.environment = Preconditions.checkNotNull(environment);
+    this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
 
     // Default to server mode unless explicitly unset internally.
     setServerMode(true);
@@ -147,6 +151,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
    * Initialize the parser, starting buck.py.
    */
   private void init() throws IOException {
+    buckEventBus.post(new ProjectBuildFileParseEvents.Started());
+
     ProcessBuilder processBuilder = new ProcessBuilder(buildArgs());
     processBuilder.environment().clear();
     processBuilder.environment().putAll(environment);
@@ -217,13 +223,15 @@ public class ProjectBuildFileParser implements AutoCloseable {
       ProjectBuildFileParserFactory factory,
       Iterable<String> includes,
       Console console,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      BuckEventBus buckEventBus)
       throws BuildFileParseException, InterruptedException {
     try (ProjectBuildFileParser buildFileParser =
              factory.createParser(
                  includes,
                  console,
-                 environment)) {
+                 environment,
+                 buckEventBus)) {
       buildFileParser.setServerMode(false);
       return buildFileParser.getAllRulesInternal(Optional.<Path>absent());
     } catch (IOException e) {
@@ -339,6 +347,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       }
     } finally {
       isClosed = true;
+      buckEventBus.post(new ProjectBuildFileParseEvents.Finished());
     }
   }
 

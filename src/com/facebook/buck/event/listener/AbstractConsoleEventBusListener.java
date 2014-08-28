@@ -19,6 +19,7 @@ import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
@@ -51,6 +52,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected final PrintStream stdErr;
 
   @Nullable
+  protected volatile ProjectBuildFileParseEvents.Started projectBuildFileParseStarted;
+  @Nullable
+  protected volatile ProjectBuildFileParseEvents.Finished projectBuildFileParseFinished;
+
+  @Nullable
   protected volatile ParseEvent.Started parseStarted;
   @Nullable
   protected volatile ParseEvent.Finished parseFinished;
@@ -71,6 +77,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.console = console;
     this.clock = clock;
     this.ansi = console.getAnsi();
+
+    this.projectBuildFileParseStarted = null;
+    this.projectBuildFileParseFinished = null;
 
     this.parseStarted = null;
     this.parseFinished = null;
@@ -151,6 +160,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       // consistent.
       lines.addAll(Splitter.on("\n").split(formattedLine));
     }
+  }
+
+  @Subscribe
+  public void projectBuildFileParseStarted(ProjectBuildFileParseEvents.Started started) {
+    projectBuildFileParseStarted = started;
+  }
+
+  @Subscribe
+  public void projectBuildFileParseFinished(ProjectBuildFileParseEvents.Finished finished) {
+    projectBuildFileParseFinished = finished;
   }
 
   @Subscribe

@@ -86,7 +86,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    final String parsingLine = "[-] PARSING BUILD FILES...FINISHED 0.4s\n";
+    final String parsingLine = "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals(parsingLine,

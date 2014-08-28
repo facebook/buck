@@ -121,7 +121,8 @@ public class PartialGraph {
             includes,
             rootsPredicate.or(RuleJsonPredicates.alwaysTrue()),
             console,
-            environment));
+            environment,
+            eventBus));
 
     ImmutableList.Builder<PartialGraph> graphs = ImmutableList.builder();
 

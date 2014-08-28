@@ -136,7 +136,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
-    long parseTime = logEventPair("PARSING BUILD FILES",
+    if (parseStarted == null && parseFinished == null) {
+      logEventPair(
+          "PARSING BUCK FILES",
+          /* suffix */ Optional.<String>absent(),
+          currentTimeMillis,
+          0L,
+          projectBuildFileParseStarted,
+          projectBuildFileParseFinished,
+          lines);
+    }
+
+    long parseTime = logEventPair("PROCESSING BUCK FILES",
         /* suffix */ Optional.<String>absent(),
         currentTimeMillis,
         0L,
@@ -339,4 +350,3 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     render(); // Ensure final frame is rendered.
   }
 }
-

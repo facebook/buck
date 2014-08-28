@@ -297,7 +297,8 @@ public class Parser {
              buildFileParserFactory.createParser(
                  defaultIncludes,
                  console,
-                 environment)) {
+                 environment,
+                 eventBus)) {
       if (!isCacheComplete(defaultIncludes, environment)) {
         Set<Path> buildTargetFiles = Sets.newHashSet();
         for (BuildTarget buildTarget : buildTargets) {
@@ -325,12 +326,14 @@ public class Parser {
       Iterable<BuildTarget> toExplore,
       Iterable<String> defaultIncludes,
       Console console,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      BuckEventBus eventBus)
       throws IOException, BuildFileParseException, InterruptedException {
     try (ProjectBuildFileParser parser = buildFileParserFactory.createParser(
         defaultIncludes,
         console,
-        environment)) {
+        environment,
+        eventBus)) {
       return findAllTransitiveDependencies(toExplore, defaultIncludes, parser, environment);
     }
   }
@@ -559,13 +562,15 @@ public class Parser {
       Path buildFile,
       Iterable<String> defaultIncludes,
       ImmutableMap<String, String> environment,
-      Console console)
+      Console console,
+      BuckEventBus buckEventBus)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     try (ProjectBuildFileParser projectBuildFileParser =
         buildFileParserFactory.createParser(
             defaultIncludes,
             console,
-            environment)) {
+            environment,
+            buckEventBus)) {
       return parseBuildFile(buildFile, defaultIncludes, projectBuildFileParser, environment);
     }
   }
@@ -693,7 +698,8 @@ public class Parser {
       Iterable<String> includes,
       RuleJsonPredicate filter,
       Console console,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      BuckEventBus buckEventBus)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     Preconditions.checkNotNull(filesystem);
     Preconditions.checkNotNull(includes);
@@ -709,7 +715,8 @@ public class Parser {
               buildFileParserFactory,
               includes,
               console,
-              environment));
+              environment,
+              buckEventBus));
       allBuildFilesParsed = true;
     }
     return filterTargets(filter);

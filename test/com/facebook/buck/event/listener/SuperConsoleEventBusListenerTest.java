@@ -22,6 +22,7 @@ import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -108,21 +109,36 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.register(listener);
 
     rawEventBus.post(configureTestEventAtTime(
-        BuildEvent.started(buildTargets),
+        new ProjectBuildFileParseEvents.Started(),
         0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(console, listener, 0L, ImmutableList.of(
+        formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.0)));
+
+    validateConsole(console, listener, 100L, ImmutableList.of(
+        formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.1)));
+
+    rawEventBus.post(configureTestEventAtTime(
+        new ProjectBuildFileParseEvents.Finished(),
+        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(console, listener, 200L, ImmutableList.of(
+        formatConsoleTimes("[-] PARSING BUCK FILES...FINISHED %s", 0.2)));
+
+    rawEventBus.post(configureTestEventAtTime(
+        BuildEvent.started(buildTargets),
+        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     rawEventBus.post(configureTestEventAtTime(
         ParseEvent.started(buildTargets),
-        0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 300L, ImmutableList.of(
-        formatConsoleTimes("[+] PARSING BUILD FILES...%s", 0.3)));
+        formatConsoleTimes("[+] PROCESSING BUCK FILES...%s", 0.1)));
 
     rawEventBus.post(
         configureTestEventAtTime(ParseEvent.finished(buildTargets,
                                                      Optional.<ActionGraph>absent()),
         400L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    final String parsingLine = formatConsoleTimes("[-] PARSING BUILD FILES...FINISHED %s", 0.4);
+    final String parsingLine = formatConsoleTimes("[-] PROCESSING BUCK FILES...FINISHED %s", 0.2);
 
     validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
         formatConsoleTimes("[+] BUILDING...%s", 0.1)));

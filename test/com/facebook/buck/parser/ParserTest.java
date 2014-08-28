@@ -167,7 +167,9 @@ public class ParserTest extends EasyMockSupport {
       @Override
       public ProjectBuildFileParser createParser(
           Iterable<String> commonIncludes,
-          Console console, ImmutableMap<String, String> environment) {
+          Console console,
+          ImmutableMap<String, String> environment,
+          BuckEventBus buckEventBus) {
         return mockBuildFileParser;
       }
     };
@@ -249,7 +251,8 @@ public class ParserTest extends EasyMockSupport {
           targets,
           ImmutableList.<String>of(),
           new TestConsole(),
-          ImmutableMap.<String, String>of());
+          ImmutableMap.<String, String>of(),
+          BuckEventBusFactory.newInstance());
       fail("Should have thrown a HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -300,7 +303,11 @@ public class ParserTest extends EasyMockSupport {
     Iterable<String> defaultIncludes = ImmutableList.of();
     try {
       parser.onlyUseThisWhenTestingToFindAllTransitiveDependencies(
-          buildTargets, defaultIncludes, new TestConsole(), ImmutableMap.<String, String>of());
+          buildTargets,
+          defaultIncludes,
+          new TestConsole(),
+          ImmutableMap.<String, String>of(),
+          BuckEventBusFactory.newInstance());
       fail("Should have thrown a HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals("Cycle found: //:F -> //:C -> //:E -> //:F", e.getMessage());
@@ -438,7 +445,8 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        BuckEventBusFactory.newInstance());
 
     ImmutableSet<BuildTarget> expectedTargets = ImmutableSet.of(
         BuildTarget.builder("//java/com/facebook", "foo").build(),
@@ -457,13 +465,15 @@ public class ParserTest extends EasyMockSupport {
         filesystem, Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        BuckEventBusFactory.newInstance());
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        BuckEventBusFactory.newInstance());
 
     assertEquals("Should have cached build rules.", 1, buildFileParserFactory.calls);
   }
@@ -481,7 +491,8 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        BuckEventBusFactory.newInstance());
 
     // Process event.
     WatchEvent<Object> event = WatchEvents.createOverflowEvent();
@@ -493,7 +504,8 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        BuckEventBusFactory.newInstance());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
@@ -512,7 +524,8 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.of("Some Key", "Some Value"));
+        ImmutableMap.of("Some Key", "Some Value"),
+        BuckEventBusFactory.newInstance());
 
     // Call filterAllTargetsInProject to request cached rules.
     parser.filterAllTargetsInProject(
@@ -520,7 +533,8 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.of("Some Key", "Some Other Value"));
+        ImmutableMap.of("Some Key", "Some Other Value"),
+        BuckEventBusFactory.newInstance());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
@@ -540,14 +554,16 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.of("Some Key", "Some Value"));
+        ImmutableMap.of("Some Key", "Some Value"),
+        BuckEventBusFactory.newInstance());
 
     // Call filterAllTargetsInProject to request cached rules with identical environment.
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(), alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.of("Some Key", "Some Value"));
+        ImmutableMap.of("Some Key", "Some Value"),
+        BuckEventBusFactory.newInstance());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated cache.", 1, buildFileParserFactory.calls);
@@ -561,7 +577,8 @@ public class ParserTest extends EasyMockSupport {
     try (ProjectBuildFileParser projectBuildFileParser = buildFileParserFactory.createParser(
         /* commonIncludes */ Lists.<String>newArrayList(),
         new TestConsole(),
-        ImmutableMap.<String, String>of())) {
+        ImmutableMap.<String, String>of(),
+        BuckEventBusFactory.newInstance())) {
       parser.parseBuildFile(
           buildFile,
           /* defaultIncludes */ ImmutableList.<String>of(),
@@ -1081,13 +1098,15 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        BuckEventBusFactory.newInstance());
     parser.filterAllTargetsInProject(
         filesystem,
         ImmutableList.of("//bar.py"),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        BuckEventBusFactory.newInstance());
 
     assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
   }
@@ -1104,7 +1123,8 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        BuckEventBusFactory.newInstance());
     BuildTarget foo = BuildTarget.builder("//java/com/facebook", "foo").build();
     parser.parseBuildFilesForTargets(
         ImmutableList.of(foo),
@@ -1135,7 +1155,8 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        BuckEventBusFactory.newInstance());
 
     assertEquals("Should have replaced build rules", 2, buildFileParserFactory.calls);
   }
@@ -1266,7 +1287,8 @@ public class ParserTest extends EasyMockSupport {
     public ProjectBuildFileParser createParser(
         Iterable<String> commonIncludes,
         Console console,
-        ImmutableMap<String, String> environment) {
+        ImmutableMap<String, String> environment,
+        BuckEventBus buckEventBus) {
       return new TestProjectBuildFileParser("python" /* pythonInterpreter */);
     }
 
@@ -1288,7 +1310,8 @@ public class ParserTest extends EasyMockSupport {
             pythonInterpreter,
             buildRuleTypes.getAllDescriptions(),
             new TestConsole(),
-            ImmutableMap.<String, String>of());
+            ImmutableMap.<String, String>of(),
+            BuckEventBusFactory.newInstance());
       }
 
       @Override

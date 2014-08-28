@@ -52,7 +52,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   public void parseFinished(ParseEvent.Finished finished) {
     super.parseFinished(finished);
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    this.parseTime.set(logEventPair("PARSING BUILD FILES",
+    this.parseTime.set(logEventPair("PARSING BUCK FILES",
         /* suffix */ Optional.<String>absent(),
         clock.currentTimeMillis(),
         0L,
