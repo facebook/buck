@@ -380,7 +380,7 @@ public class ParserTest extends EasyMockSupport {
   public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeen()
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored = BuildTarget.builder("//java/com/facebook", "foo")
-        .setFlavor("doesNotExist")
+        .addFlavor("doesNotExist")
         .build();
     try {
       testParser.parseBuildFilesForTargets(

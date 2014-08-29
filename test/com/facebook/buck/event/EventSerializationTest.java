@@ -84,7 +84,7 @@ public class EventSerializationTest {
   @Test
   public void testParseEventFinished() throws IOException {
     ParseEvent.Finished event = ParseEvent.finished(ImmutableList.<BuildTarget>of(
-        BuildTarget.builder("//base", "short").setFlavor("flv").build()),
+        BuildTarget.builder("//base", "short").addFlavor("flv").build()),
         Optional.<ActionGraph>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);

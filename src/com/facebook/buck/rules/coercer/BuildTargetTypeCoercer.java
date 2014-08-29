@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Splitter;
 
 import java.nio.file.Path;
 
@@ -46,15 +47,34 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
           (!param.isEmpty() && param.charAt(0) == ':')) {
         int colon = param.indexOf(':');
         if (colon == 0 && param.length() > 1) {
-          return BuildTarget.builder(
+          return extractFlavors(
               BuildTarget.BUILD_TARGET_PREFIX + pathRelativeToProjectRoot.toString(),
-              param.substring(1)).build();
+              param.substring(1));
         } else if (colon > 0 && param.length() > 2) {
-          return BuildTarget.builder(param.substring(0, colon), param.substring(colon + 1)).build();
+          return extractFlavors(
+              param.substring(0, colon),
+              param.substring(colon + 1));
         }
       }
     }
 
     throw CoerceFailedException.simple(object, getOutputClass());
+  }
+
+  private BuildTarget extractFlavors(String prefix, String shortName) {
+    int hashIndex = shortName.indexOf('#');
+    if (hashIndex == -1) {
+        return BuildTarget.builder(prefix, shortName).build();
+    }
+
+    Iterable<String> flavors = Splitter.on(",")
+        .omitEmptyStrings()
+        .trimResults()
+        .split(shortName.substring(hashIndex + 1));
+    BuildTarget.Builder builder = BuildTarget.builder(prefix, shortName.substring(0, hashIndex));
+    for (String flavor : flavors) {
+      builder.addFlavor(flavor);
+    }
+    return builder.build();
   }
 }

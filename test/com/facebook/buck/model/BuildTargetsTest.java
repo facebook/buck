@@ -33,7 +33,7 @@ public class BuildTargetsTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testCreateFlavoredBuildTargetRejectsFlavoredBuildTarget() {
-    BuildTarget fooBarBaz = BuildTarget.builder("//foo", "bar").setFlavor("baz").build();
+    BuildTarget fooBarBaz = BuildTarget.builder("//foo", "bar").addFlavor("baz").build();
     BuildTargets.createFlavoredBuildTarget(fooBarBaz, new Flavor("buzz"));
   }
 
@@ -48,11 +48,11 @@ public class BuildTargetsTest {
   @Test
   public void testExtendFlavoredBuildTargetOnFlavoredTarget() {
     BuildTarget fooBar = BuildTarget.builder("//foo", "bar")
-        .setFlavor(new Flavor("hello"))
+        .addFlavor(new Flavor("hello"))
         .build();
     BuildTarget fooBarBaz = BuildTargets.extendFlavoredBuildTarget(fooBar, new Flavor("baz"));
     assertTrue(fooBarBaz.isFlavored());
-    assertEquals("//foo:bar#hello-baz", fooBarBaz.getFullyQualifiedName());
+    assertEquals("//foo:bar#baz,hello", fooBarBaz.getFullyQualifiedName());
   }
 
 }

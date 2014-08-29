@@ -68,8 +68,8 @@ public class JavaThriftLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    Flavor flavor = params.getBuildTarget().getFlavor();
-    if (!hasFlavor(flavor)) {
+    ImmutableSet<Flavor> flavor = params.getBuildTarget().getFlavors();
+    if (!hasFlavors(flavor)) {
       throw new HumanReadableException("Unrecognized flavor \"%s\"", flavor);
     }
 
@@ -94,7 +94,7 @@ public class JavaThriftLibraryDescription
     JavacOptions javacOptions = JavacOptions.builder()
         .setJavaCompilerEnvironment(javacEnv)
         .build();
-    DefaultJavaLibrary defaultJavaLibrary = new DefaultJavaLibrary(
+    return new DefaultJavaLibrary(
         javaParams,
         ImmutableSet.of(new BuildRuleSourcePath(javaThriftLibrary)),
         /* resources */ ImmutableSet.<SourcePath>of(),
@@ -105,7 +105,6 @@ public class JavaThriftLibraryDescription
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         javacOptions,
         /* resourcesRoot */ Optional.<Path>absent());
-    return defaultJavaLibrary;
   }
 
   @Override
@@ -119,8 +118,12 @@ public class JavaThriftLibraryDescription
   }
 
   @Override
-  public boolean hasFlavor(Flavor flavor) {
-    return JAVA_FLAVOR.equals(flavor) || Flavor.DEFAULT.equals(flavor);
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    boolean match = true;
+    for (Flavor flavor : flavors) {
+      match &= JAVA_FLAVOR.equals(flavor) || Flavor.DEFAULT.equals(flavor);
+    }
+    return match;
   }
 
   /**

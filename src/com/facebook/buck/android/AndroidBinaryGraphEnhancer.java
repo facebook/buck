@@ -361,7 +361,7 @@ public class AndroidBinaryGraphEnhancer {
       // ruleResolver.
       BuildTarget originalTarget = javaLibrary.getBuildTarget();
       BuildTarget preDexTarget = BuildTarget.builder(originalTarget)
-          .setFlavor(DEX_FLAVOR)
+          .addFlavor(DEX_FLAVOR)
           .build();
       BuildRule preDexRule = ruleResolver.get(preDexTarget);
       if (preDexRule != null) {
@@ -457,7 +457,7 @@ public class AndroidBinaryGraphEnhancer {
 
   private BuildTarget createBuildTargetWithFlavor(Flavor flavor) {
     return BuildTarget.builder(originalBuildTarget)
-        .setFlavor(flavor)
+        .addFlavor(flavor)
         .build();
   }
 

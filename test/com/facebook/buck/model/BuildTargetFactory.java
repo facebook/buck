@@ -35,6 +35,6 @@ public class BuildTargetFactory {
     if (nameAndFlavor.length != 2) {
       return BuildTarget.builder(parts[0], parts[1]).build();
     }
-    return BuildTarget.builder(parts[0], nameAndFlavor[0]).setFlavor(nameAndFlavor[1]).build();
+    return BuildTarget.builder(parts[0], nameAndFlavor[0]).addFlavor(nameAndFlavor[1]).build();
   }
 }

@@ -44,7 +44,7 @@ public class AndroidLibraryGraphEnhancer {
       JavacOptions javacOptions) {
     Preconditions.checkNotNull(buildTarget);
     this.dummyRDotJavaBuildTarget = BuildTarget.builder(buildTarget)
-        .setFlavor(DUMMY_R_DOT_JAVA_FLAVOR)
+        .addFlavor(DUMMY_R_DOT_JAVA_FLAVOR)
         .build();
     this.originalBuildRuleParams = Preconditions.checkNotNull(buildRuleParams);
     // Override javacoptions because DummyRDotJava doesn't require annotation processing

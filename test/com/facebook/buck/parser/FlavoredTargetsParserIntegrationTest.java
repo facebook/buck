@@ -69,7 +69,7 @@ public class FlavoredTargetsParserIntegrationTest {
     File output = workspace.buildAndReturnOutput("//:example#src");
 
     // The output of the rule should be a src zip. Verify that.
-    assertTrue(output.getName().endsWith(JavacStep.SRC_ZIP));
+    assertTrue(output.getName(), output.getName().endsWith(JavacStep.SRC_ZIP));
   }
 
   @Test

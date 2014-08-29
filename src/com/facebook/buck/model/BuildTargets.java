@@ -116,10 +116,6 @@ public class BuildTargets {
    *         given flavor.
    */
   public static BuildTarget extendFlavoredBuildTarget(BuildTarget target, Flavor flavor) {
-    if (target.isFlavored()) {
-      flavor = new Flavor(String.format("%s-%s", target.getFlavor(), flavor));
-    }
-    return BuildTargets.createFlavoredBuildTarget(target.getUnflavoredTarget(), flavor);
+    return BuildTarget.builder(target).addFlavor(flavor).build();
   }
-
 }

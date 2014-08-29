@@ -32,7 +32,7 @@ public class BuildTargetFactoryTest {
   public void testTargetWithFlavor() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//example/base:one#two");
     assertEquals(
-        BuildTarget.builder("//example/base", "one").setFlavor("two").build(),
+        BuildTarget.builder("//example/base", "one").addFlavor("two").build(),
         buildTarget);
   }
 }

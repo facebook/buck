@@ -20,9 +20,13 @@ import com.facebook.buck.util.BuckConstant;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,46 +41,44 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   public static final String BUILD_TARGET_PREFIX = "//";
 
+  private static final ImmutableSortedSet<Flavor> JUST_DEFAULT =
+      ImmutableSortedSet.of(Flavor.DEFAULT);
   private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z0-9_]+");
 
   private final Optional<String> repository;
   private final String baseName;
   private final String shortName;
-  private final Optional<Flavor> flavor;
+  private final ImmutableSortedSet<Flavor> flavors;
   private final String fullyQualifiedName;
 
   private BuildTarget(
       Optional<String> repository,
       String baseName,
       String shortName,
-      Optional<Flavor> flavor) {
+      ImmutableSortedSet<Flavor> flavors) {
     Preconditions.checkNotNull(repository);
     Preconditions.checkNotNull(baseName);
     // shortName may be the empty string when parsing visibility patterns.
     Preconditions.checkNotNull(shortName);
-    Preconditions.checkNotNull(flavor);
+    Preconditions.checkNotNull(flavors);
 
     Preconditions.checkArgument(baseName.startsWith(BUILD_TARGET_PREFIX),
         "baseName must start with %s but was %s",
         BUILD_TARGET_PREFIX,
         baseName);
 
-    // There's a chance that the (String, String) constructor was called, but a flavour was
-    // specified as part of the short name. Handle that case.
-    int hashIndex = shortName.lastIndexOf("#");
-    if (hashIndex != -1 && !flavor.isPresent()) {
-      flavor = Optional.of(new Flavor(shortName.substring(hashIndex + 1)));
-      shortName = shortName.substring(0, hashIndex);
-    }
+    Preconditions.checkArgument(shortName.lastIndexOf("#") == -1,
+        "Build target name cannot contain '#' but was: %s.",
+        shortName);
 
     Preconditions.checkArgument(!shortName.contains("#"),
         "Build target name cannot contain '#' but was: %s.",
         shortName);
-    if (flavor.isPresent()) {
-      Flavor flavorName = flavor.get();
-      if (!Flavor.DEFAULT.equals(flavorName) &&
-          !VALID_FLAVOR_PATTERN.matcher(flavorName.toString()).matches()) {
-        throw new IllegalArgumentException("Invalid flavor: " + flavorName);
+
+    for (Flavor flavor : flavors) {
+      if (!Flavor.DEFAULT.equals(flavor) &&
+          !VALID_FLAVOR_PATTERN.matcher(flavor.toString()).matches()) {
+        throw new IllegalArgumentException("Invalid flavor: " + flavor);
       }
     }
 
@@ -84,7 +86,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
     this.baseName = baseName.replace("\\", "/");
     this.shortName = shortName;
-    this.flavor = flavor;
+    this.flavors = flavors;
     this.fullyQualifiedName =
         (repository.isPresent() ? "@" + repository.get() : "") +
         baseName + ":" + shortName + getFlavorPostfix();
@@ -108,7 +110,10 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   }
 
   public String getFlavorPostfix() {
-    return (flavor.isPresent() && !flavor.get().equals(Flavor.DEFAULT) ? "#" + flavor.get() : "");
+    if (flavors.isEmpty() || JUST_DEFAULT.equals(flavors)) {
+      return "";
+    }
+    return "#" + getFlavorsAsString();
   }
 
   @JsonProperty("shortName")
@@ -117,8 +122,13 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   }
 
   @JsonProperty("flavor")
-  public Flavor getFlavor() {
-    return flavor.or(Flavor.DEFAULT);
+  private String getFlavorsAsString() {
+    return Joiner.on(",")
+        .join(Sets.filter(flavors, Predicates.not(Predicates.equalTo(Flavor.DEFAULT))));
+  }
+
+  public ImmutableSet<Flavor> getFlavors() {
+    return flavors;
   }
 
   /**
@@ -178,7 +188,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   @JsonIgnore
   public boolean isFlavored() {
-    return flavor.isPresent();
+    return !(flavors.isEmpty() || JUST_DEFAULT.equals(flavors));
   }
 
   @JsonIgnore
@@ -187,14 +197,18 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   }
 
   /**
-   * @return a {@link BuildTarget} that is equal to the current one, but without the flavor. If
-   *     this build target does not have a flavor, then this object will be returned.
+   * @return a {@link BuildTarget} that is equal to the current one, but with the default flavour.
+   *     If this build target does not have a flavor, then this object will be returned.
    */
   public BuildTarget getUnflavoredTarget() {
     if (!isFlavored()) {
       return this;
     } else {
-      return new BuildTarget(repository, baseName, shortName, Optional.<Flavor>absent());
+      return new BuildTarget(
+          repository,
+          baseName,
+          shortName,
+          ImmutableSortedSet.of(Flavor.DEFAULT));
     }
   }
 
@@ -219,7 +233,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   }
 
   @Override
-  public int compareTo(BuildTarget target) {
+  public int compareTo(@Nullable BuildTarget target) {
     Preconditions.checkNotNull(target);
     return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
   }
@@ -241,18 +255,19 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     private Optional<String> repository = Optional.absent();
     private String baseName;
     private String shortName;
-    private Optional<Flavor> flavor = Optional.absent();
+    private ImmutableSortedSet.Builder<Flavor> flavors = ImmutableSortedSet.naturalOrder();
 
     private Builder(String baseName, String shortName) {
       this.baseName = baseName;
       this.shortName = shortName;
+      flavors.add(Flavor.DEFAULT);
     }
 
     private Builder(BuildTarget buildTarget) {
       this.repository = buildTarget.repository;
       this.baseName = buildTarget.baseName;
       this.shortName = buildTarget.shortName;
-      this.flavor = buildTarget.flavor;
+      this.flavors.addAll(buildTarget.flavors);
     }
 
     /**
@@ -270,18 +285,26 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     }
 
     public Builder setFlavor(Flavor flavor) {
-      this.flavor = Optional.of(flavor);
+      flavors = ImmutableSortedSet.naturalOrder();
+      flavors.add(flavor);
       return this;
     }
 
-    @VisibleForTesting
     public Builder setFlavor(String flavor) {
-      this.flavor = Optional.of(new Flavor(flavor));
+      return setFlavor(new Flavor(flavor));
+    }
+
+    public Builder addFlavor(Flavor flavor) {
+      this.flavors.add(flavor);
       return this;
+    }
+
+    public Builder addFlavor(String flavor) {
+      return addFlavor(new Flavor(flavor));
     }
 
     public BuildTarget build() {
-      return new BuildTarget(repository, baseName, shortName, flavor);
+      return new BuildTarget(repository, baseName, shortName, flavors.build());
     }
   }
 }

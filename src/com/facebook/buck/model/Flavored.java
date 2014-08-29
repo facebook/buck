@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.model;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * When applied to a {@link com.facebook.buck.rules.Description} this indicates that it supports
  * flavours.
@@ -22,8 +24,9 @@ package com.facebook.buck.model;
 public interface Flavored {
 
   /**
+   * @param flavors The set of {@link Flavor}s to consider. All must match.
    * @return Whether a {@link com.facebook.buck.rules.BuildRule} of the given {@link Flavor} can be
    * created.
    */
-  boolean hasFlavor(Flavor flavor);
+  boolean hasFlavors(ImmutableSet<Flavor> flavors);
 }

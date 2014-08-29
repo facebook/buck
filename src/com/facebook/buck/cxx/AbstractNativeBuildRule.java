@@ -164,7 +164,7 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
   public Path getPathToOutputFile() {
     BuildTarget target = getBuildTarget();
 
-    if (!target.getFlavor().equals(Flavor.DEFAULT)) {
+    if (!target.getFlavors().contains(Flavor.DEFAULT)) {
       // TODO(grp): Consider putting this path format logic in BuildTargets.getBinPath() directly.
       return Paths.get(String.format("%s/%s/%s/" + getOutputFileNameFormat(),
               BuckConstant.BIN_DIR,

@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 
 public class BuildTargetParser {
@@ -128,6 +129,15 @@ public class BuildTargetParser {
 
     String baseName = parts.get(0).isEmpty() ? parseContext.getBaseName() : parts.get(0);
     String shortName = parts.get(1);
+    Iterable<String> flavorNames = new HashSet<>();
+    int hashIndex = shortName.indexOf("#");
+    if (hashIndex != -1 && hashIndex < shortName.length()) {
+      flavorNames = Splitter.on(",")
+          .omitEmptyStrings()
+          .trimResults()
+          .split(shortName.substring(hashIndex + 1));
+      shortName = shortName.substring(0, hashIndex);
+    }
 
     String fullyQualifiedName = String.format("%s:%s", baseName, shortName);
     if (!fullyQualifiedName.startsWith(BUILD_RULE_PREFIX)) {
@@ -170,6 +180,9 @@ public class BuildTargetParser {
     }
 
     BuildTarget.Builder builder = BuildTarget.builder(baseName, shortName);
+    for (String flavor : flavorNames) {
+      builder.addFlavor(flavor);
+    }
     Optional<String> canonicalRepoName = localToCanonicalRepoNamesMap.get(givenRepoName);
     if (canonicalRepoName.isPresent()) {
       builder.setRepository(canonicalRepoName.get());

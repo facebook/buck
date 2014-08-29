@@ -23,6 +23,9 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+
 import org.junit.Test;
 
 import java.io.IOException;
@@ -88,7 +91,7 @@ public class BuildTargetTest {
   public void testBuildTargetWithFlavor() {
     BuildTarget target = BuildTarget.builder("//foo/bar", "baz").setFlavor("dex").build();
     assertEquals("baz#dex", target.getShortName());
-    assertEquals(new Flavor("dex"), target.getFlavor());
+    assertEquals(ImmutableSortedSet.of(new Flavor("dex")), target.getFlavors());
     assertTrue(target.isFlavored());
   }
 
@@ -96,14 +99,14 @@ public class BuildTargetTest {
   public void testBuildTargetWithoutFlavor() {
     BuildTarget target = BuildTarget.builder("//foo/bar", "baz").build();
     assertEquals(target.getShortName(), "baz");
-    assertEquals(Flavor.DEFAULT, target.getFlavor());
+    assertEquals(ImmutableSortedSet.of(Flavor.DEFAULT), target.getFlavors());
     assertFalse(target.isFlavored());
   }
 
   @Test
   public void testFlavorIsValid() {
     try {
-      BuildTarget.builder("//foo/bar", "baz").setFlavor("d.x").build();
+      BuildTarget.builder("//foo/bar", "baz").addFlavor("d.x").build();
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Invalid flavor: d.x", e.getMessage());
@@ -113,31 +116,23 @@ public class BuildTargetTest {
   @Test
   public void testShortNameCannotContainHashWhenFlavorSet() {
     try {
-      BuildTarget.builder("//foo/bar", "baz#dex").setFlavor("src-jar").build();
+      BuildTarget.builder("//foo/bar", "baz#dex").addFlavor("src-jar").build();
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Build target name cannot contain '#' but was: baz#dex.", e.getMessage());
     }
   }
 
-  @Test
-  public void testFlavorDerivedFromShortNameIfAbsent() {
-    assertEquals(
-        new Flavor("dex"),
-        BuildTarget.builder("//foo/bar", "baz#dex").build().getFlavor());
+  @Test(expected = IllegalArgumentException.class)
+  public void testShortNamesMustNotContainTheFlavorSeparator() {
+      BuildTarget.builder("//foo/bar", "baz#dex").build();
   }
 
   @Test
   public void testFlavorDefaultsToTheEmptyStringIfNotSet() {
-    assertEquals(Flavor.DEFAULT, BuildTarget.builder("//foo/bar", "baz").build().getFlavor());
-  }
-
-  @Test
-  public void testNotSettingTheFlavorInTheShortStringButLookingLikeYouMightIsTeasingAndWrong() {
-    // Hilarious case that might result in an IndexOutOfBoundsException
-    BuildTarget target = BuildTarget.builder("//foo/bar", "baz#").build();
-
-    assertEquals(Flavor.DEFAULT, target.getFlavor());
+    assertEquals(
+        ImmutableSet.of(Flavor.DEFAULT),
+        BuildTarget.builder("//foo/bar", "baz").build().getFlavors());
   }
 
   @Test
@@ -145,26 +140,26 @@ public class BuildTargetTest {
     BuildTarget unflavoredTarget = BuildTarget.builder("//foo/bar", "baz").build();
     assertSame(unflavoredTarget, unflavoredTarget.getUnflavoredTarget());
 
-    BuildTarget flavoredTarget = BuildTarget.builder("//foo/bar", "baz").setFlavor("biz").build();
+    BuildTarget flavoredTarget = BuildTarget.builder("//foo/bar", "baz").addFlavor("biz").build();
     assertEquals(unflavoredTarget, flavoredTarget.getUnflavoredTarget());
   }
 
   @Test
   public void testCanUnflavorATarget() {
     BuildTarget flavored = BuildTarget.builder("//foo", "bar")
-        .setFlavor(new Flavor("cake"))
+        .addFlavor(new Flavor("cake"))
         .build();
 
     // This might throw an exception if it fails to parse
     BuildTarget unflavored = BuildTarget.builder(flavored).setFlavor(Flavor.DEFAULT).build();
 
-    assertEquals(Flavor.DEFAULT, unflavored.getFlavor());
+    assertEquals(ImmutableSet.of(Flavor.DEFAULT), unflavored.getFlavors());
   }
 
   @Test
-  public void testNumbersAreValidFalvors() {
+  public void testNumbersAreValidFlavors() {
     BuildTarget.builder("//foo", "bar")
-        .setFlavor(new Flavor("1234"))
+        .addFlavor(new Flavor("1234"))
         .build();
   }
 

@@ -62,8 +62,12 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   @Override
-  public boolean hasFlavor(Flavor flavor) {
-    return flavor.equals(Flavor.DEFAULT) || flavor.equals(JavaLibrary.SRC_JAR);
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    boolean match = true;
+    for (Flavor flavor : flavors) {
+      match &= JavaLibrary.SRC_JAR.equals(flavor) || Flavor.DEFAULT.equals(flavor);
+    }
+    return match;
   }
 
   @Override
@@ -81,7 +85,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
 
-    if (JavaLibrary.SRC_JAR.equals(target.getFlavor())) {
+    if (target.getFlavors().contains(JavaLibrary.SRC_JAR)) {
       return new JavaSourceJar(params, args.srcs.get());
     }
 
@@ -224,7 +228,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       Arg arg) {
     if (arg.srcs.get().isEmpty() &&
         arg.resources.get().isEmpty() &&
-        Flavor.DEFAULT.equals(originalBuildTarget.getFlavor())) {
+        !originalBuildTarget.isFlavored()) {
       return Optional.absent();
     }
 

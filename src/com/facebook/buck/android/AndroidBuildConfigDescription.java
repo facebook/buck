@@ -79,7 +79,7 @@ public class AndroidBuildConfigDescription
     // Create one build rule to generate BuildConfig.java.
     BuildRuleParams buildConfigParams = params.copyWithChanges(
         GEN_JAVA_TYPE,
-        BuildTarget.builder(params.getBuildTarget()).setFlavor(GEN_JAVA_FLAVOR).build(),
+        BuildTarget.builder(params.getBuildTarget()).addFlavor(GEN_JAVA_FLAVOR).build(),
         params.getDeclaredDeps(),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(params.getExtraDeps())
