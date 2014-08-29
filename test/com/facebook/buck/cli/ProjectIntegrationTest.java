@@ -348,4 +348,22 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void testBuckProjectGeneratedSchemesDoNotIncludeOtherTests()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_generated_schemes_do_not_include_other_tests",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--workspace-and-projects",
+        "--with-tests");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
 }

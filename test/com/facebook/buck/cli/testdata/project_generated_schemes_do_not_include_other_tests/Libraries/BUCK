@@ -1,0 +1,157 @@
+EMPTY_CONFIGS = {
+  'Debug': (
+    '',
+    {},
+    '',
+    {},
+  ),
+  'Release': (
+    '',
+    {},
+    '',
+    {},
+  ),
+}
+
+apple_binary(
+  name = 'TestDepBinary',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    ':Dep1',
+    ':Dep2',
+    ':Dep3',
+  ],
+)
+
+apple_bundle(
+  name = 'TestDep',
+  deps = [':TestDepBinary'],
+  binary = ':TestDepBinary',
+  extension = 'app',
+)
+
+apple_library(
+  name = 'Dep1',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [],
+  visibility = ['PUBLIC'],
+)
+
+apple_library(
+  name = 'Dep2',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [],
+  visibility = ['PUBLIC'],
+)
+
+apple_library(
+  name = 'Dep3',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [],
+  visibility = ['PUBLIC'],
+)
+
+apple_library(
+  name = 'Dep1TestsLibrary',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    ':Dep1',
+  ],
+)
+
+apple_bundle(
+  name = 'Dep1Tests',
+  extension = 'octest',
+  deps = [':Dep1TestsLibrary#dynamic'],
+  binary = ':Dep1TestsLibrary#dynamic',
+)
+
+apple_test(
+  name = 'Dep1TestsTest',
+  source_under_test = [
+    ':Dep1',
+  ],
+  deps = [':Dep1Tests'],
+  test_bundle = ':Dep1Tests',
+)
+
+apple_library(
+  name = 'Dep2TestsLibrary',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    ':Dep2',
+  ],
+)
+
+apple_bundle(
+  name = 'Dep2Tests',
+  extension = 'octest',
+  deps = [':Dep2TestsLibrary#dynamic'],
+  binary = ':Dep2TestsLibrary#dynamic',
+)
+
+apple_test(
+  name = 'Dep2TestsTest',
+  source_under_test = [
+    ':Dep2',
+  ],
+  deps = [':Dep2Tests'],
+  test_bundle = ':Dep2Tests',
+)
+
+apple_library(
+  name = 'Dep3TestsLibrary',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    ':Dep3',
+  ],
+)
+
+apple_bundle(
+  name = 'Dep3Tests',
+  extension = 'octest',
+  deps = [':Dep3TestsLibrary#dynamic'],
+  binary = ':Dep3TestsLibrary#dynamic',
+)
+
+apple_test(
+  name = 'Dep3TestsTest',
+  source_under_test = [
+    ':Dep3',
+  ],
+  deps = [':Dep3Tests'],
+  test_bundle = ':Dep3Tests',
+)
+
+xcode_project_config(
+  name = 'project',
+  project_name = 'Libraries',
+  rules = [
+    ':TestDep',
+    ':Dep1',
+    ':Dep2',
+    ':Dep3',
+    ':Dep1Tests',
+    ':Dep2Tests',
+    ':Dep3Tests',
+  ],
+)
+
+xcode_workspace_config(
+  name = 'workspace',
+  src_target = ':TestDep'
+)

@@ -42,6 +42,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
@@ -250,41 +251,58 @@ public class WorkspaceAndProjectGenerator {
     return workspacePath;
   }
 
+  /**
+   * Builds the multimap of (source rule: [test rule 1, test rule 2, ...])
+   * for the set of test rules covering each source rule.
+   */
+  private static final ImmutableMultimap<BuildRule, AppleTest> getSourceRuleToTestRulesMap(
+      Iterable<BuildRule> testRules) {
+    ImmutableMultimap.Builder<BuildRule, AppleTest> sourceRuleToTestRulesBuilder =
+      ImmutableMultimap.builder();
+    for (BuildRule rule : testRules) {
+      if (!AppleBuildRules.isXcodeTargetTestBuildRule(rule)) {
+        LOG.verbose("Skipping rule %s (not xcode target test)", rule);
+        continue;
+      }
+      AppleTest testRule = (AppleTest) rule;
+      for (BuildRule sourceRule : testRule.getSourceUnderTest()) {
+        sourceRuleToTestRulesBuilder.put(sourceRule, testRule);
+      }
+    }
+    return sourceRuleToTestRulesBuilder.build();
+  }
+
   private static final void getOrderedTestRules(
       ActionGraph actionGraph,
       Optional<PartialGraph> testTargetGraph,
       final ImmutableSet<BuildRule> orderedBuildRules,
       final ImmutableSet.Builder<BuildRule> orderedTestBuildRulesBuilder,
       final ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder) {
-    ImmutableSet.Builder<BuildRule> xcodeTargetTestRulesBuilder = ImmutableSet.builder();
+    LOG.debug("Getting ordered test rules, build rules %s", orderedBuildRules);
+    final ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder = ImmutableSet.builder();
     if (testTargetGraph.isPresent()) {
-      xcodeTargetTestRulesBuilder.addAll(
-          TopologicalSort.sort(
-              testTargetGraph.get().getActionGraph(),
-              new Predicate<BuildRule>() {
-                @Override
-                public boolean apply(@Nullable BuildRule input) {
-                  return AppleBuildRules.isXcodeTargetTestBuildRule(input);
-                }
-              }));
-    }
-    final ImmutableSet<BuildRule> xcodeTargetTestRules = xcodeTargetTestRulesBuilder.build();
-
-    for (BuildRule buildRule : xcodeTargetTestRules) {
-      AppleTest testRule = (AppleTest) buildRule;
-      orderedTestBundleRulesBuilder.add(testRule.getTestBundle());
-    }
-
-    ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder = ImmutableSet.builder();
-    for (BuildRule testRule : xcodeTargetTestRules) {
-      Iterable<BuildRule> testRulesIterable = Iterables.concat(
-          AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
-              AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
+      ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules =
+        getSourceRuleToTestRulesMap(testTargetGraph.get().getActionGraph().getNodes());
+      for (BuildRule rule : orderedBuildRules) {
+        LOG.verbose("Checking if rule %s has any tests covering it..", rule);
+        for (AppleTest testRule : sourceRuleToTestRules.get(rule)) {
+          BuildRule testBundleRule = testRule.getTestBundle();
+          Iterable<BuildRule> testBundleRuleDependencies =
+            AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
+                AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
+                testBundleRule,
+                Optional.<ImmutableSet<BuildRuleType>>absent());
+          LOG.verbose(
+              "Including rule %s -> test rule %s, bundle rule %s, dependencies %s",
+              rule,
               testRule,
-              Optional.<ImmutableSet<BuildRuleType>>absent()),
-          ImmutableSet.of(testRule));
-
-      recursiveTestRulesBuilder.addAll(testRulesIterable);
+              testBundleRule,
+              testBundleRuleDependencies);
+          recursiveTestRulesBuilder.addAll(testBundleRuleDependencies);
+          recursiveTestRulesBuilder.add(testBundleRule);
+          orderedTestBundleRulesBuilder.add(testBundleRule);
+        }
+      }
     }
 
     final Set<BuildRule> includedTestRules =
