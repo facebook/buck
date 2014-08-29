@@ -139,7 +139,8 @@ public class CxxBinaryDescriptionTest {
     // Instantiate a description and call its `createBuildRule` method.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
     CxxBinaryDescription description = new CxxBinaryDescription(cxxBuckConfig);
-    CxxLink rule = description.createBuildRule(params, resolver, arg);
+    CxxBinary binRule = description.createBuildRule(params, resolver, arg);
+    CxxLink rule = binRule.getRule();
 
     // Check that link rule has the expected deps: the object files for our sources and the
     // archive from the dependency.

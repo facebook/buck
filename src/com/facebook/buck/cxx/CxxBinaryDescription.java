@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -26,6 +27,7 @@ import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +39,8 @@ import java.nio.file.Path;
 public class CxxBinaryDescription implements Description<CxxBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_binary");
+
+  private static final Flavor CXX_LINK_BINARY_FLAVOR = new Flavor("binary");
 
   private final CxxBuckConfig cxxBuckConfig;
 
@@ -53,8 +57,13 @@ public class CxxBinaryDescription implements Description<CxxBinaryDescription.Ar
     return BuildTargets.getBinPath(target, "%s/" + target.getShortName());
   }
 
+  @VisibleForTesting
+  protected static BuildTarget createCxxLinkTarget(BuildTarget target) {
+    return BuildTargets.extendFlavoredBuildTarget(target, CXX_LINK_BINARY_FLAVOR);
+  }
+
   @Override
-  public <A extends Arg> CxxLink createBuildRule(
+  public <A extends Arg> CxxBinary createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -92,19 +101,41 @@ public class CxxBinaryDescription implements Description<CxxBinaryDescription.Ar
 
     // Generate the final link rule.  We use the top-level target as the link rule's
     // target, so that it corresponds to the actual binary we build.
-    return CxxLinkableEnhancer.createCxxLinkableBuildRule(
+    Path output = getOutputPath(params.getBuildTarget());
+    CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
         resolver,
         cxxBuckConfig.getLd().or(CxxLinkables.DEFAULT_LINKER_PATH),
         cxxBuckConfig.getCxxLdFlags(),
         cxxBuckConfig.getLdFlags(),
-        params.getBuildTarget(),
+        createCxxLinkTarget(params.getBuildTarget()),
         CxxLinkableEnhancer.LinkType.EXECUTABLE,
         Optional.<String>absent(),
-        getOutputPath(params.getBuildTarget()),
+        output,
         objects,
         NativeLinkable.Type.STATIC,
         params.getDeps());
+    resolver.addToIndex(cxxLink);
+
+    // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
+    // rule above for a couple reasons:
+    //  1) CxxBinary extends BinaryBuildRule whereas CxxLink does not, so the former can be used
+    //     as executables for genrules.
+    //  2) In some cases, users add dependencies from some rules onto other binary rules, typically
+    //     if the binary is executed by some test or library code at test time.  These target graph
+    //     deps should *not* become build time dependencies on the CxxLink step, otherwise we'd
+    //     have to wait for the dependency binary to link before we could link the dependent binary.
+    //     By using another BuildRule, we can keep the original target graph dependency tree while
+    //     preventing it from affecting link parallelism.
+    return new CxxBinary(
+        params.copyWithDeps(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(params.getDeclaredDeps())
+                .add(cxxLink)
+                .build(),
+            params.getExtraDeps()),
+        output,
+        cxxLink);
   }
 
   @Override
