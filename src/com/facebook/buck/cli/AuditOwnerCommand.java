@@ -26,6 +26,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -44,6 +45,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * Outputs targets that own a specified list of files.
@@ -108,6 +111,16 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
 
     for (String filePath : options.getArguments()) {
       Path buckFile = findBuckFileFor(Paths.get(filePath));
+      if (buckFile == null) {
+        report = report.updatedWith(
+          new OwnersReport(
+              ImmutableSetMultimap.<TargetNode<?>, Path>of(),
+              /* inputWithNoOwners */ ImmutableSet.of(new File(filePath).toPath()),
+              Sets.<String>newHashSet(),
+              Sets.<String>newHashSet()));
+        continue;
+      }
+      Preconditions.checkNotNull(buckFile);
 
       // Get the target base name.
       Path targetBasePath = MorePaths.relativize(
@@ -206,21 +219,26 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
   }
 
-  private Path findBuckFileFor(Path file) {
-    Path dir = file;
-    if (!getProjectFilesystem().isDirectory(dir)) {
+  @VisibleForTesting
+  @Nullable
+  Path findBuckFileFor(Path file) {
+    ProjectFilesystem filesystem = getProjectFilesystem();
+    Path dir = filesystem.resolve(file);
+
+    if (!filesystem.isDirectory(dir)) {
       dir = dir.getParent();
     }
 
-    Path projectRoot = getProjectFilesystem().getRootPath();
-    while (dir != null && !dir.equals(projectRoot)) {
+    Path projectRoot = filesystem.getRootPath();
+    while (dir != null && !dir.equals(projectRoot.getParent())) {
       Path buck = dir.resolve(BuckConstant.BUILD_RULES_FILE_NAME);
       if (getProjectFilesystem().exists(buck)) {
         return buck;
       }
       dir = dir.getParent();
     }
-    throw new RuntimeException("Failed to find BUCK file for " + file);
+
+    return null;
   }
 
   private void printReport(AuditOwnerOptions options, OwnersReport report) throws IOException {
