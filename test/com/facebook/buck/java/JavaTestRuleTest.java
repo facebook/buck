@@ -19,71 +19,17 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Set;
 
 public class JavaTestRuleTest {
-
-  @Test
-  public void testGetClassNamesForSources() {
-    Path classesFolder = Paths.get("testdata/javatestrule/default.jar");
-    Set<SourcePath> sources = ImmutableSet.<SourcePath>of(
-        new TestSourcePath("src/com/facebook/DummyTest.java"));
-    Set<String> classNames =
-        JavaTest.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
-    assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
-  }
-
-  @Test
-  public void testGetClassNamesForSourcesWithInnerClasses() {
-    Path classesFolder = Paths.get("testdata/javatestrule/case1.jar");
-    Set<SourcePath> sources = ImmutableSet.<SourcePath>of(
-        new TestSourcePath("src/com/facebook/DummyTest.java"));
-    Set<String> classNames =
-        JavaTest.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
-    assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
-  }
-
-  @Test
-  public void testGetClassNamesForSourcesWithMultipleTopLevelClasses() {
-    Path classesFolder = Paths.get("testdata/javatestrule/case2.jar");
-    Set<SourcePath> sources = ImmutableSet.<SourcePath>of(
-        new TestSourcePath("src/com/facebook/DummyTest.java"));
-    Set<String> classNames =
-        JavaTest.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
-    assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
-  }
-
-  @Test
-  public void testGetClassNamesForSourcesWithImperfectHeuristic() {
-    Path classesFolder = Paths.get("testdata/javatestrule/case2fail.jar");
-    Set<SourcePath> sources = ImmutableSet.<SourcePath>of(
-        new TestSourcePath("src/com/facebook/feed/DummyTest.java"),
-        new TestSourcePath("src/com/facebook/nav/OtherDummyTest.java"));
-    Set<String> classNames =
-        JavaTest.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
-    assertEquals("Ideally, if the implementation of getClassNamesForSources() were tightened up," +
-        " the set would not include com.facebook.feed.OtherDummyTest because" +
-        " it was not specified in sources.",
-        ImmutableSet.of(
-            "com.facebook.feed.DummyTest",
-            "com.facebook.feed.OtherDummyTest",
-            "com.facebook.nav.OtherDummyTest"
-        ),
-        classNames);
-  }
 
   @Test
   public void shouldNotAmendVmArgsIfTargetDeviceIsNotPresent() {

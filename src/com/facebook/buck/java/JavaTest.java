@@ -333,7 +333,10 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       } else {
         outputPath = null;
       }
-      classNamesForSources = getClassNamesForSources(rule.getJavaSrcs(), outputPath);
+      classNamesForSources = getClassNamesForSources(
+          rule.getJavaSrcs(),
+          outputPath,
+          context.getProjectFilesystem());
     }
 
     public Set<String> getClassNamesForSources() {
@@ -355,11 +358,14 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
      * If this heuristic turns out to be insufficient in practice, then we can fix it.
      *
      * @param sources paths to .java source files that were passed to javac
-     * @param jarFile jar where the generated .class files were written
+     * @param jarFilePath jar where the generated .class files were written
      */
     @VisibleForTesting
-    static Set<String>  getClassNamesForSources(Set<SourcePath> sources, @Nullable Path jarFile) {
-      if (jarFile == null) {
+    static Set<String>  getClassNamesForSources(
+        Set<SourcePath> sources,
+        @Nullable Path jarFilePath,
+        ProjectFilesystem projectFilesystem) {
+      if (jarFilePath == null) {
         return ImmutableSet.of();
       }
 
@@ -376,7 +382,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       }
 
       final ImmutableSet.Builder<String> testClassNames = ImmutableSet.builder();
-      ZipFileTraversal traversal = new ZipFileTraversal(jarFile.toFile()) {
+      File jarFile = projectFilesystem.getFileForRelativePath(jarFilePath);
+      ZipFileTraversal traversal = new ZipFileTraversal(jarFile) {
 
         @Override
         public void visit(ZipFile zipFile, ZipEntry zipEntry) {
