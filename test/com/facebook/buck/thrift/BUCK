@@ -1,9 +1,25 @@
-thrift_library(
-  name = 'thrifty',
-  srcs = glob(['*.thrift']),
+java_test(
+  name = 'thrift',
+  srcs = glob(['*.java']),
   deps = [
-    '//third-party/java/astyanax:libthrift',
-    '//third-party/java/astyanax:slf4j-api',
-    '//third-party/java/astyanax:slf4j-log4j12',
+    '//lib:easymock',
+    '//lib:guava',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
+    '//lib:junit',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util/environment:platform',
+    '//src/com/facebook/buck/java:config',
+    '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:rule_pattern',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/thrift:rules',
+    '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/cli:FakeBuckConfig',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//test/com/facebook/buck/testutil:testutil',
   ]
 )
