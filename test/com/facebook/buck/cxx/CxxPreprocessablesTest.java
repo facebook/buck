@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
@@ -72,6 +73,13 @@ public class CxxPreprocessablesTest {
         input);
   }
 
+  private static FakeCxxPreprocessorDep createFakeCxxPreprocessorDep(
+      String target,
+      CxxPreprocessorInput input,
+      BuildRule... deps) {
+    return createFakeCxxPreprocessorDep(BuildTargetFactory.newInstance(target), input, deps);
+  }
+
   private static FakeBuildRule createFakeBuildRule(
       BuildTarget target,
       BuildRule... deps) {
@@ -124,7 +132,13 @@ public class CxxPreprocessablesTest {
 
     // Create a normal dep which depends on the two CxxPreprocessorDep rules above.
     BuildTarget depTarget3 = BuildTargetFactory.newInstance("//:dep3");
-    FakeBuildRule dep3 = createFakeBuildRule(depTarget3, dep1, dep2);
+    CxxPreprocessorInput nothing = new CxxPreprocessorInput(
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
+        ImmutableList.<Path>of(),
+        ImmutableList.<Path>of());
+    FakeCxxPreprocessorDep dep3 = createFakeCxxPreprocessorDep(depTarget3, nothing, dep1, dep2);
 
     // Verify that getTransitiveCxxPreprocessorInput gets all CxxPreprocessorInput objects
     // from the relevant rules above.
@@ -206,6 +220,41 @@ public class CxxPreprocessablesTest {
     // Make sure that the only dep that makes it into the CxxHeader rule is the genrule above
     // which generates one of the headers.
     assertEquals(ImmutableSortedSet.<BuildRule>of(genrule), cxxHeader.getDeps());
+  }
+
+  @Test
+  public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
+
+    // Create a native linkable that sits at the bottom of the dep chain.
+    String sentinal = "bottom";
+    CxxPreprocessorInput bottomInput = new CxxPreprocessorInput(
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableList.of(sentinal),
+        ImmutableList.<String>of(),
+        ImmutableList.<Path>of(),
+        ImmutableList.<Path>of());
+    BuildRule bottom = createFakeCxxPreprocessorDep("//:bottom", bottomInput);
+
+    // Create a non-native linkable that sits in the middle of the dep chain, preventing
+    // traversals to the bottom native linkable.
+    BuildRule middle = new FakeBuildRule("//:middle", bottom);
+
+    // Create a native linkable that sits at the top of the dep chain.
+    CxxPreprocessorInput topInput = new CxxPreprocessorInput(
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
+        ImmutableList.<Path>of(),
+        ImmutableList.<Path>of());
+    BuildRule top = createFakeCxxPreprocessorDep("//:top", topInput, middle);
+
+    // Now grab all input via traversing deps and verify that the middle rule prevents pulling
+    // in the bottom input.
+    CxxPreprocessorInput totalInput =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            ImmutableList.of(top));
+    assertTrue(bottomInput.getCppflags().contains(sentinal));
+    assertFalse(totalInput.getCppflags().contains(sentinal));
   }
 
 }

@@ -16,9 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -26,12 +24,15 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
-import com.google.common.collect.FluentIterable;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 public class CxxPreprocessables {
 
@@ -66,35 +67,33 @@ public class CxxPreprocessables {
    * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep}
    * found while traversing the dependencies starting from the {@link BuildRule} objects given.
    */
-  public static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
+  @VisibleForTesting
+  protected static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
       Iterable<? extends BuildRule> inputs) {
 
-    // Build up a graph of the inputs and their transitive dependencies.
-    final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
+    // We don't really care about the order we get back here, since headers shouldn't
+    // conflict.  However, we want something that's deterministic, so sort by build
+    // target.
+    final Map<BuildTarget, CxxPreprocessorInput> deps = Maps.newTreeMap();
+
+    // Build up the map of all C/C++ preprocessable dependencies.
     AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(inputs) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        graph.addNode(rule);
-        for (BuildRule dep : rule.getDeps()) {
-          graph.addEdge(rule, dep);
+        if (rule instanceof CxxPreprocessorDep) {
+          CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
+          Preconditions.checkState(!deps.containsKey(rule.getBuildTarget()));
+          deps.put(rule.getBuildTarget(), dep.getCxxPreprocessorInput());
+          return rule.getDeps();
+        } else {
+          return ImmutableSet.of();
         }
-        return rule.getDeps();
       }
     };
     visitor.start();
 
     // Grab the cxx preprocessor inputs and return them.
-    return CxxPreprocessorInput.concat(
-        FluentIterable
-            // We don't really care about the order we get back here, since headers shouldn't
-            // conflict.  However, we want something that's deterministic, so sort by build
-            // target.
-            .from(ImmutableSortedSet.orderedBy(HasBuildTarget.BUILD_TARGET_COMPARATOR)
-                .addAll(graph.getNodes())
-                .build())
-            .filter(CxxPreprocessorDep.class)
-            .transform(CxxPreprocessorDep.GET_CXX_PREPROCESSOR_INPUT)
-            .toList());
+    return CxxPreprocessorInput.concat(deps.values());
   }
 
   /**

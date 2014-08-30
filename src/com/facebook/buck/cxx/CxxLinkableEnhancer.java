@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.MoreIterables;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -45,30 +46,42 @@ public class CxxLinkableEnhancer {
   private CxxLinkableEnhancer() {}
 
   /**
-   * Topologically sort the dependency chain represented by the given inputs and filter
-   * by the given class.
+   * Collect up and merge all {@link NativeLinkableInput} objects from transitively traversing
+   * all unbroken dependency chains of {@link NativeLinkable} objects found via the passed in
+   * {@link BuildRule} roots.
    */
-  private static <A extends BuildRule> ImmutableList<BuildRule> topoSort(Iterable<A> inputs) {
+  @VisibleForTesting
+  protected static NativeLinkableInput getTransitiveNativeLinkableInput(
+      Iterable<? extends BuildRule> inputs,
+      NativeLinkable.Type depType) {
 
-    // Build up a graph of the inputs and their transitive dependencies.
+    // Build up a graph of the inputs and their transitive dependencies, we'll use the graph
+    // to topologically sort the dependencies.
     final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
-    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(
-        ImmutableList.<BuildRule>copyOf(inputs)) {
+    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(inputs) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        graph.addNode(rule);
-        for (BuildRule dep : rule.getDeps()) {
-          graph.addEdge(rule, dep);
+        if (rule instanceof NativeLinkable) {
+          graph.addNode(rule);
+          for (BuildRule dep : rule.getDeps()) {
+            if (dep instanceof NativeLinkable) {
+              graph.addEdge(rule, dep);
+            }
+          }
+          return rule.getDeps();
+        } else {
+          return ImmutableSet.of();
         }
-        return rule.getDeps();
       }
     };
     visitor.start();
 
-    // Topologically sort the graph and return as a list.
-    return FluentIterable
-        .from(TopologicalSort.sort(graph, Predicates.<BuildRule>alwaysTrue()))
-        .toList();
+    // Collect and topologically sort our deps that contribute to the link.
+    return NativeLinkableInput.concat(
+        FluentIterable
+            .from(TopologicalSort.sort(graph, Predicates.<BuildRule>alwaysTrue()).reverse())
+            .filter(NativeLinkable.class)
+            .transform(NativeLinkables.getNativeLinkableInput(depType)));
   }
 
   /**
@@ -106,11 +119,9 @@ public class CxxLinkableEnhancer {
     Preconditions.checkState(!soname.isPresent() || linkType.equals(LinkType.SHARED));
 
     // Collect and topologically sort our deps that contribute to the link.
-    NativeLinkableInput linkableInput = NativeLinkableInput.concat(
-        FluentIterable
-            .from(topoSort(nativeLinkableDeps).reverse())
-            .filter(NativeLinkable.class)
-            .transform(NativeLinkables.getNativeLinkableInput(depType)));
+    NativeLinkableInput linkableInput = getTransitiveNativeLinkableInput(
+        nativeLinkableDeps,
+        depType);
 
     // Construct our link build rule params.  The important part here is combining the build rules
     // that construct our object file inputs and also the deps that build our dependencies.

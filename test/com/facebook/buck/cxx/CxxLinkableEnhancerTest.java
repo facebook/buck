@@ -78,9 +78,12 @@ public class CxxLinkableEnhancerTest {
   private static FakeNativeLinkable createNativeLinkable(
       String target,
       NativeLinkableInput staticNativeLinkableInput,
-      NativeLinkableInput sharedNativeLinkableInput) {
+      NativeLinkableInput sharedNativeLinkableInput,
+      BuildRule... deps) {
     return new FakeNativeLinkable(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
+            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .build(),
         staticNativeLinkableInput,
         sharedNativeLinkableInput);
   }
@@ -325,6 +328,38 @@ public class CxxLinkableEnhancerTest {
         ImmutableSortedSet.<BuildRule>of(nativeLinkable));
     assertFalse(sharedLink.getArgs().contains(staticArg));
     assertTrue(sharedLink.getArgs().contains(sharedArg));
+  }
+
+  @Test
+  public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
+
+    // Create a native linkable that sits at the bottom of the dep chain.
+    String sentinel = "bottom";
+    NativeLinkableInput bottomInput = new NativeLinkableInput(
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableList.<Path>of(),
+        ImmutableList.of(sentinel));
+    BuildRule bottom = createNativeLinkable("//:bottom", bottomInput, bottomInput);
+
+    // Create a non-native linkable that sits in the middle of the dep chain, preventing
+    // traversals to the bottom native linkable.
+    BuildRule middle = new FakeBuildRule("//:middle", bottom);
+
+    // Create a native linkable that sits at the top of the dep chain.
+    NativeLinkableInput topInput = new NativeLinkableInput(
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableList.<Path>of(),
+        ImmutableList.<String>of());
+    BuildRule top = createNativeLinkable("//:top", topInput, topInput, middle);
+
+    // Now grab all input via traversing deps and verify that the middle rule prevents pulling
+    // in the bottom input.
+    NativeLinkableInput totalInput =
+        CxxLinkableEnhancer.getTransitiveNativeLinkableInput(
+            ImmutableList.of(top),
+            NativeLinkable.Type.STATIC);
+    assertTrue(bottomInput.getArgs().contains(sentinel));
+    assertFalse(totalInput.getArgs().contains(sentinel));
   }
 
 }
