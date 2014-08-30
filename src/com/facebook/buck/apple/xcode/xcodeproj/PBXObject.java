@@ -25,6 +25,7 @@ public abstract class PBXObject {
   @Nullable
   private String globalID;
 
+  @Nullable
   public String getGlobalID() {
     return globalID;
   }

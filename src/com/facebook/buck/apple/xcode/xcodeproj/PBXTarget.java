@@ -22,6 +22,8 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Information for building a specific artifact (a library, binary, or test).
  */
@@ -50,12 +52,12 @@ public abstract class PBXTarget extends PBXProjectItem {
   }
 
   private String name;
-  private String productName;
-  private ProductType productType;
-  private PBXFileReference productReference;
+  @Nullable private String productName;
+  @Nullable private ProductType productType;
+  @Nullable private PBXFileReference productReference;
   private List<PBXTargetDependency> dependencies;
   private List<PBXBuildPhase> buildPhases;
-  private XCConfigurationList buildConfigurationList;
+  @Nullable private XCConfigurationList buildConfigurationList;
 
   public PBXTarget(String name) {
     this.name = Preconditions.checkNotNull(name);
@@ -69,6 +71,8 @@ public abstract class PBXTarget extends PBXProjectItem {
   public void setName(String v) {
     name = v;
   }
+
+  @Nullable
   public ProductType getProductType() {
     return productType;
   }
@@ -76,6 +80,7 @@ public abstract class PBXTarget extends PBXProjectItem {
     productType = v;
   }
 
+  @Nullable
   public String getProductName() {
     return productName;
   }
@@ -84,6 +89,7 @@ public abstract class PBXTarget extends PBXProjectItem {
     this.productName = productName;
   }
 
+  @Nullable
   public PBXFileReference getProductReference() {
     return productReference;
   }
@@ -102,6 +108,8 @@ public abstract class PBXTarget extends PBXProjectItem {
   public void setBuildPhases(List<PBXBuildPhase> v) {
     buildPhases = v;
   }
+
+  @Nullable
   public XCConfigurationList getBuildConfigurationList() {
     return buildConfigurationList;
   }
@@ -127,10 +135,16 @@ public abstract class PBXTarget extends PBXProjectItem {
     if (productType != null) {
       s.addField("productType", productType.toString());
     }
-    s.addField("productName", productName);
-    s.addField("productReference", productReference);
+    if (productName != null) {
+      s.addField("productName", productName);
+    }
+    if (productReference != null) {
+      s.addField("productReference", productReference);
+    }
     s.addField("dependencies", dependencies);
     s.addField("buildPhases", buildPhases);
-    s.addField("buildConfigurationList", buildConfigurationList);
+    if (buildConfigurationList != null) {
+      s.addField("buildConfigurationList", buildConfigurationList);
+    }
   }
 }
