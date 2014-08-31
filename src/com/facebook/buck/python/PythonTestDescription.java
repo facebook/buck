@@ -178,13 +178,13 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         params.getBuildTarget(),
         "srcs",
         baseModule,
-        args.srcs.or(ImmutableSortedSet.<SourcePath>of()));
+        args.srcs);
 
     ImmutableMap<Path, SourcePath> resources = PythonUtil.toModuleMap(
         params.getBuildTarget(),
         "resources",
         baseModule,
-        args.resources.or(ImmutableSortedSet.<SourcePath>of()));
+        args.resources);
 
     // Convert the passed in module paths into test module names.
     ImmutableSet.Builder<String> testModulesBuilder = ImmutableSet.builder();

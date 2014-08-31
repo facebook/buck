@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Optional;
@@ -39,10 +40,23 @@ public class PythonUtil {
       BuildTarget target,
       String parameter,
       Path baseModule,
-      Iterable<SourcePath> sourcePaths) {
+      Optional<Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>> inputs) {
 
-    ImmutableMap<String, SourcePath> namesAndSourcePaths =
-        SourcePaths.getSourcePathNames(target, parameter, sourcePaths);
+    if (!inputs.isPresent()) {
+      return ImmutableMap.of();
+    }
+
+    final ImmutableMap<String, SourcePath> namesAndSourcePaths;
+
+    if (inputs.get().isLeft()) {
+      namesAndSourcePaths = SourcePaths.getSourcePathNames(
+          target,
+          parameter,
+          inputs.get().getLeft());
+    } else {
+      namesAndSourcePaths = inputs.get().getRight();
+    }
+
     ImmutableMap.Builder<Path, SourcePath> moduleNamesAndSourcePaths = ImmutableMap.builder();
 
     for (ImmutableMap.Entry<String, SourcePath> entry : namesAndSourcePaths.entrySet()) {

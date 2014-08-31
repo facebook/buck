@@ -24,8 +24,10 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -36,8 +38,14 @@ public class PythonLibraryDescription implements Description<Arg> {
 
   @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public Optional<ImmutableSortedSet<SourcePath>> resources;
+    public Optional<Either<
+        ImmutableSortedSet<SourcePath>,
+        ImmutableMap<String, SourcePath>>>
+            srcs;
+    public Optional<Either<
+        ImmutableSortedSet<SourcePath>,
+        ImmutableMap<String, SourcePath>>>
+            resources;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
     public Optional<String> baseModule;
   }
@@ -64,12 +72,12 @@ public class PythonLibraryDescription implements Description<Arg> {
             params.getBuildTarget(),
             "srcs",
             baseModule,
-            args.srcs.or(ImmutableSortedSet.<SourcePath>of())),
+            args.srcs),
         PythonUtil.toModuleMap(
             params.getBuildTarget(),
             "resources",
             baseModule,
-            args.resources.or(ImmutableSortedSet.<SourcePath>of())));
+            args.resources));
   }
 
 }

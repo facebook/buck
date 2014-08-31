@@ -29,7 +29,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -54,7 +56,9 @@ public class PythonTestDescriptionTest {
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
-    arg.srcs = Optional.of(ImmutableSortedSet.<SourcePath>of(new TestSourcePath("blah.py")));
+    arg.srcs = Optional.of(
+        Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+            ImmutableSortedSet.<SourcePath>of(new TestSourcePath("blah.py"))));
     arg.resources = Optional.absent();
     arg.baseModule = Optional.absent();
     arg.contacts = Optional.absent();
@@ -89,7 +93,9 @@ public class PythonTestDescriptionTest {
     arg.contacts = Optional.absent();
     arg.labels = Optional.absent();
     arg.sourceUnderTest = Optional.absent();
-    arg.srcs = Optional.of(ImmutableSortedSet.of(source));
+    arg.srcs = Optional.of(
+        Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+            ImmutableSortedSet.of(source)));
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
