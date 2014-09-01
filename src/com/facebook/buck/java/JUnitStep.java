@@ -41,7 +41,7 @@ public class JUnitStep extends ShellStep {
 
   @VisibleForTesting
   static final String JUNIT_TEST_RUNNER_CLASS_NAME =
-      "com.facebook.buck.junit.JUnitRunner";
+      "com.facebook.buck.junit.Main";
 
   @VisibleForTesting
   public static final String BUILD_ID_PROPERTY = "com.facebook.buck.buildId";

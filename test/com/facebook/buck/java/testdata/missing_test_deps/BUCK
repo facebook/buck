@@ -1,0 +1,29 @@
+java_test(
+  name = 'no-hamcrest',
+  srcs = [
+    'A.java',
+  ],
+  deps = [
+    ':junit',
+  ],
+)
+
+java_test(
+  name = 'no-junit',
+  srcs = [
+    'A.java',
+  ],
+  deps = [
+    ':hamcrest',
+  ],
+)
+
+prebuilt_jar(
+  name = 'hamcrest',
+  binary_jar = 'hamcrest.jar',
+)
+
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit.jar',
+)

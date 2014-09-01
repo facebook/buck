@@ -41,7 +41,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -372,73 +371,4 @@ public final class JUnitRunner {
     trans.transform(source, streamResult);
     output.close();
   }
-
-  /**
-   * Expected arguments are:
-   * <ul>
-   *   <li>(string) output directory
-   *   <li>(long) default timeout in milliseconds (0 for no timeout)
-   *   <li>(string) newline separated list of test selectors
-   *   <li>(string...) fully-qualified names of test classes
-   * </ul>
-   */
-  public static void main(String... args) throws Throwable {
-    // Verify the arguments.
-    if (args.length == 0) {
-      System.err.println("Must specify an output directory.");
-      System.exit(1);
-    } else if (args.length == 1) {
-      System.err.println("Must specify an output directory and a default timeout.");
-      System.exit(1);
-    } else if (args.length == 2) {
-      System.err.println("Must specify some test selectors (or empty string for no selectors).");
-      System.exit(1);
-    } else if (args.length == 3) {
-      System.err.println("Must specify at least one test.");
-      System.exit(1);
-    }
-
-    // The first argument should specify the output directory.
-    File outputDirectory = new File(args[0]);
-    if (!outputDirectory.exists()) {
-      System.err.printf("The output directory did not exist: %s\n", outputDirectory);
-      System.exit(1);
-    }
-
-    long defaultTestTimeoutMillis = Long.parseLong(args[1]);
-
-    TestSelectorList testSelectorList = TestSelectorList.empty();
-    if (!args[2].isEmpty()) {
-      List<String> rawSelectors = Arrays.asList(args[2].split("\n"));
-      testSelectorList = TestSelectorList.builder()
-          .addRawSelectors(rawSelectors)
-          .build();
-    }
-
-    boolean isDryRun = !args[3].isEmpty();
-
-    // Each subsequent argument should be a class name to run.
-    List<String> testClassNames = Arrays.asList(args).subList(4, args.length);
-
-    // Run the tests.
-    try {
-      new JUnitRunner(
-          outputDirectory,
-          testClassNames,
-          defaultTestTimeoutMillis,
-          testSelectorList,
-          isDryRun)
-          .run();
-    } finally {
-      // Explicitly exit to force the test runner to complete even if tests have sloppily left
-      // behind non-daemon threads that would have otherwise forced the process to wait and
-      // eventually timeout.
-      //
-      // Separately, we're using a successful exit code regardless of test outcome since JUnitRunner
-      // is designed to execute all tests and produce a report of success or failure.  We've done
-      // that successfully if we've gotten here.
-      System.exit(0);
-    }
-  }
-
 }
