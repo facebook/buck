@@ -8,19 +8,22 @@ import shutil
 import sys
 
 from buck_repo import check_output, which
+from tracing import Tracing
 
 
 def get_file_contents_if_exists(path, default=None):
-    if not os.path.exists(path):
-        return default
-    with open(path) as f:
-        contents = f.read().strip()
-        return default if not contents else contents
+    with Tracing('BuckProject.get_file_contents_if_it_exists', args={'path': path}):
+        if not os.path.exists(path):
+            return default
+        with open(path) as f:
+            contents = f.read().strip()
+            return default if not contents else contents
 
 
 def write_contents_to_file(path, contents):
-    with open(path, 'w') as output_file:
-        output_file.write(str(contents))
+    with Tracing('BuckProject.write_contents_to_file', args={'path': path}):
+        with open(path, 'w') as output_file:
+            output_file.write(str(contents))
 
 
 class BuckProject:
@@ -85,16 +88,17 @@ class BuckProject:
         write_contents_to_file(self.buckd_run_count_file, new_run_count)
 
     def clean_up_buckd(self):
-        if os.path.exists(self.buckd_dir):
-            shutil.rmtree(self.buckd_dir)
-        if which('watchman'):
-            trigger_list_output = check_output(
-                ['watchman', 'trigger-list', self.root])
-            trigger_list = json.loads(trigger_list_output)
-            if not trigger_list.get('triggers'):
-                subprocess.call(
-                    ['watchman', 'watch-del', self.root],
-                    stdout=open(os.devnull, 'w'))
+        with Tracing('BuckProject.clean_up_buckd'):
+            if os.path.exists(self.buckd_dir):
+                shutil.rmtree(self.buckd_dir)
+            if which('watchman'):
+                trigger_list_output = check_output(
+                    ['watchman', 'trigger-list', self.root])
+                trigger_list = json.loads(trigger_list_output)
+                if not trigger_list.get('triggers'):
+                    subprocess.call(
+                        ['watchman', 'watch-del', self.root],
+                        stdout=open(os.devnull, 'w'))
 
     def create_buckd_tmp_dir(self):
         tmp_dir_parent = os.path.join(self.buckd_dir, "tmp")
@@ -114,21 +118,23 @@ class BuckProject:
 
     @staticmethod
     def from_current_dir():
-        current_dir = os.getcwd()
-        if '--version' in sys.argv or '-V' in sys.argv:
-            return BuckProject(current_dir)
-        while current_dir != os.sep:
-            if os.path.exists(os.path.join(current_dir, ".buckconfig")):
+        with Tracing('BuckProject.from_current_dir'):
+            current_dir = os.getcwd()
+            if '--version' in sys.argv or '-V' in sys.argv:
                 return BuckProject(current_dir)
-            current_dir = os.path.dirname(current_dir)
-        raise NoBuckConfigFoundException()
+            while current_dir != os.sep:
+                if os.path.exists(os.path.join(current_dir, ".buckconfig")):
+                    return BuckProject(current_dir)
+                current_dir = os.path.dirname(current_dir)
+            raise NoBuckConfigFoundException()
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if os.path.exists(self.tmp_dir):
-            shutil.rmtree(self.tmp_dir)
+        with Tracing('BuckProject.__exit__'):
+            if os.path.exists(self.tmp_dir):
+                shutil.rmtree(self.tmp_dir)
 
 
 class NoBuckConfigFoundException(Exception):
