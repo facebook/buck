@@ -41,6 +41,7 @@ import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.timing.NanosAdjustedClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultFileHashCache;
@@ -105,6 +106,8 @@ public final class Main {
 
   private static final String BUCK_VERSION_UID_KEY = "buck.version_uid";
   private static final String BUCK_VERSION_UID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
+  private static final Optional<String> BUCKD_LAUNCH_TIME_NANOS =
+    Optional.fromNullable(System.getProperty("buck.buckd_launch_time_nanos"));
 
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
 
@@ -497,7 +500,14 @@ public final class Main {
 
     int exitCode;
     ImmutableList<BuckEventListener> eventListeners;
-    Clock clock = new DefaultClock();
+    Clock clock;
+    if (BUCKD_LAUNCH_TIME_NANOS.isPresent()) {
+      long nanosEpoch = Long.parseLong(BUCKD_LAUNCH_TIME_NANOS.get(), 10);
+      LOG.verbose("Using nanos epoch: %d", nanosEpoch);
+      clock = new NanosAdjustedClock(nanosEpoch);
+    } else {
+      clock = new DefaultClock();
+    }
     ProcessExecutor processExecutor = new ProcessExecutor(console);
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
         processExecutor,

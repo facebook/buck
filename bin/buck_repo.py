@@ -11,6 +11,8 @@ import tempfile
 import textwrap
 import time
 
+from timing import monotonic_time_nanos
+
 JAVA_CLASSPATHS = [
     "src",
     "build/abi_processor/classes",
@@ -196,6 +198,7 @@ class BuckRepo:
         '''
         command = ["java"]
         command.extend(self._get_java_args(self._buck_version_uid))
+        command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
         command.append("-Dbuck.buckd_watcher=Watchman")
         command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
         command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
