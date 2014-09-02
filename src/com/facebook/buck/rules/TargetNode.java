@@ -207,7 +207,7 @@ public class TargetNode<T extends ConstructorArg> implements Comparable<TargetNo
   }
 
   private boolean isPossiblyATarget(String param) {
-    return param.charAt(0) == ':' || param.startsWith(BuildTarget.BUILD_TARGET_PREFIX);
+    return param.startsWith(":") || param.startsWith(BuildTarget.BUILD_TARGET_PREFIX);
   }
 
   @Override

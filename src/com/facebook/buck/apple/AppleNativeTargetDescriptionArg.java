@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ConstructorArg;
-
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -26,8 +26,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 /**
  * Arguments common to {@link com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule} subclasses
@@ -39,7 +37,7 @@ public class AppleNativeTargetDescriptionArg implements ConstructorArg {
    */
   public ImmutableMap<
       String,
-      ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs;
+      ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> configs;
   public ImmutableList<AppleSource> srcs;
   public ImmutableSortedSet<String> frameworks;
   public Optional<ImmutableSortedSet<BuildRule>> deps;

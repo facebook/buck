@@ -68,6 +68,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
@@ -192,7 +193,7 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+        "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourceGroup(
             new Pair<>(
@@ -254,7 +255,7 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+        "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourceGroup(
             new Pair<>(
@@ -354,7 +355,7 @@ public class ProjectGeneratorTest {
     AppleNativeTargetDescriptionArg arg =
         appleLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+        "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourceGroup(
             new Pair<>(
@@ -384,7 +385,7 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+        "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourceGroup(
             new Pair<>(
@@ -492,7 +493,7 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+        "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
@@ -548,16 +549,16 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryConfiguresOutputPaths() throws IOException {
-    Path xcconfigFile = Paths.get("Test.xcconfig");
-    projectFilesystem.writeContentsToPath("", xcconfigFile);
+    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
+    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
-    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.<String, String>of());
     arg.configs = ImmutableMap.of("Debug", ImmutableList.of(
             argConfig,
@@ -599,8 +600,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryConfiguresDynamicLibraryOutputPaths() throws IOException {
-    Path xcconfigFile = Paths.get("Test.xcconfig");
-    projectFilesystem.writeContentsToPath("", xcconfigFile);
+    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
+    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
 
     BuildTarget buildTarget = BuildTarget.builder("//hi", "lib")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
@@ -610,8 +611,8 @@ public class ProjectGeneratorTest {
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
-    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.<String, String>of());
     arg.configs = ImmutableMap.of("Debug", ImmutableList.of(
             argConfig,
@@ -653,16 +654,16 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryDoesntOverrideHeaderOutputPath() throws IOException {
-    Path xcconfigFile = Paths.get("Test.xcconfig");
-    projectFilesystem.writeContentsToPath("", xcconfigFile);
+    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
+    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
-    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.of(
             "PUBLIC_HEADERS_FOLDER_PATH",
             "FooHeaders"
@@ -707,16 +708,16 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryDependentsSearchHeadersAndLibraries() throws IOException {
-    Path xcconfigFile = Paths.get("Test.xcconfig");
-    projectFilesystem.writeContentsToPath("", xcconfigFile);
+    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
+    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
 
     BuildRule libraryRule;
     BuildRule testRule;
 
-    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.<String, String>of());
-    ImmutableMap<String, ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs =
+    ImmutableMap<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> configs =
         ImmutableMap.of(
             "Debug", ImmutableList.of(
                 argConfig,
@@ -837,14 +838,14 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryDependentsInheritSearchPaths() throws IOException {
-    Path xcconfigFile = Paths.get("Test.xcconfig");
-    projectFilesystem.writeContentsToPath("", xcconfigFile);
+    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
+    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
 
     BuildRule libraryRule;
     BuildRule testRule;
 
-    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.of(
             "HEADER_SEARCH_PATHS",
             "headers",
@@ -854,7 +855,7 @@ public class ProjectGeneratorTest {
             "libraries",
             "FRAMEWORK_SEARCH_PATHS",
             "frameworks"));
-    ImmutableMap<String, ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs =
+    ImmutableMap<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> configs =
         ImmutableMap.of(
             "Debug", ImmutableList.of(
                 argConfig,
@@ -975,17 +976,17 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryTransitiveDependentsSearchHeadersAndLibraries() throws IOException {
-    Path xcconfigFile = Paths.get("Test.xcconfig");
-    projectFilesystem.writeContentsToPath("", xcconfigFile);
+    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
+    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
 
     BuildRule libraryDepRule;
     BuildRule libraryRule;
     BuildRule testRule;
 
-    Either<Path, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<Path, ImmutableMap<String, String>> argSettings = Either.ofRight(
+    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.<String, String>of());
-    ImmutableMap<String, ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs =
+    ImmutableMap<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> configs =
         ImmutableMap.of("Debug", ImmutableList.of(
                 argConfig,
                 argSettings,
@@ -1197,7 +1198,7 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = appleBinaryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+        "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")));
@@ -1363,7 +1364,7 @@ public class ProjectGeneratorTest {
         .build();
     AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+        "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
@@ -1576,7 +1577,7 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
-        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+        "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of());
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
@@ -2470,8 +2471,8 @@ public class ProjectGeneratorTest {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of(
-                "Conf1", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of(),
-                "Conf2", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+                "Conf1", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of(),
+                "Conf2", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of());
             return input;
           }
         });
@@ -2484,8 +2485,8 @@ public class ProjectGeneratorTest {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of(
-                "Conf2", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of(),
-                "Conf3", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+                "Conf2", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of(),
+                "Conf3", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of());
             return input;
           }
         });

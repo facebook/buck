@@ -736,7 +736,7 @@ public class ProjectGenerator {
                   new SourceTreePath(
                       PBXReference.SourceTree.SOURCE_ROOT,
                       repoRootRelativeToOutputDirectory.resolve(
-                          layers.targetLevelConfigFile.get()).normalize()));
+                          layers.targetLevelConfigFile.get().resolve()).normalize()));
           outputConfiguration.setBaseConfigurationReference(fileReference);
 
           NSDictionary inlineSettings = new NSDictionary();
@@ -1564,7 +1564,10 @@ public class ProjectGenerator {
     for (XcodeRuleConfiguration.Layer layer : configuration.getLayers()) {
       switch (layer.getLayerType()) {
         case FILE:
-          builder.addSettingsFromFile(projectFilesystem, searchPaths, layer.getPath().get());
+          builder.addSettingsFromFile(
+              projectFilesystem,
+              searchPaths,
+              layer.getSourcePath().get().resolve());
           break;
         case INLINE_SETTINGS:
           ImmutableMap<String, String> entries = layer.getInlineSettings().get();
@@ -2029,7 +2032,7 @@ public class ProjectGenerator {
               new SourceTreePath(
                   PBXReference.SourceTree.SOURCE_ROOT,
                   repoRootRelativeToOutputDirectory.resolve(
-                      config.projectLevelConfigFile.get()).normalize()));
+                      config.projectLevelConfigFile.get().resolve()).normalize()));
       outputConfig.setBaseConfigurationReference(fileReference);
 
       NSDictionary inlineSettings = new NSDictionary();
@@ -2059,9 +2062,9 @@ public class ProjectGenerator {
             layers.get(1).getLayerType() == XcodeRuleConfiguration.LayerType.FILE) {
           extractedLayers = new ConfigInXcodeLayout(
               buildTarget,
-              layers.get(0).getPath(),
+              layers.get(0).getSourcePath(),
               ImmutableMap.<String, String>of(),
-              layers.get(1).getPath(),
+              layers.get(1).getSourcePath(),
               ImmutableMap.<String, String>of());
         }
         break;
@@ -2072,9 +2075,9 @@ public class ProjectGenerator {
             layers.get(3).getLayerType() == XcodeRuleConfiguration.LayerType.INLINE_SETTINGS) {
           extractedLayers = new ConfigInXcodeLayout(
               buildTarget,
-              layers.get(0).getPath(),
+              layers.get(0).getSourcePath(),
               layers.get(1).getInlineSettings().or(ImmutableMap.<String, String>of()),
-              layers.get(2).getPath(),
+              layers.get(2).getSourcePath(),
               layers.get(3).getInlineSettings().or(ImmutableMap.<String, String>of()));
         }
         break;
@@ -2098,16 +2101,16 @@ public class ProjectGenerator {
     /** Tracks the originating build target for error reporting. */
     public final BuildTarget buildTarget;
 
-    public final Optional<Path> projectLevelConfigFile;
+    public final Optional<SourcePath> projectLevelConfigFile;
     public final ImmutableMap<String, String> projectLevelInlineSettings;
-    public final Optional<Path> targetLevelConfigFile;
+    public final Optional<SourcePath> targetLevelConfigFile;
     public final ImmutableMap<String, String> targetLevelInlineSettings;
 
     private ConfigInXcodeLayout(
         BuildTarget buildTarget,
-        Optional<Path> projectLevelConfigFile,
+        Optional<SourcePath> projectLevelConfigFile,
         ImmutableMap<String, String> projectLevelInlineSettings,
-        Optional<Path> targetLevelConfigFile,
+        Optional<SourcePath> targetLevelConfigFile,
         ImmutableMap<String, String> targetLevelInlineSettings) {
       this.buildTarget = Preconditions.checkNotNull(buildTarget);
       this.projectLevelConfigFile =

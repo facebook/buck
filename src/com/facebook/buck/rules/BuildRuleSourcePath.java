@@ -52,6 +52,8 @@ public class BuildRuleSourcePath extends AbstractSourcePath {
   }
 
   private static String getNameForRule(BuildRule rule) {
+    // This is called by the constructors before rule has been checked for nullity
+    Preconditions.checkNotNull(rule);
 
     // If this build rule implements `HasOutputName`, then return the output name
     // it provides.

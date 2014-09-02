@@ -46,6 +46,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
@@ -250,8 +251,10 @@ public class SeparatedProjectsGeneratorTest {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of("Debug", ImmutableList.of(
-                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("project.xcconfig")),
-                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("target.xcconfig"))));
+                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                    new PathSourcePath(Paths.get("project.xcconfig"))),
+                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                    new PathSourcePath(Paths.get("target.xcconfig")))));
             return input;
           }
         });
@@ -306,13 +309,15 @@ public class SeparatedProjectsGeneratorTest {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of("Debug", ImmutableList.of(
-                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("project.xcconfig")),
-                Either.<Path, ImmutableMap<String, String>>ofRight(
+                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                    new PathSourcePath(Paths.get("project.xcconfig"))),
+                Either.<SourcePath, ImmutableMap<String, String>>ofRight(
                     ImmutableMap.of(
                         "PROJECT_FLAG1", "p1",
                         "PROJECT_FLAG2", "p2")),
-                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("target.xcconfig")),
-                Either.<Path, ImmutableMap<String, String>>ofRight(
+                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                    new PathSourcePath(Paths.get("target.xcconfig"))),
+                Either.<SourcePath, ImmutableMap<String, String>>ofRight(
                     ImmutableMap.of(
                         "TARGET_FLAG1", "t1",
                         "TARGET_FLAG2", "t2"))));
@@ -328,13 +333,15 @@ public class SeparatedProjectsGeneratorTest {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of("Debug", ImmutableList.of(
-                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("project.xcconfig")),
-                Either.<Path, ImmutableMap<String, String>>ofRight(
+                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                    new PathSourcePath(Paths.get("project.xcconfig"))),
+                Either.<SourcePath, ImmutableMap<String, String>>ofRight(
                     ImmutableMap.of(
                         "PROJECT_FLAG1", "p1",
                         "PROJECT_FLAG2", "p2")),
-                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("target.xcconfig")),
-                Either.<Path, ImmutableMap<String, String>>ofRight(
+                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                    new PathSourcePath(Paths.get("target.xcconfig"))),
+                Either.<SourcePath, ImmutableMap<String, String>>ofRight(
                     ImmutableMap.of(
                         "TARGET_FLAG3", "t3",
                         "TARGET_FLAG4", "t4"))));
@@ -405,7 +412,8 @@ public class SeparatedProjectsGeneratorTest {
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = ImmutableMap.of("Debug", ImmutableList.of(
                 // this only has one layer, accepted layers is 2 or 4
-                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("target.xcconfig"))));
+                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                    new PathSourcePath(Paths.get("target.xcconfig")))));
             return input;
           }
         });
