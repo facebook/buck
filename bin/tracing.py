@@ -75,6 +75,11 @@ class Tracing(object):
         trace_filename = os.path.join(
             buck_log_dir, 'launch.{0}.{1}.trace'.format(filename_time, uuid4()))
         trace_filename_link = os.path.join(buck_log_dir, 'launch.trace')
+        try:
+            os.makedirs(buck_log_dir)
+        except OSError, e:
+            if e.errno != errno.EEXIST:
+                raise
         json.dump(Tracing._trace_events, file(trace_filename, 'w'))
         try:
             os.symlink(trace_filename, trace_filename_link)

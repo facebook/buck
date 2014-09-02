@@ -5,17 +5,25 @@ import signal
 import sys
 from buck_repo import BuckRepo, BuckRepoException
 from buck_project import BuckProject, NoBuckConfigFoundException
+from tracing import Tracing
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def main():
-    with BuckProject.from_current_dir() as project:
-        buck_repo = BuckRepo(THIS_DIR, project)
-        if 'clean' in sys.argv:
-            buck_repo.kill_buckd()
-        exit_code = buck_repo.launch_buck()
-        sys.exit(exit_code)
+    try:
+        tracing_dir = None
+        with Tracing("main"):
+            with BuckProject.from_current_dir() as project:
+                tracing_dir = os.path.join(project.get_buck_out_log_dir(), 'traces')
+                buck_repo = BuckRepo(THIS_DIR, project)
+                if 'clean' in sys.argv:
+                    buck_repo.kill_buckd()
+                exit_code = buck_repo.launch_buck()
+                sys.exit(exit_code)
+    finally:
+        if tracing_dir:
+            Tracing.write_to_dir(tracing_dir)
 
 if __name__ == "__main__":
     try:
