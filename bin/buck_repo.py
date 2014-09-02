@@ -12,6 +12,7 @@ import textwrap
 import time
 
 from timing import monotonic_time_nanos
+from tracing import Tracing
 
 JAVA_CLASSPATHS = [
     "src",
@@ -126,130 +127,133 @@ class BuckRepo:
         self._buck_version_uid = self._get_buck_version_uid()
 
     def launch_buck(self):
-        self.kill_autobuild()
-        if 'clean' in sys.argv or os.environ.get('NO_BUCKD'):
-            self.kill_buckd()
-        self._build()
-
-        use_buckd = not os.environ.get('NO_BUCKD')
-        has_watchman = bool(which('watchman'))
-        if use_buckd and has_watchman:
-            buckd_run_count = self._buck_project.get_buckd_run_count()
-            running_version = self._buck_project.get_running_buckd_version()
-            new_buckd_run_count = buckd_run_count + 1
-
-            if (buckd_run_count == MAX_BUCKD_RUN_COUNT or
-                    running_version != self._buck_version_uid):
+        with Tracing('BuckRepo.launch_buck'):
+            self.kill_autobuild()
+            if 'clean' in sys.argv or os.environ.get('NO_BUCKD'):
                 self.kill_buckd()
-                new_buckd_run_count = 0
+            self._build()
 
-            if new_buckd_run_count == 0 or not self._is_buckd_running():
-                self.launch_buckd()
-            else:
-                self._buck_project.update_buckd_run_count(new_buckd_run_count)
-        elif use_buckd and not has_watchman:
-            print("Not using buckd because watchman isn't installed.",
-                  file=sys.stderr)
+            use_buckd = not os.environ.get('NO_BUCKD')
+            has_watchman = bool(which('watchman'))
+            if use_buckd and has_watchman:
+                buckd_run_count = self._buck_project.get_buckd_run_count()
+                running_version = self._buck_project.get_running_buckd_version()
+                new_buckd_run_count = buckd_run_count + 1
 
-        if self._is_buckd_running() and os.path.exists(self._buck_client_file):
-            print("Using buckd.", file=sys.stderr)
-            buckd_port = self._buck_project.get_buckd_port()
-            if not buckd_port or not buckd_port.isdigit():
-                print(
-                    "Daemon port file is corrupt, starting new buck process.",
-                    file=sys.stderr)
-                self.kill_buckd()
-            else:
-                command = [self._buck_client_file]
-                command.append("--nailgun-port")
-                command.append(buckd_port)
-                command.append("com.facebook.buck.cli.Main")
-                command.extend(sys.argv[1:])
-                exit_code = subprocess.call(command, cwd=self._buck_project.root)
-                if exit_code == 2:
-                    print('Daemon is busy, please wait',
-                          'or run "buckd --kill" to terminate it.',
-                          file=sys.stderr)
-                return exit_code
+                if (buckd_run_count == MAX_BUCKD_RUN_COUNT or
+                        running_version != self._buck_version_uid):
+                    self.kill_buckd()
+                    new_buckd_run_count = 0
 
-        command = ["java"]
-        command.extend(self._get_java_args(self._buck_version_uid))
-        command.append("-Djava.io.tmpdir={0}".format(self._tmp_dir))
-        command.append("-classpath")
-        command.append(self._get_java_classpath())
-        command.append("com.facebook.buck.cli.Main")
-        command.extend(sys.argv[1:])
-        return subprocess.call(command, cwd=self._buck_project.root)
+                if new_buckd_run_count == 0 or not self._is_buckd_running():
+                    self.launch_buckd()
+                else:
+                    self._buck_project.update_buckd_run_count(new_buckd_run_count)
+            elif use_buckd and not has_watchman:
+                print("Not using buckd because watchman isn't installed.",
+                      file=sys.stderr)
+
+            if self._is_buckd_running() and os.path.exists(self._buck_client_file):
+                print("Using buckd.", file=sys.stderr)
+                buckd_port = self._buck_project.get_buckd_port()
+                if not buckd_port or not buckd_port.isdigit():
+                    print(
+                        "Daemon port file is corrupt, starting new buck process.",
+                        file=sys.stderr)
+                    self.kill_buckd()
+                else:
+                    command = [self._buck_client_file]
+                    command.append("--nailgun-port")
+                    command.append(buckd_port)
+                    command.append("com.facebook.buck.cli.Main")
+                    command.extend(sys.argv[1:])
+                    with Tracing('buck', args={'command': command}):
+                        exit_code = subprocess.call(command, cwd=self._buck_project.root)
+                        if exit_code == 2:
+                            print('Daemon is busy, please wait',
+                                  'or run "buckd --kill" to terminate it.',
+                                  file=sys.stderr)
+                        return exit_code
+
+            command = ["java"]
+            command.extend(self._get_java_args(self._buck_version_uid))
+            command.append("-Djava.io.tmpdir={0}".format(self._tmp_dir))
+            command.append("-classpath")
+            command.append(self._get_java_classpath())
+            command.append("com.facebook.buck.cli.Main")
+            command.extend(sys.argv[1:])
+            return subprocess.call(command, cwd=self._buck_project.root)
 
     def launch_buckd(self):
-        self._build()
-        self._setup_watchman_watch()
-        self._buck_project.create_buckd_tmp_dir()
-        # Override self._tmp_dir to a long lived directory.
-        buckd_tmp_dir = self._buck_project.buckd_tmp_dir
+        with Tracing('BuckRepo.launch_buckd'):
+            self._build()
+            self._setup_watchman_watch()
+            self._buck_project.create_buckd_tmp_dir()
+            # Override self._tmp_dir to a long lived directory.
+            buckd_tmp_dir = self._buck_project.buckd_tmp_dir
 
-        '''
-        Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
-        Set timeout to 60s (longer than the biggest GC pause seen for a 2GB
-        heap) and GC target to 15s. This means that the GC has to miss its
-        target by 100% or many 500ms heartbeats must be missed before a client
-        disconnection occurs. Specify port 0 to allow Nailgun to find an
-        available port, then parse the port number out of the first log entry.
-        '''
-        command = ["java"]
-        command.extend(self._get_java_args(self._buck_version_uid))
-        command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
-        command.append("-Dbuck.buckd_watcher=Watchman")
-        command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
-        command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
-        command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
-        command.append("-classpath")
-        command.append(self._get_java_classpath())
-        command.append("com.martiansoftware.nailgun.NGServer")
-        command.append("localhost:0")
-        command.append("{0}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
+            '''
+            Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
+            Set timeout to 60s (longer than the biggest GC pause seen for a 2GB
+            heap) and GC target to 15s. This means that the GC has to miss its
+            target by 100% or many 500ms heartbeats must be missed before a client
+            disconnection occurs. Specify port 0 to allow Nailgun to find an
+            available port, then parse the port number out of the first log entry.
+            '''
+            command = ["java"]
+            command.extend(self._get_java_args(self._buck_version_uid))
+            command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
+            command.append("-Dbuck.buckd_watcher=Watchman")
+            command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
+            command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
+            command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
+            command.append("-classpath")
+            command.append(self._get_java_classpath())
+            command.append("com.martiansoftware.nailgun.NGServer")
+            command.append("localhost:0")
+            command.append("{0}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
 
-        '''
-        We want to launch the buckd process in such a way that it finds the
-        terminal as a tty while being able to read its output. We also want to
-        shut up any nailgun output. If we simply redirect stdout/stderr to a
-        file, the super console no longer works on subsequent invocations of
-        buck. So use a pseudo-terminal to interact with it.
-        '''
-        master, slave = pty.openpty()
+            '''
+            We want to launch the buckd process in such a way that it finds the
+            terminal as a tty while being able to read its output. We also want to
+            shut up any nailgun output. If we simply redirect stdout/stderr to a
+            file, the super console no longer works on subsequent invocations of
+            buck. So use a pseudo-terminal to interact with it.
+            '''
+            master, slave = pty.openpty()
 
-        '''
-        Change the process group of the child buckd process so that when this
-        script is interrupted, it does not kill buckd.
-        '''
-        def preexec_func():
-            os.setpgrp()
+            '''
+            Change the process group of the child buckd process so that when this
+            script is interrupted, it does not kill buckd.
+            '''
+            def preexec_func():
+                os.setpgrp()
 
-        process = subprocess.Popen(
-            command,
-            cwd=self._buck_project.root,
-            stdout=slave,
-            stderr=slave,
-            preexec_fn=preexec_func)
-        self._buck_project.save_buckd_pid(process.pid)
-        stdout = os.fdopen(master)
+            process = subprocess.Popen(
+                command,
+                cwd=self._buck_project.root,
+                stdout=slave,
+                stderr=slave,
+                preexec_fn=preexec_func)
+            self._buck_project.save_buckd_pid(process.pid)
+            stdout = os.fdopen(master)
 
-        for i in range(100):
-            line = stdout.readline().strip()
-            match = BUCKD_LOG_FILE_PATTERN.match(line)
-            if match:
-                buckd_port = match.group(1)
-                break
-            time.sleep(0.1)
-        else:
-            print(
-                "nailgun server did not respond after 10s. Aborting buckd.",
-                file=sys.stderr)
-            return
+            for i in range(100):
+                line = stdout.readline().strip()
+                match = BUCKD_LOG_FILE_PATTERN.match(line)
+                if match:
+                    buckd_port = match.group(1)
+                    break
+                time.sleep(0.1)
+            else:
+                print(
+                    "nailgun server did not respond after 10s. Aborting buckd.",
+                    file=sys.stderr)
+                return
 
-        self._buck_project.save_buckd_port(buckd_port)
-        self._buck_project.save_buckd_version(self._buck_version_uid)
-        self._buck_project.update_buckd_run_count(0)
+            self._buck_project.save_buckd_port(buckd_port)
+            self._buck_project.save_buckd_version(self._buck_version_uid)
+            self._buck_project.update_buckd_run_count(0)
 
     def kill_autobuild(self):
         autobuild_pid = self._buck_project.get_autobuild_pid()
@@ -261,109 +265,114 @@ class BuckRepo:
                     pass
 
     def kill_buckd(self):
-        buckd_pid = self._buck_project.get_buckd_pid()
-        if buckd_pid:
-            if not buckd_pid.isdigit():
-                print("WARNING: Corrupt buckd pid: '{0}'.".format(buckd_pid))
-            else:
-                self._kill_buckd_process_and_wait(int(buckd_pid))
+        with Tracing('BuckRepo.kill_buckd'):
+            buckd_pid = self._buck_project.get_buckd_pid()
+            if buckd_pid:
+                if not buckd_pid.isdigit():
+                    print("WARNING: Corrupt buckd pid: '{0}'.".format(buckd_pid))
+                else:
+                    self._kill_buckd_process_and_wait(int(buckd_pid))
 
-        self._buck_project.clean_up_buckd()
+            self._buck_project.clean_up_buckd()
 
     def _kill_buckd_process_and_wait(self, buckd_pid):
-        try:
-            print("Terminating existing buckd process...", file=sys.stderr)
-            os.kill(buckd_pid, signal.SIGTERM)
-            print("Waiting for existing buckd process to exit...",
-                  file=sys.stderr)
-            for count in range(100):
-                time.sleep(0.1)
+        with Tracing('BuckRepo._kill_buckd_process_and_wait'):
+            try:
+                print("Terminating existing buckd process...", file=sys.stderr)
                 os.kill(buckd_pid, signal.SIGTERM)
-            else:
-                print(textwrap.dedent("""\
-                    Could not kill existing buckd process after 10 seconds!
-                    Force killing existing buckd process."""),
+                print("Waiting for existing buckd process to exit...",
                       file=sys.stderr)
-                os.kill(buckd_pid, signal.SIGKILL)
-        except OSError as e:
-            if e.errno != errno.ESRCH:
-                raise
+                for count in range(100):
+                    time.sleep(0.1)
+                    os.kill(buckd_pid, signal.SIGTERM)
+                else:
+                    print(textwrap.dedent("""\
+                        Could not kill existing buckd process after 10 seconds!
+                        Force killing existing buckd process."""),
+                          file=sys.stderr)
+                    os.kill(buckd_pid, signal.SIGKILL)
+            except OSError as e:
+                if e.errno != errno.ESRCH:
+                    raise
 
     def _setup_watchman_watch(self):
-        if not which('watchman'):
-            message = textwrap.dedent("""\
-                Watchman not found, please install when using buckd.
-                See https://github.com/facebook/watchman for details.""")
-            if sys.platform == "darwin":
-                message += "\n(brew install --HEAD watchman on OS X)"
-            # Bail if watchman isn't installed as we know java's
-            # FileSystemWatcher will take too long to process events.
-            raise BuckRepoException(message)
+        with Tracing('BuckRepo._setup_watchman_watch'):
+            if not which('watchman'):
+                message = textwrap.dedent("""\
+                    Watchman not found, please install when using buckd.
+                    See https://github.com/facebook/watchman for details.""")
+                if sys.platform == "darwin":
+                    message += "\n(brew install --HEAD watchman on OS X)"
+                # Bail if watchman isn't installed as we know java's
+                # FileSystemWatcher will take too long to process events.
+                raise BuckRepoException(message)
 
-        print("Using watchman.", file=sys.stderr)
-        subprocess.check_call(
-            ['watchman', 'watch', self._buck_project.root],
-            stdout=DEV_NULL,
-            stderr=DEV_NULL)
+            print("Using watchman.", file=sys.stderr)
+            subprocess.check_call(
+                ['watchman', 'watch', self._buck_project.root],
+                stdout=DEV_NULL,
+                stderr=DEV_NULL)
 
     def _is_buckd_running(self):
-        buckd_pid = self._buck_project.get_buckd_pid()
-        buckd_port = self._buck_project.get_buckd_port()
+        with Tracing('BuckRepo._is_buckd_running'):
+            buckd_pid = self._buck_project.get_buckd_pid()
+            buckd_port = self._buck_project.get_buckd_port()
 
-        if (buckd_pid is None or not buckd_pid.isdigit() or
-                buckd_port is None or not buckd_port.isdigit()):
-            return False
+            if (buckd_pid is None or not buckd_pid.isdigit() or
+                    buckd_port is None or not buckd_port.isdigit()):
+                return False
 
-        try:
-            os.kill(int(buckd_pid), 0)
-        except OSError:
-            return False
+            try:
+                os.kill(int(buckd_pid), 0)
+            except OSError:
+                return False
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            result = sock.connect_ex(('127.0.0.1', int(buckd_port)))
-        finally:
-            sock.close()
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                result = sock.connect_ex(('127.0.0.1', int(buckd_port)))
+            finally:
+                sock.close()
 
-        return result == 0
+            return result == 0
 
     def _checkout_and_clean(self, revision, branch):
-        if not self._revision_exists(revision):
-            git_command = ['git', 'fetch']
-            git_command.extend(['--all'] if not branch else ['origin', branch])
-            try:
+        with Tracing('BuckRepo._checkout_and_clean'):
+            if not self._revision_exists(revision):
+                git_command = ['git', 'fetch']
+                git_command.extend(['--all'] if not branch else ['origin', branch])
+                try:
+                    subprocess.check_call(
+                        git_command,
+                        stdout=sys.stderr,
+                        cwd=self._buck_dir)
+                except subprocess.CalledProcessError:
+                    raise BuckRepoException(textwrap.dedent("""\
+                          Failed to fetch Buck updates from git.
+                          You can disable this by creating a '.nobuckcheck' file in
+                          your repository, but this might lead to strange bugs or
+                          build failures."""))
+
+            current_revision = self._get_git_revision()
+
+            if current_revision != revision:
+                print(textwrap.dedent("""\
+                    Buck is at {0}, but should be {1}.
+                    Buck is updating itself. To disable this, add a '.nobuckcheck'
+                    file to your project root. In general, you should only disable
+                    this if you are developing Buck.""".format(
+                    current_revision, revision)),
+                    file=sys.stderr)
+
                 subprocess.check_call(
-                    git_command,
+                    ['git', 'checkout', revision],
                     stdout=sys.stderr,
                     cwd=self._buck_dir)
-            except subprocess.CalledProcessError:
-                raise BuckRepoException(textwrap.dedent("""\
-                      Failed to fetch Buck updates from git.
-                      You can disable this by creating a '.nobuckcheck' file in
-                      your repository, but this might lead to strange bugs or
-                      build failures."""))
+                if os.path.exists(self._build_success_file):
+                    os.remove(self._build_success_file)
 
-        current_revision = self._get_git_revision()
-
-        if current_revision != revision:
-            print(textwrap.dedent("""\
-                Buck is at {0}, but should be {1}.
-                Buck is updating itself. To disable this, add a '.nobuckcheck'
-                file to your project root. In general, you should only disable
-                this if you are developing Buck.""".format(
-                current_revision, revision)),
-                file=sys.stderr)
-
-            subprocess.check_call(
-                ['git', 'checkout', revision],
-                stdout=sys.stderr,
-                cwd=self._buck_dir)
-            if os.path.exists(self._build_success_file):
-                os.remove(self._build_success_file)
-
-            self._check_for_ant()
-            self._run_ant_clean()
-            self._restart_buck()
+                self._check_for_ant()
+                self._run_ant_clean()
+                self._restart_buck()
 
     def _join_buck_dir(self, relative_path):
         return os.path.join(self._buck_dir, *(relative_path.split('/')))
@@ -492,54 +501,56 @@ class BuckRepo:
                 cwd=self._buck_dir).strip()
 
     def _build(self):
-        if not os.path.exists(self._build_success_file):
-            # TODO(natthu): kill buckd if running, and
-            # restart buckd only if it was running before.
-            print(
-                "Buck does not appear to have been built -- building Buck!",
-                file=sys.stderr)
-            self._check_for_ant()
-            self._run_ant_clean()
-            self._run_ant()
+        with Tracing('BuckRepo._build'):
+            if not os.path.exists(self._build_success_file):
+                # TODO(natthu): kill buckd if running, and
+                # restart buckd only if it was running before.
+                print(
+                    "Buck does not appear to have been built -- building Buck!",
+                    file=sys.stderr)
+                self._check_for_ant()
+                self._run_ant_clean()
+                self._run_ant()
 
     def _get_buck_version_uid(self):
-        if not self._is_git:
-            return 'N/A'
+        with Tracing('BuckRepo._get_buck_version_uid'):
+            if not self._is_git:
+                return 'N/A'
 
-        if not self._is_dirty():
-            return self._get_git_revision()
+            if not self._is_dirty():
+                return self._get_git_revision()
 
-        if (self._buck_project.has_no_buck_check or
-                not self._buck_project.buck_version):
+            if (self._buck_project.has_no_buck_check or
+                    not self._buck_project.buck_version):
+                return self._compute_local_hash()
+
+            if self._has_local_changes():
+                print(textwrap.dedent("""\
+                ::: Your buck directory has local modifications, and therefore
+                ::: builds will not be able to use a distributed cache.
+                ::: The following files must be either reverted or committed:"""),
+                      file=sys.stderr)
+                subprocess.call(
+                    ['git', 'ls-files', '-m'],
+                    stdout=sys.stderr,
+                    cwd=self._buck_dir)
+            elif os.environ.get('BUCK_CLEAN_REPO_IF_DIRTY') != 'NO':
+                print(textwrap.dedent("""\
+                ::: Your local buck directory is dirty, and therefore builds will
+                ::: not be able to use a distributed cache."""), file=sys.stderr)
+                if sys.stdout.isatty():
+                    print(
+                        "::: Do you want to clean your buck directory? [y/N]",
+                        file=sys.stderr)
+                    choice = raw_input().lower()
+                    if choice == "y":
+                        subprocess.call(
+                            ['git', 'clean', '-fd'],
+                            stdout=sys.stderr,
+                            cwd=self._buck_dir)
+                        self._restart_buck()
+
             return self._compute_local_hash()
-
-        if self._has_local_changes():
-            print(textwrap.dedent("""\
-            ::: Your buck directory has local modifications, and therefore
-            ::: builds will not be able to use a distributed cache.
-            ::: The following files must be either reverted or committed:"""),
-                  file=sys.stderr)
-            subprocess.call(
-                ['git', 'ls-files', '-m'],
-                stdout=sys.stderr,
-                cwd=self._buck_dir)
-        elif os.environ.get('BUCK_CLEAN_REPO_IF_DIRTY') != 'NO':
-            print(textwrap.dedent("""\
-            ::: Your local buck directory is dirty, and therefore builds will
-            ::: not be able to use a distributed cache."""), file=sys.stderr)
-            if sys.stdout.isatty():
-                print(
-                    "::: Do you want to clean your buck directory? [y/N]",
-                    file=sys.stderr)
-                choice = raw_input().lower()
-                if choice == "y":
-                    subprocess.call(
-                        ['git', 'clean', '-fd'],
-                        stdout=sys.stderr,
-                        cwd=self._buck_dir)
-                    self._restart_buck()
-
-        return self._compute_local_hash()
 
     def _get_java_args(self, version_uid):
         java_args = [] if is_java8() else ["-XX:MaxPermSize=256m"]
