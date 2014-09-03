@@ -5,6 +5,7 @@ java_library(
   name = 'exceptions',
   srcs = EXCEPTION_SRCS,
   deps = [
+    '//lib:jsr305',
     '//src/com/facebook/buck/util:exceptions',
   ],
   visibility = ['PUBLIC'],

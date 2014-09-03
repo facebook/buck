@@ -19,6 +19,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.util.HumanReadableException;
 
+import javax.annotation.Nullable;
+
 @SuppressWarnings("serial")
 public class NoAndroidSdkException extends HumanReadableException {
 
@@ -26,7 +28,7 @@ public class NoAndroidSdkException extends HumanReadableException {
     this(null);
   }
 
-  public NoAndroidSdkException(Throwable cause) {
+  public NoAndroidSdkException(@Nullable Throwable cause) {
     super(cause,
         "Must define a local.properties file with a property named 'sdk.dir' " +
         "that points to the absolute path of your Android SDK directory, " +
