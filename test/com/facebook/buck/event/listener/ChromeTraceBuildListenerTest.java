@@ -91,7 +91,7 @@ public class ChromeTraceBuildListenerTest {
 
     for (int i = 0; i < 10; ++i) {
       File oldResult = new File(tmpDir.getRoot(),
-          String.format("%s/build.100%d.trace", BuckConstant.BUCK_TRACE_DIR, i));
+          String.format("%s/build.b7d3bf7e-%d.trace", BuckConstant.BUCK_TRACE_DIR, i));
       oldResult.createNewFile();
       oldResult.setLastModified(TimeUnit.SECONDS.toMillis(i));
     }
@@ -111,9 +111,9 @@ public class ChromeTraceBuildListenerTest {
         }).toList();
     assertEquals(4, files.size());
     assertEquals(ImmutableSortedSet.of("build.trace",
-                                       "build.1009.trace",
-                                       "build.1008.trace",
-                                       "build.1007.trace"),
+                                       "build.b7d3bf7e-7.trace",
+                                       "build.b7d3bf7e-8.trace",
+                                       "build.b7d3bf7e-9.trace"),
         ImmutableSortedSet.copyOf(files));
   }
 
