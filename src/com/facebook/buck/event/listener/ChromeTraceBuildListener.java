@@ -59,7 +59,7 @@ import java.util.concurrent.TimeUnit;
  * Logs events to a json file formatted to be viewed in Chrome Trace View (chrome://tracing).
  */
 public class ChromeTraceBuildListener implements BuckEventListener {
-  private static final String TRACE_FILE_PATTERN = "build\\.\\d*\\.trace";
+  private static final String TRACE_FILE_PATTERN = "build\\..+\\.trace";
 
   private final ProjectFilesystem projectFilesystem;
   private final int tracesToKeep;
