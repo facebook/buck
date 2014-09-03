@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.CommandEvent;
@@ -48,6 +49,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.FakeStep;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
@@ -70,8 +72,11 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 
@@ -96,7 +101,11 @@ public class ChromeTraceBuildListenerTest {
       oldResult.setLastModified(TimeUnit.SECONDS.toMillis(i));
     }
 
-    ChromeTraceBuildListener listener = new ChromeTraceBuildListener(projectFilesystem,
+    ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
+        projectFilesystem,
+        new FakeClock(1409702151000000000L),
+        Locale.US,
+        TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 3);
 
     listener.deleteOldTraces();
@@ -121,7 +130,11 @@ public class ChromeTraceBuildListenerTest {
   public void testBuildJson() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
 
-    ChromeTraceBuildListener listener = new ChromeTraceBuildListener(projectFilesystem,
+    ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
+        projectFilesystem,
+        new FakeClock(1409702151000000000L),
+        Locale.US,
+        TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 42);
 
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
@@ -290,6 +303,9 @@ public class ChromeTraceBuildListenerTest {
 
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
+        new FakeClock(1409702151000000000L),
+        Locale.US,
+        TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 3);
     try {
       tmpDir.getRoot().setReadOnly();
@@ -303,5 +319,21 @@ public class ChromeTraceBuildListenerTest {
     }  finally {
       tmpDir.getRoot().setWritable(true);
     }
+  }
+
+  @Test
+  public void outputFileUsesCurrentTime() throws IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+
+    ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
+        projectFilesystem,
+        new FakeClock(1409702151000000000L),
+        Locale.US,
+        TimeZone.getTimeZone("America/Los_Angeles"),
+        /* tracesToKeep */ 1);
+    listener.outputTrace(new BuildId("BUILD_ID"));
+    assertTrue(
+        projectFilesystem.exists(
+            Paths.get("buck-out/log/traces/build.2014-09-02.16-55-51.BUILD_ID.trace")));
   }
 }

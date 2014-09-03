@@ -556,6 +556,7 @@ public final class Main {
           rootRepository.getFilesystem(),
           rootRepository.getBuckConfig(),
           webServer,
+          clock,
           console,
           consoleListener,
           rootRepository.getKnownBuildRuleTypes(),
@@ -753,6 +754,7 @@ public final class Main {
       ProjectFilesystem projectFilesystem,
       BuckConfig config,
       Optional<WebServer> webServer,
+      Clock clock,
       Console console,
       AbstractConsoleEventBusListener consoleEventBusListener,
       KnownBuildRuleTypes knownBuildRuleTypes,
@@ -760,7 +762,7 @@ public final class Main {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
-            .add(new ChromeTraceBuildListener(projectFilesystem, config.getMaxTraces()))
+            .add(new ChromeTraceBuildListener(projectFilesystem, clock, config.getMaxTraces()))
             .add(consoleEventBusListener)
             .add(new LoggingBuildListener());
 

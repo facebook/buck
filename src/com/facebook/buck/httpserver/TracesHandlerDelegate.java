@@ -51,7 +51,7 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
   };
 
   private static final Pattern TRACE_FILE_NAME_PATTERN = Pattern.compile(
-      "build\\.([0-9a-zA-Z-]+)\\.trace");
+      "build\\.(?:[\\d\\-\\.]+\\.)?([0-9a-zA-Z-]+)\\.trace");
   private static final String TRACE_TO_IGNORE = "build.trace";
 
   private final TracesHelper tracesHelper;
