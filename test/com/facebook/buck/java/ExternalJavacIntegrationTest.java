@@ -108,7 +108,9 @@ public class ExternalJavacIntegrationTest {
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.getAbsolutePath());
     workspace.runBuckdCommand(
-        ImmutableMap.of("CHECK_THIS_VARIABLE", "1"),
+        ImmutableMap.of(
+            "CHECK_THIS_VARIABLE", "1",
+            "PATH", System.getenv("PATH")),
         "build",
         "example")
         .assertSuccess();
