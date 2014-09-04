@@ -640,7 +640,7 @@ public class ProjectGenerator {
       BuildRule buildRule,
       PBXTarget target,
       PBXGroup targetGroup,
-      ImmutableSet<XcodeRuleConfiguration> configurations,
+      ImmutableMap<String, XcodeRuleConfiguration> configurations,
       ImmutableMap<String, String> overrideBuildSettings,
       ImmutableMap<String, String> defaultBuildSettings,
       ImmutableMap<String, String> appendBuildSettings)
@@ -700,14 +700,16 @@ public class ProjectGenerator {
 
     PBXGroup configurationsGroup = targetGroup.getOrCreateChildGroupByName("Configurations");
 
-    for (XcodeRuleConfiguration configuration : configurations) {
+    for (Map.Entry<String, XcodeRuleConfiguration> configurationEntry : configurations.entrySet()) {
       if (options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
-        ConfigInXcodeLayout layers = extractXcodeConfigurationLayers(buildTarget, configuration);
-        xcodeConfigurationLayersMultimapBuilder.put(configuration.getName(), layers);
+        ConfigInXcodeLayout layers =
+            extractXcodeConfigurationLayers(buildTarget, configurationEntry.getValue());
+        xcodeConfigurationLayersMultimapBuilder.put(configurationEntry.getKey(), layers);
 
-        XCBuildConfiguration outputConfiguration =
-            target.getBuildConfigurationList().getBuildConfigurationsByName()
-                .getUnchecked(configuration.getName());
+        XCBuildConfiguration outputConfiguration = target
+            .getBuildConfigurationList()
+            .getBuildConfigurationsByName()
+            .getUnchecked(configurationEntry.getKey());
         if (layers.targetLevelConfigFile.isPresent()) {
           {
             Map<String, String> mutableOverrideConfigs = new HashMap<>(overrideConfigs);
@@ -769,13 +771,15 @@ public class ProjectGenerator {
         // Call for effect to create a stub configuration entry at project level.
         project.getBuildConfigurationList()
             .getBuildConfigurationsByName()
-            .getUnchecked(configuration.getName());
+            .getUnchecked(configurationEntry.getKey());
 
         // Write an xcconfig that embodies all the config levels, and set that as the target config.
         Path configurationFilePath = outputConfigurationDirectory.resolve(
-            mangledBuildTargetName(buildTarget) + "-" + configuration.getName() + ".xcconfig");
+            mangledBuildTargetName(buildTarget) + "-" + configurationEntry.getKey() + ".xcconfig");
         String serializedConfiguration = serializeBuildConfiguration(
-            configuration, searchPaths, overrideConfigs);
+            configurationEntry.getValue(),
+            searchPaths,
+            overrideConfigs);
         if (MorePaths.fileContentsDiffer(
             new ByteArrayInputStream(serializedConfiguration.getBytes(Charsets.UTF_8)),
             configurationFilePath,
@@ -797,9 +801,10 @@ public class ProjectGenerator {
                 new SourceTreePath(
                     PBXReference.SourceTree.SOURCE_ROOT,
                     repoRootRelativeToOutputDirectory.resolve(configurationFilePath)));
-        XCBuildConfiguration outputConfiguration =
-            target.getBuildConfigurationList().getBuildConfigurationsByName()
-                .getUnchecked(configuration.getName());
+        XCBuildConfiguration outputConfiguration = target
+            .getBuildConfigurationList()
+            .getBuildConfigurationsByName()
+            .getUnchecked(configurationEntry.getKey());
         outputConfiguration.setBaseConfigurationReference(fileReference);
       }
     }
