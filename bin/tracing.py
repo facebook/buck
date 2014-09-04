@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import errno
+import glob
 import json
 import os
 import time
@@ -87,3 +88,11 @@ class Tracing(object):
             if e.errno == errno.EEXIST:
                 os.remove(trace_filename_link)
                 os.symlink(trace_filename, trace_filename_link)
+        Tracing.clean_up_old_logs(buck_log_dir)
+
+    @staticmethod
+    def clean_up_old_logs(buck_log_dir, logs_to_keep=25):
+        traces = filter(os.path.isfile, glob.glob(os.path.join(buck_log_dir, 'launch.*.trace')))
+        traces.sort(key=os.path.getmtime)
+        for f in traces[:-logs_to_keep]:
+            os.remove(f)
