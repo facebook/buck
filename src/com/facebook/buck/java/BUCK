@@ -125,6 +125,7 @@ java_library(
     'ExternalJavacStep.java',
     'GenerateCodeCoverageReportStep.java',
     'JarDirectoryStep.java',
+    'JarDirectoryStepHelper.java',
     'JavacErrorParser.java',
     'JavacInMemoryStep.java',
     'JavacStep.java',
