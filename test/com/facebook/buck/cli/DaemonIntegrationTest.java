@@ -17,9 +17,7 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-
 import static java.util.concurrent.Executors.callable;
-
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -37,17 +35,14 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGClientListener;
@@ -65,9 +60,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Map;
-
 import java.util.concurrent.Callable;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -342,13 +335,7 @@ public class DaemonIntegrationTest {
     assertTrue("Should delete BUCK file successfully", workspace.getFile(fileName).delete());
     waitForChange(Paths.get(fileName));
 
-    try {
-      workspace.runBuckdCommand("build", "app");
-      fail("Should have thrown HumanReadableException.");
-    } catch (HumanReadableException e) {
-      assertThat("Failure should have been due to BUCK file removal.", e.getMessage(),
-          containsString(fileName));
-    }
+    workspace.runBuckdCommand("build", "app").assertFailure();
   }
 
   @Test

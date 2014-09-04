@@ -21,18 +21,14 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
-import com.facebook.buck.util.ProjectFilesystem;
 
 import org.junit.Test;
-
-import java.io.File;
 
 public class BuildTargetPatternParserTest {
 
   @Test
   public void testParse() throws NoSuchBuildTargetException {
-    ProjectFilesystem projectFilesSystem = new ProjectFilesystem(new File("./"));
-    BuildTargetPatternParser parser = new BuildTargetPatternParser(projectFilesSystem);
+    BuildTargetPatternParser parser = new BuildTargetPatternParser();
     ParseContext parseContext = ParseContext.forVisibilityArgument();
 
     assertEquals(
@@ -50,8 +46,7 @@ public class BuildTargetPatternParserTest {
 
   @Test(expected = BuildTargetParseException.class)
   public void testParseWildcardWithInvalidContext() throws NoSuchBuildTargetException {
-    ProjectFilesystem projectFilesSystem = new ProjectFilesystem(new File("./"));
-    BuildTargetPatternParser parser = new BuildTargetPatternParser(projectFilesSystem);
+    BuildTargetPatternParser parser = new BuildTargetPatternParser();
     ParseContext parseContext = ParseContext.fullyQualified();
 
     parser.parse("//...", parseContext);
@@ -60,9 +55,7 @@ public class BuildTargetPatternParserTest {
 
   @Test
   public void testParseRootPattern() throws NoSuchBuildTargetException {
-    ProjectFilesystem projectFilesSystem =
-        new ProjectFilesystem(new File("test/com/facebook/buck/parser/"));
-    BuildTargetPatternParser parser = new BuildTargetPatternParser(projectFilesSystem);
+    BuildTargetPatternParser parser = new BuildTargetPatternParser();
     ParseContext parseContext = ParseContext.forVisibilityArgument();
 
     assertEquals(

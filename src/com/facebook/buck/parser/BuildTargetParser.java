@@ -16,19 +16,14 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
-
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 
@@ -40,14 +35,11 @@ public class BuildTargetParser {
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
   private static final List<String> INVALID_BUILD_RULE_SUBSTRINGS = ImmutableList.of("..", "./");
 
-  private final ProjectFilesystem projectFilesystem;
   private final ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap;
 
-  // TODO(jacko): This is broken. Get rid of it. Probably stop taking a filesystem at all.
-  public BuildTargetParser(ProjectFilesystem projectFilesystem) {
+  public BuildTargetParser() {
     // By default, use a canonical names map that only allows targets with no repo name.
-    this(projectFilesystem, ImmutableMap.of(
-            Optional.<String>absent(), Optional.<String>absent()));
+    this(ImmutableMap.of(Optional.<String>absent(), Optional.<String>absent()));
   }
 
   /**
@@ -60,9 +52,7 @@ public class BuildTargetParser {
    *          used within the current repo to their unique, global repo names.
    */
   public BuildTargetParser(
-      ProjectFilesystem projectFilesystem,
       ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap) {
-    this.projectFilesystem = projectFilesystem;
     this.localToCanonicalRepoNamesMap = localToCanonicalRepoNamesMap;
   }
 
@@ -76,8 +66,7 @@ public class BuildTargetParser {
    * @param parseContext how targets should be interpreted, such in the context of a specific build
    *     file or only as fully-qualified names (as is the case for targets from the command line).
    */
-  public BuildTarget parse(String buildTargetName, ParseContext parseContext)
-      throws NoSuchBuildTargetException {
+  public BuildTarget parse(String buildTargetName, ParseContext parseContext) {
     Preconditions.checkNotNull(buildTargetName);
     Preconditions.checkNotNull(parseContext);
 
@@ -143,40 +132,6 @@ public class BuildTargetParser {
     if (!fullyQualifiedName.startsWith(BUILD_RULE_PREFIX)) {
       throw new BuildTargetParseException(
           String.format("%s must start with %s", fullyQualifiedName, BUILD_RULE_PREFIX));
-    }
-
-    // TODO(jacko): We need to stop doing this, unless we want to take a repository as an argument,
-    //              which would be a dependency tangle.
-    // Make sure the directory that contains the build file exists.
-    Path buildFileDirectory = Paths.get(baseName.substring(BUILD_RULE_PREFIX.length()));
-    Path buildFilePath = buildFileDirectory.resolve(BUILD_RULES_FILE_NAME);
-    if (!projectFilesystem.exists(buildFileDirectory)) {
-      if (parseContext.getType() == ParseContext.Type.BUILD_FILE &&
-          baseName.equals(parseContext.getBaseName())) {
-        throw new BuildTargetParseException(String.format(
-            "Internal error: Parsing in the context of %s, but %s does not exist",
-            buildFilePath,
-            buildFileDirectory));
-      } else {
-        throw NoSuchBuildTargetException.createForMissingDirectory(buildFileDirectory,
-            buildTargetName,
-            parseContext);
-      }
-    }
-
-    // Make sure the build file exists.
-    if (!projectFilesystem.exists(buildFilePath)) {
-      if (parseContext.getType() == ParseContext.Type.BUILD_FILE &&
-          baseName.equals(parseContext.getBaseName())) {
-        throw new BuildTargetParseException(String.format(
-            "Internal error: Parsing in the context of %s, but %s does not exist",
-            buildFilePath,
-            buildFilePath));
-      } else {
-        throw NoSuchBuildTargetException.createForMissingBuildFile(buildFilePath,
-            buildTargetName,
-            parseContext);
-      }
     }
 
     BuildTarget.Builder builder = BuildTarget.builder(baseName, shortName);

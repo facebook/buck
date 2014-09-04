@@ -101,7 +101,7 @@ public class AuditOwnerCommandTest {
     BuildRuleFactoryParams params =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
             Maps.<String, Object>newHashMap(),
-            new BuildTargetParser(new FakeProjectFilesystem()),
+            new BuildTargetParser(),
             buildTarget);
     return new TargetNode<>(
         description,

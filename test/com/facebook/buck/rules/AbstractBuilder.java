@@ -120,7 +120,7 @@ public abstract class AbstractBuilder<A extends ConstructorArg> {
     BuildRuleFactoryParams factoryParams = NonCheckingBuildRuleFactoryParams
         .createNonCheckingBuildRuleFactoryParams(
             Maps.<String, Object>newHashMap(),
-            new BuildTargetParser(filesystem),
+            new BuildTargetParser(),
             target);
     try {
       new ConstructorArgMarshaller(Paths.get("."))

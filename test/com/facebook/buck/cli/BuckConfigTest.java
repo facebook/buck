@@ -23,10 +23,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -121,12 +119,7 @@ public class BuckConfigTest {
    */
   @Test
   public void testGetBasePathToAliasMap() throws IOException, NoSuchBuildTargetException {
-    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
-    EasyMock.expect(parser.parse("//java/com/example:fbandroid", ParseContext.fullyQualified()))
-        .andReturn(BuildTargetFactory.newInstance("//java/com/example:fbandroid"))
-        .anyTimes();
-    EasyMock.replay(parser);
-
+    BuildTargetParser parser = new BuildTargetParser();
     Reader reader1 = new StringReader(Joiner.on('\n').join(
         "[alias]",
         "fb4a   =   //java/com/example:fbandroid",
@@ -159,8 +152,6 @@ public class BuckConfigTest {
     BuckConfig noAliasesConfig = createWithDefaultFilesystem(noAliasesReader, parser);
     assertEquals(ImmutableMap.of(), noAliasesConfig.getBasePathToAliasMap());
     assertEquals(ImmutableMap.of(), noAliasesConfig.getEntriesForSection("alias"));
-
-    EasyMock.verify(parser);
   }
 
   @Test
@@ -172,7 +163,7 @@ public class BuckConfigTest {
     EasyMock.replay(projectFilesystem);
 
     try {
-      BuildTargetParser parser = new BuildTargetParser(projectFilesystem);
+      BuildTargetParser parser = new BuildTargetParser();
       createWithDefaultFilesystem(reader, parser);
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
@@ -183,37 +174,19 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testConstructorThrowsNonExistentBasePath() throws IOException {
+  public void testConstructorWithNonExistentBasePath() throws IOException {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[alias]",
         "katana = //java/com/example:fb4a"));
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.exists(Paths.get("java/com/example"))).andReturn(false);
-    EasyMock.replay(projectFilesystem);
 
-    try {
-      BuildTargetParser parser = new BuildTargetParser(projectFilesystem);
-      createWithDefaultFilesystem(reader, parser);
-      fail("Should have thrown HumanReadableException.");
-    } catch (HumanReadableException e) {
-      assertEquals(
-          "No directory java/com/example when resolving target //java/com/example:fb4a " +
-          "in context FULLY_QUALIFIED",
-          e.getHumanReadableErrorMessage());
-    }
-
-    EasyMock.verify(projectFilesystem);
+    // BuckConfig should allow nonexistent targets without throwing.
+    BuildTargetParser parser = new BuildTargetParser();
+    createWithDefaultFilesystem(reader, parser);
   }
 
   @Test
   public void testGetBuildTargetForAlias() throws IOException, NoSuchBuildTargetException {
-    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
-    EasyMock.expect(parser.parse("//java/com/example:foo", ParseContext.fullyQualified()))
-        .andReturn(BuildTargetFactory.newInstance("//java/com/example:foo"));
-    EasyMock.expect(parser.parse("//java/com/example:bar", ParseContext.fullyQualified()))
-    .andReturn(BuildTargetFactory.newInstance("//java/com/example:bar"));
-    EasyMock.replay(parser);
-
+    BuildTargetParser parser = new BuildTargetParser();
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[alias]",
         "foo = //java/com/example:foo",
@@ -231,8 +204,6 @@ public class BuckConfigTest {
     assertNull(noAliasesConfig.getBuildTargetForAlias("foo"));
     assertNull(noAliasesConfig.getBuildTargetForAlias("bar"));
     assertNull(noAliasesConfig.getBuildTargetForAlias("baz"));
-
-    EasyMock.verify(parser);
   }
 
   /**
@@ -280,12 +251,7 @@ public class BuckConfigTest {
 
   @Test
   public void testReferentialAliases() throws IOException, NoSuchBuildTargetException {
-    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
-    EasyMock.expect(parser.parse("//java/com/example:foo", ParseContext.fullyQualified()))
-        .andReturn(BuildTargetFactory.newInstance("//java/com/example:foo"));
-    EasyMock.expect(parser.parse("//java/com/example:bar", ParseContext.fullyQualified()))
-        .andReturn(BuildTargetFactory.newInstance("//java/com/example:bar"));
-    EasyMock.replay(parser);
+    BuildTargetParser parser = new BuildTargetParser();
 
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[alias]",
@@ -303,16 +269,11 @@ public class BuckConfigTest {
     assertEquals("//java/com/example:foo", config.getBuildTargetForAlias("automation_foo"));
     assertEquals("//java/com/example:bar", config.getBuildTargetForAlias("automation_bar"));
     assertNull(config.getBuildTargetForAlias("baz"));
-
-    EasyMock.verify(parser);
   }
 
   @Test
   public void testUnresolvedAliasThrows() throws IOException, NoSuchBuildTargetException {
-    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
-    EasyMock.expect(parser.parse("//java/com/example:foo", ParseContext.fullyQualified()))
-        .andReturn(BuildTargetFactory.newInstance("//java/com/example:foo"));
-    EasyMock.replay(parser);
+    BuildTargetParser parser = new BuildTargetParser();
 
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[alias]",
@@ -324,14 +285,11 @@ public class BuckConfigTest {
     } catch (HumanReadableException e) {
       assertEquals("No alias for: food.", e.getHumanReadableErrorMessage());
     }
-
-    EasyMock.verify(parser);
   }
 
   @Test
   public void testDuplicateAliasDefinitionThrows() throws IOException, NoSuchBuildTargetException {
-    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
-    EasyMock.replay(parser);
+    BuildTargetParser parser = new BuildTargetParser();
 
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[alias]",
@@ -347,8 +305,6 @@ public class BuckConfigTest {
           "Duplicate definition for foo in [alias].",
           e.getHumanReadableErrorMessage());
     }
-
-    EasyMock.verify(parser);
   }
 
   @Test
@@ -369,9 +325,9 @@ public class BuckConfigTest {
     EasyMock.expect(filesystem.getAbsolutifier())
         .andReturn(IdentityPathAbsolutifier.getIdentityAbsolutifier())
         .times(2);
-    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
-    EasyMock.replay(filesystem, parser);
+    EasyMock.replay(filesystem);
 
+    BuildTargetParser parser = new BuildTargetParser();
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[project]",
         "ignore = .git, foo, bar/, baz//, a/b/c"));
@@ -395,7 +351,7 @@ public class BuckConfigTest {
           "baz",
           "a/b/c")));
 
-    EasyMock.verify(filesystem, parser);
+    EasyMock.verify(filesystem);
   }
 
   @Test
@@ -635,7 +591,7 @@ public class BuckConfigTest {
       throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     if (parser == null) {
-      parser = new BuildTargetParser(projectFilesystem);
+      parser = new BuildTargetParser();
     }
     return BuckConfig.createFromReader(
         reader,
@@ -647,7 +603,7 @@ public class BuckConfigTest {
 
   private BuckConfig createFromText(String... lines) throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
-    BuildTargetParser parser = new BuildTargetParser(projectFilesystem);
+    BuildTargetParser parser = new BuildTargetParser();
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
     return BuckConfig.createFromReader(
         reader,

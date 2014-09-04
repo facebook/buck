@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
@@ -34,8 +33,8 @@ public class BuildTargetPatternParser {
 
   private BuildTargetParser buildTargetParser;
 
-  public BuildTargetPatternParser(ProjectFilesystem projectFilesystem) {
-    buildTargetParser = new BuildTargetParser(projectFilesystem);
+  public BuildTargetPatternParser() {
+    buildTargetParser = new BuildTargetParser();
   }
 
   /**

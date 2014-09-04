@@ -65,9 +65,9 @@ public class RunCommandTest extends EasyMockSupport {
     assertEquals("", console.getTextWrittenToStdOut());
     String stderrText = console.getTextWrittenToStdErr();
     assertEquals(
-        stderrText,
-        "BUILD FAILED: No directory does/not/exist when resolving target " +
-        "//does/not/exist:exist in context FULLY_QUALIFIED\n");
+        "BUILD FAILED: No build file at does/not/exist/BUCK when resolving target " +
+        "//does/not/exist:exist.\n",
+        stderrText);
     assertEquals(1, exitCode);
   }
 

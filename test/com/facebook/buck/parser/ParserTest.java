@@ -50,10 +50,7 @@ import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
-import com.facebook.buck.rules.TestRepositoryBuilder;
-import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.BuckTestConstant;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.util.BuckConstant;
@@ -182,7 +179,7 @@ public class ParserTest extends EasyMockSupport {
         ofInstance(new FilesystemBackedBuildFileTree(filesystem)),
         rules,
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes),
-        new BuildTargetParser(filesystem));
+        new BuildTargetParser());
   }
 
   private Parser createParser(
@@ -193,7 +190,7 @@ public class ParserTest extends EasyMockSupport {
         ofInstance(new FilesystemBackedBuildFileTree(filesystem)),
         rules,
         buildFileParserFactory,
-        new BuildTargetParser(filesystem));
+        new BuildTargetParser());
   }
 
   private Parser createParser(
@@ -299,18 +296,8 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void testCircularDependencyDetection()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    Repository fakeRepo = new TestRepositoryBuilder().setFilesystem(filesystem).build();
     FakeRepositoryFactory fakeFactory = new FakeRepositoryFactory();
-    fakeFactory.setRootRepoForTesting(fakeRepo);
-    // Mock out objects that are not critical to parsing.
-    BuildTargetParser buildTargetParser = new BuildTargetParser(new FakeProjectFilesystem()) {
-      @Override
-      public BuildTarget parse(String buildTargetName, ParseContext parseContext)
-          throws NoSuchBuildTargetException {
-        return BuildTargetFactory.newInstance(buildTargetName);
-      }
-    };
+    BuildTargetParser buildTargetParser = new BuildTargetParser();
     final BuildFileTree buildFiles = createMock(BuildFileTree.class);
 
     Parser parser = createParser(

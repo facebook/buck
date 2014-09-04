@@ -227,25 +227,23 @@ public class TargetsCommandTest {
     // Set up the test buck file, parser, config, options.
     BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
     EasyMock.expect(parser.parse("//:test-library", ParseContext.fullyQualified()))
-        .andReturn(BuildTarget.builder(
-            "//testdata/com/facebook/buck/cli", "test-library").build())
+        .andReturn(BuildTarget.builder("//testdata/com/facebook/buck/cli", "test-library").build())
         .anyTimes();
     EasyMock.expect(parser.parse("//:", ParseContext.fullyQualified()))
         .andThrow(new BuildTargetParseException(
             String.format("%s cannot end with a colon.", "//:")))
         .anyTimes();
     EasyMock.expect(parser.parse("//blah/foo:bar", ParseContext.fullyQualified()))
-        .andThrow(EasyMock.createMock(NoSuchBuildTargetException.class))
+        .andReturn(BuildTarget.builder("//blah/foo", "bar").build())
         .anyTimes();
     EasyMock.expect(parser.parse("//:test-libarry", ParseContext.fullyQualified()))
-        .andReturn(BuildTarget.builder(
-            "//testdata/com/facebook/buck/cli", "test-libarry").build())
+        .andReturn(BuildTarget.builder("//testdata/com/facebook/buck/cli", "test-libarry").build())
         .anyTimes();
     EasyMock.replay(parser);
     Reader reader = new StringReader("");
     BuckConfig config = BuckConfig.createFromReader(
         reader,
-        new ProjectFilesystem(new File(".")),
+        new ProjectFilesystem(Paths.get(".")),
         parser,
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));

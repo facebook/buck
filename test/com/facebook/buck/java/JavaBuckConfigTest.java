@@ -133,7 +133,7 @@ public class JavaBuckConfigTest {
   private JavaBuckConfig createWithDefaultFilesystem(Reader reader)
       throws IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
-    BuildTargetParser parser = new BuildTargetParser(filesystem);
+    BuildTargetParser parser = new BuildTargetParser();
     BuckConfig raw = BuckConfig.createFromReader(
         reader,
         filesystem,

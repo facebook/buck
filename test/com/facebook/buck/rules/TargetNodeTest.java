@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -114,15 +113,7 @@ public class TargetNodeTest {
   }
 
   public BuildRuleFactoryParams buildRuleFactoryParams(Map<String, Object> args) {
-    // TODO(natthu): Add a `isForgiving` flag to FakeProjectFilesystem to mimic the following
-    // behaviour.
-    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get(".")) {
-      @Override
-      public boolean exists(Path pathRelativeToProjectRoot) {
-        return true;
-      }
-    };
-    BuildTargetParser parser = new BuildTargetParser(filesystem);
+    BuildTargetParser parser = new BuildTargetParser();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:three");
     return NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
         args, parser, target);

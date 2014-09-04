@@ -40,7 +40,6 @@ import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -589,13 +588,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   public BuildRuleFactoryParams buildRuleFactoryParams(Map<String, Object> args) {
-    ProjectFilesystem filesystem = new ProjectFilesystem(new File(".")) {
-      @Override
-      public boolean exists(Path pathRelativeToProjectRoot) {
-        return true;
-      }
-    };
-    BuildTargetParser parser = new BuildTargetParser(filesystem);
+    BuildTargetParser parser = new BuildTargetParser();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:three");
     return NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
         args, parser, target);

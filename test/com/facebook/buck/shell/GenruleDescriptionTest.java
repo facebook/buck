@@ -50,7 +50,7 @@ public class GenruleDescriptionTest {
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance,
         projectFilesystem,
-        new BuildTargetParser(projectFilesystem),
+        new BuildTargetParser(),
         BuildTargetFactory.newInstance("//foo:bar"),
         new FakeRuleKeyBuilderFactory());
     TargetNode<GenruleDescription.Arg> targetNode = new TargetNode<>(genruleDescription, params);

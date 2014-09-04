@@ -133,7 +133,7 @@ public class Repository {
   }
 
   public BuildTargetParser getBuildTargetParser() {
-    return new BuildTargetParser(filesystem, getLocalToCanonicalRepoNamesMap());
+    return new BuildTargetParser(getLocalToCanonicalRepoNamesMap());
   }
 
   @Override

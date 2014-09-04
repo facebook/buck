@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
@@ -230,7 +229,7 @@ public class TargetNodeVisibilityTest {
     BuildRuleFactoryParams params =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
             Maps.<String, Object>newHashMap(),
-            new BuildTargetParser(new FakeProjectFilesystem()),
+            new BuildTargetParser(),
             buildTarget);
     return new TargetNode<>(
         description,

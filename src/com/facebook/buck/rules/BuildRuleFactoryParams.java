@@ -55,7 +55,7 @@ public final class BuildRuleFactoryParams {
     this.instance = instance;
     this.filesystem = filesystem;
     this.buildTargetParser = buildTargetParser;
-    this.buildTargetPatternParser = new BuildTargetPatternParser(filesystem);
+    this.buildTargetPatternParser = new BuildTargetPatternParser();
     this.target = Preconditions.checkNotNull(target);
     this.buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
 

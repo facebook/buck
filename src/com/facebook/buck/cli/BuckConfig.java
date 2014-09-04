@@ -185,7 +185,7 @@ public class BuckConfig {
       throws IOException {
     Preconditions.checkNotNull(projectFilesystem);
     Preconditions.checkNotNull(files);
-    BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem);
+    BuildTargetParser buildTargetParser = new BuildTargetParser();
 
     if (Iterables.isEmpty(files)) {
       return new BuckConfig(
@@ -416,7 +416,8 @@ public class BuckConfig {
    * reflects the result of resolving all aliases as values in the {@code alias} section.
    */
   private static ImmutableMap<String, BuildTarget> createAliasToBuildTargetMap(
-      ImmutableMap<String, String> rawAliasMap, BuildTargetParser buildTargetParser) {
+      ImmutableMap<String, String> rawAliasMap,
+      BuildTargetParser buildTargetParser) {
     // We use a LinkedHashMap rather than an ImmutableMap.Builder because we want both (1) order to
     // be preserved, and (2) the ability to inspect the Map while building it up.
     LinkedHashMap<String, BuildTarget> aliasToBuildTarget = Maps.newLinkedHashMap();
@@ -435,11 +436,7 @@ public class BuckConfig {
       } else {
         // Here we parse the alias values with a BuildTargetParser to be strict. We could be looser
         // and just grab everything between "//" and ":" and assume it's a valid base path.
-        try {
-          buildTarget = buildTargetParser.parse(value, ParseContext.fullyQualified());
-        } catch (NoSuchBuildTargetException e) {
-          throw new HumanReadableException(e);
-        }
+        buildTarget = buildTargetParser.parse(value, ParseContext.fullyQualified());
       }
       aliasToBuildTarget.put(alias, buildTarget);
     }

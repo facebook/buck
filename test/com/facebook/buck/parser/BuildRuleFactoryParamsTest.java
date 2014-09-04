@@ -74,7 +74,7 @@ public class BuildRuleFactoryParamsTest {
 
   @Before
   public void prepareParser() throws IOException {
-    parser = new BuildTargetParser(filesystem);
+    parser = new BuildTargetParser();
   }
 
   @Test
