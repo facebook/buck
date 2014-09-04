@@ -160,15 +160,16 @@ public final class Main {
     private final ObjectMapper objectMapper;
 
     public Daemon(
-        Repository repository,
+        RepositoryFactory repositoryFactory,
         Clock clock,
-        ObjectMapper objectMapper) throws IOException {
-      this.repository = repository;
+        ObjectMapper objectMapper)
+        throws IOException, InterruptedException  {
+      this.repository = repositoryFactory.getRootRepository();
       this.clock = Preconditions.checkNotNull(clock);
       this.objectMapper = Preconditions.checkNotNull(objectMapper);
       this.hashCache = new DefaultFileHashCache(repository.getFilesystem());
-      this.parser = new Parser(
-          repository,
+      this.parser = Parser.createParser(
+          repositoryFactory,
           repository.getBuckConfig().getPythonInterpreter(),
           repository.getBuckConfig().getTempFilePatterns(),
           createRuleKeyBuilderFactory(hashCache));
@@ -308,13 +309,14 @@ public final class Main {
    */
   @VisibleForTesting
   static Daemon getDaemon(
-      Repository repository,
+      RepositoryFactory repositoryFactory,
       Clock clock,
-      ObjectMapper objectMapper) throws IOException {
+      ObjectMapper objectMapper)
+      throws IOException, InterruptedException  {
+    Path rootPath = repositoryFactory.getRootRepository().getFilesystem().getRootPath();
     if (daemon == null) {
-      LOG.debug("Starting up daemon for project root [%s]",
-          repository.getFilesystem().getRootPath());
-      daemon = new Daemon(repository, clock, objectMapper);
+      LOG.debug("Starting up daemon for project root [%s]", rootPath);
+      daemon = new Daemon(repositoryFactory, clock, objectMapper);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -322,17 +324,17 @@ public final class Main {
       // should be reported rather than silently worked around by invalidating the cache and
       // creating a new daemon object.
       Path parserRoot = daemon.getParser().getProjectRoot();
-      if (!repository.getFilesystem().getRootPath().equals(parserRoot)) {
+      if (!rootPath.equals(parserRoot)) {
         throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
-            repository.getFilesystem().getRootPath(), parserRoot));
+            rootPath, parserRoot));
       }
 
       // If Buck config or the AndroidDirectoryResolver has changed, invalidate the cache and
       // create a new daemon.
-      if (!daemon.repository.equals(repository)) {
+      if (!daemon.repository.equals(repositoryFactory.getRootRepository())) {
         LOG.info("Shutting down and restarting daemon on config or directory resolver change.");
         daemon.close();
-        daemon = new Daemon(repository, clock, objectMapper);
+        daemon = new Daemon(repositoryFactory, clock, objectMapper);
       }
     }
     return daemon;
@@ -492,7 +494,7 @@ public final class Main {
     RepositoryFactory repositoryFactory =
         new RepositoryFactory(clientEnvironment, platform, console, canonicalRootPath);
 
-    Repository rootRepository = repositoryFactory.getRepositoryByAbsolutePath(canonicalRootPath);
+    Repository rootRepository = repositoryFactory.getRootRepository();
 
     if (commandParseResult.getErrorText().isPresent()) {
       console.getStdErr().println(commandParseResult.getErrorText().get());
@@ -551,7 +553,10 @@ public final class Main {
       // running commands such as `buck clean`.
       artifactCacheFactory = new LoggingArtifactCacheFactory(executionEnvironment, buildEventBus);
 
-      Optional<WebServer> webServer = getWebServerIfDaemon(context, rootRepository, clock);
+      Optional<WebServer> webServer = getWebServerIfDaemon(
+          context,
+          repositoryFactory,
+          clock);
       eventListeners = addEventListeners(buildEventBus,
           rootRepository.getFilesystem(),
           rootRepository.getBuckConfig(),
@@ -578,7 +583,7 @@ public final class Main {
         try {
           parser = getParserFromDaemon(
               context,
-              rootRepository,
+              repositoryFactory,
               commandEvent,
               buildEventBus,
               clock);
@@ -590,8 +595,8 @@ public final class Main {
       }
 
       if (parser == null) {
-        parser = new Parser(
-            rootRepository,
+        parser = Parser.createParser(
+            repositoryFactory,
             rootRepository.getBuckConfig().getPythonInterpreter(),
             rootRepository.getBuckConfig().getTempFilePatterns(),
             createRuleKeyBuilderFactory(new DefaultFileHashCache(rootRepository.getFilesystem())));
@@ -674,12 +679,12 @@ public final class Main {
 
   private Parser getParserFromDaemon(
       Optional<NGContext> context,
-      Repository repository,
+      RepositoryFactory repositoryFactory,
       CommandEvent commandEvent,
       BuckEventBus eventBus,
       Clock clock) throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
-    Daemon daemon = getDaemon(repository, clock, objectMapper);
+    Daemon daemon = getDaemon(repositoryFactory, clock, objectMapper);
     daemon.watchClient(context.get());
     daemon.watchFileSystem(commandEvent, eventBus);
     daemon.initWebServer();
@@ -688,10 +693,11 @@ public final class Main {
 
   private Optional<WebServer> getWebServerIfDaemon(
       Optional<NGContext> context,
-      Repository repository,
-      Clock clock) throws IOException {
+      RepositoryFactory repositoryFactory,
+      Clock clock)
+      throws IOException, InterruptedException  {
     if (context.isPresent()) {
-      Daemon daemon = getDaemon(repository, clock, objectMapper);
+      Daemon daemon = getDaemon(repositoryFactory, clock, objectMapper);
       return daemon.getWebServer();
     }
     return Optional.absent();

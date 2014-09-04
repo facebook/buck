@@ -45,12 +45,15 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
+import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.BuckTestConstant;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.util.BuckConstant;
@@ -96,6 +99,7 @@ public class ParserTest extends EasyMockSupport {
   private Parser testParser;
   private KnownBuildRuleTypes buildRuleTypes;
   private ProjectFilesystem filesystem;
+  private RepositoryFactory repositoryFactory;
   private Repository repository;
 
   @Rule
@@ -103,7 +107,7 @@ public class ParserTest extends EasyMockSupport {
   private ImmutableSet<Pattern> tempFilePatterns = ImmutableSet.of(Pattern.compile(".*\\.swp$"));
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws IOException, InterruptedException  {
     tempDir.newFolder("java", "com", "facebook");
 
     defaultIncludeFile = tempDir.newFile(
@@ -140,14 +144,11 @@ public class ParserTest extends EasyMockSupport {
 
     // Create a temp directory with some build files.
     File root = tempDir.getRoot();
-    filesystem = new ProjectFilesystem(root);
+    repositoryFactory = new FakeRepositoryFactory(root.toPath());
+    repository = repositoryFactory.getRootRepository();
+    filesystem = repository.getFilesystem();
 
-    buildRuleTypes = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);
-
-    repository = new TestRepositoryBuilder()
-        .setFilesystem(filesystem)
-        .setBuildRuleTypes(buildRuleTypes)
-        .build();
+    buildRuleTypes = repository.getKnownBuildRuleTypes();
 
     DefaultProjectBuildFileParserFactory testBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
@@ -176,7 +177,7 @@ public class ParserTest extends EasyMockSupport {
   }
 
   private Parser createParser(Iterable<Map<String, Object>> rules)
-      throws IOException {
+      throws IOException, InterruptedException {
     return createParser(
         ofInstance(new FilesystemBackedBuildFileTree(filesystem)),
         rules,
@@ -186,7 +187,8 @@ public class ParserTest extends EasyMockSupport {
 
   private Parser createParser(
       Iterable<Map<String, Object>> rules,
-      ProjectBuildFileParserFactory buildFileParserFactory) throws IOException {
+      ProjectBuildFileParserFactory buildFileParserFactory)
+      throws IOException, InterruptedException {
     return createParser(
         ofInstance(new FilesystemBackedBuildFileTree(filesystem)),
         rules,
@@ -194,12 +196,29 @@ public class ParserTest extends EasyMockSupport {
         new BuildTargetParser(filesystem));
   }
 
-  private Parser createParser(Supplier<BuildFileTree> buildFileTreeSupplier,
-    Iterable<Map<String, Object>> rules,
-    ProjectBuildFileParserFactory buildFileParserFactory,
-    BuildTargetParser buildTargetParser) {
+  private Parser createParser(
+          Supplier<BuildFileTree> buildFileTreeSupplier,
+      Iterable<Map<String, Object>> rules,
+      ProjectBuildFileParserFactory buildFileParserFactory,
+      BuildTargetParser buildTargetParser)
+      throws IOException, InterruptedException {
+    return createParser(
+        buildFileTreeSupplier,
+        rules,
+        buildFileParserFactory,
+        buildTargetParser,
+        repositoryFactory);
+  }
+
+    private Parser createParser(
+        Supplier<BuildFileTree> buildFileTreeSupplier,
+        Iterable<Map<String, Object>> rules,
+        ProjectBuildFileParserFactory buildFileParserFactory,
+        BuildTargetParser buildTargetParser,
+        RepositoryFactory repositoryFactory)
+        throws IOException, InterruptedException {
     Parser parser = new Parser(
-        repository,
+        repositoryFactory,
         buildFileTreeSupplier,
         buildTargetParser,
         buildFileParserFactory,
@@ -231,9 +250,10 @@ public class ParserTest extends EasyMockSupport {
         "buck.base_path", "testdata/com/facebook/feed/model");
     List<Map<String, Object>> ruleObjects = ImmutableList.of(rawRule);
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
-    Parser parser = new Parser(
-        new TestRepositoryBuilder().setFilesystem(filesystem).build(),
+    Path root = Paths.get(".").toRealPath();
+    RepositoryFactory factory = new FakeRepositoryFactory(root);
+    Parser parser = Parser.createParser(
+        factory,
         BuckTestConstant.PYTHON_INTERPRETER,
         tempFilePatterns,
         new FakeRuleKeyBuilderFactory());
@@ -279,9 +299,12 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void testCircularDependencyDetection()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    Repository fakeRepo = new TestRepositoryBuilder().setFilesystem(filesystem).build();
+    FakeRepositoryFactory fakeFactory = new FakeRepositoryFactory();
+    fakeFactory.setRootRepoForTesting(fakeRepo);
     // Mock out objects that are not critical to parsing.
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem) {
+    BuildTargetParser buildTargetParser = new BuildTargetParser(new FakeProjectFilesystem()) {
       @Override
       public BuildTarget parse(String buildTargetName, ParseContext parseContext)
           throws NoSuchBuildTargetException {
@@ -294,7 +317,8 @@ public class ParserTest extends EasyMockSupport {
         ofInstance(buildFiles),
         circularBuildTargets(),
         createDoNothingBuildFileParserFactory(),
-        buildTargetParser);
+        buildTargetParser,
+        fakeFactory);
 
     replayAll();
 

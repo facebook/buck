@@ -36,6 +36,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TestRepositoryBuilder;
@@ -72,7 +73,7 @@ public class AuditClasspathCommandTest {
   private AuditClasspathCommand auditClasspathCommand;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws IOException, InterruptedException {
     console = new TestConsole();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
@@ -82,6 +83,7 @@ public class AuditClasspathCommandTest {
 
     auditClasspathCommand = new AuditClasspathCommand(new CommandRunnerParams(
         console,
+        new FakeRepositoryFactory(),
         repository,
         androidDirectoryResolver,
         new InstanceArtifactCacheFactory(artifactCache),
@@ -110,7 +112,8 @@ public class AuditClasspathCommandTest {
   }
 
   @Test
-  public void testClassPathOutput() throws IOException {
+  public void testClassPathOutput()
+      throws IOException, InterruptedException {
     // Build a DependencyGraph of build rules manually.
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     List<String> targets = Lists.newArrayList();

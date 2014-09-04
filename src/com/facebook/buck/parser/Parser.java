@@ -41,6 +41,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -98,8 +99,10 @@ public class Parser {
    */
   private boolean allBuildFilesParsed;
 
+  // TODO(jacko): DELETE THESE!!!
   private final Repository repository;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
+
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   /**
@@ -179,26 +182,29 @@ public class Parser {
   }
   private final BuildFileTreeCache buildFileTreeCache;
 
-  public Parser(
-      final Repository repository,
+  public static Parser createParser(
+      final RepositoryFactory repositoryFactory,
       String pythonInterpreter,
       ImmutableSet<Pattern> tempFilePatterns,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-    this(repository,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory)
+      throws IOException, InterruptedException {
+    final Repository rootRepository = repositoryFactory.getRootRepository();
+    return new Parser(repositoryFactory,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
         // TODO(simons): Consider momoizing the suppler.
         new Supplier<BuildFileTree>() {
           @Override
           public BuildFileTree get() {
-            return new FilesystemBackedBuildFileTree(repository.getFilesystem());
+            return new FilesystemBackedBuildFileTree(
+                rootRepository.getFilesystem());
           }
         },
         // TODO(jacko): Get rid of this global BuildTargetParser completely.
-        repository.getBuildTargetParser(),
+        rootRepository.getBuildTargetParser(),
         new DefaultProjectBuildFileParserFactory(
-            repository.getFilesystem(),
+            rootRepository.getFilesystem(),
             pythonInterpreter,
-            repository.getAllDescriptions()),
+            rootRepository.getAllDescriptions()),
         tempFilePatterns,
         ruleKeyBuilderFactory);
   }
@@ -208,13 +214,15 @@ public class Parser {
    */
   @VisibleForTesting
   Parser(
-      Repository repository,
+      RepositoryFactory repositoryFactory,
       Supplier<BuildFileTree> buildFileTreeSupplier,
       BuildTargetParser buildTargetParser,
       ProjectBuildFileParserFactory buildFileParserFactory,
       ImmutableSet<Pattern> tempFilePatterns,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-    this.repository = Preconditions.checkNotNull(repository);
+      RuleKeyBuilderFactory ruleKeyBuilderFactory)
+      throws IOException, InterruptedException {
+    Preconditions.checkNotNull(repositoryFactory);
+    this.repository = repositoryFactory.getRootRepository();
     this.buildFileTreeCache = new BuildFileTreeCache(
         Preconditions.checkNotNull(buildFileTreeSupplier));
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
@@ -190,13 +191,15 @@ public class AuditOwnerCommandTest {
     buckConfig = new FakeBuckConfig();
   }
 
-  private AuditOwnerCommand createAuditOwnerCommand(ProjectFilesystem filesystem) {
+  private AuditOwnerCommand createAuditOwnerCommand(ProjectFilesystem filesystem)
+      throws IOException, InterruptedException {
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     Repository repository = new TestRepositoryBuilder().setFilesystem(filesystem).build();
     return new AuditOwnerCommand(new CommandRunnerParams(
         console,
+        new FakeRepositoryFactory(),
         repository,
         androidDirectoryResolver,
         new InstanceArtifactCacheFactory(artifactCache),
@@ -209,7 +212,8 @@ public class AuditOwnerCommandTest {
   }
 
   @Test
-  public void verifyPathsThatAreNotFilesAreCorrectlyReported() throws CmdLineException {
+  public void verifyPathsThatAreNotFilesAreCorrectlyReported()
+      throws CmdLineException, IOException, InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
@@ -235,7 +239,8 @@ public class AuditOwnerCommandTest {
   }
 
   @Test
-  public void verifyMissingFilesAreCorrectlyReported() throws CmdLineException {
+  public void verifyMissingFilesAreCorrectlyReported()
+      throws CmdLineException, IOException, InterruptedException {
     // All files will be directories now
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
@@ -262,7 +267,8 @@ public class AuditOwnerCommandTest {
   }
 
   @Test
-  public void verifyInputsWithoutOwnersAreCorrectlyReported() throws CmdLineException {
+  public void verifyInputsWithoutOwnersAreCorrectlyReported()
+      throws CmdLineException, IOException, InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
@@ -293,7 +299,8 @@ public class AuditOwnerCommandTest {
    *  - one owner, multiple inputs
    */
   @Test
-  public void verifyInputsWithOneOwnerAreCorrectlyReported() throws CmdLineException {
+  public void verifyInputsWithOneOwnerAreCorrectlyReported()
+      throws CmdLineException, IOException, InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
@@ -327,7 +334,7 @@ public class AuditOwnerCommandTest {
    */
   @Test
   public void verifyInputsWithOneOwnerAreCorrectlyReportedInJson()
-    throws CmdLineException, IOException {
+      throws CmdLineException, IOException, InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
@@ -365,7 +372,8 @@ public class AuditOwnerCommandTest {
    *  - inputs that belong to multiple targets
    */
   @Test
-  public void verifyInputsWithMultipleOwnersAreCorrectlyReported() throws CmdLineException {
+  public void verifyInputsWithMultipleOwnersAreCorrectlyReported()
+      throws CmdLineException, IOException, InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public File getFileForRelativePath(String pathRelativeToProjectRoot) {
@@ -400,7 +408,7 @@ public class AuditOwnerCommandTest {
   }
 
   @Test
-  public void verifyBuckFileIsFoundWhenAvailable() {
+  public void verifyBuckFileIsFoundWhenAvailable() throws IOException, InterruptedException {
     final Path root = Paths.get("root");
     final Path buckFile = Paths.get("root/BUCK");
 
@@ -447,7 +455,7 @@ public class AuditOwnerCommandTest {
   }
 
   @Test
-  public void verifyBuckFileIsNullWhenNotFound() {
+  public void verifyBuckFileIsNullWhenNotFound() throws IOException, InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
       public boolean exists(Path path) {

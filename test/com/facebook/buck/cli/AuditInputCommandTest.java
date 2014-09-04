@@ -30,6 +30,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TestRepositoryBuilder;
@@ -58,7 +59,7 @@ public class AuditInputCommandTest {
   private AuditInputCommand auditInputCommand;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException, InterruptedException{
     console = new TestConsole();
     Repository repository = new TestRepositoryBuilder().build();
     ArtifactCache artifactCache = new NoopArtifactCache();
@@ -66,6 +67,7 @@ public class AuditInputCommandTest {
 
     auditInputCommand = new AuditInputCommand(new CommandRunnerParams(
         console,
+        new FakeRepositoryFactory(),
         repository,
         new FakeAndroidDirectoryResolver(),
         new InstanceArtifactCacheFactory(artifactCache),

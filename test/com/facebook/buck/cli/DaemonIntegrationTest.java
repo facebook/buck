@@ -29,6 +29,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -431,37 +432,43 @@ public class DaemonIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     ObjectMapper objectMapper = new ObjectMapper();
 
-    Object daemon = Main.getDaemon(new TestRepositoryBuilder().setBuckConfig(
-        new FakeBuckConfig(
-            ImmutableMap.<String, Map<String, String>>builder()
-                .put("somesection", ImmutableMap.of("somename", "somevalue"))
-                .build()))
-        .setFilesystem(filesystem)
-        .build(),
+    Object daemon = Main.getDaemon(
+        new FakeRepositoryFactory().setRootRepoForTesting(
+            new TestRepositoryBuilder().setBuckConfig(
+                new FakeBuckConfig(
+                    ImmutableMap.<String, Map<String, String>>builder()
+                        .put("somesection", ImmutableMap.of("somename", "somevalue"))
+                        .build()))
+                .setFilesystem(filesystem)
+                .build()),
         new FakeClock(0),
         objectMapper);
 
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
-        Main.getDaemon(new TestRepositoryBuilder().setBuckConfig(
-            new FakeBuckConfig(
-                ImmutableMap.<String, Map<String, String>>builder()
-                    .put("somesection", ImmutableMap.of("somename", "somevalue"))
-                    .build()))
-            .setFilesystem(filesystem)
-            .build(),
+        Main.getDaemon(
+            new FakeRepositoryFactory().setRootRepoForTesting(
+                new TestRepositoryBuilder().setBuckConfig(
+                    new FakeBuckConfig(
+                        ImmutableMap.<String, Map<String, String>>builder()
+                            .put("somesection", ImmutableMap.of("somename", "somevalue"))
+                            .build()))
+                    .setFilesystem(filesystem)
+                    .build()),
             new FakeClock(0),
             objectMapper));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
-        Main.getDaemon(new TestRepositoryBuilder().setBuckConfig(
-            new FakeBuckConfig(
-                ImmutableMap.<String, Map<String, String>>builder()
-                    .put("somesection", ImmutableMap.of("somename", "someothervalue"))
-                    .build()))
-            .setFilesystem(filesystem)
-            .build(),
+        Main.getDaemon(
+            new FakeRepositoryFactory().setRootRepoForTesting(
+                new TestRepositoryBuilder().setBuckConfig(
+                    new FakeBuckConfig(
+                        ImmutableMap.<String, Map<String, String>>builder()
+                            .put("somesection", ImmutableMap.of("somename", "someothervalue"))
+                            .build()))
+                    .setFilesystem(filesystem)
+                    .build()),
             new FakeClock(0),
             objectMapper));
   }

@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -38,6 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 /**
@@ -61,6 +63,7 @@ class CommandRunnerParams {
   @VisibleForTesting
   CommandRunnerParams(
       Console console,
+      RepositoryFactory repositoryFactory,
       Repository repository,
       AndroidDirectoryResolver androidDirectoryResolver,
       ArtifactCacheFactory artifactCacheFactory,
@@ -69,7 +72,8 @@ class CommandRunnerParams {
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper)
+      throws IOException, InterruptedException {
     this(
         console,
         repository,
@@ -77,7 +81,8 @@ class CommandRunnerParams {
         new CachingBuildEngine(),
         artifactCacheFactory,
         eventBus,
-        new Parser(repository,
+        Parser.createParser(
+            repositoryFactory,
             pythonInterpreter,
             /* tempFilePatterns */ ImmutableSet.<Pattern>of(),
             new RuleKeyBuilderFactory() {

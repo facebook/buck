@@ -46,6 +46,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TestRepositoryBuilder;
@@ -115,7 +116,7 @@ public class TargetsCommandTest {
   }
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException, InterruptedException {
     console = new TestConsole();
     Repository repository = new TestRepositoryBuilder()
         .setFilesystem(new ProjectFilesystem(Paths.get(".")))
@@ -128,6 +129,7 @@ public class TargetsCommandTest {
     targetsCommand =
         new TargetsCommand(new CommandRunnerParams(
             console,
+            new FakeRepositoryFactory(),
             repository,
             androidDirectoryResolver,
             new InstanceArtifactCacheFactory(artifactCache),
