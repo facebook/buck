@@ -112,7 +112,11 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   }
 
   public boolean getWorkspaceAndProjects() {
-    return workspaceAndProjects;
+    if (workspaceAndProjects) {
+      return workspaceAndProjects;
+    } else {
+      return getBuckConfig().getBooleanValue("project", "workspace_and_projects", false);
+    }
   }
 
   public boolean shouldProcessAnnotations() {
@@ -172,7 +176,11 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   }
 
   public boolean isWithTests() {
-    return withTests;
+    if (withTests) {
+      return withTests;
+    } else {
+      return getBuckConfig().getBooleanValue("project", "with_tests", false);
+    }
   }
 
   private List<String> getInitialTargets() {
