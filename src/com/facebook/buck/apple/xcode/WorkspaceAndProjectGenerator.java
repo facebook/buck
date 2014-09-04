@@ -220,7 +220,8 @@ public class WorkspaceAndProjectGenerator {
                 pbxprojectPath);
           }
 
-          PBXTarget fakeTarget = new PBXNativeTarget(targetName);
+          PBXTarget fakeTarget =
+              new PBXNativeTarget(targetName, PBXTarget.ProductType.STATIC_LIBRARY);
           fakeTarget.setGlobalID(targetGid);
           PBXFileReference fakeProductReference = new PBXFileReference(
               targetFileName,

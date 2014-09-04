@@ -550,8 +550,7 @@ public class ProjectGenerator {
       boolean includeFrameworks,
       boolean includeResources)
       throws IOException {
-    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
-    target.setProductType(productType);
+    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule), productType);
     setNativeTargetGid(target, buildable);
 
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());

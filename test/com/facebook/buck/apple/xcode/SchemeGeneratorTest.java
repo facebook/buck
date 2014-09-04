@@ -118,25 +118,25 @@ public class SchemeGeneratorTest {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
       ImmutableMap.builder();
 
-    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule", PBXTarget.ProductType.STATIC_LIBRARY);
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
             "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     buildRuleToTargetMapBuilder.put(rootRule, rootTarget);
-    PBXTarget leftTarget = new PBXNativeTarget("leftRule");
+    PBXTarget leftTarget = new PBXNativeTarget("leftRule", PBXTarget.ProductType.STATIC_LIBRARY);
     leftTarget.setGlobalID("leftGID");
     leftTarget.setProductReference(
         new PBXFileReference(
             "left.a", "left.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     buildRuleToTargetMapBuilder.put(leftRule, leftTarget);
-    PBXTarget rightTarget = new PBXNativeTarget("rightRule");
+    PBXTarget rightTarget = new PBXNativeTarget("rightRule", PBXTarget.ProductType.STATIC_LIBRARY);
     rightTarget.setGlobalID("rightGID");
     rightTarget.setProductReference(
         new PBXFileReference(
             "right.a", "right.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     buildRuleToTargetMapBuilder.put(rightRule, rightTarget);
-    PBXTarget childTarget = new PBXNativeTarget("childRule");
+    PBXTarget childTarget = new PBXNativeTarget("childRule", PBXTarget.ProductType.STATIC_LIBRARY);
     childTarget.setGlobalID("childGID");
     childTarget.setProductReference(
         new PBXFileReference(
@@ -226,13 +226,14 @@ public class SchemeGeneratorTest {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
       ImmutableMap.builder();
 
-    PBXTarget rootTarget = new PBXNativeTarget("root");
+    PBXTarget rootTarget = new PBXNativeTarget("root", PBXTarget.ProductType.STATIC_LIBRARY);
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
             "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     buildRuleToTargetMapBuilder.put(rootRule, rootTarget);
-    PBXTarget xcodeNativeTarget = new PBXNativeTarget("xcode-native");
+    PBXTarget xcodeNativeTarget =
+        new PBXNativeTarget("xcode-native", PBXTarget.ProductType.STATIC_LIBRARY);
     xcodeNativeTarget.setGlobalID("xcode-nativeGID");
     xcodeNativeTarget.setProductReference(
         new PBXFileReference(
@@ -365,28 +366,29 @@ public class SchemeGeneratorTest {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
         ImmutableMap.builder();
 
-    PBXTarget testDepTarget = new PBXNativeTarget("testDep");
+    PBXTarget testDepTarget = new PBXNativeTarget("testDep", PBXTarget.ProductType.STATIC_LIBRARY);
     testDepTarget.setGlobalID("testDepGID");
     testDepTarget.setProductReference(
         new PBXFileReference(
             "libDep.a", "libDep.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     buildRuleToTargetMapBuilder.put(testDepRule, testDepTarget);
 
-    PBXTarget testLibraryTarget = new PBXNativeTarget("testLibrary");
+    PBXTarget testLibraryTarget =
+        new PBXNativeTarget("testLibrary", PBXTarget.ProductType.STATIC_LIBRARY);
     testLibraryTarget.setGlobalID("testLibraryGID");
     testLibraryTarget.setProductReference(
         new PBXFileReference(
             "lib.a", "lib.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     buildRuleToTargetMapBuilder.put(libraryRule, testLibraryTarget);
 
-    PBXTarget testTarget = new PBXNativeTarget("test");
+    PBXTarget testTarget = new PBXNativeTarget("test", PBXTarget.ProductType.UNIT_TEST);
     testTarget.setGlobalID("testGID");
     testTarget.setProductReference(
         new PBXFileReference(
             "test.xctest", "test.xctest", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     buildRuleToTargetMapBuilder.put(testRule, testTarget);
 
-    PBXTarget rootTarget = new PBXNativeTarget("root");
+    PBXTarget rootTarget = new PBXNativeTarget("root", PBXTarget.ProductType.STATIC_LIBRARY);
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
@@ -514,23 +516,26 @@ public class SchemeGeneratorTest {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
       ImmutableMap.builder();
 
-    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule", PBXTarget.ProductType.STATIC_LIBRARY);
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
             "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     buildRuleToTargetMapBuilder.put(rootRule, rootTarget);
-    PBXTarget testTarget = new PBXNativeTarget("testRule");
+    PBXTarget testTarget = new PBXNativeTarget("testRule", PBXTarget.ProductType.STATIC_LIBRARY);
     testTarget.setGlobalID("testGID");
     testTarget.setProductReference(
         new PBXFileReference(
             "test.a", "test.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     buildRuleToTargetMapBuilder.put(testRule, testTarget);
-    PBXTarget testBundleTarget = new PBXNativeTarget("testBundleRule");
+    PBXTarget testBundleTarget =
+        new PBXNativeTarget("testBundleRule", PBXTarget.ProductType.UNIT_TEST);
     testBundleTarget.setGlobalID("testBundleGID");
     testBundleTarget.setProductReference(
         new PBXFileReference(
-            "test.xctest", "test.xctest", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "test.xctest",
+            "test.xctest",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
     buildRuleToTargetMapBuilder.put(xctestRule, testBundleTarget);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -609,7 +614,7 @@ public class SchemeGeneratorTest {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
       ImmutableMap.builder();
 
-    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule", PBXTarget.ProductType.STATIC_LIBRARY);
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
@@ -670,7 +675,7 @@ public class SchemeGeneratorTest {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
       ImmutableMap.builder();
 
-    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule", PBXTarget.ProductType.STATIC_LIBRARY);
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
@@ -757,7 +762,7 @@ public class SchemeGeneratorTest {
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
         ImmutableMap.builder();
 
-      PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+      PBXTarget rootTarget = new PBXNativeTarget("rootRule", PBXTarget.ProductType.STATIC_LIBRARY);
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
           new PBXFileReference(
@@ -790,7 +795,7 @@ public class SchemeGeneratorTest {
           ImmutableSortedSet.<BuildRule>of(),
           appleLibraryDescription);
 
-      PBXTarget rootTarget = new PBXNativeTarget("rootRule2");
+      PBXTarget rootTarget = new PBXNativeTarget("rootRule2", PBXTarget.ProductType.STATIC_LIBRARY);
       rootTarget.setGlobalID("root2GID");
       rootTarget.setProductReference(
           new PBXFileReference(
@@ -824,7 +829,7 @@ public class SchemeGeneratorTest {
           ImmutableSortedSet.<BuildRule>of(),
           appleLibraryDescription);
 
-      PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+      PBXTarget rootTarget = new PBXNativeTarget("rootRule", PBXTarget.ProductType.STATIC_LIBRARY);
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
           new PBXFileReference(
@@ -855,7 +860,7 @@ public class SchemeGeneratorTest {
           ImmutableSortedSet.<BuildRule>of(),
           appleLibraryDescription);
 
-      PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+      PBXTarget rootTarget = new PBXNativeTarget("rootRule", PBXTarget.ProductType.STATIC_LIBRARY);
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
           new PBXFileReference(

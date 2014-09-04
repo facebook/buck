@@ -51,33 +51,40 @@ public abstract class PBXTarget extends PBXProjectItem {
     }
   }
 
-  private String name;
+  private final String name;
+  private final ProductType productType;
+  private final List<PBXTargetDependency> dependencies;
+  private final List<PBXBuildPhase> buildPhases;
+  private final XCConfigurationList buildConfigurationList;
   @Nullable private String productName;
-  @Nullable private ProductType productType;
   @Nullable private PBXFileReference productReference;
-  private List<PBXTargetDependency> dependencies;
-  private List<PBXBuildPhase> buildPhases;
-  @Nullable private XCConfigurationList buildConfigurationList;
 
-  public PBXTarget(String name) {
+  public PBXTarget(String name, ProductType productType) {
     this.name = Preconditions.checkNotNull(name);
+    this.productType = Preconditions.checkNotNull(productType);
     this.dependencies = Lists.newArrayList();
     this.buildPhases = Lists.newArrayList();
+    this.buildConfigurationList = new XCConfigurationList();
   }
 
   public String getName() {
     return name;
   }
-  public void setName(String v) {
-    name = v;
-  }
 
-  @Nullable
   public ProductType getProductType() {
     return productType;
   }
-  public void setProductType(ProductType v) {
-    productType = v;
+
+  public List<PBXTargetDependency> getDependencies() {
+    return dependencies;
+  }
+
+  public List<PBXBuildPhase> getBuildPhases() {
+    return buildPhases;
+  }
+
+  public XCConfigurationList getBuildConfigurationList() {
+    return buildConfigurationList;
   }
 
   @Nullable
@@ -93,28 +100,9 @@ public abstract class PBXTarget extends PBXProjectItem {
   public PBXFileReference getProductReference() {
     return productReference;
   }
+
   public void setProductReference(PBXFileReference v) {
     productReference = v;
-  }
-  public List<PBXTargetDependency> getDependencies() {
-    return dependencies;
-  }
-  public void setDependencies(List<PBXTargetDependency> v) {
-    dependencies = v;
-  }
-  public List<PBXBuildPhase> getBuildPhases() {
-    return buildPhases;
-  }
-  public void setBuildPhases(List<PBXBuildPhase> v) {
-    buildPhases = v;
-  }
-
-  @Nullable
-  public XCConfigurationList getBuildConfigurationList() {
-    return buildConfigurationList;
-  }
-  public void setBuildConfigurationList(XCConfigurationList v) {
-    buildConfigurationList = v;
   }
 
   @Override
