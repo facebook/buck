@@ -16,9 +16,9 @@
 
 package com.example;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
-public class PassingTest {
+public class PassingTestTestNG {
 
   @Test
   public void test1() {

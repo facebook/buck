@@ -16,12 +16,13 @@
 package com.facebook.buck.junit;
 
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.test.selectors.TestDescription;
+import org.testng.IAnnotationTransformer;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.testng.TestNG;
-import org.testng.internal.annotations.DefaultAnnotationTransformer;
-import org.testng.internal.annotations.IAnnotationFinder;
+import org.testng.annotations.ITestAnnotation;
 import org.testng.internal.annotations.JDK15AnnotationFinder;
 import org.testng.xml.XmlClass;
 import org.testng.xml.XmlSuite;
@@ -30,6 +31,8 @@ import org.testng.xml.XmlTest;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,9 +41,6 @@ import java.util.List;
  * Class that runs a set of TestNG tests and writes the results to a directory.
  */
 public final class TestNGRunner extends BaseRunner {
-  private final IAnnotationFinder finder = new JDK15AnnotationFinder(
-      new DefaultAnnotationTransformer());
-
   @Override
   public void run() throws Throwable {
     System.out.println("TestNGRunner started!");
@@ -53,7 +53,8 @@ public final class TestNGRunner extends BaseRunner {
         results = Collections.emptyList();
       } else {
         results = new ArrayList<>();
-        TestNG tester = new TestNG();
+        TestNGWrapper tester = new TestNGWrapper();
+        tester.setAnnoTransformer(new FilteringAnnotationTransformer());
         tester.setXmlSuites(Collections.singletonList(createXmlSuite(testClass)));
         TestListener listener = new TestListener(results);
         tester.addListener(new TestListener(results));
@@ -107,6 +108,37 @@ public final class TestNGRunner extends BaseRunner {
     TestNGRunner runner = new TestNGRunner();
     runner.parseArgs(args);
     runner.runAndExit();
+  }
+
+  public final class TestNGWrapper extends TestNG {
+    /**
+     * The built-in setAnnotationTransformer unfortunately does not work with runSuitesLocally()
+     *
+     * The alternative would be to use the (much heavier) run() method.
+     */
+    public void setAnnoTransformer(IAnnotationTransformer anno) {
+      getConfiguration().setAnnotationFinder(new JDK15AnnotationFinder(anno));
+    }
+  }
+
+  public class FilteringAnnotationTransformer implements IAnnotationTransformer {
+    @Override
+    @SuppressWarnings("rawtypes")
+    public void transform(ITestAnnotation annotation, Class testClass,
+        Constructor testConstructor, Method testMethod) {
+      if (!annotation.getEnabled()) {
+        return;
+      }
+      if(testMethod == null){
+        return;
+      }
+      String className = testMethod.getDeclaringClass().getName();
+      String methodName = testMethod.getName();
+      TestDescription testDescription = new TestDescription(className, methodName);
+      boolean isIncluded = testSelectorList.isIncluded(testDescription);
+      seenDescriptions.add(testDescription);
+      annotation.setEnabled(isIncluded && !isDryRun);
+    }
   }
 
   private static class TestListener implements ITestListener {

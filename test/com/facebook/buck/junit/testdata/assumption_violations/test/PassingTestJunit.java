@@ -16,22 +16,12 @@
 
 package com.example;
 
-import org.junit.Assert;
 import org.junit.Test;
-import org.junit.internal.AssumptionViolatedException;
 
-public class AssumptionTestB {
-  @Test public void test1() {
-    throw new AssumptionViolatedException("B1");
-  }
+public class PassingTestJunit {
 
-  @Test public void test2() {
-    throw new AssumptionViolatedException("B2");
-  }
-
-  @Test public void test3() {}
-
-  @Test public void test4() {
-    Assert.assertTrue("B4", false);
+  @Test
+  public void test1() {
+    // empty
   }
 }

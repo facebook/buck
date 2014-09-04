@@ -1,0 +1,13 @@
+java_test(
+  name = 'tests1',
+  srcs = glob(['*Junit.java']),
+  deps = [ '//lib:junit' ],
+)
+
+java_test(
+  name = 'tests2',
+  test_type = 'testng',
+  srcs = glob(['*TestNG.java']),
+  deps = [ '//lib:testng' ],
+)
+

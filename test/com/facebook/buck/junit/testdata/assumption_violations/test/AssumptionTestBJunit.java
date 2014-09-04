@@ -16,24 +16,22 @@
 
 package com.example;
 
-import org.junit.Assume;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.internal.AssumptionViolatedException;
 
-public class SomeAssumptionViolationsTest {
-
-  @Test
-  public void assumptionFailureA() {
-    Assume.assumeTrue("False is true!", false);
+public class AssumptionTestBJunit {
+  @Test public void test1() {
+    throw new AssumptionViolatedException("B1");
   }
 
-  @Test
-  public void thrownAssumptionViolatedException() {
-    throw new AssumptionViolatedException("Assumption violated!");
+  @Test public void test2() {
+    throw new AssumptionViolatedException("B2");
   }
 
-  @Test
-  public void nothingWrong() {
-    // empty
+  @Test public void test3() {}
+
+  @Test public void test4() {
+    Assert.assertTrue("B4", false);
   }
 }
