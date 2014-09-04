@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.java.JavacStep.SRC_ZIP;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -125,8 +126,12 @@ public class GenAidl extends AbstractBuildRule {
     // Warn the user if the genDirectory is not under the output directory.
     if (!importPath.startsWith(target.getBasePath().toString())) {
       // TODO(simons): Make this fatal. Give people some time to clean up their rules.
-      context.logError("%s, gen_aidl import path (%s) should be a child of %s",
-          target, importPath, target.getBasePath());
+      context.getEventBus().post(
+          ConsoleEvent.warning(
+              "%s, gen_aidl import path (%s) should be a child of %s",
+              target,
+              importPath,
+              target.getBasePath()));
     }
 
     commands.add(new MkdirStep(genDirectory));
