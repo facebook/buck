@@ -155,7 +155,7 @@ public abstract class ShellStep implements Step {
       context.postEvent(ConsoleEvent.info("%s", stdout));
     }
     if (!Strings.isNullOrEmpty(stderr) && shouldPrintStderr(verbosity)) {
-      context.postEvent(ConsoleEvent.severe("%s", stderr));
+      context.postEvent(ConsoleEvent.warning("%s", stderr));
     }
 
     return result.getExitCode();

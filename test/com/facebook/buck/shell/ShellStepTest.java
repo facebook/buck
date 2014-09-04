@@ -95,7 +95,7 @@ public class ShellStepTest extends EasyMockSupport {
           @Override
           public Void answer() throws Throwable {
             ConsoleEvent event = (ConsoleEvent) getCurrentArguments()[0];
-            if (event.getLevel().equals(Level.SEVERE)) {
+            if (event.getLevel().equals(Level.WARNING)) {
               console.getStdErr().write(event.getMessage().getBytes(Charsets.US_ASCII));
             }
             return null;
