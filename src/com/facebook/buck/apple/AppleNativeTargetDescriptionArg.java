@@ -35,11 +35,12 @@ public class AppleNativeTargetDescriptionArg implements ConstructorArg {
   /**
    * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
    */
-  public ImmutableMap<
-      String,
-      ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> configs;
-  public ImmutableList<AppleSource> srcs;
-  public ImmutableSortedSet<String> frameworks;
+  public Optional<
+      ImmutableMap<
+          String,
+          ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>> configs;
+  public Optional<ImmutableList<AppleSource>> srcs;
+  public Optional<ImmutableSortedSet<String>> frameworks;
   public Optional<ImmutableSortedSet<BuildRule>> deps;
   public Optional<String> gid;
   public Optional<String> headerPathPrefix;

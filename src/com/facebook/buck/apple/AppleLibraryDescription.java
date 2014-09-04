@@ -66,7 +66,7 @@ public class AppleLibraryDescription implements
     return new AppleLibrary(
         params,
         args,
-        TargetSources.ofAppleSources(args.srcs),
+        TargetSources.ofAppleSources(args.srcs.get()),
         archiver,
         params.getBuildTarget().getFlavors().contains(DYNAMIC_LIBRARY));
   }

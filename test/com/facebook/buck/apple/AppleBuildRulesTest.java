@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -73,9 +74,10 @@ public class AppleBuildRulesTest {
             .build();
     AppleNativeTargetDescriptionArg libraryArg =
         appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.configs = ImmutableMap.of();
-    libraryArg.srcs = ImmutableList.of();
-    libraryArg.frameworks = ImmutableSortedSet.of();
+    libraryArg.configs = Optional.of(
+        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
+    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
+    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.deps = Optional.absent();
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
@@ -131,9 +133,10 @@ public class AppleBuildRulesTest {
             .build();
     AppleNativeTargetDescriptionArg arg =
         appleLibraryDescription.createUnpopulatedConstructorArg();
-    arg.configs = ImmutableMap.of();
-    arg.srcs = ImmutableList.of();
-    arg.frameworks = ImmutableSortedSet.of();
+    arg.configs = Optional.of(
+        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
+    arg.srcs = Optional.of(ImmutableList.<AppleSource>of());
+    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
@@ -162,9 +165,10 @@ public class AppleBuildRulesTest {
             .build();
     AppleNativeTargetDescriptionArg libraryArg =
         appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.configs = ImmutableMap.of();
-    libraryArg.srcs = ImmutableList.of();
-    libraryArg.frameworks = ImmutableSortedSet.of();
+    libraryArg.configs = Optional.of(
+        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
+    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
+    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.deps = Optional.absent();
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
@@ -197,9 +201,10 @@ public class AppleBuildRulesTest {
             .build();
     AppleNativeTargetDescriptionArg rootArg =
         appleLibraryDescription.createUnpopulatedConstructorArg();
-    rootArg.configs = ImmutableMap.of();
-    rootArg.srcs = ImmutableList.of();
-    rootArg.frameworks = ImmutableSortedSet.of();
+    rootArg.configs = Optional.of(
+        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
+    rootArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
+    rootArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     rootArg.deps = Optional.of(ImmutableSortedSet.of(bundleRule, libraryRule));
     rootArg.gid = Optional.absent();
     rootArg.headerPathPrefix = Optional.absent();

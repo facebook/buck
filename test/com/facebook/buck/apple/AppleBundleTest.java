@@ -23,6 +23,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -46,9 +48,10 @@ public class AppleBundleTest {
 
     AppleNativeTargetDescriptionArg libraryArg =
         appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.srcs = ImmutableList.of();
-    libraryArg.configs = ImmutableMap.of();
-    libraryArg.frameworks = ImmutableSortedSet.of();
+    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
+    libraryArg.configs = Optional.of(
+        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
+    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
     libraryArg.useBuckHeaderMaps = Optional.absent();
@@ -75,9 +78,10 @@ public class AppleBundleTest {
 
     AppleNativeTargetDescriptionArg libraryArg =
         appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.srcs = ImmutableList.of();
-    libraryArg.configs = ImmutableMap.of();
-    libraryArg.frameworks = ImmutableSortedSet.of();
+    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
+    libraryArg.configs = Optional.of(
+        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
+    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.deps = Optional.absent();
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();

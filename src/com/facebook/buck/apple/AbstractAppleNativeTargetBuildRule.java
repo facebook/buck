@@ -44,8 +44,8 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
       AppleNativeTargetDescriptionArg arg,
       TargetSources targetSources) {
     super(params, targetSources.srcPaths, targetSources.headerPaths, targetSources.perFileFlags);
-    configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
-    frameworks = Preconditions.checkNotNull(arg.frameworks);
+    configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs.get());
+    frameworks = Preconditions.checkNotNull(arg.frameworks.get());
     srcs = Preconditions.checkNotNull(targetSources.srcs);
     perFileFlags = Preconditions.checkNotNull(targetSources.perFileFlags);
     gid = Preconditions.checkNotNull(arg.gid);

@@ -25,8 +25,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,11 +46,13 @@ public class AppleLibraryTest {
   @Test
   public void getInputsToCompareToOutput() {
     AppleNativeTargetDescriptionArg arg = description.createUnpopulatedConstructorArg();
-    arg.srcs = ImmutableList.of(
-        AppleSource.ofSourcePath(new TestSourcePath("some_source.m")),
-        AppleSource.ofSourcePath(new TestSourcePath("some_header.h")));
-    arg.configs = ImmutableMap.of();
-    arg.frameworks = ImmutableSortedSet.of();
+    arg.srcs = Optional.of(
+        ImmutableList.of(
+            AppleSource.ofSourcePath(new TestSourcePath("some_source.m")),
+            AppleSource.ofSourcePath(new TestSourcePath("some_header.h"))));
+    arg.configs = Optional.of(
+        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
+    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
@@ -66,9 +70,10 @@ public class AppleLibraryTest {
   @Test
   public void getDynamicFlavorOutputName() {
     AppleNativeTargetDescriptionArg arg = description.createUnpopulatedConstructorArg();
-    arg.srcs = ImmutableList.of();
-    arg.configs = ImmutableMap.of();
-    arg.frameworks = ImmutableSortedSet.of();
+    arg.srcs = Optional.of(ImmutableList.<AppleSource>of());
+    arg.configs = Optional.of(
+        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
+    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();

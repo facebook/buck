@@ -250,11 +250,12 @@ public class SeparatedProjectsGeneratorTest {
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
-            input.configs = ImmutableMap.of("Debug", ImmutableList.of(
-                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                    new PathSourcePath(Paths.get("project.xcconfig"))),
-                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                    new PathSourcePath(Paths.get("target.xcconfig")))));
+            input.configs = Optional.of(
+                ImmutableMap.of("Debug", ImmutableList.of(
+                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                        new PathSourcePath(Paths.get("project.xcconfig"))),
+                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                        new PathSourcePath(Paths.get("target.xcconfig"))))));
             return input;
           }
         });
@@ -308,19 +309,20 @@ public class SeparatedProjectsGeneratorTest {
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
-            input.configs = ImmutableMap.of("Debug", ImmutableList.of(
-                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                    new PathSourcePath(Paths.get("project.xcconfig"))),
-                Either.<SourcePath, ImmutableMap<String, String>>ofRight(
-                    ImmutableMap.of(
-                        "PROJECT_FLAG1", "p1",
-                        "PROJECT_FLAG2", "p2")),
-                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                    new PathSourcePath(Paths.get("target.xcconfig"))),
-                Either.<SourcePath, ImmutableMap<String, String>>ofRight(
-                    ImmutableMap.of(
-                        "TARGET_FLAG1", "t1",
-                        "TARGET_FLAG2", "t2"))));
+            input.configs = Optional.of(
+                ImmutableMap.of("Debug", ImmutableList.of(
+                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                        new PathSourcePath(Paths.get("project.xcconfig"))),
+                    Either.<SourcePath, ImmutableMap<String, String>>ofRight(
+                        ImmutableMap.of(
+                            "PROJECT_FLAG1", "p1",
+                            "PROJECT_FLAG2", "p2")),
+                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                        new PathSourcePath(Paths.get("target.xcconfig"))),
+                    Either.<SourcePath, ImmutableMap<String, String>>ofRight(
+                        ImmutableMap.of(
+                            "TARGET_FLAG1", "t1",
+                            "TARGET_FLAG2", "t2")))));
             return input;
           }
         });
@@ -332,19 +334,20 @@ public class SeparatedProjectsGeneratorTest {
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
-            input.configs = ImmutableMap.of("Debug", ImmutableList.of(
-                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                    new PathSourcePath(Paths.get("project.xcconfig"))),
-                Either.<SourcePath, ImmutableMap<String, String>>ofRight(
-                    ImmutableMap.of(
-                        "PROJECT_FLAG1", "p1",
-                        "PROJECT_FLAG2", "p2")),
-                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                    new PathSourcePath(Paths.get("target.xcconfig"))),
-                Either.<SourcePath, ImmutableMap<String, String>>ofRight(
-                    ImmutableMap.of(
-                        "TARGET_FLAG3", "t3",
-                        "TARGET_FLAG4", "t4"))));
+            input.configs = Optional.of(
+                ImmutableMap.of("Debug", ImmutableList.of(
+                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                        new PathSourcePath(Paths.get("project.xcconfig"))),
+                    Either.<SourcePath, ImmutableMap<String, String>>ofRight(
+                        ImmutableMap.of(
+                            "PROJECT_FLAG1", "p1",
+                            "PROJECT_FLAG2", "p2")),
+                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                        new PathSourcePath(Paths.get("target.xcconfig"))),
+                    Either.<SourcePath, ImmutableMap<String, String>>ofRight(
+                        ImmutableMap.of(
+                            "TARGET_FLAG3", "t3",
+                            "TARGET_FLAG4", "t4")))));
             return input;
           }
         });
@@ -410,10 +413,11 @@ public class SeparatedProjectsGeneratorTest {
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
-            input.configs = ImmutableMap.of("Debug", ImmutableList.of(
-                // this only has one layer, accepted layers is 2 or 4
-                Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                    new PathSourcePath(Paths.get("target.xcconfig")))));
+            input.configs = Optional.of(
+                ImmutableMap.of("Debug", ImmutableList.of(
+                    // this only has one layer, accepted layers is 2 or 4
+                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
+                        new PathSourcePath(Paths.get("target.xcconfig"))))));
             return input;
           }
         });

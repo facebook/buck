@@ -42,6 +42,6 @@ public class AppleBinaryDescription implements Description<AppleNativeTargetDesc
     return new AppleBinary(
         params,
         args,
-        TargetSources.ofAppleSources(args.srcs));
+        TargetSources.ofAppleSources(args.srcs.get()));
   }
 }
