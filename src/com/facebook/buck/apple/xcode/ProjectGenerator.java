@@ -808,7 +808,8 @@ public class ProjectGenerator {
   private void addRunScriptBuildPhase(
     PBXNativeTarget target,
     ImmutableList<Path> srcs,
-    ShellStep genruleStep) {
+    ShellStep genruleStep,
+    String outputName) {
     // TODO(user): Check and validate dependencies of the script. If it depends on libraries etc.
     // we can't handle it currently.
     PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
@@ -826,6 +827,9 @@ public class ProjectGenerator {
       bashCommandBuilder.append(Escaper.escapeAsBashString(commandElement));
     }
     shellScriptBuildPhase.setShellScript(bashCommandBuilder.toString());
+    if (outputName.length() > 0) {
+      shellScriptBuildPhase.getOutputPaths().add(outputName);
+    }
   }
 
   private void addRunScriptBuildPhasesForDependenciesWithType(
@@ -835,7 +839,11 @@ public class ProjectGenerator {
     for (BuildRule dependency : rule.getDeps()) {
       if (dependency.getType().equals(type)) {
         Genrule genrule = (Genrule) dependency;
-        addRunScriptBuildPhase(target, genrule.getSrcs(), genrule.createGenruleStep());
+        addRunScriptBuildPhase(
+            target,
+            genrule.getSrcs(),
+            genrule.createGenruleStep(),
+            genrule.getOutputName());
       }
     }
   }
