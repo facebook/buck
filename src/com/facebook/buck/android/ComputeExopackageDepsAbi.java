@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.ComputeExopackageDepsAbi.BuildOutput;
 import com.facebook.buck.java.Keystore;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -51,6 +52,9 @@ import javax.annotation.Nullable;
  */
 public class ComputeExopackageDepsAbi extends AbstractBuildRule
     implements InitializableFromDisk<BuildOutput> {
+
+  private static final Logger LOG = Logger.get(ComputeExopackageDepsAbi.class);
+
   private static final String METADATA_KEY = "EXOPACKAGE_ABI_OF_DEPS";
 
   private final AndroidPackageableCollection packageableCollection;
@@ -96,13 +100,19 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               final Hasher hasher = Hashing.sha1().newHasher();
               // The first input to apkbuilder is the ap_ produced by aapt package.
               // Get its hash from the buildable that created it.
-              hasher.putUnencodedChars(aaptPackageResources.getResourcePackageHash().toString());
+              String resourceApkHash = aaptPackageResources.getResourcePackageHash().toString();
+              LOG.verbose("resource apk = %s", resourceApkHash);
+              hasher.putUnencodedChars(resourceApkHash);
               // Next is the primary dex.  Same plan.
-              hasher.putUnencodedChars(preDexMerge.get().getPrimaryDexHash().toString());
+              String primaryDexHash = preDexMerge.get().getPrimaryDexHash().toString();
+              LOG.verbose("primary dex = %s", primaryDexHash);
+              hasher.putUnencodedChars(primaryDexHash);
               // Non-english strings packaged as assets.
               if (packageStringAssets.isPresent()) {
-                hasher.putUnencodedChars(
-                    packageStringAssets.get().getStringAssetsZipHash().toString());
+                String stringAssetsHash =
+                    packageStringAssets.get().getStringAssetsZipHash().toString();
+                LOG.verbose("string assets = %s", stringAssetsHash);
+                hasher.putUnencodedChars(stringAssetsHash);
               }
 
               // We currently don't use any resource directories, so nothing to add there.
@@ -145,13 +155,17 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
                 Path path = entry.getKey();
                 hasher.putUnencodedChars(path.toString());
                 hasher.putByte((byte) 0);
-                hasher.putUnencodedChars(filesystem.computeSha1(path));
+                String fileSha1 = filesystem.computeSha1(path);
+                hasher.putUnencodedChars(fileSha1);
                 hasher.putByte((byte) 0);
                 hasher.putUnencodedChars(entry.getValue());
                 hasher.putByte((byte) 0);
+                LOG.verbose("file %s(%s) = %s", path, entry.getValue(), fileSha1);
               }
 
-              buildableContext.addMetadata(METADATA_KEY, hasher.hash().toString());
+              String abiHash = hasher.hash().toString();
+              LOG.verbose("ABI hash = %s", abiHash);
+              buildableContext.addMetadata(METADATA_KEY, abiHash);
               return 0;
             } catch (IOException e) {
               context.logError(e, "Error computing ABI hash.");
