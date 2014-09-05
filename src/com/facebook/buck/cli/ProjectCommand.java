@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.XcodeProjectConfig;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
+import com.facebook.buck.apple.XcodeWorkspaceConfig;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.ProjectGenerator;
 import com.facebook.buck.apple.xcode.SeparatedProjectsGenerator;
@@ -314,13 +315,19 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       LOG.debug("Generating workspace for config targets %s", targets);
       Map<BuildRule, ProjectGenerator> projectGenerators = new HashMap<>();
       for (BuildTarget workspaceConfig : targets) {
+        BuildRule workspaceRule =
+          partialGraphs.getMainGraph().getActionGraph().findBuildRuleByTarget(workspaceConfig);
+        if (!(workspaceRule instanceof XcodeWorkspaceConfig)) {
+          throw new HumanReadableException(
+              "%s must be a xcode_workspace_config",
+              workspaceRule.getFullyQualifiedName());
+        }
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             getProjectFilesystem(),
-            partialGraphs.getMainGraph(),
             partialGraphs.getTestGraph(),
             partialGraphs.getProjectGraph(),
             executionContext,
-            workspaceConfig,
+            (XcodeWorkspaceConfig) workspaceRule,
             optionsBuilder.build());
         generator.generateWorkspaceAndDependentProjects(projectGenerators);
       }

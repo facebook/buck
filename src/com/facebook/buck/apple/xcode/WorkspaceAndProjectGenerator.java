@@ -60,27 +60,24 @@ public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
 
   private final ProjectFilesystem projectFilesystem;
-  private final PartialGraph mainTargetGraph;
   private final Optional<PartialGraph> testTargetGraph;
   private final PartialGraph projectTargetGraph;
   private final ExecutionContext executionContext;
-  private final BuildTarget workspaceConfigTarget;
+  private final XcodeWorkspaceConfig workspaceBuildable;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
-      PartialGraph mainTargetGraph,
       Optional<PartialGraph> testTargetGraph,
       PartialGraph projectTargetGraph,
       ExecutionContext executionContext,
-      BuildTarget workspaceConfigTarget,
+      XcodeWorkspaceConfig workspaceBuildable,
       Set<ProjectGenerator.Option> projectGeneratorOptions) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.mainTargetGraph = Preconditions.checkNotNull(mainTargetGraph);
     this.testTargetGraph = Preconditions.checkNotNull(testTargetGraph);
     this.projectTargetGraph = Preconditions.checkNotNull(projectTargetGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
-    this.workspaceConfigTarget = workspaceConfigTarget;
+    this.workspaceBuildable = Preconditions.checkNotNull(workspaceBuildable);
     this.projectGeneratorOptions = ImmutableSet.<ProjectGenerator.Option>builder()
       .addAll(projectGeneratorOptions)
       .addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS)
@@ -90,17 +87,7 @@ public class WorkspaceAndProjectGenerator {
   public Path generateWorkspaceAndDependentProjects(
         Map<BuildRule, ProjectGenerator> projectGenerators)
       throws IOException {
-    BuildRule workspaceTargetRule =
-        mainTargetGraph.getActionGraph().findBuildRuleByTarget(workspaceConfigTarget);
-
-    if (!(workspaceTargetRule instanceof XcodeWorkspaceConfig)) {
-      throw new HumanReadableException("%s must be a xcode_workspace_config",
-          workspaceTargetRule.getFullyQualifiedName());
-    }
-
-    LOG.debug("Generating workspace for config target %s", workspaceConfigTarget);
-    XcodeWorkspaceConfig workspaceBuildable =
-        (XcodeWorkspaceConfig) workspaceTargetRule;
+    LOG.debug("Generating workspace for rule %s", workspaceBuildable);
 
     String workspaceName = workspaceBuildable.getSrcTarget().getBuildTarget().getShortName();
 
