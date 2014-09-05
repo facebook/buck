@@ -17,12 +17,14 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -35,6 +37,8 @@ import javax.annotation.Nullable;
  * Helpers for reading properties of Apple target build rules.
  */
 public final class AppleBuildRules {
+
+  private static final Logger LOG = Logger.get(AppleBuildRules.class);
 
   // Utility class not to be instantiated.
   private AppleBuildRules() { }
@@ -202,5 +206,26 @@ public final class AppleBuildRules {
                 return true;
               }
             }));
+  }
+
+  /**
+   * Builds the multimap of (source rule: [test rule 1, test rule 2, ...])
+   * for the set of test rules covering each source rule.
+   */
+  public static final ImmutableMultimap<BuildRule, AppleTest> getSourceRuleToTestRulesMap(
+      Iterable<BuildRule> testRules) {
+    ImmutableMultimap.Builder<BuildRule, AppleTest> sourceRuleToTestRulesBuilder =
+      ImmutableMultimap.builder();
+    for (BuildRule rule : testRules) {
+      if (!isXcodeTargetTestBuildRule(rule)) {
+        LOG.verbose("Skipping rule %s (not xcode target test)", rule);
+        continue;
+      }
+      AppleTest testRule = (AppleTest) rule;
+      for (BuildRule sourceRule : testRule.getSourceUnderTest()) {
+        sourceRuleToTestRulesBuilder.put(sourceRule, testRule);
+      }
+    }
+    return sourceRuleToTestRulesBuilder.build();
   }
 }

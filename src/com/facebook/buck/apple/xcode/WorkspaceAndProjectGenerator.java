@@ -60,21 +60,20 @@ public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
 
   private final ProjectFilesystem projectFilesystem;
-  private final Optional<PartialGraph> testTargetGraph;
   private final PartialGraph projectTargetGraph;
   private final ExecutionContext executionContext;
   private final XcodeWorkspaceConfig workspaceBuildable;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
+  private final ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
-      Optional<PartialGraph> testTargetGraph,
       PartialGraph projectTargetGraph,
       ExecutionContext executionContext,
       XcodeWorkspaceConfig workspaceBuildable,
-      Set<ProjectGenerator.Option> projectGeneratorOptions) {
+      Set<ProjectGenerator.Option> projectGeneratorOptions,
+      Multimap<BuildRule, AppleTest> sourceRuleToTestRules) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.testTargetGraph = Preconditions.checkNotNull(testTargetGraph);
     this.projectTargetGraph = Preconditions.checkNotNull(projectTargetGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
     this.workspaceBuildable = Preconditions.checkNotNull(workspaceBuildable);
@@ -82,6 +81,7 @@ public class WorkspaceAndProjectGenerator {
       .addAll(projectGeneratorOptions)
       .addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS)
       .build();
+    this.sourceRuleToTestRules = ImmutableMultimap.copyOf(sourceRuleToTestRules);
   }
 
   public Path generateWorkspaceAndDependentProjects(
@@ -105,7 +105,7 @@ public class WorkspaceAndProjectGenerator {
 
     getOrderedTestRules(
         projectTargetGraph.getActionGraph(),
-        testTargetGraph,
+        sourceRuleToTestRules,
         orderedBuildRules,
         orderedTestBuildRulesBuilder,
         orderedTestBundleRulesBuilder);
@@ -239,38 +239,15 @@ public class WorkspaceAndProjectGenerator {
     return workspacePath;
   }
 
-  /**
-   * Builds the multimap of (source rule: [test rule 1, test rule 2, ...])
-   * for the set of test rules covering each source rule.
-   */
-  private static final ImmutableMultimap<BuildRule, AppleTest> getSourceRuleToTestRulesMap(
-      Iterable<BuildRule> testRules) {
-    ImmutableMultimap.Builder<BuildRule, AppleTest> sourceRuleToTestRulesBuilder =
-      ImmutableMultimap.builder();
-    for (BuildRule rule : testRules) {
-      if (!AppleBuildRules.isXcodeTargetTestBuildRule(rule)) {
-        LOG.verbose("Skipping rule %s (not xcode target test)", rule);
-        continue;
-      }
-      AppleTest testRule = (AppleTest) rule;
-      for (BuildRule sourceRule : testRule.getSourceUnderTest()) {
-        sourceRuleToTestRulesBuilder.put(sourceRule, testRule);
-      }
-    }
-    return sourceRuleToTestRulesBuilder.build();
-  }
-
   private static final void getOrderedTestRules(
       ActionGraph actionGraph,
-      Optional<PartialGraph> testTargetGraph,
+      ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules,
       final ImmutableSet<BuildRule> orderedBuildRules,
       final ImmutableSet.Builder<BuildRule> orderedTestBuildRulesBuilder,
       final ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder) {
     LOG.debug("Getting ordered test rules, build rules %s", orderedBuildRules);
     final ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder = ImmutableSet.builder();
-    if (testTargetGraph.isPresent()) {
-      ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules =
-        getSourceRuleToTestRulesMap(testTargetGraph.get().getActionGraph().getNodes());
+    if (!sourceRuleToTestRules.isEmpty()) {
       for (BuildRule rule : orderedBuildRules) {
         LOG.verbose("Checking if rule %s has any tests covering it..", rule);
         for (AppleTest testRule : sourceRuleToTestRules.get(rule)) {

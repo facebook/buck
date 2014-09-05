@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.XcodeProjectConfig;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfig;
@@ -56,6 +57,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -322,13 +324,20 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
               "%s must be a xcode_workspace_config",
               workspaceRule.getFullyQualifiedName());
         }
+        Iterable<BuildRule> testBuildRules;
+        if (partialGraphs.getTestGraph().isPresent()) {
+          testBuildRules = partialGraphs.getTestGraph().get().getActionGraph().getNodes();
+        } else {
+          testBuildRules = Collections.emptySet();
+        }
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             getProjectFilesystem(),
-            partialGraphs.getTestGraph(),
             partialGraphs.getProjectGraph(),
             executionContext,
             (XcodeWorkspaceConfig) workspaceRule,
-            optionsBuilder.build());
+            optionsBuilder.build(),
+            AppleBuildRules.getSourceRuleToTestRulesMap(testBuildRules)
+        );
         generator.generateWorkspaceAndDependentProjects(projectGenerators);
       }
     } else {
