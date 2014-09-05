@@ -23,6 +23,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -37,12 +39,14 @@ import javax.annotation.Nullable;
 
 public class XcodeWorkspaceConfig extends AbstractBuildRule {
 
-  private final BuildRule srcTarget;
+  private final Optional<BuildRule> srcTarget;
+  private final String workspaceName;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
 
   protected XcodeWorkspaceConfig(BuildRuleParams params, XcodeWorkspaceConfigDescription.Arg arg) {
     super(params);
     this.srcTarget = Preconditions.checkNotNull(arg.srcTarget);
+    this.workspaceName = getWorkspaceNameFromArg(arg);
 
     // Start out with the default action config names..
     Map<SchemeActionType, String> newActionConfigNames = new HashMap<>(
@@ -55,8 +59,12 @@ public class XcodeWorkspaceConfig extends AbstractBuildRule {
     this.actionConfigNames = ImmutableMap.copyOf(newActionConfigNames);
   }
 
-  public BuildRule getSrcTarget() {
+  public Optional<BuildRule> getSrcTarget() {
     return srcTarget;
+  }
+
+  public String getWorkspaceName() {
+    return workspaceName;
   }
 
   public ImmutableMap<SchemeActionType, String> getActionConfigNames() {
@@ -84,5 +92,17 @@ public class XcodeWorkspaceConfig extends AbstractBuildRule {
   @Override
   public Path getPathToOutputFile() {
     return null;
+  }
+
+  private String getWorkspaceNameFromArg(XcodeWorkspaceConfigDescription.Arg arg) {
+    if (Preconditions.checkNotNull(arg.workspaceName).isPresent()) {
+      return arg.workspaceName.get();
+    } else if (Preconditions.checkNotNull(arg.srcTarget).isPresent()) {
+      return arg.srcTarget.get().getBuildTarget().getShortName();
+    } else {
+      throw new HumanReadableException(
+          "Either workspace_name or src_target is required for rule %s",
+          this);
+    }
   }
 }

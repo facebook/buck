@@ -52,7 +52,8 @@ public class XcodeWorkspaceConfigDescription
 
   @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
-    public BuildRule srcTarget;
+    public Optional<BuildRule> srcTarget;
+    public Optional<String> workspaceName;
     public Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames;
   }
 }

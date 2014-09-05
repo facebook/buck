@@ -89,7 +89,7 @@ public class WorkspaceAndProjectGenerator {
       throws IOException {
     LOG.debug("Generating workspace for rule %s", workspaceBuildable);
 
-    String workspaceName = workspaceBuildable.getSrcTarget().getBuildTarget().getShortName();
+    String workspaceName = workspaceBuildable.getWorkspaceName();
 
     Path outputDirectory = workspaceBuildable.getBuildTarget().getBasePath();
 
@@ -98,8 +98,13 @@ public class WorkspaceAndProjectGenerator {
         workspaceName,
         outputDirectory);
 
-    ImmutableSet<BuildRule> orderedBuildRules =
-      AppleBuildRules.getSchemeBuildableRules(workspaceBuildable.getSrcTarget());
+    ImmutableSet<BuildRule> orderedBuildRules;
+    if (workspaceBuildable.getSrcTarget().isPresent()) {
+      orderedBuildRules = AppleBuildRules.getSchemeBuildableRules(
+          workspaceBuildable.getSrcTarget().get());
+    } else {
+      orderedBuildRules = ImmutableSet.of();
+    }
     ImmutableSet.Builder<BuildRule> orderedTestBuildRulesBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder = ImmutableSet.builder();
 
@@ -225,7 +230,7 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSet<BuildRule> orderedTestBundleRules = orderedTestBundleRulesBuilder.build();
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        Optional.of(workspaceBuildable.getSrcTarget()),
+        workspaceBuildable.getSrcTarget(),
         orderedBuildRules,
         orderedTestBuildRules,
         orderedTestBundleRules,
