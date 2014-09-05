@@ -16,13 +16,10 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-
-import java.nio.file.Path;
 
 /**
  * A class containing inputs to be passed to the native linker.  Dependencies (e.g. C++ libraries)
@@ -31,22 +28,17 @@ import java.nio.file.Path;
  */
 public class NativeLinkableInput {
 
-  // Rules that contribute built inputs (e.g. archives, object files) to the arguments below.
-  private final ImmutableSet<BuildTarget> targets;
-
   // Inputs used by linker.
-  private final ImmutableList<Path> inputs;
+  private final ImmutableList<SourcePath> inputs;
 
   // Arguments to pass to the linker.  In the future it'd be nice to make this more aware of
   // the differences between archives, objects, flags, etc.
   private final ImmutableList<String> args;
 
   public NativeLinkableInput(
-      ImmutableSet<BuildTarget> targets,
-      ImmutableList<Path> inputs,
+      ImmutableList<SourcePath> inputs,
       ImmutableList<String> args) {
 
-    this.targets = Preconditions.checkNotNull(targets);
     this.inputs = Preconditions.checkNotNull(inputs);
     this.args = Preconditions.checkNotNull(args);
   }
@@ -55,27 +47,20 @@ public class NativeLinkableInput {
    * Combine, in order, several {@link NativeLinkableInput} objects into a single one.
    */
   public static NativeLinkableInput concat(Iterable<NativeLinkableInput> items) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    ImmutableList.Builder<Path> inputs = ImmutableList.builder();
+    ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
     for (NativeLinkableInput item : items) {
-      targets.addAll(item.getTargets());
       inputs.addAll(item.getInputs());
       args.addAll(item.getArgs());
     }
 
     return new NativeLinkableInput(
-        targets.build(),
         inputs.build(),
         args.build());
   }
 
-  public ImmutableSet<BuildTarget> getTargets() {
-    return targets;
-  }
-
-  public ImmutableList<Path> getInputs() {
+  public ImmutableList<SourcePath> getInputs() {
     return inputs;
   }
 
@@ -96,11 +81,11 @@ public class NativeLinkableInput {
 
     NativeLinkableInput that = (NativeLinkableInput) o;
 
-    if (!args.equals(that.args)) {
+    if (!inputs.equals(that.inputs)) {
       return false;
     }
 
-    if (!targets.equals(that.targets)) {
+    if (!args.equals(that.args)) {
       return false;
     }
 
@@ -109,7 +94,7 @@ public class NativeLinkableInput {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(targets, args);
+    return Objects.hashCode(inputs, args);
   }
 
 }

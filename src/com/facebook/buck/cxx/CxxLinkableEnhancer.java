@@ -22,8 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.MoreIterables;
@@ -103,7 +101,6 @@ public class CxxLinkableEnhancer {
    */
   public static CxxLink createCxxLinkableBuildRule(
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       Path linker,
       ImmutableList<String> cxxLdFlags,
       ImmutableList<String> ldFlags,
@@ -119,22 +116,24 @@ public class CxxLinkableEnhancer {
     Preconditions.checkState(!soname.isPresent() || linkType.equals(LinkType.SHARED));
 
     // Collect and topologically sort our deps that contribute to the link.
-    NativeLinkableInput linkableInput = getTransitiveNativeLinkableInput(
-        nativeLinkableDeps,
-        depType);
+    NativeLinkableInput linkableInput =
+        getTransitiveNativeLinkableInput(
+            nativeLinkableDeps,
+            depType);
+    ImmutableList<SourcePath> allInputs =
+        ImmutableList.<SourcePath>builder()
+            .addAll(objects)
+            .addAll(linkableInput.getInputs())
+            .build();
 
     // Construct our link build rule params.  The important part here is combining the build rules
     // that construct our object file inputs and also the deps that build our dependencies.
     BuildRuleParams linkParams = params.copyWithChanges(
         NativeLinkable.NATIVE_LINKABLE_TYPE,
         target,
-        ImmutableSortedSet.copyOf(
-            Iterables.concat(
-                // Add dependencies for build rules generating the object files.
-                SourcePaths.filterBuildRuleInputs(objects),
-                // Add dependencies for the target-node-level dependencies that
-                // contribute to the link.
-                BuildRules.toBuildRulesFor(target, resolver, linkableInput.getTargets(), false))),
+        // Add dependencies for build rules generating the object files and inputs from
+        // dependencies.
+        ImmutableSortedSet.copyOf(SourcePaths.filterBuildRuleInputs(allInputs)),
         ImmutableSortedSet.<BuildRule>of());
 
     // Build up the arguments to pass to the linker.
@@ -165,10 +164,7 @@ public class CxxLinkableEnhancer {
         linkParams,
         linker,
         output,
-        ImmutableList.<SourcePath>builder()
-            .addAll(objects)
-            .addAll(SourcePaths.toSourcePathsSortedByNaturalOrder(linkableInput.getInputs()))
-            .build(),
+        allInputs,
         args);
   }
 

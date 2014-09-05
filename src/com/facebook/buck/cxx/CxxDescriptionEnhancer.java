@@ -228,13 +228,13 @@ public class CxxDescriptionEnhancer {
     // Write a build rule to create the archive for this C/C++ library.
     final BuildTarget staticLibraryTarget = createStaticLibraryBuildTarget(params.getBuildTarget());
     final Path staticLibraryPath =  Archives.getArchiveOutputPath(staticLibraryTarget);
-    Archive archive = Archives.createArchiveRule(
+    final Archive staticLibraryBuildRule = Archives.createArchiveRule(
         staticLibraryTarget,
         params,
         cxxBuckConfig.getAr().or(Archives.DEFAULT_ARCHIVE_PATH),
         staticLibraryPath,
         objects);
-    resolver.addToIndex(archive);
+    resolver.addToIndex(staticLibraryBuildRule);
 
     // Create rules for compiling the PIC object files.
     ImmutableList<SourcePath> picObjects = createPreprocessAndCompileBuildRules(
@@ -252,7 +252,6 @@ public class CxxDescriptionEnhancer {
     final Path sharedLibraryPath = getSharedLibraryOutputPath(params.getBuildTarget());
     final CxxLink sharedLibraryBuildRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        resolver,
         cxxBuckConfig.getLd().or(CxxLinkables.DEFAULT_LINKER_PATH),
         cxxBuckConfig.getCxxLdFlags(),
         cxxBuckConfig.getLdFlags(),
@@ -303,8 +302,11 @@ public class CxxDescriptionEnhancer {
         final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
         return new NativeLinkableInput(
-            ImmutableSet.of(type == Type.STATIC ? staticLibraryTarget : sharedLibraryTarget),
-            ImmutableList.<Path>of(),
+            ImmutableList.<SourcePath>of(
+                new BuildRuleSourcePath(
+                    type == Type.STATIC ?
+                        staticLibraryBuildRule :
+                        sharedLibraryBuildRule)),
             linkerArgs);
       }
 

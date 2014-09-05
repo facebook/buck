@@ -114,23 +114,22 @@ public class PrebuiltCxxLibraryDescription
 
         // Build the library path and linker arguments that we pass through the
         // {@link NativeLinkable} interface for linking.
-        ImmutableList.Builder<Path> librariesBuilder = ImmutableList.builder();
+        ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
         ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
         if (!headerOnly) {
           if (wholeArchive) {
             linkerArgsBuilder.add("--whole-archive");
           }
-          librariesBuilder.add(library);
+          librariesBuilder.add(new PathSourcePath(library));
           linkerArgsBuilder.add(library.toString());
           if (wholeArchive) {
             linkerArgsBuilder.add("--no-whole-archive");
           }
         }
-        final ImmutableList<Path> libraries = librariesBuilder.build();
+        final ImmutableList<SourcePath> libraries = librariesBuilder.build();
         final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
         return new NativeLinkableInput(
-            /* targets */ ImmutableSet.<BuildTarget>of(),
             /* inputs */ libraries,
             /* args */ linkerArgs);
       }

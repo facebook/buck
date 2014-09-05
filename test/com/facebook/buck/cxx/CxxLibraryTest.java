@@ -23,8 +23,11 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.python.PythonPackageComponents;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
+import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
@@ -50,11 +53,11 @@ public class CxxLibraryTest {
     final Path headerSymlinkTreeRoot = Paths.get("symlink/tree/root");
 
     // Setup some dummy values for the library archive info.
-    final BuildTarget archiveTarget = BuildTargetFactory.newInstance("//:archive");
+    final BuildRule archive = new FakeBuildRule("//:archive");
     final Path archiveOutput = Paths.get("output/path/lib.a");
 
     // Setup some dummy values for the library archive info.
-    final BuildTarget sharedLibraryTarget = BuildTargetFactory.newInstance("//:shared");
+    final BuildRule sharedLibrary = new FakeBuildRule("//:shared");
     final Path sharedLibraryOutput = Paths.get("output/path/lib.so");
     final String sharedLibrarySoname = "lib.so";
 
@@ -75,12 +78,10 @@ public class CxxLibraryTest {
       public NativeLinkableInput getNativeLinkableInput(Type type) {
         return type == Type.STATIC ?
             new NativeLinkableInput(
-                ImmutableSet.of(archiveTarget),
-                ImmutableList.of(archiveOutput),
+                ImmutableList.<SourcePath>of(new BuildRuleSourcePath(archive)),
                 ImmutableList.of(archiveOutput.toString())) :
             new NativeLinkableInput(
-                ImmutableSet.of(sharedLibraryTarget),
-                ImmutableList.of(sharedLibraryOutput),
+                ImmutableList.<SourcePath>of(new BuildRuleSourcePath(sharedLibrary)),
                 ImmutableList.of(sharedLibraryOutput.toString()));
       }
 
@@ -109,8 +110,7 @@ public class CxxLibraryTest {
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedStaticNativeLinkableInput = new NativeLinkableInput(
-        ImmutableSet.of(archiveTarget),
-        ImmutableList.of(archiveOutput),
+        ImmutableList.<SourcePath>of(new BuildRuleSourcePath(archive)),
         ImmutableList.of(archiveOutput.toString()));
     assertEquals(
         expectedStaticNativeLinkableInput,
@@ -119,8 +119,7 @@ public class CxxLibraryTest {
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedSharedNativeLinkableInput = new NativeLinkableInput(
-        ImmutableSet.of(sharedLibraryTarget),
-        ImmutableList.of(sharedLibraryOutput),
+        ImmutableList.<SourcePath>of(new BuildRuleSourcePath(sharedLibrary)),
         ImmutableList.of(sharedLibraryOutput.toString()));
     assertEquals(
         expectedSharedNativeLinkableInput,

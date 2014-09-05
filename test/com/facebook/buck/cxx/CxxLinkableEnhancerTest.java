@@ -90,7 +90,6 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void testThatBuildRuleSourcePathDepsAndPathsArePropagated() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
@@ -107,7 +106,6 @@ public class CxxLinkableEnhancerTest {
     // Build the archive using a normal input the outputs of the genrules above.
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        resolver,
         DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
@@ -140,7 +138,6 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void testThatOriginalBuildParamsDepsDoNotPropagateToArchive() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
 
     // Create an `Archive` rule using build params with an existing dependency,
     // as if coming from a `TargetNode` which had declared deps.  These should *not*
@@ -156,7 +153,6 @@ public class CxxLinkableEnhancerTest {
             .build();
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        resolver,
         DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
@@ -187,8 +183,7 @@ public class CxxLinkableEnhancerTest {
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency.
     NativeLinkableInput nativeLinkableInput = new NativeLinkableInput(
-        ImmutableSet.of(fakeBuildTarget),
-        ImmutableList.<Path>of(),
+        ImmutableList.<SourcePath>of(new BuildRuleSourcePath(fakeBuildRule)),
         ImmutableList.<String>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(
         "//:dep",
@@ -198,7 +193,6 @@ public class CxxLinkableEnhancerTest {
     // Construct a CxxLink object and pass the native linkable above as the dep.
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        resolver,
         DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
@@ -216,7 +210,6 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void createCxxLinkableBuildRuleExecutableVsShared() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
@@ -226,7 +219,6 @@ public class CxxLinkableEnhancerTest {
     // Construct a CxxLink object which links as an executable.
     CxxLink executable = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        resolver,
         DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
@@ -243,7 +235,6 @@ public class CxxLinkableEnhancerTest {
     // Construct a CxxLink object which links as a shared lib.
     CxxLink shared = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        resolver,
         DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
@@ -260,7 +251,6 @@ public class CxxLinkableEnhancerTest {
     // Construct a CxxLink object which links as a shared lib with a SONAME.
     CxxLink sharedWithSoname = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        resolver,
         DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
@@ -277,7 +267,6 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void createCxxLinkableBuildRuleStaticVsSharedDeps() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
@@ -285,20 +274,17 @@ public class CxxLinkableEnhancerTest {
     // time dependency
     String staticArg = "static";
     NativeLinkableInput staticInput = new NativeLinkableInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<Path>of(),
+        ImmutableList.<SourcePath>of(),
         ImmutableList.of(staticArg));
     String sharedArg = "shared";
     NativeLinkableInput sharedInput = new NativeLinkableInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<Path>of(),
+        ImmutableList.<SourcePath>of(),
         ImmutableList.of(sharedArg));
     FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep", staticInput, sharedInput);
 
     // Construct a CxxLink object which links using static dependencies.
     CxxLink staticLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        resolver,
         DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
@@ -315,7 +301,6 @@ public class CxxLinkableEnhancerTest {
     // Construct a CxxLink object which links using shared dependencies.
     CxxLink sharedLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        resolver,
         DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
@@ -336,8 +321,7 @@ public class CxxLinkableEnhancerTest {
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinel = "bottom";
     NativeLinkableInput bottomInput = new NativeLinkableInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<Path>of(),
+        ImmutableList.<SourcePath>of(),
         ImmutableList.of(sentinel));
     BuildRule bottom = createNativeLinkable("//:bottom", bottomInput, bottomInput);
 
@@ -347,8 +331,7 @@ public class CxxLinkableEnhancerTest {
 
     // Create a native linkable that sits at the top of the dep chain.
     NativeLinkableInput topInput = new NativeLinkableInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<Path>of(),
+        ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of());
     BuildRule top = createNativeLinkable("//:top", topInput, topInput, middle);
 

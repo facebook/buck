@@ -162,12 +162,10 @@ public class CxxDescriptionEnhancerTest {
       public NativeLinkableInput getNativeLinkableInput(Type type) {
         return type == Type.STATIC ?
             new NativeLinkableInput(
-                ImmutableSet.of(staticLibraryDep.getBuildTarget()),
-                ImmutableList.of(staticLibraryOutput),
+                ImmutableList.<SourcePath>of(new BuildRuleSourcePath(staticLibraryDep)),
                 ImmutableList.of(staticLibraryOutput.toString())) :
             new NativeLinkableInput(
-                ImmutableSet.of(sharedLibraryDep.getBuildTarget()),
-                ImmutableList.of(sharedLibraryOutput),
+                ImmutableList.<SourcePath>of(new BuildRuleSourcePath(sharedLibraryDep)),
                 ImmutableList.of(sharedLibraryOutput.toString()));
       }
 

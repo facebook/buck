@@ -104,7 +104,6 @@ public class CxxBinaryDescription implements Description<CxxBinaryDescription.Ar
     Path output = getOutputPath(params.getBuildTarget());
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        resolver,
         cxxBuckConfig.getLd().or(CxxLinkables.DEFAULT_LINKER_PATH),
         cxxBuckConfig.getCxxLdFlags(),
         cxxBuckConfig.getLdFlags(),

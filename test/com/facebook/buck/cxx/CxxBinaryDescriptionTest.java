@@ -102,8 +102,7 @@ public class CxxBinaryDescriptionTest {
       @Override
       public NativeLinkableInput getNativeLinkableInput(Type type) {
         return new NativeLinkableInput(
-            ImmutableSet.of(archive.getBuildTarget()),
-            ImmutableList.of(archiveOutput),
+            ImmutableList.<SourcePath>of(new BuildRuleSourcePath(archive)),
             ImmutableList.of(archiveOutput.toString()));
       }
 
