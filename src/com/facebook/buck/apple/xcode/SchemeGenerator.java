@@ -68,7 +68,7 @@ class SchemeGenerator {
   private static final Logger LOG = Logger.get(SchemeGenerator.class);
 
   private final ProjectFilesystem projectFilesystem;
-  private final BuildRule primaryRule;
+  private final Optional<BuildRule> primaryRule;
   private final ImmutableSet<BuildRule> orderedBuildRules;
   private final ImmutableSet<BuildRule> orderedTestBuildRules;
   private final ImmutableSet<BuildRule> orderedTestBundleRules;
@@ -80,7 +80,7 @@ class SchemeGenerator {
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
-      BuildRule primaryRule,
+      Optional<BuildRule> primaryRule,
       Iterable<BuildRule> orderedBuildRules,
       Iterable<BuildRule> orderedTestBuildRules,
       Iterable<BuildRule> orderedTestBundleRules,
@@ -177,15 +177,17 @@ class SchemeGenerator {
     Optional<XCScheme.LaunchAction> launchAction = Optional.absent();
     Optional<XCScheme.ProfileAction> profileAction = Optional.absent();
 
-    XCScheme.BuildableReference primaryBuildableReference =
-        buildRuleToBuildableReferenceMap.get(primaryRule);
-    if (primaryBuildableReference != null) {
-      launchAction = Optional.of(new XCScheme.LaunchAction(
-          primaryBuildableReference,
-          actionConfigNames.get(SchemeActionType.LAUNCH)));
-      profileAction = Optional.of(new XCScheme.ProfileAction(
-          primaryBuildableReference,
-          actionConfigNames.get(SchemeActionType.PROFILE)));
+    if (primaryRule.isPresent()) {
+      XCScheme.BuildableReference primaryBuildableReference =
+        buildRuleToBuildableReferenceMap.get(primaryRule.get());
+      if (primaryBuildableReference != null) {
+        launchAction = Optional.of(new XCScheme.LaunchAction(
+            primaryBuildableReference,
+            actionConfigNames.get(SchemeActionType.LAUNCH)));
+        profileAction = Optional.of(new XCScheme.ProfileAction(
+            primaryBuildableReference,
+            actionConfigNames.get(SchemeActionType.PROFILE)));
+      }
     }
     XCScheme.AnalyzeAction analyzeAction = new XCScheme.AnalyzeAction(
         actionConfigNames.get(SchemeActionType.ANALYZE));

@@ -225,7 +225,7 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSet<BuildRule> orderedTestBundleRules = orderedTestBundleRulesBuilder.build();
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        workspaceBuildable.getSrcTarget(),
+        Optional.of(workspaceBuildable.getSrcTarget()),
         orderedBuildRules,
         orderedTestBuildRules,
         orderedTestBundleRules,
