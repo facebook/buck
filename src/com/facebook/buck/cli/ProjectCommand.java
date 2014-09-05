@@ -336,7 +336,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             executionContext,
             (XcodeWorkspaceConfig) workspaceRule,
             optionsBuilder.build(),
-            AppleBuildRules.getSourceRuleToTestRulesMap(testBuildRules)
+            AppleBuildRules.getSourceRuleToTestRulesMap(testBuildRules),
+            ImmutableSet.<BuildRule>of()
         );
         generator.generateWorkspaceAndDependentProjects(projectGenerators);
       }

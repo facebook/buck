@@ -65,6 +65,7 @@ public class WorkspaceAndProjectGenerator {
   private final XcodeWorkspaceConfig workspaceBuildable;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules;
+  private final ImmutableSet<BuildRule> extraTestRules;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
@@ -72,7 +73,8 @@ public class WorkspaceAndProjectGenerator {
       ExecutionContext executionContext,
       XcodeWorkspaceConfig workspaceBuildable,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
-      Multimap<BuildRule, AppleTest> sourceRuleToTestRules) {
+      Multimap<BuildRule, AppleTest> sourceRuleToTestRules,
+      Iterable<BuildRule> extraTestRules) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.projectTargetGraph = Preconditions.checkNotNull(projectTargetGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
@@ -82,6 +84,7 @@ public class WorkspaceAndProjectGenerator {
       .addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS)
       .build();
     this.sourceRuleToTestRules = ImmutableMultimap.copyOf(sourceRuleToTestRules);
+    this.extraTestRules = ImmutableSet.copyOf(extraTestRules);
   }
 
   public Path generateWorkspaceAndDependentProjects(
@@ -112,6 +115,7 @@ public class WorkspaceAndProjectGenerator {
         projectTargetGraph.getActionGraph(),
         sourceRuleToTestRules,
         orderedBuildRules,
+        extraTestRules,
         orderedTestBuildRulesBuilder,
         orderedTestBundleRulesBuilder);
 
@@ -247,32 +251,33 @@ public class WorkspaceAndProjectGenerator {
   private static final void getOrderedTestRules(
       ActionGraph actionGraph,
       ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules,
-      final ImmutableSet<BuildRule> orderedBuildRules,
-      final ImmutableSet.Builder<BuildRule> orderedTestBuildRulesBuilder,
-      final ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder) {
+      ImmutableSet<BuildRule> orderedBuildRules,
+      ImmutableSet<BuildRule> extraTestRules,
+      ImmutableSet.Builder<BuildRule> orderedTestBuildRulesBuilder,
+      ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder) {
     LOG.debug("Getting ordered test rules, build rules %s", orderedBuildRules);
     final ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder = ImmutableSet.builder();
     if (!sourceRuleToTestRules.isEmpty()) {
       for (BuildRule rule : orderedBuildRules) {
         LOG.verbose("Checking if rule %s has any tests covering it..", rule);
         for (AppleTest testRule : sourceRuleToTestRules.get(rule)) {
-          BuildRule testBundleRule = testRule.getTestBundle();
-          Iterable<BuildRule> testBundleRuleDependencies =
-            AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
-                AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
-                testBundleRule,
-                Optional.<ImmutableSet<BuildRuleType>>absent());
-          LOG.verbose(
-              "Including rule %s -> test rule %s, bundle rule %s, dependencies %s",
-              rule,
-              testRule,
-              testBundleRule,
-              testBundleRuleDependencies);
-          recursiveTestRulesBuilder.addAll(testBundleRuleDependencies);
-          recursiveTestRulesBuilder.add(testBundleRule);
-          orderedTestBundleRulesBuilder.add(testBundleRule);
+          addTestRuleAndDependencies(
+              testRule.getTestBundle(),
+              recursiveTestRulesBuilder,
+              orderedTestBundleRulesBuilder);
         }
       }
+    }
+
+    for (BuildRule testRule : extraTestRules) {
+      if (!(testRule instanceof AppleTest)) {
+        throw new HumanReadableException("Test rule %s must be apple_test!", testRule);
+      }
+      AppleTest appleTestRule = (AppleTest) testRule;
+      addTestRuleAndDependencies(
+          appleTestRule.getTestBundle(),
+          recursiveTestRulesBuilder,
+          orderedTestBundleRulesBuilder);
     }
 
     final Set<BuildRule> includedTestRules =
@@ -291,5 +296,19 @@ public class WorkspaceAndProjectGenerator {
             return true;
           }
         }));
+  }
+
+  private static final void addTestRuleAndDependencies(
+      BuildRule testBundleRule,
+      ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder,
+      ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder) {
+    Iterable<BuildRule> testBundleRuleDependencies =
+      AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
+          AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
+          testBundleRule,
+          Optional.<ImmutableSet<BuildRuleType>>absent());
+    recursiveTestRulesBuilder.addAll(testBundleRuleDependencies);
+    recursiveTestRulesBuilder.add(testBundleRule);
+    orderedTestBundleRulesBuilder.add(testBundleRule);
   }
 }
