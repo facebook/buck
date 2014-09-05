@@ -95,6 +95,7 @@ public class CxxLibraryDescriptionTest {
                 headerSymlinkTree.getBuildTarget()),
             ImmutableList.<String>of(),
             ImmutableList.<String>of(),
+            ImmutableMap.<Path, SourcePath>of(),
             ImmutableList.of(headerSymlinkTreeRoot),
             ImmutableList.<Path>of());
       }
@@ -129,8 +130,9 @@ public class CxxLibraryDescriptionTest {
     arg.srcs = Optional.of(ImmutableList.<SourcePath>of(
         new TestSourcePath("test/bar.cpp"),
         new BuildRuleSourcePath(genSource)));
+    String headerName = "test/bar.h";
     arg.headers = Optional.of(ImmutableList.<SourcePath>of(
-        new TestSourcePath("test/bar.h"),
+        new TestSourcePath(headerName),
         new BuildRuleSourcePath(genHeader)));
     arg.compilerFlags = Optional.absent();
     arg.propagatedPpFlags = Optional.absent();
@@ -147,10 +149,12 @@ public class CxxLibraryDescriptionTest {
     assertEquals(
         new CxxPreprocessorInput(
             ImmutableSet.of(
-                CxxDescriptionEnhancer.createHeaderTarget(target),
                 CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
             ImmutableList.<String>of(),
             ImmutableList.<String>of(),
+            ImmutableMap.<Path, SourcePath>of(
+                Paths.get(headerName), new TestSourcePath(headerName),
+                Paths.get(genHeaderName), new BuildRuleSourcePath(genHeader)),
             ImmutableList.of(
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target)),
             ImmutableList.<Path>of()),
@@ -184,9 +188,9 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(compileRule1);
     assertEquals(
         ImmutableSet.of(
+            genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderTarget(target),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
         FluentIterable.from(compileRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
@@ -202,10 +206,10 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(compileRule2);
     assertEquals(
         ImmutableSet.of(
+            genHeaderTarget,
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderTarget(target),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
         FluentIterable.from(compileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)

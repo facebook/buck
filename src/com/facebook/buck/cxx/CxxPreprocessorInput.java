@@ -17,9 +17,11 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -38,38 +40,44 @@ public class CxxPreprocessorInput {
   // The build rules which produce headers found in the includes below.
   private final ImmutableList<String> cxxppflags;
 
+  private final ImmutableMap<Path, SourcePath> includes;
+
   // Normal include directories where headers are found.
-  private final ImmutableList<Path> includes;
+  private final ImmutableList<Path> includeRoots;
 
   // Include directories where system headers.
-  private final ImmutableList<Path> systemIncludes;
+  private final ImmutableList<Path> systemIncludeRoots;
 
   public CxxPreprocessorInput(
       ImmutableSet<BuildTarget> rules,
       ImmutableList<String> cppflags,
       ImmutableList<String> cxxppflags,
-      ImmutableList<Path> includes,
-      ImmutableList<Path> systemIncludes) {
+      ImmutableMap<Path, SourcePath> includes,
+      ImmutableList<Path> includeRoots,
+      ImmutableList<Path> systemIncludeRoots) {
     this.rules = Preconditions.checkNotNull(rules);
     this.cppflags = Preconditions.checkNotNull(cppflags);
     this.cxxppflags = Preconditions.checkNotNull(cxxppflags);
     this.includes = Preconditions.checkNotNull(includes);
-    this.systemIncludes = Preconditions.checkNotNull(systemIncludes);
+    this.includeRoots = Preconditions.checkNotNull(includeRoots);
+    this.systemIncludeRoots = Preconditions.checkNotNull(systemIncludeRoots);
   }
 
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
     ImmutableList.Builder<String> cflags = ImmutableList.builder();
     ImmutableList.Builder<String> cxxflags = ImmutableList.builder();
-    ImmutableList.Builder<Path> includes = ImmutableList.builder();
-    ImmutableList.Builder<Path> systemIncludes = ImmutableList.builder();
+    ImmutableMap.Builder<Path, SourcePath> includes = ImmutableMap.builder();
+    ImmutableList.Builder<Path> includeRoots = ImmutableList.builder();
+    ImmutableList.Builder<Path> systemIncludeRoots = ImmutableList.builder();
 
     for (CxxPreprocessorInput input : inputs) {
       rules.addAll(input.getRules());
       cflags.addAll(input.getCppflags());
       cxxflags.addAll(input.getCxxppflags());
-      includes.addAll(input.getIncludes());
-      systemIncludes.addAll(input.getSystemIncludes());
+      includes.putAll(input.getIncludes());
+      includeRoots.addAll(input.getIncludeRoots());
+      systemIncludeRoots.addAll(input.getSystemIncludeRoots());
     }
 
     return new CxxPreprocessorInput(
@@ -77,7 +85,8 @@ public class CxxPreprocessorInput {
         cflags.build(),
         cxxflags.build(),
         includes.build(),
-        systemIncludes.build());
+        includeRoots.build(),
+        systemIncludeRoots.build());
   }
 
   public ImmutableSet<BuildTarget> getRules() {
@@ -92,12 +101,16 @@ public class CxxPreprocessorInput {
     return cxxppflags;
   }
 
-  public ImmutableList<Path> getIncludes() {
+  public ImmutableMap<Path, SourcePath> getIncludes() {
     return includes;
   }
 
-  public ImmutableList<Path> getSystemIncludes() {
-    return systemIncludes;
+  public ImmutableList<Path> getIncludeRoots() {
+    return includeRoots;
+  }
+
+  public ImmutableList<Path> getSystemIncludeRoots() {
+    return systemIncludeRoots;
   }
 
   @Override
@@ -129,7 +142,11 @@ public class CxxPreprocessorInput {
       return false;
     }
 
-    if (!systemIncludes.equals(that.systemIncludes)) {
+    if (!includeRoots.equals(that.includeRoots)) {
+      return false;
+    }
+
+    if (!systemIncludeRoots.equals(that.systemIncludeRoots)) {
       return false;
     }
 
@@ -138,7 +155,25 @@ public class CxxPreprocessorInput {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(rules, cppflags, cxxppflags, includes, systemIncludes);
+    return Objects.hashCode(
+        rules,
+        cppflags,
+        cxxppflags,
+        includes,
+        includeRoots,
+        systemIncludeRoots);
+  }
+
+  @Override
+  public String toString() {
+    return Objects.toStringHelper(this)
+        .add("rules", rules)
+        .add("cppflags", cppflags)
+        .add("cxxppflags", cxxppflags)
+        .add("includes", includes)
+        .add("includeRoots", includeRoots)
+        .add("systemIncludeRoots", systemIncludeRoots)
+        .toString();
   }
 
 }

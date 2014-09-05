@@ -114,6 +114,7 @@ public class CxxPreprocessablesTest {
         ImmutableSet.of(cppDepTarget1),
         ImmutableList.of("-Dtest=yes"),
         ImmutableList.of("-Dtest=yes"),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.of(Paths.get("foo/bar"), Paths.get("hello")),
         ImmutableList.of(Paths.get("/usr/include")));
     BuildTarget depTarget1 = BuildTargetFactory.newInstance("//:dep1");
@@ -125,6 +126,7 @@ public class CxxPreprocessablesTest {
         ImmutableSet.of(cppDepTarget2),
         ImmutableList.of("-DBLAH"),
         ImmutableList.of("-DBLAH"),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.of(Paths.get("goodbye")),
         ImmutableList.of(Paths.get("test")));
     BuildTarget depTarget2 = BuildTargetFactory.newInstance("//:dep2");
@@ -136,6 +138,7 @@ public class CxxPreprocessablesTest {
         ImmutableSet.<BuildTarget>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of());
     FakeCxxPreprocessorDep dep3 = createFakeCxxPreprocessorDep(depTarget3, nothing, dep1, dep2);
@@ -188,41 +191,6 @@ public class CxxPreprocessablesTest {
   }
 
   @Test
-  public void createHeaderBuildRuleHasDepsOnlyFromSourcePaths() {
-
-    // Setup up the main build target and build params, which some random dep.  We'll make
-    // sure the dep doesn't get propagated to the headers rule below.
-    FakeBuildRule dep = createFakeBuildRule(BuildTargetFactory.newInstance("//random:dep"));
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
-        .build();
-
-    // Setup a simple genrule we can wrap in a BuildRuleSourcePath to model a input source
-    // that is built by another rule.
-    Genrule genrule = GenruleBuilder
-        .createGenrule(BuildTargetFactory.newInstance("//:genrule"))
-        .setOut("foo/bar.o")
-        .build();
-
-    // Setup the link map with both a regular path-based source path and one provided by
-    // another build rule.
-    ImmutableMap<Path, SourcePath> links = ImmutableMap.<Path, SourcePath>of(
-        Paths.get("link1"), new TestSourcePath("hello"),
-        Paths.get("link2"), new BuildRuleSourcePath(genrule));
-
-    // Build our symlink tree rule using the helper method.
-    CxxHeader cxxHeader = CxxPreprocessables.createHeaderBuildRule(
-        target,
-        params,
-        links);
-
-    // Make sure that the only dep that makes it into the CxxHeader rule is the genrule above
-    // which generates one of the headers.
-    assertEquals(ImmutableSortedSet.<BuildRule>of(genrule), cxxHeader.getDeps());
-  }
-
-  @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
 
     // Create a native linkable that sits at the bottom of the dep chain.
@@ -231,6 +199,7 @@ public class CxxPreprocessablesTest {
         ImmutableSet.<BuildTarget>of(),
         ImmutableList.of(sentinal),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of());
     BuildRule bottom = createFakeCxxPreprocessorDep("//:bottom", bottomInput);
@@ -244,6 +213,7 @@ public class CxxPreprocessablesTest {
         ImmutableSet.<BuildTarget>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of());
     BuildRule top = createFakeCxxPreprocessorDep("//:top", topInput, middle);

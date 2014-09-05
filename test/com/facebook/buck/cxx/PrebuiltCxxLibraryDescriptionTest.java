@@ -101,6 +101,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<BuildTarget>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.<Path>of(),
         getIncludeDirs(arg));
     assertEquals(
@@ -146,6 +147,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<BuildTarget>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.<Path>of(),
         getIncludeDirs(arg));
     assertEquals(
@@ -189,6 +191,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<BuildTarget>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.<Path>of(),
         getIncludeDirs(arg));
     assertEquals(
@@ -232,6 +235,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableSet.<BuildTarget>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.<Path>of(),
         getIncludeDirs(arg));
     assertEquals(

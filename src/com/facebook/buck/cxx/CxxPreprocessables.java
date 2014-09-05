@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -40,8 +39,6 @@ public class CxxPreprocessables {
 
   private static final BuildRuleType HEADER_SYMLINK_TREE_TYPE =
       new BuildRuleType("header_symlink_tree");
-
-  private static final BuildRuleType HEADERS_TYPE = new BuildRuleType("headers");
 
   /**
    * Resolve the map of name to {@link SourcePath} to a map of full header name to
@@ -99,7 +96,7 @@ public class CxxPreprocessables {
   /**
    * Build the {@link SymlinkTree} rule using the original build params from a target node.
    * In particular, make sure to drop all dependencies from the original build rule params,
-   * as these are modeled via {@link CxxHeader}.
+   * as these are modeled via {@link CxxCompile}.
    */
   public static SymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildTarget target,
@@ -116,46 +113,6 @@ public class CxxPreprocessables {
             ImmutableSortedSet.<BuildRule>of()),
         root,
         links);
-  }
-
-  /**
-   * Setup a build rule that updates whenever any header or header dependency changes.
-   * This includes the hash of the header contents and all corresponding transitive
-   * header dependencies.  This should be depended on by any compile rules generated
-   * for this higher level rule to make sure we re-compile if any headers change.
-   */
-  public static CxxHeader createHeaderBuildRule(
-      BuildTarget target,
-      BuildRuleParams params,
-      ImmutableMap<Path, SourcePath> headers) {
-
-    // TODO(agallagher): In the common case, C/C++ sources only actually use a small
-    // subset of all the headers in their transitive include search space, so this setup
-    // will cause a lot of false rebuilds.  Long-term, we should add some sort of dep-file
-    // support to avoid this.
-    BuildRuleParams headerParams = params.copyWithChanges(
-        HEADERS_TYPE,
-        target,
-        /* declaredDeps */ ImmutableSortedSet.copyOf(
-            SourcePaths.filterBuildRuleInputs(headers.values())),
-        /* declaredDeps */ ImmutableSortedSet.<BuildRule>of());
-    return new CxxHeader(headerParams, headers);
-  }
-
-  /**
-   * Construct all the rule needed to handles headers for the target node represented by the
-   * given {@link com.facebook.buck.rules.BuildRuleParams}.
-   */
-  public static ImmutableSortedSet<BuildRule> createHeaderBuildRules(
-      BuildTarget headersTarget,
-      BuildTarget symlinkTarget,
-      Path symlinkRoot,
-      BuildRuleParams params,
-      ImmutableMap<Path, SourcePath> headers) {
-
-    return ImmutableSortedSet.<BuildRule>of(
-        createHeaderBuildRule(headersTarget, params, headers),
-        createHeaderSymlinkTreeBuildRule(symlinkTarget, params, symlinkRoot, headers));
   }
 
 }

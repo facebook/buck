@@ -118,18 +118,24 @@ public class CxxCompilableEnhancer {
         COMPILE_TYPE,
         target,
         // Compile rules don't inherit any of the declared deps.
-        /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* extraDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
-            // Depend on the rule that generates the source we're compiling.
-            .addAll(SourcePaths.filterBuildRuleInputs(ImmutableList.of(source.getSource())))
-            // Since compilation will consume our own headers, and the headers of our
-            // dependencies, we need to depend on the rule that represent all headers.
-            .addAll(BuildRules.toBuildRulesFor(
-                params.getBuildTarget(),
-                resolver,
-                preprocessorInput.getRules(),
-                false))
-            .build());
+        /* declaredDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
+            // Depend on the rule that generates the sources and headers we're compiling.
+            .addAll(
+                SourcePaths.filterBuildRuleInputs(
+                    ImmutableList.<SourcePath>builder()
+                        .add(source.getSource())
+                        .addAll(preprocessorInput.getIncludes().values())
+                        .build()))
+                // Also add in extra deps from the preprocessor input, such as the symlink tree
+                // rules.
+            .addAll(
+                BuildRules.toBuildRulesFor(
+                    params.getBuildTarget(),
+                    resolver,
+                    preprocessorInput.getRules(),
+                    false))
+            .build(),
+        /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     return new CxxCompile(
@@ -143,8 +149,9 @@ public class CxxCompilableEnhancer {
             .build(),
         getCompileOutputPath(target, source.getName()),
         source.getSource(),
-        preprocessorInput.getIncludes(),
-        preprocessorInput.getSystemIncludes());
+        preprocessorInput.getIncludeRoots(),
+        preprocessorInput.getSystemIncludeRoots(),
+        preprocessorInput.getIncludes());
   }
 
   /**

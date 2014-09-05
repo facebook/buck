@@ -95,6 +95,7 @@ public class CxxBinaryDescriptionTest {
                 headerSymlinkTree.getBuildTarget()),
             ImmutableList.<String>of(),
             ImmutableList.<String>of(),
+            ImmutableMap.<Path, SourcePath>of(),
             ImmutableList.of(headerSymlinkTreeRoot),
             ImmutableList.<Path>of());
       }
@@ -170,9 +171,9 @@ public class CxxBinaryDescriptionTest {
     assertNotNull(compileRule1);
     assertEquals(
         ImmutableSet.of(
+            genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderTarget(target),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
         FluentIterable.from(compileRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
@@ -188,10 +189,10 @@ public class CxxBinaryDescriptionTest {
     assertNotNull(compileRule2);
     assertEquals(
         ImmutableSet.of(
+            genHeaderTarget,
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderTarget(target),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
         FluentIterable.from(compileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)

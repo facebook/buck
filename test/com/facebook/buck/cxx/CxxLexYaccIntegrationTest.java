@@ -72,7 +72,6 @@ public class CxxLexYaccIntegrationTest {
         target,
         sourceName,
         /* pic */ false);
-    BuildTarget headerTarget = CxxDescriptionEnhancer.createHeaderTarget(target);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target);
 
@@ -83,7 +82,6 @@ public class CxxLexYaccIntegrationTest {
     assertEquals(
         ImmutableSet.of(
             yaccTarget,
-            headerTarget,
             headerSymlinkTreeTarget,
             yaccCompileTarget,
             compileTarget,
@@ -91,7 +89,6 @@ public class CxxLexYaccIntegrationTest {
             target),
         buildLog.getAllTargets());
     buildLog.assertTargetBuiltLocally(yaccTarget.toString());
-    buildLog.assertTargetBuiltLocally(headerTarget.toString());
     buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
     buildLog.assertTargetBuiltLocally(yaccCompileTarget.toString());
@@ -108,7 +105,6 @@ public class CxxLexYaccIntegrationTest {
     assertEquals(
         ImmutableSet.of(
             yaccTarget,
-            headerTarget,
             headerSymlinkTreeTarget,
             yaccCompileTarget,
             compileTarget,
@@ -116,7 +112,6 @@ public class CxxLexYaccIntegrationTest {
             target),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(yaccTarget.toString());
-    buildLog.assertTargetHadMatchingRuleKey(headerTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(compileTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(yaccCompileTarget.toString());
@@ -136,7 +131,6 @@ public class CxxLexYaccIntegrationTest {
     assertEquals(
         ImmutableSet.of(
             yaccTarget,
-            headerTarget,
             headerSymlinkTreeTarget,
             yaccCompileTarget,
             compileTarget,
@@ -144,7 +138,6 @@ public class CxxLexYaccIntegrationTest {
             target),
         buildLog.getAllTargets());
     buildLog.assertTargetBuiltLocally(yaccTarget.toString());
-    buildLog.assertTargetBuiltLocally(headerTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
     buildLog.assertTargetBuiltLocally(yaccCompileTarget.toString());

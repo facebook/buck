@@ -91,12 +91,13 @@ public class PrebuiltCxxLibraryDescription
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
         return new CxxPreprocessorInput(
-            /* targets */ ImmutableSet.<BuildTarget>of(),
+            /* rules */ ImmutableSet.<BuildTarget>of(),
             /* cppflags */ ImmutableList.<String>of(),
             /* cxxppflags */ ImmutableList.<String>of(),
-            /* includes */ ImmutableList.<Path>of(),
+            /* includes */ ImmutableMap.<Path, SourcePath>of(),
+            /* includeRoots */ ImmutableList.<Path>of(),
             // Just pass the include dirs as system includes.
-            /* systemIncludes */ includeDirs);
+            /* systemIncludeRoots */ includeDirs);
       }
 
       @Override

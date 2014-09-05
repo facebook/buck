@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -43,20 +44,11 @@ import java.nio.file.Paths;
 
 public class CxxDescriptionEnhancer {
 
-  private static final Flavor HEADER_FLAVOR = new Flavor("header");
   private static final Flavor HEADER_SYMLINK_TREE_FLAVOR = new Flavor("header-symlink-tree");
   private static final BuildRuleType LEX_TYPE = new BuildRuleType("lex");
   private static final BuildRuleType YACC_TYPE = new BuildRuleType("yacc");
 
   private CxxDescriptionEnhancer() {}
-
-  /**
-   * @return the {@link BuildTarget} to use for the {@link BuildRule} tracking the headers for
-   *    this rule.
-   */
-  public static BuildTarget createHeaderTarget(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, HEADER_FLAVOR);
-  }
 
   /**
    * @return the {@link BuildTarget} to use for the {@link BuildRule} generating the
@@ -250,24 +242,30 @@ public class CxxDescriptionEnhancer {
         lexYaccCxxSourcesBuilder.build());
   }
 
-  public static CxxPreprocessorInput createHeaderBuildRules(
+  public static SymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CxxBuckConfig config,
-      ImmutableList<String> preprocessorFlags,
       ImmutableMap<Path, SourcePath> headers) {
 
     // Setup the header and symlink tree rules
-    BuildTarget headerTarget = createHeaderTarget(params.getBuildTarget());
     BuildTarget headerSymlinkTreeTarget = createHeaderSymlinkTreeTarget(params.getBuildTarget());
     Path headerSymlinkTreeRoot = getHeaderSymlinkTreePath(params.getBuildTarget());
-    ImmutableSortedSet<BuildRule> headerRules = CxxPreprocessables.createHeaderBuildRules(
-        headerTarget,
+    final SymlinkTree headerSymlinkTree = CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         headerSymlinkTreeTarget,
-        headerSymlinkTreeRoot,
         params,
+        headerSymlinkTreeRoot,
         headers);
-    resolver.addAllToIndex(headerRules);
+    resolver.addToIndex(headerSymlinkTree);
+
+    return headerSymlinkTree;
+  }
+
+  public static CxxPreprocessorInput combineCxxPreprocessorInput(
+      BuildRuleParams params,
+      CxxBuckConfig config,
+      ImmutableList<String> preprocessorFlags,
+      SymlinkTree headerSymlinkTree,
+      ImmutableMap<Path, SourcePath> headers) {
 
     // Write the compile rules for all C/C++ sources in this rule.
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
@@ -278,17 +276,18 @@ public class CxxDescriptionEnhancer {
     return CxxPreprocessorInput.concat(
         ImmutableList.of(
             new CxxPreprocessorInput(
-                ImmutableSet.of(headerTarget, headerSymlinkTreeTarget),
+                ImmutableSet.of(headerSymlinkTree.getBuildTarget()),
                 /* cppflags */ ImmutableList.<String>builder()
-                .addAll(config.getCppFlags())
-                .addAll(preprocessorFlags)
-                .build(),
+                    .addAll(config.getCppFlags())
+                    .addAll(preprocessorFlags)
+                    .build(),
                 /* cxxppflags */ ImmutableList.<String>builder()
-                .addAll(config.getCxxppFlags())
-                .addAll(preprocessorFlags)
-                .build(),
-                /* includes */ ImmutableList.of(headerSymlinkTreeRoot),
-                /* systemIncludes */ ImmutableList.<Path>of()),
+                    .addAll(config.getCxxppFlags())
+                    .addAll(preprocessorFlags)
+                    .build(),
+                /* includes */ headers,
+                /* includeRoots */ ImmutableList.of(headerSymlinkTree.getRoot()),
+                /* systemIncludeRoots */ ImmutableList.<Path>of()),
             cxxPreprocessorInputFromDeps));
 
   }
@@ -353,16 +352,20 @@ public class CxxDescriptionEnhancer {
       CxxBuckConfig cxxBuckConfig,
       ImmutableList<String> preprocessorFlags,
       final ImmutableList<String> propagatedPpFlags,
-      ImmutableMap<Path, SourcePath> headers,
+      final ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
       ImmutableList<CxxSource> sources,
       final boolean linkWhole) {
 
-    CxxPreprocessorInput cxxPreprocessorInput = createHeaderBuildRules(
+    // Setup the header symlink tree and combine all the preprocessor input from this rule
+    // and all dependencies.
+    final SymlinkTree headerSymlinkTree =
+        createHeaderSymlinkTreeBuildRule(params, resolver, headers);
+    CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
-        resolver,
         cxxBuckConfig,
         preprocessorFlags,
+        headerSymlinkTree,
         headers);
 
     // Create rules for compiling the non-PIC object files.
@@ -423,11 +426,10 @@ public class CxxDescriptionEnhancer {
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
         return new CxxPreprocessorInput(
-            ImmutableSet.of(
-                CxxDescriptionEnhancer.createHeaderTarget(params.getBuildTarget()),
-                CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(params.getBuildTarget())),
+            ImmutableSet.of(headerSymlinkTree.getBuildTarget()),
             propagatedPpFlags,
             propagatedPpFlags,
+            headers,
             ImmutableList.of(
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(params.getBuildTarget())),
             ImmutableList.<Path>of());

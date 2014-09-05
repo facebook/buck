@@ -33,6 +33,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -63,6 +64,7 @@ public class CxxCompilableEnhancerTest {
         ImmutableSet.of(dep.getBuildTarget()),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of());
 
@@ -92,6 +94,7 @@ public class CxxCompilableEnhancerTest {
         ImmutableSet.<BuildTarget>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of());
 
@@ -123,6 +126,7 @@ public class CxxCompilableEnhancerTest {
         ImmutableSet.<BuildTarget>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of());
 

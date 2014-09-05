@@ -70,6 +70,7 @@ public class CxxLibraryTest {
             ImmutableSet.of(headerTarget, headerSymlinkTreeTarget),
             ImmutableList.<String>of(),
             ImmutableList.<String>of(),
+            ImmutableMap.<Path, SourcePath>of(),
             ImmutableList.of(headerSymlinkTreeRoot),
             ImmutableList.<Path>of());
       }
@@ -103,6 +104,7 @@ public class CxxLibraryTest {
         ImmutableSet.of(headerTarget, headerSymlinkTreeTarget),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
         ImmutableList.of(headerSymlinkTreeRoot),
         ImmutableList.<Path>of());
     assertEquals(expectedCxxPreprocessorInput, cxxLibrary.getCxxPreprocessorInput());

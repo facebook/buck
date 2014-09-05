@@ -160,6 +160,7 @@ public class CxxPythonExtensionDescriptionTest {
             ImmutableSet.<BuildTarget>of(),
             ImmutableList.<String>of(),
             ImmutableList.<String>of(),
+            ImmutableMap.<Path, SourcePath>of(),
             ImmutableList.<Path>of(),
             ImmutableList.<Path>of());
       }

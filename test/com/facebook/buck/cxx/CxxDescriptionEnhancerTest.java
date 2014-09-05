@@ -239,6 +239,7 @@ public class CxxDescriptionEnhancerTest {
                 headerSymlinkTree.getBuildTarget()),
             ImmutableList.<String>of(),
             ImmutableList.<String>of(),
+            ImmutableMap.<Path, SourcePath>of(),
             ImmutableList.of(headerSymlinkTreeRoot),
             ImmutableList.<Path>of());
       }
@@ -297,10 +298,11 @@ public class CxxDescriptionEnhancerTest {
     assertEquals(
         new CxxPreprocessorInput(
             ImmutableSet.of(
-                CxxDescriptionEnhancer.createHeaderTarget(target),
                 CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
             ImmutableList.<String>of(),
             ImmutableList.<String>of(),
+            ImmutableMap.<Path, SourcePath>of(
+                Paths.get(genHeaderName), new BuildRuleSourcePath(genHeader)),
             ImmutableList.of(
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target)),
             ImmutableList.<Path>of()),
@@ -334,9 +336,9 @@ public class CxxDescriptionEnhancerTest {
     assertNotNull(staticCompileRule1);
     assertEquals(
         ImmutableSet.of(
+            genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderTarget(target),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
         FluentIterable.from(staticCompileRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
@@ -352,10 +354,10 @@ public class CxxDescriptionEnhancerTest {
     assertNotNull(staticCompileRule2);
     assertEquals(
         ImmutableSet.of(
+            genHeaderTarget,
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderTarget(target),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
         FluentIterable.from(staticCompileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
@@ -390,9 +392,9 @@ public class CxxDescriptionEnhancerTest {
     assertNotNull(sharedCompileRule1);
     assertEquals(
         ImmutableSet.of(
+            genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderTarget(target),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
         FluentIterable.from(sharedCompileRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
@@ -408,10 +410,10 @@ public class CxxDescriptionEnhancerTest {
     assertNotNull(sharedCompileRule2);
     assertEquals(
         ImmutableSet.of(
+            genHeaderTarget,
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderTarget(target),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
         FluentIterable.from(sharedCompileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.facebook.buck.rules.SourcePaths;
@@ -111,11 +112,17 @@ public class CxxBinaryDescription implements
             ImmutableList.<String>of(),
             yaccSrcs);
 
-    CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.createHeaderBuildRules(
+    // Setup the header symlink tree and combine all the preprocessor input from this rule
+    // and all dependencies.
+    SymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTreeBuildRule(
         params,
         resolver,
+        headers);
+    CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
+        params,
         cxxBuckConfig,
         args.preprocessorFlags.or(ImmutableList.<String>of()),
+        headerSymlinkTree,
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(headers)
             .putAll(lexYaccSources.getCxxHeaders())
