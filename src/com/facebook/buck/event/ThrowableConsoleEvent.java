@@ -29,7 +29,11 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
   private final Throwable throwable;
 
   protected ThrowableConsoleEvent(Throwable throwable, String message) {
-    super(Level.SEVERE, combineThrowableAndMessage(throwable, message));
+    this(throwable, Level.SEVERE, message);
+  }
+
+  protected ThrowableConsoleEvent(Throwable throwable, Level level, String message) {
+    super(level, combineThrowableAndMessage(throwable, message));
     this.throwable = throwable;
   }
 

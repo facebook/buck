@@ -61,6 +61,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 public class CassandraArtifactCache implements ArtifactCache {
 
@@ -386,7 +387,7 @@ public class CassandraArtifactCache implements ArtifactCache {
   public static class CassandraConnectionExceptionEvent extends ThrowableConsoleEvent {
 
     public CassandraConnectionExceptionEvent(Throwable throwable, String message) {
-      super(throwable, message);
+      super(throwable, Level.WARNING, message);
     }
   }
 }
