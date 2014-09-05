@@ -26,6 +26,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 @Beta
 public class XcodeWorkspaceConfigDescription
@@ -53,6 +54,7 @@ public class XcodeWorkspaceConfigDescription
   @SuppressFieldNotInitialized
   public static class Arg implements ConstructorArg {
     public Optional<BuildRule> srcTarget;
+    public Optional<ImmutableSet<BuildRule>> extraTests;
     public Optional<String> workspaceName;
     public Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames;
   }

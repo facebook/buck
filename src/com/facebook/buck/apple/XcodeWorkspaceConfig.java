@@ -40,12 +40,18 @@ import javax.annotation.Nullable;
 public class XcodeWorkspaceConfig extends AbstractBuildRule {
 
   private final Optional<BuildRule> srcTarget;
+  private final ImmutableSet<BuildRule> extraTests;
   private final String workspaceName;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
 
   protected XcodeWorkspaceConfig(BuildRuleParams params, XcodeWorkspaceConfigDescription.Arg arg) {
     super(params);
     this.srcTarget = Preconditions.checkNotNull(arg.srcTarget);
+    if (Preconditions.checkNotNull(arg.extraTests).isPresent()) {
+      this.extraTests = ImmutableSet.copyOf(arg.extraTests.get());
+    } else {
+      this.extraTests = ImmutableSet.of();
+    }
     this.workspaceName = getWorkspaceNameFromArg(arg);
 
     // Start out with the default action config names..
@@ -61,6 +67,10 @@ public class XcodeWorkspaceConfig extends AbstractBuildRule {
 
   public Optional<BuildRule> getSrcTarget() {
     return srcTarget;
+  }
+
+  public ImmutableSet<BuildRule> getExtraTests() {
+    return extraTests;
   }
 
   public String getWorkspaceName() {

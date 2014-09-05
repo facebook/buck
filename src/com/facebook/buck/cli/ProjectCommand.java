@@ -330,14 +330,15 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         } else {
           testBuildRules = Collections.emptySet();
         }
+        XcodeWorkspaceConfig workspaceConfigRule = (XcodeWorkspaceConfig) workspaceRule;
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             getProjectFilesystem(),
             partialGraphs.getProjectGraph(),
             executionContext,
-            (XcodeWorkspaceConfig) workspaceRule,
+            workspaceConfigRule,
             optionsBuilder.build(),
             AppleBuildRules.getSourceRuleToTestRulesMap(testBuildRules),
-            ImmutableSet.<BuildRule>of()
+            workspaceConfigRule.getExtraTests()
         );
         generator.generateWorkspaceAndDependentProjects(projectGenerators);
       }
