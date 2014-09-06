@@ -21,7 +21,6 @@ import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
@@ -405,8 +404,7 @@ public class BuckConfig {
     }
   }
 
-  public BuildTarget getBuildTargetForFullyQualifiedTarget(String target)
-      throws NoSuchBuildTargetException {
+  public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {
     return buildTargetParser.parse(target, ParseContext.fullyQualified());
   }
 

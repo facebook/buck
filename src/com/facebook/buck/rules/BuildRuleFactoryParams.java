@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
@@ -80,7 +79,7 @@ public final class BuildRuleFactoryParams {
     }
   }
 
-  public BuildTarget resolveBuildTarget(String target) throws NoSuchBuildTargetException {
+  public BuildTarget resolveBuildTarget(String target) {
     return buildTargetParser.parse(target, buildFileParseContext);
   }
 
