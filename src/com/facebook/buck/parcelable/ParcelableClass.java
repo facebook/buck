@@ -47,11 +47,9 @@ public class ParcelableClass {
 
   private final Iterable<ParcelableField> fields;
 
-  @Nullable
-  private final String superClassName;
+  private final @Nullable String superClassName;
 
-  @Nullable
-  private final String rawSuperParams;
+  private final @Nullable String rawSuperParams;
 
   public ParcelableClass(String packageName,
       Iterable<String> imports,
@@ -59,8 +57,8 @@ public class ParcelableClass {
       String creatorClassName,
       String defaultFieldVisibility,
       Iterable<ParcelableField> fields,
-      String superClassName,
-      String rawSuperParams) {
+      @Nullable String superClassName,
+      @Nullable String rawSuperParams) {
     Preconditions.checkArgument(!Iterables.isEmpty(fields),
         "There must be fields, or else there is nothing to parcel.");
     boolean hasJsonAnnotations = false;
@@ -120,11 +118,11 @@ public class ParcelableClass {
     return superClassName != null;
   }
 
-  public String getSuperClassName() {
+  public @Nullable String getSuperClassName() {
     return superClassName;
   }
 
-  public String getRawSuperParams() {
+  public @Nullable String getRawSuperParams() {
     return rawSuperParams;
   }
 

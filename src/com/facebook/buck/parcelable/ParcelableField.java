@@ -37,22 +37,20 @@ public class ParcelableField {
    * If {@code null}, use {@link ParcelableClass#getDefaultFieldVisibility()} from the enclosing
    * class.
    */
-  @Nullable
-  private final String visibility;
 
-  @Nullable
-  private final String jsonProperty;
+  private final @Nullable String visibility;
 
-  @Nullable
-  private final String defaultValue;
+  private final @Nullable String jsonProperty;
+
+  private final @Nullable String defaultValue;
 
   public ParcelableField(
       String type,
       String name,
       boolean mutable,
-      String visibility,
-      String jsonProperty,
-      String defaultValue) {
+      @Nullable String visibility,
+      @Nullable String jsonProperty,
+      @Nullable String defaultValue) {
     this.type = type;
     this.name = name;
     this.mutable = mutable;
@@ -73,15 +71,15 @@ public class ParcelableField {
     return mutable;
   }
 
-  public String getVisibility() {
+  public @Nullable String getVisibility() {
     return visibility;
   }
 
-  public String getJsonProperty() {
+  public @Nullable String getJsonProperty() {
     return jsonProperty;
   }
 
-  public String getDefaultValue() {
+  public @Nullable String getDefaultValue() {
     return defaultValue;
   }
 }

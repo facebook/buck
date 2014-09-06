@@ -17,6 +17,7 @@
 package com.facebook.buck.parcelable;
 
 import com.facebook.buck.util.XmlDomParser;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
@@ -40,6 +41,7 @@ public class Parser {
     // packageName, className, creatorClass
     Element classElement = (Element) doc.getElementsByTagName("class").item(0);
     String classNameAttr = getAttribute(classElement, "name");
+    Preconditions.checkNotNull(classNameAttr, "name attribute expected");
     int splitIndex = classNameAttr.lastIndexOf('.');
     String packageName = classNameAttr.substring(0, splitIndex);
     String className = classNameAttr.substring(splitIndex + 1);
@@ -63,9 +65,13 @@ public class Parser {
     NodeList fieldNodes = fieldsElement.getElementsByTagName("field");
     for (int i = 0; i < fieldNodes.getLength(); i++) {
       Element fieldElement = (Element) fieldNodes.item(i);
+      String typeAttr = getAttribute(fieldElement, "type");
+      Preconditions.checkNotNull(typeAttr, "type attribute expected");
+      String nameAttr = getAttribute(fieldElement, "name");
+      Preconditions.checkNotNull(nameAttr, "name attribute expected");
       ParcelableField field = new ParcelableField(
-          escapeJavaType(getAttribute(fieldElement, "type")),
-          getAttribute(fieldElement, "name"),
+          escapeJavaType(typeAttr),
+          nameAttr,
           getBooleanAttribute(fieldElement, "mutable"),
           getAttribute(fieldElement, "visibility"),
           getAttribute(fieldElement, "jsonProperty"),
