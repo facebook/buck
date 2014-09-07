@@ -98,7 +98,7 @@ public class CxxCompileTest {
             DEFAULT_INPUT,
             DEFAULT_INCLUDES,
             DEFAULT_SYSTEM_INCLUDES));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), compilerChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the flags causes a rulekey change.
     RuleKey.Builder.RuleKeyPair flagsChange = generateRuleKey(
@@ -111,7 +111,7 @@ public class CxxCompileTest {
             DEFAULT_INPUT,
             DEFAULT_INCLUDES,
             DEFAULT_SYSTEM_INCLUDES));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), flagsChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, flagsChange);
 
     // Verify that changing the input causes a rulekey change.
     RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
@@ -124,7 +124,7 @@ public class CxxCompileTest {
             new TestSourcePath("different"),
             DEFAULT_INCLUDES,
             DEFAULT_SYSTEM_INCLUDES));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), inputChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
@@ -138,7 +138,7 @@ public class CxxCompileTest {
             DEFAULT_INPUT,
             ImmutableList.of(Paths.get("different")),
             DEFAULT_SYSTEM_INCLUDES));
-    assertEquals(defaultRuleKey.getTotalRuleKey(), includesChange.getTotalRuleKey());
+    assertEquals(defaultRuleKey, includesChange);
 
     // Verify that changing the system includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
@@ -152,7 +152,7 @@ public class CxxCompileTest {
             DEFAULT_INPUT,
             DEFAULT_INCLUDES,
             ImmutableList.of(Paths.get("different"))));
-    assertEquals(defaultRuleKey.getTotalRuleKey(), systemIncludesChange.getTotalRuleKey());
+    assertEquals(defaultRuleKey, systemIncludesChange);
   }
 
 }
