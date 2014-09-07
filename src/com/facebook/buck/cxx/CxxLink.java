@@ -59,6 +59,7 @@ public class CxxLink extends AbstractBuildRule {
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
         .setInput("linker", linker)
+        .set("output", output.toString())
         .set("args", args);
   }
 
