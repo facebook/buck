@@ -32,5 +32,6 @@ java_test(
     '//test/com/facebook/buck/shell:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
+    '//third-party/java/commons-compress:commons-compress',
   ],
 )

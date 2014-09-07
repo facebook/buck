@@ -74,7 +74,8 @@ public class Archive extends AbstractBuildRule {
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new RmStep(output, /* shouldForceDeletion */ true),
-        new ArchiveStep(archiver, output, SourcePaths.toPaths(inputs)));
+        new ArchiveStep(archiver, output, SourcePaths.toPaths(inputs)),
+        new ArchiveScrubberStep(output));
   }
 
   @Override
