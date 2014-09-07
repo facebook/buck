@@ -26,6 +26,8 @@ import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -40,10 +42,11 @@ public class ArchiveTest {
 
   private static final Path DEFAULT_ARCHIVER = Paths.get("ar");
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
-  private static final ImmutableList<Path> DEFAULT_INPUTS = ImmutableList.of(
-      Paths.get("a.o"),
-      Paths.get("b.o"),
-      Paths.get("c.o"));
+  private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
+      ImmutableList.<SourcePath>of(
+          new TestSourcePath("a.o"),
+          new TestSourcePath("b.o"),
+          new TestSourcePath("c.o"));
 
   private RuleKey.Builder.RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
@@ -104,7 +107,7 @@ public class ArchiveTest {
             params,
             DEFAULT_ARCHIVER,
             DEFAULT_OUTPUT,
-            ImmutableList.of(Paths.get("different"))));
+            ImmutableList.<SourcePath>of(new TestSourcePath("different"))));
     assertNotEquals(defaultRuleKey, inputChange);
   }
 

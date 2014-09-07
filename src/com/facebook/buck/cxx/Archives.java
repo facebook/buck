@@ -79,8 +79,7 @@ public class Archives {
         archiveParams,
         archiver,
         output,
-        // Reduce the source paths to regular paths.
-        ImmutableList.copyOf(SourcePaths.toPaths(inputs)));
+        inputs);
   }
 
 }

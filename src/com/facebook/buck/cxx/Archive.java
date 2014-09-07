@@ -21,6 +21,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -37,13 +39,13 @@ public class Archive extends AbstractBuildRule {
 
   private final Path archiver;
   private final Path output;
-  private final ImmutableList<Path> inputs;
+  private final ImmutableList<SourcePath> inputs;
 
   public Archive(
       BuildRuleParams params,
       Path archiver,
       Path output,
-      ImmutableList<Path> inputs) {
+      ImmutableList<SourcePath> inputs) {
     super(params);
     this.archiver = Preconditions.checkNotNull(archiver);
     this.output = Preconditions.checkNotNull(output);
@@ -52,7 +54,7 @@ public class Archive extends AbstractBuildRule {
 
   @Override
   protected Iterable<Path> getInputsToCompareToOutput() {
-    return inputs;
+    return SourcePaths.toPaths(inputs);
   }
 
   @Override
@@ -72,7 +74,7 @@ public class Archive extends AbstractBuildRule {
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new RmStep(output, /* shouldForceDeletion */ true),
-        new ArchiveStep(archiver, output, inputs));
+        new ArchiveStep(archiver, output, SourcePaths.toPaths(inputs)));
   }
 
   @Override
