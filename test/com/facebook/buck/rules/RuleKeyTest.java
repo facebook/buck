@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.java.JavaLibraryBuilder;
@@ -192,6 +193,28 @@ public class RuleKeyTest {
         .build();
 
     assertEquals(manual.getTotalRuleKey(), reflective.getTotalRuleKey());
+  }
+
+  @Test
+  public void testRuleKeyPairEqualsAndHashCodeMethods() {
+    RuleKey.Builder.RuleKeyPair keyPair1 =
+        createEmptyRuleKey()
+            .set("something", "foo")
+            .build();
+    RuleKey.Builder.RuleKeyPair keyPair2 =
+        createEmptyRuleKey()
+            .set("something", "foo")
+            .build();
+    RuleKey.Builder.RuleKeyPair keyPair3 =
+        createEmptyRuleKey()
+            .set("something", "bar")
+            .build();
+    assertEquals(keyPair1, keyPair2);
+    assertEquals(keyPair1.hashCode(), keyPair2.hashCode());
+    assertNotEquals(keyPair1, keyPair3);
+    assertNotEquals(keyPair1.hashCode(), keyPair3.hashCode());
+    assertNotEquals(keyPair2, keyPair3);
+    assertNotEquals(keyPair2.hashCode(), keyPair3.hashCode());
   }
 
   private RuleKey.Builder createEmptyRuleKey() {

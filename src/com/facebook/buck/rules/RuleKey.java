@@ -423,6 +423,43 @@ public class RuleKey {
       public RuleKey getRuleKeyWithoutDeps() {
         return ruleKeyWithoutDeps;
       }
+
+      @Override
+      public boolean equals(Object o) {
+        if (this == o) {
+          return true;
+        }
+
+        if (!(o instanceof RuleKeyPair)) {
+          return false;
+        }
+
+        RuleKeyPair that = (RuleKeyPair) o;
+
+        if (!ruleKeyWithoutDeps.equals(that.ruleKeyWithoutDeps)) {
+          return false;
+        }
+
+        if (!totalRuleKey.equals(that.totalRuleKey)) {
+          return false;
+        }
+
+        return true;
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hashCode(totalRuleKey, ruleKeyWithoutDeps);
+      }
+
+      @Override
+      public String toString() {
+        return Objects.toStringHelper(this.getClass())
+            .add("totalRuleKey", totalRuleKey)
+            .add("ruleKeyWithoutDeps", ruleKeyWithoutDeps)
+            .toString();
+      }
+
     }
 
     public RuleKeyPair build() {
