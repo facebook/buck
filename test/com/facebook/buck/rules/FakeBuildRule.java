@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableCollection;
@@ -57,6 +58,18 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
   public FakeBuildRule(BuildRuleType type, BuildTarget buildTarget) {
     this(new FakeBuildRuleParamsBuilder(buildTarget).setType(type).build());
   }
+
+  public FakeBuildRule(BuildTarget target, BuildRule... deps) {
+    this(
+        new FakeBuildRuleParamsBuilder(target)
+            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .build());
+  }
+
+  public FakeBuildRule(String target, BuildRule... deps) {
+    this(BuildTargetFactory.newInstance(target), deps);
+  }
+
   @Override
   public Iterable<Path> getInputs() {
     return ImmutableList.of();
