@@ -38,11 +38,11 @@ public class ParcelableField {
    * class.
    */
 
-  private final @Nullable String visibility;
+  @Nullable private final String visibility;
 
-  private final @Nullable String jsonProperty;
+  @Nullable private final String jsonProperty;
 
-  private final @Nullable String defaultValue;
+  @Nullable private final String defaultValue;
 
   public ParcelableField(
       String type,
@@ -71,15 +71,15 @@ public class ParcelableField {
     return mutable;
   }
 
-  public @Nullable String getVisibility() {
+  @Nullable public String getVisibility() {
     return visibility;
   }
 
-  public @Nullable String getJsonProperty() {
+  @Nullable public String getJsonProperty() {
     return jsonProperty;
   }
 
-  public @Nullable String getDefaultValue() {
+  @Nullable public String getDefaultValue() {
     return defaultValue;
   }
 }

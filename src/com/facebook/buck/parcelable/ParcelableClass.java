@@ -47,9 +47,9 @@ public class ParcelableClass {
 
   private final Iterable<ParcelableField> fields;
 
-  private final @Nullable String superClassName;
+  @Nullable private final String superClassName;
 
-  private final @Nullable String rawSuperParams;
+  @Nullable private final String rawSuperParams;
 
   public ParcelableClass(String packageName,
       Iterable<String> imports,
@@ -118,11 +118,11 @@ public class ParcelableClass {
     return superClassName != null;
   }
 
-  public @Nullable String getSuperClassName() {
+  @Nullable public String getSuperClassName() {
     return superClassName;
   }
 
-  public @Nullable String getRawSuperParams() {
+  @Nullable public String getRawSuperParams() {
     return rawSuperParams;
   }
 

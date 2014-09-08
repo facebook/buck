@@ -26,15 +26,15 @@ import java.nio.file.Paths;
 
 public class FakeRepositoryFactory extends RepositoryFactory {
 
-  static final Path fakePath = Paths.get("/fake/repo/factory/path");
+  private static final Path FAKE_PATH = Paths.get("/fake/repo/factory/path");
 
   public FakeRepositoryFactory() {
     super(
         ImmutableMap.<String, String>of(),
         Platform.detect(),
         new TestConsole(),
-        fakePath);
-    cachedRepositories.put(fakePath, new TestRepositoryBuilder().setRootPath(fakePath).build());
+        FAKE_PATH);
+    cachedRepositories.put(FAKE_PATH, new TestRepositoryBuilder().setRootPath(FAKE_PATH).build());
   }
 
   public FakeRepositoryFactory(Path root) {
