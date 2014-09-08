@@ -73,6 +73,9 @@ public class MiniAapt implements Step {
               "not(starts-with(., '@+android:id'))]");
 
   private static final ImmutableMap<String, RType> RESOURCE_TYPES = getResourceTypes();
+  private static final ImmutableSet<String> IGNORED_TAGS = ImmutableSet.of(
+      "eat-comment",
+      "skip");
 
   private static final Predicate<Path> ENDS_WITH_XML = new Predicate<Path>() {
     @Override
@@ -275,6 +278,10 @@ public class MiniAapt implements Step {
         String resourceType = node.getNodeName();
         if (resourceType.equals(ITEM_TAG)) {
           resourceType = node.getAttributes().getNamedItem("type").getNodeValue();
+        }
+
+        if (IGNORED_TAGS.contains(resourceType)) {
+          continue;
         }
 
         if (!RESOURCE_TYPES.containsKey(resourceType)) {
