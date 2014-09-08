@@ -101,9 +101,14 @@ BUCKD_LOG_FILE_PATTERN = re.compile('^NGServer.* port (\d+)\.$')
 DEV_NULL = open(os.devnull, 'w')
 
 
+class Command:
+    BUCK = "buck"
+    BUCKD = "buckd"
+
+
 class BuckRepo:
 
-    def __init__(self, buck_bin_dir, buck_project):
+    def __init__(self, buck_bin_dir, buck_project, launch_command):
         self._buck_bin_dir = buck_bin_dir
         self._buck_dir = os.path.dirname(self._buck_bin_dir)
         self._build_success_file = os.path.join(
@@ -113,6 +118,8 @@ class BuckRepo:
 
         self._buck_project = buck_project
         self._tmp_dir = buck_project.tmp_dir
+
+        self._launch_command = launch_command
 
         dot_git = os.path.join(self._buck_dir, '.git')
         self._is_git = os.path.exists(dot_git) and os.path.isdir(dot_git)
@@ -458,7 +465,7 @@ class BuckRepo:
                 self._print_ant_failure_and_exit(ant_log_path)
 
     def _restart_buck(self):
-        command = [os.path.join(self._buck_bin_dir, "buck")]
+        command = [os.path.join(self._buck_bin_dir, self._launch_command)]
         command.extend(sys.argv[1:])
         exitcode = subprocess.call(command, stdout=sys.stderr)
         if exitcode < 0:

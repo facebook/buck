@@ -2,7 +2,7 @@
 from __future__ import print_function
 import os
 import sys
-from buck_repo import BuckRepo, BuckRepoException
+from buck_repo import BuckRepo, BuckRepoException, Command
 from buck_project import BuckProject, NoBuckConfigFoundException
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -10,7 +10,7 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 def main():
     with BuckProject.from_current_dir() as project:
-        buck_repo = BuckRepo(THIS_DIR, project)
+        buck_repo = BuckRepo(THIS_DIR, project, Command.BUCKD)
         if '--help' in sys.argv:
             print("Specify --kill to kill buckd.", file=sys.stderr)
             sys.exit(0)
