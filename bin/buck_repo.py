@@ -365,7 +365,8 @@ class BuckRepo:
 
                 subprocess.check_call(
                     ['git', 'checkout', revision],
-                    stdout=sys.stderr,
+                    stdout=DEV_NULL,
+                    stderr=DEV_NULL,
                     cwd=self._buck_dir)
                 if os.path.exists(self._build_success_file):
                     os.remove(self._build_success_file)
