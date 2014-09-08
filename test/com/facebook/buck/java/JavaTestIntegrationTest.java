@@ -23,13 +23,11 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 
-@Ignore("Unable to run as part of Buck because both hamcrest and junit are present")
 public class JavaTestIntegrationTest {
 
   @Rule
@@ -73,5 +71,31 @@ public class JavaTestIntegrationTest {
         stderr,
         stderr.contains(
             "Unable to locate junit on the classpath. Please add as a test dependency."));
+  }
+
+  /**
+   * There's a requirement that the JUnitRunner creates and runs tests on the same thread (thanks to
+   * jmock having a thread guard), but we don't want to create lots of threads. Because of this the
+   * runner uses one SingleThreadExecutor to run all tests. However, if one test schedules another
+   * (as is the case with Suites and sub-tests) _and_ the buck config says that we're going to use a
+   * custom timeout for tests, then both tests are created and executed using the same single thread
+   * executor, in the following order:
+   *
+   * create suite -> create test -> run suite -> run test
+   *
+   * Obviously, that "run test" causes the deadlock, since suite hasn't finished executing and won't
+   * until test completes, but test won't be run until suite finishes. Furrfu.
+   */
+  @Test
+  public void shouldNotDeadlock() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "deadlock",
+        temp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:suite");
+
+    result.assertSuccess();
   }
 }

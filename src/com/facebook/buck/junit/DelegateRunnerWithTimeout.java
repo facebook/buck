@@ -32,15 +32,24 @@ import java.util.concurrent.Future;
 class DelegateRunnerWithTimeout extends Runner {
 
   /**
-   * Shared {@link ExecutorService} on which all tests run by this {@link Runner} are executed.
+   * {@link ExecutorService} on which all tests run by this {@link Runner} are executed.
    * <p>
    * In Robolectric, the {@code ShadowLooper.resetThreadLoopers()} asserts that the current thread
    * is the same as the thread on which the {@code ShadowLooper} class was loaded. Therefore, to
    * preserve the behavior of the {@code org.robolectric.RobolectricTestRunner}, we use an
-   * {@link ExecutorService} with a single thread to run all of the tests.
+   * {@link ExecutorService} to create and run the test on. This has the unfortunate side effect of
+   * creating one thread per runner, but JUnit ensures that they're all called serially, so the
+   * overall effect is that of having only a single thread.
+   * <p>
+   * We use a {@link ThreadLocal} so that if a test spawns more tests that create their own runners
+   * we don't deadlock.
    */
-  private static final ExecutorService executor =
-      MoreExecutors.newSingleThreadExecutor(DelegateRunnerWithTimeout.class.getSimpleName());
+  private static final ThreadLocal<ExecutorService> executor = new ThreadLocal<ExecutorService>() {
+    @Override
+    protected ExecutorService initialValue() {
+      return MoreExecutors.newSingleThreadExecutor(DelegateRunnerWithTimeout.class.getSimpleName());
+    }
+  };
 
   private final Runner delegate;
   private final long defaultTestTimeoutMillis;
@@ -74,7 +83,7 @@ class DelegateRunnerWithTimeout extends Runner {
         delegate, notifier, defaultTestTimeoutMillis);
 
     // We run the Runner in an Executor so that we can tear it down if we need to.
-    Future<?> future = executor.submit(new Runnable() {
+    Future<?> future = executor.get().submit(new Runnable() {
       @Override
       public void run() {
         delegate.run(wrapper);
@@ -92,7 +101,7 @@ class DelegateRunnerWithTimeout extends Runner {
         // The test results that have been reported to the RunNotifier should still be output, but
         // there may be tests that did not have a chance to run. Unfortunately, we have no way to
         // tell the Runner to cancel only the runaway test.
-        executor.shutdownNow();
+        executor.get().shutdownNow();
         return;
       } else {
         // Tests are still running, so wait and try again.

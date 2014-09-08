@@ -1,0 +1,31 @@
+java_library(
+  name = 'tests',
+  srcs = glob(['*Test.java']),
+  deps = [
+    ':junit',
+  ],
+)
+
+java_test(
+  name = 'suite',
+  srcs = [
+    'AllTests.java',
+  ],
+  deps = [
+    ':junit',
+    ':tests',
+  ],
+)
+
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit.jar',
+  deps = [
+    ':hamcrest',
+  ],
+)
+
+prebuilt_jar(
+  name = 'hamcrest',
+  binary_jar = 'hamcrest.jar',
+)
