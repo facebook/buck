@@ -65,6 +65,10 @@ public class Archive extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+
+    // Cache the archive we built.
+    buildableContext.recordArtifact(output);
+
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new RmStep(output, /* shouldForceDeletion */ true),

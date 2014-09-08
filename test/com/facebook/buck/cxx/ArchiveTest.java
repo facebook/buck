@@ -39,7 +39,7 @@ import java.nio.file.Paths;
 public class ArchiveTest {
 
   private static final Path DEFAULT_ARCHIVER = Paths.get("ar");
-  private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
+  private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<Path> DEFAULT_INPUTS = ImmutableList.of(
       Paths.get("a.o"),
       Paths.get("b.o"),
