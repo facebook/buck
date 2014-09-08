@@ -16,8 +16,12 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Represents the graph of {@link TargetNode}s constructed by parsing the build files.
@@ -25,5 +29,73 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode<?>> {
   public TargetGraph(MutableDirectedGraph<TargetNode<?>> graph) {
     super(graph);
+  }
+
+  public ActionGraph buildActionGraph() {
+    final BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
+
+    AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
+        new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(this) {
+
+          @Override
+          public void visit(TargetNode<?> node) {
+            TargetNodeToBuildRuleTransformer<?> transformer =
+                new TargetNodeToBuildRuleTransformer<>(node);
+            BuildRule rule;
+            try {
+              rule = transformer.transform(ruleResolver);
+            } catch (NoSuchBuildTargetException e) {
+              throw new HumanReadableException(e);
+            }
+            ruleResolver.addToIndex(rule.getBuildTarget(), rule);
+            actionGraph.addNode(rule);
+
+            for (BuildRule buildRule : rule.getDeps()) {
+              if (buildRule.getBuildTarget().isFlavored()) {
+                addGraphEnhancedDeps(rule);
+              }
+            }
+
+            for (BuildRule dep : rule.getDeps()) {
+              actionGraph.addEdge(rule, dep);
+            }
+
+          }
+
+          @Override
+          public ActionGraph getResult() {
+            return new ActionGraph(actionGraph);
+          }
+
+          private void addGraphEnhancedDeps(BuildRule rule) {
+            new AbstractDependencyVisitor(rule) {
+              @Override
+              public ImmutableSet<BuildRule> visit(BuildRule rule) {
+                ImmutableSet.Builder<BuildRule> depsToVisit = null;
+                boolean isRuleFlavored = rule.getBuildTarget().isFlavored();
+
+                for (BuildRule dep : rule.getDeps()) {
+                  boolean isDepFlavored = dep.getBuildTarget().isFlavored();
+                  if (isRuleFlavored || isDepFlavored) {
+                    actionGraph.addEdge(rule, dep);
+                  }
+
+                  if (isDepFlavored) {
+                    if (depsToVisit == null) {
+                      depsToVisit = ImmutableSet.builder();
+                    }
+                    depsToVisit.add(dep);
+                  }
+                }
+
+                return depsToVisit == null ? ImmutableSet.<BuildRule>of() : depsToVisit.build();
+              }
+            }.start();
+          }
+        };
+
+    bottomUpTraversal.traverse();
+    return bottomUpTraversal.getResult();
   }
 }

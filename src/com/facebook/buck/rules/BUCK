@@ -46,6 +46,7 @@ java_library(
   srcs = [
     'ActionGraph.java',
     'BuildRuleBuilderParams.java',
+    'AbstractDependencyVisitor.java',
     'AbstractSourcePath.java',
     'AnnotationProcessingData.java',
     'ArtifactCache.java',
@@ -76,6 +77,7 @@ java_library(
     'DefaultBuildableParams.java',
     'DefaultOnDiskBuildInfo.java',
     'Description.java',
+    'FlavorableDescription.java',
     'ExportDependencies.java',
     'Hint.java',
     'ImplicitDepsInferringDescription.java',
@@ -94,6 +96,7 @@ java_library(
     'TargetGraph.java',
     'TargetName.java',
     'TargetNode.java',
+    'TargetNodeToBuildRuleTransformer.java',
   ] + glob(["coercer/*.java"]),
   deps = [
     '//lib:guava',
@@ -125,7 +128,6 @@ java_library(
   srcs = [
     'AbiRule.java',
     'AbstractBuildRule.java',
-    'AbstractDependencyVisitor.java',
     'ArtifactCacheConnectEvent.java',
     'ArtifactCacheEvent.java',
     'Builder.java',
@@ -143,7 +145,6 @@ java_library(
     'DependencyEnhancer.java',
     'DescribedRule.java',
     'DirArtifactCache.java',
-    'FlavorableDescription.java',
     'HttpArtifactCache.java',
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',
@@ -155,7 +156,6 @@ java_library(
     'ProjectConfig.java',
     'ProjectConfigDescription.java',
     'SymlinkTree.java',
-    'TargetNodeToBuildRuleTransformer.java',
     'TestRule.java',
     'TestRunEvent.java',
   ],

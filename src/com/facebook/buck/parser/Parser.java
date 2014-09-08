@@ -20,7 +20,6 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
@@ -33,11 +32,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Repository;
@@ -45,7 +42,6 @@ import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -362,7 +358,7 @@ public class Parser {
         buildFileParser,
         environment);
 
-    return buildActionGraphFromTargetGraph(graph);
+    return graph.buildActionGraph();
   }
 
   @Nullable
@@ -376,10 +372,6 @@ public class Parser {
    * in a build. The TargetGraph is useful for commands such as
    * {@link com.facebook.buck.cli.AuditOwnerCommand} which only need to understand the relationship
    * between modules.
-   * <p>
-   * Note that this method does not cache results. Call either this or
-   * {@link #buildActionGraphFromTargetGraph(TargetGraph)} in a single
-   * {@link com.facebook.buck.rules.BuildEngine} execution.
    *
    * @param toExplore the {@link BuildTarget}s that {@link TargetGraph} is calculated for.
    * @param defaultIncludes the files to include before executing build files.
@@ -458,74 +450,6 @@ public class Parser {
     }
 
     return new TargetGraph(graph);
-  }
-
-  private synchronized ActionGraph buildActionGraphFromTargetGraph(final TargetGraph graph) {
-    final BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
-
-    AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
-        new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(graph) {
-
-          @Override
-          public void visit(TargetNode<?> node) {
-            TargetNodeToBuildRuleTransformer<?> transformer =
-                new TargetNodeToBuildRuleTransformer<>(node);
-            BuildRule rule;
-            try {
-              rule = transformer.transform(ruleResolver);
-            } catch (NoSuchBuildTargetException e) {
-              throw new HumanReadableException(e);
-            }
-            ruleResolver.addToIndex(rule.getBuildTarget(), rule);
-            actionGraph.addNode(rule);
-
-            for (BuildRule buildRule : rule.getDeps()) {
-              if (buildRule.getBuildTarget().isFlavored()) {
-                addGraphEnhancedDeps(rule);
-              }
-            }
-
-            for (BuildRule dep : rule.getDeps()) {
-              actionGraph.addEdge(rule, dep);
-            }
-
-          }
-
-          @Override
-          public ActionGraph getResult() {
-            return new ActionGraph(actionGraph);
-          }
-
-          private void addGraphEnhancedDeps(BuildRule rule) {
-            new AbstractDependencyVisitor(rule) {
-              @Override
-              public ImmutableSet<BuildRule> visit(BuildRule rule) {
-                ImmutableSet.Builder<BuildRule> depsToVisit = null;
-                boolean isRuleFlavored = rule.getBuildTarget().isFlavored();
-
-                for (BuildRule dep : rule.getDeps()) {
-                  boolean isDepFlavored = dep.getBuildTarget().isFlavored();
-                  if (isRuleFlavored || isDepFlavored) {
-                    actionGraph.addEdge(rule, dep);
-                  }
-
-                  if (isDepFlavored) {
-                    if (depsToVisit == null) {
-                      depsToVisit = ImmutableSet.builder();
-                    }
-                    depsToVisit.add(dep);
-                  }
-                }
-
-                return depsToVisit == null ? ImmutableSet.<BuildRule>of() : depsToVisit.build();
-              }
-            }.start();
-          }
-        };
-
-    bottomUpTraversal.traverse();
-    return bottomUpTraversal.getResult();
   }
 
   /**
