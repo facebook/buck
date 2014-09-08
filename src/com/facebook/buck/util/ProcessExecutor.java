@@ -41,6 +41,12 @@ public class ProcessExecutor {
     PRINT_STD_ERR,
 
     /**
+     * If set, will not highlight output to stdout or stderr when printing.
+     */
+    EXPECTING_STD_OUT,
+    EXPECTING_STD_ERR,
+
+    /**
      * If set, do not write output to stdout or stderr. However, if the process exits with a
      * non-zero exit code, then the stdout and stderr from the process will be presented to the user
      * to aid in debugging.
@@ -92,6 +98,7 @@ public class ProcessExecutor {
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
     boolean shouldPrintStdOut = options.contains(Option.PRINT_STD_OUT);
+    boolean expectingStdOut = options.contains(Option.EXPECTING_STD_OUT);
     @SuppressWarnings("resource")
     PrintStream stdOutToWriteTo = shouldPrintStdOut ?
         stdOutStream : new CapturingPrintStream();
@@ -99,9 +106,10 @@ public class ProcessExecutor {
         process.getInputStream(),
         stdOutToWriteTo,
         ansi,
-        /* flagOutputWrittenToStream */ !shouldPrintStdOut);
+        /* flagOutputWrittenToStream */ !shouldPrintStdOut && !expectingStdOut);
 
     boolean shouldPrintStdErr = options.contains(Option.PRINT_STD_ERR);
+    boolean expectingStdErr = options.contains(Option.EXPECTING_STD_ERR);
     @SuppressWarnings("resource")
     PrintStream stdErrToWriteTo = shouldPrintStdErr ?
         stdErrStream : new CapturingPrintStream();
@@ -109,7 +117,7 @@ public class ProcessExecutor {
         process.getErrorStream(),
         stdErrToWriteTo,
         ansi,
-        /* flagOutputWrittenToStream */ !shouldPrintStdErr);
+        /* flagOutputWrittenToStream */ !shouldPrintStdErr && !expectingStdErr);
 
     // Consume the streams so they do not deadlock.
     Thread stdOutConsumer = Threads.namedThread("ProcessExecutor (stdOut)", stdOut);
