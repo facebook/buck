@@ -9,8 +9,7 @@ org.eclipse.jdt.core.compiler.debug.sourceFile=generate
 org.eclipse.jdt.core.compiler.problem.assertIdentifier=error
 org.eclipse.jdt.core.compiler.problem.enumIdentifier=error
 org.eclipse.jdt.core.compiler.problem.fallthroughCase=error
-# TODO(mbolin): Fix up the violations and make this an error.
-org.eclipse.jdt.core.compiler.problem.incompleteEnumSwitch=ignore
+org.eclipse.jdt.core.compiler.problem.incompleteEnumSwitch=error
 # Most Javadoc checks are enabled because `ant verify-javadoc` takes care
 # of this for us and allows us the desired flexibility in references
 # across Java packages within the src/ directory.

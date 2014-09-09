@@ -22,9 +22,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -152,8 +152,8 @@ public final class AppleBuildRules {
                     deps = defaultDeps;
                   }
                   break;
-                case BUILDING:
-                default:
+                //$CASES-OMITTED$
+              default:
                   deps = defaultDeps;
                   break;
               }

@@ -21,16 +21,17 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
-import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule;
 import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleBinary;
+import com.facebook.buck.apple.AppleBinaryDescription;
+import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleBinary;
-import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleLibrary;
+import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleTest;
@@ -40,7 +41,6 @@ import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
-import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
@@ -1344,7 +1344,8 @@ public class ProjectGenerator {
           return Optional.of(PBXCopyFilesBuildPhase.Destination.PLUGINS);
         case APP:
           return Optional.of(PBXCopyFilesBuildPhase.Destination.EXECUTABLES);
-        default:
+        //$CASES-OMITTED$
+      default:
           return Optional.of(PBXCopyFilesBuildPhase.Destination.PRODUCTS);
       }
     } else if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
@@ -1948,6 +1949,7 @@ public class ProjectGenerator {
         });
   }
 
+  @SuppressWarnings("incomplete-switch")
   private static PBXTarget.ProductType bundleToTargetProductType(AppleBundle bundle) {
     BuildRule binary = bundle.getBinary();
 
