@@ -5,6 +5,7 @@ java_test(
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/parser:rule_pattern',
   ],
+  resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
     '//lib:easymock',
     '//lib:guava',

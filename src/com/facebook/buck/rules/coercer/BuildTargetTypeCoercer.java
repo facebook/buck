@@ -17,13 +17,22 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetParseException;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Splitter;
+import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
 public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
+
+  private final BuildTargetParser buildTargetParser;
+
+  public BuildTargetTypeCoercer(BuildTargetParser buildTargetParser) {
+    this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
+  }
 
   @Override
   public Class<BuildTarget> getOutputClass() {
@@ -43,38 +52,15 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
     if (object instanceof String) {
       String param = (String) object;
-      if (param.startsWith(BuildTarget.BUILD_TARGET_PREFIX) ||
-          (!param.isEmpty() && param.charAt(0) == ':')) {
-        int colon = param.indexOf(':');
-        if (colon == 0 && param.length() > 1) {
-          return extractFlavors(
-              BuildTarget.BUILD_TARGET_PREFIX + pathRelativeToProjectRoot.toString(),
-              param.substring(1));
-        } else if (colon > 0 && param.length() > 2) {
-          return extractFlavors(
-              param.substring(0, colon),
-              param.substring(colon + 1));
-        }
+      try {
+        return buildTargetParser.parse(
+            param,
+            ParseContext.forBaseName("//" + pathRelativeToProjectRoot));
+      } catch (BuildTargetParseException e) {
+        throw CoerceFailedException.simple(object, getOutputClass());
       }
     }
 
     throw CoerceFailedException.simple(object, getOutputClass());
-  }
-
-  private BuildTarget extractFlavors(String prefix, String shortName) {
-    int hashIndex = shortName.indexOf('#');
-    if (hashIndex == -1) {
-        return BuildTarget.builder(prefix, shortName).build();
-    }
-
-    Iterable<String> flavors = Splitter.on(",")
-        .omitEmptyStrings()
-        .trimResults()
-        .split(shortName.substring(hashIndex + 1));
-    BuildTarget.Builder builder = BuildTarget.builder(prefix, shortName.substring(0, hashIndex));
-    for (String flavor : flavors) {
-      builder.addFlavor(flavor);
-    }
-    return builder.build();
   }
 }

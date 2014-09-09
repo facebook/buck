@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -36,7 +37,7 @@ public class BuildTargetTypeCoercerTest {
 
   @Test
   public void canCoerceAnUnflavoredFullyQualifiedTarget() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+    BuildTarget seen = new BuildTargetTypeCoercer(new BuildTargetParser()).coerce(
         resolver,
         filesystem,
         basePath,
@@ -47,14 +48,18 @@ public class BuildTargetTypeCoercerTest {
 
   @Test
   public void shouldCoerceAShortTarget() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(resolver, filesystem, basePath, ":bar");
+    BuildTarget seen = new BuildTargetTypeCoercer(new BuildTargetParser()).coerce(
+        resolver,
+        filesystem,
+        basePath,
+        ":bar");
 
     assertEquals(BuildTarget.builder("//java/com/facebook/buck/example", "bar").build(), seen);
   }
 
   @Test
   public void shouldCoerceATargetWithASingleFlavor() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+    BuildTarget seen = new BuildTargetTypeCoercer(new BuildTargetParser()).coerce(
         resolver,
         filesystem,
         basePath,
@@ -65,7 +70,7 @@ public class BuildTargetTypeCoercerTest {
 
   @Test
   public void shouldCoerceMultipleFlavors() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+    BuildTarget seen = new BuildTargetTypeCoercer(new BuildTargetParser()).coerce(
         resolver,
         filesystem,
         basePath,
@@ -78,7 +83,7 @@ public class BuildTargetTypeCoercerTest {
 
   @Test
   public void shouldCoerceAShortTargetWithASingleFlavor() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+    BuildTarget seen = new BuildTargetTypeCoercer(new BuildTargetParser()).coerce(
         resolver,
         filesystem,
         basePath,

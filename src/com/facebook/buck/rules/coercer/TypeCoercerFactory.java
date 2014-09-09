@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Label;
@@ -43,11 +44,9 @@ import java.nio.file.Path;
 public class TypeCoercerFactory {
   private final TypeCoercer<Label> labelTypeCoercer = new LabelTypeCoercer();
   private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
-  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
-  private final TypeCoercer<SourcePath> sourcePathTypeCoercer =
-      new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
-  private final TypeCoercer<BuildRule> buildRuleTypeCoercer =
-      new BuildRuleTypeCoercer(buildTargetTypeCoercer);
+  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
+  private final TypeCoercer<BuildRule> buildRuleTypeCoercer;
 
   // This has no implementation, but is here so that constructor succeeds so that it can be queried.
   // This is only used for the visibility field, which is not actually handled by the coercer.
@@ -66,37 +65,44 @@ public class TypeCoercerFactory {
 
   private final TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
 
-  private final TypeCoercer<AppleSource> appleSourceTypeCoercer =
-    new AppleSourceTypeCoercer(
+  private final TypeCoercer<AppleSource> appleSourceTypeCoercer;
+
+  private final TypeCoercer<?>[] nonContainerTypeCoercers;
+
+  public TypeCoercerFactory(BuildTargetParser buildTargetParser) {
+    buildTargetTypeCoercer = new BuildTargetTypeCoercer(buildTargetParser);
+    sourcePathTypeCoercer = new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
+    buildRuleTypeCoercer = new BuildRuleTypeCoercer(buildTargetTypeCoercer);
+    appleSourceTypeCoercer = new AppleSourceTypeCoercer(
+            sourcePathTypeCoercer,
+            new PairTypeCoercer<>(sourcePathTypeCoercer, stringTypeCoercer),
+            stringTypeCoercer);
+    nonContainerTypeCoercers = new TypeCoercer<?>[] {
+        // special classes
+        labelTypeCoercer,
+        pathTypeCoercer,
         sourcePathTypeCoercer,
-        new PairTypeCoercer<>(sourcePathTypeCoercer, stringTypeCoercer),
-        stringTypeCoercer);
+        buildTargetTypeCoercer,
+        buildRuleTypeCoercer,
+        buildTargetPatternTypeCoercer,
 
-  private final TypeCoercer<?>[] nonContainerTypeCoercers = {
-      // special classes
-      labelTypeCoercer,
-      pathTypeCoercer,
-      sourcePathTypeCoercer,
-      buildTargetTypeCoercer,
-      buildRuleTypeCoercer,
-      buildTargetPatternTypeCoercer,
+        // identity
+        stringTypeCoercer,
+        new IdentityTypeCoercer<>(Boolean.class),
 
-      // identity
-      stringTypeCoercer,
-      new IdentityTypeCoercer<>(Boolean.class),
+        // numeric
+        new NumberTypeCoercer<>(Integer.class),
+        new NumberTypeCoercer<>(Double.class),
+        new NumberTypeCoercer<>(Float.class),
+        new NumberTypeCoercer<>(Long.class),
+        new NumberTypeCoercer<>(Short.class),
+        new NumberTypeCoercer<>(Byte.class),
 
-      // numeric
-      new NumberTypeCoercer<>(Integer.class),
-      new NumberTypeCoercer<>(Double.class),
-      new NumberTypeCoercer<>(Float.class),
-      new NumberTypeCoercer<>(Long.class),
-      new NumberTypeCoercer<>(Short.class),
-      new NumberTypeCoercer<>(Byte.class),
-
-      // other simple
-      appleSourceTypeCoercer,
-      new BuildConfigFieldsTypeCoercer(),
-  };
+        // other simple
+        appleSourceTypeCoercer,
+        new BuildConfigFieldsTypeCoercer(),
+    };
+  }
 
   public TypeCoercer<?> typeCoercerForType(Type type) {
     if (type instanceof TypeVariable) {

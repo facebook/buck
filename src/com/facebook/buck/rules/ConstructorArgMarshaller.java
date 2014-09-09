@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
@@ -51,7 +52,9 @@ public class ConstructorArgMarshaller {
    * @param pathFromProjectRootToBuildFile The path from the root of the project to the directory of
    *     the build file that this function is being created from.
    */
-  public ConstructorArgMarshaller(Path pathFromProjectRootToBuildFile) {
+  public ConstructorArgMarshaller(
+      Path pathFromProjectRootToBuildFile,
+      BuildTargetParser buildTargetParser) {
     Preconditions.checkNotNull(pathFromProjectRootToBuildFile);
 
     // Without this check an IndexOutOfBounds exception is thrown by normalize.
@@ -61,7 +64,11 @@ public class ConstructorArgMarshaller {
       this.basePath = pathFromProjectRootToBuildFile.normalize();
     }
 
-    this.typeCoercerFactory = new TypeCoercerFactory();
+    this.typeCoercerFactory = new TypeCoercerFactory(buildTargetParser);
+  }
+
+  public ConstructorArgMarshaller(Path pathFromProjectRootToBuildFile) {
+    this(pathFromProjectRootToBuildFile, new BuildTargetParser());
   }
 
   /**

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -32,7 +33,7 @@ import java.nio.file.Paths;
 public class ParamInfoTest {
 
   private Path path = Paths.get("path");
-  private TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
+  private TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory(new BuildTargetParser());
 
   @Test
   public void shouldReportWildcardsWithUpperBoundsAsUpperBound() throws NoSuchFieldException {

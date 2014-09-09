@@ -177,7 +177,8 @@ public final class AppleBuildRules {
         };
     try {
       traversal.traverse(ImmutableList.of(rule));
-    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException | IOException e) {
+    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException | IOException |
+        InterruptedException e) {
       // actual load failures and cycle exceptions should have been caught at an earlier stage
       throw new RuntimeException(e);
     }

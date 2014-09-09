@@ -50,7 +50,9 @@ import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
+import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.util.BuckConstant;
@@ -296,7 +298,11 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void testCircularDependencyDetection()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+    FakeProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
+    fakeFilesystem.touch(Paths.get("BUCK"));
+    Repository fakeRepo = new TestRepositoryBuilder().setFilesystem(fakeFilesystem).build();
     FakeRepositoryFactory fakeFactory = new FakeRepositoryFactory();
+    fakeFactory.setRootRepoForTesting(fakeRepo);
     BuildTargetParser buildTargetParser = new BuildTargetParser();
     final BuildFileTree buildFiles = createMock(BuildFileTree.class);
 

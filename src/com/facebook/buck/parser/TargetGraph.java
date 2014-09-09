@@ -14,21 +14,38 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.parser;
 
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.RepositoryFactory;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.IOException;
+
 /**
- * Represents the graph of {@link TargetNode}s constructed by parsing the build files.
+ * Represents the graph of {@link com.facebook.buck.rules.TargetNode}s constructed
+ * by parsing the build files.
  */
 public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode<?>> {
-  public TargetGraph(MutableDirectedGraph<TargetNode<?>> graph) {
+
+  private final RepositoryFactory repositoryFactory;
+
+  public TargetGraph(
+      MutableDirectedGraph<TargetNode<?>> graph,
+      RepositoryFactory repositoryFactory) {
     super(graph);
+    this.repositoryFactory = Preconditions.checkNotNull(repositoryFactory);
   }
 
   public ActionGraph buildActionGraph() {
@@ -44,9 +61,13 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
                 new TargetNodeToBuildRuleTransformer<>(node);
             BuildRule rule;
             try {
-              rule = transformer.transform(ruleResolver);
+              Repository targetRepo = repositoryFactory.getRepositoryByCanonicalName(
+                  node.getBuildTarget().getRepository());
+              rule = transformer.transform(ruleResolver, targetRepo.getBuildTargetParser());
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
+            } catch (IOException | InterruptedException e) {
+              throw new HumanReadableException(e.getMessage());
             }
             ruleResolver.addToIndex(rule.getBuildTarget(), rule);
             actionGraph.addNode(rule);

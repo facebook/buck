@@ -80,7 +80,7 @@ public class TargetNode<T extends ConstructorArg> implements Comparable<TargetNo
     this.declaredDeps = declaredDeps.build();
 
     // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
-    TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
+    TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory(params.buildTargetParser);
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
       ParamInfo info =

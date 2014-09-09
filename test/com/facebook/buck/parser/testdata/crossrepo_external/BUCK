@@ -1,0 +1,5 @@
+java_library(
+  name = 'external',
+  srcs = ['External.java'],
+  visibility = ['PUBLIC'],
+)

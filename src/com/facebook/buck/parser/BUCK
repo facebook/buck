@@ -4,6 +4,7 @@ java_library(
     'Parser.java',
     'PartialGraph.java',
     'ParseEvent.java',
+    'TargetGraph.java',
   ],
   deps = [
     ':project',

@@ -44,7 +44,8 @@ public abstract class AbstractAcyclicDepthFirstPostOrderTraversal<T> {
    * @throws CycleException if a cycle is found while performing the traversal.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
-  public void traverse(Iterable<? extends T> initialNodes) throws CycleException, IOException {
+  public void traverse(Iterable<? extends T> initialNodes)
+      throws CycleException, IOException, InterruptedException {
     // This corresponds to the current chain of nodes being explored. Enforcing this invariant makes
     // this data structure useful for debugging.
     Deque<Explorable> toExplore = Lists.newLinkedList();
@@ -107,7 +108,7 @@ public abstract class AbstractAcyclicDepthFirstPostOrderTraversal<T> {
   private class Explorable {
     private final T node;
     private final Iterator<T> children;
-    Explorable(T node) throws IOException {
+    Explorable(T node) throws IOException, InterruptedException {
       this.node = Preconditions.checkNotNull(node);
       this.children = findChildren(node);
     }
@@ -117,13 +118,13 @@ public abstract class AbstractAcyclicDepthFirstPostOrderTraversal<T> {
    * @return the child nodes of the specified node. Child nodes will be explored in the order
    *     in which they are provided. Not allowed to contain {@code null}.
    */
-  protected abstract Iterator<T> findChildren(T node) throws IOException;
+  protected abstract Iterator<T> findChildren(T node) throws IOException, InterruptedException;
 
   /**
    * Invoked when the specified node has been "explored," which means that all of its transitive
    * dependencies have been visited.
    */
-  protected abstract void onNodeExplored(T node);
+  protected abstract void onNodeExplored(T node) throws IOException, InterruptedException;
 
   /**
    * Upon completion of the traversal, this method is invoked with the nodes in the order they

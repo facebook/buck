@@ -48,7 +48,7 @@ public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
    * </pre>
    */
   @Test
-  public void testExpectedTraversal() throws CycleException, IOException {
+  public void testExpectedTraversal() throws CycleException, IOException, InterruptedException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("A", "C");
@@ -80,7 +80,7 @@ public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
    * Note that there is a circular dependency from F -> C -> E -> F.
    */
   @Test
-  public void testCycleDetection() throws IOException {
+  public void testCycleDetection() throws IOException, InterruptedException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("A", "C");
@@ -104,7 +104,7 @@ public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
    * Ensures that a cycle is detected in a trivial graph of a single node that points to itself.
    */
   @Test
-  public void testTrivialCycle() throws IOException {
+  public void testTrivialCycle() throws IOException, InterruptedException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "A");
     AbstractAcyclicDepthFirstPostOrderTraversal<String> dfs = new TestDagDepthFirstSearch(graph);
@@ -130,7 +130,8 @@ public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
    * </pre>
    */
   @Test
-  public void testCycleExceptionDoesNotContainUnrelatedNodes() throws IOException {
+  public void testCycleExceptionDoesNotContainUnrelatedNodes()
+      throws IOException, InterruptedException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("B", "C");
@@ -159,7 +160,8 @@ public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
    * @throws CycleException
    */
   @Test
-  public void testTraverseMultipleInitialNodes() throws CycleException, IOException {
+  public void testTraverseMultipleInitialNodes()
+      throws CycleException, IOException, InterruptedException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("B", "C");

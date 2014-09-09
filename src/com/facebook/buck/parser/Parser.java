@@ -40,7 +40,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
@@ -95,6 +94,7 @@ public class Parser {
    */
   private boolean allBuildFilesParsed;
 
+  private final RepositoryFactory repositoryFactory;
   // TODO(jacko): DELETE THESE!!!
   private final Repository repository;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
@@ -217,7 +217,7 @@ public class Parser {
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory)
       throws IOException, InterruptedException {
-    Preconditions.checkNotNull(repositoryFactory);
+    this.repositoryFactory = Preconditions.checkNotNull(repositoryFactory);
     this.repository = repositoryFactory.getRootRepository();
     this.buildFileTreeCache = new BuildFileTreeCache(
         Preconditions.checkNotNull(buildFileTreeSupplier));
@@ -350,7 +350,7 @@ public class Parser {
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes,
       final ProjectBuildFileParser buildFileParser,
-      final ImmutableMap<String, String> environment) throws IOException {
+      final ImmutableMap<String, String> environment) throws IOException, InterruptedException {
 
     final TargetGraph graph = buildTargetGraph(
         toExplore,
@@ -362,7 +362,8 @@ public class Parser {
   }
 
   @Nullable
-  public synchronized TargetNode<?> getTargetNode(BuildTarget buildTarget) {
+  public synchronized TargetNode<?> getTargetNode(BuildTarget buildTarget)
+      throws IOException, InterruptedException {
     return state.get(buildTarget);
   }
 
@@ -382,13 +383,14 @@ public class Parser {
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes,
       final ProjectBuildFileParser buildFileParser,
-      final ImmutableMap<String, String> environment) throws IOException {
+      final ImmutableMap<String, String> environment) throws IOException, InterruptedException {
     final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
 
     AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
         new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
           @Override
-          protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget) throws IOException {
+          protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget)
+              throws IOException, InterruptedException {
             ParseContext parseContext = ParseContext.forBaseName(buildTarget.getBaseName());
 
             // Verify that the BuildTarget actually exists in the map of known BuildTargets
@@ -429,7 +431,8 @@ public class Parser {
           }
 
           @Override
-          protected void onNodeExplored(BuildTarget buildTarget) {
+          protected void onNodeExplored(BuildTarget buildTarget)
+              throws IOException, InterruptedException {
             TargetNode<?> targetNode = getTargetNode(buildTarget);
             Preconditions.checkNotNull(targetNode, "No target node found for %s", buildTarget);
             graph.addNode(targetNode);
@@ -449,7 +452,7 @@ public class Parser {
       throw new HumanReadableException(e.getMessage());
     }
 
-    return new TargetGraph(graph);
+    return new TargetGraph(graph, repositoryFactory);
   }
 
   /**
@@ -462,7 +465,7 @@ public class Parser {
       Iterable<String> defaultIncludes,
       ProjectBuildFileParser buildFileParser,
       ImmutableMap<String, String> environment)
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     if (isCacheComplete(defaultIncludes, environment)) {
       // In this case, all of the build rules should have been loaded into the knownBuildTargets
       // Map before this method was invoked. Therefore, there should not be any more build files to
@@ -475,7 +478,9 @@ public class Parser {
           "Unable to locate dependency \"%s\" for target \"%s\"", buildTarget, sourceTarget);
     }
 
-    Path buildFile = repository.getAbsolutePathToBuildFile(buildTarget);
+    Repository targetRepo =
+        repositoryFactory.getRepositoryByCanonicalName(buildTarget.getRepository());
+    Path buildFile = targetRepo.getAbsolutePathToBuildFile(buildTarget);
     if (isCached(buildFile, defaultIncludes, environment)) {
       throw new HumanReadableException(
           "The build file that should contain %s has already been parsed (%s), " +
@@ -984,15 +989,23 @@ public class Parser {
     }
 
     @Nullable
-    public TargetNode<?> get(BuildTarget buildTarget) {
+    public TargetNode<?> get(BuildTarget buildTarget) throws IOException, InterruptedException {
       // Fast path.
       TargetNode<?> toReturn = memoizedTargetNodes.get(buildTarget);
       if (toReturn != null) {
         return toReturn;
       }
 
+      Repository targetRepo =
+          repositoryFactory.getRepositoryByCanonicalName(buildTarget.getRepository());
+      Path buildFilePath;
+      try {
+        buildFilePath = targetRepo.getAbsolutePathToBuildFile(buildTarget);
+      } catch (Repository.MissingBuildFileException e) {
+        throw new HumanReadableException(e);
+      }
       BuildTarget unflavored = buildTarget.getUnflavoredTarget();
-      List<Map<String, Object>> rules = state.getRawRules(unflavored.getBuildFilePath());
+      List<Map<String, Object>> rules = state.getRawRules(buildFilePath);
       for (Map<String, Object> map : rules) {
 
         if (!buildTarget.getShortNameOnly().equals(map.get("name"))) {
@@ -1023,8 +1036,8 @@ public class Parser {
 
         BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
             map,
-            repository.getFilesystem(),
-            buildTargetParser,
+            targetRepo.getFilesystem(),
+            targetRepo.getBuildTargetParser(),
             // Although we store the rule by its unflavoured name, when we construct it, we need the
             // flavour.
             buildTarget,

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.Either;
@@ -53,7 +54,8 @@ import java.util.List;
 import java.util.Map;
 
 public class TypeCoercerTest {
-  private final TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
+  private final TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory(
+      new BuildTargetParser());
   private final BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 

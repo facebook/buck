@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -36,7 +37,8 @@ public class SourcePathTypeCoercerTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
-    BuildTargetTypeCoercer buildTargetTypeCoercer = new BuildTargetTypeCoercer();
+    BuildTargetTypeCoercer buildTargetTypeCoercer = new BuildTargetTypeCoercer(
+        new BuildTargetParser());
     SourcePathTypeCoercer sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
 
