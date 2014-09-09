@@ -244,7 +244,6 @@ class BuckRepo:
                 stdout=slave,
                 stderr=slave,
                 preexec_fn=preexec_func)
-            self._buck_project.save_buckd_pid(process.pid)
             stdout = os.fdopen(master)
 
             for i in range(100):
@@ -276,14 +275,11 @@ class BuckRepo:
     def kill_buckd(self):
         with Tracing('BuckRepo.kill_buckd'):
             buckd_port = self._buck_project.get_buckd_port()
-            buckd_pid = self._buck_project.get_buckd_pid()
 
-            if buckd_port and buckd_pid:
+            if buckd_port:
                 if not buckd_port.isdigit():
                     print("WARNING: Corrupt buckd port: '{0}'.".format(buckd_port))
-                if not buckd_pid.isdigit():
-                    print("WARNING: Corrupt buckd pid: '{0}'.".format(buckd_pid))
-                if buckd_port.isdigit() and buckd_pid.isdigit():
+                else:
                     print("Shutting down nailgun server...", file=sys.stderr)
                     command = [self._buck_client_file]
                     command.append('ng-stop')
@@ -319,25 +315,25 @@ class BuckRepo:
 
     def _is_buckd_running(self):
         with Tracing('BuckRepo._is_buckd_running'):
-            buckd_pid = self._buck_project.get_buckd_pid()
             buckd_port = self._buck_project.get_buckd_port()
 
-            if (buckd_pid is None or not buckd_pid.isdigit() or
-                    buckd_port is None or not buckd_port.isdigit()):
+            if buckd_port is None or not buckd_port.isdigit():
                 return False
 
+            command = [self._buck_client_file]
+            command.append('ng-stats')
+            command.append('--nailgun-port')
+            command.append(buckd_port)
             try:
-                os.kill(int(buckd_pid), 0)
-            except OSError:
-                return False
+                subprocess.check_call(command, cwd=self._buck_project.root,
+                                      stdout=DEV_NULL, stderr=DEV_NULL)
+            except subprocess.CalledProcessError as e:
+                if e.returncode == NAILGUN_CONNECTION_REFUSED_CODE:
+                    return False
+                else:
+                    raise
 
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            try:
-                result = sock.connect_ex(('127.0.0.1', int(buckd_port)))
-            finally:
-                sock.close()
-
-            return result == 0
+            return True
 
     def _checkout_and_clean(self, revision, branch):
         with Tracing('BuckRepo._checkout_and_clean'):
