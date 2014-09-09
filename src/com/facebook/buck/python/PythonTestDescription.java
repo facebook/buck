@@ -59,10 +59,15 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
   private final Path pathToPex;
   private final Path pathToPythonTestMain;
+  private final PythonEnvironment pythonEnvironment;
 
-  public PythonTestDescription(Path pathToPex, Path pathToPythonTestMain) {
+  public PythonTestDescription(
+      Path pathToPex,
+      Path pathToPythonTestMain,
+      PythonEnvironment pythonEnvironment) {
     this.pathToPex = Preconditions.checkNotNull(pathToPex);
     this.pathToPythonTestMain = Preconditions.checkNotNull(pathToPythonTestMain);
+    this.pythonEnvironment = Preconditions.checkNotNull(pythonEnvironment);
   }
 
   @Override
@@ -216,6 +221,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     PythonBinary binary = new PythonBinary(
         binaryParams,
         pathToPex,
+        pythonEnvironment,
         getTestMainName(),
         allComponents);
     resolver.addToIndex(binary);

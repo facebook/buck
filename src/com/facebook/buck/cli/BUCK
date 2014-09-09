@@ -46,6 +46,7 @@ java_library(
     '//src/com/facebook/buck/java:config',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/rules:types',
+    '//src/com/facebook/buck/python:config',
     '//src/com/facebook/buck/command:command',
     '//test/com/facebook/buck/...',
   ]

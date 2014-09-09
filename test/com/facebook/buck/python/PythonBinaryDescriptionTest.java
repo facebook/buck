@@ -61,7 +61,9 @@ public class PythonBinaryDescriptionTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bin"))
             .setDeps(ImmutableSortedSet.<BuildRule>of(lib))
             .build();
-    PythonBinaryDescription desc = new PythonBinaryDescription(PEX_PATH);
+    PythonBinaryDescription desc = new PythonBinaryDescription(
+        PEX_PATH,
+        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
     arg.main = new TestSourcePath("blah.py");
@@ -81,7 +83,9 @@ public class PythonBinaryDescriptionTest {
         .build();
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(
         BuildTargetFactory.newInstance("//:bin"));
-    PythonBinaryDescription desc = new PythonBinaryDescription(PEX_PATH);
+    PythonBinaryDescription desc = new PythonBinaryDescription(
+        PEX_PATH,
+        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
     arg.main = new BuildRuleSourcePath(genrule);

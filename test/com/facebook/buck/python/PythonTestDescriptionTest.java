@@ -46,7 +46,10 @@ public class PythonTestDescriptionTest {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bin"))
             .build();
-    PythonTestDescription desc = new PythonTestDescription(PEX_PATH, TEST_MAIN);
+    PythonTestDescription desc = new PythonTestDescription(
+        PEX_PATH,
+        TEST_MAIN,
+        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
     arg.srcs = Optional.of(ImmutableSortedSet.<SourcePath>of(new TestSourcePath("blah.py")));

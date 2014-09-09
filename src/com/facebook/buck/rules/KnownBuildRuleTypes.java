@@ -57,6 +57,7 @@ import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.parcelable.GenParcelableDescription;
 import com.facebook.buck.python.PythonBinaryDescription;
+import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonTestDescription;
 import com.facebook.buck.shell.ExportFileDescription;
@@ -126,22 +127,25 @@ public class KnownBuildRuleTypes {
   static KnownBuildRuleTypes replaceDefaultInstance(
       BuckConfig config,
       AndroidDirectoryResolver androidDirectoryResolver,
-      JavaCompilerEnvironment javacEnv) {
+      JavaCompilerEnvironment javacEnv,
+      PythonEnvironment pythonEnv) {
     resetDefaultInstance();
-    return createInstance(config, androidDirectoryResolver, javacEnv);
+    return createInstance(config, androidDirectoryResolver, javacEnv, pythonEnv);
   }
 
 
   public static KnownBuildRuleTypes createInstance(
       BuckConfig config,
       AndroidDirectoryResolver androidDirectoryResolver,
-      JavaCompilerEnvironment javacEnv) {
+      JavaCompilerEnvironment javacEnv,
+      PythonEnvironment pythonEnv) {
     // Fast path
     if (defaultRules == null) {
       // Slow path
       synchronized (KnownBuildRuleTypes.class) {
         if (defaultRules == null) {
-          defaultRules = createBuilder(config, androidDirectoryResolver, javacEnv).build();
+          defaultRules =
+              createBuilder(config, androidDirectoryResolver, javacEnv, pythonEnv).build();
         }
       }
     }
@@ -153,7 +157,8 @@ public class KnownBuildRuleTypes {
   static Builder createBuilder(
       BuckConfig config,
       AndroidDirectoryResolver androidDirectoryResolver,
-      JavaCompilerEnvironment javacEnv) {
+      JavaCompilerEnvironment javacEnv,
+      PythonEnvironment pythonEnv) {
 
     Optional<String> ndkVersion = config.getNdkVersion();
     // If a NDK version isn't specified, we've got to reach into the runtime environment to find
@@ -220,9 +225,11 @@ public class KnownBuildRuleTypes {
     builder.register(new ProjectConfigDescription());
     builder.register(new PythonTestDescription(
         pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
-        pythonPathToPythonTestMain.or(PythonTestDescription.PYTHON_PATH_TO_PYTHON_TEST_MAIN)));
+        pythonPathToPythonTestMain.or(PythonTestDescription.PYTHON_PATH_TO_PYTHON_TEST_MAIN),
+        pythonEnv));
     builder.register(new PythonBinaryDescription(
-        pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX)));
+        pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
+        pythonEnv));
     builder.register(new PythonLibraryDescription());
     builder.register(new RobolectricTestDescription(javacEnv));
     builder.register(new ShBinaryDescription());

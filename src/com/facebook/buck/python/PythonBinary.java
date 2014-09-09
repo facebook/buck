@@ -46,14 +46,17 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
   private final Path pathToPex;
   private final Path main;
   private final PythonPackageComponents components;
+  private final PythonEnvironment pythonEnvironment;
 
   protected PythonBinary(
       BuildRuleParams params,
       Path pathToPex,
+      PythonEnvironment pythonEnvironment,
       Path main,
       PythonPackageComponents components) {
     super(params);
     this.pathToPex = Preconditions.checkNotNull(pathToPex);
+    this.pythonEnvironment = Preconditions.checkNotNull(pythonEnvironment);
     this.main = Preconditions.checkNotNull(main);
     this.components = Preconditions.checkNotNull(components);
   }
@@ -93,6 +96,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
         .set("packageType", "pex")
+        .set("pythonVersion", pythonEnvironment.getPythonVersion().toString())
         .set("mainModule", main.toString());
 
     // Hash all the input components here so we can detect changes in both input file content
@@ -129,6 +133,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
     // Generate and return the PEX build step.
     steps.add(new PexStep(
         pathToPex,
+        pythonEnvironment.getPythonPath(),
         binPath,
         PythonUtil.toModuleName(getBuildTarget(), main.toString()),
         PythonUtil.getPathMapFromSourcePaths(components.getModules()),

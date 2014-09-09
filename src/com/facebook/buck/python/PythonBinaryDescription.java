@@ -22,8 +22,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -41,9 +41,11 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
   public static final BuildRuleType TYPE = new BuildRuleType("python_binary");
 
   private final Path pathToPex;
+  private final PythonEnvironment pythonEnvironment;
 
-  public PythonBinaryDescription(Path pathToPex) {
+  public PythonBinaryDescription(Path pathToPex, PythonEnvironment pythonEnv) {
     this.pathToPex = Preconditions.checkNotNull(pathToPex);
+    this.pythonEnvironment = Preconditions.checkNotNull(pythonEnv);
   }
 
   @Override
@@ -82,6 +84,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     return new PythonBinary(
         binaryParams,
         pathToPex,
+        pythonEnvironment,
         mainModule,
         allPackageComponents);
   }

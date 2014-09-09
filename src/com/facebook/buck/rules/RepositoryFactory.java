@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
+import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidDirectoryResolver;
@@ -137,6 +139,9 @@ public class RepositoryFactory {
     ProcessExecutor processExecutor = new ProcessExecutor(console);
     JavaCompilerEnvironment javacEnv = javaConfig.getJavaCompilerEnvironment(processExecutor);
 
+    PythonBuckConfig pythonConfig = new PythonBuckConfig(config);
+    PythonEnvironment pythonEnv = pythonConfig.getPythonEnvironment(processExecutor);
+
     // NOTE:  If any other variable is used when configuring buildRuleTypes, it MUST be passed down
     // to the Daemon and implement equals/hashCode so we can invalidate the Parser if values used
     // for configuring buildRuleTypes have changed between builds.
@@ -144,7 +149,8 @@ public class RepositoryFactory {
         KnownBuildRuleTypes.createInstance(
             config,
             androidDirectoryResolver,
-            javacEnv);
+            javacEnv,
+            pythonEnv);
 
     Repository repository = new Repository(
         name,
