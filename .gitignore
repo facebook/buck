@@ -8,6 +8,7 @@ build/
 # the one in the root directory.
 buck-out
 local.properties
+.buckconfig.local
 .buckd
 
 # Compiled Python
