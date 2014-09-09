@@ -1024,11 +1024,39 @@ public class SchemeGeneratorTest {
         (String) launchActionExpr.evaluate(scheme, XPathConstants.STRING);
     assertThat(launchActionBlueprintIdentifier, equalTo(""));
 
+    XPath launchActionBuildConfigurationXpath = xpathFactory.newXPath();
+    XPathExpression launchActionBuildConfigurationExpr =
+        launchActionBuildConfigurationXpath.compile("//LaunchAction//@buildConfiguration");
+    String launchActionBuildConfigurationBlueprintIdentifier =
+        (String) launchActionBuildConfigurationExpr.evaluate(scheme, XPathConstants.STRING);
+    assertThat(launchActionBuildConfigurationBlueprintIdentifier, equalTo("Debug"));
+
     XPath profileActionXpath = xpathFactory.newXPath();
     XPathExpression profileActionExpr =
         profileActionXpath.compile("//ProfileAction//BuildableReference/@BlueprintIdentifier");
     String profileActionBlueprintIdentifier =
         (String) profileActionExpr.evaluate(scheme, XPathConstants.STRING);
     assertThat(profileActionBlueprintIdentifier, equalTo(""));
+
+    XPath profileActionBuildConfigurationXpath = xpathFactory.newXPath();
+    XPathExpression profileActionBuildConfigurationExpr =
+        profileActionBuildConfigurationXpath.compile("//ProfileAction//@buildConfiguration");
+    String profileActionBuildConfigurationBlueprintIdentifier =
+        (String) profileActionBuildConfigurationExpr.evaluate(scheme, XPathConstants.STRING);
+    assertThat(profileActionBuildConfigurationBlueprintIdentifier, equalTo("Release"));
+
+    XPath analyzeActionBuildConfigurationXpath = xpathFactory.newXPath();
+    XPathExpression analyzeActionBuildConfigurationExpr =
+        analyzeActionBuildConfigurationXpath.compile("//AnalyzeAction//@buildConfiguration");
+    String analyzeActionBuildConfigurationBlueprintIdentifier =
+        (String) analyzeActionBuildConfigurationExpr.evaluate(scheme, XPathConstants.STRING);
+    assertThat(analyzeActionBuildConfigurationBlueprintIdentifier, equalTo("Debug"));
+
+    XPath archiveActionBuildConfigurationXpath = xpathFactory.newXPath();
+    XPathExpression archiveActionBuildConfigurationExpr =
+        archiveActionBuildConfigurationXpath.compile("//ArchiveAction//@buildConfiguration");
+    String archiveActionBuildConfigurationBlueprintIdentifier =
+        (String) archiveActionBuildConfigurationExpr.evaluate(scheme, XPathConstants.STRING);
+    assertThat(archiveActionBuildConfigurationBlueprintIdentifier, equalTo("Release"));
   }
 }
