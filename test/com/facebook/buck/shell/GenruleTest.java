@@ -20,6 +20,7 @@ import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -31,11 +32,15 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -85,6 +90,15 @@ public class GenruleTest {
       };
 
   private ProjectFilesystem fakeFilesystem;
+
+  private RuleKey.Builder.RuleKeyPair generateRuleKey(
+      RuleKeyBuilderFactory factory,
+      AbstractBuildRule rule) {
+
+    RuleKey.Builder builder = factory.newInstance(rule);
+    rule.appendToRuleKey(builder);
+    return builder.build();
+  }
 
   @Before
   public void newFakeFilesystem() {
@@ -591,6 +605,28 @@ public class GenruleTest {
           .build();
       assertEquals(name, genrule.getOutputName());
     }
+  }
+
+  @Test
+  public void thatChangingOutChangesRuleKey() {
+    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory();
+    BuildTarget target = BuildTargetFactory.newInstance("//:genrule");
+
+    // Get a rule key for two genrules using two different output names, but are otherwise the
+    // same.
+    RuleKey.Builder.RuleKeyPair key1 = generateRuleKey(
+        ruleKeyBuilderFactory,
+        GenruleBuilder.createGenrule(target)
+            .setOut("foo")
+            .build());
+    RuleKey.Builder.RuleKeyPair key2 = generateRuleKey(
+        ruleKeyBuilderFactory,
+        GenruleBuilder.createGenrule(target)
+            .setOut("bar")
+            .build());
+
+    // Verify that just the difference in output name is enough to make the rule key different.
+    assertNotEquals(key1.getTotalRuleKey(), key2.getTotalRuleKey());
   }
 
   private static String getAbsolutePathFor(String path) {

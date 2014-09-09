@@ -190,7 +190,8 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     return builder
         .set("cmd", cmd)
         .set("bash", bash)
-        .set("cmd_exe", cmdExe);
+        .set("cmd_exe", cmdExe)
+        .set("out", out);
   }
 
   public ImmutableList<Path> getSrcs() {
