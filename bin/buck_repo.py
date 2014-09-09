@@ -98,6 +98,8 @@ BUCKD_CLIENT_TIMEOUT_MILLIS = 60000
 GC_MAX_PAUSE_TARGET = 15000
 
 BUCKD_LOG_FILE_PATTERN = re.compile('^NGServer.* port (\d+)\.$')
+NAILGUN_CONNECTION_REFUSED_CODE = 230
+NAILGUN_CONNECTION_BROKEN_CODE = 227
 DEV_NULL = open(os.devnull, 'w')
 
 
@@ -273,34 +275,29 @@ class BuckRepo:
 
     def kill_buckd(self):
         with Tracing('BuckRepo.kill_buckd'):
+            buckd_port = self._buck_project.get_buckd_port()
             buckd_pid = self._buck_project.get_buckd_pid()
-            if buckd_pid:
+
+            if buckd_port and buckd_pid:
+                if not buckd_port.isdigit():
+                    print("WARNING: Corrupt buckd port: '{0}'.".format(buckd_port))
                 if not buckd_pid.isdigit():
                     print("WARNING: Corrupt buckd pid: '{0}'.".format(buckd_pid))
-                else:
-                    self._kill_buckd_process_and_wait(int(buckd_pid))
+                if buckd_port.isdigit() and buckd_pid.isdigit():
+                    print("Shutting down nailgun server...", file=sys.stderr)
+                    command = [self._buck_client_file]
+                    command.append('ng-stop')
+                    command.append('--nailgun-port')
+                    command.append(buckd_port)
+                    try:
+                        subprocess.check_call(command, cwd=self._buck_project.root,
+                                              stdout=DEV_NULL, stderr=DEV_NULL)
+                    except subprocess.CalledProcessError as e:
+                        if (e.returncode != NAILGUN_CONNECTION_REFUSED_CODE and
+                                e.returncode != NAILGUN_CONNECTION_BROKEN_CODE):
+                            raise
 
             self._buck_project.clean_up_buckd()
-
-    def _kill_buckd_process_and_wait(self, buckd_pid):
-        with Tracing('BuckRepo._kill_buckd_process_and_wait'):
-            try:
-                print("Terminating existing buckd process...", file=sys.stderr)
-                os.kill(buckd_pid, signal.SIGTERM)
-                print("Waiting for existing buckd process to exit...",
-                      file=sys.stderr)
-                for count in range(100):
-                    time.sleep(0.1)
-                    os.kill(buckd_pid, signal.SIGTERM)
-                else:
-                    print(textwrap.dedent("""\
-                        Could not kill existing buckd process after 10 seconds!
-                        Force killing existing buckd process."""),
-                          file=sys.stderr)
-                    os.kill(buckd_pid, signal.SIGKILL)
-            except OSError as e:
-                if e.errno != errno.ESRCH:
-                    raise
 
     def _setup_watchman_watch(self):
         with Tracing('BuckRepo._setup_watchman_watch'):
