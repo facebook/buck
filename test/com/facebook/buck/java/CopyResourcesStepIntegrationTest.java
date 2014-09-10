@@ -48,7 +48,7 @@ public class CopyResourcesStepIntegrationTest {
 
     File helloWorldJar = workspace.buildAndReturnOutput("//java/com/example:HelloWorld");
     ProcessExecutor.Result result = workspace.runJar(helloWorldJar);
-    assertEquals("hello world\n", result.getStdout());
-    assertEquals("", result.getStderr());
+    assertEquals("hello world\n", result.getStdout().get());
+    assertEquals("", result.getStderr().get());
   }
 }

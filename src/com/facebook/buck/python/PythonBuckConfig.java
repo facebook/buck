@@ -66,7 +66,7 @@ public class PythonBuckConfig {
       Path pythonPath,
       ProcessExecutor.Result versionResult) {
     if (versionResult.getExitCode() == 0) {
-      String versionString = CharMatcher.WHITESPACE.trimFrom(versionResult.getStderr());
+      String versionString = CharMatcher.WHITESPACE.trimFrom(versionResult.getStderr().get());
       Matcher matcher = PYTHON_VERSION_REGEX.matcher(versionString);
       if (!matcher.matches()) {
         throw new HumanReadableException(
@@ -76,7 +76,7 @@ public class PythonBuckConfig {
       }
       return new PythonVersion(matcher.group(1));
     } else {
-      throw new HumanReadableException(versionResult.getStderr());
+      throw new HumanReadableException(versionResult.getStderr().get());
     }
   }
 }

@@ -26,8 +26,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 /**
  * Executes a {@link Process} and blocks until it is finished.
  */
@@ -146,14 +144,14 @@ public class ProcessExecutor {
       // to the process. This means either the user killed the process or a step failed
       // causing us to kill all other running steps. Neither of these is an exceptional
       // situation.
-      return new Result(1, /* stdout */ null, /* stderr */ null);
+      return new Result(1);
     } finally {
       process.destroy();
       process.waitFor();
     }
 
-    String stdoutText = getDataIfNotPrinted(stdOutToWriteTo, shouldPrintStdOut);
-    String stderrText = getDataIfNotPrinted(stdErrToWriteTo, shouldPrintStdErr);
+    Optional<String> stdoutText = getDataIfNotPrinted(stdOutToWriteTo, shouldPrintStdOut);
+    Optional<String> stderrText = getDataIfNotPrinted(stdErrToWriteTo, shouldPrintStdErr);
 
     // Report the exit code of the Process.
     int exitCode = process.exitValue();
@@ -162,23 +160,24 @@ public class ProcessExecutor {
     // printed.
     if (exitCode != 0 && !options.contains(Option.IS_SILENT)) {
       if (!shouldPrintStdOut) {
-        stdOutStream.print(stdoutText);
+        stdOutStream.print(stdoutText.get());
       }
       if (!shouldPrintStdErr) {
-        stdErrStream.print(stderrText);
+        stdErrStream.print(stderrText.get());
       }
     }
 
     return new Result(exitCode, stdoutText, stderrText);
   }
 
-  @Nullable
-  private static String getDataIfNotPrinted(PrintStream printStream, boolean shouldPrint) {
+  private static Optional<String> getDataIfNotPrinted(
+      PrintStream printStream,
+      boolean shouldPrint) {
     if (!shouldPrint) {
       CapturingPrintStream capturingPrintStream = (CapturingPrintStream) printStream;
-      return capturingPrintStream.getContentsAsString(Charsets.US_ASCII);
+      return Optional.of(capturingPrintStream.getContentsAsString(Charsets.US_ASCII));
     } else {
-      return null;
+      return Optional.absent();
     }
   }
 
@@ -187,28 +186,37 @@ public class ProcessExecutor {
    * {@link ProcessExecutor#execute(Process, Set, Optional)}.
    */
   public static class Result {
-    private final int exitCode;
-    @Nullable private final String stdout;
-    @Nullable private final String stderr;
 
-    public Result(int exitCode, @Nullable String stdOut, @Nullable String stderr) {
+    private final int exitCode;
+    private final Optional<String> stdout;
+    private final Optional<String> stderr;
+
+    public Result(int exitCode, Optional<String> stdout, Optional<String> stderr) {
       this.exitCode = exitCode;
-      this.stdout = stdOut;
-      this.stderr = stderr;
+      this.stdout = Preconditions.checkNotNull(stdout);
+      this.stderr = Preconditions.checkNotNull(stderr);
+    }
+
+    public Result(int exitCode, String stdout, String stderr) {
+      this(exitCode, Optional.of(stdout), Optional.of(stderr));
+    }
+
+    public Result(int exitCode) {
+      this(exitCode, Optional.<String>absent(), Optional.<String>absent());
     }
 
     public int getExitCode() {
       return exitCode;
     }
 
-    @Nullable
-    public String getStdout() {
+    public Optional<String> getStdout() {
       return stdout;
     }
 
-    @Nullable
-    public String getStderr() {
+    public Optional<String> getStderr() {
       return stderr;
     }
+
   }
+
 }

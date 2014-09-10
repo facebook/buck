@@ -94,14 +94,14 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
             Runtime.getRuntime().exec("networksetup -listallhardwareports"));
 
         if (allNetworksResult.getExitCode() == 0) {
-          String allNetworks = allNetworksResult.getStdout();
+          String allNetworks = allNetworksResult.getStdout().get();
           Optional<String> wifiNetwork = parseNetworksetupOutputForWifi(allNetworks);
           if (wifiNetwork.isPresent()) {
             ProcessExecutor.Result wifiNameResult = this.processExecutor.execute(
                 Runtime.getRuntime().exec("networksetup -getairportnetwork " + wifiNetwork.get()));
 
             if (wifiNameResult.getExitCode() == 0) {
-              return parseWifiSsid(wifiNameResult.getStdout());
+              return parseWifiSsid(wifiNameResult.getStdout().get());
             }
           }
         }

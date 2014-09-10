@@ -82,9 +82,9 @@ public class JavaBuckConfig {
       ProcessExecutor.Result versionResult = executor.execute(
           Runtime.getRuntime().exec(javac + " -version"));
       if (versionResult.getExitCode() == 0) {
-        return new JavacVersion(versionResult.getStderr());
+        return new JavacVersion(versionResult.getStderr().get());
       } else {
-        throw new HumanReadableException(versionResult.getStderr());
+        throw new HumanReadableException(versionResult.getStderr().get());
       }
     } catch (IOException e) {
       throw new HumanReadableException("Could not run " + javac + " -version");

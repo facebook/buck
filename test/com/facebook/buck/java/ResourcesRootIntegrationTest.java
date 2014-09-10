@@ -48,7 +48,7 @@ public class ResourcesRootIntegrationTest {
     assertEquals(
         "SupWorld should print the resource file's contents.",
         "nuthin much\n",
-        result.getStdout());
-    assertEquals("", result.getStderr());
+        result.getStdout().get());
+    assertEquals("", result.getStderr().get());
   }
 }

@@ -35,8 +35,8 @@ public class ProcessExecutorTest {
         Verbosity.ALL, stdOut, stdErr, ansi);
     ProcessExecutor executor = new ProcessExecutor(console);
     ProcessExecutor.Result result = executor.execute(Runtime.getRuntime().exec("echo Hello"));
-    assertEquals(ansi.asHighlightedFailureText("Hello\n"), result.getStdout());
-    assertEquals("", result.getStderr());
+    assertEquals(ansi.asHighlightedFailureText("Hello\n"), result.getStdout().get());
+    assertEquals("", result.getStderr().get());
   }
 
   @Test
@@ -51,7 +51,7 @@ public class ProcessExecutorTest {
         Runtime.getRuntime().exec("echo Hello"),
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
         Optional.<String>absent());
-    assertEquals("Hello\n", result.getStdout());
-    assertEquals("", result.getStderr());
+    assertEquals("Hello\n", result.getStdout().get());
+    assertEquals("", result.getStderr().get());
   }
 }
