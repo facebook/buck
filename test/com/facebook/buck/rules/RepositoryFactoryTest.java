@@ -18,9 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -59,11 +57,7 @@ public class RepositoryFactoryTest {
     File subBuckConfig = subProjectFolder.newFile(".buckconfig");
     Files.write(subBuckConfigString.getBytes(), subBuckConfig);
 
-    RepositoryFactory factory = new RepositoryFactory(
-        ImmutableMap.<String, String>of(),
-        Platform.detect(),
-        new TestConsole(),
-        mainProjectFolder.getRoot().toPath().toRealPath());
+    RepositoryFactory factory = new FakeRepositoryFactory(mainProjectFolder.getRoot().toPath());
 
     Repository mainProjectRepo = factory.getRepositoryByCanonicalName(Optional.<String>absent());
     ImmutableMap<Optional<String>, Optional<String>> mainLocalToCanonicalMap =

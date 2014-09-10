@@ -4,37 +4,12 @@ import copy
 import fnmatch
 import functools
 import glob as glob_module
+import json
 import optparse
 import os
 import os.path
 import re
 import sys
-
-try:
-    from com.xhaus.jyson import JysonCodec as json  # jython embedded in buck
-except ImportError:
-    import json  # python test case
-
-
-# TODO(user): upgrade to a jython including os.relpath
-def relpath(path, start=os.path.curdir):
-    """
-    Return a relative filepath
-
-    This returns the relative filepath to path from the current directory or
-    an optional start point.
-    """
-    if not path:
-        raise ValueError("no path specified")
-    start_list = os.path.abspath(start).split(os.path.sep)
-    path_list = os.path.abspath(path).split(os.path.sep)
-    # Work out how much of the filepath is shared by start and path.
-    common = len(os.path.commonprefix([start_list, path_list]))
-    rel_list = ([os.path.pardir] * (len(start_list) - common) +
-                path_list[common:])
-    if not rel_list:
-        return os.path.curdir
-    return os.path.join(*rel_list)
 
 
 # When build files are executed, the functions in this file tagged with
@@ -457,7 +432,7 @@ class BuildFileProcessor:
         # the build file or the files in includes through include_defs() don't
         # pollute the namespace for subsequent build files.
         build_env = copy.copy(self.root_build_env)
-        relative_path_to_build_file = relpath(
+        relative_path_to_build_file = os.path.relpath(
             build_file, self.project_root).replace('\\', '/')
         build_env['BASE'] = relative_path_to_build_file[:self.len_suffix]
         build_env['BUILD_FILE_DIRECTORY'] = os.path.dirname(build_file)
@@ -561,9 +536,7 @@ def main():
         buildFileProcessor.process(build_file)
 
     if options.server:
-        # Apparently for ... in sys.stdin doesn't work with Jython when a
-        # custom stdin is provided by the caller in Java-land.  Claims that
-        # sys.stdin is a filereader which doesn't offer an iterator.
+        # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
         for build_file in iter(sys.stdin.readline, ''):
             buildFileProcessor.process(build_file.rstrip())
 

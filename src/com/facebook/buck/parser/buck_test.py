@@ -3,7 +3,6 @@ from buck import split_path
 from buck import glob_walk_internal
 from buck import glob_walk
 from buck import glob_match
-from buck import relpath
 from buck import path_join
 from buck import symlink_aware_walk
 from buck import glob_module
@@ -275,24 +274,6 @@ class TestBuck(unittest.TestCase):
         self.assertEqual(
             ('HAL', [1, 2, 3], {'abc': 789}),
             testLazy.invoke(name='HAL', deps=[1, 2, 3]))
-
-    # Test the temporary reimplementation of relpath
-    # TODO(user): upgrade to a jython including os.relpath
-    def test_relpath(self):
-        real_getcwd = os.getcwd
-        try:
-            os.getcwd = lambda: r"/home/user/bar"
-            curdir = os.path.split(os.getcwd())[-1]
-            self.assertRaises(ValueError, relpath, "")
-            self.assertEqual("a", relpath("a"))
-            self.assertEqual("a", relpath(posixpath.abspath("a")))
-            self.assertEqual("a/b", relpath("a/b"))
-            self.assertEqual("../a/b", relpath("../a/b"))
-            self.assertEqual("../" + curdir + "/a", relpath("a", "../b"))
-            self.assertEqual("../" + curdir + "/a/b", relpath("a/b", "../c"))
-            self.assertEqual("../../a", relpath("a", "b/c"))
-        finally:
-            os.getcwd = real_getcwd
 
 
     def test_symlink_aware_walk(self):

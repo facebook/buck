@@ -75,7 +75,6 @@ BUCK_DIR_JAVA_ARGS = {
     "path_to_emma_jar": "third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar",
     "path_to_asm_jar": "third-party/java/asm/asm-debug-all-4.1.jar",
     "logging_config_file": "config/logging.properties",
-    "path_to_python_interp": "bin/jython",
     "path_to_buck_py": "src/com/facebook/buck/parser/buck.py",
 
     "path_to_compile_asset_catalogs_py":

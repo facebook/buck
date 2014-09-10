@@ -134,7 +134,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   }
 
   /**
-   * Initialization on demand moves around the performance impact of creating the Jython
+   * Initialization on demand moves around the performance impact of creating the Python
    * interpreter to when parsing actually begins.  This makes it easier to attribute this time
    * to the actual parse phase.
    */

@@ -538,20 +538,16 @@ public class BuckConfigTest {
         config.getPythonInterpreter());
   }
 
-  @Test
-  public void whenPythonOnPathNotFoundThenJythonUsed() throws IOException {
-    File jython = temporaryFolder.newFile("jython");
-    assertTrue("Should be able to set file executable", jython.setExecutable(true));
+  @Test(expected = HumanReadableException.class)
+  public void whenPythonOnPathNotFoundThenThrow() throws IOException {
     FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
         ImmutableMap.<String, String>builder()
             .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
             .put("PATHEXT", "")
             .build(),
-        ImmutableMap.of("buck.path_to_python_interp", jython.getAbsolutePath()));
-    assertEquals(
-        "Should fallback to Jython.",
-        jython.getAbsolutePath(),
-        config.getPythonInterpreter());
+        ImmutableMap.<String, String>of());
+    config.getPythonInterpreter();
+    fail("Should throw an exception when Python isn't found.");
   }
 
   @Test

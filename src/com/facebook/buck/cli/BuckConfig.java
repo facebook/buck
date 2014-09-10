@@ -779,11 +779,11 @@ public class BuckConfig {
 
   /**
    * Returns the path to python interpreter. If python is specified in the tools section
-   * that is used and an error reported if invalid. If no python is specified, the PATH
-   * is searched and if no python is found, jython is used as a fallback.
+   * that is used and an error reported if invalid.
    * @return The found python interpreter.
    */
   public String getPythonInterpreter() {
+    Preconditions.checkState(environment.containsKey("PATH"), "PATH is not defined.");
     Optional<String> configPath = getValue("tools", "python");
     if (configPath.isPresent()) {
       // Python path in config. Use it or report error if invalid.
@@ -805,12 +805,7 @@ public class BuckConfig {
           }
         }
       }
-      // Fall back to Jython if no python found.
-      File jython = new File(getProperty("buck.path_to_python_interp", "bin/jython"));
-      if (isExecutableFile(jython)) {
-        return jython.getAbsolutePath();
-      }
-      throw new HumanReadableException("No python or jython found.");
+      throw new HumanReadableException("No python2 or python found.");
     }
   }
 
