@@ -29,17 +29,13 @@ public class FakeRepositoryFactory extends RepositoryFactory {
   private static final Path FAKE_PATH = Paths.get("/fake/repo/factory/path");
 
   public FakeRepositoryFactory() {
-    super(
-        ImmutableMap.<String, String>of(),
-        Platform.detect(),
-        new TestConsole(),
-        FAKE_PATH);
+    this(FAKE_PATH);
     cachedRepositories.put(FAKE_PATH, new TestRepositoryBuilder().setRootPath(FAKE_PATH).build());
   }
 
   public FakeRepositoryFactory(Path root) {
     super(
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.copyOf(System.getenv()),
         Platform.detect(),
         new TestConsole(),
         root);

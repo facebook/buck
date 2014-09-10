@@ -23,14 +23,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
-import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,18 +65,11 @@ public class CrossRepoTargetsIntegrationTest {
         "external = " + externalFolder.getRoot() + "\n";
     Files.append(repositoriesSection, main.getFile(".buckconfig"), Charset.defaultCharset());
 
-    TestConsole console = new TestConsole();
-    RepositoryFactory repositoryFactory = new RepositoryFactory(
-        ImmutableMap.copyOf(System.getenv()),
-        Platform.detect(),
-        console,
-        mainFolder.getRoot().toPath());
-    Repository mainRepo = repositoryFactory.getRepositoryByAbsolutePath(
-        mainFolder.getRoot().toPath());
+    RepositoryFactory repositoryFactory = new FakeRepositoryFactory(mainFolder.getRoot().toPath());
 
     Parser parser = Parser.createParser(
         repositoryFactory,
-        mainRepo.getBuckConfig().getPythonInterpreter(),
+        repositoryFactory.getRootRepository().getBuckConfig().getPythonInterpreter(),
         ImmutableSet.<Pattern>of(),
         new FakeRuleKeyBuilderFactory());
 
@@ -89,7 +81,7 @@ public class CrossRepoTargetsIntegrationTest {
         ImmutableList.of(mainTarget),
         ImmutableList.<String>of(),
         BuckEventBusFactory.newInstance(),
-        console,
+        new TestConsole(),
         ImmutableMap.<String, String>of());
 
     BuildRule mainRule = graph.findBuildRuleByTarget(mainTarget);
