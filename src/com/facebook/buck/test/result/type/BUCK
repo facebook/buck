@@ -11,6 +11,7 @@ java_library(
     '//src/com/facebook/buck/junit:base',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/test:test',
+    '//src/com/facebook/buck/cxx:rules',
     '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/event:event',

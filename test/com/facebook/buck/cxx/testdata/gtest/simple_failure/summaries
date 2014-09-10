@@ -1,0 +1,12 @@
+[
+  {
+    "message": "folly/test/Test.cpp:4\nValue of: 0\nExpected: 1",
+    "stacktrace": "",
+    "stdErr": "",
+    "stdOut": "folly/test/Test.cpp:4: Failure\nValue of: 0\nExpected: 1",
+    "testCase": "BAR",
+    "testCaseName": "FOO",
+    "time": 0,
+    "type": "FAILURE"
+  }
+]

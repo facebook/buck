@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -21,27 +21,30 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.Label;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class CxxBinaryDescription implements
-    Description<CxxBinaryDescription.Arg>,
+public class CxxTestDescription implements
+    Description<CxxTestDescription.Arg>,
     ImplicitDepsInferringDescription {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("cxx_binary");
+  private static final BuildRuleType TYPE = new BuildRuleType("cxx_test");
 
   private final CxxBuckConfig cxxBuckConfig;
 
-  public CxxBinaryDescription(CxxBuckConfig cxxBuckConfig) {
+  public CxxTestDescription(CxxBuckConfig cxxBuckConfig) {
     this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
+  }
+
+  @Override
+  public BuildRuleType getBuildRuleType() {
+    return TYPE;
   }
 
   @Override
@@ -50,41 +53,48 @@ public class CxxBinaryDescription implements
   }
 
   @Override
-  public <A extends Arg> CxxBinary createBuildRule(
+  public <A extends Arg> CxxTest createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
 
+    // Generate the link rule that builds the test binary.
     CxxLink cxxLink = CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
         params,
         resolver,
         cxxBuckConfig,
         args);
 
-    // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
-    // rule above for a couple reasons:
-    //  1) CxxBinary extends BinaryBuildRule whereas CxxLink does not, so the former can be used
-    //     as executables for genrules.
-    //  2) In some cases, users add dependencies from some rules onto other binary rules, typically
-    //     if the binary is executed by some test or library code at test time.  These target graph
-    //     deps should *not* become build time dependencies on the CxxLink step, otherwise we'd
-    //     have to wait for the dependency binary to link before we could link the dependent binary.
-    //     By using another BuildRule, we can keep the original target graph dependency tree while
-    //     preventing it from affecting link parallelism.
-    return new CxxBinary(
+    // Construct the actual build params we'll use, notably with an added dependency on the
+    // CxxLink rule above which builds the test binary.
+    BuildRuleParams testParams =
         params.copyWithDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(params.getDeclaredDeps())
                 .add(cxxLink)
                 .build(),
-            params.getExtraDeps()),
-        cxxLink.getOutput(),
-        cxxLink);
-  }
+            params.getExtraDeps());
 
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+    CxxTest test;
+
+    CxxTestType type = args.framework.or(CxxTestType.GTEST);
+    switch (type) {
+      case GTEST: {
+        test = new CxxGtestTest(
+            testParams,
+            cxxLink.getOutput(),
+            args.labels.or(ImmutableSet.<Label>of()),
+            args.contacts.or(ImmutableSet.<String>of()),
+            args.sourceUnderTest.or(ImmutableSet.<BuildRule>of()));
+        break;
+      }
+      default: {
+        Preconditions.checkState(false, "Unhandled C++ test type: %s", type);
+        throw new RuntimeException();
+      }
+    }
+
+    return test;
   }
 
   @Override
@@ -95,18 +105,32 @@ public class CxxBinaryDescription implements
       deps.add(cxxBuckConfig.getLexDep().toString());
     }
 
+    // Attempt to extract the test type from the params, and add an implicit dep on the
+    // corresponding test framework library.
+    Object rawType = params.getNullableRawAttribute("framework");
+    if (rawType != null && rawType instanceof String) {
+      String strType = (String) rawType;
+      CxxTestType type = CxxTestType.valueOf(strType.toUpperCase());
+      switch (type) {
+        case GTEST: {
+          deps.add(cxxBuckConfig.getGtestDep().toString());
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+
     return deps.build();
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg implements ConstructorArg {
-    public Optional<ImmutableList<SourcePath>> srcs;
-    public Optional<ImmutableList<SourcePath>> headers;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
-    public Optional<ImmutableList<String>> compilerFlags;
-    public Optional<ImmutableList<String>> preprocessorFlags;
-    public Optional<ImmutableList<SourcePath>> lexSrcs;
-    public Optional<ImmutableList<SourcePath>> yaccSrcs;
+  public class Arg extends CxxBinaryDescription.Arg {
+    public Optional<ImmutableSet<String>> contacts;
+    public Optional<ImmutableSet<Label>> labels;
+    public Optional<ImmutableSet<BuildRule>> sourceUnderTest;
+    public Optional<CxxTestType> framework;
   }
 
 }

@@ -44,6 +44,7 @@ import com.facebook.buck.cxx.Archives;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPythonExtensionDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
@@ -218,6 +219,7 @@ public class KnownBuildRuleTypes {
     builder.register(new BuckExtensionDescription());
     builder.register(new CoreDataModelDescription());
     builder.register(new CxxBinaryDescription(cxxBuckConfig));
+    builder.register(new CxxTestDescription(cxxBuckConfig));
     builder.register(new CxxLibraryDescription(cxxBuckConfig));
     builder.register(new PrebuiltCxxLibraryDescription());
     builder.register(new CxxPythonExtensionDescription(cxxBuckConfig));

@@ -1,0 +1,18 @@
+[==========] Running 1 test from 1 test case.
+[----------] Global test environment set-up.
+[----------] 1 test from FOO
+[ RUN      ] FOO.BAR
+hello world
+folly/test/Test.cpp:6: Failure
+Value of: 0
+Expected: 1
+[  FAILED  ] FOO.BAR (0 ms)
+[----------] 1 test from FOO (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test case ran. (0 ms total)
+[  PASSED  ] 0 tests.
+[  FAILED  ] 1 test, listed below:
+[  FAILED  ] FOO.BAR
+
+ 1 FAILED TEST

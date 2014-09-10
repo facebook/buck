@@ -59,7 +59,7 @@ public class CxxLexYaccIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:main");
-    BuildTarget binaryTarget = CxxBinaryDescription.createCxxLinkTarget(target);
+    BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "main.cpp";
     String yaccSourceName = "mainy.yy";
     String yaccSourceFull = "foo/" + yaccSourceName;

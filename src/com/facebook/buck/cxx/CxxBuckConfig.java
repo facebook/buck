@@ -110,4 +110,8 @@ public class CxxBuckConfig {
     return delegate.getRequiredBuildTarget("cxx", "python_dep");
   }
 
+  public BuildTarget getGtestDep() {
+    return delegate.getRequiredBuildTarget("cxx", "gtest_dep");
+  }
+
 }

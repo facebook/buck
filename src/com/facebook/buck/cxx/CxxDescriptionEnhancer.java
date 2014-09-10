@@ -47,6 +47,7 @@ public class CxxDescriptionEnhancer {
   private static final Flavor HEADER_SYMLINK_TREE_FLAVOR = new Flavor("header-symlink-tree");
   private static final BuildRuleType LEX_TYPE = new BuildRuleType("lex");
   private static final BuildRuleType YACC_TYPE = new BuildRuleType("yacc");
+  private static final Flavor CXX_LINK_BINARY_FLAVOR = new Flavor("binary");
 
   private CxxDescriptionEnhancer() {}
 
@@ -473,6 +474,110 @@ public class CxxDescriptionEnhancer {
       }
 
     };
+  }
+
+  @VisibleForTesting
+  protected static Path getOutputPath(BuildTarget target) {
+    return BuildTargets.getBinPath(target, "%s/" + target.getShortName());
+  }
+
+  @VisibleForTesting
+  protected static BuildTarget createCxxLinkTarget(BuildTarget target) {
+    return BuildTargets.extendFlavoredBuildTarget(target, CXX_LINK_BINARY_FLAVOR);
+  }
+
+  public static CxxLink createBuildRulesForCxxBinaryDescriptionArg(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxBuckConfig cxxBuckConfig,
+      CxxBinaryDescription.Arg args) {
+
+    // Extract the C/C++ sources from the constructor arg.
+    ImmutableList<CxxSource> srcs =
+        CxxDescriptionEnhancer.parseCxxSources(
+            params.getBuildTarget(),
+            args.srcs.or(ImmutableList.<SourcePath>of()));
+
+    // Extract the header map from the our constructor arg.
+    ImmutableMap<Path, SourcePath> headers =
+        CxxDescriptionEnhancer.parseHeaders(
+            params.getBuildTarget(),
+            args.headers.or((ImmutableList.<SourcePath>of())));
+
+    // Extract the lex sources.
+    ImmutableMap<String, SourcePath> lexSrcs =
+        SourcePaths.getSourcePathNames(
+            params.getBuildTarget(),
+            "lexSrcs",
+            args.lexSrcs.or(ImmutableList.<SourcePath>of()));
+
+    // Extract the yacc sources.
+    ImmutableMap<String, SourcePath> yaccSrcs =
+        SourcePaths.getSourcePathNames(
+            params.getBuildTarget(),
+            "yaccSrcs",
+            args.yaccSrcs.or(ImmutableList.<SourcePath>of()));
+
+    // Setup the rules to run lex/yacc.
+    CxxHeaderSourceSpec lexYaccSources =
+        CxxDescriptionEnhancer.createLexYaccBuildRules(
+            params,
+            resolver,
+            cxxBuckConfig,
+            ImmutableList.<String>of(),
+            lexSrcs,
+            ImmutableList.<String>of(),
+            yaccSrcs);
+
+    // Setup the header symlink tree and combine all the preprocessor input from this rule
+    // and all dependencies.
+    SymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTreeBuildRule(
+        params,
+        resolver,
+        headers);
+    CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
+        params,
+        cxxBuckConfig,
+        args.preprocessorFlags.or(ImmutableList.<String>of()),
+        headerSymlinkTree,
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(headers)
+            .putAll(lexYaccSources.getCxxHeaders())
+            .build());
+
+    // Generate the rules for setting up and headers, preprocessing, and compiling the input
+    // sources and return the source paths for the object files.
+    ImmutableList<SourcePath> objects =
+        CxxDescriptionEnhancer.createPreprocessAndCompileBuildRules(
+            params,
+            resolver,
+            cxxBuckConfig,
+            cxxPreprocessorInput,
+            args.compilerFlags.or(ImmutableList.<String>of()),
+            /* pic */ false,
+            ImmutableList.<CxxSource>builder()
+                .addAll(srcs)
+                .addAll(lexYaccSources.getCxxSources())
+                .build());
+
+    // Generate the final link rule.  We use the top-level target as the link rule's
+    // target, so that it corresponds to the actual binary we build.
+    Path output = getOutputPath(params.getBuildTarget());
+    CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        params,
+        cxxBuckConfig.getLd().or(CxxLinkables.DEFAULT_LINKER_PATH),
+        cxxBuckConfig.getCxxLdFlags(),
+        cxxBuckConfig.getLdFlags(),
+        createCxxLinkTarget(params.getBuildTarget()),
+        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Optional.<String>absent(),
+        output,
+        objects,
+        NativeLinkable.Type.STATIC,
+        params.getDeps());
+    resolver.addToIndex(cxxLink);
+
+    return cxxLink;
   }
 
 }

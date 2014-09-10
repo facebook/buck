@@ -43,7 +43,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
-    BuildTarget binaryTarget = CxxBinaryDescription.createCxxLinkTarget(target);
+    BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "simple.cpp";
     String sourceFull = "foo/" + sourceName;
     BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
@@ -130,7 +130,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple_with_header");
-    BuildTarget binaryTarget = CxxBinaryDescription.createCxxLinkTarget(target);
+    BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "simple_with_header.cpp";
     String headerName = "simple_with_header.h";
     String headerFull = "foo/" + headerName;
@@ -188,7 +188,7 @@ public class CxxBinaryIntegrationTest {
 
     // Setup variables pointing to the sources and targets of the top-level binary rule.
     BuildTarget target = BuildTargetFactory.newInstance("//foo:binary_with_dep");
-    BuildTarget binaryTarget = CxxBinaryDescription.createCxxLinkTarget(target);
+    BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "foo.cpp";
     BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
         target,
