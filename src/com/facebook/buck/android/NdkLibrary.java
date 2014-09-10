@@ -28,16 +28,20 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
@@ -117,7 +121,7 @@ public class NdkLibrary extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
-      BuildableContext buildableContext) {
+      final BuildableContext buildableContext) {
 
     // .so files are written to the libs/ subdirectory of the output directory.
     // All of them should be recorded via the BuildableContext.
@@ -135,8 +139,33 @@ public class NdkLibrary extends AbstractBuildRule
 
     buildableContext.recordArtifactsInDirectory(genDirectory);
     // Some tools need to inspect .so files whose symbols haven't been stripped, so cache these too.
-    buildableContext.recordArtifactsInDirectory(buildArtifactsDirectory);
-    return ImmutableList.of(nkdBuildStep, mkDirStep, copyStep);
+    // However, the intermediate object files are huge and we have no interest in them, so filter
+    // them out.
+    Step cacheUnstrippedObjs = new AbstractExecutionStep("cache_unstripped_so") {
+      @Override
+      public int execute(ExecutionContext context) {
+        try {
+          Set<Path> unstrippedSharedObjs = context.getProjectFilesystem()
+              .getFilesUnderPath(
+                  buildArtifactsDirectory,
+                  new Predicate<Path>() {
+                    @Override
+                    public boolean apply(Path input) {
+                      return input.toString().endsWith(".so");
+                    }
+                  });
+          for (Path path : unstrippedSharedObjs) {
+            buildableContext.recordArtifact(path);
+          }
+        } catch (IOException e) {
+          context.logError(e, "Failed to cache intermediate artifacts of %s.", getBuildTarget());
+          return 1;
+        }
+        return 0;
+      }
+    };
+
+    return ImmutableList.of(nkdBuildStep, mkDirStep, copyStep, cacheUnstrippedObjs);
   }
 
   /**
