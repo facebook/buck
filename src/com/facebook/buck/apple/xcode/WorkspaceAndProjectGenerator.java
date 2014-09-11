@@ -17,8 +17,8 @@
 package com.facebook.buck.apple.xcode;
 
 import com.dd.plist.NSDictionary;
-import com.facebook.buck.apple.AppleTest;
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleTest;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfig;
@@ -65,7 +65,7 @@ public class WorkspaceAndProjectGenerator {
   private final XcodeWorkspaceConfig workspaceBuildable;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules;
-  private final ImmutableSet<BuildRule> extraTestRules;
+  private final ImmutableSet<BuildRule> extraTestBundleRules;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
@@ -74,7 +74,7 @@ public class WorkspaceAndProjectGenerator {
       XcodeWorkspaceConfig workspaceBuildable,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       Multimap<BuildRule, AppleTest> sourceRuleToTestRules,
-      Iterable<BuildRule> extraTestRules) {
+      Iterable<BuildRule> extraTestBundleRules) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.projectTargetGraph = Preconditions.checkNotNull(projectTargetGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
@@ -84,7 +84,7 @@ public class WorkspaceAndProjectGenerator {
       .addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS)
       .build();
     this.sourceRuleToTestRules = ImmutableMultimap.copyOf(sourceRuleToTestRules);
-    this.extraTestRules = ImmutableSet.copyOf(extraTestRules);
+    this.extraTestBundleRules = ImmutableSet.copyOf(extraTestBundleRules);
   }
 
   public Path generateWorkspaceAndDependentProjects(
@@ -115,7 +115,7 @@ public class WorkspaceAndProjectGenerator {
         projectTargetGraph.getActionGraph(),
         sourceRuleToTestRules,
         orderedBuildRules,
-        extraTestRules,
+        extraTestBundleRules,
         orderedTestBuildRulesBuilder,
         orderedTestBundleRulesBuilder);
 
@@ -252,7 +252,7 @@ public class WorkspaceAndProjectGenerator {
       ActionGraph actionGraph,
       ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules,
       ImmutableSet<BuildRule> orderedBuildRules,
-      ImmutableSet<BuildRule> extraTestRules,
+      ImmutableSet<BuildRule> extraTestBundleRules,
       ImmutableSet.Builder<BuildRule> orderedTestBuildRulesBuilder,
       ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder) {
     LOG.debug("Getting ordered test rules, build rules %s", orderedBuildRules);
@@ -269,13 +269,14 @@ public class WorkspaceAndProjectGenerator {
       }
     }
 
-    for (BuildRule testRule : extraTestRules) {
-      if (!(testRule instanceof AppleTest)) {
-        throw new HumanReadableException("Test rule %s must be apple_test!", testRule);
+    for (BuildRule testBundleRule : extraTestBundleRules) {
+      if (!AppleBuildRules.isXcodeTargetTestBundleBuildRule(testBundleRule)) {
+        throw new HumanReadableException(
+            "Test rule %s must be apple_bundle with a test extension!",
+            testBundleRule);
       }
-      AppleTest appleTestRule = (AppleTest) testRule;
       addTestRuleAndDependencies(
-          appleTestRule.getTestBundle(),
+          testBundleRule,
           recursiveTestRulesBuilder,
           orderedTestBundleRulesBuilder);
     }

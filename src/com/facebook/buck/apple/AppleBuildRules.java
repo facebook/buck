@@ -76,6 +76,20 @@ public final class AppleBuildRules {
     return XCODE_TARGET_TEST_BUNDLE_EXTENSIONS.contains(extension);
   }
 
+  /**
+   * Whether the rule is an AppleBundle rule containing a known test bundle extension.
+   */
+  public static boolean isXcodeTargetTestBundleBuildRule(BuildRule rule) {
+    if (!(rule instanceof AppleBundle)) {
+      return false;
+    }
+    AppleBundle appleBundleRule = (AppleBundle) rule;
+    if (!appleBundleRule.getExtensionValue().isPresent()) {
+      return false;
+    }
+    return isXcodeTargetTestBundleExtension(appleBundleRule.getExtensionValue().get());
+  }
+
   public enum RecursiveRuleDependenciesMode {
     /**
      * Will always traverse dependencies.
