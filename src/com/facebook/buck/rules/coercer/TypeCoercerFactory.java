@@ -100,6 +100,7 @@ public class TypeCoercerFactory {
 
         // other simple
         appleSourceTypeCoercer,
+        new AppleBundleDestinationTypeCoercer(stringTypeCoercer),
         new BuildConfigFieldsTypeCoercer(),
     };
   }

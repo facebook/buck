@@ -78,7 +78,6 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
   }
 
   @Override
-  @SuppressWarnings("PMD.EmptyCatchBlock")
   public AppleSource coerce(
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem filesystem,
