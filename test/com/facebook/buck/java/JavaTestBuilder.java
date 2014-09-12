@@ -95,6 +95,7 @@ public class JavaTestBuilder {
           contacts.build(),
           proguardConfig,
           /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+          JUnitStep.TYPE_JUNIT,
           JavacOptions.DEFAULTS,
           vmArgs,
           sourcesUnderTest.build(),

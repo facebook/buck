@@ -19,7 +19,7 @@ package com.example;
 import org.junit.Test;
 import org.junit.internal.AssumptionViolatedException;
 
-public class AssumptionTestA {
+public class AssumptionTestAJunit {
   @Test public void test1() {}
   @Test public void test2() {}
   @Test public void test3() {

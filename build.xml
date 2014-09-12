@@ -96,6 +96,7 @@
 
   <path id="junit">
     <pathelement location="${lib.dir}/junit-4.11.jar" />
+    <pathelement location="${lib.dir}/testng-6.8.jar" />
     <pathelement location="${lib.dir}/hamcrest-core-1.3.jar" />
     <pathelement location="${lib.dir}/hamcrest-library-1.3.jar" />
   </path>
@@ -617,6 +618,7 @@
     <path refid="classpath" />
     <!-- Buck test runner has references to JUnit. -->
     <pathelement location="${lib.dir}/junit-4.11.jar" />
+    <pathelement location="${lib.dir}/testng-6.8.jar" />
   </path>
 
   <target name="javadoc"
