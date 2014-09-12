@@ -21,6 +21,7 @@ import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -107,7 +108,7 @@ public class ZipStep implements Step {
           }
 
           Path relativePath = junkPaths ? file.getFileName() : baseDir.relativize(file);
-          String entryName = relativePath.toString();
+          String entryName = MorePaths.pathWithUnixSeparators(relativePath);
           CustomZipEntry entry = new CustomZipEntry(entryName);
           entry.setTime(attributes.lastModifiedTime().toMillis());
           entry.setSize(attributes.size());

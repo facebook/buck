@@ -313,7 +313,7 @@ public class JarDirectoryStep implements Step {
 
       @Override
       public void visit(File file, String relativePath) {
-        JarEntry entry = new JarEntry(relativePath);
+        JarEntry entry = new JarEntry(relativePath.replace('\\', '/'));
         String entryName = entry.getName();
         entry.setTime(file.lastModified());
         try {
@@ -341,7 +341,7 @@ public class JarDirectoryStep implements Step {
           // root of the tree. Skip.
           return;
         }
-        String entryName = relativePath + "/";
+        String entryName = relativePath.replace('\\', '/') + "/";
         if (alreadyAddedEntries.contains(entryName)) {
           return;
         }
