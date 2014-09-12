@@ -807,7 +807,8 @@ public final class Main {
       Verbosity verbosity,
       ExecutionEnvironment executionEnvironment,
       BuckConfig config) {
-    if (console.getAnsi().isAnsiTerminal() &&
+    if (Platform.WINDOWS != Platform.detect() &&
+        console.getAnsi().isAnsiTerminal() &&
         !verbosity.shouldPrintCommand() &&
         verbosity.shouldPrintStandardInformation()) {
       SuperConsoleEventBusListener superConsole = new SuperConsoleEventBusListener(

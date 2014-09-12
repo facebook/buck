@@ -116,7 +116,7 @@ def symlink_aware_walk(base):
 
 def split_path(path):
     """Splits /foo/bar/baz.java into ['', 'foo', 'bar', 'baz.java']."""
-    return path.split(os.path.sep)
+    return path.split('/')
 
 
 def well_formed_tokens(tokens):
