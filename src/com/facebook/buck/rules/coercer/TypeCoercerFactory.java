@@ -102,6 +102,7 @@ public class TypeCoercerFactory {
         appleSourceTypeCoercer,
         new AppleBundleDestinationTypeCoercer(stringTypeCoercer),
         new BuildConfigFieldsTypeCoercer(),
+        new UriTypeCoercer(),
     };
   }
 

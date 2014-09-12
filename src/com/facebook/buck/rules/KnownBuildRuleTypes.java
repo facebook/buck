@@ -46,6 +46,8 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
+import com.facebook.buck.file.Downloader;
+import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaCompilerEnvironment;
@@ -78,6 +80,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
+import java.net.Proxy;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -188,6 +191,11 @@ public class KnownBuildRuleTypes {
     Optional<Path> pythonPathToPythonTestMain =
         config.getPath("python", "path_to_python_test_main");
 
+    // Default maven repo, if set
+    Optional<String> defaultMavenRepo = config.getValue("download", "maven_repo");
+    Downloader downloader = new Downloader(Optional.<Proxy>absent(), defaultMavenRepo);
+    boolean downloadAtRuntimeOk = config.getBooleanValue("download", "in_build", false);
+
     Builder builder = builder();
 
     JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
@@ -245,6 +253,7 @@ public class KnownBuildRuleTypes {
         pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
         pythonEnv));
     builder.register(new PythonLibraryDescription());
+    builder.register(new RemoteFileDescription(downloadAtRuntimeOk, downloader));
     builder.register(new RobolectricTestDescription(javacEnv));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription());

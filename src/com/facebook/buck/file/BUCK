@@ -1,0 +1,40 @@
+java_library(
+  name = 'downloader',
+  srcs = [
+    'Downloader.java',
+    'DownloadEvent.java',
+    'DownloadProgressEvent.java',
+    'MavenUrlDecoder.java',
+  ],
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/util:exceptions',
+  ],
+  visibility = [ 'PUBLIC' ],
+)
+
+java_library(
+  name = 'file',
+  srcs = [
+    'DownloadStep.java',
+    'RemoteFile.java',
+    'RemoteFileDescription.java',
+  ],
+  deps = [
+    ':downloader',
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:exceptions',
+    '//third-party/java/infer-annotations:infer-annotations',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/rules:types',
+  ],
+)
