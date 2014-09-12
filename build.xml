@@ -677,12 +677,12 @@
 
   <target name="travis" depends="test, verify-javadoc" />
 
-  <target name="client" description="install nailgun buckd c client">
+  <target name="client" description="install nailgun buckd c client (non Windows only)">
     <mkdir dir="${build.dir}" />
     <exec dir="${basedir}"
           executable="gcc"
           failonerror="true"
-          os="Mac OS X,Linux">
+          osfamily="unix">
       <arg line="-Wall -pedantic -O3 -o ${build.dir}/ng ${client.dir}/nailgun-client/ng.c" />
     </exec>
   </target>
