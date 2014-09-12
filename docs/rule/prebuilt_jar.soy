@@ -5,6 +5,10 @@
   {call buck.page}
     {param title: 'prebuilt_jar()' /}
     {param prettify: true /}
+    {param description}
+      A rule that is used to identify a JAR file that is checked into the
+      project as a precompiled binary.
+    {/param}
     {param content}
 
 {call buck.rule}

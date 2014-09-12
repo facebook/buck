@@ -5,6 +5,10 @@
   {call buck.page}
     {param title: 'java_binary()' /}
     {param prettify: true /}
+    {param description}
+      A rule that is used to create a JAR file of the compiled .class files
+      and resources of the java_library() rules on which it depends.
+    {/param}
     {param content}
 
 {call buck.rule}

@@ -5,6 +5,10 @@
   {call buck.page}
     {param title: 'android_build_config()' /}
     {param prettify: true /}
+    {param description}
+      A rule that is used to generate a BuildConfig class with global
+      configuration variables that android_library() rules can compile against.
+    {/param}
     {param content}
 
 {call buck.rule}

@@ -5,6 +5,10 @@
   {call buck.page}
     {param title: 'python_binary()' /}
     {param prettify: true /}
+    {param description}
+      A rule that is used to build a PEX file that includes python sources and
+      resources from all transitive python_library() dependencies.
+    {/param}
     {param content}
 
 {call buck.rule}

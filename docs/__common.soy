@@ -7,6 +7,7 @@
  * @param? ishome
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
+ * @param description the content of the og:description meta tag
  */
 {template .page}
   {call .header}
@@ -14,6 +15,7 @@
     {param title: $title /}
     {param subtitle: $subtitle /}
     {param prettify: $prettify /}
+    {param description: $description /}
   {/call}
 
   <div class="{css overview}">
@@ -31,6 +33,7 @@
  * @param? ishome
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
+ * @param description the content of the og:description meta tag
  */
 {template .header}
 {let $fullTitle}
@@ -77,6 +80,7 @@ ga('send', 'pageview');
   <meta property="og:site_name" content="Buck: an Android build tool">
   <meta property="og:image" content="http://facebook.github.io/buck/static/og.png">
   <meta property="og:type" content="{$og_type}">
+  <meta property="og:description" content="{$description}">
   <meta property="fb:admins" content="{FB_APP_ID}">
 
 </head>

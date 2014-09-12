@@ -5,6 +5,11 @@
   {call buck.page}
     {param title: 'ndk_library()' /}
     {param prettify: true /}
+    {param description}
+      A rule that is used to define a set of C/C++ files, an Android.mk and an
+      Application.mk file that are used by the Android NDK's ndk-build tool to
+      generate one or more shared objects.
+    {/param}
     {param content}
 
 {call buck.rule}

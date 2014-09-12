@@ -5,6 +5,10 @@
   {call buck.page}
     {param title: 'genrule()' /}
     {param prettify: true /}
+    {param description}
+      A rule that is used to generate a file from a shell command. It must
+      produce a single output file.
+    {/param}
     {param content}
 
 {call buck.rule}

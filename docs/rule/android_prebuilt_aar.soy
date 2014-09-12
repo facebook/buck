@@ -5,6 +5,10 @@
   {call buck.page}
     {param title: 'android_prebuilt_aar()' /}
     {param prettify: true /}
+    {param description}
+      A rule that takes an .aar file and makes it available as an Android
+      dependency.
+    {/param}
     {param content}
 
 {call buck.rule}
