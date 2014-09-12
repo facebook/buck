@@ -76,7 +76,8 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
           getParser(),
           getBuckEventBus(),
           console,
-          environment);
+          environment,
+          false /* enableProfiling */);
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

@@ -84,7 +84,8 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
           getParser(),
           getBuckEventBus(),
           console,
-          environment);
+          environment,
+          false /* enableProfiling */);
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

@@ -436,7 +436,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         getParser(),
         getBuckEventBus(),
         console,
-        environment);
+        environment,
+        options.getEnableProfiling());
   }
 
   @VisibleForTesting
@@ -540,7 +541,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getParser(),
           getBuckEventBus(),
           console,
-          environment);
+          environment,
+          options.getEnableProfiling());
       return new PartialGraphs(
           partialGraphs.get(0),
           Optional.of(partialGraphs.get(1)),
@@ -558,7 +560,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getParser(),
           getBuckEventBus(),
           console,
-          environment);
+          environment,
+          options.getEnableProfiling());
       return new PartialGraphs(
           partialGraphs.get(0),
           Optional.<PartialGraph>absent(),

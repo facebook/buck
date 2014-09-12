@@ -88,6 +88,11 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
           "applies to generated Xcode projects.)")
   private boolean readOnly = DEFAULT_READ_ONLY_VALUE;
 
+  @Option(
+      name = "--profile",
+      usage = "Enable profiling of buck.py in debug log")
+  private boolean enableProfiling = false;
+
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
@@ -200,5 +205,9 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     BuildCommandOptions buildCommandOptions = new BuildCommandOptions(getBuckConfig());
     buildCommandOptions.setArguments(initialTargets);
     return buildCommandOptions;
+  }
+
+  public boolean getEnableProfiling() {
+    return enableProfiling;
   }
 }

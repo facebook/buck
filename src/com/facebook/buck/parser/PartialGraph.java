@@ -62,7 +62,8 @@ public class PartialGraph {
       Parser parser,
       BuckEventBus eventBus,
       Console console,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      boolean enableProfiling)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     return createPartialGraph(
         RuleJsonPredicates.alwaysTrue(),
@@ -71,7 +72,8 @@ public class PartialGraph {
         parser,
         eventBus,
         console,
-        environment);
+        environment,
+        enableProfiling);
   }
 
   public static PartialGraph createPartialGraph(
@@ -81,7 +83,8 @@ public class PartialGraph {
       Parser parser,
       BuckEventBus eventBus,
       Console console,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      boolean enableProfiling)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     return Iterables.getOnlyElement(
         createPartialGraphs(
@@ -94,7 +97,8 @@ public class PartialGraph {
             parser,
             eventBus,
             console,
-            environment));
+            environment,
+            enableProfiling));
   }
 
   /**
@@ -113,7 +117,8 @@ public class PartialGraph {
       Parser parser,
       BuckEventBus eventBus,
       Console console,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      boolean enableProfiling)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     ImmutableSet<BuildTarget> roots = rootsOptional.or(
         parser.filterAllTargetsInProject(
@@ -122,7 +127,8 @@ public class PartialGraph {
             rootsPredicate.or(RuleJsonPredicates.alwaysTrue()),
             console,
             environment,
-            eventBus));
+            eventBus,
+            enableProfiling));
 
     ImmutableList.Builder<PartialGraph> graphs = ImmutableList.builder();
 
@@ -147,7 +153,8 @@ public class PartialGraph {
           parser,
           eventBus,
           console,
-          environment);
+          environment,
+          enableProfiling);
 
       ImmutableSet.Builder<BuildTarget> allTargetsBuilder = ImmutableSet.builder();
       allTargetsBuilder.addAll(partialGraph.getTargets());

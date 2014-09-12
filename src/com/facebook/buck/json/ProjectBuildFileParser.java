@@ -25,6 +25,7 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.InputStreamConsumer;
+import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Threads;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,6 +38,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,6 +89,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private boolean isInitialized;
   private boolean isClosed;
 
+  private boolean enableProfiling;
+  @Nullable private NamedTemporaryFile profileOutputFile;
+
   protected ProjectBuildFileParser(
       ProjectFilesystem projectFilesystem,
       Iterable<String> commonIncludes,
@@ -123,6 +128,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ensureNotInitialized();
 
     this.isServerMode = isServerMode;
+  }
+
+  public void setEnableProfiling(boolean enableProfiling) {
+    ensureNotClosed();
+    ensureNotInitialized();
+    this.enableProfiling = enableProfiling;
   }
 
   private void ensureNotClosed() {
@@ -191,6 +202,14 @@ public class ProjectBuildFileParser implements AutoCloseable {
     // produced.
     argBuilder.add("-u");
 
+    if (enableProfiling) {
+      profileOutputFile = new NamedTemporaryFile("buck-py-profile", ".pstats");
+      argBuilder.add("-m");
+      argBuilder.add("cProfile");
+      argBuilder.add("-o");
+      argBuilder.add(profileOutputFile.get().toString());
+    }
+
     argBuilder.add(getPathToBuckPy(descriptions).toString());
 
     if (isServerMode) {
@@ -224,7 +243,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       Iterable<String> includes,
       Console console,
       ImmutableMap<String, String> environment,
-      BuckEventBus buckEventBus)
+      BuckEventBus buckEventBus,
+      boolean enableProfiling)
       throws BuildFileParseException, InterruptedException {
     try (ProjectBuildFileParser buildFileParser =
              factory.createParser(
@@ -233,6 +253,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
                  environment,
                  buckEventBus)) {
       buildFileParser.setServerMode(false);
+      buildFileParser.setEnableProfiling(enableProfiling);
       return buildFileParser.getAllRulesInternal(Optional.<Path>absent());
     } catch (IOException e) {
       throw BuildFileParseException.createForGenericBuildFileParseError(e);
@@ -325,6 +346,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
           }
         }
 
+        if (enableProfiling && profileOutputFile != null) {
+          parseProfileOutput(profileOutputFile.get());
+        }
+
         LOG.debug("Waiting for process %s to exit...", buckPyProcess);
         int exitCode = buckPyProcess.waitFor();
         if (exitCode != 0) {
@@ -348,6 +373,35 @@ public class ProjectBuildFileParser implements AutoCloseable {
     } finally {
       isClosed = true;
       buckEventBus.post(new ProjectBuildFileParseEvents.Finished());
+    }
+  }
+
+  private static void parseProfileOutput(Path profileOutput) throws InterruptedException {
+    try {
+      LOG.debug("Parsing output of profiler: %s", profileOutput);
+      ProcessBuilder processBuilder = new ProcessBuilder(
+          "python", "-m", "pstats", profileOutput.toString());
+      Process process = processBuilder.start();
+      LOG.debug("Started process: %s", processBuilder.command());
+      try (OutputStreamWriter stdin =
+               new OutputStreamWriter(process.getOutputStream(), Charsets.UTF_8);
+           BufferedWriter stdinWriter = new BufferedWriter(stdin);
+           InputStreamReader stdout =
+               new InputStreamReader(process.getInputStream(), Charsets.UTF_8);
+           BufferedReader stdoutReader = new BufferedReader(stdout)) {
+        stdinWriter.write("sort cumulative\nstats 25\n");
+        stdinWriter.flush();
+        stdinWriter.close();
+        LOG.debug("Reading process output...");
+        String line;
+        while ((line = stdoutReader.readLine()) != null) {
+          LOG.debug("buck.py profile: %s", line);
+        }
+        LOG.debug("Done reading process output.");
+      }
+      process.waitFor();
+    } catch (IOException e) {
+      LOG.error(e, "Couldn't read profile output file %s", profileOutput);
     }
   }
 

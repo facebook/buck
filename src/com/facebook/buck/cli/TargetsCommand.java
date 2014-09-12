@@ -105,7 +105,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
             getParser(),
             getBuckEventBus(),
             console,
-            environment);
+            environment,
+            false /* enableProfiling */);
       } else {
         graph = PartialGraph.createPartialGraphIncludingRoots(
             matchingBuildTargets,

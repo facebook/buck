@@ -636,7 +636,8 @@ public class Parser {
       RuleJsonPredicate filter,
       Console console,
       ImmutableMap<String, String> environment,
-      BuckEventBus buckEventBus)
+      BuckEventBus buckEventBus,
+      boolean enableProfiling)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     Preconditions.checkNotNull(filesystem);
     Preconditions.checkNotNull(includes);
@@ -653,7 +654,8 @@ public class Parser {
               includes,
               console,
               environment,
-              buckEventBus));
+              buckEventBus,
+              enableProfiling));
       allBuildFilesParsed = true;
     }
     return filterTargets(filter);
