@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
@@ -27,9 +28,12 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.FileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
@@ -49,7 +53,9 @@ public class CacheCommandTest extends EasyMockSupport {
         .builder()
         .setConsole(console)
         .build();
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
+    FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(
+        Maps.<String, String>newHashMap());
+    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams, fileHashCache);
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
     replayAll();
@@ -70,7 +76,9 @@ public class CacheCommandTest extends EasyMockSupport {
         .builder()
         .setConsole(console)
         .build();
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
+    FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(
+        Maps.<String, String>newHashMap());
+    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams, fileHashCache);
 
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
@@ -78,7 +86,8 @@ public class CacheCommandTest extends EasyMockSupport {
     expect(
         buckConfig.createCassandraArtifactCache(
             eq(Optional.<String>absent()),
-            capture(buckEventBus))).andReturn(null);
+            capture(buckEventBus),
+            anyObject(FileHashCache.class))).andReturn(null);
 
     replayAll();
 
@@ -104,7 +113,9 @@ public class CacheCommandTest extends EasyMockSupport {
         .builder()
         .setConsole(console)
         .build();
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
+    FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(
+        Maps.<String, String>newHashMap());
+    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams, fileHashCache);
 
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
@@ -118,7 +129,8 @@ public class CacheCommandTest extends EasyMockSupport {
     expect(
         buckConfig.createCassandraArtifactCache(
             eq(Optional.<String>absent()),
-            capture(buckEventBus))).andReturn(cassandra);
+            capture(buckEventBus),
+            anyObject(FileHashCache.class))).andReturn(cassandra);
 
     replayAll();
 
@@ -143,7 +155,9 @@ public class CacheCommandTest extends EasyMockSupport {
         .builder()
         .setConsole(console)
         .build();
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
+    FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(
+        Maps.<String, String>newHashMap());
+    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams, fileHashCache);
 
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
@@ -157,7 +171,8 @@ public class CacheCommandTest extends EasyMockSupport {
     expect(
         buckConfig.createCassandraArtifactCache(
             eq(Optional.<String>absent()),
-            capture(buckEventBus))).andReturn(cassandra);
+            capture(buckEventBus),
+            anyObject(FileHashCache.class))).andReturn(cassandra);
 
     replayAll();
 

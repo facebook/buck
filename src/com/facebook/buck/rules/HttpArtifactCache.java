@@ -19,7 +19,9 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.hash.HashCode;
 import com.google.common.io.ByteStreams;
 import com.google.common.base.Preconditions;
 
@@ -27,6 +29,9 @@ import java.io.File;
 import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
@@ -57,6 +62,7 @@ public class HttpArtifactCache implements ArtifactCache {
   private final boolean doStore;
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus buckEventBus;
+  private final FileHashCache fileHashCache;
   private final String urlStore;
 
   public HttpArtifactCache(
@@ -65,7 +71,8 @@ public class HttpArtifactCache implements ArtifactCache {
       int timeoutSeconds,
       boolean doStore,
       ProjectFilesystem projectFilesystem,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      FileHashCache fileHashCache) {
     Preconditions.checkNotNull(hostname);
     Preconditions.checkArgument(0 <= port && port < 65536);
     Preconditions.checkArgument(1 <= timeoutSeconds);
@@ -77,6 +84,7 @@ public class HttpArtifactCache implements ArtifactCache {
     this.doStore = doStore;
     this.projectFilesystem = projectFilesystem;
     this.buckEventBus = buckEventBus;
+    this.fileHashCache = Preconditions.checkNotNull(fileHashCache);
     this.numConnectionExceptionReports = new AtomicInteger(0);
     this.urlStore = String.format(URL_TEMPLATE_STORE, hostname, port);
   }
@@ -110,11 +118,45 @@ public class HttpArtifactCache implements ArtifactCache {
 
     switch (responseCode) {
       case HttpURLConnection.HTTP_OK:
-        try {
-          Path path = file.toPath();
-          projectFilesystem.createParentDirs(path);
-          projectFilesystem.copyToPath(connection.getInputStream(), path,
-              StandardCopyOption.REPLACE_EXISTING);
+        try (InputStream input = connection.getInputStream()) {
+
+          // Setup an object input stream to deserialize the hash code.
+          try (ObjectInputStream objectStream = new ObjectInputStream(input)) {
+
+            // First, extract the hash code from the beginning of the request data.
+            HashCode expectedHashCode;
+            try {
+              expectedHashCode = (HashCode) objectStream.readObject();
+            } catch (ClassNotFoundException | ClassCastException e) {
+              logger.warn("fetch(%s): could not deserialize artifact checksum", ruleKey);
+              return CacheResult.MISS;
+            }
+
+            // Setup a temporary file, which sits next to the destination, to write to and
+            // make sure all parent dirs exist.
+            Path path = file.toPath();
+            projectFilesystem.createParentDirs(path);
+            Path temp = projectFilesystem.createTempFile(
+                path.getParent(),
+                path.getFileName().toString(),
+                ".tmp");
+
+            // Write the remaining response data to the temp file.
+            projectFilesystem.copyToPath(input, temp, StandardCopyOption.REPLACE_EXISTING);
+
+            // Now form the checksum on the file we got and compare it to the checksum form the
+            // the HTTP header.  If it's incorrect, log this and return a miss.
+            HashCode actualHashCode = fileHashCache.get(temp);
+            if (!expectedHashCode.equals(actualHashCode)) {
+              logger.warn("fetch(%s): artifact had invalid checksum", ruleKey);
+              projectFilesystem.deleteFileAtPath(temp);
+              return CacheResult.MISS;
+            }
+
+            // Finally, move the temp file into it's final place.
+            projectFilesystem.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
+
+          }
         } catch (IOException e) {
           logger.warn(e, "fetch(%s): [write] IOException: %s", ruleKey, e.getMessage());
           return CacheResult.MISS;
@@ -142,6 +184,9 @@ public class HttpArtifactCache implements ArtifactCache {
       connection.setConnectTimeout(1000 * timeoutSeconds);
       connection.setRequestMethod(method);
       prepareFileUpload(connection, file, ruleKey.toString());
+    } catch (NotSerializableException e) {
+      logger.error(e, "store(%s): could not write hash code: %s", ruleKey);
+      return;
     } catch (MalformedURLException e) {
       logger.error(e, "store(%s): malformed URL: %s", ruleKey, urlStore);
       return;
@@ -207,8 +252,18 @@ public class HttpArtifactCache implements ArtifactCache {
       os.write("Content-Disposition: form-data; name=\"data0\"; filename=\"artifact\"\r\n"
           .getBytes(StandardCharsets.UTF_8));
       os.write("Content-Type: application/octet-stream\r\n\r\n".getBytes(StandardCharsets.UTF_8));
-      ByteStreams.copy(is, os);
-      os.write(("\r\n--" + BOUNDARY + "--\r\n").getBytes(StandardCharsets.UTF_8));
+
+      // Setup an object output stream to serialize the hash code.
+      try (ObjectOutputStream objectStream = new ObjectOutputStream(os)) {
+
+        // Grab the hash code of the file contents and serialize it to the beginning of the
+        // request data.
+        objectStream.writeObject(fileHashCache.get(file.toPath()));
+        objectStream.flush();
+
+        ByteStreams.copy(is, os);
+        os.write(("\r\n--" + BOUNDARY + "--\r\n").getBytes(StandardCharsets.UTF_8));
+      }
     }
   }
 }

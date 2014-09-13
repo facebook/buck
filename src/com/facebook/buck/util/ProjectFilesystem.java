@@ -734,4 +734,13 @@ public class ProjectFilesystem {
     return false;
   }
 
+  public Path createTempFile(
+      Path directory,
+      String prefix,
+      String suffix,
+      FileAttribute<?>... attrs)
+      throws IOException {
+    return Files.createTempFile(directory, prefix, suffix, attrs);
+  }
+
 }

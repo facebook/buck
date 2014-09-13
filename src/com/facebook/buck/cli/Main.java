@@ -528,6 +528,8 @@ public final class Main {
       }
     }
 
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(rootRepository.getFilesystem());
+
     @Nullable ArtifactCacheFactory artifactCacheFactory = null;
 
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
@@ -551,7 +553,10 @@ public final class Main {
 
       // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
       // running commands such as `buck clean`.
-      artifactCacheFactory = new LoggingArtifactCacheFactory(executionEnvironment, buildEventBus);
+      artifactCacheFactory = new LoggingArtifactCacheFactory(
+          executionEnvironment,
+          buildEventBus,
+          fileHashCache);
 
       Optional<WebServer> webServer = getWebServerIfDaemon(
           context,
@@ -599,7 +604,7 @@ public final class Main {
             repositoryFactory,
             rootRepository.getBuckConfig().getPythonInterpreter(),
             rootRepository.getBuckConfig().getTempFilePatterns(),
-            createRuleKeyBuilderFactory(new DefaultFileHashCache(rootRepository.getFilesystem())));
+            createRuleKeyBuilderFactory(fileHashCache));
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootRepository.getFilesystem());
 

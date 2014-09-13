@@ -31,6 +31,7 @@ import com.facebook.buck.rules.MultiArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -574,7 +575,8 @@ public class BuckConfig {
 
   public ArtifactCache createArtifactCache(
       Optional<String> currentWifiSsid,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      FileHashCache fileHashCache) {
     ImmutableList<String> modes = getArtifactCacheModes();
     if (modes.isEmpty()) {
       return new NoopArtifactCache();
@@ -591,13 +593,14 @@ public class BuckConfig {
         case cassandra:
           ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(
               currentWifiSsid,
-              buckEventBus);
+              buckEventBus,
+              fileHashCache);
           if (cassandraArtifactCache != null) {
             builder.add(cassandraArtifactCache);
           }
           break;
         case http:
-          ArtifactCache httpArtifactCache = createHttpArtifactCache(buckEventBus);
+          ArtifactCache httpArtifactCache = createHttpArtifactCache(buckEventBus, fileHashCache);
           builder.add(httpArtifactCache);
           break;
         }
@@ -647,14 +650,15 @@ public class BuckConfig {
   }
 
   /**
-   * Clients should use {@link #createArtifactCache(Optional, BuckEventBus)} unless it
-   * is expected that the user has defined a {@code cassandra} cache, and that it should be used
+   * Clients should use {@link #createArtifactCache(Optional, BuckEventBus, FileHashCache)} unless
+   * it is expected that the user has defined a {@code cassandra} cache, and that it should be used
    * exclusively.
    */
   @Nullable
   CassandraArtifactCache createCassandraArtifactCache(
       Optional<String> currentWifiSsid,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      FileHashCache fileHashCache) {
     // cache.blacklisted_wifi_ssids
     ImmutableSet<String> blacklistedWifi = ImmutableSet.copyOf(
         Splitter.on(",")
@@ -678,14 +682,22 @@ public class BuckConfig {
         getValue("cache", "connection_timeout_seconds").or(DEFAULT_CASSANDRA_TIMEOUT_SECONDS));
 
     try {
-      return new CassandraArtifactCache(cacheHosts, port, timeoutSeconds, doStore, buckEventBus);
+      return new CassandraArtifactCache(
+          cacheHosts,
+          port,
+          timeoutSeconds,
+          doStore,
+          buckEventBus,
+          fileHashCache);
     } catch (ConnectionException e) {
       buckEventBus.post(ThrowableConsoleEvent.create(e, "Cassandra cache connection failure."));
       return null;
     }
   }
 
-  private ArtifactCache createHttpArtifactCache(BuckEventBus buckEventBus) {
+  private ArtifactCache createHttpArtifactCache(
+      BuckEventBus buckEventBus,
+      FileHashCache fileHashCache) {
     String host = getValue("cache", "http_host").or("localhost");
     int port = Integer.parseInt(getValue("cache", "http_port").or(DEFAULT_HTTP_CACHE_PORT));
     int timeoutSeconds = Integer.parseInt(
@@ -697,7 +709,8 @@ public class BuckConfig {
         timeoutSeconds,
         doStore,
         projectFilesystem,
-        buckEventBus);
+        buckEventBus,
+        fileHashCache);
   }
 
   private boolean readCacheMode(String fieldName, String defaultValue) {

@@ -16,15 +16,18 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
+import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -45,8 +48,16 @@ import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -117,6 +128,7 @@ public class CassandraArtifactCache implements ArtifactCache {
   private final AtomicInteger numConnectionExceptionReports;
   private final boolean doStore;
   private final BuckEventBus buckEventBus;
+  private final FileHashCache fileHashCache;
 
   private final Set<ListenableFuture<OperationResult<Void>>> futures;
   private final AtomicBoolean isWaitingToClose;
@@ -127,9 +139,10 @@ public class CassandraArtifactCache implements ArtifactCache {
       int port,
       int timeoutSeconds,
       boolean doStore,
-      BuckEventBus buckEventBus)
+      BuckEventBus buckEventBus,
+      FileHashCache fileHashCache)
       throws ConnectionException {
-    this(timeoutSeconds, doStore, buckEventBus, new AstyanaxContext.Builder()
+    this(timeoutSeconds, doStore, buckEventBus, fileHashCache, new AstyanaxContext.Builder()
             .forCluster(CLUSTER_NAME)
             .forKeyspace(KEYSPACE_NAME)
             .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
@@ -151,9 +164,11 @@ public class CassandraArtifactCache implements ArtifactCache {
       int timeoutSeconds,
       boolean doStore,
       BuckEventBus buckEventBus,
+      FileHashCache fileHashCache,
       final AstyanaxContext<Keyspace> context) {
     this.doStore = doStore;
     this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
+    this.fileHashCache = Preconditions.checkNotNull(fileHashCache);
     this.numConnectionExceptionReports = new AtomicInteger(0);
     this.timeoutSeconds = timeoutSeconds;
     this.context = Preconditions.checkNotNull(context);
@@ -270,9 +285,45 @@ public class CassandraArtifactCache implements ArtifactCache {
     try {
       Column<String> column = result.getResult().getColumnByName(ARTIFACT_COLUMN_NAME);
       if (column != null) {
-        byte[] artifact = column.getByteArrayValue();
-        Files.createParentDirs(output);
-        Files.write(artifact, output);
+        ByteArrayInputStream dataStream = new ByteArrayInputStream(column.getByteArrayValue());
+
+        // Setup an object input stream to deserialize the hash code.
+        try (ObjectInputStream objectStream = new ObjectInputStream(dataStream)) {
+
+          // Deserialize the expected hash code object from the front of the artifact.
+          HashCode expectedHashCode;
+          try {
+            expectedHashCode = (HashCode) objectStream.readObject();
+          } catch (ClassNotFoundException | ClassCastException e) {
+            buckEventBus.post(
+                ThrowableConsoleEvent.create(
+                    e,
+                    "Could not deserialize artifact checksum from %s:%s.",
+                    ruleKey,
+                    output.getPath()));
+            return CacheResult.MISS;
+          }
+
+          // Write the contents to a temp file that sits next to the real destination.
+          Path path = output.toPath();
+          Files.createDirectories(path.getParent());
+          Path temp = Files.createTempFile(path.getParent(), path.getFileName().toString(), ".tmp");
+          Files.copy(dataStream, temp, StandardCopyOption.REPLACE_EXISTING);
+
+          // Compare the embedded hash code with the one we calculated here.  If they don't match,
+          // discard the output and report a mismatch event.
+          HashCode actualHashCode = fileHashCache.get(temp);
+          if (!expectedHashCode.equals(actualHashCode)) {
+            buckEventBus.post(new CassandraChecksumMismatchEvent(expectedHashCode, actualHashCode));
+            Files.delete(temp);
+            return CacheResult.MISS;
+          }
+
+          // Finally, move the temp file into it's final place.
+          Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
+
+        }
+
         // Cassandra timestamps use microsecond resolution.
         if (System.currentTimeMillis() * 1000L - column.getTimestamp() > ttl * 1000000L / 2L) {
           // The cache entry has lived for more than half of its total TTL, so rewrite it in order
@@ -306,15 +357,41 @@ public class CassandraArtifactCache implements ArtifactCache {
       return;
     }
     try {
-      Keyspace keyspace = keyspaceAndTtl.get().getKeyspace();
-      int ttl = keyspaceAndTtl.get().getTtl();
-      MutationBatch mutationBatch = keyspace.prepareMutationBatch();
 
-      mutationBatch.withRow(CF_ARTIFACT, ruleKey.toString())
-          .setDefaultTtl(ttl)
-          .putColumn(ARTIFACT_COLUMN_NAME, Files.toByteArray(output));
-      ListenableFuture<OperationResult<Void>> mutationFuture = mutationBatch.executeAsync();
-      trackFuture(mutationFuture);
+      // Prepare a byte stream to stage the data we're storing.
+      ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
+
+      // Setup an object output stream wrapper to serialize the hash code.
+      try (ObjectOutputStream objectStream = new ObjectOutputStream(dataStream)) {
+
+        // Store the hash code at the beginning of the data we're storing.
+        HashCode hashCode = fileHashCache.get(output.toPath());
+        try {
+          objectStream.writeObject(hashCode);
+          objectStream.flush();
+        } catch (NotSerializableException e) {
+          buckEventBus.post(
+              ThrowableConsoleEvent.create(
+                  e,
+                  "Artifact store(%s, %s) error: %s",
+                  ruleKey,
+                  output.getPath()));
+          return;
+        }
+
+        // The rest of the data is the contents of the artifact.
+        Files.copy(output.toPath(), dataStream);
+
+        Keyspace keyspace = keyspaceAndTtl.get().getKeyspace();
+        int ttl = keyspaceAndTtl.get().getTtl();
+        MutationBatch mutationBatch = keyspace.prepareMutationBatch();
+        mutationBatch.withRow(CF_ARTIFACT, ruleKey.toString())
+            .setDefaultTtl(ttl)
+            .putColumn(ARTIFACT_COLUMN_NAME, dataStream.toByteArray());
+        ListenableFuture<OperationResult<Void>> mutationFuture = mutationBatch.executeAsync();
+        trackFuture(mutationFuture);
+
+      }
     } catch (ConnectionException e) {
       reportConnectionFailure("Attempting to store " + ruleKey + ".", e);
     } catch (IOException | OutOfMemoryError e) {
@@ -390,4 +467,43 @@ public class CassandraArtifactCache implements ArtifactCache {
       super(throwable, Level.WARNING, message);
     }
   }
+
+  public static class CassandraChecksumMismatchEvent extends AbstractBuckEvent {
+
+    private final HashCode expected;
+    private final HashCode actual;
+
+    public CassandraChecksumMismatchEvent(HashCode expected, HashCode actual) {
+      this.expected = Preconditions.checkNotNull(expected);
+      this.actual = Preconditions.checkNotNull(actual);
+    }
+
+    @Override
+    protected String getValueString() {
+      return String.format(
+          "Checksum mismatch: %s (expected) != %s (actual)",
+          expected,
+          actual);
+    }
+
+    @Override
+    public boolean isRelatedTo(BuckEvent event) {
+      return false;
+    }
+
+    @Override
+    public String getEventName() {
+      return "CassandraChecksumMismatchEvent";
+    }
+
+    public HashCode getExpected() {
+      return expected;
+    }
+
+    public HashCode getActual() {
+      return actual;
+    }
+
+  }
+
 }

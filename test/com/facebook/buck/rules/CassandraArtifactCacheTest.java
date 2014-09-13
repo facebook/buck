@@ -21,6 +21,9 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.util.FileHashCache;
+import com.google.common.collect.Maps;
 import com.netflix.astyanax.AstyanaxContext;
 import com.netflix.astyanax.Keyspace;
 
@@ -33,12 +36,15 @@ public class CassandraArtifactCacheTest {
   public void whenCacheClosedThenContextShutdown() {
     AstyanaxContext<Keyspace> mockContext = createMock(AstyanaxContext.class);
     BuckEventBus mockEventBus = createMock(BuckEventBus.class);
+    FileHashCache fileHashCache =
+        FakeFileHashCache.createFromStrings(Maps.<String, String>newHashMap());
     mockContext.shutdown();
     replay(mockContext);
     CassandraArtifactCache cache = new CassandraArtifactCache(
         10 /* timeoutSeconds */,
         true /* doStore */,
         mockEventBus,
+        fileHashCache,
         mockContext);
     cache.close();
     verify(mockContext);

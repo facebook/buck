@@ -19,7 +19,9 @@ package com.facebook.buck.cli;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.FileHashCache;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -32,8 +34,11 @@ import java.util.List;
  */
 public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
 
-  protected CacheCommand(CommandRunnerParams params) {
+  private final FileHashCache fileHashCache;
+
+  protected CacheCommand(CommandRunnerParams params, FileHashCache fileHashCache) {
     super(params);
+    this.fileHashCache = Preconditions.checkNotNull(fileHashCache);
   }
 
   @Override
@@ -53,7 +58,8 @@ public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
     BuckConfig buckConfig = options.getBuckConfig();
     CassandraArtifactCache cassandra = buckConfig.createCassandraArtifactCache(
         Optional.<String>absent(),
-        getBuckEventBus());
+        getBuckEventBus(),
+        fileHashCache);
     if (cassandra == null) {
       console.printErrorText("No cassandra cache defined.");
       return 1;
