@@ -222,6 +222,11 @@ public class AaptPackageResources extends AbstractBuildRule
     final ImmutableMap.Builder<Path, Path> allAssets = ImmutableMap.builder();
 
     for (final Path assetsDirectory : assetsDirectories) {
+        if (!filesystem.exists(assetsDirectory))
+        {
+            continue;
+        }
+
       filesystem.walkRelativeFileTree(
           assetsDirectory, new SimpleFileVisitor<Path>() {
             @Override
