@@ -72,3 +72,21 @@ java_library(
     'PUBLIC',
   ],
 )
+
+python_library(
+  name = 'buck',
+  srcs = [
+    'buck.py',
+  ],
+)
+
+python_test(
+  name = 'buck_test',
+  srcs = [
+    'processor_test.py',
+    'buck_test.py',
+  ],
+  deps = [
+    ':buck',
+  ],
+)

@@ -266,7 +266,8 @@ class TestBuck(unittest.TestCase):
                 build_env=None):
             return (name, deps, build_env)
 
-        testLazy = LazyBuildEnvPartial(cobol_binary, {})
+        testLazy = LazyBuildEnvPartial(cobol_binary)
+        testLazy.build_env = {}
         self.assertEqual(
             ('HAL', [1, 2, 3], {}),
             testLazy.invoke(name='HAL', deps=[1, 2, 3]))

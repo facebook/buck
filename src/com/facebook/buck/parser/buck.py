@@ -1,9 +1,12 @@
 from __future__ import with_statement
 
+import __future__
 import copy
 import fnmatch
 import functools
 import glob as glob_module
+import imp
+import inspect
 import json
 import optparse
 import os
@@ -16,42 +19,69 @@ import sys
 # @provide_for_build will be provided in the build file's local symbol table.
 #
 # When these functions are called from a build file, they will be passed
-# a keyword parameter, build_env, which is a dictionary with information about
+# a keyword parameter, build_env, which is a object with information about
 # the environment of the build file which is currently being processed.
-# It contains the following keys:
+# It contains the following attributes:
 #
-# "BUILD_FILE_DIRECTORY" - The directory containing the build file.
+# "dirname" - The directory containing the build file.
 #
-# "BASE" - The base path of the build file.
-#
-# "PROJECT_ROOT" - An absolute path to the project root.
-#
-# "BUILD_FILE_SYMBOL_TABLE" - The global symbol table of the build file.
+# "base_path" - The base path of the build file.
 
 BUILD_FUNCTIONS = []
 BUILD_RULES_FILE_NAME = 'BUCK'
 
 
-def provide_for_build(func):
-    BUILD_FUNCTIONS.append(func)
-    return func
+class BuildContextType(object):
+    """
+    Identifies the type of input file to the processor.
+    """
+
+    BUILD_FILE = 'build_file'
+    INCLUDE = 'include'
 
 
-class LazyBuildEnvPartial:
+class BuildFileContext(object):
+    """
+    The build context used when processing a build file.
+    """
+
+    type = BuildContextType.BUILD_FILE
+
+    def __init__(self, base_path, dirname):
+        self.globals = {}
+        self.includes = set()
+        self.base_path = base_path
+        self.dirname = dirname
+        self.rules = {}
+
+
+class IncludeContext(object):
+    """
+    The build context used when processing an include.
+    """
+
+    type = BuildContextType.INCLUDE
+
+    def __init__(self):
+        self.globals = {}
+        self.includes = set()
+
+
+class LazyBuildEnvPartial(object):
     """Pairs a function with a build environment in which it will be executed.
 
-    Note that although both the function and build environment must be
-    specified via the constructor, the build environment may be reassigned
-    after construction.
+    Note that while the function is specified via the constructor, the build
+    environment must be assigned after construction, for the build environment
+    currently being used.
 
     To call the function with its build environment, use the invoke() method of
     this class, which will forward the arguments from invoke() to the
     underlying function.
     """
 
-    def __init__(self, func, default_build_env):
+    def __init__(self, func):
         self.func = func
-        self.build_env = default_build_env
+        self.build_env = None
 
     def invoke(self, *args, **kwargs):
         """Invokes the bound function injecting 'build_env' into **kwargs."""
@@ -60,38 +90,27 @@ class LazyBuildEnvPartial:
         return self.func(*args, **updated_kwargs)
 
 
-def make_build_file_symbol_table(build_env):
-    """Creates a symbol table with functions decorated by provide_for_build."""
-    symbol_table = {}
-    lazy_functions = []
-    for func in BUILD_FUNCTIONS:
-        func_with_env = LazyBuildEnvPartial(func, build_env)
-        symbol_table[func.__name__] = func_with_env.invoke
-        lazy_functions.append(func_with_env)
-    return {
-        'symbol_table': symbol_table,
-        'lazy_functions': lazy_functions,
-    }
-
-
-def update_lazy_functions(lazy_functions, build_env):
-    """Updates a list of LazyBuildEnvPartials with build_env."""
-    for lazy_function in lazy_functions:
-        lazy_function.build_env = build_env
+def provide_for_build(func):
+    BUILD_FUNCTIONS.append(func)
+    return func
 
 
 def add_rule(rule, build_env):
+    assert build_env.type == BuildContextType.BUILD_FILE, (
+        "Cannot use `{}()` at the top-level of an included file."
+        .format(rule['type']))
+
     # Include the base path of the BUILD file so the reader consuming this
     # JSON will know which BUILD file the rule came from.
     if 'name' not in rule:
         raise ValueError(
             'rules must contain the field \'name\'.  Found %s.' % rule)
     rule_name = rule['name']
-    if rule_name in build_env['RULES']:
+    if rule_name in build_env.rules:
         raise ValueError('Duplicate rule definition found.  Found %s and %s' %
-                         (rule, build_env['RULES'][rule_name]))
-    rule['buck.base_path'] = build_env['BASE']
-    build_env['RULES'][rule_name] = rule
+                         (rule, build_env.rules[rule_name]))
+    rule['buck.base_path'] = build_env.base_path
+    build_env.rules[rule_name] = rule
 
 
 def symlink_aware_walk(base):
@@ -328,7 +347,10 @@ def glob_match(pattern, path, include_dotfiles=False):
 
 @provide_for_build
 def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
-    search_base = build_env['BUILD_FILE_DIRECTORY']
+    assert build_env.type == BuildContextType.BUILD_FILE, (
+        "Cannot use `glob()` at the top-level of an included file.")
+
+    search_base = build_env.dirname
 
     # Ensure the user passes lists of strings rather than just a string.
     assert not isinstance(includes, basestring), \
@@ -354,26 +376,6 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
 
 
 @provide_for_build
-def include_defs(name, build_env=None):
-    """Loads a file in the context of the current build file.
-
-    Name must begin with "//" and references a file relative to the project
-    root.
-
-    An example is the build file //first-party/orca/orcaapp/BUILD contains
-    include_defs('//BUILD_DEFS')
-    which loads a list called NO_DX which can then be used in the build file.
-    """
-    if name[:2] != '//':
-        raise ValueError(
-            'include_defs argument "%s" must begin with //' % name)
-    relative_path = name[2:]
-    include_file = os.path.join(build_env['PROJECT_ROOT'], relative_path)
-    build_env['INCLUDES'].append(include_file)
-    execfile(include_file, build_env['BUILD_FILE_SYMBOL_TABLE'])
-
-
-@provide_for_build
 def get_base_path(build_env=None):
     """Get the base path to the build file that was initially evaluated.
 
@@ -386,16 +388,21 @@ def get_base_path(build_env=None):
              trailing slash. The return value will be "" if called from
              the build file in the root of the project.
     """
-    return build_env['BASE']
+    assert build_env.type == BuildContextType.BUILD_FILE, (
+        "Cannot use `get_base_path()` at the top-level of an included file.")
+    return build_env.base_path
 
 
 @provide_for_build
 def add_deps(name, deps=[], build_env=None):
-    if name not in build_env['RULES']:
+    assert build_env.type == BuildContextType.BUILD_FILE, (
+        "Cannot use `add_deps()` at the top-level of an included file.")
+
+    if name not in build_env.rules:
         raise ValueError(
             'Invoked \'add_deps\' on non-existent rule %s.' % name)
 
-    rule = build_env['RULES'][name]
+    rule = build_env.rules[name]
     if 'deps' not in rule:
         raise ValueError(
             'Invoked \'add_deps\' on rule %s that has no \'deps\' field'
@@ -403,61 +410,207 @@ def add_deps(name, deps=[], build_env=None):
     rule['deps'] = rule['deps'] + deps
 
 
-class BuildFileProcessor:
-    def __init__(self, project_root, includes, server):
-        self.project_root = project_root
-        self.includes = includes
-        self.server = server
-        self.len_suffix = -len('/' + BUILD_RULES_FILE_NAME)
+class BuildFileProcessor(object):
 
-        # Create root_build_env
-        build_env = {}
-        build_env['PROJECT_ROOT'] = self.project_root
-        build_symbols = make_build_file_symbol_table(build_env)
-        build_env['BUILD_FILE_SYMBOL_TABLE'] = build_symbols['symbol_table']
-        build_env['LAZY_FUNCTIONS'] = build_symbols['lazy_functions']
-        build_env['INCLUDES'] = []
+    def __init__(self, project_root, implicit_includes=[]):
+        self._cache = {}
+        self._build_env_stack = []
 
-        # If there are any default includes, evaluate those first to populate
-        # the build_env.
-        for include in self.includes:
-            include_defs(include, build_env)
+        self._project_root = project_root
+        self._implicit_includes = implicit_includes
 
-        self.root_build_env = build_env
+        lazy_functions = {}
+        for func in BUILD_FUNCTIONS:
+            func_with_env = LazyBuildEnvPartial(func)
+            lazy_functions[func.__name__] = func_with_env
+        self._functions = lazy_functions
 
-    def process(self, build_file):
-        """Process an individual build file and output JSON to stdout."""
+    def _merge_globals(self, src, dst):
+        """
+        Copy the global definitions from one globals dict to another.
 
-        # Reset build_env for each build file so that the variables declared in
-        # the build file or the files in includes through include_defs() don't
-        # pollute the namespace for subsequent build files.
-        build_env = copy.copy(self.root_build_env)
+        Ignores special attributes and attributes starting with '_', which
+        typically denote module-level private attributes.
+        """
+
+        hidden = set([
+            'include_defs',
+        ])
+
+        for key, val in src.iteritems():
+            if not key.startswith('_') and key not in hidden:
+                dst[key] = val
+
+    def _update_functions(self, build_env):
+        """
+        Updates the build functions to use the given build context when called.
+        """
+
+        for function in self._functions.itervalues():
+            function.build_env = build_env
+
+    def _install_functions(self, namespace):
+        """
+        Installs the build functions, by their name, into the given namespace.
+        """
+
+        for name, function in self._functions.iteritems():
+            namespace[name] = function.invoke
+
+    def _get_include_path(self, name):
+        """
+        Resolve the given include def name to a full path.
+        """
+
+        # Find the path from the include def name.
+        if not name.startswith('//'):
+            raise ValueError(
+                'include_defs argument "%s" must begin with //' % name)
+        relative_path = name[2:]
+        return os.path.join(self._project_root, name[2:])
+
+    def _include_defs(self, name, implicit_includes=[]):
+        """
+        Pull the named include into the current caller's context.
+
+        This method is meant to be installed into the globals of any files or
+        includes that we process.
+        """
+
+        # Grab the current build context from the top of the stack.
+        build_env = self._build_env_stack[-1]
+
+        # Resolve the named include to its path and process it to get its
+        # build context and module.
+        path = self._get_include_path(name)
+        inner_env, mod = self._process_include(
+            path,
+            implicit_includes=implicit_includes)
+
+        # Look up the caller's stack frame and merge the include's globals
+        # into it's symbol table.
+        frame = inspect.currentframe()
+        while frame.f_globals['__name__'] == __name__:
+            frame = frame.f_back
+        self._merge_globals(mod.__dict__, frame.f_globals)
+
+        # Pull in the include's accounting of its own referenced includes
+        # into the current build context.
+        build_env.includes.add(path)
+        build_env.includes.update(inner_env.includes)
+
+    def _push_build_env(self, build_env):
+        """
+        Set the given build context as the current context.
+        """
+
+        self._build_env_stack.append(build_env)
+        self._update_functions(build_env)
+
+    def _pop_build_env(self):
+        """
+        Restore the previous build context as the current context.
+        """
+
+        self._build_env_stack.pop()
+        if self._build_env_stack:
+            self._update_functions(self._build_env_stack[-1])
+
+    def _process(self, build_env, path, implicit_includes=[]):
+        """
+        Process a build file or include at the given path.
+        """
+
+        # First check the cache.
+        cached = self._cache.get(path)
+        if cached is not None:
+            return cached
+
+        # Install the build context for this input as the current context.
+        self._push_build_env(build_env)
+
+        # The globals dict that this file will be executed under.
+        default_globals = {}
+
+        # Install the implicit build functions and adding the 'include_defs'
+        # functions.
+        self._install_functions(default_globals)
+        default_globals['include_defs'] = functools.partial(
+            self._include_defs,
+            implicit_includes=implicit_includes)
+
+        # If any implicit includes were specified, process them first.
+        for include in implicit_includes:
+            include_path = self._get_include_path(include)
+            inner_env, mod = self._process_include(include_path)
+            self._merge_globals(mod.__dict__, default_globals)
+            build_env.includes.add(include_path)
+            build_env.includes.update(inner_env.includes)
+
+        # Build a new module for the given file, using the default globals
+        # created above.
+        module = imp.new_module(path)
+        module.__file__ = path
+        module.__dict__.update(default_globals)
+
+        with open(path) as f:
+            contents = f.read()
+
+        # Enable absolute imports.  This prevents the compiler from trying to
+        # do a relative import first, and warning that this module doesn't
+        # exist in sys.modules.
+        future_features = __future__.absolute_import.compiler_flag
+        code = compile(contents, path, 'exec', future_features, 1)
+        exec(code, module.__dict__)
+
+        # Restore the previous build context.
+        self._pop_build_env()
+
+        self._cache[path] = build_env, module
+        return build_env, module
+
+    def _process_include(self, path, implicit_includes=[]):
+        """
+        Process the include file at the given path.
+        """
+
+        build_env = IncludeContext()
+        return self._process(
+            build_env,
+            path,
+            implicit_includes=implicit_includes)
+
+    def _process_build_file(self, path, implicit_includes=[]):
+        """
+        Process the build file at the given path.
+        """
+
+        # Create the build file context, including the base path and directory
+        # name of the given path.
         relative_path_to_build_file = os.path.relpath(
-            build_file, self.project_root).replace('\\', '/')
-        build_env['BASE'] = relative_path_to_build_file[:self.len_suffix]
-        build_env['BUILD_FILE_DIRECTORY'] = os.path.dirname(build_file)
-        build_env['RULES'] = {}
+            path, self._project_root).replace('\\', '/')
+        len_suffix = -len('/' + BUILD_RULES_FILE_NAME)
+        base_path = relative_path_to_build_file[:len_suffix]
+        dirname = os.path.dirname(path)
+        build_env = BuildFileContext(base_path, dirname)
 
-        # Copy BUILD_FILE_SYMBOL_TABLE over.  This is the only dict that we
-        # need a sperate copy of since update_lazy_functions will modify it.
-        build_env['BUILD_FILE_SYMBOL_TABLE'] = copy.copy(
-            self.root_build_env['BUILD_FILE_SYMBOL_TABLE'])
+        return self._process(
+            build_env,
+            path,
+            implicit_includes=implicit_includes)
 
-        # Re-apply build_env to the rules added in this file with
-        # @provide_for_build.
-        update_lazy_functions(build_env['LAZY_FUNCTIONS'], build_env)
-        execfile(os.path.join(self.project_root, build_file),
-                 build_env['BUILD_FILE_SYMBOL_TABLE'])
+    def process(self, path):
+        """
+        Process a build file returning a dict of it's rules and includes.
+        """
 
-        values = build_env['RULES'].values()
-        # Filter out keys with a value of "None" from the final rule
-        # definition.
-        values.append({"__includes": [build_file] + build_env['INCLUDES']})
-        if self.server:
-            print json.dumps(values)
-        else:
-            for value in values:
-                print json.dumps(value)
+        build_env, mod = self._process_build_file(
+            os.path.join(self._project_root, path),
+            implicit_includes=self._implicit_includes)
+        values = build_env.rules.values()
+        values.append({"__includes": [path] + sorted(build_env.includes)})
+        return values
+
 
 # Inexplicably, this script appears to run faster when the arguments passed
 # into it are absolute paths. However, we want the "buck.base_path" property
@@ -529,16 +682,21 @@ def main():
 
     buildFileProcessor = BuildFileProcessor(
         project_root,
-        options.include or [],
-        options.server)
+        implicit_includes=options.include or [])
 
     for build_file in build_files:
-        buildFileProcessor.process(build_file)
+        values = buildFileProcessor.process(build_file)
+        if options.server:
+            print json.dumps(values)
+        else:
+            for value in values:
+                print json.dumps(value)
 
     if options.server:
         # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
         for build_file in iter(sys.stdin.readline, ''):
-            buildFileProcessor.process(build_file.rstrip())
+            values = buildFileProcessor.process(build_file.rstrip())
+            print json.dumps(values)
 
     # Python tries to flush/close stdout when it quits, and if there's a dead
     # pipe on the other end, it will spit some warnings to stderr. This breaks
