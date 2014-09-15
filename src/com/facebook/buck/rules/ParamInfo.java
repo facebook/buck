@@ -32,7 +32,6 @@ import javax.annotation.Nullable;
 
 class ParamInfo implements Comparable<ParamInfo> {
 
-  private final Path pathRelativeToProjectRoot;
   private final TypeCoercer<?> typeCoercer;
 
   private final boolean isOptional;
@@ -40,12 +39,7 @@ class ParamInfo implements Comparable<ParamInfo> {
   private final String pythonName;
   private final Field field;
 
-  public ParamInfo(
-      TypeCoercerFactory typeCoercerFactory,
-      Path pathRelativeToProjectRoot,
-      Field field) {
-
-    this.pathRelativeToProjectRoot = Preconditions.checkNotNull(pathRelativeToProjectRoot);
+  public ParamInfo( TypeCoercerFactory typeCoercerFactory, Field field) {
     this.field = Preconditions.checkNotNull(field);
     this.name = field.getName();
     Hint hint = field.getAnnotation(Hint.class);
@@ -90,7 +84,12 @@ class ParamInfo implements Comparable<ParamInfo> {
       ProjectFilesystem filesystem,
       Object arg,
       BuildRuleFactoryParams params) throws ParamInfoException {
-    set(ruleResolver, filesystem, arg, params.getNullableRawAttribute(name));
+    set(
+        ruleResolver,
+        filesystem,
+        params.target.getBasePath(),
+        arg,
+        params.getNullableRawAttribute(name));
   }
 
   /**
@@ -98,12 +97,14 @@ class ParamInfo implements Comparable<ParamInfo> {
    *
    * @param ruleResolver {@link BuildRuleResolver} used for {@link BuildRule} instances.
    * @param filesystem {@link ProjectFilesystem} used to ensure {@link Path}s exist.
+   * @param pathRelativeToProjectRoot The path relative to the project root that this DTO is for.
    * @param dto The constructor DTO on which the value should be set.
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
   public void set(
       BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
       Object dto,
       @Nullable Object value) throws ParamInfoException {
     Object result;

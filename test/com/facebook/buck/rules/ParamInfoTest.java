@@ -43,7 +43,7 @@ public class ParamInfoTest {
     }
 
     Field field = Example.class.getField("path");
-    ParamInfo info = new ParamInfo(typeCoercerFactory, path, field);
+    ParamInfo info = new ParamInfo(typeCoercerFactory, field);
 
     Class<?> type = info.getResultClass();
     assertEquals(SourcePath.class, type);
@@ -57,7 +57,7 @@ public class ParamInfoTest {
     }
 
     Field field = Example.class.getField("path");
-    ParamInfo info = new ParamInfo(typeCoercerFactory, path, field);
+    ParamInfo info = new ParamInfo(typeCoercerFactory, field);
 
     Class<?> type = info.getResultClass();
     assertEquals(SourcePath.class, type);
@@ -71,7 +71,7 @@ public class ParamInfoTest {
     }
 
     Field field = Example.class.getField("bad");
-    new ParamInfo(typeCoercerFactory, path, field);
+    new ParamInfo(typeCoercerFactory, field);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -82,7 +82,7 @@ public class ParamInfoTest {
     }
 
     Field field = Example.class.getField("bad");
-    new ParamInfo(typeCoercerFactory, path, field);
+    new ParamInfo(typeCoercerFactory, field);
   }
 
   @Test
@@ -97,10 +97,10 @@ public class ParamInfoTest {
 
     ParamInfo info;
 
-    info = new ParamInfo(typeCoercerFactory, path, Example.class.getField("isDefaultName"));
+    info = new ParamInfo(typeCoercerFactory, Example.class.getField("isDefaultName"));
     assertEquals("is_default_name", info.getPythonName());
 
-    info = new ParamInfo(typeCoercerFactory, path, Example.class.getField("notDefaultName"));
+    info = new ParamInfo(typeCoercerFactory, Example.class.getField("notDefaultName"));
     assertEquals("not_the_default_name_123", info.getPythonName());
   }
 
@@ -114,15 +114,15 @@ public class ParamInfoTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    ParamInfo info = new ParamInfo(typeCoercerFactory, path, Example.class.getField("field"));
+    ParamInfo info = new ParamInfo(typeCoercerFactory, Example.class.getField("field"));
 
-    info.set(resolver, filesystem, example, null);
+    info.set(resolver, filesystem, path, example, null);
     assertEquals(Optional.<String>absent(), example.field);
 
-    info.set(resolver, filesystem, example, "");
+    info.set(resolver, filesystem, path, example, "");
     assertEquals(Optional.of(""), example.field);
 
-    info.set(resolver, filesystem, example, "foo");
+    info.set(resolver, filesystem, path, example, "foo");
     assertEquals(Optional.of("foo"), example.field);
   }
 }

@@ -84,7 +84,7 @@ public class TargetNode<T extends ConstructorArg> implements Comparable<TargetNo
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
       ParamInfo info =
-          new ParamInfo(typeCoercerFactory, params.target.getBasePath(), field);
+          new ParamInfo(typeCoercerFactory, field);
       if (info.hasElementTypes(BuildRule.class, SourcePath.class, Path.class)) {
         detectBuildTargetsAndPathsForParameter(extraDeps, paths, info, params);
       }

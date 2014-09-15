@@ -40,7 +40,6 @@ import java.util.Set;
  */
 public class ConstructorArgMarshaller {
 
-  private final Path basePath;
   private final TypeCoercerFactory typeCoercerFactory;
 
   /**
@@ -56,14 +55,6 @@ public class ConstructorArgMarshaller {
       Path pathFromProjectRootToBuildFile,
       BuildTargetParser buildTargetParser) {
     Preconditions.checkNotNull(pathFromProjectRootToBuildFile);
-
-    // Without this check an IndexOutOfBounds exception is thrown by normalize.
-    if (pathFromProjectRootToBuildFile.toString().isEmpty()) {
-      this.basePath = pathFromProjectRootToBuildFile;
-    } else {
-      this.basePath = pathFromProjectRootToBuildFile.normalize();
-    }
-
     this.typeCoercerFactory = new TypeCoercerFactory(buildTargetParser);
   }
 
@@ -136,7 +127,7 @@ public class ConstructorArgMarshaller {
       if (Modifier.isFinal(field.getModifiers())) {
         continue;
       }
-      allInfo.add(new ParamInfo(typeCoercerFactory, basePath, field));
+      allInfo.add(new ParamInfo(typeCoercerFactory, field));
     }
 
     return allInfo.build();
