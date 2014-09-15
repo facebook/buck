@@ -1,0 +1,23 @@
+EMPTY_CONFIGS = {
+  'Debug': (
+    '../../Configurations/Empty.xcconfig',
+    {},
+    '../../Configurations/Empty.xcconfig',
+    {},
+  ),
+  'Release': (
+    '../../Configurations/Empty.xcconfig',
+    {},
+    '../../Configurations/Empty.xcconfig',
+    {},
+  ),
+}
+
+apple_library(
+  name = 'Dep1',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [],
+  visibility = ['PUBLIC'],
+)

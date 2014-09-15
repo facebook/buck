@@ -20,9 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversers;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Multimap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -54,14 +52,6 @@ public class BuildRules {
     }
 
     return buildRules.build();
-  }
-
-  public static Multimap<Path, BuildRule> buildRulesByTargetBasePath(Iterable<BuildRule> rules) {
-    ImmutableMultimap.Builder<Path, BuildRule> result = ImmutableMultimap.builder();
-    for (BuildRule rule : rules) {
-      result.put(rule.getBuildTarget().getBasePath(), rule);
-    }
-    return result.build();
   }
 
   /**
