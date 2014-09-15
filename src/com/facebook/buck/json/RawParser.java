@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
@@ -30,6 +31,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 /**
  * A simple JSON parser that can parse a JSON map to a raw {@code Map<String, Object>} Java object.
@@ -51,7 +54,7 @@ public class RawParser {
     try {
       JsonObject json = new Gson().fromJson(reader, JsonObject.class);
       Map<String, Object> map = (Map<String, Object>) toRawTypes(json);
-      return map;
+      return Preconditions.checkNotNull(map);
     } finally {
       jsonReader.close();
     }
@@ -60,6 +63,7 @@ public class RawParser {
   /**
    * @return One of: String, Boolean, Long, Number, List<Object>, Map<String, Object>.
    */
+  @Nullable
   @VisibleForTesting
   static Object toRawTypes(JsonElement json) {
     // Cases are ordered from most common to least common.

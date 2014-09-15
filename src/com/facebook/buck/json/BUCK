@@ -7,6 +7,7 @@ java_library(
   srcs = RAW_PARSER_SRCS,
   deps = [
     '//lib:guava',
+    '//lib:jsr305',
     '//third-party/java/gson:gson',
   ],
   visibility = [
