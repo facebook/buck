@@ -31,13 +31,15 @@ import java.nio.file.Paths;
 
 public class BuildTargetTypeCoercerTest {
 
+  private BuildTargetParser targetParser = new BuildTargetParser();
   private BuildRuleResolver resolver = new BuildRuleResolver();
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Path basePath = Paths.get("java/com/facebook/buck/example");
 
   @Test
   public void canCoerceAnUnflavoredFullyQualifiedTarget() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer(new BuildTargetParser()).coerce(
+    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        targetParser,
         resolver,
         filesystem,
         basePath,
@@ -48,7 +50,8 @@ public class BuildTargetTypeCoercerTest {
 
   @Test
   public void shouldCoerceAShortTarget() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer(new BuildTargetParser()).coerce(
+    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        targetParser,
         resolver,
         filesystem,
         basePath,
@@ -59,7 +62,8 @@ public class BuildTargetTypeCoercerTest {
 
   @Test
   public void shouldCoerceATargetWithASingleFlavor() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer(new BuildTargetParser()).coerce(
+    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        targetParser,
         resolver,
         filesystem,
         basePath,
@@ -70,7 +74,8 @@ public class BuildTargetTypeCoercerTest {
 
   @Test
   public void shouldCoerceMultipleFlavors() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer(new BuildTargetParser()).coerce(
+    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        targetParser,
         resolver,
         filesystem,
         basePath,
@@ -83,7 +88,8 @@ public class BuildTargetTypeCoercerTest {
 
   @Test
   public void shouldCoerceAShortTargetWithASingleFlavor() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer(new BuildTargetParser()).coerce(
+    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        targetParser,
         resolver,
         filesystem,
         basePath,

@@ -452,7 +452,7 @@ public class Parser {
       throw new HumanReadableException(e.getMessage());
     }
 
-    return new TargetGraph(graph, repositoryFactory);
+    return new TargetGraph(graph);
   }
 
   /**

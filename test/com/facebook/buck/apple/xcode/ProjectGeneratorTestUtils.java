@@ -28,7 +28,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.ActionGraph;
@@ -94,7 +93,7 @@ final class ProjectGeneratorTestUtils {
         value = ImmutableMap.of();
       } else if (field.getType().isAssignableFrom(Optional.class)) {
         Type nonOptionalType = Types.getFirstNonOptionalType(field);
-        TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory(new BuildTargetParser());
+        TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
         TypeCoercer<?> typeCoercer = typeCoercerFactory.typeCoercerForType(nonOptionalType);
         value = typeCoercer.getOptionalValue();
       } else if (field.getType().isAssignableFrom(String.class)) {

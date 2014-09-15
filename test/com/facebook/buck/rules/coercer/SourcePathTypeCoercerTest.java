@@ -37,8 +37,7 @@ public class SourcePathTypeCoercerTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
-    BuildTargetTypeCoercer buildTargetTypeCoercer = new BuildTargetTypeCoercer(
-        new BuildTargetParser());
+    BuildTargetTypeCoercer buildTargetTypeCoercer = new BuildTargetTypeCoercer();
     SourcePathTypeCoercer sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
 
@@ -47,6 +46,7 @@ public class SourcePathTypeCoercerTest {
     // Verify that regular strings coerced as PathSourcePaths preserve their original name.
     String src = "test/source.cpp";
     SourcePath res = sourcePathTypeCoercer.coerce(
+        new BuildTargetParser(),
         buildRuleResolver,
         filesystem,
         basePath,

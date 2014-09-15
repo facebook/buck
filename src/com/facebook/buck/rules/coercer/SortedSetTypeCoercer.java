@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
@@ -49,6 +50,7 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
   }
 
   protected void fillSortedSet(
+      BuildTargetParser buildTargetParser,
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
@@ -59,7 +61,11 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
       for (Object element : (Iterable<?>) object) {
         // if any element failed, the entire collection fails
         T coercedElement = elementTypeCoercer.coerce(
-            buildRuleResolver, filesystem, pathRelativeToProjectRoot, element);
+            buildTargetParser,
+            buildRuleResolver,
+            filesystem,
+            pathRelativeToProjectRoot,
+            element);
         boolean alreadyExists = !builder.add(coercedElement);
         if (alreadyExists) {
           throw new CoerceFailedException(
@@ -73,13 +79,20 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
 
   @Override
   public ImmutableSortedSet<T> coerce(
+      BuildTargetParser buildTargetParser,
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     final SortedSet<T> builder = Sets.newTreeSet();
-    fillSortedSet(buildRuleResolver, filesystem, pathRelativeToProjectRoot, builder, object);
+    fillSortedSet(
+        buildTargetParser,
+        buildRuleResolver,
+        filesystem,
+        pathRelativeToProjectRoot,
+        builder,
+        object);
     return ImmutableSortedSet.copyOf(builder);
   }
 

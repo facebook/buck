@@ -123,7 +123,7 @@ public abstract class AbstractBuilder<A extends ConstructorArg> {
             new BuildTargetParser(),
             target);
     try {
-      new ConstructorArgMarshaller(Paths.get("."))
+      new ConstructorArgMarshaller()
           .populate(resolver, filesystem, factoryParams, arg, true);
     } catch (ConstructorArgMarshalException error) {
       throw Throwables.propagate(error);

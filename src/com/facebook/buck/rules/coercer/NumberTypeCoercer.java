@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -39,6 +40,7 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
 
   @Override
   public T coerce(
+      BuildTargetParser buildTargetParser,
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,

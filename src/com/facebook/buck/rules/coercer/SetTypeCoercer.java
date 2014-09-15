@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
@@ -41,13 +42,20 @@ public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T>
 
   @Override
   public ImmutableSet<T> coerce(
+      BuildTargetParser buildTargetParser,
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     ImmutableSet.Builder<T> builder = ImmutableSet.builder();
-    fill(buildRuleResolver, filesystem, pathRelativeToProjectRoot, builder, object);
+    fill(
+        buildTargetParser,
+        buildRuleResolver,
+        filesystem,
+        pathRelativeToProjectRoot,
+        builder,
+        object);
     return builder.build();
   }
 }

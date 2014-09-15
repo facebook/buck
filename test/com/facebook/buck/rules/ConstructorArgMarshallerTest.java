@@ -58,7 +58,7 @@ public class ConstructorArgMarshallerTest {
   @Before
   public void setUpInspector() {
     basePath = Paths.get("example", "path");
-    marshaller = new ConstructorArgMarshaller(basePath);
+    marshaller = new ConstructorArgMarshaller();
     ruleResolver = new BuildRuleResolver();
     filesystem = new FakeProjectFilesystem();
     ruleType = new BuildRuleType("example");

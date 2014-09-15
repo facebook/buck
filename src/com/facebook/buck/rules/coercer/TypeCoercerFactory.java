@@ -54,6 +54,7 @@ public class TypeCoercerFactory {
       new IdentityTypeCoercer<BuildTargetPattern>(BuildTargetPattern.class) {
         @Override
         public BuildTargetPattern coerce(
+            BuildTargetParser buildTargetParser,
             BuildRuleResolver buildRuleResolver,
             ProjectFilesystem filesystem,
             Path pathRelativeToProjectRoot,
@@ -69,8 +70,8 @@ public class TypeCoercerFactory {
 
   private final TypeCoercer<?>[] nonContainerTypeCoercers;
 
-  public TypeCoercerFactory(BuildTargetParser buildTargetParser) {
-    buildTargetTypeCoercer = new BuildTargetTypeCoercer(buildTargetParser);
+  public TypeCoercerFactory() {
+    buildTargetTypeCoercer = new BuildTargetTypeCoercer();
     sourcePathTypeCoercer = new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
     buildRuleTypeCoercer = new BuildRuleTypeCoercer(buildTargetTypeCoercer);
     appleSourceTypeCoercer = new AppleSourceTypeCoercer(

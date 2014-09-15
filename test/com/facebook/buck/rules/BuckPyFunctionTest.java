@@ -28,8 +28,6 @@ import com.google.common.base.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -40,8 +38,7 @@ public class BuckPyFunctionTest {
 
   @Before
   public void setUpMarshaller() {
-    Path basePath = Paths.get("example", "path");
-    buckPyFunction = new BuckPyFunction(new ConstructorArgMarshaller(basePath));
+    buckPyFunction = new BuckPyFunction(new ConstructorArgMarshaller());
   }
 
   @Test

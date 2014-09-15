@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -36,6 +37,7 @@ public class PathTypeCoercerTest {
   @Rule
   public final TemporaryFolder tmpDir = new TemporaryFolder();
 
+  private final BuildTargetParser buildTargetParser = new BuildTargetParser();
   private final BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
   private ProjectFilesystem filesystem;
   private final Path pathRelativeToProjectRoot = Paths.get("");
@@ -51,6 +53,7 @@ public class PathTypeCoercerTest {
     String invalidPath = "";
     try {
       pathTypeCoercer.coerce(
+          buildTargetParser,
           buildRuleResolver,
           filesystem,
           pathRelativeToProjectRoot,
@@ -66,6 +69,7 @@ public class PathTypeCoercerTest {
     String missingPath = "hello";
     try {
       pathTypeCoercer.coerce(
+          buildTargetParser,
           buildRuleResolver,
           filesystem,
           pathRelativeToProjectRoot,

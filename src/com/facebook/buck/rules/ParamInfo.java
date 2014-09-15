@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -39,7 +40,7 @@ class ParamInfo implements Comparable<ParamInfo> {
   private final String pythonName;
   private final Field field;
 
-  public ParamInfo( TypeCoercerFactory typeCoercerFactory, Field field) {
+  public ParamInfo(TypeCoercerFactory typeCoercerFactory, Field field) {
     this.field = Preconditions.checkNotNull(field);
     this.name = field.getName();
     Hint hint = field.getAnnotation(Hint.class);
@@ -85,6 +86,7 @@ class ParamInfo implements Comparable<ParamInfo> {
       Object arg,
       BuildRuleFactoryParams params) throws ParamInfoException {
     set(
+        params.buildTargetParser,
         ruleResolver,
         filesystem,
         params.target.getBasePath(),
@@ -102,6 +104,7 @@ class ParamInfo implements Comparable<ParamInfo> {
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
   public void set(
+      BuildTargetParser buildTargetParser,
       BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
@@ -121,7 +124,12 @@ class ParamInfo implements Comparable<ParamInfo> {
       }
     } else {
       try {
-        result = typeCoercer.coerce(ruleResolver, filesystem, pathRelativeToProjectRoot, value);
+        result = typeCoercer.coerce(
+            buildTargetParser,
+            ruleResolver,
+            filesystem,
+            pathRelativeToProjectRoot,
+            value);
       } catch (CoerceFailedException e) {
         throw new ParamInfoException(name, e.getMessage(), e);
       }

@@ -22,17 +22,10 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
 public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
-
-  private final BuildTargetParser buildTargetParser;
-
-  public BuildTargetTypeCoercer(BuildTargetParser buildTargetParser) {
-    this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
-  }
 
   @Override
   public Class<BuildTarget> getOutputClass() {
@@ -41,6 +34,7 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
   @Override
   public BuildTarget coerce(
+      BuildTargetParser buildTargetParser,
       BuildRuleResolver unused,
       ProjectFilesystem alsoUnused,
       Path pathRelativeToProjectRoot,

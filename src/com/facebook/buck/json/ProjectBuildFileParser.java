@@ -18,8 +18,8 @@ package com.facebook.buck.json;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
@@ -431,8 +431,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       CharStreams.copy(Files.newBufferedReader(original, UTF_8), out);
       out.write("\n\n");
 
-      // The base path doesn't matter, but should be set.
-      ConstructorArgMarshaller inspector = new ConstructorArgMarshaller(projectRoot);
+      ConstructorArgMarshaller inspector = new ConstructorArgMarshaller();
       BuckPyFunction function = new BuckPyFunction(inspector);
       for (Description<?> description : descriptions) {
         out.write(function.toPythonFunction(

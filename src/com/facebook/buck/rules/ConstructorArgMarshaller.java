@@ -17,11 +17,9 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.lang.reflect.Field;
@@ -47,19 +45,9 @@ public class ConstructorArgMarshaller {
    * the build file that has called the build rule's function in buck.py. This is used for resolving
    * additional paths to ones relative to the project root, and to allow {@link BuildTarget}
    * instances to be fully qualified.
-   *
-   * @param pathFromProjectRootToBuildFile The path from the root of the project to the directory of
-   *     the build file that this function is being created from.
    */
-  public ConstructorArgMarshaller(
-      Path pathFromProjectRootToBuildFile,
-      BuildTargetParser buildTargetParser) {
-    Preconditions.checkNotNull(pathFromProjectRootToBuildFile);
-    this.typeCoercerFactory = new TypeCoercerFactory(buildTargetParser);
-  }
-
-  public ConstructorArgMarshaller(Path pathFromProjectRootToBuildFile) {
-    this(pathFromProjectRootToBuildFile, new BuildTargetParser());
+  public ConstructorArgMarshaller() {
+    this.typeCoercerFactory = new TypeCoercerFactory();
   }
 
   /**

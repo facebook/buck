@@ -23,15 +23,10 @@ import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-
-import java.io.IOException;
 
 /**
  * Represents the graph of {@link com.facebook.buck.rules.TargetNode}s constructed
@@ -39,13 +34,8 @@ import java.io.IOException;
  */
 public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode<?>> {
 
-  private final RepositoryFactory repositoryFactory;
-
-  public TargetGraph(
-      MutableDirectedGraph<TargetNode<?>> graph,
-      RepositoryFactory repositoryFactory) {
+  public TargetGraph(MutableDirectedGraph<TargetNode<?>> graph) {
     super(graph);
-    this.repositoryFactory = Preconditions.checkNotNull(repositoryFactory);
   }
 
   public ActionGraph buildActionGraph() {
@@ -61,13 +51,9 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
                 new TargetNodeToBuildRuleTransformer<>(node);
             BuildRule rule;
             try {
-              Repository targetRepo = repositoryFactory.getRepositoryByCanonicalName(
-                  node.getBuildTarget().getRepository());
-              rule = transformer.transform(ruleResolver, targetRepo.getBuildTargetParser());
+              rule = transformer.transform(ruleResolver);
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
-            } catch (IOException | InterruptedException e) {
-              throw new HumanReadableException(e.getMessage());
             }
             ruleResolver.addToIndex(rule.getBuildTarget(), rule);
             actionGraph.addNode(rule);

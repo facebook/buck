@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -79,6 +80,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
 
   @Override
   public AppleSource coerce(
+      BuildTargetParser buildTargetParser,
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
@@ -90,6 +92,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
     // We're expecting one of three types here. They can be differentiated pretty easily.
     if (object instanceof String) {
       return AppleSource.ofSourcePath(sourcePathTypeCoercer.coerce(
+              buildTargetParser,
               buildRuleResolver,
               filesystem,
               pathRelativeToProjectRoot,
@@ -106,6 +109,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       if (second instanceof String) {
         return AppleSource.ofSourcePathWithFlags(
             sourcePathWithFlagsTypeCoercer.coerce(
+                buildTargetParser,
                 buildRuleResolver,
                 filesystem,
                 pathRelativeToProjectRoot,
@@ -113,6 +117,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       } else if (second instanceof List) {
         return AppleSource.ofSourceGroup(
             sourceGroupTypeCoercer.coerce(
+                buildTargetParser,
                 buildRuleResolver,
                 filesystem,
                 pathRelativeToProjectRoot,

@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -37,13 +36,11 @@ public class TargetNodeToBuildRuleTransformer<T extends ConstructorArg> {
     this.targetNode = Preconditions.checkNotNull(targetNode);
   }
 
-  public BuildRule transform(BuildRuleResolver ruleResolver, BuildTargetParser buildTargetParser)
+  public BuildRule transform(BuildRuleResolver ruleResolver)
       throws NoSuchBuildTargetException {
     BuildRuleFactoryParams ruleFactoryParams = targetNode.getRuleFactoryParams();
     Description<T> description = targetNode.getDescription();
-    ConstructorArgMarshaller inspector = new ConstructorArgMarshaller(
-        targetNode.getBuildTarget().getBasePath(),
-        buildTargetParser);
+    ConstructorArgMarshaller inspector = new ConstructorArgMarshaller();
     T arg = description.createUnpopulatedConstructorArg();
     try {
       inspector.populate(
