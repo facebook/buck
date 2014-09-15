@@ -33,7 +33,6 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
@@ -46,13 +45,11 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
@@ -661,37 +658,6 @@ public class Parser {
     return filterTargets(filter);
   }
 
-
-  /**
-   * Traverses the target graph starting from {@code roots} and returns the {@link BuildTarget}s
-   * associated with the nodes for which the {@code filter} passes. See
-   * {@link RuleJsonPredicates#matchBuildRuleType(BuildRuleType)} for an example of such a
-   * {@link RuleJsonPredicate}.
-   */
-  public synchronized ImmutableSet<BuildTarget> targetsInProjectFromRoots(
-      ImmutableSet<BuildTarget> roots,
-      Iterable<String> defaultIncludes,
-      BuckEventBus eventBus,
-      Console console,
-      ImmutableMap<String, String> environment)
-      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    ActionGraph actionGraph = parseBuildFilesForTargets(
-        roots,
-        defaultIncludes,
-        eventBus,
-        console,
-        environment);
-
-    return ImmutableSet.copyOf(
-        FluentIterable.from(
-            actionGraph.getNodes()).transform(
-            new Function<BuildRule, BuildTarget>() {
-              @Override
-              public BuildTarget apply(BuildRule input) {
-                return input.getBuildTarget();
-                }
-              }));
-  }
 
   /**
    * Called when a new command is executed and used to signal to the BuildFileTreeCache
