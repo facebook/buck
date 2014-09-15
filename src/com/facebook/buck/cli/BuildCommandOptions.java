@@ -44,7 +44,7 @@ import java.util.List;
 
 public class BuildCommandOptions extends AbstractCommandOptions {
 
-  @Option(name = "--num-threads", usage = "Default is 1.25 * num processors.")
+  @Option(name = "--num-threads", aliases = "-j", usage = "Default is 1.25 * num processors.")
   private int numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
 
   @Option(name = "--build-dependencies",
