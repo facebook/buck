@@ -73,8 +73,6 @@ def createArgParser():
         help='The new buck revision')
     return parser
 
-DEVNULL = open('/dev/null', 'w')
-
 
 def log(message):
     print '%s\t%s' % (str(datetime.now()), message)
@@ -91,17 +89,13 @@ class BuildResult():
 def git_clean(cwd):
     log('Running git clean.')
     subprocess.check_call(
-        ['git', 'clean', '-xfd'],
-        stdout=DEVNULL,
-        stderr=DEVNULL,
+        ['git', 'clean', '--quiet', '-xfd'],
         cwd=cwd)
 
 
 def git_reset(cwd, revision):
     subprocess.check_call(
-        ['git', 'reset', '--hard', revision],
-        stdout=DEVNULL,
-        stderr=DEVNULL,
+        ['git', 'reset', '--quiet', '--hard', revision],
         cwd=cwd)
 
 
@@ -109,8 +103,6 @@ def buck_clean(args, cwd):
     log('Running buck clean.')
     subprocess.check_call(
         [args.path_to_buck, 'clean'],
-        stdout=DEVNULL,
-        stderr=DEVNULL,
         cwd=cwd)
 
 
@@ -118,7 +110,6 @@ def git_get_revisions(args):
     return list(reversed(subprocess.check_output(
         ['git', 'log', '--pretty=format:%H', 'HEAD', '-n',
          str(args.revisions_to_go_back + 1)],
-        stderr=DEVNULL,
         cwd=args.repo_under_test).splitlines()))
 
 
@@ -126,9 +117,7 @@ def git_checkout(revision, cwd):
     log('Checking out %s.' % revision)
     git_reset(cwd, 'HEAD')
     subprocess.check_call(
-        ['git', 'checkout', revision],
-        stdout=DEVNULL,
-        stderr=DEVNULL,
+        ['git', 'checkout', '--quiet', revision],
         cwd=cwd)
 
 
