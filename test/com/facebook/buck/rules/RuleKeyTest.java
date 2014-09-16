@@ -217,6 +217,63 @@ public class RuleKeyTest {
     assertNotEquals(keyPair2.hashCode(), keyPair3.hashCode());
   }
 
+  @Test
+  public void setInputPathSourcePath() {
+
+    // Just changing the name of a named source path shouldn't change the hash.
+    assertEquals(
+        createEmptyRuleKey()
+            .setInput("key", new PathSourcePath(Paths.get("something")))
+            .build(),
+        createEmptyRuleKey()
+            .setInput("key", new PathSourcePath(Paths.get("something", "else")))
+            .build());
+
+    // But changing the key should...
+    assertNotEquals(
+        createEmptyRuleKey()
+            .setInput("key", new PathSourcePath(Paths.get("something")))
+            .build(),
+        createEmptyRuleKey()
+            .setInput("different-key", new PathSourcePath(Paths.get("something")))
+            .build());
+  }
+
+  @Test
+  public void setInputBuildRuleSourcePath() {
+    FakeBuildRule fake1 = new FakeBuildRule("//:fake1");
+    fake1.setRuleKey(RuleKey.TO_RULE_KEY.apply("deadbeef"));
+    FakeBuildRule fake2 = new FakeBuildRule("//:fake2");
+    fake2.setRuleKey(RuleKey.TO_RULE_KEY.apply("feeddeed"));
+
+    // Verify that just changing the path of the build rule doesn't affect the rule key.
+    assertEquals(
+        createEmptyRuleKey()
+            .setInput("key", new BuildRuleSourcePath(fake1, Paths.get("location")))
+            .build(),
+        createEmptyRuleKey()
+            .setInput("key", new BuildRuleSourcePath(fake1, Paths.get("different")))
+            .build());
+
+    // Verify that just changing the build rule rule key changes the calculated rule key.
+    assertNotEquals(
+        createEmptyRuleKey()
+            .setInput("key", new BuildRuleSourcePath(fake1, Paths.get("location")))
+            .build(),
+        createEmptyRuleKey()
+            .setInput("key", new BuildRuleSourcePath(fake2, Paths.get("location")))
+            .build());
+
+    // Verify that just changing the key changes the calculated rule key.
+    assertNotEquals(
+        createEmptyRuleKey()
+            .setInput("key", new BuildRuleSourcePath(fake1, Paths.get("location")))
+            .build(),
+        createEmptyRuleKey()
+            .setInput("different-key", new BuildRuleSourcePath(fake1, Paths.get("location")))
+            .build());
+  }
+
   private RuleKey.Builder createEmptyRuleKey() {
     return RuleKey.builder(
         BuildTargetFactory.newInstance("//some:example"),
