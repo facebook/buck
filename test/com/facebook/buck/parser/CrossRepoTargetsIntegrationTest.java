@@ -82,7 +82,7 @@ public class CrossRepoTargetsIntegrationTest {
         ImmutableList.<String>of(),
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of()).buildActionGraph();
 
     BuildRule mainRule = graph.findBuildRuleByTarget(mainTarget);
     assertEquals(mainTarget, mainRule.getBuildTarget());

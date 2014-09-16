@@ -26,7 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.parser.TargetGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -81,7 +81,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     rawEventBus.post(configureTestEventAtTime(
         ParseEvent.finished(buildTargets,
-            Optional.<ActionGraph>absent()),
+            Optional.<TargetGraph>absent()),
             400L,
             TimeUnit.MILLISECONDS,
             threadId));

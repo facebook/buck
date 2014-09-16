@@ -348,21 +348,22 @@ public class ParserTest extends EasyMockSupport {
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
-    ActionGraph graph = testParser.parseBuildFilesForTargets(
+    TargetGraph targetGraph = testParser.parseBuildFilesForTargets(
         buildTargets,
         defaultIncludes,
         eventBus,
         new TestConsole(),
         ImmutableMap.<String, String>of());
-    BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
+    ActionGraph actionGraph = targetGraph.buildActionGraph();
+    BuildRule fooRule = actionGraph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
-    BuildRule barRule = graph.findBuildRuleByTarget(barTarget);
+    BuildRule barRule = actionGraph.findBuildRuleByTarget(barTarget);
     assertNotNull(barRule);
 
     ImmutableList<ParseEvent> expected = ImmutableList.of(
         TestEventConfigerator.configureTestEvent(ParseEvent.started(buildTargets), eventBus),
         TestEventConfigerator.configureTestEvent(ParseEvent.finished(buildTargets,
-            Optional.of(graph)),
+            Optional.of(targetGraph)),
             eventBus));
 
     Iterable<ParseEvent> events = Iterables.filter(listener.getEvents(), ParseEvent.class);
@@ -1102,7 +1103,7 @@ public class ParserTest extends EasyMockSupport {
         defaultIncludes,
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of()).buildActionGraph();
 
     BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);

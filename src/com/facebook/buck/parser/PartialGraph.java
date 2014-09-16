@@ -216,7 +216,7 @@ public class PartialGraph {
         includes,
         eventBus,
         console,
-        environment);
+        environment).buildActionGraph();
 
     return new PartialGraph(graph, targets);
   }

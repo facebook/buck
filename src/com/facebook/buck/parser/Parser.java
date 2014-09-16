@@ -276,12 +276,12 @@ public class Parser {
   }
 
   /**
-   * @param buildTargets the build targets to generate an action graph for.
+   * @param buildTargets the build targets to generate a target graph for.
    * @param defaultIncludes the files to include before executing build files.
    * @param eventBus used to log events while parsing.
-   * @return the action graph containing the build targets and their related targets.
+   * @return the target graph containing the build targets and their related targets.
    */
-  public synchronized ActionGraph parseBuildFilesForTargets(
+  public synchronized TargetGraph parseBuildFilesForTargets(
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
@@ -291,7 +291,7 @@ public class Parser {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
     postParseStartEvent(buildTargets, eventBus);
-    ActionGraph graph = null;
+    TargetGraph graph = null;
     // TODO(jacko): Instantiating one ProjectBuildFileParser here isn't enough. We a collection of
     //              repo-specific parsers.
     try (ProjectBuildFileParser buildFileParser =
@@ -311,7 +311,7 @@ public class Parser {
         }
       }
 
-      graph = findAllTransitiveDependencies(
+      graph = buildTargetGraph(
           buildTargets,
           defaultIncludes,
           buildFileParser,
@@ -335,27 +335,8 @@ public class Parser {
         console,
         environment,
         eventBus)) {
-      return findAllTransitiveDependencies(toExplore, defaultIncludes, parser, environment);
+      return buildTargetGraph(toExplore, defaultIncludes, parser, environment).buildActionGraph();
     }
-  }
-
-  /**
-   * @param toExplore BuildTargets whose dependencies need to be explored.
-   */
-  @VisibleForTesting
-  private ActionGraph findAllTransitiveDependencies(
-      Iterable<BuildTarget> toExplore,
-      final Iterable<String> defaultIncludes,
-      final ProjectBuildFileParser buildFileParser,
-      final ImmutableMap<String, String> environment) throws IOException, InterruptedException {
-
-    final TargetGraph graph = buildTargetGraph(
-        toExplore,
-        defaultIncludes,
-        buildFileParser,
-        environment);
-
-    return graph.buildActionGraph();
   }
 
   @Nullable

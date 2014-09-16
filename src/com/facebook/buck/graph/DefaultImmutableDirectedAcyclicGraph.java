@@ -21,6 +21,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 
+import java.util.Objects;
+
 public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirectedAcyclicGraph<T> {
 
   private final ImmutableSet<T> nodes;
@@ -58,5 +60,22 @@ public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirecte
   /** @return an unmodifiable view of the nodes in this graph */
   public Iterable<T> getNodes() {
     return nodes;
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (!(other instanceof DefaultImmutableDirectedAcyclicGraph)) {
+      return false;
+    }
+
+    DefaultImmutableDirectedAcyclicGraph<?> that = (DefaultImmutableDirectedAcyclicGraph<?>) other;
+    return Objects.equals(this.nodes, that.nodes) &&
+        Objects.equals(this.outgoingEdges, that.outgoingEdges) &&
+        Objects.equals(this.incomingEdges, that.incomingEdges);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(nodes, outgoingEdges, incomingEdges);
   }
 }
