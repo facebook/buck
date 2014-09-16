@@ -19,7 +19,7 @@ package com.facebook.buck.apple.xcode;
 import com.facebook.buck.apple.XcodeProjectConfig;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
  */
 public class SeparatedProjectsGenerator {
   private final ProjectFilesystem projectFilesystem;
-  private final PartialGraph partialGraph;
+  private final ActionGraph actionGraph;
   private final ExecutionContext executionContext;
   private final ImmutableSet<BuildTarget> projectConfigTargets;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
@@ -48,16 +48,17 @@ public class SeparatedProjectsGenerator {
    * Project generators used to generate the projects, useful for testing to retrieve pre-serialized
    * structures.
    */
+  @Nullable
   private ImmutableMap<BuildTarget, ProjectGenerator> projectGenerators;
 
   public SeparatedProjectsGenerator(
       ProjectFilesystem projectFilesystem,
-      PartialGraph partialGraph,
+      ActionGraph actionGraph,
       ExecutionContext executionContext,
       ImmutableSet<BuildTarget> projectConfigTargets,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.partialGraph = Preconditions.checkNotNull(partialGraph);
+    this.actionGraph = Preconditions.checkNotNull(actionGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
     this.projectConfigTargets = Preconditions.checkNotNull(projectConfigTargets);
     this.projectGenerators = null;
@@ -67,14 +68,17 @@ public class SeparatedProjectsGenerator {
       .build();
 
     for (BuildTarget target : projectConfigTargets) {
-      BuildRule rule = partialGraph.getActionGraph().findBuildRuleByTarget(target);
+      BuildRule rule = this.actionGraph.findBuildRuleByTarget(target);
       if (rule == null) {
         throw new HumanReadableException(
             "target not found: " + target.toString());
       }
       if (!rule.getType().equals(XcodeProjectConfigDescription.TYPE)) {
         throw new HumanReadableException(
-            "expected only xcode_project_config rules, got: " + target.toString());
+            "expected only 'xcode_project_config' rules, got a '" +
+                rule.getType().toString() +
+                "' rule: " +
+                target.toString());
       }
     }
   }
@@ -84,7 +88,7 @@ public class SeparatedProjectsGenerator {
     ImmutableMap.Builder<BuildTarget, ProjectGenerator> projectGeneratorsBuilder =
         ImmutableMap.builder();
     for (BuildTarget target : projectConfigTargets) {
-      BuildRule rule = partialGraph.getActionGraph().findBuildRuleByTarget(target);
+      BuildRule rule = actionGraph.findBuildRuleByTarget(target);
       XcodeProjectConfig buildable =
           (XcodeProjectConfig) Preconditions.checkNotNull(rule);
 
@@ -93,7 +97,7 @@ public class SeparatedProjectsGenerator {
         initialTargetsBuilder.add(memberRule.getBuildTarget());
       }
       ProjectGenerator generator = new ProjectGenerator(
-          partialGraph.getActionGraph().getNodes(),
+          actionGraph.getNodes(),
           initialTargetsBuilder.build(),
           projectFilesystem,
           executionContext,

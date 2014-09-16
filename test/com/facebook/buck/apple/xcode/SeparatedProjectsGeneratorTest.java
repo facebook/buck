@@ -94,7 +94,7 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        partialGraph,
+        partialGraph.getActionGraph(),
         executionContext,
         ImmutableSet.of(rule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -114,7 +114,7 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        partialGraph,
+        partialGraph.getActionGraph(),
         executionContext,
         ImmutableSet.of(rule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -135,7 +135,7 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSet.of(rule, configRule));
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        partialGraph,
+        partialGraph.getActionGraph(),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -174,7 +174,7 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSet.of(rule, configRule));
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        partialGraph,
+        partialGraph.getActionGraph(),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -228,7 +228,7 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSet.of(rule, configRule));
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        partialGraph,
+        partialGraph.getActionGraph(),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -267,7 +267,7 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)),
+        createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)).getActionGraph(),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -359,7 +359,8 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule1, rule2)),
+        createPartialGraphFromBuildRules(
+            ImmutableSet.of(configRule, rule1, rule2)).getActionGraph(),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -429,7 +430,7 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)),
+        createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)).getActionGraph(),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -480,7 +481,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         createPartialGraphFromBuildRules(
-            ImmutableSet.of(configRule, libraryRule, binaryRule, nativeRule)),
+            ImmutableSet.of(configRule, libraryRule, binaryRule, nativeRule)).getActionGraph(),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -517,7 +518,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         createPartialGraphFromBuildRules(
-            ImmutableSet.of(fooRule1, barRule2, fooConfigRule, barConfigRule)),
+            ImmutableSet.of(fooRule1, barRule2, fooConfigRule, barConfigRule)).getActionGraph(),
         executionContext,
         ImmutableSet.of(fooConfigRule.getBuildTarget(), barConfigRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
