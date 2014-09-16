@@ -42,16 +42,16 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
     final BuildRuleResolver ruleResolver = new BuildRuleResolver();
     final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
 
+    final TargetNodeToBuildRuleTransformer transformer = new TargetNodeToBuildRuleTransformer();
+
     AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(this) {
 
           @Override
           public void visit(TargetNode<?> node) {
-            TargetNodeToBuildRuleTransformer<?> transformer =
-                new TargetNodeToBuildRuleTransformer<>(node);
             BuildRule rule;
             try {
-              rule = transformer.transform(ruleResolver);
+              rule = transformer.transform(ruleResolver, node);
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
             }

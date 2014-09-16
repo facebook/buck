@@ -20,6 +20,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableSet;
 
 import java.lang.reflect.Field;
@@ -27,6 +29,8 @@ import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Used to derive information from the constructor args returned by {@link Description} instances.
@@ -39,6 +43,7 @@ import java.util.Set;
 public class ConstructorArgMarshaller {
 
   private final TypeCoercerFactory typeCoercerFactory;
+  private final Cache<Class<? extends ConstructorArg>, ImmutableSet<ParamInfo>> coercedTypes;
 
   /**
    * Constructor. {@code pathFromProjectRootToBuildFile} is the path relative to the project root to
@@ -48,6 +53,7 @@ public class ConstructorArgMarshaller {
    */
   public ConstructorArgMarshaller() {
     this.typeCoercerFactory = new TypeCoercerFactory();
+    this.coercedTypes = CacheBuilder.newBuilder().build();
   }
 
   /**
@@ -107,17 +113,28 @@ public class ConstructorArgMarshaller {
   }
 
   ImmutableSet<ParamInfo> getAllParamInfo(ConstructorArg dto) {
-    Class<?> argClass = dto.getClass();
+    final Class<? extends ConstructorArg> argClass = dto.getClass();
+    try {
+      return coercedTypes.get(argClass, new Callable<ImmutableSet<ParamInfo>>() {
+            @Override
+            public ImmutableSet<ParamInfo> call() {
+              ImmutableSet.Builder<ParamInfo> allInfo = ImmutableSet.builder();
 
-    ImmutableSet.Builder<ParamInfo> allInfo = ImmutableSet.builder();
+              for (Field field : argClass.getFields()) {
+                if (Modifier.isFinal(field.getModifiers())) {
+                  continue;
+                }
+                allInfo.add(new ParamInfo(typeCoercerFactory, field));
+              }
 
-    for (Field field : argClass.getFields()) {
-      if (Modifier.isFinal(field.getModifiers())) {
-        continue;
-      }
-      allInfo.add(new ParamInfo(typeCoercerFactory, field));
+              return allInfo.build();
+            }
+          });
+    } catch (ExecutionException e) {
+      // This gets thrown if we saw an error when loading the value. Nothing sane to do here, and
+      // we (previously, before using a cache), simply allowed a RuntimeException to bubble up.
+      // Maintain that behaviour.
+      throw new RuntimeException(e);
     }
-
-    return allInfo.build();
   }
 }

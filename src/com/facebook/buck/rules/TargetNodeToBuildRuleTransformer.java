@@ -28,19 +28,17 @@ import com.google.common.collect.ImmutableSortedSet;
 /**
  * Takes in an {@link TargetNode} from the target graph and builds a {@link DescribedRule}.
  */
-public class TargetNodeToBuildRuleTransformer<T extends ConstructorArg> {
+public class TargetNodeToBuildRuleTransformer {
 
-  private final TargetNode<T> targetNode;
+  ConstructorArgMarshaller inspector = new ConstructorArgMarshaller();
 
-  public TargetNodeToBuildRuleTransformer(TargetNode<T> targetNode) {
-    this.targetNode = Preconditions.checkNotNull(targetNode);
-  }
-
-  public BuildRule transform(BuildRuleResolver ruleResolver)
+  public <T extends ConstructorArg> BuildRule transform(
+      BuildRuleResolver ruleResolver,
+      TargetNode<T> targetNode)
       throws NoSuchBuildTargetException {
     BuildRuleFactoryParams ruleFactoryParams = targetNode.getRuleFactoryParams();
     Description<T> description = targetNode.getDescription();
-    ConstructorArgMarshaller inspector = new ConstructorArgMarshaller();
+
     T arg = description.createUnpopulatedConstructorArg();
     try {
       inspector.populate(
