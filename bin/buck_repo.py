@@ -136,13 +136,13 @@ class BuckRepo:
             self._checkout_and_clean(revision, branch)
 
         self._buck_version_uid = self._get_buck_version_uid()
+        self._build()
 
     def launch_buck(self):
         with Tracing('BuckRepo.launch_buck'):
             self.kill_autobuild()
             if 'clean' in sys.argv or os.environ.get('NO_BUCKD'):
                 self.kill_buckd()
-            self._build()
 
             use_buckd = not os.environ.get('NO_BUCKD')
             has_watchman = bool(which('watchman'))
@@ -198,7 +198,6 @@ class BuckRepo:
 
     def launch_buckd(self):
         with Tracing('BuckRepo.launch_buckd'):
-            self._build()
             self._setup_watchman_watch()
             self._buck_project.create_buckd_tmp_dir()
             # Override self._tmp_dir to a long lived directory.
