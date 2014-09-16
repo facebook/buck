@@ -317,7 +317,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         XcodeWorkspaceConfig workspaceConfigRule = (XcodeWorkspaceConfig) workspaceRule;
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             getProjectFilesystem(),
-            partialGraphs.getProjectGraph(),
+            partialGraphs.getProjectGraph().getActionGraph(),
             executionContext,
             workspaceConfigRule,
             optionsBuilder.build(),

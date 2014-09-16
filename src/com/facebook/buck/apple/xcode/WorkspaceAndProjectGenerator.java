@@ -28,7 +28,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -57,7 +56,7 @@ public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
 
   private final ProjectFilesystem projectFilesystem;
-  private final PartialGraph projectTargetGraph;
+  private final ActionGraph projectGraph;
   private final ExecutionContext executionContext;
   private final XcodeWorkspaceConfig workspaceBuildable;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
@@ -66,14 +65,14 @@ public class WorkspaceAndProjectGenerator {
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
-      PartialGraph projectTargetGraph,
+      ActionGraph projectGraph,
       ExecutionContext executionContext,
       XcodeWorkspaceConfig workspaceBuildable,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       Multimap<BuildRule, AppleTest> sourceRuleToTestRules,
       Iterable<BuildRule> extraTestBundleRules) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.projectTargetGraph = Preconditions.checkNotNull(projectTargetGraph);
+    this.projectGraph = Preconditions.checkNotNull(projectGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
     this.workspaceBuildable = Preconditions.checkNotNull(workspaceBuildable);
     this.projectGeneratorOptions = ImmutableSet.<ProjectGenerator.Option>builder()
@@ -109,7 +108,7 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder = ImmutableSet.builder();
 
     getOrderedTestRules(
-        projectTargetGraph.getActionGraph(),
+        projectGraph,
         sourceRuleToTestRules,
         orderedBuildRules,
         extraTestBundleRules,
@@ -122,7 +121,7 @@ public class WorkspaceAndProjectGenerator {
         ImmutableMap.builder();
 
     for (XcodeProjectConfig xcodeProjectConfig : Iterables.filter(
-        projectTargetGraph.getActionGraph().getNodes(),
+        projectGraph.getNodes(),
         XcodeProjectConfig.class)) {
       ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
       for (BuildRule memberRule : xcodeProjectConfig.getRules()) {
@@ -134,7 +133,7 @@ public class WorkspaceAndProjectGenerator {
       if (generator == null) {
         LOG.debug("Generating project for rule %s", xcodeProjectConfig);
         generator = new ProjectGenerator(
-            projectTargetGraph.getActionGraph().getNodes(),
+            projectGraph.getNodes(),
             initialTargets,
             projectFilesystem,
             executionContext,
@@ -156,7 +155,7 @@ public class WorkspaceAndProjectGenerator {
     }
 
     for (XcodeNative buildable : Iterables.filter(
-        projectTargetGraph.getActionGraph().getNodes(),
+        projectGraph.getNodes(),
         XcodeNative.class)) {
       Path projectPath = buildable.getProjectContainerPath().resolve();
       Path pbxprojectPath = projectPath.resolve("project.pbxproj");
