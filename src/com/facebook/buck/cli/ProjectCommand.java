@@ -43,8 +43,6 @@ import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -55,7 +53,6 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,8 +79,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     }
   };
 
-  @VisibleForTesting
-  class PartialGraphs {
+  private static class PartialGraphs {
     private final PartialGraph mainGraph;
     private final Optional<PartialGraph> testGraph;
     private final PartialGraph projectGraph;
@@ -165,7 +161,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     File tempFile = new File(tempDir, "project.json");
     int exitCode;
     try {
-      exitCode = createIntellijProject(project,
+      exitCode = project.createIntellijProject(
           tempFile,
           executionContext.getProcessExecutor(),
           !options.getArgumentsFormattedAsBuildTargets().isEmpty(),
@@ -191,7 +187,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             options.createBuildCommandOptionsWithInitialTargets(additionalInitialTargets);
 
 
-        exitCode = runBuildCommand(buildCommand, buildOptions);
+        exitCode = buildCommand.runCommandWithOptions(buildOptions);
         if (exitCode != 0) {
           return exitCode;
         }
@@ -223,42 +219,30 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   ImmutableList<String> getAnnotationProcessingTargets(ProjectCommandOptions options)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
+    Optional<ImmutableSet<BuildTarget>> buildTargets = getRootsFromOptions(options);
+    PartialGraph partialGraph = Iterables.getOnlyElement(
+        PartialGraph.createPartialGraphs(
+          buildTargets,
+          Optional.of(ANNOTATION_PREDICATE),
+          ImmutableList.<RuleJsonPredicate>of(),
+          ImmutableList.<AssociatedRulePredicate>of(),
+          getProjectFilesystem(),
+          options.getDefaultIncludes(),
+          getParser(),
+          getBuckEventBus(),
+          console,
+          environment,
+          options.getEnableProfiling()));
+
     return ImmutableList.copyOf(
         Iterables.transform(
-            Iterables.getOnlyElement(
-                createPartialGraphs(
-                    Optional.of(ANNOTATION_PREDICATE),
-                    Optional.<RuleJsonPredicate>absent(),
-                    Optional.<AssociatedRulePredicate>absent(),
-                    options))
-                .getTargets(),
+            partialGraph.getTargets(),
             new Function<BuildTarget, String>() {
               @Override
               public String apply(BuildTarget target) {
                 return target.getFullyQualifiedName();
               }
             }));
-  }
-
-  /**
-   * Calls {@link Project#createIntellijProject}
-   *
-   * This is factored into a separate method for testing purposes.
-   */
-  @VisibleForTesting
-  int createIntellijProject(Project project,
-      File jsonTemplate,
-      ProcessExecutor processExecutor,
-      boolean generateMinimalProject,
-      PrintStream stdOut,
-      PrintStream stdErr)
-      throws IOException, InterruptedException {
-    return project.createIntellijProject(
-        jsonTemplate,
-        processExecutor,
-        generateMinimalProject,
-        stdOut,
-        stdErr);
   }
 
   /**
@@ -379,17 +363,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return targetsBuilder.build();
   }
 
-  /**
-   * Calls {@link BuildCommand#runCommandWithOptions}
-   *
-   * This is factored into a separate method for testing purposes.
-   */
-  @VisibleForTesting
-  int runBuildCommand(BuildCommand buildCommand, BuildCommandOptions options)
-      throws IOException, InterruptedException {
-    return buildCommand.runCommandWithOptions(options);
-  }
-
   private Optional<ImmutableSet<BuildTarget>> getRootsFromOptions(ProjectCommandOptions options)
       throws BuildTargetException, IOException {
     Optional<ImmutableSet<BuildTarget>> buildTargets = Optional.absent();
@@ -402,46 +375,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return buildTargets;
   }
 
-  @VisibleForTesting
-  ImmutableList<PartialGraph> createPartialGraphs(
-      Optional<RuleJsonPredicate> rootsPredicate,
-      Optional<RuleJsonPredicate> rulePredicate,
-      Optional<AssociatedRulePredicate> associatedRulePredicate,
-      ProjectCommandOptions options)
-      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    Optional<ImmutableSet<BuildTarget>> buildTargets = getRootsFromOptions(options);
-
-    ImmutableList.Builder<RuleJsonPredicate> predicateBuilder = ImmutableList.builder();
-    ImmutableList.Builder<AssociatedRulePredicate> associatedRulePredicateBuilder =
-        ImmutableList.builder();
-
-    if (rulePredicate.isPresent() || associatedRulePredicate.isPresent()) {
-      if (options.isWithTests()) {
-        predicateBuilder.add(RuleJsonPredicates.isTestRule());
-        associatedRulePredicateBuilder.add(AssociatedRulePredicates.associatedTestsRules());
-      }
-
-      predicateBuilder.add(rulePredicate.or(RuleJsonPredicates.alwaysTrue()));
-      associatedRulePredicateBuilder.add(associatedRulePredicate.or(
-              AssociatedRulePredicates.alwaysTrue()));
-    }
-
-    return PartialGraph.createPartialGraphs(
-        buildTargets,
-        rootsPredicate,
-        predicateBuilder.build(),
-        associatedRulePredicateBuilder.build(),
-        getProjectFilesystem(),
-        options.getDefaultIncludes(),
-        getParser(),
-        getBuckEventBus(),
-        console,
-        environment,
-        options.getEnableProfiling());
-  }
-
-  @VisibleForTesting
-  PartialGraphs createPartialGraphs(ProjectCommandOptions options)
+  private PartialGraphs createPartialGraphs(ProjectCommandOptions options)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     RuleJsonPredicate projectRootsPredicate;
     RuleJsonPredicate projectPredicate;
