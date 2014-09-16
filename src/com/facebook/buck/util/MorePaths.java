@@ -168,7 +168,7 @@ public class MorePaths {
   public static ImmutableSortedSet<Path> asPaths(Iterable<String> paths) {
     ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
     for (String path : paths) {
-      builder.add(Paths.get(path));
+      builder.add(TO_PATH.apply(path));
     }
     return builder.build();
   }

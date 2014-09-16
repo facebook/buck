@@ -1,9 +1,7 @@
 from __future__ import print_function
-import errno
 import os
-import pty
+import platform
 import re
-import socket
 import signal
 import subprocess
 import sys
@@ -13,6 +11,11 @@ import time
 
 from timing import monotonic_time_nanos
 from tracing import Tracing
+
+# We use pty to launch buckd. For now, we don't support buckd on Windows, which is fortunate
+# because it turns out pty doesn't work on Windows either. Oh! Happy happenstance!
+if platform.system() != 'Windows':
+    import pty
 
 JAVA_CLASSPATHS = [
     "src",
@@ -123,7 +126,7 @@ class BuckRepo:
         self._launch_command = launch_command
 
         dot_git = os.path.join(self._buck_dir, '.git')
-        self._is_git = os.path.exists(dot_git) and os.path.isdir(dot_git)
+        self._is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git')
         self._is_buck_repo_dirty_override = os.environ.get('BUCK_REPOSITORY_DIRTY')
 
         buck_version = buck_project.buck_version
@@ -190,6 +193,7 @@ class BuckRepo:
             command.append(self._get_java_classpath())
             command.append("com.facebook.buck.cli.Main")
             command.extend(sys.argv[1:])
+
             return subprocess.call(command, cwd=self._buck_project.root)
 
     def launch_buckd(self):
@@ -589,7 +593,7 @@ class BuckRepo:
         return java_args
 
     def _get_java_classpath(self):
-        return ':'.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
+        return os.pathsep.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
 
 
 class BuckRepoException(Exception):

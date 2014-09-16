@@ -58,5 +58,5 @@ elif platform.system() == 'Windows':
     def _monotonic_time_nanos_windows():
         perf_counter = ctypes.c_uint64()
         ctypes.windll.kernel32.QueryPerformanceCounter(ctypes.byref(perf_counter))
-        return perf_counter * NSEC_PER_SEC / perf_frequency
+        return perf_counter.value * NSEC_PER_SEC / perf_frequency.value
     monotonic_time_nanos = _monotonic_time_nanos_windows

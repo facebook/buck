@@ -1,6 +1,6 @@
 [java]
-    # Indicates that any folder named src or test
-    # are folders that contain Java code.
+    ; Indicates that any folder named src or test
+    ; are folders that contain Java code.
     src_roots = src, test
 [alias]
     buck = //src/com/facebook/buck/cli:cli
@@ -8,9 +8,9 @@
 [buildfile]
     includes = //DEFS
 [project]
-    # Directories that do not contain input files.
-    # All of these directories should also appear in the "ignore_dirs" list
-    # in .watchmanconfig, with the exception of ".git".
+    ; Directories that do not contain input files.
+    ; All of these directories should also appear in the "ignore_dirs" list
+    ; in .watchmanconfig, with the exception of ".git".
     ignore = \
       .git, \
       .buckd, \
@@ -30,14 +30,14 @@
       test/com/facebook/buck/cxx/testdata, \
       test/com/facebook/buck/python/testdata, \
 
-    # Common temp file patterns:
-    # .*\.swp$ (vim)
-    # ^#.*#$, .*~$ (emacs)
-    # .*___jb_bak___$, .*___jb_old___$ (intellij idea)
+    ; Common temp file patterns:
+    ; .*\.swp$ (vim)
+    ; ^#.*#$, .*~$ (emacs)
+    ; .*___jb_bak___$, .*___jb_old___$ (intellij idea)
     temp_files = \
       .*\.swp$, \
       ^#.*#$, .*~$, \
       .*___jb_bak___$, .*___jb_old___$,
 [test]
-    # Maximum timeout of 1 minute per test.
+    ; Maximum timeout of 1 minute per test.
     timeout = 60000

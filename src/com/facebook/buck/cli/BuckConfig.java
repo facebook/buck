@@ -45,12 +45,15 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
@@ -368,28 +371,54 @@ public class BuckConfig {
     }
 
     if (projectConfig.containsKey(ignoreKey)) {
-      builder.addAll(MorePaths.asPaths(
-          Splitter.on(',')
-            .omitEmptyStrings()
-            .trimResults()
-            .split(projectConfig.get(ignoreKey))));
+      builder.addAll(
+          Lists.transform(asListWithoutComments(projectConfig.get(ignoreKey)), MorePaths.TO_PATH));
     }
 
     // Normalize paths in order to eliminate trailing '/' characters and whatnot.
     return builder.build();
   }
 
+  /**
+   * ini4j leaves things that look like comments in the values of entries in the file. Generally,
+   * we don't want to include these in our parameters, so filter them out where necessary. In an INI
+   * file, the comment separator is ";", but some parsers (ini4j included) use "#" too. This method
+   * handles both cases.
+   *
+   * @return An {@link ImmutableList} containing all entries that don't look like comments, or the
+   *     empty list if there are no values of if {@code value} is null.
+   */
+  private ImmutableList<String> asListWithoutComments(@Nullable String value) {
+    if (value == null) {
+      return ImmutableList.of();
+    }
+
+    Iterable<String> allValues = Splitter.on(',')
+        .omitEmptyStrings()
+        .trimResults()
+        .split(value);
+    return FluentIterable.from(allValues)
+        .filter(
+            new Predicate<String>() {
+              @Override
+              public boolean apply(String input) {
+                // Reject if the first printable character is an ini comment char (';' or '#')
+                return !Pattern.compile("^\\s*[#;]").matcher(input).find();
+              }
+            })
+        .toList();
+  }
+
+  private ImmutableList<String> asListWithoutComments(Optional<String> value) {
+    return asListWithoutComments(value.orNull());
+  }
+
   public ImmutableSet<Pattern> getTempFilePatterns() {
     final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
     final String tempFilesKey = "temp_files";
     ImmutableSet.Builder<Pattern> builder = ImmutableSet.builder();
-    if (projectConfig.containsKey(tempFilesKey)) {
-      for (String regex : Splitter.on(',')
-          .omitEmptyStrings()
-          .trimResults()
-          .split(projectConfig.get(tempFilesKey))) {
-        builder.add(Pattern.compile(regex));
-      }
+    for (String regex : asListWithoutComments(projectConfig.get(tempFilesKey))) {
+      builder.add(Pattern.compile(regex));
     }
     return builder.build();
   }
@@ -492,20 +521,11 @@ public class BuckConfig {
   }
 
   public ImmutableSet<String> getListenerJars() {
-    String jarPathsString = getValue("extensions", "listeners").or("");
-    Splitter splitter = Splitter.on(',').omitEmptyStrings().trimResults();
-    return ImmutableSet.copyOf(splitter.split(jarPathsString));
+    return ImmutableSet.copyOf(asListWithoutComments(getValue("extensions", "listeners")));
   }
 
   public ImmutableSet<String> getSrcRoots() {
-    Optional<String> srcRootsOptional = getValue("java", "src_roots");
-    if (srcRootsOptional.isPresent()) {
-      String srcRoots = srcRootsOptional.get();
-      Splitter splitter = Splitter.on(',').omitEmptyStrings().trimResults();
-      return ImmutableSet.copyOf(splitter.split(srcRoots));
-    } else {
-      return ImmutableSet.of();
-    }
+    return ImmutableSet.copyOf(asListWithoutComments(getValue("java", "src_roots")));
   }
 
   @VisibleForTesting
@@ -519,18 +539,7 @@ public class BuckConfig {
    */
   ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
     Optional<String> excludedRulesOptional = getValue("test", "excluded_labels");
-    if (excludedRulesOptional.isPresent()) {
-      String excludedRules = excludedRulesOptional.get();
-      Splitter splitter = Splitter.on(',').omitEmptyStrings().trimResults();
-      ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
-      // Validate that all specified labels are valid.
-      for (String raw : splitter.split(excludedRules)) {
-        builder.add(raw);
-      }
-      return builder.build();
-    } else {
-      return ImmutableList.of();
-    }
+    return asListWithoutComments(excludedRulesOptional);
   }
 
   @Beta
@@ -618,8 +627,7 @@ public class BuckConfig {
   }
 
   ImmutableList<String> getArtifactCacheModes() {
-    String cacheMode = getValue("cache", "mode").or("");
-    return ImmutableList.copyOf(Splitter.on(',').trimResults().omitEmptyStrings().split(cacheMode));
+    return asListWithoutComments(getValue("cache", "mode"));
   }
 
   @VisibleForTesting
@@ -630,12 +638,13 @@ public class BuckConfig {
   }
 
   public Optional<Long> getCacheDirMaxSizeBytes() {
-    return getValue("cache", "dir_max_size").transform(new Function<String, Long>() {
-      @Override
-      public Long apply(String input) {
-        return SizeUnit.parseBytes(input);
-      }
-    });
+    return getValue("cache", "dir_max_size").transform(
+        new Function<String, Long>() {
+          @Override
+          public Long apply(String input) {
+            return SizeUnit.parseBytes(input);
+          }
+        });
   }
 
   private ArtifactCache createDirArtifactCache() {
@@ -661,10 +670,7 @@ public class BuckConfig {
       FileHashCache fileHashCache) {
     // cache.blacklisted_wifi_ssids
     ImmutableSet<String> blacklistedWifi = ImmutableSet.copyOf(
-        Splitter.on(",")
-            .trimResults()
-            .omitEmptyStrings()
-            .split(getValue("cache", "blacklisted_wifi_ssids").or("")));
+        asListWithoutComments(getValue("cache", "blacklisted_wifi_ssids")));
     if (currentWifiSsid.isPresent() && blacklistedWifi.contains(currentWifiSsid.get())) {
       // We're connected to a wifi hotspot that has been explicitly blacklisted from connecting to
       // Cassandra.

@@ -8,6 +8,21 @@ import time
 from timing import monotonic_time_nanos
 from uuid import uuid4
 
+# We need to optionally include some functions for Windows.
+import platform
+if platform.system() == 'Windows':
+    import ctypes
+
+
+def create_symlink(original, symlink):
+    if os.path.exists(symlink):
+        os.remove(symlink)
+    if platform.system() == 'Windows':
+        k32 = ctypes.windll.LoadLibrary("kernel32.dll")
+        k32.CreateSymbolicLinkA(symlink, original, 1)
+    else:
+        os.symlink(original, symlink)
+
 
 class _TraceEventPhases(object):
     BEGIN = 'B'
@@ -82,12 +97,7 @@ class Tracing(object):
             if e.errno != errno.EEXIST:
                 raise
         json.dump(Tracing._trace_events, file(trace_filename, 'w'))
-        try:
-            os.symlink(trace_filename, trace_filename_link)
-        except OSError, e:
-            if e.errno == errno.EEXIST:
-                os.remove(trace_filename_link)
-                os.symlink(trace_filename, trace_filename_link)
+        create_symlink(trace_filename, trace_filename_link)
         Tracing.clean_up_old_logs(buck_log_dir)
 
     @staticmethod
