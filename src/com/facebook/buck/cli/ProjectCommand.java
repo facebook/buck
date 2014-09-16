@@ -81,29 +81,29 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     }
   };
 
-  private static class PartialGraphs {
-    private final PartialGraph mainGraph;
-    private final Optional<PartialGraph> testGraph;
-    private final PartialGraph projectGraph;
+  private static class ActionGraphs {
+    private final ActionGraph mainGraph;
+    private final Optional<ActionGraph> testGraph;
+    private final ActionGraph projectGraph;
 
-    public PartialGraphs(
-        PartialGraph mainGraph,
-        Optional<PartialGraph> testGraph,
-        PartialGraph projectGraph) {
+    public ActionGraphs(
+        ActionGraph mainGraph,
+        Optional<ActionGraph> testGraph,
+        ActionGraph projectGraph) {
       this.mainGraph = Preconditions.checkNotNull(mainGraph);
       this.testGraph = Preconditions.checkNotNull(testGraph);
       this.projectGraph = Preconditions.checkNotNull(projectGraph);
     }
 
-    public PartialGraph getMainGraph() {
+    public ActionGraph getMainGraph() {
       return mainGraph;
     }
 
-    public Optional<PartialGraph> getTestGraph() {
+    public Optional<ActionGraph> getTestGraph() {
       return testGraph;
     }
 
-    public PartialGraph getProjectGraph() {
+    public ActionGraph getProjectGraph() {
       return projectGraph;
     }
   }
@@ -136,23 +136,24 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    */
   int runIntellijProjectGenerator(ProjectCommandOptions options)
       throws IOException, InterruptedException {
-    // Create a PartialGraph that only contains targets that can be represented as IDE
+    // Create an ActionGraph that only contains targets that can be represented as IDE
     // configuration files.
-    PartialGraph partialGraph;
+    ActionGraph actionGraph;
 
     try {
-      partialGraph = createPartialGraphs(options).getProjectGraph();
+      actionGraph = createPartialGraphs(options).getProjectGraph();
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
 
-    ExecutionContext executionContext = createExecutionContext(options,
-        partialGraph.getActionGraph());
+    ExecutionContext executionContext = createExecutionContext(
+        options,
+        actionGraph);
 
     Project project = new Project(
         ImmutableSet.copyOf(
             FluentIterable
-                .from(partialGraph.getActionGraph().getNodes())
+                .from(actionGraph.getNodes())
                 .filter(
                     new Predicate<BuildRule>() {
                       @Override
@@ -168,7 +169,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
                       }
                     }
                 )),
-        partialGraph.getActionGraph(),
+        actionGraph,
         options.getBasePathToAliasMap(),
         options.getJavaPackageFinder(),
         executionContext,
@@ -271,9 +272,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    */
   int runXcodeProjectGenerator(ProjectCommandOptions options)
       throws IOException, InterruptedException {
-    PartialGraphs partialGraphs;
+    ActionGraphs actionGraphs;
     try {
-      partialGraphs = createPartialGraphs(options);
+      actionGraphs = createPartialGraphs(options);
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -289,7 +290,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     ExecutionContext executionContext = createExecutionContext(
         options,
-        partialGraphs.getProjectGraph().getActionGraph());
+        actionGraphs.getProjectGraph());
 
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (options.getReadOnly()) {
@@ -302,7 +303,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     if (options.getCombinedProject() != null) {
       // Generate a single project containing a target and all its dependencies and tests.
       ProjectGenerator projectGenerator = new ProjectGenerator(
-          partialGraphs.getProjectGraph().getActionGraph().getNodes(),
+          actionGraphs.getProjectGraph().getNodes(),
           passedInTargetsSet,
           getProjectFilesystem(),
           executionContext,
@@ -314,7 +315,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableSet<BuildTarget> targets;
       if (passedInTargetsSet.isEmpty()) {
         targets = getAllTargetsOfType(
-            partialGraphs.getMainGraph().getActionGraph().getNodes(),
+            actionGraphs.getMainGraph().getNodes(),
             XcodeWorkspaceConfigDescription.TYPE);
       } else {
         targets = passedInTargetsSet;
@@ -323,22 +324,22 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       Map<BuildRule, ProjectGenerator> projectGenerators = new HashMap<>();
       for (BuildTarget workspaceConfig : targets) {
         BuildRule workspaceRule =
-          partialGraphs.getMainGraph().getActionGraph().findBuildRuleByTarget(workspaceConfig);
+          actionGraphs.getMainGraph().findBuildRuleByTarget(workspaceConfig);
         if (!(workspaceRule instanceof XcodeWorkspaceConfig)) {
           throw new HumanReadableException(
               "%s must be a xcode_workspace_config",
               workspaceRule.getFullyQualifiedName());
         }
         Iterable<BuildRule> testBuildRules;
-        if (partialGraphs.getTestGraph().isPresent()) {
-          testBuildRules = partialGraphs.getTestGraph().get().getActionGraph().getNodes();
+        if (actionGraphs.getTestGraph().isPresent()) {
+          testBuildRules = actionGraphs.getTestGraph().get().getNodes();
         } else {
           testBuildRules = Collections.emptySet();
         }
         XcodeWorkspaceConfig workspaceConfigRule = (XcodeWorkspaceConfig) workspaceRule;
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             getProjectFilesystem(),
-            partialGraphs.getProjectGraph().getActionGraph(),
+            actionGraphs.getProjectGraph(),
             executionContext,
             workspaceConfigRule,
             optionsBuilder.build(),
@@ -354,7 +355,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableSet<BuildTarget> targets;
       if (passedInTargetsSet.isEmpty()) {
         targets = getAllTargetsOfType(
-            partialGraphs.getProjectGraph().getActionGraph().getNodes(),
+            actionGraphs.getProjectGraph().getNodes(),
             XcodeProjectConfigDescription.TYPE);
       } else {
         targets = passedInTargetsSet;
@@ -362,7 +363,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
       SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
           getProjectFilesystem(),
-          partialGraphs.getProjectGraph().getActionGraph(),
+          actionGraphs.getProjectGraph(),
           executionContext,
           targets,
           optionsBuilder.build());
@@ -396,7 +397,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return buildTargets;
   }
 
-  private PartialGraphs createPartialGraphs(ProjectCommandOptions options)
+  private ActionGraphs createPartialGraphs(ProjectCommandOptions options)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     RuleJsonPredicate projectRootsPredicate;
     RuleJsonPredicate projectPredicate;
@@ -498,10 +499,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           console,
           environment,
           options.getEnableProfiling());
-      return new PartialGraphs(
-          partialGraphs.get(0),
-          Optional.of(partialGraphs.get(1)),
-          partialGraphs.get(2));
+      return new ActionGraphs(
+          partialGraphs.get(0).getActionGraph(),
+          Optional.of(partialGraphs.get(1).getActionGraph()),
+          partialGraphs.get(2).getActionGraph());
     } else {
       ImmutableList<PartialGraph> partialGraphs = PartialGraph.createPartialGraphs(
           buildTargets,
@@ -517,10 +518,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           console,
           environment,
           options.getEnableProfiling());
-      return new PartialGraphs(
-          partialGraphs.get(0),
-          Optional.<PartialGraph>absent(),
-          partialGraphs.get(1));
+      return new ActionGraphs(
+          partialGraphs.get(0).getActionGraph(),
+          Optional.<ActionGraph>absent(),
+          partialGraphs.get(1).getActionGraph());
     }
   }
 
