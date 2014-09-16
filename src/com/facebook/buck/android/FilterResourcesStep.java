@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -63,6 +64,7 @@ public class FilterResourcesStep implements Step {
   private static final Pattern DRAWABLE_EXCLUDE_PATTERN = Pattern.compile(
       ".*-nodpi.*", Pattern.CASE_INSENSITIVE);
 
+  private static final Logger LOG = Logger.get(FilterResourcesStep.class);
 
   @VisibleForTesting
   static final Pattern NON_ENGLISH_STRING_PATH = Pattern.compile(
@@ -119,6 +121,10 @@ public class FilterResourcesStep implements Step {
     this.drawableFinder = drawableFinder;
     this.imageScaler = imageScaler;
     this.nonEnglishStringFilesBuilder = ImmutableSet.builder();
+    LOG.info(
+        "FilterResourcesStep: filterDrawables: %s; filterStrings: %s",
+        filterDrawables,
+        filterStrings);
   }
 
   @Override
@@ -142,7 +148,11 @@ public class FilterResourcesStep implements Step {
   private int doExecute(ExecutionContext context) throws IOException, InterruptedException {
     List<Predicate<Path>> pathPredicates = Lists.newArrayList();
 
-    final boolean canDownscale = imageScaler != null && imageScaler.isAvailable(context);
+    boolean canDownscale = imageScaler != null && imageScaler.isAvailable(context);
+    LOG.info(
+        "FilterResourcesStep: canDownscale: %s. imageScalar non-null: %s.",
+        canDownscale,
+        imageScaler != null);
 
     if (filterDrawables) {
       Set<Path> drawables = drawableFinder.findDrawables(
@@ -428,6 +438,7 @@ public class FilterResourcesStep implements Step {
     }
 
     public FilterResourcesStep build() {
+      LOG.info("FilterResourcesStep.Builder: resource filter: %s", resourceFilter);
       return new FilterResourcesStep(
           inResDirToOutResDirMap,
           resourceFilter.isEnabled(),
