@@ -46,6 +46,8 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -147,7 +149,26 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ExecutionContext executionContext = createExecutionContext(options,
         partialGraph.getActionGraph());
 
-    Project project = new Project(partialGraph,
+    Project project = new Project(
+        ImmutableSet.copyOf(
+            FluentIterable
+                .from(partialGraph.getActionGraph().getNodes())
+                .filter(
+                    new Predicate<BuildRule>() {
+                      @Override
+                      public boolean apply(BuildRule input) {
+                        return input instanceof ProjectConfig;
+                      }
+                    })
+                .transform(
+                    new Function<BuildRule, ProjectConfig>() {
+                      @Override
+                      public ProjectConfig apply(BuildRule input) {
+                        return (ProjectConfig) input;
+                      }
+                    }
+                )),
+        partialGraph.getActionGraph(),
         options.getBasePathToAliasMap(),
         options.getJavaPackageFinder(),
         executionContext,

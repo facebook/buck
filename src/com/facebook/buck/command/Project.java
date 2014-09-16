@@ -32,7 +32,6 @@ import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.InMemoryBuildFileTree;
-import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AnnotationProcessingData;
@@ -131,7 +130,8 @@ public class Project {
    */
   private static final boolean GENERATE_PROPERTIES_FILES = false;
 
-  private final PartialGraph partialGraph;
+  private final ImmutableSet<ProjectConfig> rules;
+  private final ActionGraph actionGraph;
   private final BuildFileTree buildFileTree;
   private final ImmutableMap<Path, String> basePathToAliasMap;
   private final JavaPackageFinder javaPackageFinder;
@@ -143,7 +143,8 @@ public class Project {
   private final String pythonInterpreter;
   private final ObjectMapper objectMapper;
 
-  public Project(PartialGraph partialGraph,
+  public Project(ImmutableSet<ProjectConfig> rules,
+      ActionGraph actionGraph,
       Map<Path, String> basePathToAliasMap,
       JavaPackageFinder javaPackageFinder,
       ExecutionContext executionContext,
@@ -152,10 +153,11 @@ public class Project {
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
       ObjectMapper objectMapper) {
-    this.partialGraph = Preconditions.checkNotNull(partialGraph);
+    this.rules = Preconditions.checkNotNull(rules);
+    this.actionGraph = Preconditions.checkNotNull(actionGraph);
     this.buildFileTree = new InMemoryBuildFileTree(
         Iterables.transform(
-            partialGraph.getActionGraph().getNodes(),
+            actionGraph.getNodes(),
             new Function<BuildRule, BuildTarget>() {
               @Override
               public BuildTarget apply(BuildRule input) {
@@ -343,8 +345,8 @@ public class Project {
   }
 
   @VisibleForTesting
-  PartialGraph getPartialGraph() {
-    return partialGraph;
+  ActionGraph getActionGraph() {
+    return actionGraph;
   }
 
   /**
@@ -357,19 +359,12 @@ public class Project {
 
   @VisibleForTesting
   List<Module> createModulesForProjectConfigs() throws IOException {
-    ActionGraph actionGraph = partialGraph.getActionGraph();
     List<Module> modules = Lists.newArrayList();
 
     // Convert the project_config() targets into modules and find the union of all jars passed to
     // no_dx.
     ImmutableSet.Builder<Path> noDxJarsBuilder = ImmutableSet.builder();
-    for (BuildTarget target : partialGraph.getTargets()) {
-      BuildRule buildRule = actionGraph.findBuildRuleByTarget(target);
-      if (!(buildRule instanceof ProjectConfig)) {
-        continue;
-      }
-      ProjectConfig projectConfig = (ProjectConfig) buildRule;
-
+    for (ProjectConfig projectConfig : rules) {
       BuildRule srcRule = projectConfig.getSrcRule();
       if (srcRule instanceof AndroidBinary) {
         AndroidBinary androidBinary = (AndroidBinary) srcRule;
