@@ -108,7 +108,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
             environment,
             false /* enableProfiling */);
       } else {
-        graph = PartialGraph.createPartialGraphIncludingRoots(
+        graph = PartialGraph.createPartialGraph(
             matchingBuildTargets,
             options.getDefaultIncludes(),
             getParser(),

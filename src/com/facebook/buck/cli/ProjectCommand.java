@@ -25,6 +25,7 @@ import com.facebook.buck.apple.xcode.ProjectGenerator;
 import com.facebook.buck.apple.xcode.SeparatedProjectsGenerator;
 import com.facebook.buck.apple.xcode.WorkspaceAndProjectGenerator;
 import com.facebook.buck.command.Project;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
@@ -33,6 +34,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.AssociatedRulePredicate;
 import com.facebook.buck.parser.AssociatedRulePredicates;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RuleJsonPredicate;
 import com.facebook.buck.parser.RuleJsonPredicates;
@@ -42,13 +44,16 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -243,7 +248,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Optional<ImmutableSet<BuildTarget>> buildTargets = getRootsFromOptions(options);
     PartialGraph partialGraph = Iterables.getOnlyElement(
-        PartialGraph.createPartialGraphs(
+        createPartialGraphs(
           buildTargets,
           Optional.of(ANNOTATION_PREDICATE),
           ImmutableList.<RuleJsonPredicate>of(),
@@ -483,7 +488,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     Optional<ImmutableSet<BuildTarget>> buildTargets = getRootsFromOptions(options);
 
     if (options.isWithTests()) {
-      ImmutableList<PartialGraph> partialGraphs = PartialGraph.createPartialGraphs(
+      ImmutableList<PartialGraph> partialGraphs = createPartialGraphs(
           buildTargets,
           Optional.of(projectRootsPredicate),
           ImmutableList.of(
@@ -504,7 +509,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           Optional.of(partialGraphs.get(1).getActionGraph()),
           partialGraphs.get(2).getActionGraph());
     } else {
-      ImmutableList<PartialGraph> partialGraphs = PartialGraph.createPartialGraphs(
+      ImmutableList<PartialGraph> partialGraphs = createPartialGraphs(
           buildTargets,
           Optional.of(projectRootsPredicate),
           ImmutableList.of(
@@ -523,6 +528,87 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           Optional.<ActionGraph>absent(),
           partialGraphs.get(1).getActionGraph());
     }
+  }
+
+  /**
+   * Creates a graph containing the {@link BuildRule}s identified by {@code roots} and their
+   * dependencies. Then for each pair of {@link RuleJsonPredicate} in {@code predicates} and
+   * {@link AssociatedRulePredicate} in {@code associatedRulePredicates}, rules throughout the
+   * project that pass are added to the graph.
+   */
+  public static ImmutableList<PartialGraph> createPartialGraphs(
+      Optional<ImmutableSet<BuildTarget>> rootsOptional,
+      Optional<RuleJsonPredicate> rootsPredicate,
+      ImmutableList<RuleJsonPredicate> predicates,
+      ImmutableList<AssociatedRulePredicate> associatedRulePredicates,
+      ProjectFilesystem filesystem,
+      Iterable<String> includes,
+      Parser parser,
+      BuckEventBus eventBus,
+      Console console,
+      ImmutableMap<String, String> environment,
+      boolean enableProfiling)
+      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
+    ImmutableSet<BuildTarget> roots = rootsOptional.or(
+        parser.filterAllTargetsInProject(
+            filesystem,
+            includes,
+            rootsPredicate.or(RuleJsonPredicates.alwaysTrue()),
+            console,
+            environment,
+            eventBus,
+            enableProfiling));
+
+    ImmutableList.Builder<PartialGraph> graphs = ImmutableList.builder();
+
+    PartialGraph partialGraph = PartialGraph.createPartialGraph(
+        roots,
+        includes,
+        parser,
+        eventBus,
+        console,
+        environment);
+
+    graphs.add(partialGraph);
+
+    for (int i = 0; i < predicates.size(); i++) {
+      RuleJsonPredicate predicate = predicates.get(i);
+      AssociatedRulePredicate associatedRulePredicate = associatedRulePredicates.get(i);
+
+      PartialGraph associatedPartialGraph = PartialGraph.createPartialGraph(
+          predicate,
+          filesystem,
+          includes,
+          parser,
+          eventBus,
+          console,
+          environment,
+          enableProfiling);
+
+      ImmutableSet.Builder<BuildTarget> allTargetsBuilder = ImmutableSet.builder();
+      allTargetsBuilder.addAll(partialGraph.getTargets());
+
+      for (BuildTarget buildTarget : associatedPartialGraph.getTargets()) {
+        BuildRule buildRule = associatedPartialGraph
+            .getActionGraph()
+            .findBuildRuleByTarget(buildTarget);
+        if (associatedRulePredicate.isMatch(buildRule, partialGraph.getActionGraph())) {
+          allTargetsBuilder.add(buildRule.getBuildTarget());
+        }
+      }
+
+      partialGraph = PartialGraph.createPartialGraph(
+          allTargetsBuilder.build(),
+          includes,
+          parser,
+          eventBus,
+          console,
+          environment);
+
+      graphs.add(partialGraph);
+    }
+
+    return graphs.build();
   }
 
   @Override
