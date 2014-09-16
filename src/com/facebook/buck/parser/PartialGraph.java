@@ -211,7 +211,7 @@ public class PartialGraph {
 
     // Now that the Parser is loaded up with the set of all build rules, use it to create a
     // DependencyGraph of only the targets we want to build.
-    ActionGraph graph = parser.parseBuildFilesForTargets(
+    ActionGraph graph = parser.buildTargetGraph(
         targets,
         includes,
         eventBus,

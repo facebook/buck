@@ -336,7 +336,7 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void testParseBuildFilesForTargetsWithOverlappingTargets()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    // Execute parseBuildFilesForTargets() with multiple targets that require parsing the same
+    // Execute buildTargetGraph() with multiple targets that require parsing the same
     // build file.
     BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook", "foo").build();
     BuildTarget barTarget = BuildTarget.builder("//java/com/facebook", "bar").build();
@@ -348,7 +348,7 @@ public class ParserTest extends EasyMockSupport {
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
-    TargetGraph targetGraph = testParser.parseBuildFilesForTargets(
+    TargetGraph targetGraph = testParser.buildTargetGraph(
         buildTargets,
         defaultIncludes,
         eventBus,
@@ -373,14 +373,14 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void testMissingBuildRuleInValidFile()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
+    // Execute buildTargetGraph() with a target in a valid file but a bad rule name.
     BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook", "foo").build();
     BuildTarget razTarget = BuildTarget.builder("//java/com/facebook", "raz").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     try {
-      testParser.parseBuildFilesForTargets(
+      testParser.buildTargetGraph(
           buildTargets,
           defaultIncludes,
           BuckEventBusFactory.newInstance(),
@@ -401,7 +401,7 @@ public class ParserTest extends EasyMockSupport {
         .addFlavor("doesNotExist")
         .build();
     try {
-      testParser.parseBuildFilesForTargets(
+      testParser.buildTargetGraph(
           ImmutableSortedSet.of(flavored),
           ImmutableList.<String>of(),
           BuckEventBusFactory.newInstance(),
@@ -418,7 +418,7 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void testInvalidDepFromValidFile()
       throws IOException, BuildFileParseException, BuildTargetException, InterruptedException {
-    // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
+    // Execute buildTargetGraph() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "invalid");
 
     File testInvalidBuildFile = tempDir.newFile(
@@ -438,7 +438,7 @@ public class ParserTest extends EasyMockSupport {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     try {
-      testParser.parseBuildFilesForTargets(
+      testParser.buildTargetGraph(
           buildTargets,
           defaultIncludes,
           BuckEventBusFactory.newInstance(),
@@ -1080,7 +1080,7 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void testGeneratedDeps()
       throws IOException, BuildFileParseException, BuildTargetException, InterruptedException {
-    // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
+    // Execute buildTargetGraph() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "generateddeps");
 
     File testGeneratedDepsBuckFile = tempDir.newFile(
@@ -1098,7 +1098,7 @@ public class ParserTest extends EasyMockSupport {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
-    ActionGraph graph = testParser.parseBuildFilesForTargets(
+    ActionGraph graph = testParser.buildTargetGraph(
         buildTargets,
         defaultIncludes,
         BuckEventBusFactory.newInstance(),
@@ -1156,7 +1156,7 @@ public class ParserTest extends EasyMockSupport {
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
     BuildTarget foo = BuildTarget.builder("//java/com/facebook", "foo").build();
-    parser.parseBuildFilesForTargets(
+    parser.buildTargetGraph(
         ImmutableList.of(foo),
         Lists.<String>newArrayList(),
         BuckEventBusFactory.newInstance(),
@@ -1174,7 +1174,7 @@ public class ParserTest extends EasyMockSupport {
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
     BuildTarget foo = BuildTarget.builder("//java/com/facebook", "foo").build();
-    parser.parseBuildFilesForTargets(
+    parser.buildTargetGraph(
         ImmutableList.of(foo),
         Lists.<String>newArrayList(),
         BuckEventBusFactory.newInstance(),

@@ -281,7 +281,7 @@ public class Parser {
    * @param eventBus used to log events while parsing.
    * @return the target graph containing the build targets and their related targets.
    */
-  public synchronized TargetGraph parseBuildFilesForTargets(
+  public synchronized TargetGraph buildTargetGraph(
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
@@ -357,7 +357,7 @@ public class Parser {
    * @param buildFileParser the parser for build files.
    * @return a {@link TargetGraph} containing all the nodes from {@code toExplore}.
    */
-  public synchronized TargetGraph buildTargetGraph(
+  private synchronized TargetGraph buildTargetGraph(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes,
       final ProjectBuildFileParser buildFileParser,

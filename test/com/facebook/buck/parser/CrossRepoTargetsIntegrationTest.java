@@ -77,7 +77,7 @@ public class CrossRepoTargetsIntegrationTest {
     BuildTarget externalTarget =
         BuildTarget.builder("//", "external").setRepository("external").build();
 
-    ActionGraph graph = parser.parseBuildFilesForTargets(
+    ActionGraph graph = parser.buildTargetGraph(
         ImmutableList.of(mainTarget),
         ImmutableList.<String>of(),
         BuckEventBusFactory.newInstance(),
