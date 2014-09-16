@@ -17,8 +17,6 @@ def main():
             with BuckProject.from_current_dir() as project:
                 tracing_dir = os.path.join(project.get_buck_out_log_dir(), 'traces')
                 buck_repo = BuckRepo(THIS_DIR, project, Command.BUCK)
-                if 'clean' in sys.argv:
-                    buck_repo.kill_buckd()
                 exit_code = buck_repo.launch_buck()
                 sys.exit(exit_code)
     finally:
