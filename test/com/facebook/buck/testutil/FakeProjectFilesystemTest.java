@@ -271,4 +271,14 @@ public class FakeProjectFilesystemTest {
     assertEquals(filesystem.getLastModifiedTime(Paths.get("foo/bar")), 49152);
     assertEquals(filesystem.getLastModifiedTime(Paths.get("foo/bar/baz")), 49152);
   }
+
+  @Test
+  public void testWritingAFileAddsParentDirectories() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.writeContentsToPath("hello", Paths.get("test/one/two/three.txt"));
+
+    assertTrue(filesystem.exists(Paths.get("test/one/two")));
+    assertTrue(filesystem.exists(Paths.get("test/one")));
+    assertTrue(filesystem.exists(Paths.get("test")));
+  }
 }

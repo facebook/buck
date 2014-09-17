@@ -257,9 +257,16 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       byte[] bytes,
       Path path,
       FileAttribute<?>... attrs) {
-    fileContents.put(path.normalize(), Preconditions.checkNotNull(bytes));
-    fileAttributes.put(path.normalize(), ImmutableSet.copyOf(attrs));
-    fileLastModifiedTimes.put(path.normalize(), FileTime.fromMillis(clock.currentTimeMillis()));
+    Path normalizedPath = path.normalize();
+    fileContents.put(normalizedPath, Preconditions.checkNotNull(bytes));
+    fileAttributes.put(normalizedPath, ImmutableSet.copyOf(attrs));
+
+    Path directory = normalizedPath.getParent();
+    while (directory != null) {
+      directories.add(directory);
+      directory = directory.getParent();
+    }
+    fileLastModifiedTimes.put(normalizedPath, FileTime.fromMillis(clock.currentTimeMillis()));
   }
 
   @Override
