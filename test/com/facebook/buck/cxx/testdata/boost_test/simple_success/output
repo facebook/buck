@@ -1,0 +1,5 @@
+Running 1 test case...
+Entering test suite "Foo"
+Entering test case "bar"
+Leaving test case "bar"
+Leaving test suite "Foo"

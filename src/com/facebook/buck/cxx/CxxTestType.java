@@ -21,4 +21,5 @@ package com.facebook.buck.cxx;
  */
 public enum CxxTestType {
   GTEST,
+  BOOST,
 }

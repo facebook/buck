@@ -114,4 +114,8 @@ public class CxxBuckConfig {
     return delegate.getRequiredBuildTarget("cxx", "gtest_dep");
   }
 
+  public BuildTarget getBoostTestDep() {
+    return delegate.getRequiredBuildTarget("cxx", "boost_test_dep");
+  }
+
 }

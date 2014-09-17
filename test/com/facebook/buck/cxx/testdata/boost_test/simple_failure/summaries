@@ -1,0 +1,12 @@
+[
+  {
+    "message": "folly/test/Boost.cpp(5): error in \"bar\": check 0 == 1 failed [0 != 1]",
+    "stacktrace": "",
+    "stdErr": "",
+    "stdOut": "",
+    "testCase": "bar",
+    "testCaseName": "Foo",
+    "time": 0,
+    "type": "FAILURE"
+  }
+]

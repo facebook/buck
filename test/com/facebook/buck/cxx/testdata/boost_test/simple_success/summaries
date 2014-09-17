@@ -1,0 +1,12 @@
+[
+  {
+    "message": "",
+    "stacktrace": "",
+    "stdErr": "",
+    "stdOut": "",
+    "testCase": "bar",
+    "testCaseName": "Foo",
+    "time": 0,
+    "type": "SUCCESS"
+  }
+]

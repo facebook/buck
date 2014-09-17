@@ -88,6 +88,15 @@ public class CxxTestDescription implements
             args.sourceUnderTest.or(ImmutableSet.<BuildRule>of()));
         break;
       }
+      case BOOST: {
+        test = new CxxBoostTest(
+            testParams,
+            cxxLink.getOutput(),
+            args.labels.or(ImmutableSet.<Label>of()),
+            args.contacts.or(ImmutableSet.<String>of()),
+            args.sourceUnderTest.or(ImmutableSet.<BuildRule>of()));
+        break;
+      }
       default: {
         Preconditions.checkState(false, "Unhandled C++ test type: %s", type);
         throw new RuntimeException();
@@ -114,6 +123,10 @@ public class CxxTestDescription implements
       switch (type) {
         case GTEST: {
           deps.add(cxxBuckConfig.getGtestDep().toString());
+          break;
+        }
+        case BOOST: {
+          deps.add(cxxBuckConfig.getBoostTestDep().toString());
           break;
         }
         default: {

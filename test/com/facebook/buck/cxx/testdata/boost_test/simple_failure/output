@@ -1,0 +1,6 @@
+Running 1 test case...
+Entering test suite "Foo"
+Entering test case "bar"
+folly/test/Boost.cpp(5): error in "bar": check 0 == 1 failed [0 != 1]
+Leaving test case "bar"
+Leaving test suite "Foo"
