@@ -1,0 +1,55 @@
+java_library(
+  name = 'primary',
+  srcs = [ 'PrimaryClass.java' ],
+)
+
+java_library(
+  name = 'dep',
+  srcs = [ 'Dependency.java' ],
+)
+
+genrule(
+  name = 'gen_aar',
+  srcs = [
+    'AndroidManifest.xml',
+    'build_aar.sh',
+  ],
+  bash = './build_aar.sh $OUT $TMP AndroidManifest.xml $(location :primary) $(location :dep)',
+  out = 'example.aar',
+  deps = [
+    ':primary',
+    ':dep',
+  ],
+)
+
+android_prebuilt_aar(
+  name = 'aar',
+  aar = ':gen_aar',
+)
+
+android_library(
+  name = 'lib',
+  srcs = [ 'UseClassInLib.java' ],
+  deps = [
+    ':aar',
+  ],
+)
+
+android_binary(
+  name = 'app',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:16',
+  keystore = '//keystores:debug',
+  deps = [
+    ':lib',
+  ],
+)
+
+genrule(
+  name = 'extract-classes-dex',
+  bash = ' && '.join([
+      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app)',
+      'find $TMP -name \\*.smali > $OUT',
+      ]),
+  out = 'smali-files.txt',
+)

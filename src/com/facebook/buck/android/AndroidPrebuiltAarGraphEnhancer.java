@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.JarDirectoryStepHelper;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.java.PrebuiltJarDescription;
@@ -41,6 +42,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -48,8 +50,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -178,6 +183,7 @@ class AndroidPrebuiltAarGraphEnhancer {
 
     private final SourcePath aarFile;
     private final Path unpackDirectory;
+    private final Path uberClassesJar;
 
     private UnzipAar(BuildRuleParams buildRuleParams, SourcePath aarFile) {
       super(buildRuleParams);
@@ -185,6 +191,9 @@ class AndroidPrebuiltAarGraphEnhancer {
       this.unpackDirectory = BuildTargets.getBinPath(
           buildRuleParams.getBuildTarget(),
           "__unpack_%s__");
+      this.uberClassesJar = BuildTargets.getBinPath(
+          buildRuleParams.getBuildTarget(),
+          "__uber_classes_%s__/classes.jar");
     }
 
     @Override
@@ -196,38 +205,56 @@ class AndroidPrebuiltAarGraphEnhancer {
       steps.add(new TouchStep(getProguardConfig()));
       steps.add(new MkdirStep(getAssetsDirectory()));
 
-      // For now, we do not support an .aar file that has entries in the libs directory.
-      // Basically, this is for simplicity because we do not know how many more prebuilt_jar rules
-      // we would have to add at enhacement time. If this is a problem in practice, then we can
-      // add a step that generates an uber-jar from classes.jar and the contents of the libs
-      // directory and then have the prebuilt_jar step wrap the uber-jar instead of classes.jar.
-      // Because there are not many .aar files in the wild, it is difficult to tell whether this
-      // will be a pain point for developers.
-      steps.add(new AbstractExecutionStep("check_for_libs") {
+      // We take the classes.jar file that is required to exist in an .aar and merge it with any
+      // .jar files under libs/ into an "uber" jar. We do this for simplicity because we do not know
+      // how many entries there are in libs/ at graph enhancement time, but we need to make sure
+      // that all of the .class files in the .aar get packaged. As it is implemented today, an
+      // android_library that depends on an android_prebuilt_aar can compile against anything in the
+      // .aar's classes.jar or libs/.
+      steps.add(new MkdirStep(uberClassesJar.getParent()));
+      steps.add(new AbstractExecutionStep("create_uber_classes_jar") {
         @Override
         public int execute(ExecutionContext context) {
+          Path classesJar = unpackDirectory.resolve("classes.jar");
           Path libsDirectory = unpackDirectory.resolve("libs");
           ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-          if (!projectFilesystem.exists(libsDirectory)) {
-            return 0;
-          }
-
-          if (projectFilesystem.listFiles(libsDirectory).length > 0) {
-            context.logError(
-                new IllegalArgumentException(),
-                "Error processing %s for %s. " +
-                    "Currently, Buck does not support .aar files with lib entries. " +
-                    "If this is a problem for you, please file an issue on GitHub.",
-                aarFile,
-                getBuildTarget());
-            return 1;
+          if (!projectFilesystem.exists(libsDirectory) ||
+              projectFilesystem.listFiles(libsDirectory).length == 0) {
+            try {
+              projectFilesystem.copy(classesJar, uberClassesJar, CopySourceMode.FILE);
+            } catch (IOException e) {
+              context.logError(e, "Failed to copy from %s to %s", classesJar, uberClassesJar);
+              return 1;
+            }
           } else {
-            return 0;
+            // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
+            ImmutableSet.Builder<Path> entriesToJarBuilder = ImmutableSet.builder();
+            entriesToJarBuilder.add(classesJar);
+            for (File file : projectFilesystem.listFiles(libsDirectory)) {
+              entriesToJarBuilder.add(file.toPath());
+            }
+
+            ImmutableSet<Path> entriesToJar = entriesToJarBuilder.build();
+            try {
+              JarDirectoryStepHelper.createJarFile(
+                  uberClassesJar,
+                  entriesToJar,
+                  /* mainClass */ null,
+                  /* manifestFile */ null,
+                  /* mergeManifests */ true,
+                  /* blacklist */ ImmutableList.<Pattern>of(),
+                  context);
+            } catch (IOException e) {
+              context.logError(e, "Failed to jar %s into %s", entriesToJar, uberClassesJar);
+              return 1;
+            }
           }
+          return 0;
         }
       });
 
       buildableContext.recordArtifactsInDirectory(unpackDirectory);
+      buildableContext.recordArtifact(uberClassesJar);
       return steps.build();
     }
 
@@ -248,7 +275,7 @@ class AndroidPrebuiltAarGraphEnhancer {
     }
 
     Path getPathToClassesJar() {
-      return unpackDirectory.resolve("classes.jar");
+      return uberClassesJar;
     }
 
     Path getResDirectory() {
