@@ -322,23 +322,6 @@ public class Parser {
     }
   }
 
-  @VisibleForTesting
-  synchronized ActionGraph onlyUseThisWhenTestingToFindAllTransitiveDependencies(
-      Iterable<BuildTarget> toExplore,
-      Iterable<String> defaultIncludes,
-      Console console,
-      ImmutableMap<String, String> environment,
-      BuckEventBus eventBus)
-      throws IOException, BuildFileParseException, InterruptedException {
-    try (ProjectBuildFileParser parser = buildFileParserFactory.createParser(
-        defaultIncludes,
-        console,
-        environment,
-        eventBus)) {
-      return buildTargetGraph(toExplore, defaultIncludes, parser, environment).buildActionGraph();
-    }
-  }
-
   @Nullable
   public synchronized TargetNode<?> getTargetNode(BuildTarget buildTarget)
       throws IOException, InterruptedException {

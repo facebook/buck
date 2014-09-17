@@ -1,0 +1,55 @@
+genrule(
+  name = 'A',
+  deps = [
+    ':B',
+    ':C',
+  ],
+  srcs = [],
+  out = '',
+)
+
+genrule(
+  name = 'B',
+  deps = [
+    ':D',
+    ':E',
+  ],
+  srcs = [],
+  out = '',
+)
+
+genrule(
+  name = 'C',
+  deps = [
+    ':E',
+  ],
+  srcs = [],
+  out = '',
+)
+
+genrule(
+  name = 'D',
+  deps = [
+    ':F',
+  ],
+  srcs = [],
+  out = '',
+)
+
+genrule(
+  name = 'E',
+  deps = [
+    ':F',
+  ],
+  srcs = [],
+  out = '',
+)
+
+genrule(
+  name = 'F',
+  deps = [
+    ':C',
+  ],
+  srcs = [],
+  out = '',
+)

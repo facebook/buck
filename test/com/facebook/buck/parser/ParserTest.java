@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import static com.facebook.buck.parser.RuleJsonPredicates.alwaysTrue;
 import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
 import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
@@ -32,7 +31,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
-import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -41,7 +39,6 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -50,9 +47,7 @@ import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
-import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.util.BuckConstant;
@@ -99,7 +94,6 @@ public class ParserTest extends EasyMockSupport {
   private KnownBuildRuleTypes buildRuleTypes;
   private ProjectFilesystem filesystem;
   private RepositoryFactory repositoryFactory;
-  private Repository repository;
 
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
@@ -144,7 +138,7 @@ public class ParserTest extends EasyMockSupport {
     // Create a temp directory with some build files.
     File root = tempDir.getRoot();
     repositoryFactory = new FakeRepositoryFactory(root.toPath());
-    repository = repositoryFactory.getRootRepository();
+    Repository repository = repositoryFactory.getRootRepository();
     filesystem = repository.getFilesystem();
 
     buildRuleTypes = repository.getKnownBuildRuleTypes();
@@ -155,24 +149,6 @@ public class ParserTest extends EasyMockSupport {
             BuckTestConstant.PYTHON_INTERPRETER,
             buildRuleTypes.getAllDescriptions());
     testParser = createParser(emptyBuildTargets(), testBuildFileParserFactory);
-  }
-
-  private ProjectBuildFileParserFactory createDoNothingBuildFileParserFactory()
-      throws BuildFileParseException, InterruptedException {
-    final ProjectBuildFileParser mockBuildFileParser = createMock(ProjectBuildFileParser.class);
-    mockBuildFileParser.close();
-    expectLastCall().anyTimes();
-
-    return new ProjectBuildFileParserFactory() {
-      @Override
-      public ProjectBuildFileParser createParser(
-          Iterable<String> commonIncludes,
-          Console console,
-          ImmutableMap<String, String> environment,
-          BuckEventBus buckEventBus) {
-        return mockBuildFileParser;
-      }
-    };
   }
 
   private Parser createParser(Iterable<Map<String, Object>> rules)
@@ -231,106 +207,6 @@ public class ParserTest extends EasyMockSupport {
     }
 
     return parser;
-  }
-
-  /**
-   * If a rule contains an erroneous dep to a non-existent rule, then it should throw an
-   * appropriate message to help the user find the source of his error.
-   */
-  @Test
-  public void testParseRawRulesWithBadDependency()
-      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    String nonExistentBuildTarget = "//testdata/com/facebook/feed:util";
-    Map<String, Object> rawRule = ImmutableMap.<String, Object>of(
-        "type", "java_library",
-        "name", "feed",
-        // A non-existent dependency: this is a user error that should be reported.
-        "deps", ImmutableList.of(nonExistentBuildTarget),
-        "buck.base_path", "testdata/com/facebook/feed/model");
-    List<Map<String, Object>> ruleObjects = ImmutableList.of(rawRule);
-
-    Path root = Paths.get(".").toRealPath();
-    RepositoryFactory factory = new FakeRepositoryFactory(root);
-    Parser parser = Parser.createParser(
-        factory,
-        BuckTestConstant.PYTHON_INTERPRETER,
-        tempFilePatterns,
-        new FakeRuleKeyBuilderFactory());
-
-    parser.parseRawRulesInternal(ruleObjects);
-    RuleJsonPredicate predicate = alwaysTrue();
-    ImmutableSet<BuildTarget> targets = parser.filterTargets(predicate);
-    BuildTarget expectedBuildTarget = BuildTarget.builder(
-        "//testdata/com/facebook/feed/model",
-        "feed").build();
-    assertEquals(ImmutableSet.of(expectedBuildTarget), targets);
-
-    try {
-      parser.onlyUseThisWhenTestingToFindAllTransitiveDependencies(
-          targets,
-          ImmutableList.<String>of(),
-          new TestConsole(),
-          ImmutableMap.<String, String>of(),
-          BuckEventBusFactory.newInstance());
-      fail("Should have thrown a HumanReadableException.");
-    } catch (HumanReadableException e) {
-      assertEquals(
-          String.format("No rule found when resolving target %s in build file " +
-              "//testdata/com/facebook/feed/BUCK", nonExistentBuildTarget),
-          e.getHumanReadableErrorMessage());
-    }
-  }
-
-  /**
-   * Creates the following graph (assume all / and \ indicate downward pointing arrows):
-   * <pre>
-   *         A
-   *       /   \
-   *     B       C <----|
-   *   /   \   /        |
-   * D       E          |
-   *   \   /            |
-   *     F --------------
-   * </pre>
-   * Note that there is a circular dependency from C -> E -> F -> C that should be caught by the
-   * parser.
-   */
-  @Test
-  public void testCircularDependencyDetection()
-      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    FakeProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
-    fakeFilesystem.touch(Paths.get("BUCK"));
-    Repository fakeRepo = new TestRepositoryBuilder().setFilesystem(fakeFilesystem).build();
-    FakeRepositoryFactory fakeFactory = new FakeRepositoryFactory();
-    fakeFactory.setRootRepoForTesting(fakeRepo);
-    BuildTargetParser buildTargetParser = new BuildTargetParser();
-    final BuildFileTree buildFiles = createMock(BuildFileTree.class);
-
-    Parser parser = createParser(
-        ofInstance(buildFiles),
-        circularBuildTargets(),
-        createDoNothingBuildFileParserFactory(),
-        buildTargetParser,
-        fakeFactory);
-
-    replayAll();
-
-    BuildTarget rootNode = BuildTargetFactory.newInstance("//:A");
-    Iterable<BuildTarget> buildTargets = ImmutableSet.of(rootNode);
-    Iterable<String> defaultIncludes = ImmutableList.of();
-    try {
-      parser.onlyUseThisWhenTestingToFindAllTransitiveDependencies(
-          buildTargets,
-          defaultIncludes,
-          new TestConsole(),
-          ImmutableMap.<String, String>of(),
-          BuckEventBusFactory.newInstance());
-      fail("Should have thrown a HumanReadableException.");
-    } catch (HumanReadableException e) {
-      assertEquals("Cycle found: //:F -> //:C -> //:E -> //:F", e.getMessage());
-    }
-
-    verifyAll();
   }
 
   @Test
@@ -1066,7 +942,8 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(Paths.get("SomeClass.java__backup"),
+    WatchEvent<Path> event = createPathEvent(
+        Paths.get("SomeClass.java__backup"),
         StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
 
@@ -1267,36 +1144,6 @@ public class ParserTest extends EasyMockSupport {
   private Iterable<Map<String, Object>> emptyBuildTargets() {
     return Sets.newHashSet();
   }
-
-  private Iterable<Map<String, Object>> circularBuildTargets() {
-    return ImmutableSet.<Map<String, Object>>builder()
-        .add(createRule("//:A", "B", "C"))
-        .add(createRule("//:B", "D", "E"))
-        .add(createRule("//:C", "E"))
-        .add(createRule("//:D", "F"))
-        .add(createRule("//:E", "F"))
-        .add(createRule("//:F", "C"))
-        .build();
-  }
-
-  private ImmutableMap<String, Object> createRule(String name, String... deps) {
-    BuildTarget target = BuildTargetFactory.newInstance(name);
-
-    ImmutableMap.Builder<String, Object> rule = ImmutableMap.<String, Object>builder()
-        .put("name", target.getShortName())
-        .put("type", PrebuiltJarDescription.TYPE.toString())
-        .put("binary_jar", name + ".jar")
-        .put("buck.base_path", target.getBasePath().toString());
-
-    ImmutableList.Builder<String> allDeps = ImmutableList.builder();
-    for (String dep : deps) {
-      allDeps.add(String.format("%s:%s", BuildTarget.BUILD_TARGET_PREFIX, dep));
-    }
-    rule.put("deps", allDeps.build());
-
-    return rule.build();
-  }
-
 
   /**
    * ProjectBuildFileParser test double which counts the number of times rules are parsed to test
