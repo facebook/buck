@@ -76,7 +76,7 @@ public class RemoteFile extends AbstractBuildRule {
     return builder
         .setReflectively("donwnload-at-runtime", isBuildTimeDownloadingOk)
         .setReflectively("sha1", sha1.toString())
-        .setReflectively("out", output)
+        .setReflectively("out", output.toString())
         .setReflectively("url", uri.toString());
   }
 
