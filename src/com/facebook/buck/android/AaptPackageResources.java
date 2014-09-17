@@ -167,20 +167,22 @@ public class AaptPackageResources extends AbstractBuildRule
 
     steps.add(new MkdirStep(getResourceApkPath().getParent()));
 
-    steps.add(new AaptStep(
-        getAndroidManifestXml(),
-        filteredResourcesProvider.getResDirectories(),
-        assetsDirectory,
-        getResourceApkPath(),
-        packageType.isCrunchPngFiles()));
+    steps.add(
+        new AaptStep(
+            getAndroidManifestXml(),
+            filteredResourcesProvider.getResDirectories(),
+            assetsDirectory,
+            getResourceApkPath(),
+            packageType.isCrunchPngFiles()));
 
     buildableContext.recordArtifact(getAndroidManifestXml());
     buildableContext.recordArtifact(getResourceApkPath());
 
-    steps.add(new RecordFileSha1Step(
-        getResourceApkPath(),
-        RESOURCE_PACKAGE_HASH_KEY,
-        buildableContext));
+    steps.add(
+        new RecordFileSha1Step(
+            getResourceApkPath(),
+            RESOURCE_PACKAGE_HASH_KEY,
+            buildableContext));
 
     return steps.build();
   }
@@ -189,7 +191,7 @@ public class AaptPackageResources extends AbstractBuildRule
    * Buck does not require the manifest to be named AndroidManifest.xml, but commands such as aapt
    * do. For this reason, we symlink the path to {@link #manifest} to the path returned by
    * this method, whose name is always "AndroidManifest.xml".
-   * <p>
+   * <p/>
    * Therefore, commands created by this buildable should use this method instead of
    * {@link #manifest}.
    */
@@ -202,7 +204,7 @@ public class AaptPackageResources extends AbstractBuildRule
    * to the directory that contains the union of all the assets. If any work needs to be done to
    * create such a directory, the appropriate commands should be added to the {@code commands}
    * list builder.
-   * <p>
+   * <p/>
    * If there are no assets (i.e., {@code assetsDirectories} is empty), then the return value will
    * be an empty {@link Optional}.
    */
@@ -222,6 +224,9 @@ public class AaptPackageResources extends AbstractBuildRule
     final ImmutableMap.Builder<Path, Path> allAssets = ImmutableMap.builder();
 
     for (final Path assetsDirectory : assetsDirectories) {
+      if (!filesystem.exists(assetsDirectory))
+        continue;
+
       filesystem.walkRelativeFileTree(
           assetsDirectory, new SimpleFileVisitor<Path>() {
             @Override
@@ -233,9 +238,10 @@ public class AaptPackageResources extends AbstractBuildRule
     }
 
     for (Map.Entry<Path, Path> entry : allAssets.build().entrySet()) {
-      steps.add(new MkdirAndSymlinkFileStep(
-          entry.getValue(),
-          destination.resolve(entry.getKey())));
+      steps.add(
+          new MkdirAndSymlinkFileStep(
+              entry.getValue(),
+              destination.resolve(entry.getKey())));
     }
 
     return Optional.of(destination);
