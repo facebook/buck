@@ -27,6 +27,8 @@ import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -61,6 +63,7 @@ class CommandRunnerParams {
   private final JavaPackageFinder javaPackageFinder;
   private final ObjectMapper objectMapper;
   private final FileHashCache fileHashCache;
+  private final Clock clock;
 
   @VisibleForTesting
   CommandRunnerParams(
@@ -98,7 +101,8 @@ class CommandRunnerParams {
         environment,
         javaPackageFinder,
         objectMapper,
-        fileHashCache);
+        fileHashCache,
+        new DefaultClock());
   }
 
   public CommandRunnerParams(
@@ -113,7 +117,8 @@ class CommandRunnerParams {
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
       ObjectMapper objectMapper,
-      FileHashCache fileHashCache) {
+      FileHashCache fileHashCache,
+      Clock clock) {
     this.console = Preconditions.checkNotNull(console);
     this.repository = Preconditions.checkNotNull(repository);
     this.buildEngine = Preconditions.checkNotNull(buildEngine);
@@ -126,6 +131,7 @@ class CommandRunnerParams {
     this.javaPackageFinder = javaPackageFinder;
     this.objectMapper = Preconditions.checkNotNull(objectMapper);
     this.fileHashCache = Preconditions.checkNotNull(fileHashCache);
+    this.clock = Preconditions.checkNotNull(clock);
   }
 
   public Ansi getAnsi() {
@@ -184,4 +190,7 @@ class CommandRunnerParams {
     return fileHashCache;
   }
 
+  public Clock getClock() {
+    return clock;
+  }
 }

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -120,7 +121,8 @@ public class CleanCommandTest extends EasyMockSupport {
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
         new ObjectMapper(),
-        FakeFileHashCache.EMPTY_CACHE);
+        FakeFileHashCache.EMPTY_CACHE,
+        new DefaultClock());
     return new CleanCommand(params);
   }
 

@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -213,6 +214,10 @@ public class ExecutionContext {
 
   public ImmutableMap<String, String> getEnvironment() {
     return environment;
+  }
+
+  public BuildId getBuildId() {
+    return eventBus.getBuildId();
   }
 
   public static class Builder {

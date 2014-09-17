@@ -37,6 +37,7 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
@@ -72,6 +73,8 @@ public class Build implements Closeable {
 
   private final BuildDependencies buildDependencies;
 
+  private final Clock clock;
+
   /** Not set until {@link #executeBuild(Set)} is invoked. */
   @Nullable
   private BuildContext buildContext;
@@ -98,7 +101,8 @@ public class Build implements Closeable {
       Platform platform,
       ImmutableMap<String, String> environment,
       BuckConfig buckConfig,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      Clock clock) {
     this.actionGraph = Preconditions.checkNotNull(actionGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
@@ -125,6 +129,7 @@ public class Build implements Closeable {
     this.stepRunner = new DefaultStepRunner(executionContext, numThreads);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
+    this.clock = Preconditions.checkNotNull(clock);
   }
 
   public ActionGraph getActionGraph() {
@@ -221,12 +226,15 @@ public class Build implements Closeable {
         .setActionGraph(actionGraph)
         .setStepRunner(stepRunner)
         .setProjectFilesystem(executionContext.getProjectFilesystem())
+        .setClock(clock)
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(executionContext.getBuckEventBus())
         .setAndroidBootclasspathForAndroidPlatformTarget(
             executionContext.getAndroidPlatformTargetOptional())
         .setBuildDependencies(buildDependencies)
+        .setBuildId(executionContext.getBuildId())
+        .setEnvironment(executionContext.getEnvironment())
         .build();
 
     return Builder.getInstance().buildRules(buildEngine, rulesToBuild, buildContext);

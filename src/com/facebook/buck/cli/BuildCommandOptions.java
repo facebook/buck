@@ -23,6 +23,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -129,7 +130,8 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       Optional<TargetDevice> targetDevice,
       Platform platform,
       ImmutableMap<String, String> environment,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      Clock clock) {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
     }
@@ -151,6 +153,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         platform,
         environment,
         buckConfig,
-        objectMapper);
+        objectMapper,
+        clock);
   }
 }

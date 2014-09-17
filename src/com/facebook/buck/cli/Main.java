@@ -623,7 +623,8 @@ public final class Main {
               clientEnvironment,
               rootRepository.getBuckConfig().createDefaultJavaPackageFinder(),
               objectMapper,
-              fileHashCache));
+              fileHashCache,
+              clock));
 
       // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
       if (webServer.isPresent()) {

@@ -21,8 +21,10 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
@@ -30,6 +32,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -41,29 +44,38 @@ public class BuildContext {
   private final ActionGraph actionGraph;
   private final StepRunner stepRunner;
   private final ProjectFilesystem projectFilesystem;
+  private final Clock clock;
   private final ArtifactCache artifactCache;
   private final JavaPackageFinder javaPackageFinder;
   private final BuckEventBus events;
   private final Supplier<String> androidBootclasspathSupplier;
   private final BuildDependencies buildDependencies;
+  private final BuildId buildId;
+  private final ImmutableMap<String, String> environment;
 
   private BuildContext(
       ActionGraph actionGraph,
       StepRunner stepRunner,
       ProjectFilesystem projectFilesystem,
+      Clock clock,
       ArtifactCache artifactCache,
       JavaPackageFinder javaPackageFinder,
       BuckEventBus events,
       Supplier<String> androidBootclasspathSupplier,
-      BuildDependencies buildDependencies) {
+      BuildDependencies buildDependencies,
+      BuildId buildId,
+      ImmutableMap<String, String> environment) {
     this.actionGraph = Preconditions.checkNotNull(actionGraph);
     this.stepRunner = Preconditions.checkNotNull(stepRunner);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.clock = Preconditions.checkNotNull(clock);
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.events = Preconditions.checkNotNull(events);
     this.androidBootclasspathSupplier = Preconditions.checkNotNull(androidBootclasspathSupplier);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
+    this.buildId = Preconditions.checkNotNull(buildId);
+    this.environment = Preconditions.checkNotNull(environment);
   }
 
   public Path getProjectRoot() {
@@ -113,6 +125,7 @@ public class BuildContext {
     return buildDependencies;
   }
 
+
   /**
    * Creates an {@link OnDiskBuildInfo}.
    * <p>
@@ -132,7 +145,14 @@ public class BuildContext {
   BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget,
       RuleKey ruleKey,
       RuleKey ruleKeyWithoutDeps) {
-    return new BuildInfoRecorder(buildTarget, projectFilesystem, ruleKey, ruleKeyWithoutDeps);
+    return new BuildInfoRecorder(
+        buildTarget,
+        projectFilesystem,
+        clock,
+        buildId,
+        environment,
+        ruleKey,
+        ruleKeyWithoutDeps);
   }
 
   public void logBuildInfo(String format, Object... args) {
@@ -156,11 +176,14 @@ public class BuildContext {
     private ActionGraph actionGraph = null;
     private StepRunner stepRunner = null;
     private ProjectFilesystem projectFilesystem = null;
+    private Clock clock = null;
     private ArtifactCache artifactCache = null;
     private JavaPackageFinder javaPackgeFinder = null;
     private BuckEventBus events = null;
     private Supplier<String> androidBootclasspathSupplier = null;
     private BuildDependencies buildDependencies = BuildDependencies.getDefault();
+    private BuildId buildId = null;
+    private ImmutableMap<String, String> environment = ImmutableMap.of();
 
     private Builder() {}
 
@@ -172,11 +195,14 @@ public class BuildContext {
           actionGraph,
           stepRunner,
           projectFilesystem,
+          clock,
           artifactCache,
           javaPackgeFinder,
           events,
           androidBootclasspathSupplier,
-          buildDependencies);
+          buildDependencies,
+          buildId,
+          environment);
     }
 
     public Builder setActionGraph(ActionGraph actionGraph) {
@@ -191,6 +217,11 @@ public class BuildContext {
 
     public Builder setProjectFilesystem(ProjectFilesystem fileystemProject) {
       this.projectFilesystem = fileystemProject;
+      return this;
+    }
+
+    public Builder setClock(Clock clock) {
+      this.clock = clock;
       return this;
     }
 
@@ -231,6 +262,16 @@ public class BuildContext {
       } else {
         setDefaultAndroidBootclasspathSupplier();
       }
+      return this;
+    }
+
+    public Builder setBuildId(BuildId buildId) {
+      this.buildId = buildId;
+      return this;
+    }
+
+    public Builder setEnvironment(ImmutableMap<String, String> environment) {
+      this.environment = environment;
       return this;
     }
 

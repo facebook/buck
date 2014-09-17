@@ -136,7 +136,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         Optional.<TargetDevice>absent(),
         getCommandRunnerParams().getPlatform(),
         getCommandRunnerParams().getEnvironment(),
-        getCommandRunnerParams().getObjectMapper());
+        getCommandRunnerParams().getObjectMapper(),
+        getCommandRunnerParams().getClock());
     int exitCode = 0;
     try {
       exitCode = executeBuildAndPrintAnyFailuresToConsole(buildTargets, build, console);

@@ -18,7 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
@@ -28,6 +30,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -39,9 +42,11 @@ import com.google.gson.JsonPrimitive;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -55,10 +60,15 @@ public class BuildInfoRecorder {
 
   private static final DirectoryTraverser DEFAULT_DIRECTORY_TRAVERSER =
       new DefaultDirectoryTraverser();
+  private static final Path PATH_TO_ARTIFACT_INFO = Paths.get("buck-out/log/cache_artifact.txt");
+  private static final String BUCK_CACHE_DATA_ENV_VAR = "BUCK_CACHE_DATA";
 
   private final BuildTarget buildTarget;
   private final Path pathToMetadataDirectory;
   private final ProjectFilesystem projectFilesystem;
+  private final Clock clock;
+  private final BuildId buildId;
+  private final String artifactExtraData;
   private final Map<String, String> metadataToWrite;
   private final RuleKey ruleKey;
 
@@ -72,19 +82,39 @@ public class BuildInfoRecorder {
 
   BuildInfoRecorder(BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      Clock clock,
+      BuildId buildId,
+      ImmutableMap<String, String> environment,
       RuleKey ruleKey,
       RuleKey rukeKeyWithoutDeps) {
-    this(buildTarget, projectFilesystem, ruleKey, rukeKeyWithoutDeps, DEFAULT_DIRECTORY_TRAVERSER);
+    this(
+        buildTarget,
+        projectFilesystem,
+        clock,
+        buildId,
+        environment,
+        ruleKey,
+        rukeKeyWithoutDeps,
+        DEFAULT_DIRECTORY_TRAVERSER);
   }
 
   BuildInfoRecorder(BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      Clock clock,
+      BuildId buildId,
+      ImmutableMap<String, String> environment,
       RuleKey ruleKey,
       RuleKey rukeKeyWithoutDeps,
       DirectoryTraverser directoryTraverser) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.pathToMetadataDirectory = BuildInfo.getPathToMetadataDirectory(buildTarget);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.clock = Preconditions.checkNotNull(clock);
+    this.buildId = Preconditions.checkNotNull(buildId);
+
+    this.artifactExtraData =
+        String.format("artifact_data=%s", environment.get(BUCK_CACHE_DATA_ENV_VAR));
+
     this.metadataToWrite = Maps.newHashMap();
 
     metadataToWrite.put(BuildInfo.METADATA_KEY_FOR_RULE_KEY,
@@ -162,7 +192,16 @@ public class BuildInfoRecorder {
     File zip;
     try {
       zip = File.createTempFile(buildTarget.getFullyQualifiedName().replace('/', '_'), ".zip");
-      projectFilesystem.createZip(pathsToIncludeInZip, zip);
+      long time = TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis());
+      String additionalArtifactInfo = String.format(
+          "build_id=%s\ntimestamp=%d\n%s\n",
+          buildId,
+          time,
+          artifactExtraData);
+      projectFilesystem.createZip(
+          pathsToIncludeInZip,
+          zip,
+          ImmutableMap.of(PATH_TO_ARTIFACT_INFO, additionalArtifactInfo));
     } catch (IOException e) {
       eventBus.post(ConsoleEvent.info("Failed to create zip for %s containing:\n%s",
           buildTarget,
