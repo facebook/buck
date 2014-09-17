@@ -55,6 +55,10 @@ public class ZipInspector {
     assertFalse(zipFileEntries.contains(pathRelativeToRoot));
   }
 
+  public ImmutableSet<String> getZipFileEntries() {
+    return zipFileEntries;
+  }
+
   public long getCrc(String pathRelativeToRoot) throws IOException {
     try (ZipFile zipFile = new ZipFile(this.zipFile)) {
       ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);

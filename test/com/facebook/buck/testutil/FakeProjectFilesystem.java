@@ -402,7 +402,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public void createZip(Iterable<Path> pathsToIncludeInZip, File out) {
+  public void createZip(Collection<Path> pathsToIncludeInZip, File out) {
     throw new UnsupportedOperationException();
   }
 }

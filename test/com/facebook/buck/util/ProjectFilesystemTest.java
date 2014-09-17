@@ -23,11 +23,13 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.WatchEvents;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProjectFilesystem.CopySourceMode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
@@ -466,5 +468,41 @@ public class ProjectFilesystemTest {
     // strict subset of the expected permissions.
     PosixFileAttributes attrs = filesystem.readAttributes(path, PosixFileAttributes.class);
     assertTrue(permissions.containsAll(attrs.permissions()));
+  }
+
+
+  @Test
+  public void testCreateZip() throws IOException {
+    tmp.newFolder("foo");
+    tmp.newFile("foo/bar.txt");
+    tmp.newFile("foo/baz.txt");
+
+    File output = tmp.newFile("out.zip");
+
+    filesystem.createZip(
+        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
+        output);
+
+    ZipInspector zipInspector = new ZipInspector(output);
+    assertEquals(ImmutableSet.of("foo/bar.txt", "foo/baz.txt"), zipInspector.getZipFileEntries());
+  }
+
+  @Test
+  public void testCreateZipWithAdditionalFiles() throws IOException {
+    tmp.newFolder("foo");
+    tmp.newFile("foo/bar.txt");
+    tmp.newFile("foo/baz.txt");
+
+    File output = tmp.newFile("out.zip");
+
+    filesystem.createZip(
+        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
+        output,
+        ImmutableMap.of(Paths.get("log/info.txt"), "hello"));
+
+    ZipInspector zipInspector = new ZipInspector(output);
+    assertEquals(
+        ImmutableSet.of("foo/bar.txt", "foo/baz.txt", "log/info.txt"),
+        zipInspector.getZipFileEntries());
   }
 }

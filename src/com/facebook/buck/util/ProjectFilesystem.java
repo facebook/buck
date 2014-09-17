@@ -29,6 +29,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.Hashing;
@@ -38,6 +39,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -69,6 +71,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
@@ -661,7 +664,18 @@ public class ProjectFilesystem {
    * Takes a sequence of paths relative to the project root and writes a zip file to {@code out}
    * with the contents and structure that matches that of the specified paths.
    */
-  public void createZip(Iterable<Path> pathsToIncludeInZip, File out) throws IOException {
+  public void createZip(Collection<Path> pathsToIncludeInZip, File out) throws IOException {
+    createZip(pathsToIncludeInZip, out, ImmutableMap.<Path, String>of());
+  }
+
+  /**
+   * Similar to {@link #createZip(Collection, File)}, but also takes a list of additional files to
+   * write in the zip, including their contents, as a map.
+   */
+  public void createZip(
+      Collection<Path> pathsToIncludeInZip,
+      File out,
+      ImmutableMap<Path, String> additionalFileContents) throws IOException {
     Preconditions.checkState(!Iterables.isEmpty(pathsToIncludeInZip));
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
       for (Path path : pathsToIncludeInZip) {
@@ -680,6 +694,16 @@ public class ProjectFilesystem {
         zip.putNextEntry(entry);
         try (InputStream input = Files.newInputStream(getPathForRelativePath(path))) {
           ByteStreams.copy(input, zip);
+        }
+        zip.closeEntry();
+      }
+
+      for (Map.Entry<Path, String> fileContentsEntry : additionalFileContents.entrySet()) {
+        CustomZipEntry entry = new CustomZipEntry(fileContentsEntry.getKey().toString());
+        zip.putNextEntry(entry);
+        try (InputStream stream =
+                 new ByteArrayInputStream(fileContentsEntry.getValue().getBytes(Charsets.UTF_8))) {
+          ByteStreams.copy(stream, zip);
         }
         zip.closeEntry();
       }
