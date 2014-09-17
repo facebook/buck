@@ -15,7 +15,7 @@ if platform.system() == 'Windows':
 
 
 def create_symlink(original, symlink):
-    if os.path.exists(symlink):
+    if os.path.lexists(symlink):
         os.remove(symlink)
     if platform.system() == 'Windows':
         k32 = ctypes.windll.LoadLibrary("kernel32.dll")
