@@ -1,0 +1,38 @@
+# Because baksmali and smali are uber-jars that contain
+# their own versions of Guava, they should never be
+# depended on as java_library rules. Instead, the java_library
+# rules should be used with $(exe) in genrules.
+
+# disassembles and/or dumps a dex file.
+java_binary(
+  name = 'baksmali',
+  main_class = 'org.jf.baksmali.main',
+  deps = [
+    ':baksmali-library',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+# assembles a set of smali files into a dex file.
+java_binary(
+  name = 'smali',
+  main_class = 'org.jf.smali.main',
+  deps = [
+    ':smali-library',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+prebuilt_jar(
+  name = 'baksmali-library',
+  binary_jar = 'baksmali-2.0.3.jar',
+)
+
+prebuilt_jar(
+  name = 'smali-library',
+  binary_jar = 'smali-2.0.3.jar',
+)
