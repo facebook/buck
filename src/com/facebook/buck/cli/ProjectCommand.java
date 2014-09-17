@@ -402,7 +402,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return buildTargets;
   }
 
-  private ActionGraphs createPartialGraphs(ProjectCommandOptions options)
+  private ActionGraphs createPartialGraphs(final ProjectCommandOptions options)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     RuleJsonPredicate projectRootsPredicate;
     RuleJsonPredicate projectPredicate;
@@ -439,10 +439,13 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
               Map<String, Object> rawParseData,
               BuildRuleType buildRuleType,
               BuildTarget buildTarget) {
-            if (XcodeProjectConfigDescription.TYPE != buildRuleType &&
-                XcodeWorkspaceConfigDescription.TYPE != buildRuleType) {
+            BuildRuleType filterType = options.getWorkspaceAndProjects() ?
+                XcodeWorkspaceConfigDescription.TYPE :
+                XcodeProjectConfigDescription.TYPE;
+            if (filterType != buildRuleType) {
               return false;
             }
+
             String targetName = buildTarget.getFullyQualifiedName();
             for (String prefix : defaultExcludePaths) {
               if (targetName.startsWith("//" + prefix) &&
