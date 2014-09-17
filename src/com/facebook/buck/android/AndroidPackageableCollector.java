@@ -136,19 +136,6 @@ public class AndroidPackageableCollector {
   public AndroidPackageableCollector addResourceDirectory(
       BuildTarget owner,
       Path resourceDir,
-      String rDotJavaPackage) {
-    if (resourcesToExclude.contains(owner)) {
-      return this;
-    }
-
-    doAddResourceDirectory(owner, resourceDir);
-    rDotJavaPackages.add(rDotJavaPackage);
-    return this;
-  }
-
-  public AndroidPackageableCollector addResourceDirectory(
-      BuildTarget owner,
-      Path resourceDir,
       Supplier<String> rDotJavaPackageSupplier) {
     if (resourcesToExclude.contains(owner)) {
       return this;
