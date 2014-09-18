@@ -84,14 +84,14 @@ public class MavenUrlDecoder {
 
     try {
       String plainUri = String.format(
-          "%s%s/%s/%s/%s-%s.%s",
+          "%s%s/%s/%s/%s-%s%s",
           host,
           group,
           artifactId,
           version,
           artifactId,
           version,
-          type);
+          fileExtensionFor(type));
       URI generated = new URI(plainUri);
       if ("https".equals(generated.getScheme()) || "http".equals(generated.getScheme())) {
         return generated;
@@ -103,4 +103,16 @@ public class MavenUrlDecoder {
     }
   }
 
+  private static String fileExtensionFor(String type) {
+    switch (type) {
+      case "jar":
+        return ".jar";
+
+      case "src":
+        return "-sources.jar";
+
+      default:
+        return String.format("-%s.jar", type);
+    }
+  }
 }

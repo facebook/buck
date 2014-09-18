@@ -34,8 +34,6 @@ import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.nio.file.Path;
 
-import javax.annotation.Nullable;
-
 /**
  * Represents a remote file that needs to be downloaded. Optionally, this class can be prevented
  * from running at build time, requiring a user to run {@code buck fetch} before executing the
@@ -102,9 +100,8 @@ public class RemoteFile extends AbstractBuildRule {
     return steps.build();
   }
 
-  @Nullable
   @Override
   public Path getPathToOutputFile() {
-    return null;
+    return output;
   }
 }
