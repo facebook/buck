@@ -17,10 +17,13 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.google.common.base.Optional;
 
 import org.junit.Test;
+
+import java.io.IOException;
 
 /**
  * Unit test for {@link Command}.
@@ -75,4 +78,21 @@ public class CommandTest {
         Optional.absent(),
         Command.parseCommandName("unsintskk").getCommand());
   }
+
+  @Test
+  public void commandConstructorsTakeJustCommandRunnerParams()
+      throws IOException, InterruptedException {
+    CommandRunnerParams params = CommandRunnerParamsForTesting.builder()
+        .build();
+    for (Command command : Command.values()) {
+      try {
+        command.getCommandRunnerClass()
+            .getDeclaredConstructor(CommandRunnerParams.class)
+            .newInstance(params);
+      } catch (Exception e) {
+        fail(String.format("%s: %s %s", command.getDeclaringClass(), e.getClass(), e.getMessage()));
+      }
+    }
+  }
+
 }

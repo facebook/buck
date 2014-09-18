@@ -30,6 +30,7 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -59,6 +60,7 @@ class CommandRunnerParams {
   private final Repository repository;
   private final JavaPackageFinder javaPackageFinder;
   private final ObjectMapper objectMapper;
+  private final FileHashCache fileHashCache;
 
   @VisibleForTesting
   CommandRunnerParams(
@@ -72,7 +74,8 @@ class CommandRunnerParams {
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper)
+      ObjectMapper objectMapper,
+      FileHashCache fileHashCache)
       throws IOException, InterruptedException {
     this(
         console,
@@ -94,7 +97,8 @@ class CommandRunnerParams {
         platform,
         environment,
         javaPackageFinder,
-        objectMapper);
+        objectMapper,
+        fileHashCache);
   }
 
   public CommandRunnerParams(
@@ -108,7 +112,8 @@ class CommandRunnerParams {
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      FileHashCache fileHashCache) {
     this.console = Preconditions.checkNotNull(console);
     this.repository = Preconditions.checkNotNull(repository);
     this.buildEngine = Preconditions.checkNotNull(buildEngine);
@@ -120,6 +125,7 @@ class CommandRunnerParams {
     this.environment = Preconditions.checkNotNull(environment);
     this.javaPackageFinder = javaPackageFinder;
     this.objectMapper = Preconditions.checkNotNull(objectMapper);
+    this.fileHashCache = Preconditions.checkNotNull(fileHashCache);
   }
 
   public Ansi getAnsi() {
@@ -173,4 +179,9 @@ class CommandRunnerParams {
   public ObjectMapper getObjectMapper() {
     return objectMapper;
   }
+
+  public FileHashCache getFileHashCache() {
+    return fileHashCache;
+  }
+
 }

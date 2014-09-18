@@ -18,6 +18,7 @@ package com.facebook.buck.testutil;
 
 import com.facebook.buck.util.FileHashCache;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
@@ -28,6 +29,9 @@ import java.util.Map;
  * FileHashCache that is populated with a fixed set of entries.
  */
 public class FakeFileHashCache implements FileHashCache {
+
+  public static final FakeFileHashCache EMPTY_CACHE =
+      createFromStrings(Maps.<String, String>newHashMap());
 
   private final ImmutableMap<Path, HashCode> pathsToHashes;
 

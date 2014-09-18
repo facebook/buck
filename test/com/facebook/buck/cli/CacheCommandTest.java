@@ -28,12 +28,10 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
@@ -53,9 +51,7 @@ public class CacheCommandTest extends EasyMockSupport {
         .builder()
         .setConsole(console)
         .build();
-    FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(
-        Maps.<String, String>newHashMap());
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams, fileHashCache);
+    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
     replayAll();
@@ -76,9 +72,7 @@ public class CacheCommandTest extends EasyMockSupport {
         .builder()
         .setConsole(console)
         .build();
-    FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(
-        Maps.<String, String>newHashMap());
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams, fileHashCache);
+    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
 
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
@@ -113,9 +107,7 @@ public class CacheCommandTest extends EasyMockSupport {
         .builder()
         .setConsole(console)
         .build();
-    FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(
-        Maps.<String, String>newHashMap());
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams, fileHashCache);
+    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
 
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
@@ -155,9 +147,7 @@ public class CacheCommandTest extends EasyMockSupport {
         .builder()
         .setConsole(console)
         .build();
-    FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(
-        Maps.<String, String>newHashMap());
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams, fileHashCache);
+    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
 
     BuckConfig buckConfig = createMock(BuckConfig.class);
 

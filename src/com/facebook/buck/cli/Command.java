@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.util.MoreStrings;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -191,4 +192,10 @@ public enum Command {
 
     return Optional.absent();
   }
+
+  @VisibleForTesting
+  protected Class<? extends CommandRunner> getCommandRunnerClass() {
+    return commandRunnerClass;
+  }
+
 }
