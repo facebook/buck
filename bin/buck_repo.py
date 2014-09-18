@@ -22,7 +22,7 @@ JAVA_CLASSPATHS = [
     "build/abi_processor/classes",
     "build/classes",
     "build/dx_classes",
-    "lib/args4j-2.0.28.jar",
+    "lib/args4j-2.0.30.jar",
     "lib/ddmlib-22.5.3.jar",
     "lib/guava-17.0.jar",
     "lib/ini4j-0.5.2.jar",
