@@ -1,0 +1,3 @@
+include setup.py pathlib.py test_pathlib.py *.txt
+include docs/*.rst docs/*.py docs/*.bat docs/Makefile docs/*.png
+

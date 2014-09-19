@@ -32,6 +32,9 @@
 
   <property name="eclipse.dir" value="${basedir}/third-party/java/eclipse" />
 
+  <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
+  <property name="unittest2.dir" value="${third-party.dir}/py/unittest2" />
+
   <fileset dir="${third-party.dir}/java" id="buck.jars">
     <include name="args4j/args4j-2.0.30.jar" />
     <include name="ddmlib/ddmlib-22.5.3.jar" />
@@ -475,12 +478,26 @@
     <fail if="hasFailingTests" />
   </target>
 
-  <target name="py-test" description="runs the Python tests">
+  <target name="py-test" description="runs the Python tests" depends="buck-py-test, asset-catalogs-py-test, pathlib-py-test" />
+
+  <target name="buck-py-test" description="tests the BUCK parser">
     <exec executable="python" failonerror="true">
+      <env key="PYTHONPATH" path="${pathlib.dir}" />
       <arg value="src/com/facebook/buck/parser/buck_test.py" />
     </exec>
+  </target>
+
+  <target name="asset-catalogs-py-test" description="tests the asset catalogs compiler">
     <exec executable="python" failonerror="true">
       <arg value="src/com/facebook/buck/apple/compile_asset_catalogs_test.py" />
+    </exec>
+  </target>
+
+  <target name="pathlib-py-test" description="tests pathlib.py">
+    <exec executable="python" failonerror="true" dir="${pathlib.dir}">
+      <!-- Needed on Python 2.6. -->
+      <env key="PYTHONPATH" path="${unittest2.dir}" />
+      <arg value="test_pathlib.py" />
     </exec>
   </target>
 
