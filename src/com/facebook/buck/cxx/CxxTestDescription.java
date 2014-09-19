@@ -35,6 +35,7 @@ public class CxxTestDescription implements
     ImplicitDepsInferringDescription {
 
   private static final BuildRuleType TYPE = new BuildRuleType("cxx_test");
+  private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
   private final CxxBuckConfig cxxBuckConfig;
 
@@ -77,7 +78,7 @@ public class CxxTestDescription implements
 
     CxxTest test;
 
-    CxxTestType type = args.framework.or(CxxTestType.GTEST);
+    CxxTestType type = args.framework.or(getDefaultTestType());
     switch (type) {
       case GTEST: {
         test = new CxxGtestTest(
@@ -106,6 +107,30 @@ public class CxxTestDescription implements
     return test;
   }
 
+  private Optional<CxxTestType> getTypeFromParams(BuildRuleFactoryParams params) {
+    Object rawType = params.getNullableRawAttribute("framework");
+
+    // If not set, return the default test type.
+    if (rawType == null) {
+      return Optional.of(getDefaultTestType());
+    }
+
+    // If the parameter isn't a string, this should be a coercion error, so just bail here
+    // and let the type coercer handle the actual error.
+    if (!(rawType instanceof String)) {
+      return Optional.absent();
+    }
+
+    // Try to convert the string to an enum.  If we fail, just return nothing and let the
+    // coercer throw the real error.
+    try {
+      String strType = (String) rawType;
+      return Optional.of(CxxTestType.valueOf(strType.toUpperCase()));
+    } catch (IllegalArgumentException e) {
+      return Optional.absent();
+    }
+  }
+
   @Override
   public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params) {
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
@@ -116,11 +141,9 @@ public class CxxTestDescription implements
 
     // Attempt to extract the test type from the params, and add an implicit dep on the
     // corresponding test framework library.
-    Object rawType = params.getNullableRawAttribute("framework");
-    if (rawType != null && rawType instanceof String) {
-      String strType = (String) rawType;
-      CxxTestType type = CxxTestType.valueOf(strType.toUpperCase());
-      switch (type) {
+    Optional<CxxTestType> type = getTypeFromParams(params);
+    if (type.isPresent()) {
+      switch (type.get()) {
         case GTEST: {
           deps.add(cxxBuckConfig.getGtestDep().toString());
           break;
@@ -136,6 +159,10 @@ public class CxxTestDescription implements
     }
 
     return deps.build();
+  }
+
+  public CxxTestType getDefaultTestType() {
+    return DEFAULT_TEST_TYPE;
   }
 
   @SuppressFieldNotInitialized

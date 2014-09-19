@@ -39,12 +39,6 @@ public class CxxTestDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTargetParser parser = new BuildTargetParser();
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        ImmutableMap.of("framework", CxxTestType.GTEST.toString()),
-        filesystem,
-        parser,
-        target,
-        new FakeRuleKeyBuilderFactory());
 
     BuildTarget gtest = BuildTargetFactory.newInstance("//:gtest");
 
@@ -55,8 +49,24 @@ public class CxxTestDescriptionTest {
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
     CxxTestDescription desc = new CxxTestDescription(cxxBuckConfig);
 
+    // Test the default test type is gtest.
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        ImmutableMap.<String, Object>of(),
+        filesystem,
+        parser,
+        target,
+        new FakeRuleKeyBuilderFactory());
     Iterable<String> implicit = desc.findDepsFromParams(params);
+    assertTrue(Iterables.contains(implicit, gtest.toString()));
 
+    // Test explicitly setting gtest works as well.
+    params = new BuildRuleFactoryParams(
+        ImmutableMap.of("framework", CxxTestType.GTEST.toString()),
+        filesystem,
+        parser,
+        target,
+        new FakeRuleKeyBuilderFactory());
+    implicit = desc.findDepsFromParams(params);
     assertTrue(Iterables.contains(implicit, gtest.toString()));
   }
 
