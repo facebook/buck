@@ -409,6 +409,9 @@ class _BasePurePathTest(object):
         self.assertTrue(P('foo').match('**/*'))
         self.assertTrue(P('foo').match('**/**'))
         self.assertTrue(P('foo').match('**/**/**'))
+        # Match entire relative path
+        self.assertTrue(P('foo/a.py').match('foo/*.py', match_entire=True))
+        self.assertFalse(P('bar/foo/a.py').match('foo/*.py', match_entire=True))
 
     def test_ordering_common(self):
         # Ordering is tuple-alike

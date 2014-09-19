@@ -897,9 +897,13 @@ class PurePath(object):
         by the system, if any."""
         return self._flavour.is_reserved(self._parts)
 
-    def match(self, path_pattern):
+    def match(self, path_pattern, match_entire=False):
         """
         Return True if this path matches the given pattern.
+
+        If this path is absolute or if match_entire is True, the
+        entire path must match the pattern.  Otherwise, any suffix of
+        the path may match the pattern.
         """
         cf = self._flavour.casefold
         path_pattern = cf(path_pattern)
@@ -913,18 +917,17 @@ class PurePath(object):
         parts = self._cparts
         if len([x for x in pat_parts if x != '**']) > len(parts):
             return False
-        match_is_absolute = False
         if drv or root:
             if len(pat_parts) == 1 and len(parts) == 1:
                 # We've already matched drv and root, and that's all we have, so we've matched.
                 return True
             parts = parts[1:]
             pat_parts = pat_parts[1:]
-            match_is_absolute = True
-        return self._apply_match(parts, pat_parts, match_is_absolute)
+            match_entire = True
+        return self._apply_match(parts, pat_parts, match_entire)
 
     @classmethod
-    def _apply_match(cls, parts, pat_parts, match_is_absolute):
+    def _apply_match(cls, parts, pat_parts, match_entire):
         parts_matched = 0
         pat_parts_matched = 0
         while parts_matched < len(parts) and pat_parts_matched < len(pat_parts):
@@ -935,7 +938,7 @@ class PurePath(object):
                 # match the remaining path parts.
                 remaining_parts = parts[:-parts_matched] if parts_matched else parts
                 remaining_pat_parts = pat_parts[:-(pat_parts_matched + 1)]
-                if cls._apply_match(remaining_parts, remaining_pat_parts, match_is_absolute):
+                if cls._apply_match(remaining_parts, remaining_pat_parts, match_entire):
                     return True
                 else:
                     # The rest of the pattern did not match from the current position.
@@ -951,7 +954,7 @@ class PurePath(object):
         while pat_parts_matched < len(pat_parts) and pat_parts[-(pat_parts_matched + 1)] == '**':
             pat_parts_matched += 1
         return pat_parts_matched == len(pat_parts) and \
-            (parts_matched == len(parts) if match_is_absolute else True)
+            (parts_matched == len(parts) if match_entire else True)
 
 
 class PurePosixPath(PurePath):
