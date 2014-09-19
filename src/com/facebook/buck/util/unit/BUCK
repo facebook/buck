@@ -2,7 +2,7 @@ java_library(
   name = 'unit',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
+    '//third-party/java/guava:guava',
     '//src/com/facebook/buck/util:util',
   ],
   visibility = [

@@ -7,10 +7,10 @@ java_test(
   ],
   resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
-    '//lib:easymock',
-    '//lib:guava',
-    '//lib:jsr305',
-    '//lib:junit',
+    '//third-party/java/easymock:easymock',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/junit:junit',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java:rules',
@@ -46,7 +46,7 @@ java_library(
     'PartialGraphFactory.java',
   ],
   deps = [
-    '//lib:guava',
+    '//third-party/java/guava:guava',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',

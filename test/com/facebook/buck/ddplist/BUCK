@@ -6,7 +6,7 @@ java_test(
     '//third-party/java/dd-plist:dd-plist',
   ],
   deps = [
-    '//lib:junit',
+    '//third-party/java/junit:junit',
     '//third-party/java/dd-plist:dd-plist',
    ],
 )

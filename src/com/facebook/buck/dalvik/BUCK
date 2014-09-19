@@ -4,8 +4,8 @@ java_library(
     'DalvikStatsTool.java',
   ],
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//third-party/java/asm:asm',
   ],
   visibility = [
@@ -39,8 +39,8 @@ java_library(
   ],
   deps = [
     ':dalvik_stats_tool',
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
@@ -59,8 +59,8 @@ java_library(
   ],
   deps = [
     ':dalvik_stats_tool',
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/step:step',

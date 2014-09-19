@@ -2,7 +2,7 @@ java_library(
   name = 'collect',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
+    '//third-party/java/guava:guava',
   ],
   visibility = [
     'PUBLIC',

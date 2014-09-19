@@ -2,7 +2,7 @@ java_library(
   name = 'plist',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
+    '//third-party/java/guava:guava',
   ],
   visibility = ['PUBLIC'],
 )

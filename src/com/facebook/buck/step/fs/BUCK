@@ -2,8 +2,8 @@ java_library(
   name = 'fs',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',

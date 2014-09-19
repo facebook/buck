@@ -5,8 +5,8 @@ java_test(
     '//src/com/facebook/buck/util/concurrent:concurrent',
   ],
   deps = [
-    '//lib:guava',
-    '//lib:junit',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
     '//src/com/facebook/buck/util/concurrent:concurrent',
   ],
 )
@@ -17,7 +17,7 @@ java_library(
     'FakeListeningExecutorService.java',
   ],
   deps = [
-    '//lib:guava',
+    '//third-party/java/guava:guava',
   ],
   visibility = [
     'PUBLIC',

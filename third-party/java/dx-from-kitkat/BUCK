@@ -2,7 +2,7 @@ java_library(
   name = 'dx',
   srcs = glob(['src/**/*.java']),
   deps = [
-    '//lib:guava',
+    '//third-party/java/guava:guava',
   ],
   visibility = ['PUBLIC'],
 )

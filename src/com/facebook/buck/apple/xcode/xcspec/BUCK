@@ -2,8 +2,8 @@ java_library(
   name = 'xcspec',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:jsr305',
-    '//lib:guava',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/guava:guava',
     '//third-party/java/dd-plist:dd-plist',
   ],
   visibility = ['PUBLIC'],

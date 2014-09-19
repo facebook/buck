@@ -7,8 +7,8 @@ java_test(
     '//src/com/facebook/buck/dalvik:steps',
   ],
   deps = [
-    '//lib:guava',
-    '//lib:junit',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/dalvik:dalvik_stats_tool',
     '//src/com/facebook/buck/dalvik:steps',

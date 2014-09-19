@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'objenesis',
+  binary_jar = 'objenesis-1.2.jar',
+  visibility = [
+    '//third-party/java/easymock:easymock',
+  ],
+)
+

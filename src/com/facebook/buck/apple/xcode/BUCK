@@ -10,8 +10,8 @@ java_library(
   ],
   deps = [
     ':xcode',
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/apple/xcode/plist:plist',
     '//src/com/facebook/buck/apple/xcode/xcconfig:xcconfig',
@@ -45,8 +45,8 @@ java_library(
     'XCScheme.java',
   ] + glob(['util/*.java', 'xcodeproj/*.java']),
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//third-party/java/dd-plist:dd-plist',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/apple/xcode/plist:plist',

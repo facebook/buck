@@ -16,7 +16,7 @@ java_library(
   srcs = glob(['*.java'], excludes = PLATFORM_SRCS),
   deps = [
     ':platform',
-    '//lib:guava',
+    '//third-party/java/guava:guava',
     '//src/com/facebook/buck/util:io',
   ],
   visibility = [

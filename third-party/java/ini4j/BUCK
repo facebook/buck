@@ -1,0 +1,10 @@
+prebuilt_jar(
+  name = 'ini4j',
+  binary_jar = 'ini4j-0.5.2.jar',
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/cli:config',
+    '//test/com/facebook/buck/cli:cli',
+  ],
+)
+

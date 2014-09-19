@@ -5,8 +5,8 @@ java_test(
     '//src/com/facebook/buck/java/classes:classes',
   ],
   deps = [
-    '//lib:guava',
-    '//lib:junit',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/util:io',
   ],

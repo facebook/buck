@@ -2,7 +2,7 @@ java_library(
   name = 'firstorder',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
+    '//third-party/java/guava:guava',
     '//third-party/java/asm:asm',
   ],
   visibility = ['PUBLIC'],

@@ -2,8 +2,8 @@ java_test(
   name = 'util',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
-    '//lib:junit',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
     '//src/com/facebook/buck/android/agent:manifest-as-resource',
     '//src/com/facebook/buck/android/agent/util:util',
     '//src/com/facebook/buck/util:util',

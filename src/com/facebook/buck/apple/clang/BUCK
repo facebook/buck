@@ -2,8 +2,8 @@ java_library(
   name = 'headermap',
   srcs = ['HeaderMap.java'],
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     'PUBLIC'
@@ -15,8 +15,8 @@ java_library(
   srcs = ['PrintHeaderMap.java'],
   deps = [
     ':headermap',
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     'PUBLIC'

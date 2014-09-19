@@ -11,6 +11,6 @@ java_library(
   srcs = glob(['*.java']),
   deps = [
     '//third-party/java/asm:asm',
-    '//lib:guava',
+    '//third-party/java/guava:guava',
   ],
 )

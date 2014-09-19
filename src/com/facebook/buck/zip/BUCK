@@ -11,7 +11,7 @@ java_library(
     'ZipOutputStreams.java',
   ],
   deps = [
-    '//lib:guava',
+    '//third-party/java/guava:guava',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:exceptions',
   ],
@@ -23,8 +23,8 @@ java_library(
   srcs = [ 'Unzip.java' ],
   deps = [
     ':stream',
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//third-party/java/commons-compress:commons-compress',
     '//src/com/facebook/buck/util:io',
   ],
@@ -37,8 +37,8 @@ java_library(
   deps = [
     ':stream',
     ':unzip',
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/shell:steps',

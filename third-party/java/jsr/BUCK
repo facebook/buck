@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'jsr305',
+  binary_jar = 'jsr305.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+

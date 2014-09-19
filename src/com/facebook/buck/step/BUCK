@@ -2,9 +2,9 @@ java_library(
   name = 'step',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
-    '//lib:jackson',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/jackson:jackson',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/java:packagefinder',

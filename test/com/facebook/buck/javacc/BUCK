@@ -5,7 +5,7 @@ java_test(
     '//third-party/java/javacc:javacc',
   ],
   deps = [
-    '//lib:junit',
+    '//third-party/java/junit:junit',
     ':simple1',
   ],
 )

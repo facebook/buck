@@ -5,7 +5,7 @@ java_test(
     '//src/com/facebook/buck/util/collect:collect',
   ],
   deps = [
-    '//lib:junit',
+    '//third-party/java/junit:junit',
     '//src/com/facebook/buck/util/collect:collect',
   ],
 )

@@ -25,7 +25,7 @@ java_library(
     # IMPORTANT! This library limits itself to types that are available in both the JDK and Android
     # Java API. The objective is to limit the set of files added to the ClassLoader that runs the
     # test, as not to interfere with the results of the test.
-    '//lib:junit',
+    '//third-party/java/junit:junit',
     '//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner',
   ],
   visibility = [

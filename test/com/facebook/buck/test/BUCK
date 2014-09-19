@@ -2,8 +2,8 @@ java_test(
   name = 'test',
   srcs = glob(['*Test.java']),
   deps = [
-    '//lib:guava',
-    '//lib:junit',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
     '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test:test',  
   ],

@@ -4,8 +4,8 @@ javacc_parser_library(
   name = 'xcconfig',
   srcs = glob(['*.java', '*.jj']),
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
   ],

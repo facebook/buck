@@ -1,0 +1,7 @@
+prebuilt_jar(
+  name = 'sdklib',
+  binary_jar = 'sdklib.jar',
+  visibility = [
+    '//src/com/facebook/buck/android:steps',
+  ]
+)

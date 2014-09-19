@@ -1,0 +1,12 @@
+prebuilt_jar(
+  name = 'nailgun',
+  binary_jar = 'nailgun-server-0.9.2-SNAPSHOT.jar',
+  source_jar = 'nailgun-server-0.9.2-SNAPSHOT-sources.jar',
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/java:java',
+    '//test/com/facebook/buck/testutil/integration:integration',
+  ]
+)
+

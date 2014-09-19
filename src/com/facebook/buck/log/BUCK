@@ -5,8 +5,8 @@ java_library(
     '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     'PUBLIC',

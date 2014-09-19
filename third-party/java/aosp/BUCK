@@ -13,7 +13,7 @@ java_library(
   srcs = glob(['tests/src/**/*.java'], excludes = TEST_SRC),
   deps = [
     ':aosp',
-    '//lib:junit',
+    '//third-party/java/junit:junit',
   ],
 )
 
@@ -24,7 +24,7 @@ java_test(
   deps = [
     ':aosp',
     ':testutils',
-    '//lib:junit',
+    '//third-party/java/junit:junit',
   ],
   source_under_test = [
     ':aosp',

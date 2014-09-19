@@ -56,7 +56,7 @@ import java.util.List;
 
 public class PrebuiltJarTest {
 
-  private static final Path PATH_TO_JUNIT_JAR = Paths.get("lib/junit-4.11.jar");
+  private static final Path PATH_TO_JUNIT_JAR = Paths.get("third-party/java/junit/junit-4.11.jar");
 
   private PrebuiltJar junitJarRule;
 

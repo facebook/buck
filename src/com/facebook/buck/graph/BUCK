@@ -2,8 +2,8 @@ java_library(
   name = 'graph',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     'PUBLIC',

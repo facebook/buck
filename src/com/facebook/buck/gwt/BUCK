@@ -2,7 +2,7 @@ java_library(
   name = 'gwt',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
+    '//third-party/java/guava:guava',
     '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',

@@ -7,7 +7,7 @@ java_library(
     'MavenUrlDecoder.java',
   ],
   deps = [
-    '//lib:guava',
+    '//third-party/java/guava:guava',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/util:exceptions',
   ],
@@ -23,8 +23,8 @@ java_library(
   ],
   deps = [
     ':downloader',
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',

@@ -1,0 +1,12 @@
+prebuilt_jar(
+  name = 'easymock',
+  binary_jar = 'easymock-3.0.jar',
+  deps = [
+    '//third-party/java/cglib:cglib',
+    '//third-party/java/objenesis:objenesis',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)
+

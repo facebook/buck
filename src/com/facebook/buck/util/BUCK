@@ -6,8 +6,8 @@ java_library(
   srcs = CONSTANT_SRCS,
   visibility = [ 'PUBLIC' ],
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
 )
 
@@ -21,8 +21,8 @@ java_library(
   name = 'exceptions',
   srcs = EXCEPTION_SRCS,
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [ 'PUBLIC' ],
 )
@@ -50,8 +50,8 @@ java_library(
   srcs = IO_SRCS,
   deps = [
     ':constants',
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/zip:stream',
   ],
@@ -68,7 +68,7 @@ java_library(
   srcs = NETWORK_SRCS,
   deps = [
     ':exceptions',
-    '//lib:guava',
+    '//third-party/java/guava:guava',
     '//src/com/facebook/buck/log:log',
   ],
   visibility = [ 'PUBLIC' ],
@@ -83,10 +83,10 @@ java_library(
     ':constants',
     ':exceptions',
     ':io',
-    '//lib:guava',
-    '//lib:jackson-core',
-    '//lib:jackson-databind',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jackson:jackson-core',
+    '//third-party/java/jackson:jackson-databind',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/zip:stream',

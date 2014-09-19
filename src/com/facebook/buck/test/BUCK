@@ -13,14 +13,14 @@ java_library(
   name = 'test',
   srcs = glob(['*.java'], excludes = ['CoverageReportFormat.java']),
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
-    '//lib:jackson-annotations',
-    '//lib:jackson-core',
+    '//third-party/java/jackson:jackson-annotations',
+    '//third-party/java/jackson:jackson-core',
   ],
   visibility = ['PUBLIC'],
 )

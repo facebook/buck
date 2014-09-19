@@ -5,11 +5,11 @@ java_test(
     '//src/com/facebook/buck/apple/clang:headermap',
   ],
   deps = [
-    '//lib:guava',
-    '//lib:jsr305',
-    '//lib:junit',
-    '//lib:hamcrest-core',
-    '//lib:hamcrest-library',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/junit:junit',
+    '//third-party/java/hamcrest:hamcrest-core',
+    '//third-party/java/hamcrest:hamcrest-library',
     '//src/com/facebook/buck/apple/clang:headermap',
   ]
 )

@@ -2,10 +2,10 @@ java_test(
   name = 'cache',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
-    '//lib:hamcrest-core',
-    '//lib:hamcrest-library',
-    '//lib:junit',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest-core',
+    '//third-party/java/hamcrest:hamcrest-library',
+    '//third-party/java/junit:junit',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],
 )

@@ -1,0 +1,58 @@
+java_library(
+    name = 'jackson',
+    deps = [],
+    exported_deps = [
+      ':jackson-annotations',
+      ':jackson-core',
+      ':jackson-databind',
+    ],
+    visibility = [
+      '//src/com/facebook/buck/event:event',
+      '//src/com/facebook/buck/python:rules',
+      '//src/com/facebook/buck/step:step',
+      '//test/com/facebook/buck/step:testutil',
+    ],
+)
+
+prebuilt_jar(
+  name = 'jackson-annotations',
+  binary_jar = 'jackson-annotations-2.0.5.jar',
+  visibility = [
+    '//src/com/facebook/buck/event/listener:listener',
+    '//src/com/facebook/buck/command:command',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/test:test',
+    '//test/...',
+  ],
+)
+
+prebuilt_jar(
+  name = 'jackson-core',
+  binary_jar = 'jackson-core-2.0.5.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+prebuilt_jar(
+  name = 'jackson-databind',
+  binary_jar = 'jackson-databind-2.0.5.jar',
+  visibility = [
+    '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/android:steps',
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/command:command',
+    '//src/com/facebook/buck/event/listener:listener',
+    '//src/com/facebook/buck/httpserver:httpserver',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/shell:rules',
+    '//src/com/facebook/buck/shell:steps',
+    '//test/...',
+  ],
+)
+

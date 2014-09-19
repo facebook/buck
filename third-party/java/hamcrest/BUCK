@@ -1,0 +1,21 @@
+prebuilt_jar(
+  name = 'hamcrest-core',
+  binary_jar = 'hamcrest-core-1.3.jar',
+  visibility = [
+    '//test/...',
+    '//third-party/java/junit:junit',
+  ],
+)
+
+prebuilt_jar(
+  name = 'hamcrest-library',
+  binary_jar = 'hamcrest-library-1.3.jar',
+  deps = [
+    ':hamcrest-core',
+  ],
+  visibility = [
+    '//test/...',
+    '//third-party/java/junit:junit',
+  ],
+)
+
