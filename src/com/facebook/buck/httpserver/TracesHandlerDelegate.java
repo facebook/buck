@@ -52,7 +52,6 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
   private static final Pattern TRACE_FILE_NAME_PATTERN = Pattern.compile(
       "build\\.(?:[\\d\\-\\.]+\\.)?([0-9a-zA-Z-]+)\\.trace");
-  private static final String TRACE_TO_IGNORE = "build.trace";
 
   private final TracesHelper tracesHelper;
 
@@ -79,17 +78,15 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
     SoyListData traces = new SoyListData();
     for (File file : traceFiles) {
       String name = file.getName();
-      if (TRACE_TO_IGNORE.equals(name)) {
+      Matcher matcher = TRACE_FILE_NAME_PATTERN.matcher(name);
+      if (!matcher.matches()) {
+        // Could be build.trace or launch.xxx.trace.
         continue;
       }
 
       SoyMapData trace = new SoyMapData();
       trace.put("name", name);
-
-      Matcher matcher = TRACE_FILE_NAME_PATTERN.matcher(name);
-      if (matcher.matches()) {
-        trace.put("id", matcher.group(1));
-      }
+      trace.put("id", matcher.group(1));
 
       TraceAttributes traceAttributes = tracesHelper.getTraceAttributesFor(file);
       trace.put("dateTime", traceAttributes.getFormattedDateTime());
