@@ -23,6 +23,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Objects;
+
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
@@ -142,4 +144,41 @@ public class TestResultSummary {
         testCaseName,
         getTestName());
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (!(o instanceof TestResultSummary)) {
+      return false;
+    }
+
+    TestResultSummary that = (TestResultSummary) o;
+
+    return
+        testCaseName.equals(that.testCaseName) &&
+        testName.equals(that.testName) &&
+        type.equals(that.type) &&
+        time == that.time &&
+        Objects.equals(message, that.message) &&
+        Objects.equals(stacktrace, that.stacktrace) &&
+        Objects.equals(stdOut, that.stdOut) &&
+        Objects.equals(stdErr, that.stdErr);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        testCaseName,
+        testName,
+        type,
+        time,
+        message,
+        stacktrace,
+        stdOut,
+        stdErr);
+  }
+
 }

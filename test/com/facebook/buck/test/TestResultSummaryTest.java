@@ -18,6 +18,7 @@ package com.facebook.buck.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -78,5 +79,16 @@ public class TestResultSummaryTest {
     assertEquals("FAIL  456ms com.facebook.buck.rules.TestResultSummaryTest#testGetters()",
         testResultSummary.toString());
   }
+
+  @Test
+  public void canTestEquality() {
+    assertEquals(
+        new TestResultSummary("Class", "test", ResultType.SUCCESS, 0L, "FAIL!", null, null, null),
+        new TestResultSummary("Class", "test", ResultType.SUCCESS, 0L, "FAIL!", null, null, null));
+    assertNotEquals(
+        new TestResultSummary("Class", "test", ResultType.SUCCESS, 0L, "FAIL!", null, null, null),
+        new TestResultSummary("Class", "test", ResultType.FAILURE, 0L, "FAIL!", null, null, null));
+  }
+
 }
 
