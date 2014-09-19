@@ -55,7 +55,7 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
             }
-            ruleResolver.addToIndex(rule.getBuildTarget(), rule);
+            ruleResolver.addToIndex(rule);
             actionGraph.addNode(rule);
 
             for (BuildRule buildRule : rule.getDeps()) {

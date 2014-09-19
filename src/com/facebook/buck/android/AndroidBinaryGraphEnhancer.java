@@ -137,8 +137,6 @@ public class AndroidBinaryGraphEnhancer {
     ImmutableSortedSet<BuildRule> resourceRules =
         getTargetsAsRules(resourceDetails.resourcesWithNonEmptyResDir);
 
-    BuildTarget buildTargetForFilterResources =
-        createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR);
     FilteredResourcesProvider filteredResourcesProvider;
     boolean needsResourceFiltering =
         resourceFilter.isEnabled() || resourceCompressionMode.isStoreStringsAsAssets();
@@ -146,7 +144,7 @@ public class AndroidBinaryGraphEnhancer {
     if (needsResourceFiltering) {
       BuildRuleParams paramsForResourcesFilter = buildRuleParams.copyWithChanges(
           BuildRuleType.RESOURCES_FILTER,
-          buildTargetForFilterResources,
+          createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR),
           resourceRules,
           /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
       ResourcesFilter resourcesFilter = new ResourcesFilter(
@@ -155,7 +153,7 @@ public class AndroidBinaryGraphEnhancer {
           resourceDetails.whitelistedStringDirectories,
           resourceCompressionMode,
           resourceFilter);
-      ruleResolver.addToIndex(buildTargetForFilterResources, resourcesFilter);
+      ruleResolver.addToIndex(resourcesFilter);
 
       filteredResourcesProvider = resourcesFilter;
       enhancedDeps.add(resourcesFilter);
@@ -165,10 +163,9 @@ public class AndroidBinaryGraphEnhancer {
           new IdentityResourcesProvider(resourceDetails.resourceDirectories);
     }
 
-    BuildTarget buildTargetForUberRDotJava = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
     BuildRuleParams paramsForUberRDotJava = buildRuleParams.copyWithChanges(
         BuildRuleType.UBER_R_DOT_JAVA,
-        buildTargetForUberRDotJava,
+        createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR),
         resourceRules,
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
     UberRDotJava uberRDotJava = new UberRDotJava(
@@ -179,7 +176,7 @@ public class AndroidBinaryGraphEnhancer {
         javacOptions,
         shouldPreDex,
         shouldBuildStringSourceMap);
-    ruleResolver.addToIndex(buildTargetForUberRDotJava, uberRDotJava);
+    ruleResolver.addToIndex(uberRDotJava);
     enhancedDeps.add(uberRDotJava);
 
     // TODO(natthu): Try to avoid re-building the collection by passing UberRDotJava directly.
@@ -214,11 +211,9 @@ public class AndroidBinaryGraphEnhancer {
 
     Optional<PackageStringAssets> packageStringAssets = Optional.absent();
     if (resourceCompressionMode.isStoreStringsAsAssets()) {
-      BuildTarget buildTargetForPackageStringAssets =
-          createBuildTargetWithFlavor(PACKAGE_STRING_ASSETS_FLAVOR);
       BuildRuleParams paramsForPackageStringAssets = buildRuleParams.copyWithChanges(
           BuildRuleType.PACKAGE_STRING_ASSETS,
-          buildTargetForPackageStringAssets,
+          createBuildTargetWithFlavor(PACKAGE_STRING_ASSETS_FLAVOR),
           ImmutableSortedSet.<BuildRule>of(uberRDotJava),
           /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
       packageStringAssets = Optional.of(
@@ -226,15 +221,14 @@ public class AndroidBinaryGraphEnhancer {
               paramsForPackageStringAssets,
               filteredResourcesProvider,
               uberRDotJava));
-      ruleResolver.addToIndex(buildTargetForPackageStringAssets, packageStringAssets.get());
+      ruleResolver.addToIndex(packageStringAssets.get());
       enhancedDeps.add(packageStringAssets.get());
     }
 
     // Create the AaptPackageResourcesBuildable.
-    BuildTarget buildTargetForAapt = createBuildTargetWithFlavor(AAPT_PACKAGE_FLAVOR);
     BuildRuleParams paramsForAaptPackageResources = buildRuleParams.copyWithChanges(
         BuildRuleType.AAPT_PACKAGE,
-        buildTargetForAapt,
+        createBuildTargetWithFlavor(AAPT_PACKAGE_FLAVOR),
         getAdditionalAaptDeps(resourceRules, packageableCollection),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
@@ -244,7 +238,7 @@ public class AndroidBinaryGraphEnhancer {
         packageableCollection.assetsDirectories,
         packageType,
         cpuFilters);
-    ruleResolver.addToIndex(buildTargetForAapt, aaptPackageResources);
+    ruleResolver.addToIndex(aaptPackageResources);
     enhancedDeps.add(aaptPackageResources);
 
     Optional<PreDexMerge> preDexMerge = Optional.absent();
@@ -261,10 +255,9 @@ public class AndroidBinaryGraphEnhancer {
     ImmutableSortedSet<BuildRule> finalDeps;
     Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.absent();
     if (exopackage) {
-      BuildTarget buildTargetForAbiCalculation = createBuildTargetWithFlavor(CALCULATE_ABI_FLAVOR);
       BuildRuleParams paramsForComputeExopackageAbi = buildRuleParams.copyWithChanges(
           BuildRuleType.EXOPACKAGE_DEPS_ABI,
-          buildTargetForAbiCalculation,
+          createBuildTargetWithFlavor(CALCULATE_ABI_FLAVOR),
           enhancedDeps.build(),
           /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
       computeExopackageDepsAbi = Optional.of(
@@ -275,7 +268,7 @@ public class AndroidBinaryGraphEnhancer {
               packageStringAssets,
               preDexMerge,
               keystore));
-      ruleResolver.addToIndex(buildTargetForAbiCalculation, computeExopackageDepsAbi.get());
+      ruleResolver.addToIndex(computeExopackageDepsAbi.get());
       finalDeps = ImmutableSortedSet.<BuildRule>of(computeExopackageDepsAbi.get());
     } else {
       finalDeps = enhancedDeps.build();
@@ -422,16 +415,15 @@ public class AndroidBinaryGraphEnhancer {
           /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
       DexProducedFromJavaLibrary preDex =
           new DexProducedFromJavaLibrary(paramsForPreDex, javaLibrary);
-      ruleResolver.addToIndex(preDexTarget, preDex);
+      ruleResolver.addToIndex(preDex);
       preDexDeps.add(preDex);
     }
 
     ImmutableSet<DexProducedFromJavaLibrary> allPreDexDeps = preDexDeps.build();
 
-    BuildTarget buildTargetForDexMerge = createBuildTargetWithFlavor(DEX_MERGE_FLAVOR);
     BuildRuleParams paramsForPreDexMerge = buildRuleParams.copyWithChanges(
         BuildRuleType.DEX_MERGE,
-        buildTargetForDexMerge,
+        createBuildTargetWithFlavor(DEX_MERGE_FLAVOR),
         getDexMergeDeps(uberRDotJava, allPreDexDeps),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
     PreDexMerge preDexMerge = new PreDexMerge(
@@ -440,7 +432,7 @@ public class AndroidBinaryGraphEnhancer {
         dexSplitMode,
         allPreDexDeps,
         uberRDotJava);
-    ruleResolver.addToIndex(buildTargetForDexMerge, preDexMerge);
+    ruleResolver.addToIndex(preDexMerge);
 
     return preDexMerge;
   }

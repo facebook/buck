@@ -102,7 +102,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         ruleKeyBuilderFactory,
         BuildRuleType.GWT_MODULE);
     BuildRule gwtModule = createGwtModule(params, arg);
-    ruleResolver.addToIndex(gwtModule.getBuildTarget(), gwtModule);
+    ruleResolver.addToIndex(gwtModule);
   }
 
   @VisibleForTesting

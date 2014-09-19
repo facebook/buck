@@ -173,7 +173,7 @@ public class ConstructorArgMarshallerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
     FakeBuildRule rule = new FakeBuildRule(ruleType, target);
-    ruleResolver.addToIndex(target, rule);
+    ruleResolver.addToIndex(rule);
     Dto dto = new Dto();
     marshaller.populate(
         ruleResolver,
@@ -416,17 +416,20 @@ public class ConstructorArgMarshallerTest {
       public List<? extends SourcePath> yup;
     }
 
-    BuildTarget target = BuildTargetFactory.newInstance("//will:happen");
-    ruleResolver.addToIndex(target, new FakeBuildRule(new BuildRuleType("example"), target));
+    BuildRule rule = new FakeBuildRule(
+        new BuildRuleType("example"),
+        BuildTargetFactory.newInstance("//will:happen"));
+    ruleResolver.addToIndex(rule);
     Dto dto = new Dto();
     marshaller.populate(
         ruleResolver,
         filesystem,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
-            "yup", ImmutableList.of(target.getFullyQualifiedName()))),
+            "yup", ImmutableList.of(rule.getBuildTarget().getFullyQualifiedName()))),
         dto);
 
-    BuildRuleSourcePath path = new BuildRuleSourcePath(new FakeBuildRule(ruleType, target));
+    BuildRuleSourcePath path = new BuildRuleSourcePath(
+        new FakeBuildRule(ruleType, rule.getBuildTarget()));
     assertEquals(ImmutableList.of(path), dto.yup);
   }
 
@@ -472,7 +475,7 @@ public class ConstructorArgMarshallerTest {
     FakeBuildRule expectedRule = new FakeBuildRule(
         ruleType,
         BuildTargetFactory.newInstance("//example/path:path"));
-    ruleResolver.addToIndex(expectedRule.getBuildTarget(), expectedRule);
+    ruleResolver.addToIndex(expectedRule);
 
     ImmutableMap<String, Object> args = ImmutableMap.<String, Object>builder()
         .put("required", "cheese")

@@ -130,7 +130,7 @@ public class AndroidBinaryGraphEnhancerTest {
         JavacOptions.DEFAULTS,
         false,
         false);
-    ruleResolver.addToIndex(uberRDotJavaTarget, uberRDotJava);
+    ruleResolver.addToIndex(uberRDotJava);
 
     AndroidPackageableCollection collection =
         new AndroidPackageableCollector(

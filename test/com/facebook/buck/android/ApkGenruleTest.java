@@ -145,7 +145,7 @@ public class ApkGenruleTest {
               }
             }).build();
     ApkGenrule apkGenrule = description.createBuildRule(params, ruleResolver, arg);
-    ruleResolver.addToIndex(buildTarget, apkGenrule);
+    ruleResolver.addToIndex(apkGenrule);
 
     // Verify all of the observers of the Genrule.
     String expectedApkOutput =

@@ -150,7 +150,7 @@ public class GenruleTest {
         .addSrc(Paths.get("src/com/facebook/katana/convert_to_katana.py"))
         .addSrc(Paths.get("src/com/facebook/katana/AndroidManifest.xml"))
         .build();
-    ruleResolver.addToIndex(buildTarget, genrule);
+    ruleResolver.addToIndex(genrule);
 
     // Verify all of the observers of the Genrule.
     assertEquals(GEN_PATH.resolve("src/com/facebook/katana/AndroidManifest.xml"),
@@ -500,7 +500,7 @@ public class GenruleTest {
     }
 
     BuildRule genrule = builder.build();
-    ruleResolver.addToIndex(target, genrule);
+    ruleResolver.addToIndex(genrule);
     return genrule;
   }
 

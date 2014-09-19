@@ -87,7 +87,7 @@ public class AndroidLibraryGraphEnhancer {
         dummyRDotJavaParams,
         androidResourceDeps,
         javacOptions);
-    ruleResolver.addToIndex(dummyRDotJavaBuildTarget, dummyRDotJava);
+    ruleResolver.addToIndex(dummyRDotJava);
     return Optional.of(dummyRDotJava);
   }
 

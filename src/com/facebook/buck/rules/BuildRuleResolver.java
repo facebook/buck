@@ -70,23 +70,16 @@ public class BuildRuleResolver {
   }
 
   /**
-   * Adds to the index a mapping from {@code target} to {@code buildRule}.
-   */
-  public void addToIndex(BuildTarget target, BuildRule buildRule) {
-    BuildRule oldValue = buildRuleIndex.put(target, buildRule);
-    if (oldValue != null) {
-      throw new IllegalStateException("A build rule for this target has already been created: " +
-          target);
-    }
-  }
-
-  /**
    * Adds to the index a mapping from {@code buildRule}'s target to itself and returns
    * {@code buildRule}.
    */
   @VisibleForTesting
   public <T extends BuildRule> T addToIndex(T buildRule) {
-    addToIndex(buildRule.getBuildTarget(), buildRule);
+    BuildRule oldValue = buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
+    if (oldValue != null) {
+      throw new IllegalStateException("A build rule for this target has already been created: " +
+          buildRule.getBuildTarget());
+    }
     return buildRule;
   }
 

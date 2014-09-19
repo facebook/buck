@@ -761,7 +761,7 @@ public class ProjectTest {
         .addSrc(Paths.get("Android.mk"))
         .build();
 
-    ruleResolver.addToIndex(ndkLibrary.getBuildTarget(), ndkLibrary);
+    ruleResolver.addToIndex(ndkLibrary);
 
     ProjectConfig ndkProjectConfig = (ProjectConfig) ProjectConfigBuilder
         .newProjectConfigRuleBuilder(

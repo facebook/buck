@@ -1367,7 +1367,7 @@ public class ProjectGeneratorTest {
         .setOut("helloworld.txt")
         .build();
 
-    buildRuleResolver.addToIndex(genrule.getBuildTarget(), genrule);
+    buildRuleResolver.addToIndex(genrule);
 
     BuildTarget libTarget = BuildTarget.builder("//foo", "lib").build();
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget)
@@ -1390,7 +1390,7 @@ public class ProjectGeneratorTest {
     arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = appleLibraryDescription.createBuildRule(libParams, buildRuleResolver, arg);
 
-    buildRuleResolver.addToIndex(libTarget, rule);
+    buildRuleResolver.addToIndex(rule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));

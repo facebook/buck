@@ -211,7 +211,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
 
     GwtModule gwtModule = gwtModuleOptional.get();
-    ruleResolver.addToIndex(gwtModule.getBuildTarget(), gwtModule);
+    ruleResolver.addToIndex(gwtModule);
   }
 
   /**

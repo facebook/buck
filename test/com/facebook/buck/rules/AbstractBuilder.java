@@ -63,7 +63,7 @@ public abstract class AbstractBuilder<A extends ConstructorArg> {
     BuildRuleParams params = createBuildRuleParams(filesystem);
 
     BuildRule rule = description.createBuildRule(params, resolver, arg);
-    resolver.addToIndex(target, rule);
+    resolver.addToIndex(rule);
     return rule;
   }
 

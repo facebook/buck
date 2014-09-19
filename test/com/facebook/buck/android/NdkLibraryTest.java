@@ -68,7 +68,7 @@ public class NdkLibraryTest {
             .setIsAsset(true)
             .build();
 
-    ruleResolver.addToIndex(ndkLibrary.getBuildTarget(), ndkLibrary);
+    ruleResolver.addToIndex(ndkLibrary);
 
     assertEquals(NdkLibraryDescription.TYPE, ndkLibrary.getType());
 

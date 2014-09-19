@@ -193,7 +193,7 @@ public class AndroidBinaryTest {
       BuildRule nativeLibsRule = PrebuiltNativeLibraryBuilder.newBuilder(nativeLibOnebuildTarget)
           .setNativeLibs(Paths.get(nativeLibsDirectory))
           .build();
-      ruleResolver.addToIndex(nativeLibOnebuildTarget, nativeLibsRule);
+      ruleResolver.addToIndex(nativeLibsRule);
       androidLibraryRuleBuilder.addDep(nativeLibsRule);
     }
 

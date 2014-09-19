@@ -183,7 +183,7 @@ public class DefaultJavaLibraryTest {
         .setBash("echo 'aha' > $OUT")
         .setOut("stuff.txt")
         .build();
-    ruleResolver.addToIndex(genruleBuildTarget, genrule);
+    ruleResolver.addToIndex(genrule);
 
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem() {
       @Override
@@ -601,7 +601,7 @@ public class DefaultJavaLibraryTest {
         .setBash("echo 'aha' > $OUT")
         .setOut("stuff.txt")
         .build();
-    ruleResolver.addToIndex(genruleBuildTarget, genrule);
+    ruleResolver.addToIndex(genrule);
 
     String commonLibAbiKeyHash = Strings.repeat("a", 40);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
