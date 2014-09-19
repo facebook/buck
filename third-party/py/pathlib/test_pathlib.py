@@ -362,6 +362,53 @@ class _BasePurePathTest(object):
         self.assertTrue(P('/a/b.py').match('/a/*.py'))
         self.assertFalse(P('/ab.py').match('/a/*.py'))
         self.assertFalse(P('/a/b/c.py').match('/a/*.py'))
+        # Double-star wildcard absolute pattern
+        self.assertTrue(P('/a.py').match('**/*.py'))
+        self.assertTrue(P('/a/b.py').match('**'))
+        self.assertTrue(P('/a/b.py').match('**/*'))
+        self.assertTrue(P('/a/b.py').match('**/*.py'))
+        self.assertTrue(P('/a/b/c.py').match('**/*.py'))
+        self.assertTrue(P('/a/b/c/d.py').match('**/*.py'))
+        self.assertFalse(P('/a/b/c/d.spam').match('**/*.py'))
+        # Double-star wildcard relative pattern
+        self.assertTrue(P('a.py').match('**/*.py'))
+        self.assertTrue(P('a/b.py').match('**'))
+        self.assertTrue(P('a/b.py').match('**/*'))
+        self.assertTrue(P('a/b.py').match('**/*.py'))
+        self.assertTrue(P('a/b/c.py').match('**/*py'))
+        self.assertTrue(P('a/b/c/d.py').match('**/*py'))
+        self.assertFalse(P('a/b/c/d.spam').match('**/*.py'))
+        # Double-star wildcard absolute pattern with prefix
+        self.assertTrue(P('/a/b.py').match('/a/**'))
+        self.assertTrue(P('/a/b.py').match('/a/**/*'))
+        self.assertTrue(P('/a/b.py').match('/a/**/*.py'))
+        self.assertTrue(P('/a/b/c.py').match('/a/**/*py'))
+        self.assertTrue(P('/a/b/c/d.py').match('/a/**/*py'))
+        # Failed lookahead absolute pattern with prefix
+        self.assertTrue(P('/a/b/c/b/c').match('/a/b/**'))
+        self.assertFalse(P('/a/spam/c/b/c').match('/a/b/**'))
+        # Double-star wildcard relative pattern with prefix
+        self.assertTrue(P('a/b.py').match('a/**'))
+        self.assertTrue(P('a/b.py').match('a/**/*'))
+        self.assertTrue(P('a/b.py').match('a/**/*.py'))
+        self.assertTrue(P('a/b/c.py').match('a/**/*py'))
+        self.assertTrue(P('a/b/c/d.py').match('a/**/*py'))
+        self.assertFalse(P('a/b/c/d.spam').match('a/**/*py'))
+        self.assertFalse(P('a/b/c/d.py').match('e/**'))
+        # Failed lookahead relative pattern with prefix
+        self.assertTrue(P('a/b/c/b/c').match('a/b/**'))
+        self.assertFalse(P('a/spam/c/b/c').match('a/b/**'))
+        # Double-star wildcard pattern with suffix
+        self.assertTrue(P('/c/a/c/a/b').match('**/a/b'))
+        self.assertTrue(P('c/a/c/a/b').match('**/a/b'))
+        self.assertFalse(P('c/a/c/spam/b').match('**/a/b'))
+        # Double-star with multiple path components
+        self.assertTrue(P('a/b/c/food/e.py').match('**/b/*/foo*/*.py'))
+        self.assertTrue(P('a/b/c/d.py').match('**/b/**/*.py'))
+        # Double-star with single path component
+        self.assertTrue(P('foo').match('**/*'))
+        self.assertTrue(P('foo').match('**/**'))
+        self.assertTrue(P('foo').match('**/**/**'))
 
     def test_ordering_common(self):
         # Ordering is tuple-alike
@@ -770,6 +817,7 @@ class PureWindowsPathTest(_BasePurePathTest, unittest.TestCase):
     def test_match_common(self):
         P = self.cls
         # Absolute patterns
+        self.assertTrue(P('c:/').match('/'))
         self.assertTrue(P('c:/b.py').match('/*.py'))
         self.assertTrue(P('c:/b.py').match('c:*.py'))
         self.assertTrue(P('c:/b.py').match('c:/*.py'))
@@ -1361,6 +1409,7 @@ class _BasePathTest(object):
             _check(p.glob("*/fileB"), ['dirB/fileB'])
         else:
             _check(p.glob("*/fileB"), ['dirB/fileB', 'linkB/fileB'])
+        _check(p.glob("dirC/**"), ['dirC/fileC', 'dirC/dirD', 'dirC/dirD/fileD'])
 
     def test_rglob_common(self):
         def _check(glob, expected):

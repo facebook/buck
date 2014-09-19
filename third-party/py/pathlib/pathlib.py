@@ -445,10 +445,12 @@ class _Selector:
     """A selector matches a specific glob pattern part against the children
     of a given path."""
 
-    def __init__(self, child_parts):
+    def __init__(self, child_parts, no_child_parts_successor_cls=None):
         self.child_parts = child_parts
         if child_parts:
             self.successor = _make_selector(child_parts)
+        elif no_child_parts_successor_cls:
+            self.successor = no_child_parts_successor_cls()
         else:
             self.successor = _TerminatingSelector()
 
@@ -466,6 +468,15 @@ class _TerminatingSelector:
 
     def _select_from(self, parent_path, is_dir, exists, listdir):
         yield parent_path
+
+
+class _EverythingSelector:
+
+    def _select_from(self, parent_path, is_dir, exists, listdir):
+        if not is_dir(parent_path):
+            return
+        for name in listdir(parent_path):
+            yield parent_path._make_child_relpath(name)
 
 
 class _PreciseSelector(_Selector):
@@ -504,7 +515,7 @@ class _WildcardSelector(_Selector):
 class _RecursiveWildcardSelector(_Selector):
 
     def __init__(self, pat, child_parts):
-        _Selector.__init__(self, child_parts)
+        _Selector.__init__(self, child_parts, _EverythingSelector)
 
     def _iterate_directories(self, parent_path, is_dir, listdir):
         yield parent_path
@@ -900,16 +911,47 @@ class PurePath(object):
         if root and root != cf(self._root):
             return False
         parts = self._cparts
-        if drv or root:
-            if len(pat_parts) != len(parts):
-                return False
-            pat_parts = pat_parts[1:]
-        elif len(pat_parts) > len(parts):
+        if len([x for x in pat_parts if x != '**']) > len(parts):
             return False
-        for part, pat in zip(reversed(parts), reversed(pat_parts)):
-            if not fnmatch.fnmatchcase(part, pat):
+        match_is_absolute = False
+        if drv or root:
+            if len(pat_parts) == 1 and len(parts) == 1:
+                # We've already matched drv and root, and that's all we have, so we've matched.
+                return True
+            parts = parts[1:]
+            pat_parts = pat_parts[1:]
+            match_is_absolute = True
+        return self._apply_match(parts, pat_parts, match_is_absolute)
+
+    @classmethod
+    def _apply_match(cls, parts, pat_parts, match_is_absolute):
+        parts_matched = 0
+        pat_parts_matched = 0
+        while parts_matched < len(parts) and pat_parts_matched < len(pat_parts):
+            pat = pat_parts[-(pat_parts_matched + 1)]
+            if pat == '**':
+                # ** can match nothing, or it can consume any number of elements.
+                # There may be more pattern parts preceding the **. If so, make sure they
+                # match the remaining path parts.
+                remaining_parts = parts[:-parts_matched] if parts_matched else parts
+                remaining_pat_parts = pat_parts[:-(pat_parts_matched + 1)]
+                if cls._apply_match(remaining_parts, remaining_pat_parts, match_is_absolute):
+                    return True
+                else:
+                    # The rest of the pattern did not match from the current position.
+                    # Try the rest of the pattern against the next position.
+                    parts_matched += 1
+            elif fnmatch.fnmatchcase(parts[-(parts_matched + 1)], pat):
+                parts_matched += 1
+                pat_parts_matched += 1
+            else:
+                # The current part does not match; we're done.
                 return False
-        return True
+        # Consume any remaining ** pattern parts (they match nothing).
+        while pat_parts_matched < len(pat_parts) and pat_parts[-(pat_parts_matched + 1)] == '**':
+            pat_parts_matched += 1
+        return pat_parts_matched == len(pat_parts) and \
+            (parts_matched == len(parts) if match_is_absolute else True)
 
 
 class PurePosixPath(PurePath):
@@ -1277,4 +1319,3 @@ class PosixPath(Path, PurePosixPath):
 
 class WindowsPath(Path, PureWindowsPath):
     __slots__ = ()
-
