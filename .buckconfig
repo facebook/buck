@@ -15,6 +15,7 @@
       .git, \
       .buckd, \
       build, \
+      bin, \
       src/com/facebook/buck/cli/quickstart, \
       test/com/facebook/buck/android/testdata, \
       test/com/facebook/buck/cli/testdata, \

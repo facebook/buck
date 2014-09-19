@@ -66,6 +66,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
       "src/com/facebook/buck/parser/buck.py");
 
+  private static final Path PATH_TO_PATHLIB_PY = Paths.get(
+      System.getProperty(
+          "buck.path_to_pathlib_py",
+          "third-party/py/pathlib/pathlib.py"));
+
   private static final Logger LOG = Logger.get(ProjectBuildFileParser.class);
 
   private final ImmutableMap<String, String> environment;
@@ -166,6 +171,14 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ProcessBuilder processBuilder = new ProcessBuilder(buildArgs());
     processBuilder.environment().clear();
     processBuilder.environment().putAll(environment);
+    String pythonPath = environment.get("PYTHONPATH");
+    String pathlibPyDir = PATH_TO_PATHLIB_PY.getParent().toString();
+    if (pythonPath == null) {
+      pythonPath = pathlibPyDir;
+    } else {
+      pythonPath = pythonPath + ":" + pathlibPyDir;
+    }
+    processBuilder.environment().put("PYTHONPATH", pythonPath);
 
     LOG.debug(
         "Starting buck.py command: %s environment: %s",

@@ -1,0 +1,6 @@
+python_library(
+    name='pathlib',
+    srcs=['pathlib.py'],
+    base_module='',
+    visibility=['PUBLIC'],
+)

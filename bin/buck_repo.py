@@ -71,6 +71,7 @@ BUCK_DIR_JAVA_ARGS = {
     "path_to_asm_jar": "third-party/java/asm/asm-debug-all-4.1.jar",
     "logging_config_file": "config/logging.properties",
     "path_to_buck_py": "src/com/facebook/buck/parser/buck.py",
+    "path_to_pathlib_py": "third-party/py/pathlib/pathlib.py",
 
     "path_to_compile_asset_catalogs_py":
     "src/com/facebook/buck/apple/compile_asset_catalogs.py",

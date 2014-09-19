@@ -83,6 +83,9 @@ python_library(
   srcs = [
     'buck.py',
   ],
+  deps = [
+    '//third-party/py/pathlib:pathlib',
+  ]
 )
 
 python_test(
@@ -93,5 +96,6 @@ python_test(
   ],
   deps = [
     ':buck',
+    '//third-party/py/pathlib:pathlib',
   ],
 )

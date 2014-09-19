@@ -7,7 +7,9 @@ import functools
 import glob as glob_module
 import imp
 import inspect
+import itertools
 import json
+from pathlib import Path
 import optparse
 import os
 import os.path
@@ -113,246 +115,50 @@ def add_rule(rule, build_env):
     build_env.rules[rule_name] = rule
 
 
-def split_path(path):
-    """Splits /foo/bar/baz.java into ['', 'foo', 'bar', 'baz.java']."""
-    return path.split('/')
-
-
-def well_formed_tokens(tokens):
-    """Verify that a tokenized path contains no empty token."""
-    return all(tokens)
-
-
-def path_join(path, element):
-    """Add a new path element to a path.
-
-    This method assumes None encodes the empty path.
-    """
-    if path is None:
-        return element
-    return path + os.path.sep + element
-
-
-def glob_walk_internal(
-        normpath_join, iglob, isresult, visited, tokens, path, normpath):
-    """Recursive routine for glob_walk.
-
-    'visited' is initially the empty set.
-    'tokens' is the list of glob elements yet to be traversed, e.g.
-        ['**', '*.java'].
-    'path', initially None, is the path being constructed.
-    'normpath', initially os.path.realpath(root), is the os.path.realpath()-
-        normalization of the path being constructed.
-    'normpath_join(normpath, element)' is the os.path.realpath()-normalization
-        of path_join(normpath, element)
-    'iglob(pattern)' should behave like glob.iglob if 'path' were relative to
-        the current directory
-    'isresult(path)' should verify that path is valid as a result (typically
-        calls os.path.isfile)
-    """
-    # Base case.
-    if not tokens:
-        if isresult(path):
-            yield path
-        return
-
-    token = tokens[0]
-    next_tokens = tokens[1:]
-
-    # Special base case of ['**'].
-    if token == '**' and not next_tokens:
-        if isresult(path):
-            yield path
-        # Continue for the non-base case.
-
-    # Except for the base cases above, refuse to visit twice the same
-    # normalized path with the same tokens.
-    # This is necessary for termination in case of symlinks.
-    key = (tuple(tokens), normpath)
-    if key in visited:
-        return
-    visited.add(key)
-
-    path_and_sep_len = len(path) + 1 if path is not None else 0
-
-    # Special glob token, equivalent to zero or more consecutive '*'
-    if token == '**':
-        # The base case of ['**'] was handled above.
-        if next_tokens:
-            for x in glob_walk_internal(
-                    normpath_join, iglob, isresult,
-                    visited, next_tokens, path,
-                    normpath):
-                yield x
-        for child in iglob(path_join(path, '*')):
-            for x in glob_walk_internal(
-                    normpath_join, iglob, isresult,
-                    visited, tokens, child,
-                    normpath_join(normpath, child[path_and_sep_len:])):
-                yield x
-
-    # Usual glob pattern (normal case).
-    elif next_tokens:
-        for child in iglob(path_join(path, token)):
-            for x in glob_walk_internal(
-                    normpath_join, iglob, isresult,
-                    visited, next_tokens, child,
-                    normpath_join(normpath, child[path_and_sep_len:])):
-                yield x
-    # Usual glob pattern (optimized when there are no next tokens).
-    else:
-        for child in iglob(path_join(path, token)):
-            for x in glob_walk_internal(
-                    normpath_join, iglob, isresult,
-                    visited, None, child, None):
-                yield x
-
-
-def glob_walk(pattern, root, include_dotfiles=False):
-    """Walk the path hierarchy, following symlinks, and emit relative paths to
-    plain files matching 'pattern'.
-
-    Patterns can be any combination of chars recognized by shell globs.
-    The special path token '**' expands to zero or more consecutive '*'.
-    E.g. '**/foo.java' will match the union of 'foo.java', '*/foo.java.',
-    '*/*/foo.java', etc.
-
-    Names starting with dots will not be matched by '?', '*' and '**' unless
-    include_dotfiles=True
-    """
-    # os.path.realpath()-normalized version of path_join
-    def normpath_join(normpath, element):
-        newpath = normpath + os.path.sep + element
-        if os.path.islink(newpath):
-            return os.path.realpath(newpath)
-        else:
-            return newpath
-
-    # Relativized version of glob.iglob
-    # Note that glob.iglob already optimizes paths with no special char.
-    root_len = len(os.path.join(root, ''))
-    special_rules_for_dots = (
-        ((r'^\*', '.*'), (r'^\?', '.'), (r'/\*', '/.*'), (r'/\?', '/.'))
-        if include_dotfiles else [])
-
-    def iglob(pattern):
-        for p in glob_module.iglob(os.path.join(root, pattern)):
-            yield p[root_len:]
-        # Additional pass for dots.
-        # Note that there is at most one occurrence of one problematic pattern.
-        for rule in special_rules_for_dots:
-            special = re.sub(rule[0], rule[1], pattern, count=1)
-            # Using pointer equality for speed:
-            # http://docs.python.org/2.7/library/re.html#re.sub
-            if special is not pattern:
-                for p in glob_module.iglob(os.path.join(root, special)):
-                    yield p[root_len:]
-                break
-
-    # Relativized version of os.path.isfile
-    def isresult(path):
-        if path is None:
-            return False
-        return os.path.isfile(os.path.join(root, path))
-
-    visited = set()
-    tokens = split_path(pattern)
-    assert well_formed_tokens(tokens), (
-        "Glob patterns cannot be empty, start or end with a slash, or contain "
-        "consecutive slashes.")
-    return glob_walk_internal(
-        normpath_join, iglob, isresult, visited, tokens, None,
-        os.path.realpath(root))
-
-
-def glob_match_internal(include_dotfiles, tokens, chunks):
-    """Recursive routine for glob_match.
-
-    Works as glob_walk_internal but on a linear path instead of some
-    filesystem.
-    """
-    # Base case(s).
-    if not tokens:
-        return True if not chunks else False
-    token = tokens[0]
-    next_tokens = tokens[1:]
-    if not chunks:
-        return (glob_match_internal(include_dotfiles, next_tokens, chunks)
-                if token == '**' else False)
-    chunk = chunks[0]
-    next_chunks = chunks[1:]
-
-    # Plain name (possibly empty)
-    if not glob_module.has_magic(token):
-        return (
-            token == chunk and
-            glob_match_internal(include_dotfiles, next_tokens, next_chunks))
-
-    # Special glob token.
-    elif token == '**':
-        if glob_match_internal(include_dotfiles, next_tokens, chunks):
-            return True
-        # Simulate glob pattern '*'
-        if not include_dotfiles and chunk and chunk[0] == '.':
-            return False
-        return glob_match_internal(include_dotfiles, tokens, next_chunks)
-
-    # Usual glob pattern.
-    else:
-        # We use the same internal library fnmatch as the original code:
-        #    http://hg.python.org/cpython/file/2.7/Lib/glob.py#l76
-        # TODO(user): to match glob.glob, '.*' should not match '.'
-        # or '..'
-        if (not include_dotfiles and
-                token[0] != '.' and
-                chunk and
-                chunk[0] == '.'):
-            return False
-        return (
-            fnmatch.fnmatch(chunk, token) and
-            glob_match_internal(include_dotfiles, next_tokens, next_chunks))
-
-
-def glob_match(pattern, path, include_dotfiles=False):
-    """Checks if a given (non necessarily existing) path matches a 'pattern'.
-
-    Patterns can include the same special tokens as glob_walk.
-    Paths and patterns are seen as a list of path elements delimited by '/'.
-    E.g. '/' does not match '', but '*' does.
-    """
-    tokens = split_path(pattern)
-    chunks = split_path(path)
-    return glob_match_internal(include_dotfiles, tokens, chunks)
-
-
 @provide_for_build
 def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
     assert build_env.type == BuildContextType.BUILD_FILE, (
         "Cannot use `glob()` at the top-level of an included file.")
 
-    search_base = build_env.dirname
+    search_base = Path(build_env.dirname)
+    return glob_internal(includes, excludes, include_dotfiles, search_base)
 
+
+def glob_internal(includes, excludes, include_dotfiles, search_base):
     # Ensure the user passes lists of strings rather than just a string.
     assert not isinstance(includes, basestring), \
         "The first argument to glob() must be a list of strings."
     assert not isinstance(excludes, basestring), \
         "The excludes argument must be a list of strings."
 
-    paths = set()
-    for pattern in includes:
-        for path in glob_walk(
-                pattern, search_base, include_dotfiles=include_dotfiles):
-            paths.add(path)
+    def includes_iterator():
+        for pattern in includes:
+            for path in search_base.glob(pattern):
+                # TODO(user): Handle hidden files on Windows.
+                if path.is_file() and (include_dotfiles or not path.name.startswith('.')):
+                    yield path.relative_to(search_base)
+
+    def is_special(pat):
+        return "*" in pat or "?" in pat or "[" in pat
+
+    non_special_excludes = set()
+    match_excludes = set()
+    for pattern in excludes:
+        if is_special(pattern):
+            match_excludes.add(pattern)
+        else:
+            non_special_excludes.add(pattern)
 
     def exclusion(path):
-        exclusions = (
-            e for e in excludes
-            if glob_match(e, path, include_dotfiles=include_dotfiles))
-        return next(exclusions, None)
+        if str(path) in non_special_excludes:
+            return True
+        for pattern in match_excludes:
+            result = path.match(pattern, match_entire=True)
+            if result:
+                return True
+        return False
 
-    paths = [p for p in paths if not exclusion(p)]
-    paths.sort()
-    return paths
+    return sorted(set([str(p) for p in includes_iterator() if not exclusion(p)]))
 
 
 @provide_for_build

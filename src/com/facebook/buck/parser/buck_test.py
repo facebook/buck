@@ -1,16 +1,34 @@
-from buck import LazyBuildEnvPartial
-from buck import split_path
-from buck import glob_walk_internal
-from buck import glob_walk
-from buck import glob_match
-from buck import path_join
-from buck import glob_module
-import fnmatch
-import unittest
-import re
+from buck import glob_internal, LazyBuildEnvPartial
+from pathlib import Path, PurePosixPath
 import os
-import posixpath
+import shutil
+import sys
+import tempfile
+import unittest
 
+
+class FakePath(PurePosixPath):
+    def glob(self, pattern):
+        return self.glob_results.get(pattern)
+
+    def is_file(self):
+        return True
+
+
+def fake_path(path, glob_results={}):
+    # Path does magic in __new__ with its args; it's hard to add more without
+    # changing that class. So we use a wrapper function to diddle with
+    # FakePath's members.
+    result = FakePath(path)
+    result.glob_results = {}
+    for pattern, paths in glob_results.iteritems():
+        result.glob_results[pattern] = [result / FakePath(p) for p in paths]
+    return result
+
+
+def split_path(path):
+    """Splits /foo/bar/baz.java into ['', 'foo', 'bar', 'baz.java']."""
+    return path.split('/')
 
 class TestBuck(unittest.TestCase):
 
@@ -23,240 +41,135 @@ class TestBuck(unittest.TestCase):
             split_path('foo/bar/baz.java'))
         self.assertEqual(['', 'foo', 'bar', ''], split_path('/foo/bar/'))
 
-    def glob_match_using_glob_walk(self, pattern_to_test, path_to_test,
-                                   include_dotfiles=False):
-        chunks = split_path(path_to_test)
-        # Simulate a "file system" with only one path, that is path_to_test
-        # Note: for the purpose of simulating glob_match, we do not treat empty
-        # names as special.
-
-        def iglob(pattern):
-            tokens = split_path(pattern)
-            n = len(tokens)
-            self.assertTrue(n > 0)
-            if n > len(chunks):
-                return
-            self.assertEqual(chunks[:n - 1], tokens[:n - 1])
-            token = tokens[n - 1]
-            chunk = chunks[n - 1]
-            if (not include_dotfiles and (not token or token[0] != '.') and
-                    chunk and chunk[0] == '.'):
-                return
-            if fnmatch.fnmatch(chunk, token):
-                yield os.path.sep.join(chunks[:n])
-
-        def isresult(path):
-            if path is None:
-                return False
-            return path_to_test == path
-
-        visited = set()
-        tokens = split_path(pattern_to_test)
-        return next(glob_walk_internal(
-            path_join,
-            iglob,
-            isresult,
-            visited,
-            tokens,
-            None,
-            None), None) is not None
-
-    def run_test_glob_match_both_ways(self, result, pattern, path,
-                                      include_dotfiles=False):
+    def test_glob_includes_simple(self):
+        search_base = fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', 'B.java']})
         self.assertEqual(
-            result,
-            glob_match(pattern, path, include_dotfiles=include_dotfiles),
-            "glob_match('%s', '%s', include_dotfiles=%s) should be %s" % (
-                pattern, path, include_dotfiles, result))
+            ['A.java', 'B.java'],
+            glob_internal(
+                includes=['*.java'],
+                excludes=[],
+                include_dotfiles=False,
+                search_base=search_base))
+
+    def test_glob_includes_sort(self):
+        search_base = fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', 'E.java', 'D.java', 'C.java', 'B.java']})
         self.assertEqual(
-            result,
-            self.glob_match_using_glob_walk(
-                pattern, path, include_dotfiles=include_dotfiles),
-            "glob_match_using_glob_walk('%s', '%s', include_dotfiles=%s) "
-            "should be %s" % (pattern, path, include_dotfiles, result))
+            ['A.java', 'B.java', 'C.java', 'D.java', 'E.java'],
+            glob_internal(
+                includes=['*.java'],
+                excludes=[],
+                include_dotfiles=False,
+                search_base=search_base))
 
-    def test_glob_match_simple(self):
-        patterns = ['', '/', 'src', '/src', 'foo/bar', 'foo//bar', 'foo/bar/']
-        for pattern in patterns:
-            for path in patterns:
-                self.run_test_glob_match_both_ways(
-                    pattern == path, pattern, path)
+    def test_glob_includes_multi(self):
+        search_base = fake_path(
+            'foo',
+            glob_results={
+                'bar/*.java': ['bar/A.java', 'bar/B.java'],
+                'baz/*.java': ['baz/C.java', 'baz/D.java'],
+            })
+        self.assertEqual(
+            ['bar/A.java', 'bar/B.java', 'baz/C.java', 'baz/D.java'],
+            glob_internal(
+                includes=['bar/*.java', 'baz/*.java'],
+                excludes=[],
+                include_dotfiles=False,
+                search_base=search_base))
 
-    def test_glob_match_simple_glob(self):
-        pattern = '*'
-        self.run_test_glob_match_both_ways(True, pattern, '')
-        self.run_test_glob_match_both_ways(False, pattern, '/')
-        self.run_test_glob_match_both_ways(True, pattern, 'src')
-        self.run_test_glob_match_both_ways(False, pattern, '/src')
+    def test_glob_excludes_double_star(self):
+        search_base = fake_path(
+            'foo',
+            glob_results={
+                '**/*.java': ['A.java', 'B.java', 'Test.java'],
+            })
+        self.assertEqual(
+            ['A.java', 'B.java'],
+            glob_internal(
+                includes=['**/*.java'],
+                excludes=['**/*Test.java'],
+                include_dotfiles=False,
+                search_base=search_base))
 
-    def test_glob_match_simple_slash_glob(self):
-        pattern = '/*'
-        self.run_test_glob_match_both_ways(False, pattern, '')
-        self.run_test_glob_match_both_ways(True, pattern, '/')
-        self.run_test_glob_match_both_ways(False, pattern, 'src')
-        self.run_test_glob_match_both_ways(True, pattern, '/src')
+    def test_glob_excludes_multi(self):
+        search_base = fake_path(
+            'foo',
+            glob_results={
+                'bar/*.java': ['bar/A.java', 'bar/B.java'],
+                'baz/*.java': ['baz/C.java', 'baz/D.java'],
+            })
+        self.assertEqual(
+            ['bar/B.java', 'baz/D.java'],
+            glob_internal(
+                includes=['bar/*.java', 'baz/*.java'],
+                excludes=['*/[AC].java'],
+                include_dotfiles=False,
+                search_base=search_base))
 
-    def test_glob_match_simple_double_star(self):
-        pattern = '**'
-        self.run_test_glob_match_both_ways(True, pattern, '')
-        self.run_test_glob_match_both_ways(True, pattern, '/')
-        self.run_test_glob_match_both_ways(True, pattern, 'src')
-        self.run_test_glob_match_both_ways(True, pattern, '/src')
+    def test_glob_excludes_relative(self):
+        search_base = fake_path(
+            'foo',
+            glob_results={
+                '**/*.java': ['foo/A.java', 'foo/bar/B.java', 'bar/C.java'],
+            })
+        self.assertEqual(
+            ['foo/A.java', 'foo/bar/B.java'],
+            glob_internal(
+                includes=['**/*.java'],
+                excludes=['bar/*.java'],
+                include_dotfiles=False,
+                search_base=search_base))
 
-    def test_glob_match_simple_slash_double_star(self):
-        pattern = '/**'
-        self.run_test_glob_match_both_ways(True, pattern, '')
-        self.run_test_glob_match_both_ways(True, pattern, '/')
-        self.run_test_glob_match_both_ways(False, pattern, 'src')
-        self.run_test_glob_match_both_ways(True, pattern, '/src')
+    def test_glob_includes_skips_dotfiles(self):
+        search_base = fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', '.B.java']})
+        self.assertEqual(
+            ['A.java'],
+            glob_internal(
+                includes=['*.java'],
+                excludes=[],
+                include_dotfiles=False,
+                search_base=search_base))
 
-    def test_glob_match_double_star(self):
-        pattern = 'src/**/*.java'
-        self.run_test_glob_match_both_ways(True, pattern, 'src/Foo.java')
-        self.run_test_glob_match_both_ways(False, pattern, '/src/Foo.java')
-        self.run_test_glob_match_both_ways(False, pattern, 'src/Foodjava')
-        self.run_test_glob_match_both_ways(
-            True, pattern, 'src/com/facebook/Foo.java')
-        self.run_test_glob_match_both_ways(
-            False, pattern, 'src/com/facebook/Foodjava')
+    def test_glob_includes_does_not_skip_dotfiles_if_include_dotfiles(self):
+        search_base = fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', '.B.java']})
+        self.assertEqual(
+            ['.B.java', 'A.java'],
+            glob_internal(
+                includes=['*.java'],
+                excludes=[],
+                include_dotfiles=True,
+                search_base=search_base))
 
-    def test_glob_match_single_star(self):
-        client_src = 'src/com/facebook/bookmark/client/*.java'
-        self.run_test_glob_match_both_ways(
-            True,
-            client_src,
-            'src/com/facebook/bookmark/client/BookmarkClient.java')
-        self.run_test_glob_match_both_ways(
-            False,
-            client_src,
-            'src/com/facebook/bookmark/client/util/Util.java')
-
-    def test_glob_match_single_star_no_directory_prefix(self):
-        star_dot_java = '*.java'
-        self.run_test_glob_match_both_ways(True, star_dot_java, 'Main.java')
-        self.run_test_glob_match_both_ways(
-            False, star_dot_java, 'com/example/Main.java')
-
-    def test_glob_match_double_star_no_subdir(self):
-        all_java_tests = '**/*Test.java'
-        self.run_test_glob_match_both_ways(False, all_java_tests, 'Main.java')
-        self.run_test_glob_match_both_ways(
-            True, all_java_tests, 'MainTest.java')
-        self.run_test_glob_match_both_ways(
-            False, all_java_tests, 'com/example/Main.java')
-        self.run_test_glob_match_both_ways(
-            True, all_java_tests, 'com/example/MainTest.java')
-
-    def test_glob_match_ignores_dot_files_and_dirs_by_default(self):
-        all_java_tests = '**/*Test.java'
-        self.run_test_glob_match_both_ways(
-            True, all_java_tests, 'path/to/MyJavaTest.java')
-        self.run_test_glob_match_both_ways(
-            False, all_java_tests, 'path/to/.MyJavaTest.java')
-        self.run_test_glob_match_both_ways(
-            False, all_java_tests, 'path/.to/MyJavaTest.java')
-        # The following case does not match any more.
-        # For simplicity of the semantics, normalization should be done
-        # outside the matching function.
-        self.run_test_glob_match_both_ways(
-            False, all_java_tests, './path/to/MyJavaTest.java')
-
-    def test_glob_match_can_include_dot_files_and_dirs(self):
-        all_java_tests = '**/*Test.java'
-        self.run_test_glob_match_both_ways(
-            True,
-            all_java_tests,
-            'path/to/MyJavaTest.java',
-            include_dotfiles=True)
-        self.run_test_glob_match_both_ways(
-            True,
-            all_java_tests,
-            'path/to/.MyJavaTest.java',
-            include_dotfiles=True)
-        self.run_test_glob_match_both_ways(
-            True,
-            all_java_tests,
-            'path/.to/MyJavaTest.java',
-            include_dotfiles=True)
-        self.run_test_glob_match_both_ways(
-            True,
-            all_java_tests,
-            './path/to/MyJavaTest.java',
-            include_dotfiles=True)
-
-    def test_symlink_aware_glob_walk(self):
-        real_iglob = glob_module.iglob
-        real_islink = os.path.islink
-        real_isfile = os.path.isfile
-        real_realpath = os.path.realpath
-
-        # a/
-        #  b/
-        #   c/
-        #    file
-        #    file2 -> file
-        #    .file
-        #   sibling -> c
-        #   ancestor -> ../..
-        all_paths = [
-            'a',
-            'a/b',
-            'a/b/c',
-            'a/b/c/file',
-            'a/b/c/file2',
-            'a/b/c/.file',
-            'a/b/sibling',
-            'a/b/ancestor',
-        ]
-
-        def mock_iglob(pattern):
-            for path in all_paths:
-                if glob_match(pattern, path):
-                    yield path
-
-        def mock_realpath(path):
-            if path == 'a/b/sibling':
-                return 'a/b/c'
-            if path == 'a/b/ancestor':
-                return 'a'
-            if path == 'a/b/c/file2':
-                return 'a/b/c/file'
-            if path == 'a':
-                return path
-            self.fail('glob_walk should only call realpath on the root'
-                      ' or on symlinks (was called on "%s").' % path)
-
-        def mock_islink(path):
-            return (path == 'a/b/sibling' or path == 'a/b/ancestor'
-                    or path == 'a/b/c/file2')
-
-        def mock_isfile(path):
-            return (path == 'a/b/c/file' or path == 'a/b/c/file2'
-                    or path == 'a/b/c/.file')
-
+    def test_glob_double_star_integration(self):
+        d = tempfile.mkdtemp()
         try:
-            glob_module.iglob = mock_iglob
-            os.path.islink = mock_islink
-            os.path.isfile = mock_isfile
-            os.path.realpath = mock_realpath
-
-            # Symlinked directories do not cause loop or duplicated results.
-            # Symlinked files are allowed to duplicate results.
-            # By default, dot files are ignored.
-            result = [p for p in glob_walk('**', 'a')]
-            self.assertEqual(['b/c/file', 'b/c/file2'], result)
-
-            result = [p for p in glob_walk('**/*', 'a')]
-            self.assertEqual(['b/c/file', 'b/c/file2'], result)
-
-            result = [p for p in glob_walk('*/*/*', 'a')]
-            self.assertEqual(['b/c/file', 'b/c/file2'], result)
-
+            subdir = os.path.join(d, 'b', 'a', 'c', 'a')
+            os.makedirs(subdir)
+            f = open(os.path.join(subdir, 'A.java'), 'w')
+            f.close()
+            f = open(os.path.join(subdir, 'B.java'), 'w')
+            f.close()
+            f = open(os.path.join(subdir, 'Test.java'), 'w')
+            f.close()
+            f = open(os.path.join(subdir, '.tmp.java'), 'w')
+            f.close()
+            os.makedirs(os.path.join(subdir, 'NotAFile.java'))
+            self.assertEqual(
+                ['b/a/c/a/A.java', 'b/a/c/a/B.java'],
+                glob_internal(
+                    includes=['b/a/**/*.java'],
+                    excludes=['**/*Test.java'],
+                    include_dotfiles=False,
+                    search_base=Path(d)))
         finally:
-            glob_module.iglob = real_iglob
-            os.path.islink = real_islink
-            os.path.isfile = real_isfile
-            os.path.realpath = real_realpath
+            shutil.rmtree(d)
 
     def test_lazy_build_env_partial(self):
         def cobol_binary(
