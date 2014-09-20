@@ -9167,7 +9167,7 @@ base.exportTo('ui', function() {
           ui.Overlay.prototype.onVisibleChange_.bind(this), true);
 
       // Setup the shadow root
-      this.shadow_ = this.webkitCreateShadowRoot();
+      this.shadow_ = this.createShadowRoot();
       this.shadow_.appendChild(base.instantiateTemplate('#overlay-template'));
 
       this.closeBtn_ = this.shadow_.querySelector('close-button');
@@ -28461,7 +28461,7 @@ base.exportTo('tracing', function() {
     __proto__: HTMLUnknownElement.prototype,
 
     decorate: function() {
-      var shadow = this.webkitCreateShadowRoot();
+      var shadow = this.createShadowRoot();
       shadow.applyAuthorStyles = true;
       shadow.resetStyleInheritance = true;
 
