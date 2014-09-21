@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import ctypes
-import os
 import platform
+import sys
 
 
 def monotonic_time_nanos():
@@ -60,3 +60,13 @@ elif platform.system() == 'Windows':
         ctypes.windll.kernel32.QueryPerformanceCounter(ctypes.byref(perf_counter))
         return perf_counter.value * NSEC_PER_SEC / perf_frequency.value
     monotonic_time_nanos = _monotonic_time_nanos_windows
+elif sys.platform == 'cygwin':
+    k32 = ctypes.CDLL('Kernel32', use_errno=True)
+    perf_frequency = ctypes.c_uint64()
+    k32.QueryPerformanceFrequency(ctypes.byref(perf_frequency))
+
+    def _monotonic_time_nanos_cygwin():
+        perf_counter = ctypes.c_uint64()
+        k32.QueryPerformanceCounter(ctypes.byref(perf_counter))
+        return perf_counter.value * NSEC_PER_SEC / perf_frequency.value
+    monotonic_time_nanos = _monotonic_time_nanos_cygwin
