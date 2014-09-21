@@ -63,6 +63,15 @@ compiled class files and resources.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'exported_deps' /}
+  {param default : '[]' /}
+  {param desc}
+  This is the same as in <a href="java_library.html"><code>java_library
+  </code></a>.
+  {/param}
+{/call}
+
 {call buck.visibility_arg /}
 
 {/param} // args
