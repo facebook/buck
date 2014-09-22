@@ -93,6 +93,9 @@ GC_MAX_PAUSE_TARGET = 15000
 
 BUCKD_LOG_FILE_PATTERN = re.compile('^NGServer.* port (\d+)\.$')
 NAILGUN_CONNECTION_REFUSED_CODE = 230
+# TODO(natthu): CI servers, for some reason, encounter this error.
+# For now, simply skip this error. Need to figure out why this happens.
+NAILGUN_UNEXPECTED_CHUNK_TYPE = 229
 NAILGUN_CONNECTION_BROKEN_CODE = 227
 
 
@@ -284,8 +287,10 @@ class BuckRepo:
                             cwd=self._buck_project.root,
                             stderr=subprocess.STDOUT)
                     except subprocess.CalledProcessError as e:
-                        if (e.returncode != NAILGUN_CONNECTION_REFUSED_CODE and
-                                e.returncode != NAILGUN_CONNECTION_BROKEN_CODE):
+                        if (e.returncode not in
+                                [NAILGUN_CONNECTION_REFUSED_CODE,
+                                    NAILGUN_CONNECTION_BROKEN_CODE,
+                                    NAILGUN_UNEXPECTED_CHUNK_TYPE]):
                             print(e.output, file=sys.stderr)
                             raise
 
