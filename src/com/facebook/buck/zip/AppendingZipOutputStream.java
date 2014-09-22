@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 
+import javax.annotation.Nullable;
+
 /**
  * A drop-in replacement for (@link java.util.zip.ZipOutStream} that supports the ability to set a
  * compression level and allows multiple entries with the same name.
@@ -45,7 +47,7 @@ class AppendingZipOutputStream extends CustomZipOutputStream {
   private final Clock clock;
   private long currentOffset = 0;
   private List<EntryAccounting> entries = Lists.newLinkedList();
-  private EntryAccounting currentEntry = null;
+  @Nullable private EntryAccounting currentEntry = null;
 
   private Set<String> seenNames = Sets.newHashSet();
 
@@ -59,6 +61,7 @@ class AppendingZipOutputStream extends CustomZipOutputStream {
 
   @Override
   protected void actuallyWrite(byte[] b, int off, int len) throws IOException {
+    Preconditions.checkNotNull(currentEntry);
     currentOffset += currentEntry.write(delegate, b, off, len);
   }
 

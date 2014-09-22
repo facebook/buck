@@ -12,6 +12,7 @@ java_library(
   ],
   deps = [
     '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:exceptions',
   ],
