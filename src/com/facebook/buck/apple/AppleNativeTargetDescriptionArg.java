@@ -41,6 +41,7 @@ public class AppleNativeTargetDescriptionArg implements ConstructorArg {
           ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>> configs;
   public Optional<ImmutableList<AppleSource>> srcs;
   public Optional<ImmutableSortedSet<String>> frameworks;
+  public Optional<ImmutableSortedSet<String>> weakFrameworks;
   public Optional<ImmutableSortedSet<BuildRule>> deps;
   public Optional<String> gid;
   public Optional<String> headerPathPrefix;

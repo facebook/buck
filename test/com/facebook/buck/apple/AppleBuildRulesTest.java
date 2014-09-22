@@ -79,6 +79,7 @@ public class AppleBuildRulesTest {
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.deps = Optional.absent();
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
@@ -141,6 +142,7 @@ public class AppleBuildRulesTest {
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     arg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    arg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
@@ -174,6 +176,7 @@ public class AppleBuildRulesTest {
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.deps = Optional.absent();
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
@@ -212,6 +215,7 @@ public class AppleBuildRulesTest {
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     rootArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     rootArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    rootArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     rootArg.deps = Optional.of(ImmutableSortedSet.of(bundleRule, libraryRule));
     rootArg.gid = Optional.absent();
     rootArg.headerPathPrefix = Optional.absent();

@@ -34,6 +34,7 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
   private final ImmutableList<GroupedSource> srcs;
   private final ImmutableMap<SourcePath, String> perFileFlags;
   private final ImmutableSortedSet<String> frameworks;
+  private final ImmutableSortedSet<String> weakFrameworks;
   private final Optional<String> gid;
   private final Optional<String> headerPathPrefix;
   private final boolean useBuckHeaderMaps;
@@ -45,6 +46,7 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
     super(params, targetSources.srcPaths, targetSources.headerPaths, targetSources.perFileFlags);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs.get());
     frameworks = Preconditions.checkNotNull(arg.frameworks.get());
+    weakFrameworks = Preconditions.checkNotNull(arg.weakFrameworks.get());
     srcs = Preconditions.checkNotNull(targetSources.srcs);
     perFileFlags = Preconditions.checkNotNull(targetSources.perFileFlags);
     gid = Preconditions.checkNotNull(arg.gid);
@@ -78,6 +80,13 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
    */
   public ImmutableSortedSet<String> getFrameworks() {
     return frameworks;
+  }
+
+  /**
+   * Returns the set of frameworks to weak link with the target.
+   */
+  public ImmutableSortedSet<String> getWeakFrameworks() {
+    return weakFrameworks;
   }
 
   /**

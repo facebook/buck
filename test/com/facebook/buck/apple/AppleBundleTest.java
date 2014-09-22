@@ -49,6 +49,7 @@ public class AppleBundleTest {
     libraryArg.configs = Optional.of(
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
     libraryArg.useBuckHeaderMaps = Optional.absent();
@@ -84,6 +85,7 @@ public class AppleBundleTest {
     libraryArg.configs = Optional.of(
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.deps = Optional.absent();
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();

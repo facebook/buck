@@ -319,6 +319,7 @@ public class SchemeGeneratorTest {
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     testDepArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     testDepArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    testDepArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     testDepArg.deps = Optional.absent();
     testDepArg.gid = Optional.absent();
     testDepArg.headerPathPrefix = Optional.absent();
@@ -337,6 +338,7 @@ public class SchemeGeneratorTest {
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.deps = Optional.of(ImmutableSortedSet.of(testDepRule));
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
@@ -494,6 +496,7 @@ public class SchemeGeneratorTest {
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.deps = Optional.absent();
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
@@ -942,6 +945,7 @@ public class SchemeGeneratorTest {
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.deps = Optional.absent();
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
