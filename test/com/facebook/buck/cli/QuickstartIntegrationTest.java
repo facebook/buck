@@ -113,7 +113,6 @@ public class QuickstartIntegrationTest {
       Joiner.on('\n').join("//apps/myapp:app",
         "//apps/myapp:app#aapt_package",
         "//apps/myapp:app#dex_merge",
-        "//apps/myapp:app#uber_r_dot_java",
         "//apps/myapp:debug_keystore",
         "//apps/myapp:project_config",
         "//java/com/example/activity:activity",

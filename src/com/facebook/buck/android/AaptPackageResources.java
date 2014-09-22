@@ -19,6 +19,12 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AaptPackageResources.BuildOutput;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
+import com.facebook.buck.dalvik.EstimateLinearAllocStep;
+import com.facebook.buck.java.AccumulateClassNamesStep;
+import com.facebook.buck.java.HasJavaClassHashes;
+import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.java.JavacStep;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -32,6 +38,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -46,7 +53,10 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -54,6 +64,8 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,30 +73,49 @@ import java.util.Set;
  * Packages the resources using {@code aapt}.
  */
 public class AaptPackageResources extends AbstractBuildRule
-    implements InitializableFromDisk<BuildOutput> {
+    implements InitializableFromDisk<BuildOutput>, HasJavaClassHashes {
 
   public static final String RESOURCE_PACKAGE_HASH_KEY = "resource_package_hash";
+  public static final String R_DOT_JAVA_LINEAR_ALLOC_SIZE = "r_dot_java_linear_alloc_size";
+
+  /** Options to use with {@link com.facebook.buck.android.DxStep} when dexing R.java. */
+  public static final EnumSet<DxStep.Option> DX_OPTIONS = EnumSet.of(
+      DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
+      DxStep.Option.RUN_IN_PROCESS,
+      DxStep.Option.NO_OPTIMIZE);
 
   private final SourcePath manifest;
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final ImmutableSet<Path> assetsDirectories;
   private final PackageType packageType;
   private final ImmutableSet<TargetCpuType> cpuFilters;
+  private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
+  private final JavacOptions javacOptions;
+  private final boolean rDotJavaNeedsDexing;
+  private final boolean shouldBuildStringSourceMap;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   AaptPackageResources(
       BuildRuleParams params,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
+      ImmutableList<HasAndroidResourceDeps> resourceDeps,
       ImmutableSet<Path> assetsDirectories,
       PackageType packageType,
-      ImmutableSet<TargetCpuType> cpuFilters) {
+      ImmutableSet<TargetCpuType> cpuFilters,
+      JavacOptions javacOptions,
+      boolean rDotJavaNeedsDexing,
+      boolean shouldBuildStringSourceMap) {
     super(params);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
+    this.resourceDeps = Preconditions.checkNotNull(resourceDeps);
     this.assetsDirectories = Preconditions.checkNotNull(assetsDirectories);
     this.packageType = Preconditions.checkNotNull(packageType);
     this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
+    this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
+    this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
@@ -97,7 +128,9 @@ public class AaptPackageResources extends AbstractBuildRule
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
         .set("packageType", packageType.toString())
-        .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString());
+        .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
+        .set("rDotJavaNeedsDexing", rDotJavaNeedsDexing)
+        .set("shouldBuildStringSourceMap", shouldBuildStringSourceMap);
   }
 
   @Override
@@ -105,10 +138,64 @@ public class AaptPackageResources extends AbstractBuildRule
     return getResourceApkPath();
   }
 
+  public Optional<DexWithClasses> getRDotJavaDexWithClasses() {
+    Preconditions.checkState(rDotJavaNeedsDexing,
+        "Error trying to get R.java dex file: R.java is not supposed to be dexed.");
+
+    final Optional<Integer> linearAllocSizeEstimate =
+        buildOutputInitializer.getBuildOutput().rDotJavaDexLinearAllocEstimate;
+    if (!linearAllocSizeEstimate.isPresent()) {
+      return Optional.absent();
+    }
+
+    return Optional.<DexWithClasses>of(
+        new DexWithClasses() {
+          @Override
+          public Path getPathToDexFile() {
+            return getPathToRDotJavaDex();
+          }
+
+          @Override
+          public ImmutableSet<String> getClassNames() {
+            throw new RuntimeException(
+                "Since R.java is unconditionally packed in the primary dex, no" +
+                    "one should call this method.");
+          }
+
+          @Override
+          public Sha1HashCode getClassesHash() {
+            return Sha1HashCode.fromHashCode(
+                Hashing.combineOrdered(getClassNamesToHashes().values()));
+          }
+
+          @Override
+          public int getSizeEstimate() {
+            return linearAllocSizeEstimate.get();
+          }
+        });
+  }
+
+  @Override
+  public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
+    return buildOutputInitializer.getBuildOutput().rDotJavaClassesHash;
+  }
+
+  /**
+   * @return path to the directory where the {@code R.class} files can be found after this rule is
+   *     built.
+   */
+  public Path getPathToCompiledRDotJavaFiles() {
+    return BuildTargets.getBinPath(getBuildTarget(), "__%s_rdotjava_bin__");
+  }
+
+  public Path getPathToRDotTxtDir() {
+    return BuildTargets.getBinPath(getBuildTarget(), "__%s_res_symbols__");
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
-      BuildableContext buildableContext) {
+      final BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -167,12 +254,45 @@ public class AaptPackageResources extends AbstractBuildRule
 
     steps.add(new MkdirStep(getResourceApkPath().getParent()));
 
+    Path rDotTxtDir = getPathToRDotTxtDir();
+    steps.add(new MakeCleanDirectoryStep(rDotTxtDir));
+
     steps.add(new AaptStep(
         getAndroidManifestXml(),
         filteredResourcesProvider.getResDirectories(),
         assetsDirectory,
         getResourceApkPath(),
+        rDotTxtDir,
         packageType.isCrunchPngFiles()));
+
+    if (!filteredResourcesProvider.getResDirectories().isEmpty()) {
+      generateAndCompileRDotJavaFiles(steps, buildableContext);
+      if (rDotJavaNeedsDexing) {
+        Path rDotJavaDexDir = getPathToRDotJavaDexFiles();
+        steps.add(new MakeCleanDirectoryStep(rDotJavaDexDir));
+        steps.add(new DxStep(
+                getPathToRDotJavaDex(),
+                Collections.singleton(getPathToCompiledRDotJavaFiles()),
+                DX_OPTIONS));
+
+        final EstimateLinearAllocStep estimateLinearAllocStep = new EstimateLinearAllocStep(
+            getPathToCompiledRDotJavaFiles());
+        steps.add(estimateLinearAllocStep);
+
+        buildableContext.recordArtifact(getPathToRDotJavaDex());
+        steps.add(
+            new AbstractExecutionStep("record_build_output") {
+              @Override
+              public int execute(ExecutionContext context) {
+                buildableContext.addMetadata(
+                    R_DOT_JAVA_LINEAR_ALLOC_SIZE,
+                    estimateLinearAllocStep.get().toString());
+                return 0;
+              }
+            });
+      }
+    }
+
 
     buildableContext.recordArtifact(getAndroidManifestXml());
     buildableContext.recordArtifact(getResourceApkPath());
@@ -183,6 +303,59 @@ public class AaptPackageResources extends AbstractBuildRule
         buildableContext));
 
     return steps.build();
+  }
+
+  private void generateAndCompileRDotJavaFiles(
+      ImmutableList.Builder<Step> steps,
+      BuildableContext buildableContext) {
+    // Merge R.txt of HasAndroidRes and generate the resulting R.java files per package.
+    Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
+    steps.add(new MakeCleanDirectoryStep(rDotJavaSrc));
+
+    Path rDotTxtDir = getPathToRDotTxtDir();
+    MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
+        resourceDeps,
+        Optional.of(rDotTxtDir.resolve("R.txt")),
+        rDotJavaSrc);
+    steps.add(mergeStep);
+
+    if (shouldBuildStringSourceMap) {
+      // Make sure we have an output directory
+      Path outputDirPath = getPathForNativeStringInfoDirectory();
+      steps.add(new MakeCleanDirectoryStep(outputDirPath));
+
+      // Add the step that parses R.txt and all the strings.xml files, and
+      // produces a JSON with android resource id's and xml paths for each string resource.
+      GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
+          rDotTxtDir,
+          filteredResourcesProvider.getResDirectories(),
+          outputDirPath);
+      steps.add(genNativeStringInfo);
+
+      // Cache the generated strings.json file, it will be stored inside outputDirPath
+      buildableContext.recordArtifactsInDirectory(outputDirPath);
+    }
+
+    // Create the path where the R.java files will be compiled.
+    Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
+    steps.add(new MakeCleanDirectoryStep(rDotJavaBin));
+
+    JavacStep javac = UberRDotJavaUtil.createJavacStepForUberRDotJavaFiles(
+        mergeStep.getRDotJavaFiles(),
+        rDotJavaBin,
+        javacOptions,
+        getBuildTarget());
+    steps.add(javac);
+
+    Path rDotJavaClassesTxt = getPathToRDotJavaClassesTxt();
+    steps.add(new MakeCleanDirectoryStep(rDotJavaClassesTxt.getParent()));
+    steps.add(new AccumulateClassNamesStep(Optional.of(rDotJavaBin), rDotJavaClassesTxt));
+
+    // Ensure the generated R.txt, R.java, and R.class files are also recorded.
+    buildableContext.recordArtifactsInDirectory(rDotTxtDir);
+    buildableContext.recordArtifactsInDirectory(rDotJavaSrc);
+    buildableContext.recordArtifactsInDirectory(rDotJavaBin);
+    buildableContext.recordArtifact(rDotJavaClassesTxt);
   }
 
   /**
@@ -262,9 +435,17 @@ public class AaptPackageResources extends AbstractBuildRule
 
   static class BuildOutput {
     private final Sha1HashCode resourcePackageHash;
+    private final Optional<Integer> rDotJavaDexLinearAllocEstimate;
+    private final ImmutableSortedMap<String, HashCode> rDotJavaClassesHash;
 
-    BuildOutput(Sha1HashCode resourcePackageHash) {
+    BuildOutput(
+        Sha1HashCode resourcePackageHash,
+        Optional<Integer> rDotJavaDexLinearAllocEstimate,
+        ImmutableSortedMap<String, HashCode> rDotJavaClassesHash) {
       this.resourcePackageHash = Preconditions.checkNotNull(resourcePackageHash);
+      this.rDotJavaDexLinearAllocEstimate =
+          Preconditions.checkNotNull(rDotJavaDexLinearAllocEstimate);
+      this.rDotJavaClassesHash = Preconditions.checkNotNull(rDotJavaClassesHash);
     }
   }
 
@@ -275,11 +456,58 @@ public class AaptPackageResources extends AbstractBuildRule
         resourcePackageHash.isPresent(),
         "Should not be initializing %s from disk if the resource hash is not written.",
         getBuildTarget());
-    return new BuildOutput(resourcePackageHash.get());
+
+    ImmutableSortedMap<String, HashCode> classesHash = ImmutableSortedMap.of();
+    if (!filteredResourcesProvider.getResDirectories().isEmpty()) {
+      List<String> lines;
+      try {
+        lines = onDiskBuildInfo.getOutputFileContentsByLine(getPathToRDotJavaClassesTxt());
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+      classesHash = AccumulateClassNamesStep.parseClassHashes(lines);
+    }
+
+    Optional<String> linearAllocSizeValue = onDiskBuildInfo.getValue(R_DOT_JAVA_LINEAR_ALLOC_SIZE);
+    Optional<Integer> linearAllocSize = linearAllocSizeValue.isPresent()
+        ? Optional.of(Integer.parseInt(linearAllocSizeValue.get()))
+        : Optional.<Integer>absent();
+
+    return new BuildOutput(resourcePackageHash.get(), linearAllocSize, classesHash);
   }
 
   @Override
   public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
     return buildOutputInitializer;
+  }
+
+  private Path getPathToRDotJavaDexFiles() {
+    return BuildTargets.getBinPath(getBuildTarget(), "__%s_rdotjava_dex__");
+  }
+
+  private Path getPathToRDotJavaClassesTxt() {
+    return BuildTargets.getBinPath(getBuildTarget(), "__%s_rdotjava_classes__")
+        .resolve("classes.txt");
+  }
+
+  private Path getPathToRDotJavaDex() {
+    return getPathToRDotJavaDexFiles().resolve("classes.dex.jar");
+  }
+
+  /**
+   * This directory contains both the generated {@code R.java} files under a directory path that
+   * matches the corresponding package structure.
+   */
+  private Path getPathToGeneratedRDotJavaSrcFiles() {
+    return getPathToGeneratedRDotJavaSrcFiles(getBuildTarget());
+  }
+
+  private Path getPathForNativeStringInfoDirectory() {
+    return BuildTargets.getBinPath(getBuildTarget(), "__%s_string_source_map__");
+  }
+
+  @VisibleForTesting
+  static Path getPathToGeneratedRDotJavaSrcFiles(BuildTarget buildTarget) {
+    return BuildTargets.getBinPath(buildTarget, "__%s_rdotjava_src__");
   }
 }

@@ -52,16 +52,16 @@ public class PackageStringAssets extends AbstractBuildRule
   private static final String STRING_ASSETS_ZIP_HASH = "STRING_ASSETS_ZIP_HASH";
 
   private final FilteredResourcesProvider filteredResourcesProvider;
-  private final UberRDotJava uberRDotJava;
+  private final AaptPackageResources aaptPackageResources;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public PackageStringAssets(
       BuildRuleParams params,
       FilteredResourcesProvider filteredResourcesProvider,
-      UberRDotJava uberRDotJava) {
+      AaptPackageResources aaptPackageResources) {
     super(params);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
-    this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
+    this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
@@ -94,7 +94,7 @@ public class PackageStringAssets extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(pathToStrings));
     steps.add(new CompileStringsStep(
             filteredResourcesProvider.getNonEnglishStringFiles(),
-            uberRDotJava.getPathToRDotTxtDir(),
+            aaptPackageResources.getPathToRDotTxtDir(),
             pathToStrings));
     steps.add(new ZipStep(
             pathToStringAssetsZip,

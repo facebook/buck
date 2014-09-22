@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavaLibraryBuilder;
@@ -48,13 +49,13 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
@@ -106,7 +107,7 @@ public class AndroidBinaryGraphEnhancerTest {
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         createStrictMock(PathSourcePath.class),
         AndroidBinary.PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.< AndroidBinary.TargetCpuType>of(),
+        /* cpuFilters */ ImmutableSet.< TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ true,
         BuildTargets.getBinPath(apkTarget, "%s/classes.dex"),
@@ -119,18 +120,22 @@ public class AndroidBinaryGraphEnhancerTest {
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.<SourcePath>absent());
 
-    BuildTarget uberRDotJavaTarget =
-        BuildTarget.builder("//java/com/example", "apk").setFlavor("uber_r_dot_java").build();
-    BuildRuleParams uberRDotJavaParams = new FakeBuildRuleParamsBuilder(uberRDotJavaTarget).build();
-    UberRDotJava uberRDotJava = new UberRDotJava(
-        uberRDotJavaParams,
+    BuildTarget aaptPackageResourcesTarget =
+        BuildTarget.builder("//java/com/example", "apk").setFlavor("aapt_package").build();
+    BuildRuleParams aaptPackageResourcesParams =
+        new FakeBuildRuleParamsBuilder(aaptPackageResourcesTarget).build();
+    AaptPackageResources aaptPackageResources = new AaptPackageResources(
+        aaptPackageResourcesParams,
+        /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         createMock(FilteredResourcesProvider.class),
         ImmutableList.<HasAndroidResourceDeps>of(),
-        Suppliers.ofInstance(ImmutableSet.<String>of()),
+        ImmutableSet.<Path>of(),
+        AndroidBinary.PackageType.DEBUG,
+        ImmutableSet.<TargetCpuType>of(),
         JavacOptions.DEFAULTS,
         false,
         false);
-    ruleResolver.addToIndex(uberRDotJava);
+    ruleResolver.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
         new AndroidPackageableCollector(
@@ -147,7 +152,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
 
     BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(
-        uberRDotJava,
+        aaptPackageResources,
         /* preDexRulesNotInThePackageableCollection */ ImmutableList
             .<DexProducedFromJavaLibrary>of(),
         collection);
@@ -165,8 +170,8 @@ public class AndroidBinaryGraphEnhancerTest {
 
     Iterator<BuildRule> depsForPreDexingIter = dexMergeRule.getDeps().iterator();
 
-    BuildRule shouldBeUberRDotJavaRule = depsForPreDexingIter.next();
-    assertEquals(uberRDotJava, shouldBeUberRDotJavaRule);
+    BuildRule shouldBeAaptPackageResourcesRule = depsForPreDexingIter.next();
+    assertEquals(aaptPackageResources, shouldBeAaptPackageResourcesRule);
 
     BuildRule preDexRule1 = depsForPreDexingIter.next();
     assertEquals("//java/com/example:dep1#dex", preDexRule1.getBuildTarget().toString());
@@ -207,7 +212,7 @@ public class AndroidBinaryGraphEnhancerTest {
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         new TestSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.<AndroidBinary.TargetCpuType>of(),
+        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ false,
         BuildTargets.getBinPath(apkTarget, "%s/classes.dex"),
@@ -258,19 +263,6 @@ public class AndroidBinaryGraphEnhancerTest {
     assertTrue(resourcesProvider instanceof ResourcesFilter);
     BuildRule resourcesFilterRule = findRuleOfType(ruleResolver, ResourcesFilter.class);
 
-    BuildRule uberRDotJavaRule = findRuleOfType(ruleResolver, UberRDotJava.class);
-    MoreAsserts.assertDepends(
-        "UberRDotJava must depend on ResourcesFilter",
-        uberRDotJavaRule,
-        resourcesFilterRule);
-
-    BuildRule packageStringAssetsRule =
-        findRuleOfType(ruleResolver, PackageStringAssets.class);
-    MoreAsserts.assertDepends(
-        "PackageStringAssets must depend on ResourcesFilter",
-        packageStringAssetsRule,
-        uberRDotJavaRule);
-
     BuildRule aaptPackageResourcesRule =
         findRuleOfType(ruleResolver, AaptPackageResources.class);
     MoreAsserts.assertDepends(
@@ -278,16 +270,20 @@ public class AndroidBinaryGraphEnhancerTest {
         aaptPackageResourcesRule,
         resourcesFilterRule);
 
+    BuildRule packageStringAssetsRule =
+        findRuleOfType(ruleResolver, PackageStringAssets.class);
+    MoreAsserts.assertDepends(
+        "PackageStringAssets must depend on ResourcesFilter",
+        packageStringAssetsRule,
+        aaptPackageResourcesRule);
+
+
     assertFalse(result.getPreDexMerge().isPresent());
 
     MoreAsserts.assertDepends(
         "ComputeExopackageDepsAbi must depend on ResourcesFilter",
         computeExopackageDepsAbiRule,
         resourcesFilterRule);
-    MoreAsserts.assertDepends(
-        "ComputeExopackageDepsAbi must depend on UberRDotJava",
-        computeExopackageDepsAbiRule,
-        uberRDotJavaRule);
     MoreAsserts.assertDepends(
         "ComputeExopackageDepsAbi must depend on PackageStringAssets",
         computeExopackageDepsAbiRule,

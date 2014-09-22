@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -70,9 +71,13 @@ public class AaptPackageResourcesTest {
         params,
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
+        ImmutableList.<HasAndroidResourceDeps>of(),
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.<TargetCpuType>of());
+        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
+        JavacOptions.DEFAULTS,
+        /* rDotJavaNeedsDexing */ false,
+        /* shouldBuildStringSourceMap */ false);
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -128,9 +133,13 @@ public class AaptPackageResourcesTest {
         params,
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
+        ImmutableList.<HasAndroidResourceDeps>of(),
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
-        ImmutableSet.<TargetCpuType>of());
+        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
+        JavacOptions.DEFAULTS,
+        /* rDotJavaNeedsDexing */ false,
+        /* shouldBuildStringSourceMap */ false);
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     Set<Path> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
@@ -185,9 +194,13 @@ public class AaptPackageResourcesTest {
         params,
         /* manifest */ new TestSourcePath("facebook/base/AndroidManifest.xml"),
         resourcesFilter,
+        ImmutableList.<HasAndroidResourceDeps>of(),
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
-        ImmutableSet.<TargetCpuType>of());
+        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
+        JavacOptions.DEFAULTS,
+        /* rDotJavaNeedsDexing */ false,
+        /* shouldBuildStringSourceMap */ false);
 
     AndroidResource resourceOne = (AndroidResource) ruleResolver.get(
         BuildTargetFactory.newInstance("//facebook/base:libraryOne_resources"));
