@@ -94,7 +94,6 @@ GC_MAX_PAUSE_TARGET = 15000
 BUCKD_LOG_FILE_PATTERN = re.compile('^NGServer.* port (\d+)\.$')
 NAILGUN_CONNECTION_REFUSED_CODE = 230
 NAILGUN_CONNECTION_BROKEN_CODE = 227
-DEV_NULL = open(os.devnull, 'w')
 
 
 class Command:
@@ -280,11 +279,14 @@ class BuckRepo:
                     command.append('--nailgun-port')
                     command.append(buckd_port)
                     try:
-                        subprocess.check_call(command, cwd=self._buck_project.root,
-                                              stdout=DEV_NULL, stderr=DEV_NULL)
+                        check_output(
+                            command,
+                            cwd=self._buck_project.root,
+                            stderr=subprocess.STDOUT)
                     except subprocess.CalledProcessError as e:
                         if (e.returncode != NAILGUN_CONNECTION_REFUSED_CODE and
                                 e.returncode != NAILGUN_CONNECTION_BROKEN_CODE):
+                            print(e.output, file=sys.stderr)
                             raise
 
             self._buck_project.clean_up_buckd()
@@ -302,10 +304,13 @@ class BuckRepo:
                 raise BuckRepoException(message)
 
             print("Using watchman.", file=sys.stderr)
-            subprocess.check_call(
-                ['watchman', 'watch', self._buck_project.root],
-                stdout=DEV_NULL,
-                stderr=DEV_NULL)
+            try:
+                check_output(
+                    ['watchman', 'watch', self._buck_project.root],
+                    stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError as e:
+                print(e.output, file=sys.stderr)
+                raise
 
     def _is_buckd_running(self):
         with Tracing('BuckRepo._is_buckd_running'):
@@ -319,12 +324,15 @@ class BuckRepo:
             command.append('--nailgun-port')
             command.append(buckd_port)
             try:
-                subprocess.check_call(command, cwd=self._buck_project.root,
-                                      stdout=DEV_NULL, stderr=DEV_NULL)
+                check_output(
+                    command,
+                    cwd=self._buck_project.root,
+                    stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
                 if e.returncode == NAILGUN_CONNECTION_REFUSED_CODE:
                     return False
                 else:
+                    print(e.output, file=sys.stderr)
                     raise
 
             return True
@@ -358,9 +366,7 @@ class BuckRepo:
                     file=sys.stderr)
 
                 subprocess.check_call(
-                    ['git', 'checkout', revision],
-                    stdout=DEV_NULL,
-                    stderr=DEV_NULL,
+                    ['git', 'checkout', '--quiet', revision],
                     cwd=self._buck_dir)
                 if os.path.exists(self._build_success_file):
                     os.remove(self._build_success_file)
@@ -477,7 +483,6 @@ class BuckRepo:
             subprocess.check_call(
                 ['git', 'add', '-u'],
                 cwd=self._buck_dir,
-                stderr=DEV_NULL,
                 env=new_environ)
 
             git_tree_out = check_output(
