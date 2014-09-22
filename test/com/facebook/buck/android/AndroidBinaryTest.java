@@ -192,7 +192,7 @@ public class AndroidBinaryTest {
           BuildTargetFactory.newInstance(buildTarget + "_native_libs");
       BuildRule nativeLibsRule = PrebuiltNativeLibraryBuilder.newBuilder(nativeLibOnebuildTarget)
           .setNativeLibs(Paths.get(nativeLibsDirectory))
-          .build();
+          .build(ruleResolver);
       ruleResolver.addToIndex(nativeLibsRule);
       androidLibraryRuleBuilder.addDep(nativeLibsRule);
     }
@@ -201,18 +201,28 @@ public class AndroidBinaryTest {
   }
 
   @Test
-  public void testGetInputsToCompareToOutput() {
+  public void testGetInputsToCompareToOutputIncludesManifest() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBinaryBuilder androidBinaryRuleBuilder = AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
         .setManifest(new TestSourcePath("java/src/com/facebook/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore((Keystore) addKeystoreRule(ruleResolver));
+        .setKeystore(addKeystoreRule(ruleResolver));
 
     MoreAsserts.assertIterablesEquals(
         "getInputsToCompareToOutput() should include manifest.",
         ImmutableList.of(Paths.get("java/src/com/facebook/AndroidManifest.xml")),
-        androidBinaryRuleBuilder.build().getInputs());
+        androidBinaryRuleBuilder.build(ruleResolver).getInputs());
+  }
+
+  @Test
+  public void testGetInputsToCompareToOutputIncludesProguardConfig() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    AndroidBinaryBuilder androidBinaryRuleBuilder = AndroidBinaryBuilder.createBuilder(
+        BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
+        .setManifest(new TestSourcePath("java/src/com/facebook/AndroidManifest.xml"))
+        .setTarget("Google Inc.:Google APIs:16")
+        .setKeystore(addKeystoreRule(ruleResolver));
 
     SourcePath proguardConfig = new TestSourcePath("java/src/com/facebook/proguard.cfg");
     androidBinaryRuleBuilder.setProguardConfig(Optional.of(proguardConfig));
@@ -221,13 +231,13 @@ public class AndroidBinaryTest {
         ImmutableList.of(
             Paths.get("java/src/com/facebook/AndroidManifest.xml"),
             Paths.get("java/src/com/facebook/proguard.cfg")),
-        androidBinaryRuleBuilder.build().getInputs());
+        androidBinaryRuleBuilder.build(ruleResolver).getInputs());
   }
 
   @Test
   public void testGetUnsignedApkPath() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    Keystore keystore = (Keystore) addKeystoreRule(ruleResolver);
+    Keystore keystore = addKeystoreRule(ruleResolver);
 
     AndroidBinary ruleInRootDirectory = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//:fb4a"))
@@ -254,7 +264,7 @@ public class AndroidBinaryTest {
     AndroidBinary rule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
-        .setKeystore((Keystore) addKeystoreRule(ruleResolver))
+        .setKeystore(addKeystoreRule(ruleResolver))
         .setTarget("Google Inc.:Google APIs:16")
         .build(ruleResolver);
 
@@ -284,7 +294,7 @@ public class AndroidBinaryTest {
     AndroidBinary splitDexRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
-        .setKeystore((Keystore) addKeystoreRule(ruleResolver))
+        .setKeystore(addKeystoreRule(ruleResolver))
         .setTarget("Google Inc.:Google APIs:16")
         .setShouldSplitDex(true)
         .setLinearAllocHardLimit(0)
@@ -415,9 +425,9 @@ public class AndroidBinaryTest {
     verify(context);
   }
 
-  private BuildRule addKeystoreRule(BuildRuleResolver ruleResolver) {
+  private Keystore addKeystoreRule(BuildRuleResolver ruleResolver) {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    return KeystoreBuilder.createBuilder(keystoreTarget)
+    return (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
         .build(ruleResolver);

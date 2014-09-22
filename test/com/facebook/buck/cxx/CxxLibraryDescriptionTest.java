@@ -66,16 +66,18 @@ public class CxxLibraryDescriptionTest {
     // Setup a genrule the generates a header we'll list.
     String genHeaderName = "test/foo.h";
     BuildTarget genHeaderTarget = BuildTargetFactory.newInstance("//:genHeader");
-    Genrule genHeader = GenruleBuilder.createGenrule(genHeaderTarget)
+    Genrule genHeader = (Genrule) GenruleBuilder
+        .newGenruleBuilder(genHeaderTarget)
         .setOut(genHeaderName)
-        .build();
+        .build(resolver);
 
     // Setup a genrule the generates a source we'll list.
     String genSourceName = "test/foo.cpp";
     BuildTarget genSourceTarget = BuildTargetFactory.newInstance("//:genSource");
-    Genrule genSource = GenruleBuilder.createGenrule(genSourceTarget)
+    Genrule genSource = (Genrule) GenruleBuilder
+        .newGenruleBuilder(genSourceTarget)
         .setOut(genSourceName)
-        .build();
+        .build(resolver);
 
     // Setup a C/C++ library that we'll depend on form the C/C++ binary description.
     final BuildRule header = createFakeBuildRule("//:header");

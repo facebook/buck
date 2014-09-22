@@ -28,7 +28,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -36,6 +38,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class AndroidPackageableCollectorTest {
@@ -45,8 +49,11 @@ public class AndroidPackageableCollectorTest {
    * re-introduced to fb4a.
    */
   @Test
-  public void testFindTransitiveDependencies() {
+  public void testFindTransitiveDependencies() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    Path prebuiltNativeLibraryPath = Paths.get("java/com/facebook/prebuilt_native_library/libs");
+    projectFilesystem.mkdirs(prebuiltNativeLibraryPath);
 
     // Create an AndroidBinaryRule that transitively depends on two prebuilt JARs. One of the two
     // prebuilt JARs will be listed in the AndroidBinaryRule's no_dx list.
@@ -72,10 +79,9 @@ public class AndroidPackageableCollectorTest {
         BuildTargetFactory.newInstance("//java/com/facebook/prebuilt_native_library:library");
     BuildRule prebuiltNativeLibraryBuild =
         PrebuiltNativeLibraryBuilder.newBuilder(prebuiltNativeLibraryTarget)
-        .setNativeLibs(Paths.get("/java/com/facebook/prebuilt_native_library/libs"))
+        .setNativeLibs(prebuiltNativeLibraryPath)
         .setIsAsset(true)
-        .build();
-    ruleResolver.addToIndex(prebuiltNativeLibraryBuild);
+        .build(ruleResolver, projectFilesystem);
 
     BuildRule libraryRule = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook:example"))

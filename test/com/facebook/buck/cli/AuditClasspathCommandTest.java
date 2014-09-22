@@ -150,9 +150,9 @@ public class AuditClasspathCommandTest {
         .setKeystore(keystore)
         .setOriginalDeps(ImmutableSortedSet.of(androidLibrary, javaLibrary))
         .build(ruleResolver);
-    JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//:project-tests"))
+    JavaTestBuilder.newJavaTestBuilder(BuildTargetFactory.newInstance("//:project-tests"))
         .addDep(javaLibrary)
-        .setSourceUnderTest(ImmutableSet.of(javaLibrary))
+        .setSourceUnderTest(ImmutableSortedSet.of(javaLibrary.getBuildTarget()))
         .addSrc(Paths.get("src/com/facebook/test/ProjectTests.java"))
         .build(ruleResolver);
     PartialGraph partialGraph2 = createGraphFromBuildRules(ruleResolver, targets);

@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -154,7 +155,7 @@ public class CxxPreprocessablesTest {
 
   @Test
   public void createHeaderSymlinkTreeBuildRuleHasNoDeps() {
-
+    BuildRuleResolver resolver = new BuildRuleResolver();
     // Setup up the main build target and build params, which some random dep.  We'll make
     // sure the dep doesn't get propagated to the symlink rule below.
     FakeBuildRule dep = createFakeBuildRule(BuildTargetFactory.newInstance("//random:dep"));
@@ -166,10 +167,10 @@ public class CxxPreprocessablesTest {
 
     // Setup a simple genrule we can wrap in a BuildRuleSourcePath to model a input source
     // that is built by another rule.
-    Genrule genrule = GenruleBuilder
-        .createGenrule(BuildTargetFactory.newInstance("//:genrule"))
+    Genrule genrule = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
         .setOut("foo/bar.o")
-        .build();
+        .build(resolver);
 
     // Setup the link map with both a regular path-based source path and one provided by
     // another build rule.

@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -50,18 +51,19 @@ public class ArchivesTest {
 
   @Test
   public void testThatBuildRuleSourcePathDepsAndPathsArePropagated() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
     // Create a couple of genrules to generate inputs for an archive rule.
-    Genrule genrule1 = GenruleBuilder
-        .createGenrule(BuildTargetFactory.newInstance("//:genrule"))
+    Genrule genrule1 = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
         .setOut("foo/bar.o")
-        .build();
-    Genrule genrule2 = GenruleBuilder
-        .createGenrule(BuildTargetFactory.newInstance("//:genrule2"))
+        .build(resolver);
+    Genrule genrule2 = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
         .setOut("foo/test.o")
-        .build();
+        .build(resolver);
 
     // Build the archive using a normal input the outputs of the genrules above.
     Archive archive = Archives.createArchiveRule(

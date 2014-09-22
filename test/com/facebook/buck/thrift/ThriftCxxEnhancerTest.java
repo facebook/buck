@@ -465,10 +465,11 @@ public class ThriftCxxEnhancerTest {
         BuildRuleParamsFactory.createTrivialBuildRuleParams(TARGET);
 
     // Add a dummy dependency to the constructor arg to make sure it gets through.
+    BuildRule argDep = createFakeBuildRule("//:arg_dep");
+    resolver.addToIndex(argDep);
     ThriftConstructorArg arg = new ThriftConstructorArg();
     arg.cpp2Options = Optional.absent();
-    arg.cpp2Deps = Optional.of(
-        ImmutableSortedSet.<BuildRule>of(createFakeBuildRule("//:arg_dep")));
+    arg.cpp2Deps = Optional.of(ImmutableSortedSet.of(argDep));
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
@@ -482,8 +483,9 @@ public class ThriftCxxEnhancerTest {
             Paths.get("output2")));
 
     // Create a dummy implicit dep to pass in.
-    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.<BuildRule>of(
-        createFakeBuildRule("//:dep"));
+    BuildRule dep = createFakeBuildRule("//:dep");
+    resolver.addToIndex(dep);
+    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.<BuildRule>of(dep);
 
     // Run the enhancer to create the language specific build rule.
     ENHANCER_CPP2.createBuildRule(

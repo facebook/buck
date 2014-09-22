@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 
@@ -85,6 +86,7 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricContainsAllResourceDependenciesInResVmArg() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
     ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder =
         ImmutableList.builder();
     for (int i = 0; i < 10; i++) {
@@ -97,7 +99,7 @@ public class RobolectricTestRuleTest {
 
     RobolectricTest robolectricTest = (RobolectricTest) RobolectricTestBuilder
         .createBuilder(robolectricBuildTarget)
-        .build();
+        .build(resolver);
 
     String result = robolectricTest.getRobolectricResourceDirectories(resDeps);
     for (HasAndroidResourceDeps dep : resDeps) {
@@ -107,6 +109,7 @@ public class RobolectricTestRuleTest {
 
   @Test
   public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
     Path resDep1 = Paths.get("res1");
     Path resDep2 = Paths.get("res2");
     Path resDep3 = Paths.get("res3");
@@ -125,7 +128,7 @@ public class RobolectricTestRuleTest {
 
     RobolectricTest robolectricTest = (RobolectricTest) RobolectricTestBuilder
         .createBuilder(robolectricBuildTarget)
-        .build();
+        .build(resolver);
 
     String result = robolectricTest.getRobolectricResourceDirectories(
         ImmutableList.<HasAndroidResourceDeps>of(

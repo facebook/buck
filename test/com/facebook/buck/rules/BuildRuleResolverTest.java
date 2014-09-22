@@ -51,19 +51,20 @@ public class BuildRuleResolverTest {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
 
     // Create an iterable of some build rules.
+    // We don't use the buildRuleResolver so they're not added automatically.
     ImmutableSortedSet<BuildRule> buildRules = ImmutableSortedSet.of(
             JavaLibraryBuilder
                 .createBuilder(BuildTargetFactory.newInstance("//foo:bar"))
-                .build(),
+                .build(new BuildRuleResolver()),
             JavaLibraryBuilder
-                .createBuilder(BuildTargetFactory.newInstance("//foo:bar"))
-                .build());
+                .createBuilder(BuildTargetFactory.newInstance("//foo:baz"))
+                .build(new BuildRuleResolver()));
 
     // Check that we get back the rules we added from the function.
     ImmutableSortedSet<BuildRule> added = buildRuleResolver.addAllToIndex(buildRules);
     assertEquals(buildRules, added);
 
-    // Test that we actuall added the rules.
+    // Test that we actually added the rules.
     ImmutableSortedSet<BuildRule> all = ImmutableSortedSet.copyOf(
         buildRuleResolver.getBuildRules());
     assertEquals(buildRules, all);

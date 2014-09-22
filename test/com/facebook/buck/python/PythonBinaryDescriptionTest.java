@@ -47,9 +47,10 @@ public class PythonBinaryDescriptionTest {
   public void thatComponentSourcePathDepsPropagateProperly() {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
-    Genrule genrule = GenruleBuilder.createGenrule(BuildTargetFactory.newInstance("//:gen"))
+    Genrule genrule = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
         .setOut("blah.py")
-        .build();
+        .build(resolver);
     BuildRuleParams libParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
         BuildTargetFactory.newInstance("//:lib"));
     PythonLibrary lib = new PythonLibrary(
@@ -80,9 +81,10 @@ public class PythonBinaryDescriptionTest {
   public void thatMainSourcePathPropagatesToDeps() {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
-    Genrule genrule = GenruleBuilder.createGenrule(BuildTargetFactory.newInstance("//:gen"))
+    Genrule genrule = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
         .setOut("blah.py")
-        .build();
+        .build(resolver);
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(
         BuildTargetFactory.newInstance("//:bin"));
     PythonBinaryDescription desc = new PythonBinaryDescription(

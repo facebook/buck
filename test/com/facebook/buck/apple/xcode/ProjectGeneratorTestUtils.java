@@ -68,8 +68,13 @@ final class ProjectGeneratorTestUtils {
   public static <T extends ConstructorArg> BuildRule createBuildRuleWithDefaults(
       BuildTarget target,
       ImmutableSortedSet<BuildRule> deps,
-      Description<T> description) {
-    return createBuildRuleWithDefaults(target, deps, description, Functions.<T>identity());
+      Description<T> description, BuildRuleResolver resolver) {
+    return createBuildRuleWithDefaults(
+        target,
+        resolver,
+        deps,
+        description,
+        Functions.<T>identity());
   }
 
 
@@ -79,6 +84,7 @@ final class ProjectGeneratorTestUtils {
    */
   public static <T extends ConstructorArg> BuildRule createBuildRuleWithDefaults(
       BuildTarget target,
+      BuildRuleResolver resolver,
       ImmutableSortedSet<BuildRule> deps,
       Description<T> description,
       Function<T, T> overrides) {
@@ -122,7 +128,7 @@ final class ProjectGeneratorTestUtils {
 
     return description.createBuildRule(
         buildRuleParams,
-        new BuildRuleResolver(),
+        resolver,
         overrides.apply(arg));
   }
 

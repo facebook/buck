@@ -179,11 +179,11 @@ public class DefaultJavaLibraryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget genruleBuildTarget = BuildTargetFactory.newInstance("//generated:stuff");
-    BuildRule genrule = GenruleBuilder.createGenrule(genruleBuildTarget)
+    BuildRule genrule = GenruleBuilder
+        .newGenruleBuilder(genruleBuildTarget)
         .setBash("echo 'aha' > $OUT")
         .setOut("stuff.txt")
-        .build();
-    ruleResolver.addToIndex(genrule);
+        .build(ruleResolver);
 
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem() {
       @Override
@@ -597,11 +597,11 @@ public class DefaultJavaLibraryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget genruleBuildTarget = BuildTargetFactory.newInstance("//generated:stuff");
-    BuildRule genrule = GenruleBuilder.createGenrule(genruleBuildTarget)
+    BuildRule genrule = GenruleBuilder
+        .newGenruleBuilder(genruleBuildTarget)
         .setBash("echo 'aha' > $OUT")
         .setOut("stuff.txt")
-        .build();
-    ruleResolver.addToIndex(genrule);
+        .build(ruleResolver);
 
     String commonLibAbiKeyHash = Strings.repeat("a", 40);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
@@ -983,7 +983,7 @@ public class DefaultJavaLibraryTest {
     JavaLibrary libraryOne = (JavaLibrary) JavaLibraryBuilder
         .createBuilder(libraryOneTarget)
         .addSrc(Paths.get("java/src/com/libone/bar.java"))
-        .build();
+        .build(ruleResolver);
 
     BuildContext context = createSuggestContext(ruleResolver,
         BuildDependencies.FIRST_ORDER_ONLY);

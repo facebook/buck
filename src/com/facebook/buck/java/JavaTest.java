@@ -194,7 +194,9 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   }
 
   @VisibleForTesting
-  List<String> amendVmArgs(List<String> existingVmArgs, Optional<TargetDevice> targetDevice) {
+  ImmutableList<String> amendVmArgs(
+      ImmutableList<String> existingVmArgs,
+      Optional<TargetDevice> targetDevice) {
     ImmutableList.Builder<String> vmArgs = ImmutableList.builder();
     vmArgs.addAll(existingVmArgs);
     onAmendVmArgs(vmArgs, targetDevice);

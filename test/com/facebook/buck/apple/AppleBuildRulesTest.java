@@ -68,6 +68,7 @@ public class AppleBuildRulesTest {
 
   @Test
   public void testAppleTestIsXcodeTargetTestBuildRuleType() throws Exception {
+    BuildRuleResolver resolver = new BuildRuleResolver();
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
@@ -83,7 +84,8 @@ public class AppleBuildRulesTest {
     libraryArg.headerPathPrefix = Optional.absent();
     libraryArg.useBuckHeaderMaps = Optional.absent();
     BuildRule libraryRule =
-        appleLibraryDescription.createBuildRule(libraryParams, new BuildRuleResolver(), libraryArg);
+        appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg);
+    resolver.addToIndex(libraryRule);
 
     BuildRuleParams xctestParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "xctest").build())
@@ -100,8 +102,9 @@ public class AppleBuildRulesTest {
 
     BuildRule xctestRule = appleBundleDescription.createBuildRule(
         xctestParams,
-        new BuildRuleResolver(),
+        resolver,
         xctestArg);
+    resolver.addToIndex(xctestRule);
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
@@ -119,8 +122,9 @@ public class AppleBuildRulesTest {
 
     BuildRule testRule = appleTestDescription.createBuildRule(
         params,
-        new BuildRuleResolver(),
+        resolver,
         arg);
+    resolver.addToIndex(testRule);
 
     assertTrue(AppleBuildRules.isXcodeTargetTestBuildRule(testRule));
   }
@@ -159,6 +163,7 @@ public class AppleBuildRulesTest {
 
   @Test
   public void testRecursiveTargetsIncludesBundleBinaryFromOutsideBundle() throws Exception {
+    BuildRuleResolver resolver = new BuildRuleResolver();
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
@@ -174,7 +179,8 @@ public class AppleBuildRulesTest {
     libraryArg.headerPathPrefix = Optional.absent();
     libraryArg.useBuckHeaderMaps = Optional.absent();
     BuildRule libraryRule =
-        appleLibraryDescription.createBuildRule(libraryParams, new BuildRuleResolver(), libraryArg);
+        appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg);
+    resolver.addToIndex(libraryRule);
 
     BuildRuleParams bundleParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bundle").build())
@@ -191,8 +197,9 @@ public class AppleBuildRulesTest {
 
     BuildRule bundleRule = appleBundleDescription.createBuildRule(
         bundleParams,
-        new BuildRuleResolver(),
+        resolver,
         bundleArg);
+    resolver.addToIndex(bundleRule);
 
     BuildRuleParams rootParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "root").build())

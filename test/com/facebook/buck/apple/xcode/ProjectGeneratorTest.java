@@ -712,6 +712,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryDependentsSearchHeadersAndLibraries() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
     projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
 
@@ -744,7 +746,8 @@ public class ProjectGeneratorTest {
       arg.gid = Optional.absent();
       arg.headerPathPrefix = Optional.absent();
       arg.useBuckHeaderMaps = Optional.absent();
-      libraryRule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+      libraryRule = appleLibraryDescription.createBuildRule(params, resolver, arg);
+      resolver.addToIndex(libraryRule);
     }
 
     {
@@ -768,8 +771,9 @@ public class ProjectGeneratorTest {
       dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
-          new BuildRuleResolver(),
+          resolver,
           dynamicLibraryArg);
+      resolver.addToIndex(dynamicLibraryDep);
 
       BuildRuleParams xctestParams =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "xctest").build())
@@ -786,8 +790,9 @@ public class ProjectGeneratorTest {
 
       BuildRule xctestRule = appleBundleDescription.createBuildRule(
           xctestParams,
-          new BuildRuleResolver(),
+          resolver,
           xctestArg);
+      resolver.addToIndex(xctestRule);
 
       BuildRuleParams params =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
@@ -805,8 +810,9 @@ public class ProjectGeneratorTest {
 
       testRule = appleTestDescription.createBuildRule(
           params,
-          new BuildRuleResolver(),
+          resolver,
           arg);
+      resolver.addToIndex(testRule);
     }
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -843,6 +849,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryDependentsInheritSearchPaths() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
     projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
 
@@ -883,7 +891,8 @@ public class ProjectGeneratorTest {
       arg.gid = Optional.absent();
       arg.headerPathPrefix = Optional.absent();
       arg.useBuckHeaderMaps = Optional.absent();
-      libraryRule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+      libraryRule = appleLibraryDescription.createBuildRule(params, resolver, arg);
+      resolver.addToIndex(libraryRule);
     }
 
     {
@@ -907,8 +916,9 @@ public class ProjectGeneratorTest {
       dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
-          new BuildRuleResolver(),
+          resolver,
           dynamicLibraryArg);
+      resolver.addToIndex(dynamicLibraryDep);
 
       BuildRuleParams xctestParams =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "xctest").build())
@@ -925,8 +935,9 @@ public class ProjectGeneratorTest {
 
       BuildRule xctestRule = appleBundleDescription.createBuildRule(
           xctestParams,
-          new BuildRuleResolver(),
+          resolver,
           xctestArg);
+      resolver.addToIndex(xctestRule);
 
       BuildRuleParams params =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
@@ -944,8 +955,9 @@ public class ProjectGeneratorTest {
 
       testRule = appleTestDescription.createBuildRule(
           params,
-          new BuildRuleResolver(),
+          resolver,
           arg);
+      resolver.addToIndex(testRule);
     }
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -982,6 +994,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryTransitiveDependentsSearchHeadersAndLibraries() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
     projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
 
@@ -1015,7 +1029,8 @@ public class ProjectGeneratorTest {
       arg.headerPathPrefix = Optional.absent();
       arg.useBuckHeaderMaps = Optional.absent();
       libraryDepRule =
-          appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+          appleLibraryDescription.createBuildRule(params, resolver, arg);
+      resolver.addToIndex(libraryDepRule);
     }
 
     {
@@ -1034,7 +1049,8 @@ public class ProjectGeneratorTest {
       arg.gid = Optional.absent();
       arg.headerPathPrefix = Optional.absent();
       arg.useBuckHeaderMaps = Optional.absent();
-      libraryRule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+      libraryRule = appleLibraryDescription.createBuildRule(params, resolver, arg);
+      resolver.addToIndex(libraryRule);
     }
 
     {
@@ -1058,8 +1074,9 @@ public class ProjectGeneratorTest {
       dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
-          new BuildRuleResolver(),
+          resolver,
           dynamicLibraryArg);
+      resolver.addToIndex(dynamicLibraryDep);
 
       BuildRuleParams xctestParams =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "xctest").build())
@@ -1076,8 +1093,9 @@ public class ProjectGeneratorTest {
 
       BuildRule xctestRule = appleBundleDescription.createBuildRule(
           xctestParams,
-          new BuildRuleResolver(),
+          resolver,
           xctestArg);
+      resolver.addToIndex(xctestRule);
 
       BuildRuleParams params =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
@@ -1095,8 +1113,9 @@ public class ProjectGeneratorTest {
 
       testRule = appleTestDescription.createBuildRule(
           params,
-          new BuildRuleResolver(),
+          resolver,
           arg);
+      resolver.addToIndex(testRule);
     }
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1136,11 +1155,14 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleTestRule() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "dynamic").setFlavor(
             AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
         ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription);
+        appleLibraryDescription, resolver);
+    resolver.addToIndex(dynamicLibraryDep);
 
     BuildRuleParams xctestParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "xctest").build())
@@ -1157,8 +1179,9 @@ public class ProjectGeneratorTest {
 
     BuildRule xctestRule = appleBundleDescription.createBuildRule(
         xctestParams,
-        new BuildRuleResolver(),
+        resolver,
         xctestArg);
+    resolver.addToIndex(xctestRule);
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
@@ -1171,13 +1194,14 @@ public class ProjectGeneratorTest {
     arg.testBundle = xctestRule;
     arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
     arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(xctestRule));
+    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule));
     arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
 
     BuildRule rule = appleTestDescription.createBuildRule(
         params,
-        new BuildRuleResolver(),
+        resolver,
         arg);
+    resolver.addToIndex(rule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(rule),
@@ -1195,10 +1219,15 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBinaryRule() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule depRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "dep").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(depRule);
+
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "binary").build())
             .setDeps(ImmutableSortedSet.of(depRule))
@@ -1220,7 +1249,8 @@ public class ProjectGeneratorTest {
     arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.absent();
 
-    BuildRule rule = appleBinaryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildRule rule = appleBinaryDescription.createBuildRule(params, resolver, arg);
+    resolver.addToIndex(rule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(rule),
@@ -1251,20 +1281,29 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBundleRuleGathersXcodeNativeDependencies() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule fooRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//external", "extFoo").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        xcodeNativeDescription);
+        xcodeNativeDescription,
+        resolver);
+    resolver.addToIndex(fooRule);
+
     BuildRule barRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//external", "extBar").build(),
         ImmutableSortedSet.of(fooRule),
-        xcodeNativeDescription);
+        xcodeNativeDescription,
+        resolver);
+    resolver.addToIndex(barRule);
 
     BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "dynamic").setFlavor(
             AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
         ImmutableSortedSet.of(barRule),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(dynamicLibraryDep);
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "foo").build())
@@ -1281,8 +1320,9 @@ public class ProjectGeneratorTest {
 
     BuildRule binaryRule = appleBundleDescription.createBuildRule(
         params,
-        new BuildRuleResolver(),
+        resolver,
         arg);
+    resolver.addToIndex(binaryRule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(fooRule, barRule, binaryRule),
@@ -1302,8 +1342,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBundleRuleUsesCustomXcodeNativeBuildableNames() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule fooRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//external", "extFoo").build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         xcodeNativeDescription,
         new Function<XcodeNativeDescription.Arg,
@@ -1315,13 +1358,15 @@ public class ProjectGeneratorTest {
             return input;
           }
         });
+    resolver.addToIndex(fooRule);
 
     BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "dynamic").setFlavor(
             AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
         ImmutableSortedSet.of(fooRule),
-        appleLibraryDescription
-    );
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(dynamicLibraryDep);
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "foo").build())
@@ -1338,7 +1383,7 @@ public class ProjectGeneratorTest {
 
     BuildRule binaryRule = appleBundleDescription.createBuildRule(
         params,
-        new BuildRuleResolver(),
+        resolver,
         arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1361,13 +1406,12 @@ public class ProjectGeneratorTest {
 
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
 
-    BuildRule genrule = GenruleBuilder.createGenrule(BuildTarget.builder("//foo", "script").build())
-        .addSrc(new TestSourcePath("script/input.png").resolve())
+    BuildRule genrule = GenruleBuilder
+        .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
+        .setSrcs(ImmutableList.<SourcePath>of(new TestSourcePath("script/input.png")))
         .setBash("echo \"hello world!\"")
         .setOut("helloworld.txt")
-        .build();
-
-    buildRuleResolver.addToIndex(genrule);
+        .build(buildRuleResolver);
 
     BuildTarget libTarget = BuildTarget.builder("//foo", "lib").build();
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget)
@@ -1393,7 +1437,8 @@ public class ProjectGeneratorTest {
     buildRuleResolver.addToIndex(rule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
+        buildRuleResolver,
+        ImmutableSet.of(rule.getBuildTarget()));
 
     projectGenerator.createXcodeProjects();
 
@@ -1419,9 +1464,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBundleRuleWithPostBuildScriptDependency() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
 
     BuildRule scriptRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "post_build_script").build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         iosPostprocessResourcesDescription,
         new Function<IosPostprocessResourcesDescription.Arg,
@@ -1434,9 +1481,11 @@ public class ProjectGeneratorTest {
             return input;
           }
         });
+    resolver.addToIndex(scriptRule);
 
     BuildRule resourceRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "resource").build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         appleResourceDescription,
         new Function<AppleResourceDescription.Arg, AppleResourceDescription.Arg>() {
@@ -1446,12 +1495,15 @@ public class ProjectGeneratorTest {
             return input;
           }
         });
+    resolver.addToIndex(resourceRule);
 
     BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "dynamic").setFlavor(
             AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
         ImmutableSortedSet.of(resourceRule),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(dynamicLibraryDep);
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bundle").build())
@@ -1468,8 +1520,9 @@ public class ProjectGeneratorTest {
 
     BuildRule bundleRule = appleBundleDescription.createBuildRule(
         params,
-        new BuildRuleResolver(),
+        resolver,
         arg);
+    resolver.addToIndex(bundleRule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
       ImmutableSet.of(bundleRule),
@@ -1504,12 +1557,15 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBundleRuleForDynamicFramework() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "dynamic").setFlavor(
             AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
         ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription
-    );
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(dynamicLibraryDep);
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bundle").build())
@@ -1526,8 +1582,9 @@ public class ProjectGeneratorTest {
 
     BuildRule rule = appleBundleDescription.createBuildRule(
         params,
-        new BuildRuleResolver(),
+        resolver,
         arg);
+    resolver.addToIndex(rule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(rule),
@@ -1546,8 +1603,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCoreDataModelRuleAddsReference() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule modelRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "model").build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         coreDataModelDescription,
         new Function<CoreDataModelDescription.Arg, CoreDataModelDescription.Arg>() {
@@ -1557,12 +1617,14 @@ public class ProjectGeneratorTest {
             return args;
           }
         });
+    resolver.addToIndex(modelRule);
 
     BuildRule libraryRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(modelRule),
-        appleLibraryDescription);
-
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(libraryRule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(libraryRule),
@@ -1585,6 +1647,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void ruleToTargetMapContainsPBXTarget() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
@@ -1604,7 +1668,8 @@ public class ProjectGeneratorTest {
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.absent();
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildRule rule = appleLibraryDescription.createBuildRule(params, resolver, arg);
+    resolver.addToIndex(rule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(rule),
@@ -1636,19 +1701,28 @@ public class ProjectGeneratorTest {
     //
     // Calling generate on FooBin should pull in everything except BazLibTest
 
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     final BuildRule barLib = createBuildRuleWithDefaults(
         BuildTarget.builder("//bar", "lib").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(barLib);
+
     final BuildRule fooLib = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(barLib),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(fooLib);
 
     BuildRule fooBinBinary = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "binbinary").build(),
         ImmutableSortedSet.of(fooLib),
-        appleBinaryDescription);
+        appleBinaryDescription,
+        resolver);
+    resolver.addToIndex(fooBinBinary);
 
     BuildRuleParams fooBinParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bin").build())
@@ -1665,13 +1739,16 @@ public class ProjectGeneratorTest {
 
     BuildRule fooBin = appleBundleDescription.createBuildRule(
         fooBinParams,
-        new BuildRuleResolver(),
+        resolver,
         fooBinArg);
+    resolver.addToIndex(fooBin);
 
     final BuildRule bazLib = createBuildRuleWithDefaults(
         BuildTarget.builder("//baz", "lib").build(),
         ImmutableSortedSet.of(fooLib),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(bazLib);
 
     BuildRule bazTest;
     {
@@ -1695,8 +1772,9 @@ public class ProjectGeneratorTest {
       dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
-          new BuildRuleResolver(),
+          resolver,
           dynamicLibraryArg);
+      resolver.addToIndex(dynamicLibraryDep);
 
       BuildRuleParams xctestParams =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//baz", "xctest").build())
@@ -1713,8 +1791,9 @@ public class ProjectGeneratorTest {
 
       BuildRule xctestRule = appleBundleDescription.createBuildRule(
           xctestParams,
-          new BuildRuleResolver(),
+          resolver,
           xctestArg);
+      resolver.addToIndex(xctestRule);
 
       BuildRuleParams params =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//baz", "test").build())
@@ -1732,12 +1811,13 @@ public class ProjectGeneratorTest {
 
       bazTest = appleTestDescription.createBuildRule(
           params,
-          new BuildRuleResolver(),
+          resolver,
           arg);
+      resolver.addToIndex(bazTest);
     }
     final BuildRule bazLibTest = bazTest;
 
-    BuildRule fooTest;
+    BuildRule fooLibTest;
     {
       BuildRuleParams dynamicLibraryParams =
           new FakeBuildRuleParamsBuilder(
@@ -1759,8 +1839,9 @@ public class ProjectGeneratorTest {
       dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
-          new BuildRuleResolver(),
+          resolver,
           dynamicLibraryArg);
+      resolver.addToIndex(dynamicLibraryDep);
 
       BuildRuleParams xctestParams =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib-xctest").build())
@@ -1777,8 +1858,9 @@ public class ProjectGeneratorTest {
 
       BuildRule xctestRule = appleBundleDescription.createBuildRule(
           xctestParams,
-          new BuildRuleResolver(),
+          resolver,
           xctestArg);
+      resolver.addToIndex(xctestRule);
 
       BuildRuleParams params =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib-test").build())
@@ -1794,14 +1876,14 @@ public class ProjectGeneratorTest {
       arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(xctestRule));
       arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib));
 
-      fooTest = appleTestDescription.createBuildRule(
+      fooLibTest = appleTestDescription.createBuildRule(
           params,
-          new BuildRuleResolver(),
+          resolver,
           arg);
+      resolver.addToIndex(fooLibTest);
     }
-    final BuildRule fooLibTest = fooTest;
 
-    BuildRule fooBinTestLib;
+    BuildRule fooBinTest;
     {
       BuildRuleParams dynamicLibraryParams =
           new FakeBuildRuleParamsBuilder(
@@ -1823,8 +1905,9 @@ public class ProjectGeneratorTest {
       dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
-          new BuildRuleResolver(),
+          resolver,
           dynamicLibraryArg);
+      resolver.addToIndex(dynamicLibraryDep);
 
       BuildRuleParams xctestParams =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bin-xctest").build())
@@ -1841,8 +1924,9 @@ public class ProjectGeneratorTest {
 
       BuildRule xctestRule = appleBundleDescription.createBuildRule(
           xctestParams,
-          new BuildRuleResolver(),
+          resolver,
           xctestArg);
+      resolver.addToIndex(xctestRule);
 
       BuildRuleParams params =
           new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bin-test").build())
@@ -1858,12 +1942,12 @@ public class ProjectGeneratorTest {
       arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(xctestRule));
       arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib));
 
-      fooBinTestLib = appleTestDescription.createBuildRule(
+      fooBinTest = appleTestDescription.createBuildRule(
           params,
-          new BuildRuleResolver(),
+          resolver,
           arg);
+      resolver.addToIndex(fooBinTest);
     }
-    final BuildRule fooBinTest = fooBinTestLib;
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(barLib, fooLib, fooBin, bazLib, bazLibTest, fooLibTest, fooBinTest),
@@ -1892,10 +1976,13 @@ public class ProjectGeneratorTest {
 
   @Test
   public void generatedGidsForTargetsAreStable() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule fooLib = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "foo").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(fooLib),
@@ -1915,10 +2002,13 @@ public class ProjectGeneratorTest {
 
   @Test
   public void stopsLinkingRecursiveDependenciesAtDynamicLibraries() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule dependentStaticLibrary = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "static").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
 
     BuildTarget dependentDynamicLibraryTarget = BuildTarget
         .builder("//dep", "dynamic")
@@ -1943,8 +2033,9 @@ public class ProjectGeneratorTest {
 
     BuildRule dependentDynamicLibrary = appleLibraryDescription.createBuildRule(
         dependentDynamicLibraryParams,
-        new BuildRuleResolver(),
+        resolver,
         dependentDynamicLibraryArg);
+    resolver.addToIndex(dependentDynamicLibrary);
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
@@ -1969,8 +2060,9 @@ public class ProjectGeneratorTest {
 
     BuildRule library = appleLibraryDescription.createBuildRule(
         libraryParams,
-        new BuildRuleResolver(),
+        resolver,
         libraryArg);
+    resolver.addToIndex(library);
 
     BuildRuleParams bundleParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "final").build())
@@ -1987,8 +2079,9 @@ public class ProjectGeneratorTest {
 
     BuildRule bundle = appleBundleDescription.createBuildRule(
         bundleParams,
-        new BuildRuleResolver(),
+        resolver,
         bundleArg);
+    resolver.addToIndex(bundle);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(bundle),
@@ -2006,10 +2099,14 @@ public class ProjectGeneratorTest {
 
   @Test
   public void stopsLinkingRecursiveDependenciesAtBundles() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule dependentStaticLibrary = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "static").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(dependentStaticLibrary);
 
     BuildTarget dependentDynamicLibraryTarget = BuildTarget
         .builder("//dep", "dynamic")
@@ -2034,8 +2131,9 @@ public class ProjectGeneratorTest {
 
     BuildRule dependentDynamicLibrary = appleLibraryDescription.createBuildRule(
         dependentDynamicLibraryParams,
-        new BuildRuleResolver(),
+        resolver,
         dependentDynamicLibraryArg);
+    resolver.addToIndex(dependentDynamicLibrary);
 
     BuildRuleParams dependentFrameworkParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//dep", "framework").build())
@@ -2052,8 +2150,9 @@ public class ProjectGeneratorTest {
 
     BuildRule dependentFramework = appleBundleDescription.createBuildRule(
         dependentFrameworkParams,
-        new BuildRuleResolver(),
+        resolver,
         dependentFrameworkArg);
+    resolver.addToIndex(dependentFramework);
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
@@ -2078,8 +2177,9 @@ public class ProjectGeneratorTest {
 
     BuildRule library = appleLibraryDescription.createBuildRule(
         libraryParams,
-        new BuildRuleResolver(),
+        resolver,
         libraryArg);
+    resolver.addToIndex(library);
 
     BuildRuleParams bundleParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "final").build())
@@ -2096,8 +2196,9 @@ public class ProjectGeneratorTest {
 
     BuildRule bundle = appleBundleDescription.createBuildRule(
         bundleParams,
-        new BuildRuleResolver(),
+        resolver,
         bundleArg);
+    resolver.addToIndex(bundle);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(bundle),
@@ -2115,10 +2216,14 @@ public class ProjectGeneratorTest {
 
   @Test
   public void stopsCopyingRecursiveDependenciesAtBundles() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule dependentStaticLibrary = createBuildRuleWithDefaults(
         BuildTarget.builder("//dep", "static").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(dependentStaticLibrary);
 
     BuildRuleParams dependentStaticFrameworkParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//dep", "static-framework").build())
@@ -2136,8 +2241,9 @@ public class ProjectGeneratorTest {
 
     BuildRule dependentStaticFramework = appleBundleDescription.createBuildRule(
         dependentStaticFrameworkParams,
-        new BuildRuleResolver(),
+        resolver,
         dependentStaticFrameworkArg);
+    resolver.addToIndex(dependentStaticFramework);
 
     BuildTarget dependentDynamicLibraryTarget = BuildTarget
         .builder("//dep", "dynamic")
@@ -2162,8 +2268,9 @@ public class ProjectGeneratorTest {
 
     BuildRule dependentDynamicLibrary = appleLibraryDescription.createBuildRule(
         dependentDynamicLibraryParams,
-        new BuildRuleResolver(),
+        resolver,
         dependentDynamicLibraryArg);
+    resolver.addToIndex(dependentDynamicLibrary);
 
     BuildRuleParams dependentFrameworkParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//dep", "framework").build())
@@ -2180,8 +2287,9 @@ public class ProjectGeneratorTest {
 
     BuildRule dependentFramework = appleBundleDescription.createBuildRule(
         dependentFrameworkParams,
-        new BuildRuleResolver(),
+        resolver,
         dependentFrameworkArg);
+    resolver.addToIndex(dependentFramework);
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
@@ -2206,8 +2314,9 @@ public class ProjectGeneratorTest {
 
     BuildRule library = appleLibraryDescription.createBuildRule(
         libraryParams,
-        new BuildRuleResolver(),
+        resolver,
         libraryArg);
+    resolver.addToIndex(library);
 
     BuildRuleParams bundleParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "final").build())
@@ -2224,8 +2333,9 @@ public class ProjectGeneratorTest {
 
     BuildRule bundle = appleBundleDescription.createBuildRule(
         bundleParams,
-        new BuildRuleResolver(),
+        resolver,
         bundleArg);
+    resolver.addToIndex(bundle);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(bundle),
@@ -2243,6 +2353,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void bundlesDontLinkTheirOwnBinary() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
@@ -2266,8 +2378,9 @@ public class ProjectGeneratorTest {
 
     BuildRule library = appleLibraryDescription.createBuildRule(
         libraryParams,
-        new BuildRuleResolver(),
+        resolver,
         libraryArg);
+    resolver.addToIndex(library);
 
     BuildRuleParams bundleParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "final").build())
@@ -2284,8 +2397,9 @@ public class ProjectGeneratorTest {
 
     BuildRule bundle = appleBundleDescription.createBuildRule(
         bundleParams,
-        new BuildRuleResolver(),
+        resolver,
         bundleArg);
+    resolver.addToIndex(bundle);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(bundle),
@@ -2303,8 +2417,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void resourcesInDependenciesPropagatesToBundles() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule resourceRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "res").build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         appleResourceDescription,
         new Function<AppleResourceDescription.Arg, AppleResourceDescription.Arg>() {
@@ -2315,16 +2432,21 @@ public class ProjectGeneratorTest {
             return input;
           }
         });
+    resolver.addToIndex(resourceRule);
 
     BuildRule libraryRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(resourceRule),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(libraryRule);
 
     BuildRule bundleLibraryRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "bundlelib").build(),
         ImmutableSortedSet.of(libraryRule),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(bundleLibraryRule);
 
     BuildRuleParams bundleParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bundle").build())
@@ -2341,8 +2463,9 @@ public class ProjectGeneratorTest {
 
     BuildRule bundleRule = appleBundleDescription.createBuildRule(
         bundleParams,
-        new BuildRuleResolver(),
+        resolver,
         bundleArg);
+    resolver.addToIndex(bundleRule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(resourceRule, libraryRule, bundleRule),
@@ -2358,8 +2481,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void assetCatalogsInDependenciesPropogatesToBundles() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule assetCatalogRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "asset_catalog").build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
@@ -2371,16 +2497,21 @@ public class ProjectGeneratorTest {
             return input;
           }
         });
+    resolver.addToIndex(assetCatalogRule);
 
     BuildRule libraryRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(assetCatalogRule),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(libraryRule);
 
     BuildRule bundleLibraryRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "bundlelib").build(),
         ImmutableSortedSet.of(libraryRule),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(bundleLibraryRule);
 
     BuildRuleParams bundleParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bundle").build())
@@ -2397,8 +2528,9 @@ public class ProjectGeneratorTest {
 
     BuildRule bundleRule = appleBundleDescription.createBuildRule(
         bundleParams,
-        new BuildRuleResolver(),
+        resolver,
         bundleArg);
+    resolver.addToIndex(bundleRule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(assetCatalogRule, libraryRule, bundleRule),
@@ -2414,8 +2546,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void assetCatalogsBuildPhaseBuildsBothCommonAndBundledAssetCatalogs() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule assetCatalog1 = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "asset_catalog1").build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
@@ -2427,8 +2562,11 @@ public class ProjectGeneratorTest {
             return input;
           }
         });
+    resolver.addToIndex(assetCatalog1);
+
     BuildRule assetCatalog2 = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "asset_catalog2").build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
@@ -2441,16 +2579,21 @@ public class ProjectGeneratorTest {
             return input;
           }
         });
+    resolver.addToIndex(assetCatalog2);
 
     BuildRule libraryRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "lib").build(),
         ImmutableSortedSet.of(assetCatalog1, assetCatalog2),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(libraryRule);
 
     BuildRule bundleLibraryRule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "bundlelib").build(),
         ImmutableSortedSet.of(libraryRule),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(bundleLibraryRule);
 
     BuildRuleParams bundleParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bundle").build())
@@ -2467,8 +2610,9 @@ public class ProjectGeneratorTest {
 
     BuildRule bundleRule = appleBundleDescription.createBuildRule(
         bundleParams,
-        new BuildRuleResolver(),
+        resolver,
         bundleArg);
+    resolver.addToIndex(bundleRule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(assetCatalog1, assetCatalog2, libraryRule, bundleRule),
@@ -2489,8 +2633,11 @@ public class ProjectGeneratorTest {
   @Test
   public void generatedProjectConfigurationListIsUnionOfAllTargetConfigurations()
       throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule rule1 = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "rule1").build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription,
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
@@ -2506,6 +2653,7 @@ public class ProjectGeneratorTest {
 
     BuildRule rule2 = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "rule2").build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription,
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
@@ -2534,10 +2682,13 @@ public class ProjectGeneratorTest {
 
   @Test
   public void shouldEmitFilesForBuildSettingPrefixedFrameworks() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule rule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "rule")
             .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
             .build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription,
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
@@ -2568,10 +2719,13 @@ public class ProjectGeneratorTest {
 
   @Test(expected = HumanReadableException.class)
   public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRule rule = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "rule")
             .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
             .build(),
+        resolver,
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription,
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
@@ -2630,6 +2784,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void targetGidInDescriptionSetsTargetGidInGeneratedProject() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
@@ -2644,7 +2800,8 @@ public class ProjectGeneratorTest {
     arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.absent();
 
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildRule rule = appleLibraryDescription.createBuildRule(params, resolver, arg);
+    resolver.addToIndex(rule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(rule),
@@ -2661,6 +2818,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void targetGidInDescriptionReservesGidFromUseByAnotherTarget() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     BuildRuleParams fooParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
@@ -2677,7 +2836,8 @@ public class ProjectGeneratorTest {
     fooArg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule fooRule =
-      appleLibraryDescription.createBuildRule(fooParams, new BuildRuleResolver(), fooArg);
+      appleLibraryDescription.createBuildRule(fooParams, resolver, fooArg);
+    resolver.addToIndex(fooRule);
 
     BuildRuleParams barParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//bar", "lib").build())
@@ -2695,7 +2855,8 @@ public class ProjectGeneratorTest {
     barArg.useBuckHeaderMaps = Optional.absent();
 
     BuildRule barRule =
-      appleLibraryDescription.createBuildRule(barParams, new BuildRuleResolver(), barArg);
+      appleLibraryDescription.createBuildRule(barParams, resolver, barArg);
+    resolver.addToIndex(barRule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(fooRule, barRule),
@@ -2718,6 +2879,8 @@ public class ProjectGeneratorTest {
 
   @Test
   public void projectIsRewrittenIfContentsHaveChanged() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.<BuildRule>of(),
         ImmutableSet.<BuildTarget>of());
@@ -2731,7 +2894,9 @@ public class ProjectGeneratorTest {
     BuildRule fooLib = createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "foo").build(),
         ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription);
+        appleLibraryDescription,
+        resolver);
+    resolver.addToIndex(fooLib);
 
     ProjectGenerator projectGenerator2 = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(fooLib),

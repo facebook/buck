@@ -61,6 +61,7 @@ public class UberRDotJavaUtilTest {
     aarArg.deps = Optional.<ImmutableSortedSet<BuildRule>>of(ImmutableSortedSet.<BuildRule>of());
     BuildRule androidPrebuiltAar = new AndroidPrebuiltAarDescription()
         .createBuildRule(aarParams, resolver, aarArg);
+    resolver.addToIndex(androidPrebuiltAar);
 
     BuildRuleParams resParams = new BuildRuleParams(
         BuildTargetFactory.newInstance("//java/com/example:res"),

@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
@@ -33,41 +34,41 @@ public class JavaTestRuleTest {
 
   @Test
   public void shouldNotAmendVmArgsIfTargetDeviceIsNotPresent() {
-    List<String> vmArgs = ImmutableList.of("--one", "--two", "--three");
+    ImmutableList<String> vmArgs = ImmutableList.of("--one", "--two", "--three");
     JavaTest rule = newRule(vmArgs);
 
-    List<String> amended = rule.amendVmArgs(vmArgs, Optional.<TargetDevice>absent());
+    ImmutableList<String> amended = rule.amendVmArgs(vmArgs, Optional.<TargetDevice>absent());
 
     MoreAsserts.assertListEquals(vmArgs, amended);
   }
 
   @Test
   public void shouldAddEmulatorTargetDeviceToVmArgsIfPresent() {
-    List<String> vmArgs = ImmutableList.of("--one");
+    ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, null);
-    List<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
+    ImmutableList<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
 
-    List<String> expected = ImmutableList.of("--one", "-Dbuck.device=emulator");
+    ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=emulator");
     assertEquals(expected, amended);
   }
 
   @Test
   public void shouldAddRealTargetDeviceToVmArgsIfPresent() {
-    List<String> vmArgs = ImmutableList.of("--one");
+    ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.REAL_DEVICE, null);
-    List<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
+    ImmutableList<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
 
-    List<String> expected = ImmutableList.of("--one", "-Dbuck.device=device");
+    ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=device");
     assertEquals(expected, amended);
   }
 
   @Test
   public void shouldAddDeviceSerialIdToVmArgsIfPresent() {
-    List<String> vmArgs = ImmutableList.of("--one");
+    ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, "123");
@@ -78,11 +79,12 @@ public class JavaTestRuleTest {
     assertEquals(expected, amended);
   }
 
-  private JavaTest newRule(List<String> vmArgs) {
-    return JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//example:test"))
+  private JavaTest newRule(ImmutableList<String> vmArgs) {
+    return (JavaTest) JavaTestBuilder
+        .newJavaTestBuilder(BuildTargetFactory.newInstance("//example:test"))
         .setVmArgs(vmArgs)
         .addSrc(Paths.get("ExampleTest.java"))
-        .build();
+        .build(new BuildRuleResolver());
   }
 
 }

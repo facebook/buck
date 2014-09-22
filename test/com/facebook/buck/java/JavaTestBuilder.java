@@ -17,91 +17,44 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuilder;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 
 import java.nio.file.Path;
-import java.util.List;
 
-public class JavaTestBuilder {
-  private JavaTestBuilder() {
-    // Utility class
+import javax.annotation.Nullable;
+
+public class JavaTestBuilder extends AbstractBuilder<JavaTestDescription.Arg> {
+  private JavaTestBuilder(BuildTarget target) {
+    super(new JavaTestDescription(JavaCompilerEnvironment.DEFAULT), target);
   }
 
-  public static Builder createBuilder(BuildTarget target) {
-    return new Builder(target);
+  public static JavaTestBuilder newJavaTestBuilder(BuildTarget target) {
+    return new JavaTestBuilder(target);
   }
 
-  public static class Builder {
+  public JavaTestBuilder addDep(BuildRule rule) {
+    arg.deps = amend(arg.deps, rule);
+    return this;
+  }
 
-    private final BuildTarget target;
-    private final ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-    private final ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
-    private final ImmutableSortedSet.Builder<SourcePath> resources =
-        ImmutableSortedSet.naturalOrder();
-    private final ImmutableSet.Builder<Label> labels = ImmutableSet.builder();
-    private final ImmutableSet.Builder<String> contacts = ImmutableSet.builder();
-    private Optional<Path> proguardConfig = Optional.absent();
-    private ImmutableSet.Builder<BuildRule> sourcesUnderTest = ImmutableSet.builder();
-    private List<String> vmArgs = Lists.newArrayList();
+  public JavaTestBuilder addSrc(Path path) {
+    arg.srcs = amend(arg.srcs, new PathSourcePath(path));
+    return this;
+  }
 
-    public Builder(BuildTarget target) {
-      this.target = target;
-    }
+  public JavaTestBuilder setSourceUnderTest(
+      @Nullable ImmutableSortedSet<BuildTarget> sourceUnderTest) {
+    arg.sourceUnderTest = Optional.fromNullable(sourceUnderTest);
+    return this;
+  }
 
-    public Builder addDep(BuildRule rule) {
-      deps.add(rule);
-      return this;
-    }
-
-    public Builder addSrc(Path path) {
-      srcs.add(new PathSourcePath(path));
-      return this;
-    }
-
-    public Builder setSourceUnderTest(ImmutableSet<BuildRule> targets) {
-      sourcesUnderTest.addAll(targets);
-      return this;
-    }
-
-    public Builder setVmArgs(List<String> vmArgs) {
-      this.vmArgs = vmArgs;
-      return this;
-    }
-
-    public JavaTest build() {
-      return build(new BuildRuleResolver());
-    }
-
-    public JavaTest build(BuildRuleResolver resolver) {
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
-          .setType(JavaTestDescription.TYPE)
-          .setDeps(deps.build())
-          .build();
-      JavaTest test = new JavaTest(
-          params,
-          srcs.build(),
-          resources.build(),
-          labels.build(),
-          contacts.build(),
-          proguardConfig,
-          /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-          TestType.JUNIT,
-          JavacOptions.DEFAULTS,
-          vmArgs,
-          sourcesUnderTest.build(),
-          Optional.<Path>absent());
-      resolver.addToIndex(test);
-      return test;
-    }
+  public JavaTestBuilder setVmArgs(@Nullable ImmutableList<String> vmArgs) {
+    arg.vmArgs = Optional.fromNullable(vmArgs);
+    return this;
   }
 }

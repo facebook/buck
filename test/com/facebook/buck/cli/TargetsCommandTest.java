@@ -299,7 +299,8 @@ public class TargetsCommandTest {
         .addSrc(Paths.get("javasrc/JavaLibrary.java"))
         .addDep(prebuiltJar)
         .build(ruleResolver);
-    JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//javatest:test-java-library"))
+    JavaTestBuilder
+        .newJavaTestBuilder(BuildTargetFactory.newInstance("//javatest:test-java-library"))
         .addSrc(Paths.get("javatest/TestJavaLibrary.java"))
         .addDep(javaLibrary)
         .build(ruleResolver);

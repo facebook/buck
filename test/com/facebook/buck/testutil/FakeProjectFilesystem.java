@@ -50,10 +50,11 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
-import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -196,6 +197,11 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   @Override
   public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Set<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
+    return new HashSet<>();
   }
 
   @Override

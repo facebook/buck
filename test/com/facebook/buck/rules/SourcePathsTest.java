@@ -81,14 +81,15 @@ public class SourcePathsTest {
 
   @Test
   public void getSourcePathNameOnBuildRuleSourcePath() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
 
     // Verify that wrapping a genrule in a BuildRuleSourcePath resolves to the output name of
     // that genrule.
     String out = "test/blah.txt";
-    Genrule genrule = GenruleBuilder
-        .createGenrule(BuildTargetFactory.newInstance("//:genrule"))
+    Genrule genrule = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
         .setOut(out)
-        .build();
+        .build(resolver);
     BuildRuleSourcePath buildRuleSourcePath1 = new BuildRuleSourcePath(genrule);
     String actual1 = buildRuleSourcePath1.getName();
     assertEquals(out, actual1);

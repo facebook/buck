@@ -17,110 +17,51 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuilder;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.testutil.IdentityPathAbsolutifier;
-import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Function;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Set;
+import javax.annotation.Nullable;
 
-public class GenruleBuilder {
-
-  private GenruleBuilder() {
-    // Utility class
+public class GenruleBuilder extends AbstractBuilder<GenruleDescription.Arg> {
+  private GenruleBuilder(BuildTarget target) {
+    super(new GenruleDescription(), target);
   }
 
-  public static Builder createGenrule(BuildTarget target) {
-    return new Builder(target);
+  public static GenruleBuilder newGenruleBuilder(BuildTarget target) {
+    return new GenruleBuilder(target);
   }
 
-  public static class Builder {
-    private final GenruleDescription description;
-    private final GenruleDescription.Arg args;
-    private final BuildTarget target;
-    private Function<Path, Path> absolutifier;
-    private final Set<BuildRule> deps = Sets.newHashSet();
-    private final ImmutableList.Builder<Path> srcs = ImmutableList.builder();
+  public GenruleBuilder setOut(String out) {
+    arg.out = out;
+    return this;
+  }
 
-    Builder(BuildTarget target) {
-      this.target = target;
-      this.description = new GenruleDescription();
-      this.args = this.description.createUnpopulatedConstructorArg();
+  public GenruleBuilder setBash(@Nullable String bash) {
+    arg.bash = Optional.fromNullable(bash);
+    return this;
+  }
 
-      // Populate the args with sensible defaults.
-      this.args.bash = Optional.absent();
-      this.args.cmd = Optional.absent();
-      this.args.cmdExe = Optional.absent();
-    }
+  public GenruleBuilder setCmd(@Nullable String cmd) {
+    arg.cmd = Optional.fromNullable(cmd);
+    return this;
+  }
 
-    public Genrule build() {
-      final ImmutableSortedSet<BuildRule> depRules = ImmutableSortedSet.copyOf(deps);
-      args.deps = Optional.of(depRules);
-      args.srcs = Optional.of(FluentIterable
-          .from(srcs.build())
-          .transform(SourcePaths.TO_SOURCE_PATH)
-          .toList());
+  public GenruleBuilder setCmdExe(@Nullable String cmdExe) {
+    arg.cmdExe = Optional.fromNullable(cmdExe);
+    return this;
+  }
 
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
-          .setDeps(depRules)
-          .setType(GenruleDescription.TYPE)
-          .setProjectFilesystem(
-              new ProjectFilesystem(Paths.get(".")) {
-                @Override
-                public Function<Path, Path> getAbsolutifier() {
-                  return Optional.fromNullable(absolutifier)
-                      .or(IdentityPathAbsolutifier.getIdentityAbsolutifier());
-                }
-              })
-          .build();
-      return description.createBuildRule(params, new BuildRuleResolver(), args);
-    }
+  public GenruleBuilder setSrcs(@Nullable ImmutableList<SourcePath> srcs) {
+    arg.srcs = Optional.fromNullable(srcs);
+    return this;
+  }
 
-    public Builder setRelativeToAbsolutePathFunctionForTesting(Function<Path, Path> absolutifier) {
-      this.absolutifier = absolutifier;
-      return this;
-    }
-
-    public Builder setBash(String bash) {
-      args.bash = Optional.of(bash);
-      return this;
-    }
-
-    public Builder setCmd(String cmd) {
-      args.cmd = Optional.of(cmd);
-      return this;
-    }
-
-    public Builder setCmdExe(String cmdExe) {
-      args.cmdExe = Optional.of(cmdExe);
-      return this;
-    }
-
-    public Builder setOut(String out) {
-      args.out = Preconditions.checkNotNull(out);
-      return this;
-    }
-
-    public Builder addDep(BuildRule rule) {
-      deps.add(rule);
-      return this;
-    }
-
-    public Builder addSrc(Path path) {
-      srcs.add(path);
-      return this;
-    }
+  public GenruleBuilder setDeps(@Nullable ImmutableSortedSet<BuildRule> deps) {
+    arg.deps = Optional.fromNullable(deps);
+    return this;
   }
 }

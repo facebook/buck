@@ -50,10 +50,6 @@ public abstract class AbstractBuilder<A extends ConstructorArg> {
     populateWithDefaultValues(this.arg, this.target);
   }
 
-  public final BuildRule build() {
-    return build(new BuildRuleResolver());
-  }
-
   public final BuildRule build(BuildRuleResolver resolver) {
     return build(resolver, new FakeProjectFilesystem());
   }

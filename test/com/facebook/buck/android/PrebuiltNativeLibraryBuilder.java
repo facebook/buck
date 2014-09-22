@@ -17,47 +17,38 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.AbstractBuilder;
+import com.facebook.buck.rules.BuildRule;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class PrebuiltNativeLibraryBuilder {
+import javax.annotation.Nullable;
 
-  private PrebuiltNativeLibraryBuilder() {
-    // Utility class.
+public class PrebuiltNativeLibraryBuilder
+    extends AbstractBuilder<PrebuiltNativeLibraryDescription.Args> {
+
+  private PrebuiltNativeLibraryBuilder(BuildTarget target) {
+    super(new PrebuiltNativeLibraryDescription(), target);
   }
 
-  public static Builder newBuilder(BuildTarget buildTarget) {
-    return new Builder(buildTarget);
+  public static PrebuiltNativeLibraryBuilder newBuilder(BuildTarget buildTarget) {
+    return new PrebuiltNativeLibraryBuilder(buildTarget);
   }
 
-  public static class Builder {
+  public PrebuiltNativeLibraryBuilder setIsAsset(@Nullable Boolean isAsset) {
+    arg.isAsset = Optional.fromNullable(isAsset);
+    return this;
+  }
 
-    private BuildTarget buildTarget;
-    private Path nativeLibs;
-    private boolean isAsset;
+  public PrebuiltNativeLibraryBuilder setNativeLibs(@Nullable Path nativeLibs) {
+    arg.nativeLibs = nativeLibs;
+    return this;
+  }
 
-    public Builder(BuildTarget buildTarget) {
-      this.buildTarget = buildTarget;
-    }
-
-    public Builder setNativeLibs(Path nativeLibs) {
-      this.nativeLibs = nativeLibs;
-      return this;
-    }
-
-    public Builder setIsAsset(boolean isAsset) {
-      this.isAsset = isAsset;
-      return this;
-    }
-
-    public PrebuiltNativeLibrary build() {
-      return new PrebuiltNativeLibrary(
-          new FakeBuildRuleParamsBuilder(buildTarget).build(),
-          nativeLibs,
-          isAsset,
-          ImmutableSortedSet.<Path>of());
-    }
+  public PrebuiltNativeLibraryBuilder setDeps(@Nullable ImmutableSortedSet<BuildRule> deps) {
+    arg.deps = Optional.fromNullable(deps);
+    return this;
   }
 }

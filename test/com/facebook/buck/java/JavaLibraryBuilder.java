@@ -22,13 +22,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.util.List;
 
-public class JavaLibraryBuilder
-    extends AbstractBuilder<JavaLibraryDescription.Arg> {
+public class JavaLibraryBuilder extends AbstractBuilder<JavaLibraryDescription.Arg> {
 
   protected JavaLibraryBuilder(BuildTarget target) {
     super(new JavaLibraryDescription(JavaCompilerEnvironment.DEFAULT), target);
@@ -36,11 +33,6 @@ public class JavaLibraryBuilder
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target) {
     return new JavaLibraryBuilder(target);
-  }
-
-  public JavaLibraryBuilder addAllAnnotationProcessors(List<String> processorNames) {
-    arg.annotationProcessors = Optional.of(ImmutableSet.copyOf(processorNames));
-    return this;
   }
 
   public JavaLibraryBuilder addDep(BuildRule rule) {
