@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
@@ -148,7 +149,9 @@ public class JavacInMemoryStep extends JavacStep {
       // since we do not print them out to console in case of error
       try {
         context.getProjectFilesystem().writeLinesToPath(
-            Iterables.transform(javaSourceFilePaths, Functions.toStringFunction()),
+            FluentIterable.from(javaSourceFilePaths)
+                .transform(SourcePaths.TO_PATH)
+                .transform(Functions.toStringFunction()),
             pathToSrcsList.get());
       } catch (IOException e) {
         close(fileManager, compilationUnits, null);

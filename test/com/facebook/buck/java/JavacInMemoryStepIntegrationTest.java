@@ -23,6 +23,8 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
@@ -150,7 +152,36 @@ public class JavacInMemoryStepIntegrationTest {
     result.assertSuccess();
   }
 
-  private JavacInMemoryStep createJavac(boolean withSyntaxError) throws IOException {
+  /**
+   * There was a bug where `BuildRuleSourcePath` sources were written to the classes file using
+   * their string representation, rather than their resolved path.
+   */
+  @Test
+  public void shouldWriteResolvedBuildRuleSourcePathsToClassesFile()
+      throws IOException, InterruptedException {
+
+    BuildRuleSourcePath sourcePath = new BuildRuleSourcePath(
+        new FakeBuildRule("//:fake"),
+        Paths.get("Example.java"));
+
+    JavacInMemoryStep javac = createJavac(
+        /* javaSourceFilePaths */ ImmutableSet.<SourcePath>of(sourcePath),
+        /* withSyntaxError */ false);
+    ExecutionContext executionContext = createExecutionContext();
+    int exitCode = javac.execute(executionContext);
+    assertEquals("javac should exit with code 0.", exitCode, 0);
+
+    File srcsListFile = pathToSrcsList.toFile();
+    assertTrue(srcsListFile.exists());
+    assertTrue(srcsListFile.isFile());
+    assertEquals("Example.java", Files.toString(srcsListFile, Charsets.UTF_8).trim());
+  }
+
+  private JavacInMemoryStep createJavac(
+      ImmutableSet<SourcePath> javaSourceFilePaths,
+      boolean withSyntaxError)
+      throws IOException {
+
     File exampleJava = tmp.newFile("Example.java");
     Files.write(Joiner.on('\n').join(
             "package com.example;",
@@ -166,7 +197,7 @@ public class JavacInMemoryStepIntegrationTest {
     Path pathToOutputAbiFile = Paths.get("abi");
     return new JavacInMemoryStep(
         pathToOutputDirectory,
-        /* javaSourceFilePaths */ ImmutableSet.<SourcePath>of(new TestSourcePath("Example.java")),
+        javaSourceFilePaths,
         /* transitive classpathEntries */ ImmutableSet.<Path>of(),
         /* declated classpathEntries */ ImmutableSet.<Path>of(),
         JavacOptions.builder().build(),
@@ -175,6 +206,12 @@ public class JavacInMemoryStepIntegrationTest {
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
         Optional.of(pathToSrcsList));
+  }
+
+  private JavacInMemoryStep createJavac(boolean withSyntaxError) throws IOException {
+    return createJavac(
+        /* javaSourceFilePaths */ ImmutableSet.<SourcePath>of(new TestSourcePath("Example.java")),
+        withSyntaxError);
   }
 
   private ExecutionContext createExecutionContext() {
