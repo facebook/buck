@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.TraceEvent;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.ArtifactCacheConnectEvent;
@@ -64,6 +65,7 @@ import java.util.concurrent.TimeUnit;
  * Logs events to a json file formatted to be viewed in Chrome Trace View (chrome://tracing).
  */
 public class ChromeTraceBuildListener implements BuckEventListener {
+  private static final Logger LOG = Logger.get(ChromeTraceBuildListener.class);
   private static final String TRACE_FILE_PATTERN =
     "build\\.[a-z\\d\\-\\.]*\\.trace";
 
@@ -125,6 +127,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     if (filesSortedByModified.size() > tracesToKeep) {
       ImmutableList<File> filesToRemove =
           filesSortedByModified.subList(tracesToKeep, filesSortedByModified.size());
+      LOG.debug("Deleting old traces: %s", filesToRemove);
       for (File file : filesToRemove) {
         file.delete();
       }
@@ -153,6 +156,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
           });
 
       ObjectMapper mapper = new ObjectMapper();
+      LOG.debug("Writing Chrome trace to %s", tracePath);
       mapper.writeValue(traceOutput, tsSortedEvents);
 
       String symlinkPath = String.format("%s/build.trace",
