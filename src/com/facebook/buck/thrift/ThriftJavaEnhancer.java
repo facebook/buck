@@ -20,6 +20,7 @@ import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -78,7 +79,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
   private Path getSourceZipOutputPath(BuildTarget target, String name) {
     BuildTarget flavoredTarget = getSourceZipBuildTarget(target, name);
-    return BuildTargets.getBinPath(flavoredTarget, "%s/src.zip");
+    return BuildTargets.getBinPath(flavoredTarget, "%s" + JavacStep.SRC_ZIP);
   }
 
   @Override
@@ -95,7 +96,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
     for (ImmutableMap.Entry<String, ThriftSource> ent : sources.entrySet()) {
       String name = ent.getKey();
       BuildRule compilerRule = ent.getValue().getCompileRule();
-      Path sourceDirectory = ent.getValue().getOutputDir();
+      Path sourceDirectory = ent.getValue().getOutputDir().resolve("gen-java");
 
       BuildTarget sourceZipTarget = getSourceZipBuildTarget(params.getBuildTarget(), name);
       Path sourceZip = getSourceZipOutputPath(params.getBuildTarget(), name);

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Preconditions;
@@ -71,6 +72,7 @@ public class SrcZip extends AbstractBuildRule {
 
     return ImmutableList.of(
         new RmStep(sourceZip, true),
+        new MkdirStep(sourceZip.getParent()),
         new ZipStep(
             sourceZip,
             /* paths */ ImmutableSet.<Path>of(),
