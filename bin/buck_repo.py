@@ -436,15 +436,19 @@ class BuckRepo:
 
     def _print_ant_failure_and_exit(self, ant_log_path):
         print(textwrap.dedent("""\
-                ::: 'ant' failed in the buck repo at {0}.
-                ::: Check the logs at {1}.""".format(
+                ::: 'ant' failed in the buck repo at '{0}',
+                ::: and 'buck' is not properly built. It will be unusable
+                ::: until the error is corrected. You can check the logs
+                ::: at {1} to figure out what broke.""".format(
               self._buck_dir, ant_log_path)), file=sys.stderr)
         if self._is_git:
             raise BuckRepoException(textwrap.dedent("""\
-                ::: Try running: git -C "{0}" clean -xfd""".format(self._buck_dir)))
+                ::: It is possible that running this command will fix it:
+                ::: git -C "{0}" clean -xfd""".format(self._buck_dir)))
         else:
             raise BuckRepoException(textwrap.dedent("""\
-                ::: Try running: rm -rf "{0}"/build""".format(self._buck_dir)))
+                ::: It is possible that running this command will fix it:
+                ::: rm -rf "{0}"/build""".format(self._buck_dir)))
 
     def _run_ant_clean(self):
         clean_log_path = os.path.join(self._buck_project.get_buck_out_log_dir(), 'ant-clean.log')
