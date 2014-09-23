@@ -68,7 +68,8 @@ final class ProjectGeneratorTestUtils {
   public static <T extends ConstructorArg> BuildRule createBuildRuleWithDefaults(
       BuildTarget target,
       ImmutableSortedSet<BuildRule> deps,
-      Description<T> description, BuildRuleResolver resolver) {
+      Description<T> description,
+      BuildRuleResolver resolver) {
     return createBuildRuleWithDefaults(
         target,
         resolver,

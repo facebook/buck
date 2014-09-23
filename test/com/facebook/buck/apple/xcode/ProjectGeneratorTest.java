@@ -2752,6 +2752,7 @@ public class ProjectGeneratorTest {
         BuildTarget.builder("//foo", "rule")
             .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
             .build(),
+        new BuildRuleResolver(),
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription,
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
@@ -2791,6 +2792,7 @@ public class ProjectGeneratorTest {
         BuildTarget.builder("//foo", "rule")
             .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
             .build(),
+        new BuildRuleResolver(),
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription,
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
