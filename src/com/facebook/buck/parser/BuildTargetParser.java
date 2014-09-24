@@ -128,7 +128,8 @@ public class BuildTargetParser {
       shortName = shortName.substring(0, hashIndex);
     }
 
-    String fullyQualifiedName = String.format("%s:%s", baseName, shortName);
+    String fullyQualifiedName = new StringBuilder(baseName.length() + shortName.length() + 2)
+        .append(baseName).append(':').append(shortName).toString();
     if (!fullyQualifiedName.startsWith(BUILD_RULE_PREFIX)) {
       throw new BuildTargetParseException(
           String.format("%s must start with %s", fullyQualifiedName, BUILD_RULE_PREFIX));
