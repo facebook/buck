@@ -286,12 +286,12 @@ class BuckRepo:
                             command,
                             cwd=self._buck_project.root,
                             stderr=subprocess.STDOUT)
-                    except subprocess.CalledProcessError as e:
+                    except CalledProcessError as e:
                         if (e.returncode not in
                                 [NAILGUN_CONNECTION_REFUSED_CODE,
                                     NAILGUN_CONNECTION_BROKEN_CODE,
                                     NAILGUN_UNEXPECTED_CHUNK_TYPE]):
-                            print(e.output, file=sys.stderr)
+                            print(e.output, end='', file=sys.stderr)
                             raise
 
             self._buck_project.clean_up_buckd()
@@ -313,8 +313,8 @@ class BuckRepo:
                 check_output(
                     ['watchman', 'watch', self._buck_project.root],
                     stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError as e:
-                print(e.output, file=sys.stderr)
+            except CalledProcessError as e:
+                print(e.output, end='', file=sys.stderr)
                 raise
 
     def _is_buckd_running(self):
@@ -333,11 +333,11 @@ class BuckRepo:
                     command,
                     cwd=self._buck_project.root,
                     stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError as e:
+            except CalledProcessError as e:
                 if e.returncode == NAILGUN_CONNECTION_REFUSED_CODE:
                     return False
                 else:
-                    print(e.output, file=sys.stderr)
+                    print(e.output, end='', file=sys.stderr)
                     raise
 
             return True
@@ -671,6 +671,14 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
     return None
 
 
+# Backport of the Python 2.7 subprocess.CalledProcessError, including
+# an `output` attribute.
+class CalledProcessError(subprocess.CalledProcessError):
+    def __init__(self, returncode, cmd, output=None):
+        super(CalledProcessError, self).__init__(returncode, cmd)
+        self.output = output
+
+
 # Backport of the Python 2.7 subprocess.check_output. Taken from
 # http://hg.python.org/cpython/file/71cb8f605f77/Lib/subprocess.py
 # Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se>
@@ -686,7 +694,7 @@ def check_output(*popenargs, **kwargs):
         cmd = kwargs.get("args")
         if cmd is None:
             cmd = popenargs[0]
-        raise subprocess.CalledProcessError(retcode, cmd, output=output)
+        raise CalledProcessError(retcode, cmd, output=output)
     return output
 
 
