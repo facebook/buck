@@ -28,8 +28,11 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 
 public class ZipStepTest {
 
@@ -193,4 +197,43 @@ public class ZipStepTest {
       assertEquals(ImmutableSet.of("file1.txt"), zip.getFileNames());
     }
   }
+
+  /**
+   * Tests a couple bugs:
+   *     1) {@link com.facebook.buck.zip.OverwritingZipOutputStream} was writing uncompressed zip
+   *        entries incorrectly.
+   *     2) {@link ZipStep} wasn't setting the output size when writing uncompressed entries.
+   */
+  @Test
+  public void minCompressionWritesCorrectZipFile() throws IOException {
+    File parent = tmp.newFolder("zipstep");
+    File out = new File(parent, "output.zip");
+
+    File toZip = tmp.newFolder("zipdir");
+    byte[] contents = "hello world".getBytes();
+    Files.write(contents, new File(toZip, "file1.txt"));
+    Files.write(contents, new File(toZip, "file2.txt"));
+    Files.write(contents, new File(toZip, "file3.txt"));
+
+    ZipStep step = new ZipStep(
+        Paths.get("zipstep/output.zip"),
+        ImmutableSet.<Path>of(),
+        false,
+        ZipStep.MIN_COMPRESSION_LEVEL,
+        Paths.get("zipdir"));
+    assertEquals(0, step.execute(executionContext));
+
+    // Use apache's common-compress to parse the zip file, since it reads the central
+    // directory and will verify it's valid.
+    try (ZipFile zip = new ZipFile(out)) {
+      Enumeration<ZipArchiveEntry> entries = zip.getEntries();
+      ZipArchiveEntry entry1 = entries.nextElement();
+      assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry1)));
+      ZipArchiveEntry entry2 = entries.nextElement();
+      assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry2)));
+      ZipArchiveEntry entry3 = entries.nextElement();
+      assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry3)));
+    }
+  }
+
 }

@@ -25,6 +25,7 @@ import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -35,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Set;
+import java.util.zip.ZipEntry;
 
 /**
  * A {@link com.facebook.buck.step.Step} that creates a ZIP archive..
@@ -107,15 +109,25 @@ public class ZipStep implements Step {
             return FileVisitResult.CONTINUE;
           }
 
+          Path resolvedPath = filesystem.resolve(file);
           Path relativePath = junkPaths ? file.getFileName() : baseDir.relativize(file);
           String entryName = MorePaths.pathWithUnixSeparators(relativePath);
           CustomZipEntry entry = new CustomZipEntry(entryName);
           entry.setTime(attributes.lastModifiedTime().toMillis());
-          entry.setSize(attributes.size());
           entry.setCompressionLevel(compressionLevel);
 
+          // If we're using STORED files, we must manually set the CRC, size, and compressed size.
+          if (entry.getMethod() == ZipEntry.STORED) {
+            entry.setSize(attributes.size());
+            entry.setCompressedSize(attributes.size());
+            entry.setCrc(
+                com.google.common.io.Files.hash(
+                    resolvedPath.toFile(),
+                    Hashing.crc32()).padToLong());
+          }
+
           out.putNextEntry(entry);
-          Files.copy(filesystem.resolve(file), out);
+          Files.copy(resolvedPath, out);
           out.closeEntry();
           return FileVisitResult.CONTINUE;
         }
