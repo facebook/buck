@@ -28,3 +28,75 @@ return b.innerHTML},prettyPrint:D.prettyPrint=function(a,d){function g(){for(var
 o.className&&e.test(o.className)){m=!0;break}if(!m){d.className+=" prettyprinted";m=j.lang;if(!m){var m=k.match(n),y;if(!m&&(y=U(d))&&t.test(y.tagName))m=y.className.match(n);m&&(m=m[1])}if(w.test(d.tagName))o=1;else var o=d.currentStyle,u=s.defaultView,o=(o=o?o.whiteSpace:u&&u.getComputedStyle?u.getComputedStyle(d,q).getPropertyValue("white-space"):0)&&"pre"===o.substring(0,3);u=j.linenums;if(!(u=u==="true"||+u))u=(u=k.match(/\blinenums\b(?::(\d+))?/))?u[1]&&u[1].length?+u[1]:!0:!1;u&&J(d,u,o);r=
 {h:m,c:d,j:u,i:o};K(r)}}}i<p.length?setTimeout(g,250):"function"===typeof a&&a()}for(var b=d||document.body,s=b.ownerDocument||document,b=[b.getElementsByTagName("pre"),b.getElementsByTagName("code"),b.getElementsByTagName("xmp")],p=[],m=0;m<b.length;++m)for(var j=0,k=b[m].length;j<k;++j)p.push(b[m][j]);var b=q,c=Date;c.now||(c={now:function(){return+new Date}});var i=0,r,n=/\blang(?:uage)?-([\w.]+)(?!\S)/,e=/\bprettyprint\b/,v=/\bprettyprinted\b/,w=/pre|xmp/i,t=/^code$/i,f=/^(?:pre|code|xmp)$/i,
 h={};g()}};typeof define==="function"&&define.amd&&define("google-code-prettify",[],function(){return Y})})();}()
+
+// Taken from https://code.google.com/p/google-code-prettify/issues/detail?id=223.
+// Because we serve the minified version of prettify.js, I had to figure out what
+// some of the properties were renamed to and modified the original patch with the
+// renamed equivalents.
+
+// The line lexer takes an array of patterns.
+// Each pattern starts with a regular expression followed by a syntax color for each captured set in the expression.
+// For instance, you might capture a key followed by an operator followed by a value. So after that regular expression,
+//   there would be the syntax colors for the key, operator, and value (in order).
+// Anything that's not captured is then given the PR_PLAIN syntax color.
+// Patterns must be designed to match whole lines and they should be listed in order of precedence, so once a pattern
+//   matches a line, that line no longer checks itself against other patterns.
+function createLineLexer(patterns) {
+  return function(job) {
+    // job.sourceCode was minified to job.a.
+    var lines = job.a.match(/[^\r\n]*([\r\n]+|$)/g),
+      // job.basePos was minified to job.e
+      pos = job.e,
+      decorations = [ pos, PR['PR_PLAIN'] ],
+      li, nLines = lines.length,
+      line,
+      pi, nPatterns = patterns.length,
+      pattern,
+      mi, nMatches, matches, match, mOffset, mIndex;
+    // Iterate each line
+    for ( li = 0; li < nLines; ++li ) {
+      line = lines[li];
+      // Iterate each pattern, seeing if the line matches the pattern
+      for ( pi = 0; pi < nPatterns; ++pi ) {
+        pattern = patterns[pi];
+        matches = line.match(pattern[0]);
+        if ( matches ) {
+          nMatches = matches.length;
+          mOffset = 0;
+          // Iterate each captured set
+          for ( mi = 1; mi < nMatches; ++mi ) {
+            match = matches[mi];
+            // Sets are captured in order, so we can find the position of the capture using indexOf with an offset
+            mIndex = line.indexOf(match, mOffset);
+            // This should never fail since the regex was passed, but just in case, ensure that we found the index
+            if ( mIndex > -1 ) {
+              mOffset = mIndex + match.length;
+              // Add the decorator. Use the PR_PLAIN styling for the text following the capture
+              decorations.push(pos + mIndex, pattern[mi]);
+              decorations.push(pos + mIndex + match.length, PR['PR_PLAIN']);
+            }
+          }
+          break;
+        }
+      }
+      // Increment the pos, moving on to the next line
+      pos += line.length;
+    }
+    // Send the decorations back with in the job
+    // job.decorations was minified to job.g.
+    job.g = decorations;
+  }
+};
+
+
+PR['registerLangHandler'](
+  createLineLexer([
+    // If a line starts with a semicolon or hash as the first non-whitespace character then the whole line is a comment
+    [ /^\s*([;#].+)/, PR['PR_COMMENT'] ],
+    // If the first non-whitespace character is a left bracket and it ends with a right bracket then it's a section marker
+    [ /^\s*(\[[^\]]*\])\s*$/, PR['PR_KEYWORD'] ],
+    // Attributes start with a name followed by an equals sign or colon and then everything after is the value (trimmed)
+    [ /^\s*([^:=]+)\s*([=:])\s*(.+)/, PR['PR_ATTRIB_NAME'], PR['PR_PUNCTUATION'], PR['PR_PLAIN'] ]
+  ]),
+  [ 'conf', 'ini', 'property' ]
+);
