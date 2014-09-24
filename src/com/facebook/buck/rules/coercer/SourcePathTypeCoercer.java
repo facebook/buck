@@ -53,7 +53,9 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    try {
+    if ((object instanceof String) && (
+        ((String) object).startsWith("//") || ((String) object).startsWith(":"))
+        ) {
       BuildTarget buildTarget =
           buildTargetTypeCoercer.coerce(
               buildTargetParser,
@@ -67,7 +69,7 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
         throw CoerceFailedException.simple(object, BuildRule.class);
       }
       return new BuildRuleSourcePath(rule.get());
-    } catch (CoerceFailedException e) {
+    } else {
       Path path = pathTypeCoercer.coerce(
           buildTargetParser,
           buildRuleResolver,
