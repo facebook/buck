@@ -202,31 +202,44 @@ public final class Main {
           FileSystems.getDefault().newWatchService());
     }
 
-    private Optional<WebServer> createWebServer(
-        BuckConfig config,
-        ProjectFilesystem projectFilesystem) {
+    private Optional<WebServer> createWebServer(BuckConfig config, ProjectFilesystem filesystem) {
+      Optional<Integer> port = getValidWebServerPort(config);
+      if (port.isPresent()) {
+        WebServer webServer = new WebServer(port.get(), filesystem, STATIC_CONTENT_DIRECTORY);
+        return Optional.of(webServer);
+      } else {
+        return Optional.absent();
+      }
+    }
+
+    /**
+     * If the return value is not absent, then the port is a nonnegative integer. This means that
+     * specifying a port of -1 effectively disables the WebServer.
+     */
+    private static Optional<Integer> getValidWebServerPort(BuckConfig config) {
       // Enable the web httpserver if it is given by command line parameter or specified in
-      // .buckconfig. The presence of a port number is sufficient.
+      // .buckconfig. The presence of a nonnegative port number is sufficient.
       Optional<String> serverPort =
           Optional.fromNullable(System.getProperty("buck.httpserver.port"));
       if (!serverPort.isPresent()) {
         serverPort = config.getValue("httpserver", "port");
       }
-      Optional<WebServer> webServer;
-      if (serverPort.isPresent() && !serverPort.get().isEmpty()) {
-        String rawPort = serverPort.get();
-        try {
-          int port = Integer.parseInt(rawPort, 10);
-          LOG.debug("Starting up web server on port %d.", port);
-          webServer = Optional.of(new WebServer(port, projectFilesystem, STATIC_CONTENT_DIRECTORY));
-        } catch (NumberFormatException e) {
-          LOG.error("Could not parse port for httpserver: %s.", rawPort);
-          webServer = Optional.absent();
-        }
-      } else {
-        webServer = Optional.absent();
+
+      if (!serverPort.isPresent() || serverPort.get().isEmpty()) {
+        return Optional.absent();
       }
-      return webServer;
+
+      String rawPort = serverPort.get();
+      int port;
+      try {
+        port = Integer.parseInt(rawPort, 10);
+        LOG.debug("Starting up web server on port %d.", port);
+      } catch (NumberFormatException e) {
+        LOG.error("Could not parse port for httpserver: %s.", rawPort);
+        return Optional.absent();
+      }
+
+      return port >= 0 ? Optional.of(port) : Optional.<Integer>absent();
     }
 
     public Optional<WebServer> getWebServer() {
@@ -628,9 +641,11 @@ public final class Main {
 
       // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
       if (webServer.isPresent()) {
-        int port = webServer.get().getPort();
-        buildEventBus.post(ConsoleEvent.info(
-            "See trace at http://localhost:%s/trace/%s", port, buildId));
+        Optional<Integer> port = webServer.get().getPort();
+        if (port.isPresent()) {
+          buildEventBus.post(ConsoleEvent.info(
+              "See trace at http://localhost:%s/trace/%s", port.get(), buildId));
+        }
       }
 
       buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));

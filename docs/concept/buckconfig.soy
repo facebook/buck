@@ -7,6 +7,7 @@
     {param description}
       An optional file that contains configuration information for Buck.
     {/param}
+    {param prettify: true /}
     {param content}
 
 The root of your project may contain a configuration file
@@ -170,6 +171,53 @@ where resources from a <code>java_library()</code> should be placed within the
 generated JAR file. Hopefully <code>src_roots</code> will be removed at some
 point.
 
+<h2>[httpserver]</h2>
+
+<p>
+
+Option to enable an experimental web server that presents a UI to explore build data.
+Note that Buck must be run as a daemon in order for the web server to be available.
+
+<p>
+Specifying the port is sufficient to enable the web server:
+
+{literal}<pre class="prettyprint">
+[httpserver]
+  # The web server will be available at http://localhost:8080/.
+  port = 8080
+</pre>{/literal}
+
+<p>
+
+If you want Buck to find a free port and use that (i.e., an <em>ephemeral port</em>), then
+specify a value of <code>0</code>:
+
+{literal}<pre class="prettyprint">
+[httpserver]
+  # The web server will be available at http://localhost:XXXX/.
+  # Buck will print out the value of XXXX that it chose when the build
+  # is complete. This value will be valid so long as the daemon is
+  # kept alive.
+  #
+  # It is common for `port = 0` to be used in a shared .buckconfig file
+  # for a project. Then individuals may override this value in
+  # .buckconfig.local for each checkout of the repository so that the
+  # port is predictable and guaranteed not to overlap with a port from
+  # another checkout of the same project.
+  port = 0
+</pre>{/literal}
+
+<p>
+
+If you want to disable the web server, specify a value of <code>-1</code> for the port:
+
+{literal}<pre class="prettyprint">
+[httpserver]
+  # This will disable the web server. This often happens when
+  # a nonnegative port is specified in .buckconfig, but the user
+  # wants to override this behavior in .buckconfig.local.
+  port = -1
+</pre>{/literal}
 
 <h2>[ndk]</h2>
 

@@ -18,12 +18,15 @@ package com.facebook.buck.httpserver;
 
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
@@ -44,23 +47,38 @@ public class WebServer {
   private static final String TRACES_CONTEXT_PATH = "/traces";
   private static final String TRACE_DATA_CONTEXT_PATH = "/tracedata";
 
-  private final int port;
+  private Optional<Integer> port;
   private final ProjectFilesystem projectFilesystem;
   private final String staticContentDirectory;
   private final Server server;
   private final StreamingWebSocketServlet streamingWebSocketServlet;
 
-  public WebServer(int port,
+  /**
+   * @param port If 0, then an <a href="http://en.wikipedia.org/wiki/Ephemeral_port">
+   *     ephemeral port</a> will be assigned. Use {@link #getPort()} to find out which port is being
+   *     used.
+   */
+  public WebServer(
+      int port,
       ProjectFilesystem projectFilesystem,
       String staticContentDirectory) {
-    this.port = port;
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.staticContentDirectory = Preconditions.checkNotNull(staticContentDirectory);
+    this.port = Optional.absent();
     this.server = new Server(port);
     this.streamingWebSocketServlet = new StreamingWebSocketServlet();
   }
 
-  public int getPort() {
+  public Optional<Integer> getPort() {
+    if (!port.isPresent()) {
+      for (Connector connector : server.getConnectors()) {
+        if (connector instanceof ServerConnector) {
+          port = Optional.of(((ServerConnector) connector).getLocalPort());
+          break;
+        }
+      }
+    }
+
     return port;
   }
 
