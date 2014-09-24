@@ -66,6 +66,10 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
   }
 
   public void tellClients(BuckEvent event) {
+    if (connections.isEmpty()) {
+      return;
+    }
+
     try {
       String message = new ObjectMapper().writeValueAsString(event);
       tellAll(message);
