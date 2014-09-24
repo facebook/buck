@@ -50,8 +50,16 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
     }
   };
 
+  /**
+   * Regex pattern that can be used as a parameter to {@link Pattern#compile(String)} to match a
+   * valid trace id.
+   */
+  private static final String TRACE_ID_PATTERN_TEXT = "([0-9a-zA-Z-]+)";
+
+  static final Pattern TRACE_ID_PATTERN = Pattern.compile(TRACE_ID_PATTERN_TEXT);
+
   private static final Pattern TRACE_FILE_NAME_PATTERN = Pattern.compile(
-      "build\\.(?:[\\d\\-\\.]+\\.)?([0-9a-zA-Z-]+)\\.trace");
+      "build\\.(?:[\\d\\-\\.]+\\.)?" + TRACE_ID_PATTERN + "\\.trace");
 
   private final TracesHelper tracesHelper;
 

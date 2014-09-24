@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 
 import org.easymock.EasyMockSupport;
@@ -28,9 +29,11 @@ import org.eclipse.jetty.server.Request;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Matcher;
 
@@ -73,6 +76,13 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.flushBuffer();
 
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    File traceFile = createMock(File.class);
+    String name = "build.abcdef.trace";
+    expect(traceFile.getName()).andStubReturn(name);
+    Path pathToTraceFile = BuckConstant.BUCK_TRACE_DIR.resolve(name);
+    expect(traceFile.toPath()).andReturn(pathToTraceFile);
+    expect(projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR)).andStubReturn(
+        new File[] {traceFile});
     expect(
         projectFilesystem.getInputStreamForRelativePath(
             Paths.get("buck-out/log/traces/build.abcdef.trace")))
@@ -108,9 +118,15 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.flushBuffer();
 
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    File traceFile = createMock(File.class);
+    String name = "build.abcdef.trace";
+    expect(traceFile.getName()).andStubReturn(name);
+    Path pathToTraceFile = BuckConstant.BUCK_TRACE_DIR.resolve(name);
+    expect(traceFile.toPath()).andReturn(pathToTraceFile);
+    expect(projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR)).andStubReturn(
+        new File[] {traceFile});
     expect(
-        projectFilesystem.getInputStreamForRelativePath(
-            Paths.get("buck-out/log/traces/build.abcdef.trace")))
+        projectFilesystem.getInputStreamForRelativePath(pathToTraceFile))
         .andReturn(new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes()));
     TraceDataHandler traceDataHandler = new TraceDataHandler(
         new TracesHelper(projectFilesystem));

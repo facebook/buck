@@ -17,6 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -136,7 +137,19 @@ public class TracesHelper {
     }
   }
 
-  private static Path getPathToTrace(String id) {
-    return BuckConstant.BUCK_TRACE_DIR.resolve(String.format("build.%s.trace", id));
+  private Path getPathToTrace(String id) {
+    Preconditions.checkNotNull(id);
+    Preconditions.checkArgument(TracesHandlerDelegate.TRACE_ID_PATTERN.matcher(id).matches());
+
+    String testPrefix = "build.";
+    String testSuffix = "." + id + ".trace";
+    for (File traceFile : projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR)) {
+      String name = traceFile.getName();
+      if (name.endsWith(testSuffix) && name.startsWith(testPrefix)) {
+        return traceFile.toPath();
+      }
+    }
+
+    throw new HumanReadableException("Could not find a build trace with id %s.", id);
   }
 }
