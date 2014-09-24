@@ -91,7 +91,6 @@ public class JavaTestIntegrationTest {
             "Unable to locate testng on the classpath. Please add as a test dependency."));
   }
 
-
   /**
    * There's a requirement that the JUnitRunner creates and runs tests on the same thread (thanks to
    * jmock having a thread guard), but we don't want to create lots of threads. Because of this the
@@ -117,4 +116,20 @@ public class JavaTestIntegrationTest {
 
     result.assertSuccess();
   }
+
+  @Test
+  public void missingResultsFileIsTestFailure() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "java_test_missing_result_file",
+        temp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:simple");
+
+    result.assertSpecialExitCode("test should fail", 42);
+    String stderr = result.getStderr();
+    assertTrue(stderr, stderr.contains("test exited before generating results file"));
+  }
+
 }

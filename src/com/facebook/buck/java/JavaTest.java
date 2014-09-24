@@ -29,8 +29,10 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
+import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.XmlTestResultParser;
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -273,6 +275,24 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     return base;
   }
 
+  /**
+   * @return a test case result, named "main", signifying a failure of the entire test class.
+   */
+  private TestCaseSummary getTestClassFailedSummary(String testClass, String message) {
+    return new TestCaseSummary(
+        testClass,
+        ImmutableList.of(
+            new TestResultSummary(
+                testClass,
+                "main",
+                ResultType.FAILURE,
+                0L,
+                message,
+                "",
+                "",
+                "")));
+  }
+
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext context,
@@ -303,14 +323,18 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
           String path = String.format("%s%s.xml", testClass, testSelectorSuffix);
           File testResultFile = filesystem.getFileForRelativePath(
               getPathToTestOutputDirectory().resolve(path));
+          if (!isUsingTestSelectors && !testResultFile.isFile()) {
+            summaries.add(
+                getTestClassFailedSummary(
+                    testClass,
+                    "test exited before generating results file"));
           // Not having a test result file at all (which only happens when we are using test
           // selectors) is interpreted as meaning a test didn't run at all, so we'll completely
           // ignore it.  This is another result of the fact that JUnit is the only thing that can
           // definitively say whether or not a class should be run.  It's not possible, for example,
           // to filter testClassNames here at the buck end.
-          if (!isUsingTestSelectors || testResultFile.isFile()) {
-            TestCaseSummary summary = XmlTestResultParser.parse(testResultFile);
-            summaries.add(summary);
+          } else if (testResultFile.isFile()) {
+            summaries.add(XmlTestResultParser.parse(testResultFile));
           }
         }
 
