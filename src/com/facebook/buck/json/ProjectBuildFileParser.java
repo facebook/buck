@@ -91,6 +91,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   private boolean enableProfiling;
   @Nullable private NamedTemporaryFile profileOutputFile;
+  @Nullable private Thread stderrConsumer;
 
   protected ProjectBuildFileParser(
       ProjectFilesystem projectFilesystem,
@@ -178,12 +179,18 @@ public class ProjectBuildFileParser implements AutoCloseable {
     OutputStream stdin = buckPyProcess.getOutputStream();
     InputStream stderr = buckPyProcess.getErrorStream();
 
-    Thread stderrConsumer = Threads.namedThread(
+    stderrConsumer = Threads.namedThread(
         ProjectBuildFileParser.class.getSimpleName(),
         new InputStreamConsumer(stderr,
             console.getStdErr(),
             console.getAnsi(),
-            /* flagOutputWrittenToStream */ true));
+            /* flagOutputWrittenToStream */ true,
+            Optional.<InputStreamConsumer.Handler>of(new InputStreamConsumer.Handler() {
+              @Override
+              public void handleLine(String line) {
+                LOG.warn("buck.py warning: %s", line);
+              }
+            })));
     stderrConsumer.start();
 
     buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
@@ -304,13 +311,16 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Preconditions.checkState(buildFile.isPresent() == isServerMode);
 
     if (buildFile.isPresent()) {
-      buckPyStdinWriter.write(buildFile.get().toString());
+      String buildFileString = buildFile.get().toString();
+      LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
+      buckPyStdinWriter.write(buildFileString);
       buckPyStdinWriter.newLine();
       buckPyStdinWriter.flush();
     }
 
     LOG.debug("Parsing output of process %s...", buckPyProcess);
     List<Map<String, Object>> result = buckPyStdoutParser.nextRules();
+    LOG.verbose("Got rules: %s", result);
     LOG.debug("Parsed %d rules from process", result.size());
     return result;
   }
@@ -344,6 +354,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
             // Safe to ignore since we've already flushed everything we wanted
             // to write.
           }
+        }
+
+        if (stderrConsumer != null) {
+          stderrConsumer.join();
+          stderrConsumer = null;
         }
 
         if (enableProfiling && profileOutputFile != null) {

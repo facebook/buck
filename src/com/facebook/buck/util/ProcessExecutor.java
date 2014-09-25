@@ -104,7 +104,8 @@ public class ProcessExecutor {
         process.getInputStream(),
         stdOutToWriteTo,
         ansi,
-        /* flagOutputWrittenToStream */ !shouldPrintStdOut && !expectingStdOut);
+        /* flagOutputWrittenToStream */ !shouldPrintStdOut && !expectingStdOut,
+        Optional.<InputStreamConsumer.Handler>absent());
 
     boolean shouldPrintStdErr = options.contains(Option.PRINT_STD_ERR);
     boolean expectingStdErr = options.contains(Option.EXPECTING_STD_ERR);
@@ -115,7 +116,8 @@ public class ProcessExecutor {
         process.getErrorStream(),
         stdErrToWriteTo,
         ansi,
-        /* flagOutputWrittenToStream */ !shouldPrintStdErr && !expectingStdErr);
+        /* flagOutputWrittenToStream */ !shouldPrintStdErr && !expectingStdErr,
+        Optional.<InputStreamConsumer.Handler>absent());
 
     // Consume the streams so they do not deadlock.
     Thread stdOutConsumer = Threads.namedThread("ProcessExecutor (stdOut)", stdOut);
