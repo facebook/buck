@@ -1,5 +1,13 @@
 {namespace buck.buckconfig}
 
+/**
+ * @param title
+ */
+{template .section}
+  <h2 id="{$title}">[{$title}]</h2>
+  <p>
+{/template}
+
 /***/
 {template .soyweb}
   {call buck.page}
@@ -9,6 +17,7 @@
     {/param}
     {param prettify: true /}
     {param content}
+<p>
 
 The root of your project may contain a configuration file
 named <code>.buckconfig</code>. If present, Buck will read this file
@@ -26,32 +35,68 @@ version-controlled file that contains settings that are applicable to all team m
 standard includes for build files), whereas <code>.buckconfig.local</code> will be excluded from
 version control because it contains user-specific overrides (such as personal aliases).
 
-<h2>[alias]</h2>
+<p>
+
+The following sections are recognized by Buck:
+
+<p>
+
+{foreach $name in [
+    'adb',
+    'alias',
+    'buildfile',
+    'cache',
+    'color',
+    'java',
+    'httpserver',
+    'log',
+    'ndk',
+    'project',
+    'test',
+    ]}
+  <a href="#{$name}"><code>[{$name}]</code></a><br>
+{/foreach}
+
+{call .section}{param title: 'adb' /}{/call}
+
+This section controls adb restart behavior on errors.
+
+{literal}<pre class="prettyprint lang-ini">
+[adb]
+  # This specifies a whether to restart adb on failure or not.
+  adb_restart_on_failure = true
+</pre>{/literal}
+
+
+{call .section}{param title: 'alias' /}{/call}
 
 As demonstrated in the <a href="{ROOT}setup/quick_start.html">Quick Start</a>{sp}
 instructions, aliases for build targets can be defined in
 {sp}<code>.buckconfig</code>:
 
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [alias]
   app     = //apps/myapp:app
   apptest = //apps/myapp:test
 </pre>{/literal}
 
+<p>
+
 This facilitates command-line use:
 
-{literal}<pre>
-buck build app
-buck test apptest
+{literal}<pre class="prettyprint">
+$ buck build app
+$ buck test apptest
 </pre>{/literal}
 
-<h2>[buildfile]</h2>
+
+{call .section}{param title: 'buildfile' /}{/call}
 
 This section may define an <code>includes</code> property that can specify a
 path to a file of macros and constants that will automatically be included in
 every build file. Therefore, defining the following:
 
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [buildfile]
   includes = //core/DEFS
 </pre>{/literal}
@@ -61,7 +106,7 @@ is the equivalent of manually invoking <code>include_defs('//core/DEFS')</code>
 {sp}<a href="{ROOT}function/include_defs.html"><code>include_defs()</code></a>
 {sp}for more details.
 
-<h2>[cache]</h2>
+{call .section}{param title: 'cache' /}{/call}
 
 This section configures build artifact caching, which can be disabled
 (default), on the filesystem, or in a distributed cache that can be shared
@@ -70,7 +115,7 @@ other properties, if any, are relevant to caching configuration; the irrelevant
 properties are ignored. The following example configures Buck to use both
 directory-based and Cassandra caching.
 
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [cache]
     # Build artifact caching configuration.
     #
@@ -82,8 +127,8 @@ directory-based and Cassandra caching.
     # The default set is empty.
     mode = dir, cassandra
 
-    # Directory path used for directory-based caching. The default directory is
-    # buck-cache.
+    # Directory path used for directory-based caching. The default directory
+    # is buck-cache.
     dir = buck-cache
 
     # Comma-separated set of known Cassandra cache nodes, for example:
@@ -97,8 +142,8 @@ directory-based and Cassandra caching.
     # 9160.
     port = 9160
 
-    # Treat the Cassandra cache as readonly or readwrite.  The default mode is
-    # readwrite.
+    # Treat the Cassandra cache as readonly or readwrite.  The default mode
+    # is readwrite.
     cassandra_mode = readwrite
 
     # Host for http cache. The default is localhost.
@@ -107,10 +152,11 @@ directory-based and Cassandra caching.
     # Port on which to connect to the http cache. The default is 8080.
     http_port = 8080
 
-    # Whether the http cache is readonly or readwrite. The default is readwrite.
+    # Whether the http cache is readonly or readwrite. The default is
+    # readwrite.
     http_mode = readwrite
 
-    # Timeout for http requests
+    # Timeout for http requests.
     http_timeout_seconds = 10
 </pre>{/literal}
 
@@ -130,27 +176,18 @@ instructions beyond the following:
 Buck communicates with the http cache using a
 {sp}<a href="{ROOT}concept/http_cache_api.html">simple API</a>.
 
-<h2>[adb]</h2>
 
-This section controls adb restart behavior on errors.
-
-{literal}<pre>
-# This specifies a whether to restart adb on failure
-# or not.
-adb_restart_on_failure = true
-</pre>{/literal}
-
-<h2>[color]</h2>
+{call .section}{param title: 'color' /}{/call}
 
 Specify the following to disable colorized output:
 
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [color]
   ui = false
 </pre>{/literal}
 
 
-<h2>[java]</h2>
+{call .section}{param title: 'java' /}{/call}
 
 This section may define a <code>src_roots</code> property that specifies
 file paths to roots of Java code (where a root contains a tree
@@ -158,7 +195,7 @@ of Java folders where the folder structure mirrors the package structure).
 This list of paths is comma-delimited. Paths that start with a slash are
 relative to the root of the project. All other paths can match a folder
 anywhere in the tree. For example:
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [java]
   src_roots = src, /java/, /javatests/
 </pre>{/literal}
@@ -171,9 +208,8 @@ where resources from a <code>java_library()</code> should be placed within the
 generated JAR file. Hopefully <code>src_roots</code> will be removed at some
 point.
 
-<h2>[httpserver]</h2>
 
-<p>
+{call .section}{param title: 'httpserver' /}{/call}
 
 Option to enable an experimental web server that presents a UI to explore build data.
 Note that Buck must be run as a daemon in order for the web server to be available.
@@ -181,7 +217,7 @@ Note that Buck must be run as a daemon in order for the web server to be availab
 <p>
 Specifying the port is sufficient to enable the web server:
 
-{literal}<pre class="prettyprint">
+{literal}<pre class="prettyprint lang-ini">
 [httpserver]
   # The web server will be available at http://localhost:8080/.
   port = 8080
@@ -192,7 +228,7 @@ Specifying the port is sufficient to enable the web server:
 If you want Buck to find a free port and use that (i.e., an <em>ephemeral port</em>), then
 specify a value of <code>0</code>:
 
-{literal}<pre class="prettyprint">
+{literal}<pre class="prettyprint lang-ini">
 [httpserver]
   # The web server will be available at http://localhost:XXXX/.
   # Buck will print out the value of XXXX that it chose when the build
@@ -211,7 +247,7 @@ specify a value of <code>0</code>:
 
 If you want to disable the web server, specify a value of <code>-1</code> for the port:
 
-{literal}<pre class="prettyprint">
+{literal}<pre class="prettyprint lang-ini">
 [httpserver]
   # This will disable the web server. This often happens when
   # a nonnegative port is specified in .buckconfig, but the user
@@ -219,34 +255,36 @@ If you want to disable the web server, specify a value of <code>-1</code> for th
   port = -1
 </pre>{/literal}
 
-<h2>[ndk]</h2>
+
+{call .section}{param title: 'log' /}{/call}
+
+This section controls how Buck will log information about builds for later
+inspection.
+
+{literal}<pre class="prettyprint lang-ini">
+[log]
+  max_traces = 25
+</pre>{/literal}
+
+Will limit Buck to creating, at most, 25{sp}
+<a href="{ROOT}about/performance_tuning.html">Chrome Traces</a>.
+
+
+{call .section}{param title: 'ndk' /}{/call}
 
 This section may define both <code>min_version</code> and{sp}
 <code>max_version</code> properties to enable Buck to check before building an{sp}
 {call buck.ndk_library /} that the project supports the configured NDK. Both
 properties must be specified to enable this check. For example, to support
 only versions r7 through r8d:
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [ndk]
   min_version = r7
   max_version = r8d
 </pre>{/literal}
 
 
-<h2>[test]</h2>
-
-This section may define a <code>timeout</code> for each test that Buck runs.
-The value given is in milliseconds.
-
-{literal}<pre>
-# This specifies a maximum timeout of 5 minutes (300000 
-# milliseconds) per test. A JUnit test can override this 
-# via its `@Test` annotation.
-timeout = 300000
-</pre>{/literal}
-
-
-<h2>[project]</h2>
+{call .section}{param title: 'project' /}{/call}
 
 This section may define a <code>default_android_manifest</code> property
 to identify the <code>AndroidManifest.xml</code> that should be used when
@@ -260,7 +298,7 @@ project needs an <code>AndroidManifest.xml</code>, this provides a convenient
 fallback, preventing the need to litter your project with boilerplate
 {sp}<code>AndroidManifest.xml</code> files.
 
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [project]
   default_android_manifest = //shared/AndroidManifest.xml
 </pre>{/literal}
@@ -278,7 +316,7 @@ want to be sure that <code>genrule()</code> was built before importing the
 project into IntelliJ because IntelliJ does not know how to build
 your <code>genrule()</code> as part of its built-in build process:
 
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [project]
   initial_targets = //java/com/facebook/schema:generate_thrift_jar
 </pre>{/literal}
@@ -296,7 +334,7 @@ Buck automatically excludes its own output, e.g. <code>buck-out</code>,
 (see the "dir" setting of the "cache" section), but it makes no assumptions
 about source control systems.
 
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [project]
   ignore = .git
 </pre>{/literal}
@@ -308,7 +346,7 @@ daemon filesystem monitoring. Setting this property to match any temporary files
 created by your IDE or editor will avoid unnecessary cache invalidation when using
 the Buck daemon.
 
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [project]
   temp_files = ^#.*#$, .*~$, .*\.swp$
 </pre>{/literal}
@@ -321,23 +359,24 @@ In these cases, you may want to let <code>buck project</code> do the bulk of the
 heavy-lifting, and then let your <code>post_process</code> script do some cleanup
 on the generated files.
 
-{literal}<pre>
+{literal}<pre class="prettyprint lang-ini">
 [project]
   post_process = ./scripts/post_process_buck_project.sh
 </pre>{/literal}
 
-<h2>[log]</h2>
 
-This section controls how Buck will log information about builds for later
-inspection.
+{call .section}{param title: 'test' /}{/call}
 
-{literal}<pre>
-[log]
-  max_traces = 25
+This section may define a <code>timeout</code> for each test that Buck runs.
+The value given is in milliseconds.
+
+{literal}<pre class="prettyprint lang-ini">
+[test]
+  # This specifies a maximum timeout of 5 minutes (300000 
+  # milliseconds) per test. A JUnit test can override this 
+  # via its `@Test` annotation.
+  timeout = 300000
 </pre>{/literal}
-
-Will limit Buck to creating, at most, 25{sp}
-<a href="{ROOT}about/performance_tuning.html">Chrome Traces</a>.
 
     {/param}
   {/call}

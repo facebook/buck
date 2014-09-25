@@ -92,7 +92,7 @@ function createLineLexer(patterns) {
 PR['registerLangHandler'](
   createLineLexer([
     // If a line starts with a semicolon or hash as the first non-whitespace character then the whole line is a comment
-    [ /^\s*([;#].+)/, PR['PR_COMMENT'] ],
+    [ /^\s*([;#][^\n]*)/, PR['PR_COMMENT'] ],
     // If the first non-whitespace character is a left bracket and it ends with a right bracket then it's a section marker
     [ /^\s*(\[[^\]]*\])\s*$/, PR['PR_KEYWORD'] ],
     // Attributes start with a name followed by an equals sign or colon and then everything after is the value (trimmed)
