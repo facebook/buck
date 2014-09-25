@@ -52,7 +52,7 @@ public class CxxBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   @Override
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return ImmutableList.of(output.toString());
+    return ImmutableList.of(projectFilesystem.resolve(output).toString());
   }
 
   @Override
