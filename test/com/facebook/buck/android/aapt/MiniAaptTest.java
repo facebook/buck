@@ -19,6 +19,7 @@ package com.facebook.buck.android.aapt;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
@@ -137,6 +138,17 @@ public class MiniAaptTest {
             new FakeRDotTxtEntry(IdType.INT, RType.ATTR, "complexAttr"),
             new FakeRDotTxtEntry(IdType.INT, RType.ID, "some_id"),
             new FakeRDotTxtEntry(IdType.INT, RType.STYLE, "Widget_Theme")));
+
+    boolean foundElement = false;
+    for (RDotTxtEntry definition : definitions) {
+      if (definition.name.equals("MyNiceView")) {
+        assertEquals(
+            "{ 0x7f000000,0x7f000000,0x7f000000,0x7f000000 }",
+            definition.idValue);
+        foundElement = true;
+      }
+    }
+    assertTrue(foundElement);
   }
 
   @Test(expected = ResourceParseException.class)

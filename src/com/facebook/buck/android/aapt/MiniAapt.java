@@ -300,7 +300,6 @@ public class MiniAapt implements Step {
   private void addToResourceCollector(Node node, RType rType) {
     String resourceName = sanitizeName(extractNameAttribute(node));
     if (rType.equals(RType.STYLEABLE)) {
-      resourceCollector.addIntArrayResourceIfNotPresent(rType, resourceName);
 
       int count = 0;
       for (Node attrNode = node.getFirstChild();
@@ -326,6 +325,8 @@ public class MiniAapt implements Step {
           resourceCollector.addIntResourceIfNotPresent(RType.ATTR, attrName);
         }
       }
+
+      resourceCollector.addIntArrayResourceIfNotPresent(rType, resourceName, count);
     } else {
       resourceCollector.addIntResourceIfNotPresent(rType, resourceName);
     }

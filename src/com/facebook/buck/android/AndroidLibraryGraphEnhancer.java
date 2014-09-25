@@ -31,16 +31,23 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidLibraryGraphEnhancer {
 
+  public static enum ResourceDependencyMode {
+    FIRST_ORDER,
+    TRANSITIVE,
+  }
+
   private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR = new Flavor("dummy_r_dot_java");
 
   private final BuildTarget dummyRDotJavaBuildTarget;
   private final BuildRuleParams originalBuildRuleParams;
   private final JavacOptions javacOptions;
+  private final ResourceDependencyMode resourceDependencyMode;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
       BuildRuleParams buildRuleParams,
-      JavacOptions javacOptions) {
+      JavacOptions javacOptions,
+      ResourceDependencyMode resourceDependencyMode) {
     Preconditions.checkNotNull(buildTarget);
     this.dummyRDotJavaBuildTarget = BuildTarget.builder(buildTarget)
         .addFlavor(DUMMY_R_DOT_JAVA_FLAVOR)
@@ -53,17 +60,32 @@ public class AndroidLibraryGraphEnhancer {
     this.javacOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
         .setJavaCompilerEnvironment(javacOptions.getJavaCompilerEnvironment())
         .build();
+    this.resourceDependencyMode = Preconditions.checkNotNull(resourceDependencyMode);
   }
 
   public Optional<DummyRDotJava> createBuildableForAndroidResources(
       BuildRuleResolver ruleResolver,
       boolean createBuildableIfEmptyDeps) {
     ImmutableSortedSet<BuildRule> originalDeps = originalBuildRuleParams.getDeps();
-    ImmutableSet<HasAndroidResourceDeps> androidResourceDeps =
-        FluentIterable.from(originalDeps)
+    ImmutableSet<HasAndroidResourceDeps> androidResourceDeps;
+
+    switch (resourceDependencyMode) {
+      case FIRST_ORDER:
+        androidResourceDeps = FluentIterable.from(originalDeps)
             .filter(HasAndroidResourceDeps.class)
             .filter(HasAndroidResourceDeps.NON_EMPTY_RESOURCE)
             .toSet();
+        break;
+      case TRANSITIVE:
+        androidResourceDeps = UnsortedAndroidResourceDeps.createFrom(
+            originalDeps,
+            Optional.<UnsortedAndroidResourceDeps.Callback>absent())
+            .getResourceDeps();
+        break;
+      default:
+        throw new IllegalStateException(
+            "Invalid resource dependency mode: " + resourceDependencyMode);
+    }
 
     if (androidResourceDeps.isEmpty() && !createBuildableIfEmptyDeps) {
       return Optional.absent();

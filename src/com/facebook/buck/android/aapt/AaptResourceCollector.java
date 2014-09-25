@@ -18,6 +18,7 @@ package com.facebook.buck.android.aapt;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -32,9 +33,6 @@ import java.util.Set;
  * the resource type, and {@code yyyy} represents the id within that resource type.
  */
 public class AaptResourceCollector {
-
-  // We cheat here because array values are ignored by Robolectric.
-  private static final String ARRAY_VALUE = "{ }";
 
   private int currentTypeId;
   private final HashMap<RType, ResourceIdEnumerator> enumerators;
@@ -58,8 +56,13 @@ public class AaptResourceCollector {
     }
   }
 
-  public void addIntArrayResourceIfNotPresent(RType rType, String name) {
-    addResource(rType, IdType.INT_ARRAY, name, ARRAY_VALUE);
+  public void addIntArrayResourceIfNotPresent(RType rType, String name, int numValues) {
+    // Robolectric expects the array to be populated with the right number of values, irrespective
+    // of what the values are.
+    String idValue = String.format(
+        "{ %s }",
+        Joiner.on(",").join(Collections.nCopies(numValues, "0x7f000000")));
+    addResource(rType, IdType.INT_ARRAY, name, idValue);
   }
 
   public void addResource(RType rType, IdType idType, String name, String idValue) {

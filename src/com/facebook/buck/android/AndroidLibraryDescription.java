@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryDescription;
@@ -68,7 +69,8 @@ public class AndroidLibraryDescription implements Description<AndroidLibraryDesc
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyWithExtraDeps(args.exportedDeps.get()),
-        javacOptions.build());
+        javacOptions.build(),
+        ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
         resolver,
         /* createBuildableIfEmpty */ false);

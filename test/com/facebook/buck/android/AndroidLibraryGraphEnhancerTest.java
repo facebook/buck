@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacVersion;
@@ -49,7 +50,8 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
-        JavacOptions.DEFAULTS);
+        JavacOptions.DEFAULTS,
+        ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> result = graphEnhancer.createBuildableForAndroidResources(
         new BuildRuleResolver(),
         /* createdBuildableIfEmptyDeps */ false);
@@ -80,7 +82,8 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
-        JavacOptions.DEFAULTS);
+        JavacOptions.DEFAULTS,
+        ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -132,7 +135,8 @@ public class AndroidLibraryGraphEnhancerTest {
                     Optional.of(new JavacVersion("1.7")),
                     PopularAndroidJavaCompilerEnvironment.TARGETED_JAVA_VERSION,
                     PopularAndroidJavaCompilerEnvironment.TARGETED_JAVA_VERSION))
-            .build());
+            .build(),
+        ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
