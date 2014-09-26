@@ -151,7 +151,7 @@ public class DummyRDotJavaTest {
                                                  String pathToAbiOutputFile) {
     Set<SourcePath> javaSourceFiles = ImmutableSet.<SourcePath>of(
         new TestSourcePath("buck-out/bin/java/base/__rule_rdotjava_src__/com/facebook/R.java"));
-    return UberRDotJavaUtil.createJavacStepForDummyRDotJavaFiles(
+    return RDotJava.createJavacStepForDummyRDotJavaFiles(
         javaSourceFiles,
         Paths.get(rDotJavaClassesFolder),
         Optional.of(Paths.get(pathToAbiOutputFile)),

@@ -38,10 +38,10 @@ import java.util.Set;
  * {@code R.java} file represents the transitive closure of Android libraries that are being
  * packaged into an APK and has the real values for that APK.
  */
-public class UberRDotJavaUtil {
+public class RDotJava {
 
   /** Utility class: do not instantiate. */
-  private UberRDotJavaUtil() {}
+  private RDotJava() {}
 
   static JavacStep createJavacStepForUberRDotJavaFiles(
       Set<SourcePath> javaSourceFilePaths,

@@ -127,7 +127,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
     // Compile the .java files.
     final JavacStep javacStep =
-        UberRDotJavaUtil.createJavacStepForDummyRDotJavaFiles(
+        RDotJava.createJavacStepForDummyRDotJavaFiles(
             javaSourceFilePaths,
             rDotJavaClassesFolder,
             Optional.of(pathToAbiOutputFile),

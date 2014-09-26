@@ -340,7 +340,7 @@ public class AaptPackageResources extends AbstractBuildRule
     Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
     steps.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
-    JavacStep javac = UberRDotJavaUtil.createJavacStepForUberRDotJavaFiles(
+    JavacStep javac = RDotJava.createJavacStepForUberRDotJavaFiles(
         mergeStep.getRDotJavaFiles(),
         rDotJavaBin,
         javacOptions,
