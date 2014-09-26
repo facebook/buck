@@ -108,19 +108,24 @@ class BuckRepo:
 
     def __init__(self, buck_bin_dir, buck_project, launch_command):
         self._buck_bin_dir = buck_bin_dir
-        self._buck_dir = os.path.dirname(self._buck_bin_dir)
+        self._buck_dir = self._platform_path(os.path.dirname(self._buck_bin_dir))
         self._build_success_file = os.path.join(
             self._buck_dir, "build", "successful-build")
         self._buck_client_file = os.path.join(
             self._buck_dir, "build", "ng")
 
         self._buck_project = buck_project
-        self._tmp_dir = buck_project.tmp_dir
+        self._tmp_dir = self._platform_path(buck_project.tmp_dir)
+
+        self._pathsep = os.pathsep
+        if (sys.platform == 'cygwin'):
+            self._pathsep = ';'
 
         self._launch_command = launch_command
 
         dot_git = os.path.join(self._buck_dir, '.git')
-        self._is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git')
+        self._is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git') and \
+            sys.platform != 'cygwin'
         self._is_buck_repo_dirty_override = os.environ.get('BUCK_REPOSITORY_DIRTY')
 
         buck_version = buck_project.buck_version
@@ -597,8 +602,13 @@ class BuckRepo:
             java_args.extend(extra_java_args.split(' '))
         return java_args
 
+    def _platform_path(self, path):
+        if sys.platform != 'cygwin':
+            return path
+        return subprocess.check_output(['cygpath', '-w', path]).strip()
+
     def _get_java_classpath(self):
-        return os.pathsep.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
+        return self._pathsep.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
 
 
 class BuckRepoException(Exception):

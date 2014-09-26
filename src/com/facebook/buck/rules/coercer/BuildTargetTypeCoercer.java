@@ -21,6 +21,7 @@ import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 
 import java.nio.file.Path;
@@ -47,9 +48,12 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
     if (object instanceof String) {
       String param = (String) object;
       try {
+        String baseName = BuildTarget.BUILD_TARGET_PREFIX +
+            MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
+
         return buildTargetParser.parse(
             param,
-            ParseContext.forBaseName("//" + pathRelativeToProjectRoot));
+            ParseContext.forBaseName(baseName));
       } catch (BuildTargetParseException e) {
         throw CoerceFailedException.simple(object, getOutputClass());
       }
