@@ -104,17 +104,27 @@ public class WorkspaceAndProjectGenerator {
     } else {
       orderedBuildRules = ImmutableSet.of();
     }
-    ImmutableSet.Builder<BuildRule> orderedTestBuildRulesBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder = ImmutableSet.builder();
 
-    getOrderedTestRules(
-        projectGraph,
-        sourceRuleToTestRules,
-        orderedBuildRules,
-        extraTestBundleRules,
-        orderedTestBuildRulesBuilder,
-        orderedTestBundleRulesBuilder);
+    ImmutableSet<BuildRule> orderedTestBuildRules;
+    ImmutableSet<BuildRule> orderedTestBundleRules;
+    {
+      ImmutableSet.Builder<BuildRule> orderedTestBuildRulesBuilder = ImmutableSet.builder();
+      ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder = ImmutableSet.builder();
 
+      getOrderedTestRules(
+          projectGraph,
+          sourceRuleToTestRules,
+          orderedBuildRules,
+          extraTestBundleRules,
+          orderedTestBuildRulesBuilder,
+          orderedTestBundleRulesBuilder);
+
+      orderedTestBuildRules = orderedTestBuildRulesBuilder.build();
+      orderedTestBundleRules = orderedTestBundleRulesBuilder.build();
+    }
+
+    Sets.SetView<BuildRule> rulesInRequiredProjects =
+        Sets.union(orderedBuildRules, orderedTestBuildRules);
     ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
         ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
@@ -123,6 +133,10 @@ public class WorkspaceAndProjectGenerator {
     for (XcodeProjectConfig xcodeProjectConfig : Iterables.filter(
         projectGraph.getNodes(),
         XcodeProjectConfig.class)) {
+      if (Sets.intersection(rulesInRequiredProjects, xcodeProjectConfig.getRules()).isEmpty()) {
+        continue;
+      }
+
       ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
       for (BuildRule memberRule : xcodeProjectConfig.getRules()) {
         initialTargetsBuilder.add(memberRule.getBuildTarget());
@@ -206,12 +220,11 @@ public class WorkspaceAndProjectGenerator {
 
     Path workspacePath = workspaceGenerator.writeWorkspace();
 
-    ImmutableSet<BuildRule> orderedTestBundleRules = orderedTestBundleRulesBuilder.build();
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
         workspaceBuildable.getSrcTarget(),
         orderedBuildRules,
-        orderedTestBuildRulesBuilder.build(),
+        orderedTestBuildRules,
         orderedTestBundleRules,
         workspaceName,
         outputDirectory.resolve(workspaceName + ".xcworkspace"),

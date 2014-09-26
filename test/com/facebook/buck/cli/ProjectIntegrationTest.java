@@ -398,4 +398,20 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void generatingAllWorkspacesWillNotIncludeAllProjectsInEachOfThem() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "generating_all_workspaces_will_not_include_all_projects_in_each_of_them",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--workspace-and-projects");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
 }

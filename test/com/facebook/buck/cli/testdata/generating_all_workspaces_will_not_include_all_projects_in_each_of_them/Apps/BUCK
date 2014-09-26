@@ -1,0 +1,76 @@
+EMPTY_CONFIGS = {
+  'Debug': (
+    '',
+    {},
+    '',
+    {},
+  ),
+  'Release': (
+    '',
+    {},
+    '',
+    {},
+  ),
+}
+
+apple_binary(
+  name = 'TestAppBinary1',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    '//Libraries:Dep1',
+    '//Libraries:Dep2',
+  ],
+)
+
+apple_bundle(
+  name = 'TestApp1',
+  deps = [':TestAppBinary1'],
+  binary = ':TestAppBinary1',
+  extension = 'app',
+)
+
+xcode_project_config(
+  name = 'project1',
+  project_name = 'TestApp1',
+  rules = [
+    ':TestApp1',
+  ],
+)
+
+xcode_workspace_config(
+  name = 'workspace1',
+  src_target = '//Apps:TestApp1'
+)
+
+apple_binary(
+  name = 'TestAppBinary2',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    '//Libraries:Dep2',
+    '//Libraries:Dep3',
+  ],
+)
+
+apple_bundle(
+  name = 'TestApp2',
+  deps = [':TestAppBinary2'],
+  binary = ':TestAppBinary2',
+  extension = 'app',
+)
+
+xcode_project_config(
+  name = 'project2',
+  project_name = 'TestApp2',
+  rules = [
+    ':TestApp2',
+  ],
+)
+
+xcode_workspace_config(
+  name = 'workspace2',
+  src_target = '//Apps:TestApp2'
+)
