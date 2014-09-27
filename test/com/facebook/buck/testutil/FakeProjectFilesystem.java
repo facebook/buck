@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -190,8 +191,26 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
+  public boolean isHidden(Path path) {
+    return isFile(path) && path.getFileName().toString().startsWith(".");
+  }
+
+  @Override
   public boolean isDirectory(Path path, LinkOption... linkOptions) {
     return directories.contains(path.normalize());
+  }
+
+  @Override
+  public Collection<Path> getDirectoryContents(final Path pathRelativeToProjectRoot) {
+    Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
+    return FluentIterable.from(fileContents.keySet()).filter(
+        new Predicate<Path>() {
+          @Override
+          public boolean apply(Path input) {
+            return input.getParent().equals(pathRelativeToProjectRoot);
+          }
+        })
+        .toList();
   }
 
   @Override

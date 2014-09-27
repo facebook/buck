@@ -264,6 +264,10 @@ public class ProjectFilesystem {
         getPathForRelativePath(pathRelativeToProjectRoot));
   }
 
+  public boolean isHidden(Path pathRelativeToProjectRoot) throws IOException {
+    return Files.isHidden(getPathForRelativePath(pathRelativeToProjectRoot));
+  }
+
   /**
    * Similar to {@link #walkFileTree(Path, FileVisitor)} except this takes in a path relative to
    * the project root.

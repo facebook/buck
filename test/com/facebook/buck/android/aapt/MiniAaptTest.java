@@ -215,7 +215,6 @@ public class MiniAaptTest {
   @Test
   public void testVerifyReferences()
       throws IOException, XPathExpressionException, ResourceParseException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.writeLinesToPath(RESOURCES, Paths.get("resource.xml"));
 
     ImmutableList<String> rDotTxt = ImmutableList.of(
@@ -236,5 +235,22 @@ public class MiniAaptTest {
         ImmutableSet.<RDotTxtEntry>of(
             new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "some_image")),
         missing);
+  }
+
+  @Test
+  public void testProcessFileNamesInDirectory() throws IOException, ResourceParseException {
+    filesystem.touch(Paths.get("res/drawable/icon.png"));
+    filesystem.touch(Paths.get("res/drawable-ldpi/nine_patch.9.png"));
+    filesystem.touch(Paths.get("res/drawable-ldpi/.DS_Store"));
+
+    MiniAapt aapt = new MiniAapt(Paths.get("res"), Paths.get("R.txt"), ImmutableSet.<Path>of());
+    aapt.processFileNamesInDirectory(filesystem, Paths.get("res/drawable"));
+    aapt.processFileNamesInDirectory(filesystem, Paths.get("res/drawable-ldpi"));
+
+    assertEquals(
+        ImmutableSet.<RDotTxtEntry>of(
+            new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "icon"),
+            new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "nine_patch")),
+        aapt.getResourceCollector().getResources());
   }
 }

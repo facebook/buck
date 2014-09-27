@@ -210,28 +210,41 @@ public class MiniAapt implements Step {
         continue;
       }
 
-      int dashIndex = dirname.indexOf('-');
-      if (dashIndex != -1) {
-        dirname = dirname.substring(0, dashIndex);
+      processFileNamesInDirectory(filesystem, dir);
+    }
+  }
+
+  void processFileNamesInDirectory(ProjectFilesystem filesystem, Path dir)
+      throws IOException, ResourceParseException {
+    String dirname = dir.getFileName().toString();
+    int dashIndex = dirname.indexOf('-');
+    if (dashIndex != -1) {
+      dirname = dirname.substring(0, dashIndex);
+    }
+
+    if (!RESOURCE_TYPES.containsKey(dirname)) {
+      throw new ResourceParseException("'%s' is not a valid resource sub-directory.", dir);
+    }
+
+    for (Path resourceFile : filesystem.getDirectoryContents(dir)) {
+      if (filesystem.isHidden(resourceFile)) {
+        continue;
       }
 
-      if (!RESOURCE_TYPES.containsKey(dirname)) {
-        throw new ResourceParseException("'%s' is not a valid resource sub-directory.", dir);
-      }
+      String filename = resourceFile.getFileName().toString();
+      int dotIndex = filename.indexOf('.');
+      String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
 
-      for (Path resourceFile : filesystem.getDirectoryContents(dir)) {
-        String filename = resourceFile.getFileName().toString();
-        int dotIndex = filename.indexOf('.');
-        String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
-
-        resourceCollector.addIntResourceIfNotPresent(RESOURCE_TYPES.get(dirname), resourceName);
-      }
+      resourceCollector.addIntResourceIfNotPresent(RESOURCE_TYPES.get(dirname), resourceName);
     }
   }
 
   void processValues(ProjectFilesystem filesystem, BuckEventBus eventBus, Path valuesDir)
       throws IOException, ResourceParseException {
     for (Path path : filesystem.getFilesUnderPath(valuesDir)) {
+      if (filesystem.isHidden(path)) {
+        continue;
+      }
       if (!filesystem.isFile(path) && !filesystem.isIgnored(path)) {
         eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring non-file '%s'.", path));
         continue;
