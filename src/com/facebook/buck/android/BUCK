@@ -74,7 +74,6 @@ RULES_SRCS = [
   'ResourcesFilter.java',
   'RobolectricTestDescription.java',
   'RobolectricTest.java',
-  'UberRDotJava.java',
   'UberRDotJavaUtil.java',
   'UnsortedAndroidResourceDeps.java',
 ]
