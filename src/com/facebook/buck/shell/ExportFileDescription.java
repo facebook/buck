@@ -19,7 +19,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -48,7 +47,7 @@ public class ExportFileDescription implements Description<ExportFileDescription.
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg implements ConstructorArg {
+  public static class Arg {
     public Optional<? extends SourcePath> src;
     public Optional<String> out;
   }

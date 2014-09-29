@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ConstructorArg;
 
 import com.facebook.buck.rules.Label;
 import com.google.common.base.Optional;
@@ -51,7 +50,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg implements ConstructorArg {
+  public static class Arg {
     public BuildRule testBundle;
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;

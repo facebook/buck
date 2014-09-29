@@ -17,7 +17,6 @@
 package com.facebook.buck.thrift;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -27,7 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 @SuppressFieldNotInitialized
-public class ThriftConstructorArg implements ConstructorArg {
+public class ThriftConstructorArg {
 
   public String name;
   public ImmutableMap<SourcePath, ImmutableList<String>> srcs;

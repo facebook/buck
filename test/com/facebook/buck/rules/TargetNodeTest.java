@@ -81,7 +81,7 @@ public class TargetNodeTest {
             BuildTargetFactory.newInstance("//example/path:two")));
   }
 
-  public class Arg implements ConstructorArg {
+  public class Arg {
     public ImmutableSortedSet<BuildRule> deps;
     public ImmutableSortedSet<SourcePath> sourcePaths;
     public Optional<AppleSource> appleSource;

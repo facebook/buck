@@ -28,7 +28,7 @@ import com.facebook.buck.model.Flavor;
  *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
  *
  */
-public interface Description<T extends ConstructorArg> {
+public interface Description<T> {
 
   /**
    * @return The {@link BuildRuleType} being described.

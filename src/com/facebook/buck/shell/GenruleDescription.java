@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -95,7 +94,7 @@ public class GenruleDescription
   }
 
   @SuppressFieldNotInitialized
-  public class Arg implements ConstructorArg {
+  public class Arg {
     public String out;
     public Optional<String> bash;
     public Optional<String> cmd;

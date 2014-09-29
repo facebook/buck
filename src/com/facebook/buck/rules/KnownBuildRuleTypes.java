@@ -110,7 +110,7 @@ public class KnownBuildRuleTypes {
     return type;
   }
 
-  public Description<? extends ConstructorArg> getDescription(BuildRuleType buildRuleType) {
+  public Description<?> getDescription(BuildRuleType buildRuleType) {
     Description<?> description = descriptions.get(buildRuleType);
     if (description == null) {
       throw new HumanReadableException(

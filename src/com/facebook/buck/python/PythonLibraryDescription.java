@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
@@ -37,7 +36,7 @@ public class PythonLibraryDescription implements Description<Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("python_library");
 
   @SuppressFieldNotInitialized
-  public static class Arg implements ConstructorArg {
+  public static class Arg {
     public Optional<Either<
         ImmutableSortedSet<SourcePath>,
         ImmutableMap<String, SourcePath>>>

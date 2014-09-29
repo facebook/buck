@@ -25,7 +25,7 @@ public interface DependencyEnhancer {
   /**
    * A {@link BuildRule} may employ graph enhancement to alter its dependencies. If it does this, it
    * must return the new dependencies via this method. The {@code inferredDeps} are derived by
-   * looking at a {@link ConstructorArg}'s public fields other than {@code deps} and finding any
+   * looking at a constructor arg's public fields other than {@code deps} and finding any
    * that are or contain {@link BuildRule}s. The union of these and the {@code declaredDeps}
    * provides all the known dependencies of a rule.
    * <p>

@@ -65,7 +65,7 @@ public class KnownBuildRuleTypesTest {
 
   private static BuildRuleParams buildRuleParams;
 
-  private static class TestDescription implements Description<ConstructorArg> {
+  private static class TestDescription implements Description<Object> {
 
     public static final BuildRuleType TYPE = new BuildRuleType("known_rule_test");
 
@@ -85,12 +85,12 @@ public class KnownBuildRuleTypesTest {
     }
 
     @Override
-    public ConstructorArg createUnpopulatedConstructorArg() {
-      return new ConstructorArg() {};
+    public Object createUnpopulatedConstructorArg() {
+      return new Object();
     }
 
     @Override
-    public <A extends ConstructorArg> BuildRule createBuildRule(
+    public <A> BuildRule createBuildRule(
         BuildRuleParams params,
         BuildRuleResolver resolver,
         A args) {

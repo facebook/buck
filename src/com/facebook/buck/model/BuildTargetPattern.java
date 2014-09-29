@@ -34,8 +34,7 @@ public interface BuildTargetPattern extends Predicate<BuildTarget> {
   };
 
   /**
-   * Value that can be used for the {@code visibility} argument for a
-   * {@link com.facebook.buck.rules.ConstructorArg} for a rule that should be public.
+   * Value that can be used for the {@code visibility} argument for a rule that should be public.
    */
   public static final ImmutableSet<BuildTargetPattern> PUBLIC =
       ImmutableSet.of(BuildTargetPattern.MATCH_ALL);

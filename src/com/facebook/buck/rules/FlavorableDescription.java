@@ -21,7 +21,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 /**
  * {@link Description} that has flavors to register.
  */
-public interface FlavorableDescription<T extends ConstructorArg> extends Description<T> {
+public interface FlavorableDescription<T> extends Description<T> {
 
   // TODO(simons): Currently, this API requires that implementations create Buildables for all
   // possible flavors, which can waste memory. Tighten up this API so that such Buildables are

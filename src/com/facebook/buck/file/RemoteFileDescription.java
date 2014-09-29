@@ -20,7 +20,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -63,7 +62,7 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
   }
 
   @SuppressFieldNotInitialized
-  public class Arg implements ConstructorArg {
+  public class Arg {
     public URI url;
     public String sha1;
     public Optional<String> out;

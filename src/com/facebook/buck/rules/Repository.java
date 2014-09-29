@@ -77,7 +77,7 @@ public class Repository {
     return filesystem;
   }
 
-  public Description<? extends ConstructorArg> getDescription(BuildRuleType type) {
+  public Description<?> getDescription(BuildRuleType type) {
     return buildRuleTypes.getDescription(type);
   }
 

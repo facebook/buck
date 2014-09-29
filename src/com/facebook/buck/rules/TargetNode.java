@@ -39,7 +39,7 @@ import java.util.Set;
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
-public class TargetNode<T extends ConstructorArg> implements Comparable<TargetNode<?>> {
+public class TargetNode<T> implements Comparable<TargetNode<?>> {
 
   private final BuildRuleFactoryParams ruleFactoryParams;
   private final Description<T> description;

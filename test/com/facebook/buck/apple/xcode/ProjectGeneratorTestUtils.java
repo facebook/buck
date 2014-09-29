@@ -34,7 +34,6 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
@@ -65,7 +64,7 @@ final class ProjectGeneratorTestUtils {
    */
   private ProjectGeneratorTestUtils() {}
 
-  public static <T extends ConstructorArg> BuildRule createBuildRuleWithDefaults(
+  public static <T> BuildRule createBuildRuleWithDefaults(
       BuildTarget target,
       ImmutableSortedSet<BuildRule> deps,
       Description<T> description,
@@ -83,7 +82,7 @@ final class ProjectGeneratorTestUtils {
    * Helper function to create a build rule for a description, initializing fields to empty values,
    * and allowing a user to override specific fields.
    */
-  public static <T extends ConstructorArg> BuildRule createBuildRuleWithDefaults(
+  public static <T> BuildRule createBuildRuleWithDefaults(
       BuildTarget target,
       BuildRuleResolver resolver,
       ImmutableSortedSet<BuildRule> deps,

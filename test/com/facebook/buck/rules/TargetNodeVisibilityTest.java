@@ -217,7 +217,7 @@ public class TargetNodeVisibilityTest {
       return new FakeBuildRule(params);
     }
 
-    public static class FakeArg implements ConstructorArg {
+    public static class FakeArg {
 
     }
   }

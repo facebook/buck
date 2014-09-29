@@ -37,7 +37,7 @@ import java.nio.file.Paths;
  *
  * @param <A> The type of the constructor arg returned by the Buildable's {@link Description}.
  */
-public abstract class AbstractBuilder<A extends ConstructorArg> {
+public abstract class AbstractBuilder<A> {
 
   private final Description<A> description;
   private final BuildTarget target;

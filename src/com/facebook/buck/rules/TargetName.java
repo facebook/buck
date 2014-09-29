@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 
 
 /**
- * Annotates that a {@link ConstructorArg} has no 'name' attribute.
+ * Annotates that a {@link Description}'s constructor arg has no 'name' attribute.
  */
 @Retention(RUNTIME)
 @Target({TYPE})

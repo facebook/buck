@@ -75,7 +75,6 @@ java_library(
     'BuildRuleSuccess.java',
     'BuildRuleType.java',
     'CacheResult.java',
-    'ConstructorArg.java',
     'ConstructorArgMarshaller.java',
     'ConstructorArgMarshalException.java',
     'DefaultBuildableParams.java',

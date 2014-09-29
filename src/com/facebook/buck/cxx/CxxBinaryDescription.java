@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -99,7 +98,7 @@ public class CxxBinaryDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg implements ConstructorArg {
+  public static class Arg {
     public Optional<ImmutableList<SourcePath>> srcs;
     public Optional<ImmutableList<SourcePath>> headers;
     public Optional<ImmutableSortedSet<BuildRule>> deps;

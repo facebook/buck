@@ -37,13 +37,11 @@ import java.util.concurrent.ExecutionException;
  * There are two major uses this information is put to: populating the DTO object from the
  * {@link BuildRuleFactoryParams}, which is populated by the functions added to Buck's core build
  * file parsing script. The second function of this class is to generate those functions.
- *
- * @see ConstructorArg
  */
 public class ConstructorArgMarshaller {
 
   private final TypeCoercerFactory typeCoercerFactory;
-  private final Cache<Class<? extends ConstructorArg>, ImmutableSet<ParamInfo>> coercedTypes;
+  private final Cache<Class<?>, ImmutableSet<ParamInfo>> coercedTypes;
 
   /**
    * Constructor. {@code pathFromProjectRootToBuildFile} is the path relative to the project root to
@@ -83,7 +81,7 @@ public class ConstructorArgMarshaller {
       BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
-      ConstructorArg dto) throws ConstructorArgMarshalException {
+      Object dto) throws ConstructorArgMarshalException {
     populate(
         ruleResolver,
         filesystem,
@@ -96,7 +94,7 @@ public class ConstructorArgMarshaller {
       BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
-      ConstructorArg dto,
+      Object dto,
       boolean onlyOptional) throws ConstructorArgMarshalException {
     Set<ParamInfo> allInfo = getAllParamInfo(dto);
 
@@ -112,8 +110,8 @@ public class ConstructorArgMarshaller {
     }
   }
 
-  ImmutableSet<ParamInfo> getAllParamInfo(ConstructorArg dto) {
-    final Class<? extends ConstructorArg> argClass = dto.getClass();
+  ImmutableSet<ParamInfo> getAllParamInfo(Object dto) {
+    final Class<?> argClass = dto.getClass();
     try {
       return coercedTypes.get(argClass, new Callable<ImmutableSet<ParamInfo>>() {
             @Override

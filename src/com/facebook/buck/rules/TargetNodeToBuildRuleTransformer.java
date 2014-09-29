@@ -32,7 +32,7 @@ public class TargetNodeToBuildRuleTransformer {
 
   ConstructorArgMarshaller inspector = new ConstructorArgMarshaller();
 
-  public <T extends ConstructorArg> BuildRule transform(
+  public <T> BuildRule transform(
       BuildRuleResolver ruleResolver,
       TargetNode<T> targetNode)
       throws NoSuchBuildTargetException {

@@ -20,7 +20,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
@@ -52,7 +51,7 @@ public class XcodeWorkspaceConfigDescription
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg implements ConstructorArg {
+  public static class Arg {
     public Optional<BuildRule> srcTarget;
     public Optional<ImmutableSet<BuildRule>> extraTests;
     public Optional<String> workspaceName;

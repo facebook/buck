@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
@@ -31,7 +30,7 @@ import com.google.common.collect.ImmutableSortedSet;
  * Arguments common to {@link com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule} subclasses
  */
 @SuppressFieldNotInitialized
-public class AppleNativeTargetDescriptionArg implements ConstructorArg {
+public class AppleNativeTargetDescriptionArg {
   /**
    * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
    */

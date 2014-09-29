@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRepositoryFactory;
@@ -90,7 +89,7 @@ public class AuditOwnerCommandTest {
       return new FakeBuildRule(params);
     }
 
-    public static class FakeArg implements ConstructorArg {
+    public static class FakeArg {
 
     }
   }
