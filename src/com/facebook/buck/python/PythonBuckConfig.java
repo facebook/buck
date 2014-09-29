@@ -38,7 +38,7 @@ public class PythonBuckConfig {
   private static final String SECTION = "python";
 
   private static final Pattern PYTHON_VERSION_REGEX =
-      Pattern.compile(".*?(\\wython \\d+\\.\\d+).*");
+      Pattern.compile(".*?(\\wy(thon|run) \\d+\\.\\d+).*");
 
   // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
   private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
@@ -147,7 +147,7 @@ public class PythonBuckConfig {
       throws InterruptedException {
     try {
       ProcessExecutor.Result versionResult = processExecutor.execute(
-          Runtime.getRuntime().exec(new String[]{pythonPath.toString(), "--version"}),
+          Runtime.getRuntime().exec(new String[]{pythonPath.toString(), "-V"}),
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_ERR),
           /* stdin */ Optional.<String>absent(),
           /* timeOutMs */ Optional.<Long>absent());
@@ -166,11 +166,13 @@ public class PythonBuckConfig {
       Path pythonPath,
       ProcessExecutor.Result versionResult) {
     if (versionResult.getExitCode() == 0) {
-      String versionString = CharMatcher.WHITESPACE.trimFrom(versionResult.getStderr().get());
+      String versionString = CharMatcher.WHITESPACE.trimFrom(
+          CharMatcher.WHITESPACE.trimFrom(versionResult.getStderr().get()) +
+          CharMatcher.WHITESPACE.trimFrom(versionResult.getStdout().get()).replaceAll("\u001B\\[[;\\d]*m", ""));
       Matcher matcher = PYTHON_VERSION_REGEX.matcher(versionString);
       if (!matcher.matches()) {
         throw new HumanReadableException(
-            "`%s --version` returned an invalid version string %s",
+            "`%s -V` returned an invalid version string %s",
             pythonPath,
             versionString);
       }
