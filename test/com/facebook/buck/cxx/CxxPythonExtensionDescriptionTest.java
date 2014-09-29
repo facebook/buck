@@ -105,7 +105,7 @@ public class CxxPythonExtensionDescriptionTest {
         ImmutableMap.<String, Map<String, String>>of(
             "cxx", ImmutableMap.of(
                 "python_dep", pythonDep.toString())));
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(buckConfig);
     desc = new CxxPythonExtensionDescription(cxxBuckConfig);
   }
 

@@ -17,7 +17,8 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -26,19 +27,19 @@ import java.nio.file.Path;
 public class OCamlBuckConfig {
 
   private final BuckConfig delegate;
-  private final CxxBuckConfig cxxBuckConfig;
+  private final CxxPlatform cxxPlatform;
 
   public OCamlBuckConfig(BuckConfig delegate) {
     this.delegate = Preconditions.checkNotNull(delegate);
-    cxxBuckConfig = new CxxBuckConfig(delegate);
+    cxxPlatform = new DefaultCxxPlatform(delegate);
   }
 
   public Optional<Path> getOCamlCompiler() {
     return delegate.getPath("ocaml", "ocaml.compiler");
   }
 
-  public Optional<Path> getCCompiler() {
-    return cxxBuckConfig.getCompiler();
+  public Path getCCompiler() {
+    return cxxPlatform.getCxx().resolve();
   }
 
   public Optional<Path> getOCamlDepTool() {

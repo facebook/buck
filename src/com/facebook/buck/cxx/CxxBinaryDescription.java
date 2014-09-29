@@ -34,10 +34,10 @@ public class CxxBinaryDescription implements
 
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_binary");
 
-  private final CxxBuckConfig cxxBuckConfig;
+  private final CxxPlatform cxxPlatform;
 
-  public CxxBinaryDescription(CxxBuckConfig cxxBuckConfig) {
-    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
+  public CxxBinaryDescription(CxxPlatform cxxPlatform) {
+    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
   }
 
   @Override
@@ -54,7 +54,7 @@ public class CxxBinaryDescription implements
     CxxLink cxxLink = CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
         params,
         resolver,
-        cxxBuckConfig,
+        cxxPlatform,
         args);
 
     // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
@@ -88,7 +88,7 @@ public class CxxBinaryDescription implements
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
     if (!params.getOptionalListAttribute("lexSrcs").isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep().toString());
+      deps.add(cxxPlatform.getLexDep().toString());
     }
 
     return deps.build();

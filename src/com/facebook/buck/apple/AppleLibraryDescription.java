@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -25,18 +26,16 @@ import com.facebook.buck.rules.Description;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Path;
-
 public class AppleLibraryDescription implements
     Description<AppleNativeTargetDescriptionArg>, Flavored {
   public static final BuildRuleType TYPE = new BuildRuleType("apple_library");
 
   public static final Flavor DYNAMIC_LIBRARY = new Flavor("dynamic");
 
-  private final Path archiver;
+  private final CxxPlatform cxxPlatform;
 
-  public AppleLibraryDescription(Path archiver) {
-    this.archiver = Preconditions.checkNotNull(archiver);
+  public AppleLibraryDescription(CxxPlatform cxxPlatform) {
+    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
   }
 
   @Override
@@ -67,7 +66,7 @@ public class AppleLibraryDescription implements
         params,
         args,
         TargetSources.ofAppleSources(args.srcs.get()),
-        archiver,
+        cxxPlatform.getAr(),
         params.getBuildTarget().getFlavors().contains(DYNAMIC_LIBRARY));
   }
 }

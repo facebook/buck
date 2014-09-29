@@ -47,9 +47,9 @@ public class CxxLexYaccIntegrationTest {
 
   @Before
   public void setUp() {
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
-    assumeExists(cxxBuckConfig.getLex());
-    assumeExists(cxxBuckConfig.getYacc());
+    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
+    assumeExists(cxxBuckConfig.getLex().resolve());
+    assumeExists(cxxBuckConfig.getYacc().resolve());
   }
 
   @Test

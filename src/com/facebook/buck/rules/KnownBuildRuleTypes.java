@@ -40,9 +40,8 @@ import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.Archives;
+import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.cxx.CxxBinaryDescription;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
@@ -189,11 +188,7 @@ public class KnownBuildRuleTypes {
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(config);
 
     // Construct the C/C++ config wrapping the buck config.
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
-
-    // Look up the path to the "ar" tool in the buck config, falling back to the default
-    // if not found.
-    Path archiver = config.getPath("tools", "ar").or(Archives.DEFAULT_ARCHIVE_PATH);
+    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(config);
 
     // Look up the path to the PEX builder script.
     Optional<Path> pythonPathToPex = config.getPath("python", "path_to_pex");
@@ -231,11 +226,11 @@ public class KnownBuildRuleTypes {
     builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
     builder.register(new PrebuiltOCamlLibraryDescription());
     builder.register(new OCamlLibraryDescription(ocamlBuckConfig));
-    builder.register(new CxxBinaryDescription(cxxBuckConfig));
-    builder.register(new CxxTestDescription(cxxBuckConfig));
-    builder.register(new CxxLibraryDescription(cxxBuckConfig));
+    builder.register(new CxxBinaryDescription(cxxPlatform));
+    builder.register(new CxxTestDescription(cxxPlatform));
+    builder.register(new CxxLibraryDescription(cxxPlatform));
     builder.register(new PrebuiltCxxLibraryDescription());
-    builder.register(new CxxPythonExtensionDescription(cxxBuckConfig));
+    builder.register(new CxxPythonExtensionDescription(cxxPlatform));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
@@ -245,7 +240,7 @@ public class KnownBuildRuleTypes {
     builder.register(new JavaBinaryDescription());
     builder.register(new JavaLibraryDescription(javacEnv));
     builder.register(new JavaTestDescription(javacEnv));
-    builder.register(new AppleLibraryDescription(archiver));
+    builder.register(new AppleLibraryDescription(cxxPlatform));
     builder.register(new AppleBinaryDescription());
     builder.register(new IosPostprocessResourcesDescription());
     builder.register(new AppleResourceDescription());
@@ -255,8 +250,8 @@ public class KnownBuildRuleTypes {
             thriftBuckConfig,
             ImmutableList.of(
                 new ThriftJavaEnhancer(thriftBuckConfig, javacEnv),
-                new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ false),
-                new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ true),
+                new ThriftCxxEnhancer(thriftBuckConfig, cxxPlatform, /* cpp2 */ false),
+                new ThriftCxxEnhancer(thriftBuckConfig, cxxPlatform, /* cpp2 */ true),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED))));
     builder.register(new NdkLibraryDescription(ndkVersion));

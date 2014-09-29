@@ -78,7 +78,7 @@ public class CxxDescriptionEnhancerTest {
                 "lex", lexPath.toString(),
                 "yacc", yaccPath.toString())),
         filesystem);
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(buckConfig);
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
@@ -149,7 +149,7 @@ public class CxxDescriptionEnhancerTest {
   @Test
   public void linkWhole() {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(buckConfig);
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
@@ -282,7 +282,7 @@ public class CxxDescriptionEnhancerTest {
         .build();
 
     // Construct C/C++ library build rules.
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
+    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
     CxxLibrary rule = CxxDescriptionEnhancer.createCxxLibraryBuildRules(
         params,
         resolver,

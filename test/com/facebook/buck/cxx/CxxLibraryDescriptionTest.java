@@ -144,7 +144,7 @@ public class CxxLibraryDescriptionTest {
     arg.yaccSrcs = Optional.absent();
 
     // Instantiate a description and call its `createBuildRule` method.
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
+    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
     CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig);
     CxxLibrary rule = description.createBuildRule(params, resolver, arg);
 

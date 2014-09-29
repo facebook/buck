@@ -36,7 +36,7 @@ import java.nio.file.Path;
  */
 public class CxxCompile extends AbstractBuildRule {
 
-  private final Path compiler;
+  private final SourcePath compiler;
   private final ImmutableList<String> flags;
   private final Path output;
   private final SourcePath input;
@@ -46,7 +46,7 @@ public class CxxCompile extends AbstractBuildRule {
 
   public CxxCompile(
       BuildRuleParams params,
-      Path compiler,
+      SourcePath compiler,
       ImmutableList<String> flags,
       Path output,
       SourcePath input,
@@ -95,7 +95,7 @@ public class CxxCompile extends AbstractBuildRule {
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new CxxCompileStep(
-            compiler,
+            compiler.resolve(),
             flags,
             output,
             input.resolve(),
@@ -108,7 +108,7 @@ public class CxxCompile extends AbstractBuildRule {
     return output;
   }
 
-  public Path getCompiler() {
+  public SourcePath getCompiler() {
     return compiler;
   }
 

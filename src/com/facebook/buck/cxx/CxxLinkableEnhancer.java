@@ -56,7 +56,7 @@ public class CxxLinkableEnhancer {
    */
   public static CxxLink createCxxLinkableBuildRule(
       BuildRuleParams params,
-      Path linker,
+      SourcePath linker,
       ImmutableList<String> cxxLdFlags,
       ImmutableList<String> ldFlags,
       BuildTarget target,

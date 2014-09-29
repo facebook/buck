@@ -45,10 +45,10 @@ public class CxxPythonExtensionDescription implements
 
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_python_extension");
 
-  private final CxxBuckConfig cxxBuckConfig;
+  private final CxxPlatform cxxPlatform;
 
-  public CxxPythonExtensionDescription(CxxBuckConfig cxxBuckConfig) {
-    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
+  public CxxPythonExtensionDescription(CxxPlatform cxxPlatform) {
+    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
   }
 
   @Override
@@ -107,7 +107,7 @@ public class CxxPythonExtensionDescription implements
         CxxDescriptionEnhancer.createLexYaccBuildRules(
             params,
             resolver,
-            cxxBuckConfig,
+            cxxPlatform,
             ImmutableList.<String>of(),
             lexSrcs,
             ImmutableList.<String>of(),
@@ -121,7 +121,7 @@ public class CxxPythonExtensionDescription implements
         headers);
     CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
         params,
-        cxxBuckConfig,
+        cxxPlatform,
         args.preprocessorFlags.or(ImmutableList.<String>of()),
         headerSymlinkTree,
         ImmutableMap.<Path, SourcePath>builder()
@@ -133,7 +133,7 @@ public class CxxPythonExtensionDescription implements
         CxxDescriptionEnhancer.createPreprocessAndCompileBuildRules(
             params,
             resolver,
-            cxxBuckConfig,
+            cxxPlatform,
             cxxPreprocessorInput,
             args.compilerFlags.or(ImmutableList.<String>of()),
             /* pic */ true,
@@ -150,9 +150,9 @@ public class CxxPythonExtensionDescription implements
     final Path extensionPath = getExtensionPath(extensionTarget);
     CxxLink extensionRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        cxxBuckConfig.getLd().or(CxxLinkables.DEFAULT_LINKER_PATH),
-        cxxBuckConfig.getCxxLdFlags(),
-        cxxBuckConfig.getLdFlags(),
+        cxxPlatform.getCxxld(),
+        cxxPlatform.getCxxldflags(),
+        cxxPlatform.getLdflags(),
         extensionTarget,
         CxxLinkableEnhancer.LinkType.SHARED,
         Optional.of(extensionName),
@@ -182,10 +182,10 @@ public class CxxPythonExtensionDescription implements
   public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params) {
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
-    deps.add(cxxBuckConfig.getPythonDep().toString());
+    deps.add(cxxPlatform.getPythonDep().toString());
 
     if (!params.getOptionalListAttribute("lexSrcs").isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep().toString());
+      deps.add(cxxPlatform.getLexDep().toString());
     }
 
     return deps.build();

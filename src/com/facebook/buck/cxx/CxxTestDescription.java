@@ -38,10 +38,10 @@ public class CxxTestDescription implements
   private static final BuildRuleType TYPE = new BuildRuleType("cxx_test");
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
-  private final CxxBuckConfig cxxBuckConfig;
+  private final CxxPlatform cxxPlatform;
 
-  public CxxTestDescription(CxxBuckConfig cxxBuckConfig) {
-    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
+  public CxxTestDescription(CxxPlatform cxxPlatform) {
+    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
   }
 
   @Override
@@ -64,7 +64,7 @@ public class CxxTestDescription implements
     CxxLink cxxLink = CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
         params,
         resolver,
-        cxxBuckConfig,
+        cxxPlatform,
         args);
 
     // Construct the actual build params we'll use, notably with an added dependency on the
@@ -137,7 +137,7 @@ public class CxxTestDescription implements
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
     if (!params.getOptionalListAttribute("lexSrcs").isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep().toString());
+      deps.add(cxxPlatform.getLexDep().toString());
     }
 
     // Attempt to extract the test type from the params, and add an implicit dep on the
@@ -146,11 +146,11 @@ public class CxxTestDescription implements
     if (type.isPresent()) {
       switch (type.get()) {
         case GTEST: {
-          deps.add(cxxBuckConfig.getGtestDep().toString());
+          deps.add(cxxPlatform.getGtestDep().toString());
           break;
         }
         case BOOST: {
-          deps.add(cxxBuckConfig.getBoostTestDep().toString());
+          deps.add(cxxPlatform.getBoostTestDep().toString());
           break;
         }
         default: {

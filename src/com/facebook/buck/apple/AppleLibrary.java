@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CompilerStep;
 import com.facebook.buck.cxx.ArchiveStep;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -28,7 +29,7 @@ import java.nio.file.Path;
 
 public class AppleLibrary extends AbstractAppleNativeTargetBuildRule {
 
-  Path archiver;
+  SourcePath archiver;
 
   private final boolean linkedDynamically;
 
@@ -36,7 +37,7 @@ public class AppleLibrary extends AbstractAppleNativeTargetBuildRule {
       BuildRuleParams params,
       AppleNativeTargetDescriptionArg arg,
       TargetSources targetSources,
-      Path archiver,
+      SourcePath archiver,
       boolean linkedDynamically) {
     super(params, arg, targetSources);
     this.linkedDynamically = linkedDynamically;
@@ -66,7 +67,7 @@ public class AppleLibrary extends AbstractAppleNativeTargetBuildRule {
               /* commandLineArgs */ ImmutableList.<String>of()));
     } else {
       return ImmutableList.<Step>of(new ArchiveStep(
-          archiver,
+          archiver.resolve(),
           outputFile,
           ImmutableList.copyOf(files)));
     }

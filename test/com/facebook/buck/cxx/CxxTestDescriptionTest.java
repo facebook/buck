@@ -46,7 +46,7 @@ public class CxxTestDescriptionTest {
         ImmutableMap.<String, Map<String, String>>of(
             "cxx",
             ImmutableMap.of("gtest_dep", gtest.toString())));
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(buckConfig);
     CxxTestDescription desc = new CxxTestDescription(cxxBuckConfig);
 
     // Test the default test type is gtest.

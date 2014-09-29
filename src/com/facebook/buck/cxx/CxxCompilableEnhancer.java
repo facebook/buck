@@ -100,7 +100,7 @@ public class CxxCompilableEnhancer {
   public static CxxCompile createCompileBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      Path compiler,
+      SourcePath compiler,
       CxxPreprocessorInput preprocessorInput,
       ImmutableList<String> compilerFlags,
       boolean pic,
@@ -161,7 +161,7 @@ public class CxxCompilableEnhancer {
   public static ImmutableSortedSet<BuildRule> createCompileBuildRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      Path compiler,
+      SourcePath compiler,
       CxxPreprocessorInput preprocessorInput,
       ImmutableList<String> compilerFlags,
       boolean pic,

@@ -39,10 +39,10 @@ public class CxxLibraryDescription implements
 
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_library");
 
-  private final CxxBuckConfig cxxBuckConfig;
+  private final CxxPlatform cxxPlatform;
 
-  public CxxLibraryDescription(CxxBuckConfig cxxBuckConfig) {
-    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
+  public CxxLibraryDescription(CxxPlatform cxxPlatform) {
+    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
   }
 
   @Override
@@ -87,7 +87,7 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.createLexYaccBuildRules(
             params,
             resolver,
-            cxxBuckConfig,
+            cxxPlatform,
             ImmutableList.<String>of(),
             lexSrcs,
             ImmutableList.<String>of(),
@@ -98,7 +98,7 @@ public class CxxLibraryDescription implements
     return CxxDescriptionEnhancer.createCxxLibraryBuildRules(
         params,
         resolver,
-        cxxBuckConfig,
+        cxxPlatform,
         args.preprocessorFlags.or(ImmutableList.<String>of()),
         args.propagatedPpFlags.or(ImmutableList.<String>of()),
         ImmutableMap.<Path, SourcePath>builder()
@@ -123,7 +123,7 @@ public class CxxLibraryDescription implements
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
     if (!params.getOptionalListAttribute("lexSrcs").isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep().toString());
+      deps.add(cxxPlatform.getLexDep().toString());
     }
 
     return deps.build();

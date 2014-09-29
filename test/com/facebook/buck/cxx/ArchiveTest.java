@@ -40,7 +40,7 @@ import java.nio.file.Paths;
 
 public class ArchiveTest {
 
-  private static final Path DEFAULT_ARCHIVER = Paths.get("ar");
+  private static final SourcePath DEFAULT_ARCHIVER = new TestSourcePath("ar");
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.<SourcePath>of(
@@ -85,7 +85,7 @@ public class ArchiveTest {
         ruleKeyBuilderFactory,
         new Archive(
             params,
-            Paths.get("different"),
+            new TestSourcePath("different"),
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverChange);

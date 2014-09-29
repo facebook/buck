@@ -41,7 +41,7 @@ import java.nio.file.Paths;
 
 public class CxxCompileTest {
 
-  private static final Path DEFAULT_COMPILER = Paths.get("compiler");
+  private static final SourcePath DEFAULT_COMPILER = new TestSourcePath("compiler");
   private static final ImmutableList<String> DEFAULT_FLAGS =
       ImmutableList.of("-fsanitize=address");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
@@ -96,7 +96,7 @@ public class CxxCompileTest {
         ruleKeyBuilderFactory,
         new CxxCompile(
             params,
-            Paths.get("different"),
+            new TestSourcePath("different"),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,

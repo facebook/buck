@@ -16,7 +16,7 @@
 
 package com.facebook.buck.thrift;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxCompilables;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaderSourceSpec;
@@ -50,15 +50,15 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
   private static final Flavor CPP2_FLAVOR = new Flavor("cpp2");
 
   private final ThriftBuckConfig thriftBuckConfig;
-  private final CxxBuckConfig cxxBuckConfig;
+  private final CxxPlatform cxxPlatform;
   private final boolean cpp2;
 
   public ThriftCxxEnhancer(
       ThriftBuckConfig thriftBuckConfig,
-      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
       boolean cpp2) {
     this.thriftBuckConfig = Preconditions.checkNotNull(thriftBuckConfig);
-    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
+    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
     this.cpp2 = cpp2;
   }
 
@@ -204,7 +204,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     return CxxDescriptionEnhancer.createCxxLibraryBuildRules(
         langParams,
         resolver,
-        cxxBuckConfig,
+        cxxPlatform,
         /* preprocessorFlags */ ImmutableList.<String>of(),
         /* propagatedPpFlags */ ImmutableList.<String>of(),
         spec.getCxxHeaders(),

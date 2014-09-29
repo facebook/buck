@@ -40,7 +40,7 @@ import java.nio.file.Paths;
 
 public class CxxLinkTest {
 
-  private static final Path DEFAULT_LINKER = Paths.get("ld");
+  private static final SourcePath DEFAULT_LINKER = new TestSourcePath("ld");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.exe");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS = ImmutableList.<SourcePath>of(
       new TestSourcePath("a.o"),
@@ -89,7 +89,7 @@ public class CxxLinkTest {
         ruleKeyBuilderFactory,
         new CxxLink(
             params,
-            Paths.get("different"),
+            new TestSourcePath("different"),
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS,
             DEFAULT_ARGS));

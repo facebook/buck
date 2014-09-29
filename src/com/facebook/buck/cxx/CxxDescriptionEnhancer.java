@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
@@ -155,7 +154,7 @@ public class CxxDescriptionEnhancer {
   public static CxxHeaderSourceSpec createLexYaccBuildRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CxxBuckConfig config,
+      CxxPlatform config,
       ImmutableList<String> lexFlags,
       ImmutableMap<String, SourcePath> lexSrcs,
       ImmutableList<String> yaccFlags,
@@ -182,7 +181,7 @@ public class CxxDescriptionEnhancer {
               ImmutableSortedSet.copyOf(
                   SourcePaths.filterBuildRuleInputs(ImmutableList.of(source))),
               ImmutableSortedSet.<BuildRule>of()),
-          new PathSourcePath(config.getLex()),
+          config.getLex(),
           ImmutableList.<String>builder()
               .addAll(config.getLexFlags())
               .addAll(lexFlags)
@@ -218,7 +217,7 @@ public class CxxDescriptionEnhancer {
               ImmutableSortedSet.copyOf(
                   SourcePaths.filterBuildRuleInputs(ImmutableList.of(source))),
               ImmutableSortedSet.<BuildRule>of()),
-          new PathSourcePath(config.getYacc()),
+          config.getYacc(),
           ImmutableList.<String>builder()
               .addAll(config.getYaccFlags())
               .addAll(yaccFlags)
@@ -263,7 +262,7 @@ public class CxxDescriptionEnhancer {
 
   public static CxxPreprocessorInput combineCxxPreprocessorInput(
       BuildRuleParams params,
-      CxxBuckConfig config,
+      CxxPlatform config,
       ImmutableList<String> preprocessorFlags,
       SymlinkTree headerSymlinkTree,
       ImmutableMap<Path, SourcePath> headers) {
@@ -279,11 +278,11 @@ public class CxxDescriptionEnhancer {
             new CxxPreprocessorInput(
                 ImmutableSet.of(headerSymlinkTree.getBuildTarget()),
                 /* cppflags */ ImmutableList.<String>builder()
-                    .addAll(config.getCppFlags())
+                    .addAll(config.getCppflags())
                     .addAll(preprocessorFlags)
                     .build(),
                 /* cxxppflags */ ImmutableList.<String>builder()
-                    .addAll(config.getCxxppFlags())
+                    .addAll(config.getCxxppflags())
                     .addAll(preprocessorFlags)
                     .build(),
                 /* includes */ headers,
@@ -303,7 +302,7 @@ public class CxxDescriptionEnhancer {
   public static ImmutableList<SourcePath> createPreprocessAndCompileBuildRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CxxBuckConfig config,
+      CxxPlatform config,
       CxxPreprocessorInput cxxPreprocessorInput,
       ImmutableList<String> compilerFlags,
       boolean pic,
@@ -312,7 +311,7 @@ public class CxxDescriptionEnhancer {
     ImmutableSortedSet<BuildRule> objectRules = CxxCompilableEnhancer.createCompileBuildRules(
         params,
         resolver,
-        config.getCompiler().or(CxxCompilables.DEFAULT_CXX_COMPILER),
+        config.getCxx(),
         cxxPreprocessorInput,
         compilerFlags,
         pic,
@@ -350,7 +349,7 @@ public class CxxDescriptionEnhancer {
   public static CxxLibrary createCxxLibraryBuildRules(
       final BuildRuleParams params,
       BuildRuleResolver resolver,
-      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
       ImmutableList<String> preprocessorFlags,
       final ImmutableList<String> propagatedPpFlags,
       final ImmutableMap<Path, SourcePath> headers,
@@ -364,7 +363,7 @@ public class CxxDescriptionEnhancer {
         createHeaderSymlinkTreeBuildRule(params, resolver, headers);
     CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
-        cxxBuckConfig,
+        cxxPlatform,
         preprocessorFlags,
         headerSymlinkTree,
         headers);
@@ -373,7 +372,7 @@ public class CxxDescriptionEnhancer {
     ImmutableList<SourcePath> objects = createPreprocessAndCompileBuildRules(
         params,
         resolver,
-        cxxBuckConfig,
+        cxxPlatform,
         cxxPreprocessorInput,
         compilerFlags,
         /* pic */ false,
@@ -385,7 +384,7 @@ public class CxxDescriptionEnhancer {
     final Archive staticLibraryBuildRule = Archives.createArchiveRule(
         staticLibraryTarget,
         params,
-        cxxBuckConfig.getAr().or(Archives.DEFAULT_ARCHIVE_PATH),
+        cxxPlatform.getAr(),
         staticLibraryPath,
         objects);
     resolver.addToIndex(staticLibraryBuildRule);
@@ -394,7 +393,7 @@ public class CxxDescriptionEnhancer {
     ImmutableList<SourcePath> picObjects = createPreprocessAndCompileBuildRules(
         params,
         resolver,
-        cxxBuckConfig,
+        cxxPlatform,
         cxxPreprocessorInput,
         compilerFlags,
         /* pic */ true,
@@ -406,9 +405,9 @@ public class CxxDescriptionEnhancer {
     final Path sharedLibraryPath = getSharedLibraryOutputPath(params.getBuildTarget());
     final CxxLink sharedLibraryBuildRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        cxxBuckConfig.getLd().or(CxxLinkables.DEFAULT_LINKER_PATH),
-        cxxBuckConfig.getCxxLdFlags(),
-        cxxBuckConfig.getLdFlags(),
+        cxxPlatform.getCxxld(),
+        cxxPlatform.getCxxldflags(),
+        cxxPlatform.getLdflags(),
         sharedLibraryTarget,
         CxxLinkableEnhancer.LinkType.SHARED,
         Optional.of(sharedLibrarySoname),
@@ -489,7 +488,7 @@ public class CxxDescriptionEnhancer {
   public static CxxLink createBuildRulesForCxxBinaryDescriptionArg(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args) {
 
     // Extract the C/C++ sources from the constructor arg.
@@ -523,7 +522,7 @@ public class CxxDescriptionEnhancer {
         CxxDescriptionEnhancer.createLexYaccBuildRules(
             params,
             resolver,
-            cxxBuckConfig,
+            cxxPlatform,
             ImmutableList.<String>of(),
             lexSrcs,
             ImmutableList.<String>of(),
@@ -537,7 +536,7 @@ public class CxxDescriptionEnhancer {
         headers);
     CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
         params,
-        cxxBuckConfig,
+        cxxPlatform,
         args.preprocessorFlags.or(ImmutableList.<String>of()),
         headerSymlinkTree,
         ImmutableMap.<Path, SourcePath>builder()
@@ -551,7 +550,7 @@ public class CxxDescriptionEnhancer {
         CxxDescriptionEnhancer.createPreprocessAndCompileBuildRules(
             params,
             resolver,
-            cxxBuckConfig,
+            cxxPlatform,
             cxxPreprocessorInput,
             args.compilerFlags.or(ImmutableList.<String>of()),
             /* pic */ false,
@@ -565,9 +564,9 @@ public class CxxDescriptionEnhancer {
     Path output = getOutputPath(params.getBuildTarget());
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         params,
-        cxxBuckConfig.getLd().or(CxxLinkables.DEFAULT_LINKER_PATH),
-        cxxBuckConfig.getCxxLdFlags(),
-        cxxBuckConfig.getLdFlags(),
+        cxxPlatform.getCxxld(),
+        cxxPlatform.getCxxldflags(),
+        cxxPlatform.getLdflags(),
         createCxxLinkTarget(params.getBuildTarget()),
         CxxLinkableEnhancer.LinkType.EXECUTABLE,
         Optional.<String>absent(),

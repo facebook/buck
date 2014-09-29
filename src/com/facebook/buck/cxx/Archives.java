@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * A utility class containing helper methods for working with "ar" archives.
@@ -36,8 +35,6 @@ import java.nio.file.Paths;
 public class Archives {
 
   private Archives() {}
-
-  public static final Path DEFAULT_ARCHIVE_PATH = Paths.get("/usr/bin/ar");
 
   private static final BuildRuleType ARCHIVE_TYPE = new BuildRuleType("archive");
 
@@ -61,7 +58,7 @@ public class Archives {
   public static Archive createArchiveRule(
       BuildTarget target,
       BuildRuleParams originalParams,
-      Path archiver,
+      SourcePath archiver,
       Path output,
       ImmutableList<SourcePath> inputs) {
 

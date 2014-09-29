@@ -18,15 +18,9 @@ package com.facebook.buck.cxx;
 
 import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class CxxCompilables {
 
   private CxxCompilables() {}
-
-  public static final Path DEFAULT_CC_COMPILER = Paths.get("/usr/bin/gcc");
-  public static final Path DEFAULT_CXX_COMPILER = Paths.get("/usr/bin/g++");
 
   /**
    * Source files that can be preprocessed and compiled.

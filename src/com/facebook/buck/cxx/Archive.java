@@ -37,13 +37,13 @@ import java.nio.file.Path;
  */
 public class Archive extends AbstractBuildRule {
 
-  private final Path archiver;
+  private final SourcePath archiver;
   private final Path output;
   private final ImmutableList<SourcePath> inputs;
 
   public Archive(
       BuildRuleParams params,
-      Path archiver,
+      SourcePath archiver,
       Path output,
       ImmutableList<SourcePath> inputs) {
     super(params);
@@ -75,7 +75,7 @@ public class Archive extends AbstractBuildRule {
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new RmStep(output, /* shouldForceDeletion */ true),
-        new ArchiveStep(archiver, output, SourcePaths.toPaths(inputs)),
+        new ArchiveStep(archiver.resolve(), output, SourcePaths.toPaths(inputs)),
         new ArchiveScrubberStep(output));
   }
 

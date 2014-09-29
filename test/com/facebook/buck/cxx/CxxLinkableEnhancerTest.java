@@ -46,7 +46,7 @@ import java.nio.file.Paths;
 
 public class CxxLinkableEnhancerTest {
 
-  private static final Path DEFAULT_LINKER = Paths.get("linker");
+  private static final SourcePath DEFAULT_LINKER = new TestSourcePath("linker");
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS = ImmutableList.<SourcePath>of(
       new TestSourcePath("a.o"),

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -42,6 +43,8 @@ import org.junit.Test;
 import java.nio.file.Path;
 
 public class CxxCompilableEnhancerTest {
+
+  private static final CxxPlatform CXX_PLATFORM = new DefaultCxxPlatform(new FakeBuckConfig());
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
@@ -75,7 +78,7 @@ public class CxxCompilableEnhancerTest {
     CxxCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         resolver,
-        CxxCompilables.DEFAULT_CXX_COMPILER,
+        CXX_PLATFORM.getCxx(),
         cxxPreprocessorInput,
         ImmutableList.<String>of(),
         /* pic */ false,
@@ -106,7 +109,7 @@ public class CxxCompilableEnhancerTest {
     CxxCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         resolver,
-        CxxCompilables.DEFAULT_CXX_COMPILER,
+        CXX_PLATFORM.getCxx(),
         cxxPreprocessorInput,
         ImmutableList.<String>of(),
         /* pic */ false,
@@ -138,7 +141,7 @@ public class CxxCompilableEnhancerTest {
     CxxCompile noPic = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         resolver,
-        CxxCompilables.DEFAULT_CXX_COMPILER,
+        CXX_PLATFORM.getCxx(),
         cxxPreprocessorInput,
         ImmutableList.<String>of(),
         /* pic */ false,
@@ -156,7 +159,7 @@ public class CxxCompilableEnhancerTest {
     CxxCompile pic = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         resolver,
-        CxxCompilables.DEFAULT_CXX_COMPILER,
+        CXX_PLATFORM.getCxx(),
         cxxPreprocessorInput,
         ImmutableList.<String>of(),
         /* pic */ true,

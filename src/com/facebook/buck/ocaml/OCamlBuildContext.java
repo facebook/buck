@@ -16,7 +16,6 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.CxxCompilables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
@@ -335,7 +334,7 @@ public class OCamlBuildContext {
     private Builder(OCamlBuildContext context, OCamlBuckConfig config) {
       this.context = Preconditions.checkNotNull(context);
       context.ocamlDepTool = config.getOCamlDepTool().or(DEFAULT_OCAML_DEP_TOOL);
-      context.cCompiler = config.getCCompiler().or(CxxCompilables.DEFAULT_CC_COMPILER);
+      context.cCompiler = config.getCCompiler();
       context.ocamlCompiler = config.getOCamlCompiler().or(DEFAULT_OCAML_COMPILER);
       context.ocamlBytecodeCompiler = config.getOCamlBytecodeCompiler()
           .or(DEFAULT_OCAML_BYTECODE_COMPILER);

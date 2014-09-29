@@ -19,7 +19,7 @@ package com.facebook.buck.thrift;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -53,7 +53,8 @@ public class ThriftCxxEnhancerTest {
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:test#cpp");
   private static final FakeBuckConfig BUCK_CONFIG = new FakeBuckConfig();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
-  private static final CxxBuckConfig CXX_BUCK_CONFIG = new CxxBuckConfig(BUCK_CONFIG);
+  private static final DefaultCxxPlatform CXX_BUCK_CONFIG =
+      new DefaultCxxPlatform(BUCK_CONFIG);
   private static final ThriftCxxEnhancer ENHANCER_CPP = new ThriftCxxEnhancer(
       THRIFT_BUCK_CONFIG,
       CXX_BUCK_CONFIG,

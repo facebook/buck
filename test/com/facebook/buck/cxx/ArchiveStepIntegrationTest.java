@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
@@ -45,9 +46,10 @@ public class ArchiveStepIntegrationTest {
   @Test
   public void thatGeneratedArchivesAreDeterministic() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    CxxPlatform platform = new DefaultCxxPlatform(new FakeBuckConfig());
 
     // Build up the paths to various files the archive step will use.
-    Path archiver = Archives.DEFAULT_ARCHIVE_PATH;
+    Path archiver = platform.getAr().resolve();
     Path output = filesystem.resolve(Paths.get("output.a"));
     Path relativeInput = Paths.get("input.dat");
     Path input = filesystem.resolve(relativeInput);
@@ -55,7 +57,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build an archive step.
     ArchiveStep archiveStep = new ArchiveStep(
-        Archives.DEFAULT_ARCHIVE_PATH,
+        archiver,
         output,
         ImmutableList.of(input));
     ArchiveScrubberStep archiveScrubberStep = new ArchiveScrubberStep(output);
@@ -64,7 +66,7 @@ public class ArchiveStepIntegrationTest {
     assumeTrue(Files.exists(archiver));
     ExecutionContext executionContext =
         TestExecutionContext.newBuilder()
-            .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
+            .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
             .build();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = archiveStep.execute(executionContext);

@@ -141,7 +141,7 @@ public class CxxBinaryDescriptionTest {
     arg.yaccSrcs = Optional.absent();
 
     // Instantiate a description and call its `createBuildRule` method.
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
+    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
     CxxBinaryDescription description = new CxxBinaryDescription(cxxBuckConfig);
     CxxBinary binRule = description.createBuildRule(params, resolver, arg);
     CxxLink rule = binRule.getRule();
