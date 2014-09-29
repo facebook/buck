@@ -137,7 +137,7 @@ class BuckRepo:
         self._buck_version_uid = self._get_buck_version_uid()
         self._build()
 
-    def launch_buck(self, build_id):
+    def launch_buck(self):
         with Tracing('BuckRepo.launch_buck'):
             self.kill_autobuild()
             if 'clean' in sys.argv or os.environ.get('NO_BUCKD'):
@@ -163,9 +163,6 @@ class BuckRepo:
                 print("Not using buckd because watchman isn't installed.",
                       file=sys.stderr)
 
-            env = os.environ.copy()
-            env['BUCK_BUILD_ID'] = build_id
-
             if self._is_buckd_running() and os.path.exists(self._buck_client_file):
                 print("Using buckd.", file=sys.stderr)
                 buckd_port = self._buck_project.get_buckd_port()
@@ -181,7 +178,7 @@ class BuckRepo:
                     command.append("com.facebook.buck.cli.Main")
                     command.extend(sys.argv[1:])
                     with Tracing('buck', args={'command': command}):
-                        exit_code = subprocess.call(command, cwd=self._buck_project.root, env=env)
+                        exit_code = subprocess.call(command, cwd=self._buck_project.root)
                         if exit_code == 2:
                             print('Daemon is busy, please wait',
                                   'or run "buckd --kill" to terminate it.',
@@ -196,7 +193,7 @@ class BuckRepo:
             command.append("com.facebook.buck.cli.Main")
             command.extend(sys.argv[1:])
 
-            return subprocess.call(command, cwd=self._buck_project.root, env=env)
+            return subprocess.call(command, cwd=self._buck_project.root)
 
     def launch_buckd(self):
         with Tracing('BuckRepo.launch_buckd'):

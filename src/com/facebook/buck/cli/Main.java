@@ -108,7 +108,6 @@ public final class Main {
   private static final String BUCK_VERSION_UID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
   private static final Optional<String> BUCKD_LAUNCH_TIME_NANOS =
     Optional.fromNullable(System.getProperty("buck.buckd_launch_time_nanos"));
-  private static final String BUCK_BUILD_ID_ENV_VAR = "BUCK_BUILD_ID";
 
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
 
@@ -896,24 +895,10 @@ public final class Main {
     }
   }
 
-  private static BuildId getBuildId(Optional<NGContext> context) {
-    String specifiedBuildId;
-    if (context.isPresent()) {
-      specifiedBuildId = context.get().getEnv().getProperty(BUCK_BUILD_ID_ENV_VAR);
-    } else {
-      specifiedBuildId = System.getenv().get(BUCK_BUILD_ID_ENV_VAR);
-    }
-    if (specifiedBuildId == null) {
-      return new BuildId();
-    } else {
-      return new BuildId(specifiedBuildId);
-    }
-  }
-
   private void runMainThenExit(String[] args, Optional<NGContext> context) {
     File projectRoot = new File(".");
     int exitCode = FAIL_EXIT_CODE;
-    BuildId buildId = getBuildId(context);
+    BuildId buildId = new BuildId();
 
     // Note that try-with-resources blocks close their resources *before*
     // executing catch or finally blocks. That means we can't use one here,

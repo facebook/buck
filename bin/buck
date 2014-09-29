@@ -6,7 +6,6 @@ import sys
 from buck_repo import BuckRepo, BuckRepoException, Command
 from buck_project import BuckProject, NoBuckConfigFoundException
 from tracing import Tracing
-import uuid
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -14,16 +13,15 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 def main():
     try:
         tracing_dir = None
-        build_id = str(uuid.uuid4())
         with Tracing("main"):
             with BuckProject.from_current_dir() as project:
                 tracing_dir = os.path.join(project.get_buck_out_log_dir(), 'traces')
                 buck_repo = BuckRepo(THIS_DIR, project, Command.BUCK)
-                exit_code = buck_repo.launch_buck(build_id)
+                exit_code = buck_repo.launch_buck()
                 sys.exit(exit_code)
     finally:
         if tracing_dir:
-            Tracing.write_to_dir(tracing_dir, build_id)
+            Tracing.write_to_dir(tracing_dir)
 
 if __name__ == "__main__":
     try:

@@ -6,6 +6,7 @@ import json
 import os
 import time
 from timing import monotonic_time_nanos
+from uuid import uuid4
 
 # We need to optionally include some functions for Windows.
 import platform
@@ -85,10 +86,10 @@ class Tracing(object):
             'args': args})
 
     @staticmethod
-    def write_to_dir(buck_log_dir, build_id):
+    def write_to_dir(buck_log_dir):
         filename_time = time.strftime('%Y-%m-%d.%H-%M-%S')
         trace_filename = os.path.join(
-            buck_log_dir, 'launch.{0}.{1}.trace'.format(filename_time, build_id))
+            buck_log_dir, 'launch.{0}.{1}.trace'.format(filename_time, uuid4()))
         trace_filename_link = os.path.join(buck_log_dir, 'launch.trace')
         try:
             os.makedirs(buck_log_dir)
