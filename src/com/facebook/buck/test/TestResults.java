@@ -39,6 +39,7 @@ public class TestResults {
   private final ImmutableList<TestCaseSummary> failures;
   private final int failureCount;
   private final ImmutableSet<String> contacts;
+  private final boolean hasAssumptionViolations;
   private boolean dependenciesPassTheirTests = true;
 
   @VisibleForTesting
@@ -53,10 +54,14 @@ public class TestResults {
     this.source = Preconditions.checkNotNull(source);
     this.testCases = ImmutableList.copyOf(testCases);
     this.contacts = ImmutableSet.copyOf(contacts);
+    boolean hasAssumptionViolations = false;
 
     int failureCount = 0;
     ImmutableList.Builder<TestCaseSummary> failures = ImmutableList.builder();
     for (TestCaseSummary result : testCases) {
+      if (result.hasAssumptionViolations()) {
+        hasAssumptionViolations = true;
+      }
       if (!result.isSuccess()) {
         failures.add(result);
         failureCount += result.getFailureCount();
@@ -64,6 +69,7 @@ public class TestResults {
     }
     this.failures = failures.build();
     this.failureCount = failureCount;
+    this.hasAssumptionViolations = hasAssumptionViolations;
   }
 
   @JsonIgnore
@@ -73,6 +79,10 @@ public class TestResults {
 
   public boolean isSuccess() {
     return failures.isEmpty();
+  }
+
+  public boolean hasAssumptionViolations() {
+    return hasAssumptionViolations;
   }
 
   public int getFailureCount() {
