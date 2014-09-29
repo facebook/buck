@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -144,6 +146,26 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
         /* modules */ ImmutableMap.<Path, SourcePath>of(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         nativeLibraries);
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables() {
+    return AndroidPackageableCollector.getPackageableRules(params.getDeps());
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    collector.addNativeLinkable(this);
+  }
+
+  @Override
+  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+    ImmutableMap.Builder<String, SourcePath> solibs = ImmutableMap.builder();
+    if (!headerOnly && !provided) {
+      SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
+      solibs.put(soname, sharedLibrary);
+    }
+    return solibs.build();
   }
 
 }

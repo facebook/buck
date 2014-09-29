@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
@@ -42,10 +43,10 @@ import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPythonExtensionDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatform;
@@ -146,11 +147,12 @@ public class KnownBuildRuleTypes {
   /**
    * @return the map holding the available {@link NdkCxxPlatform}s.
    */
-  private static ImmutableMap<Flavor, NdkCxxPlatform> getNdkCxxPlatforms(
+  private static ImmutableMap<AndroidBinary.TargetCpuType, CxxPlatform> getNdkCxxPlatforms(
       Path ndkRoot,
       Platform platform) {
 
-    ImmutableMap.Builder<Flavor, NdkCxxPlatform> ndkCxxPlatformBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<AndroidBinary.TargetCpuType, CxxPlatform> ndkCxxPlatformBuilder =
+        ImmutableMap.builder();
 
     NdkCxxPlatform armeabi =
         new NdkCxxPlatform(
@@ -171,7 +173,7 @@ public class KnownBuildRuleTypes {
                     "-msoft-float",
                     "-mthumb",
                     "-Os")));
-    ndkCxxPlatformBuilder.put(armeabi.asFlavor(), armeabi);
+    ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARM, armeabi);
     NdkCxxPlatform armeabiv7 =
         new NdkCxxPlatform(
             "Android NDK arm-v7",
@@ -192,7 +194,7 @@ public class KnownBuildRuleTypes {
                     "-mfloat-abi=softfp",
                     "-mthumb",
                     "-Os")));
-    ndkCxxPlatformBuilder.put(armeabiv7.asFlavor(), armeabiv7);
+    ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARMV7, armeabiv7);
     NdkCxxPlatform x86 =
         new NdkCxxPlatform(
             "Android NDK x86",
@@ -210,7 +212,7 @@ public class KnownBuildRuleTypes {
                     "-funswitch-loops",
                     "-finline-limit=300",
                     "-O2")));
-    ndkCxxPlatformBuilder.put(x86.asFlavor(), x86);
+    ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.X86, x86);
 
     return ndkCxxPlatformBuilder.build();
   }
@@ -239,6 +241,16 @@ public class KnownBuildRuleTypes {
     // Construct the OCaml config wrapping the buck config.
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
 
+    // Setup the NDK C/C++ platforms.
+    ImmutableMap.Builder<AndroidBinary.TargetCpuType, CxxPlatform> ndkCxxPlatformsBuilder =
+        ImmutableMap.builder();
+    Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
+    if (ndkRoot.isPresent()) {
+      ndkCxxPlatformsBuilder.putAll(getNdkCxxPlatforms(ndkRoot.get(), platform));
+    }
+    ImmutableMap<AndroidBinary.TargetCpuType, CxxPlatform> ndkCxxPlatforms =
+        ndkCxxPlatformsBuilder.build();
+
     // Construct the C/C++ config wrapping the buck config.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxPlatformsBuilder = ImmutableMap.builder();
@@ -249,9 +261,8 @@ public class KnownBuildRuleTypes {
 
     // If an Android NDK is present, add platforms for that.  This is mostly useful for
     // testing our Android NDK support for right now.
-    Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
-    if (ndkRoot.isPresent()) {
-      cxxPlatformsBuilder.putAll(getNdkCxxPlatforms(ndkRoot.get(), platform));
+    for (CxxPlatform ndkCxxPlatform : ndkCxxPlatforms.values()) {
+      cxxPlatformsBuilder.put(ndkCxxPlatform.asFlavor(), ndkCxxPlatform);
     }
 
     // Build up the final list of C/C++ platforms.
@@ -278,7 +289,11 @@ public class KnownBuildRuleTypes {
     JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
         .setJavaCompilerEnvironment(javacEnv)
         .build();
-    builder.register(new AndroidBinaryDescription(androidBinaryOptions, proGuardConfig));
+    builder.register(
+        new AndroidBinaryDescription(
+            androidBinaryOptions,
+            proGuardConfig,
+            ndkCxxPlatforms));
     builder.register(new AndroidBuildConfigDescription());
     builder.register(new AndroidInstrumentationApkDescription(proGuardConfig));
     builder.register(new AndroidLibraryDescription(javacEnv));

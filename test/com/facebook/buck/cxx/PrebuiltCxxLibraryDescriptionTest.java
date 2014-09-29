@@ -351,4 +351,20 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertTrue(nativeLinkableInput.getInputs().isEmpty());
   }
 
+  @Test
+  public void addsLibsToAndroidPackageableCollector() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
+        .setProjectFilesystem(filesystem)
+        .build();
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
+    assertEquals(
+        ImmutableMap.<String, SourcePath>of(
+            getSharedLibrarySoname(arg),
+            new PathSourcePath(getSharedLibraryPath(arg))),
+        lib.getSharedLibraries(CXX_PLATFORM));
+  }
+
 }

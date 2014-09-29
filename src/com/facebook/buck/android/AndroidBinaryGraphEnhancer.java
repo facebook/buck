@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
@@ -42,12 +43,14 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
@@ -84,6 +87,12 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildConfigFields buildConfigValues;
   private final Optional<SourcePath> buildConfigValuesFile;
 
+  /**
+   * Maps a {@link TargetCpuType} to the {@link CxxPlatform} we need to use to build C/C++
+   * libraries for it.
+   */
+  private final ImmutableMap<TargetCpuType, CxxPlatform> nativePlatforms;
+
   AndroidBinaryGraphEnhancer(
       BuildRuleParams originalParams,
       BuildRuleResolver ruleResolver,
@@ -102,7 +111,8 @@ public class AndroidBinaryGraphEnhancer {
       EnumSet<ExopackageMode> exopackageModes,
       Keystore keystore,
       BuildConfigFields buildConfigValues,
-      Optional<SourcePath> buildConfigValuesFile) {
+      Optional<SourcePath> buildConfigValuesFile,
+      ImmutableMap<TargetCpuType, CxxPlatform> nativePlatforms) {
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
@@ -124,6 +134,7 @@ public class AndroidBinaryGraphEnhancer {
     this.keystore = keystore;
     this.buildConfigValues = buildConfigValues;
     this.buildConfigValuesFile = buildConfigValuesFile;
+    this.nativePlatforms = nativePlatforms;
   }
 
   EnhancementResult createAdditionalBuildables() {
@@ -252,18 +263,44 @@ public class AndroidBinaryGraphEnhancer {
       enhancedDeps.addAll(getTargetsAsRules(packageableCollection.javaLibrariesToDex()));
     }
 
+    // Iterate over all the {@link AndroidNativeLinkable}s from the collector and grab the shared
+    // libraries for all the {@link TargetCpuType}s that we care about.  We deposit them into a map
+    // of CPU type and SONAME to the shared library path, which the {@link CopyNativeLibraries}
+    // rule will use to compose the destination name.
+    ImmutableMap.Builder<Map.Entry<TargetCpuType, String>, SourcePath> nativeLinkableLibsBuilder =
+        ImmutableMap.builder();
+    for (AndroidNativeLinkable nativeLinkable : packageableCollection.nativeLinkables()) {
+      for (TargetCpuType targetCpuType : cpuFilters) {
+        CxxPlatform cxxPlatform = nativePlatforms.get(targetCpuType);
+        ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(cxxPlatform);
+        for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
+          nativeLinkableLibsBuilder.put(
+              new AbstractMap.SimpleEntry<>(targetCpuType, entry.getKey()),
+              entry.getValue());
+        }
+      }
+    }
+    ImmutableMap<Map.Entry<TargetCpuType, String>, SourcePath> nativeLinkableLibs =
+        nativeLinkableLibsBuilder.build();
+
     Optional<CopyNativeLibraries> copyNativeLibraries = Optional.absent();
-    if (!packageableCollection.nativeLibsDirectories().isEmpty()) {
+    if (!packageableCollection.nativeLibsDirectories().isEmpty() ||
+        !nativeLinkableLibs.isEmpty()) {
       BuildRuleParams paramsForCopyNativeLibraries = buildRuleParams.copyWithChanges(
           BuildRuleType.COPY_NATIVE_LIBS,
           createBuildTargetWithFlavor(COPY_NATIVE_LIBS_FLAVOR),
-          getTargetsAsRules(packageableCollection.nativeLibsTargets()),
+          ImmutableSortedSet.<BuildRule>naturalOrder()
+              .addAll(getTargetsAsRules(packageableCollection.nativeLibsTargets()))
+              .addAll(pathResolver.filterBuildRuleInputs(nativeLinkableLibs.values()))
+              .build(),
           /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
-      copyNativeLibraries = Optional.of(new CopyNativeLibraries(
+      copyNativeLibraries = Optional.of(
+          new CopyNativeLibraries(
               paramsForCopyNativeLibraries,
               pathResolver,
               packageableCollection.nativeLibsDirectories(),
-              cpuFilters));
+              cpuFilters,
+              pathResolver.getMappedPaths(nativeLinkableLibs)));
       ruleResolver.addToIndex(copyNativeLibraries.get());
       enhancedDeps.add(copyNativeLibraries.get());
     }

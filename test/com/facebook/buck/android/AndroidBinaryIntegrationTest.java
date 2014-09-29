@@ -156,4 +156,17 @@ public class AndroidBinaryIntegrationTest {
     output = workspace.getFileContents("buck-out/gen/java/com/preprocess/content.txt");
     assertThat(output, containsString("content=3"));
   }
+
+  @Test
+  public void testCxxLibraryDep() throws IOException {
+    workspace.runBuckCommand("build", "//apps/sample:app_cxx_lib_dep").assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/sample/app_cxx_lib_dep.apk"));
+    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
+  }
+
 }

@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
@@ -75,10 +76,15 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
 
   private final JavacOptions javacOptions;
   private final ProGuardConfig proGuardConfig;
+  private final ImmutableMap<TargetCpuType, CxxPlatform> nativePlatforms;
 
-  public AndroidBinaryDescription(JavacOptions javacOptions, ProGuardConfig proGuardConfig) {
+  public AndroidBinaryDescription(
+      JavacOptions javacOptions,
+      ProGuardConfig proGuardConfig,
+      ImmutableMap<TargetCpuType, CxxPlatform> nativePlatforms) {
     this.javacOptions = javacOptions;
     this.proGuardConfig = proGuardConfig;
+    this.nativePlatforms = nativePlatforms;
   }
 
   @Override
@@ -165,7 +171,8 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         exopackageModes,
         (Keystore) keystore,
         args.buildConfigValues.get(),
-        args.buildConfigValuesFile);
+        args.buildConfigValuesFile,
+        nativePlatforms);
     AndroidBinaryGraphEnhancer.EnhancementResult result =
         graphEnhancer.createAdditionalBuildables();
 

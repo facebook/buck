@@ -19,6 +19,8 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -136,6 +138,19 @@ public class CxxPythonExtensionDescriptionTest {
         return null;
       }
 
+      @Override
+      public Iterable<AndroidPackageable> getRequiredPackageables() {
+        return ImmutableList.of();
+      }
+
+      @Override
+      public void addToCollector(AndroidPackageableCollector collector) {}
+
+      @Override
+      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+        return ImmutableMap.of();
+      }
+
     };
   }
 
@@ -243,6 +258,19 @@ public class CxxPythonExtensionDescriptionTest {
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(sharedLibrarySoname),
                 new PathSourcePath(sharedLibraryOutput)));
+      }
+
+      @Override
+      public Iterable<AndroidPackageable> getRequiredPackageables() {
+        return ImmutableList.of();
+      }
+
+      @Override
+      public void addToCollector(AndroidPackageableCollector collector) {}
+
+      @Override
+      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+        return ImmutableMap.of();
       }
 
     };

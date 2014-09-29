@@ -37,6 +37,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -45,6 +46,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -59,17 +61,26 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   private final ImmutableSet<Path> nativeLibDirectories;
   private final ImmutableSet<TargetCpuType> cpuFilters;
 
+  /**
+   * A map of native libraries to copy in which are already filtered using the above CPU filter.
+   * The keys of the map are the tuple of {@link TargetCpuType} and shared library SONAME
+   * (e.g. <"x86", "libtest.so">), and the values of the map are the full paths to the libraries.
+   */
+  private final ImmutableMap<Map.Entry<TargetCpuType, String>, Path> filteredNativeLibraries;
+
   protected CopyNativeLibraries(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       ImmutableSet<Path> nativeLibDirectories,
-      ImmutableSet<TargetCpuType> cpuFilters) {
+      ImmutableSet<TargetCpuType> cpuFilters,
+      ImmutableMap<Map.Entry<TargetCpuType, String>, Path> filteredNativeLibraries) {
     super(buildRuleParams, resolver);
     this.nativeLibDirectories = nativeLibDirectories;
-    Preconditions.checkArgument(
-        !nativeLibDirectories.isEmpty(),
-        "There should be at least one native library to copy.");
     this.cpuFilters = cpuFilters;
+    this.filteredNativeLibraries = filteredNativeLibraries;
+    Preconditions.checkArgument(
+        !nativeLibDirectories.isEmpty() || !filteredNativeLibraries.isEmpty(),
+        "There should be at least one native library to copy.");
   }
 
   public Path getPathToNativeLibsDir() {
@@ -105,6 +116,19 @@ public class CopyNativeLibraries extends AbstractBuildRule {
 
     for (Path nativeLibDir : nativeLibDirectories) {
       copyNativeLibrary(nativeLibDir, pathToNativeLibs, cpuFilters, steps);
+    }
+
+    // Copy in the pre-filtered native libraries.
+    for (Map.Entry<Map.Entry<TargetCpuType, String>, Path> entry :
+         filteredNativeLibraries.entrySet()) {
+      Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(entry.getKey().getKey());
+      Preconditions.checkState(abiDirectoryComponent.isPresent());
+      Path destination =
+          pathToNativeLibs
+              .resolve(abiDirectoryComponent.get())
+              .resolve(entry.getKey().getValue());
+      steps.add(new MkdirStep(destination.getParent()));
+      steps.add(CopyStep.forFile(entry.getValue(), destination));
     }
 
     final Path pathToMetadataTxt = getPathToMetadataTxt();

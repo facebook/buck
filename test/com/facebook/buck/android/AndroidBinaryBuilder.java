@@ -20,12 +20,14 @@ import static com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.List;
@@ -37,7 +39,8 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
     super(
         new AndroidBinaryDescription(
             JavacOptions.DEFAULTS,
-            new ProGuardConfig(new FakeBuckConfig())),
+            new ProGuardConfig(new FakeBuckConfig()),
+            ImmutableMap.<AndroidBinary.TargetCpuType, CxxPlatform>of()),
         target);
   }
 

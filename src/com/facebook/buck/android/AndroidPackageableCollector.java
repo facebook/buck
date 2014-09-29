@@ -145,6 +145,11 @@ public class AndroidPackageableCollector {
     return this;
   }
 
+  public AndroidPackageableCollector addNativeLinkable(AndroidNativeLinkable nativeLinkable) {
+    collectionBuilder.addNativeLinkables(nativeLinkable);
+    return this;
+  }
+
   public AndroidPackageableCollector addNativeLibAssetsDirectory(Path nativeLibAssetsDir) {
     collectionBuilder.addNativeLibAssetsDirectories(nativeLibAssetsDir);
     return this;

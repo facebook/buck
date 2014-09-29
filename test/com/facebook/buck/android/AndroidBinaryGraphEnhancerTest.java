@@ -29,6 +29,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavacOptions;
@@ -52,6 +53,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -121,7 +123,8 @@ public class AndroidBinaryGraphEnhancerTest {
         EnumSet.noneOf(ExopackageMode.class),
         createStrictMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
-        /* buildConfigValuesFile */ Optional.<SourcePath>absent());
+        /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, CxxPlatform>of());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTarget.builder("//java/com/example", "apk").setFlavor("aapt_package").build();
@@ -227,7 +230,8 @@ public class AndroidBinaryGraphEnhancerTest {
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         keystore,
         /* buildConfigValues */ BuildConfigFields.empty(),
-        /* buildConfigValuesFiles */ Optional.<SourcePath>absent());
+        /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, CxxPlatform>of());
     replay(keystore);
     EnhancementResult result = graphEnhancer.createAdditionalBuildables();
 

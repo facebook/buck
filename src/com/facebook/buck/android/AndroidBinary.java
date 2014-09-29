@@ -130,7 +130,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     }
   }
 
-  static enum TargetCpuType {
+  public static enum TargetCpuType {
     ARM,
     ARMV7,
     X86,
