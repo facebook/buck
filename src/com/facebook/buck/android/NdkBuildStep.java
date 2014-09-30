@@ -87,8 +87,26 @@ public class NdkBuildStep extends ShellStep {
         "APP_PROJECT_PATH=" + absolutifier.apply(buildArtifactsDirectory) + "/",
         "APP_BUILD_SCRIPT=" + absolutifier.apply(Paths.get(makefilePath)),
         "NDK_OUT=" + absolutifier.apply(buildArtifactsDirectory) + "/",
-        "NDK_LIBS_OUT=" + projectFilesystem.resolve(binDirectory));
+        "NDK_LIBS_OUT=" + projectFilesystem.resolve(binDirectory),
+        // Suppress the custom build step messages (e.g. "Compile++ ...").
+        "host-echo-build-step=@#");
+
+    // If we're running verbosely, force all the subcommands from the ndk build to be printed out.
+    if (context.getVerbosity().shouldPrintCommand()) {
+      builder.add("V=1");
+    // Otherwise, suppress everything, including the "make: entering directory..." messages.
+    } else {
+      builder.add("--silent");
+    }
 
     return builder.build();
   }
+
+  // The ndk-build command delegates to `make` to run a lot of subcommands, so print them as they
+  // happen.
+  @Override
+  protected boolean shouldFlushStdOutErrAsProgressIsMade() {
+    return true;
+  }
+
 }

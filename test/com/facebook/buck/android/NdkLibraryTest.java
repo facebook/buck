@@ -34,6 +34,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -105,6 +106,7 @@ public class NdkLibraryTest {
     Path ndkBuildDir = createMock(Path.class);
     expect(ndkDir.resolve("ndk-build")).andReturn(ndkBuildDir);
     expect(ndkBuildDir.toAbsolutePath()).andReturn(Paths.get("/ndk-r8b/ndk-build"));
+    expect(executionContext.getVerbosity()).andReturn(Verbosity.STANDARD_INFORMATION);
 
     replay(executionContext, projectFilesystem, mockPlatformTarget, ndkDir, ndkBuildDir);
     MoreAsserts.assertShellCommands(
@@ -114,7 +116,9 @@ public class NdkLibraryTest {
               "/ndk-r8b/ndk-build -j %d -C %s/ flag1 flag2 " +
               "APP_PROJECT_PATH=/foo/%s/%s/%s/ APP_BUILD_SCRIPT=/foo/%s/Android.mk " +
               "NDK_OUT=/foo/%s/%s/%s/ " +
-              "NDK_LIBS_OUT=/foo/%s/%s/%s/libs",
+              "NDK_LIBS_OUT=/foo/%s/%s/%s/libs " +
+              "host-echo-build-step=@# " +
+              "--silent",
               Runtime.getRuntime().availableProcessors(),
               basePath,
               BuckConstant.BIN_DIR,
