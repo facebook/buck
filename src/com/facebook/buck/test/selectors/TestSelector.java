@@ -14,11 +14,16 @@
  * under the License.
  */
 
+
+
+
 package com.facebook.buck.test.selectors;
 
 
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+
 
 /**
  * A way of matching a test-method in a test-class, and saying whether or not to include any matches
@@ -33,14 +38,19 @@ import java.util.regex.PatternSyntaxException;
  */
 public class TestSelector {
 
+  /** Defining @Nullable locally here because we cannot import
+   * javax.annotation.Nullable;
+   *according to comment in src/com/facebook/buck/test/selectors/BUCK */
+  @interface Nullable{};
+
   private final boolean inclusive;
-  /* @Nullable */ private final Pattern classPattern;
-  /* @Nullable */ private final Pattern methodPattern;
+  @Nullable  private final Pattern classPattern;
+  @Nullable  private final Pattern methodPattern;
 
   TestSelector(
       boolean inclusive,
-      /* @Nullable */ Pattern classPattern,
-      /* @Nullable */ Pattern methodPattern) {
+      @Nullable Pattern classPattern,
+      @Nullable Pattern methodPattern) {
     this.inclusive = inclusive;
     this.classPattern = classPattern;
     this.methodPattern = methodPattern;
@@ -120,7 +130,7 @@ public class TestSelector {
     return builder.toString();
   }
 
-  private static Pattern getPatternOrNull(String string) {
+  @Nullable private static Pattern getPatternOrNull(String string) {
     if (string.isEmpty()) {
       return null;
     } else {
@@ -151,11 +161,21 @@ public class TestSelector {
   }
 
   boolean matches(TestDescription description) {
-    String aClassName = description.getClassName();
-    String aMethodName = description.getMethodName();
+    boolean isClassMatch;
+    boolean isMethodMatch;
 
-    boolean isClassMatch = isMatchAnyClass() || classPattern.matcher(aClassName).find();
-    boolean isMethodMatch = isMatchAnyMethod() || methodPattern.matcher(aMethodName).find();
+    if (classPattern == null) {
+      isClassMatch = true;
+    } else {
+      isClassMatch = classPattern.matcher(description.getClassName()).find();
+    }
+
+    if (methodPattern == null) {
+      isMethodMatch = true;
+    } else {
+      isMethodMatch = methodPattern.matcher(description.getMethodName()).find();
+    }
+
     return isClassMatch && isMethodMatch;
   }
 }
