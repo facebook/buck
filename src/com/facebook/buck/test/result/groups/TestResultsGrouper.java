@@ -162,7 +162,7 @@ public class TestResultsGrouper {
   private Map<TestRule, TestResults> flushOne(TestRule ourTestRule) {
     Map<TestRule, TestResults> result = Maps.newHashMap();
 
-    TestResults ourTestResults = allTestResults.get(ourTestRule);
+    TestResults ourTestResults = Preconditions.checkNotNull(allTestResults.get(ourTestRule));
     result.put(ourTestRule, ourTestResults);
 
     int failedDepsCount = 0;
