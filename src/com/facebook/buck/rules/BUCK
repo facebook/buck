@@ -146,7 +146,6 @@ java_library(
     'DefaultBuildableContext.java',
     'BuildRuleBuilderParams.java',
     'DependencyEnhancer.java',
-    'DescribedRule.java',
     'DirArtifactCache.java',
     'HttpArtifactCache.java',
     'IndividualTestEvent.java',

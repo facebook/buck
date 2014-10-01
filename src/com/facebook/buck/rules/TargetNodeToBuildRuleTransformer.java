@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
- * Takes in an {@link TargetNode} from the target graph and builds a {@link DescribedRule}.
+ * Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}.
  */
 public class TargetNodeToBuildRuleTransformer {
 
