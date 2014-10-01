@@ -57,18 +57,18 @@ public class ExecutionContext {
   private final ObjectMapper objectMapper;
 
   private ExecutionContext(
-      ProjectFilesystem projectFilesystem,
-      Console console,
+      @Nullable ProjectFilesystem projectFilesystem,
+      @Nullable Console console,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<TargetDevice> targetDevice,
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
-      BuckEventBus eventBus,
-      Platform platform,
-      ImmutableMap<String, String> environment,
-      JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper) {
+      @Nullable BuckEventBus eventBus,
+      @Nullable Platform platform,
+      @Nullable ImmutableMap<String, String> environment,
+      @Nullable JavaPackageFinder javaPackageFinder,
+      @Nullable ObjectMapper objectMapper) {
     this.verbosity = Preconditions.checkNotNull(console).getVerbosity();
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.console = Preconditions.checkNotNull(console);
