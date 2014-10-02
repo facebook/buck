@@ -126,11 +126,11 @@ public class TargetNode<T> implements Comparable<TargetNode<?>> {
     return pathsReferenced;
   }
 
-  public Set<BuildTarget> getDeclaredDeps() {
+  public ImmutableSortedSet<BuildTarget> getDeclaredDeps() {
     return declaredDeps;
   }
 
-  public Set<BuildTarget> getExtraDeps() {
+  public ImmutableSortedSet<BuildTarget> getExtraDeps() {
     return extraDeps;
   }
 

@@ -21,6 +21,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
@@ -73,6 +74,14 @@ public class BuildRuleResolver {
 
   public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
     return Optional.fromNullable(buildRuleIndex.get(Preconditions.checkNotNull(buildTarget)));
+  }
+
+  public ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets) {
+    ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget target : targets) {
+      rules.add(getRule(target));
+    }
+    return rules.build();
   }
 
   /**

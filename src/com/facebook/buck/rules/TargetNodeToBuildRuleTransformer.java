@@ -16,13 +16,11 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 /**
  * Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}.
@@ -49,18 +47,13 @@ public class TargetNodeToBuildRuleTransformer {
       throw new HumanReadableException("%s: %s", targetNode.getBuildTarget(), e.getMessage());
     }
 
-    ImmutableSortedSet.Builder<BuildRule> declaredRules =
-        expandRules(ruleResolver, targetNode.getDeclaredDeps());
-    ImmutableSortedSet.Builder<BuildRule> extraRules =
-        expandRules(ruleResolver, targetNode.getExtraDeps());
-
     // The params used for the Buildable only contain the declared parameters. However, the deps of
     // the rule include not only those, but also any that were picked up through the deps declared
     // via a SourcePath.
     BuildRuleParams params = new BuildRuleParams(
         targetNode.getBuildTarget(),
-        declaredRules.build(),
-        extraRules.build(),
+        ruleResolver.getAllRules(targetNode.getDeclaredDeps()),
+        ruleResolver.getAllRules(targetNode.getExtraDeps()),
         getVisibilityPatterns(targetNode),
         ruleFactoryParams.getProjectFilesystem(),
         ruleFactoryParams.getRuleKeyBuilderFactory(),
@@ -79,18 +72,6 @@ public class TargetNodeToBuildRuleTransformer {
     }
 
     return buildRule;
-  }
-
-  private static ImmutableSortedSet.Builder<BuildRule> expandRules(
-      BuildRuleResolver ruleResolver,
-      Iterable<BuildTarget> targets) {
-    ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
-
-    for (BuildTarget target : targets) {
-      rules.add(ruleResolver.getRule(target));
-    }
-
-    return rules;
   }
 
   private static ImmutableSet<BuildTargetPattern> getVisibilityPatterns(TargetNode<?> targetNode)
