@@ -543,6 +543,7 @@ public class Parser {
     // INCLUDES_META_RULE maps to a list of file paths: the head is a
     // dependent build file and the tail is a list of the files it includes.
     List<String> fileNames = ((List<String>) map.get(INCLUDES_META_RULE));
+    Preconditions.checkNotNull(fileNames);
     Path dependent = normalize(Paths.get(fileNames.get(0)));
     for (String fileName : fileNames) {
       buildFileDependents.put(normalize(Paths.get(fileName)), dependent);

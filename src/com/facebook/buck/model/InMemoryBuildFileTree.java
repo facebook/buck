@@ -82,7 +82,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
 
       Node child = new Node(basePath);
       Node parent = findParent(child, basePathToNodeIndex);
-      parent.addChild(child);
+      Preconditions.checkNotNull(parent).addChild(child);
       basePathToNodeIndex.put(basePath, child);
     }
   }
@@ -131,6 +131,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
    * @return the Node in {@code basePathToNodeIndex} with the longest basePath that is a prefix of
    *     {@code child}'s basePath.
    */
+  @Nullable
   private static Node findParent(Node child, Map<Path, Node> basePathToNodeIndex) {
     Path current = child.basePath;
     while (current != null) {

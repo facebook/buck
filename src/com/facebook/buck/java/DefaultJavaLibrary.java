@@ -307,7 +307,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       return Suppliers.memoize(new Supplier<Sha1HashCode>() {
         @Override
         public Sha1HashCode get() {
-          return createTotalAbiKey(javacStep.getAbiKey());
+          return createTotalAbiKey(Preconditions.checkNotNull(javacStep.getAbiKey()));
         }
       });
     } else {

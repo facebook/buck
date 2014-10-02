@@ -64,6 +64,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
   private final ImmutableList<String> vmArgs;
 
+  @Nullable
   private CompiledClassFileFinder compiledClassFileFinder;
 
   private final ImmutableSet<Label> labels;

@@ -34,12 +34,15 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 
+import javax.annotation.Nullable;
+
 class ZipEntryJavaFileObject extends SimpleJavaFileObject implements Closeable {
 
   private final ZipFile zipFile;
   private final ZipEntry zipEntry;
 
   @GuardedBy("this")
+  @Nullable
   private String contents;
 
   public ZipEntryJavaFileObject(ZipFile zipFile, ZipEntry zipEntry) {

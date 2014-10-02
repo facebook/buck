@@ -145,6 +145,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
    * If this build target were //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava/".
    */
+  @Nullable
   public String getBaseNameWithSlash() {
     return getBaseNameWithSlash(baseName);
   }

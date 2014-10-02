@@ -91,7 +91,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
         String.format(
             "%s/%s__%s_gen__",
             BuckConstant.ANNOTATION_DIR,
-            ownerTarget.getBasePathWithSlash(),
+            Preconditions.checkNotNull(ownerTarget).getBasePathWithSlash(),
             ownerTarget.getShortName()));
   }
 
@@ -232,6 +232,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
           processOnly);
     }
 
+    @Nullable
     private HasClasspathEntries getRuleAsHasClasspathEntries(BuildRule rule) {
       if (rule instanceof HasClasspathEntries) {
         return (HasClasspathEntries) rule;

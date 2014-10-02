@@ -31,6 +31,8 @@ import java.util.Collection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import javax.annotation.Nullable;
+
 /**
  * Traversal strategy for traversing a set of paths that themselves are traversed.  The provided
  * paths can point to zip/jar files, directories of resource/class files, or individual files
@@ -56,6 +58,7 @@ public abstract class ClasspathTraversal {
    * sort of cumulative value that is computed as a result of the traversal.
    */
   // TODO(mbolin): Change this from Object to a generic <T>.
+  @Nullable
   public Object getResult() {
     return null;
   }

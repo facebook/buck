@@ -310,7 +310,7 @@ public class JavacInMemoryStep extends JavacStep {
         }
         LOG.debug("Loading %s from own classloader", name);
 
-        Class<? extends Processor> aClass = processorBundle.classLoader
+        Class<? extends Processor> aClass = Preconditions.checkNotNull(processorBundle.classLoader)
             .loadClass(name)
             .asSubclass(Processor.class);
         processorBundle.processors.add(aClass.newInstance());
