@@ -1,0 +1,10 @@
+ocaml_binary(
+    name = 'ctest',
+    srcs = [
+        'ctest.c',
+        'test.ml',
+    ],
+    deps = [
+    ],
+    #INSERTION_POINT
+)

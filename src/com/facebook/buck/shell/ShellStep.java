@@ -137,13 +137,8 @@ public abstract class ShellStep implements Step {
   @VisibleForTesting
   int interactWithProcess(ExecutionContext context, Process process) throws InterruptedException {
     ImmutableSet.Builder<Option> options = ImmutableSet.builder();
-    if (shouldFlushStdOutErrAsProgressIsMade()) {
-      options.add(Option.PRINT_STD_OUT);
-      options.add(Option.PRINT_STD_ERR);
-    }
-    if (context.getVerbosity() == Verbosity.SILENT) {
-      options.add(Option.IS_SILENT);
-    }
+
+    addOptions(context, options);
 
     ProcessExecutor executor = context.getProcessExecutor();
     ProcessExecutor.Result result = executor.execute(process, options.build(), getStdin());
@@ -159,6 +154,18 @@ public abstract class ShellStep implements Step {
     }
 
     return result.getExitCode();
+  }
+
+  protected void addOptions(
+      ExecutionContext context,
+      ImmutableSet.Builder<Option> options) {
+    if (shouldFlushStdOutErrAsProgressIsMade()) {
+      options.add(Option.PRINT_STD_OUT);
+      options.add(Option.PRINT_STD_ERR);
+    }
+    if (context.getVerbosity() == Verbosity.SILENT) {
+      options.add(Option.IS_SILENT);
+    }
   }
 
   public long getDuration() {

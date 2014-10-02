@@ -1,0 +1,12 @@
+ocaml_binary(
+    name = 'hello_ocaml',
+    srcs = [
+        'amodule.ml',
+        'bmodule.ml',
+        'cmodule.ml',
+        'hello_ocaml.ml',
+    ],
+    deps = [
+        '//ocamllib:ocamllib'
+    ],
+)

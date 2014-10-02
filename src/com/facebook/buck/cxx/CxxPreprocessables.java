@@ -65,7 +65,7 @@ public class CxxPreprocessables {
    * found while traversing the dependencies starting from the {@link BuildRule} objects given.
    */
   @VisibleForTesting
-  protected static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
+  public static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
       Iterable<? extends BuildRule> inputs) {
 
     // We don't really care about the order we get back here, since headers shouldn't

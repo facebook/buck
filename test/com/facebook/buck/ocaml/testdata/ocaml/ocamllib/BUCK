@@ -1,0 +1,13 @@
+ocaml_library(
+    name = 'ocamllib',
+    srcs = [
+        'm1.ml',
+        'm2.ml',
+        'm3.ml',
+        'mmain.ml',
+        #INSERT_POINT
+    ],
+    visibility = [
+        'PUBLIC'
+    ]
+)

@@ -29,12 +29,12 @@ import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
-import com.facebook.buck.apple.AppleLibraryDescription;
-import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
@@ -58,6 +58,10 @@ import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarDescription;
+import com.facebook.buck.ocaml.OCamlBinaryDescription;
+import com.facebook.buck.ocaml.OCamlBuckConfig;
+import com.facebook.buck.ocaml.OCamlLibraryDescription;
+import com.facebook.buck.ocaml.PrebuiltOCamlLibraryDescription;
 import com.facebook.buck.parcelable.GenParcelableDescription;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonEnvironment;
@@ -145,7 +149,6 @@ public class KnownBuildRuleTypes {
     return createInstance(config, androidDirectoryResolver, javacEnv, pythonEnv);
   }
 
-
   public static KnownBuildRuleTypes createInstance(
       BuckConfig config,
       AndroidDirectoryResolver androidDirectoryResolver,
@@ -182,6 +185,9 @@ public class KnownBuildRuleTypes {
     // Construct the thrift config wrapping the buck config.
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
 
+    // Construct the OCaml config wrapping the buck config.
+    OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(config);
+
     // Construct the C/C++ config wrapping the buck config.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
@@ -206,7 +212,8 @@ public class KnownBuildRuleTypes {
     JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
         .setJavaCompilerEnvironment(javacEnv)
         .build();
-    builder.register(new AndroidBinaryDescription(
+    builder.register(
+        new AndroidBinaryDescription(
             androidBinaryOptions,
             config.getProguardJarOverride()));
     builder.register(new AndroidBuildConfigDescription());
@@ -221,6 +228,9 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleTestDescription());
     builder.register(new BuckExtensionDescription());
     builder.register(new CoreDataModelDescription());
+    builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
+    builder.register(new PrebuiltOCamlLibraryDescription());
+    builder.register(new OCamlLibraryDescription(ocamlBuckConfig));
     builder.register(new CxxBinaryDescription(cxxBuckConfig));
     builder.register(new CxxTestDescription(cxxBuckConfig));
     builder.register(new CxxLibraryDescription(cxxBuckConfig));
@@ -240,25 +250,28 @@ public class KnownBuildRuleTypes {
     builder.register(new IosPostprocessResourcesDescription());
     builder.register(new AppleResourceDescription());
     builder.register(new JavaBinaryDescription());
-    builder.register(new ThriftLibraryDescription(
-        thriftBuckConfig,
-        ImmutableList.of(
-            new ThriftJavaEnhancer(thriftBuckConfig, javacEnv),
-            new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ false),
-            new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ true),
-            new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
-            new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED))));
+    builder.register(
+        new ThriftLibraryDescription(
+            thriftBuckConfig,
+            ImmutableList.of(
+                new ThriftJavaEnhancer(thriftBuckConfig, javacEnv),
+                new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ false),
+                new ThriftCxxEnhancer(thriftBuckConfig, cxxBuckConfig, /* cpp2 */ true),
+                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
+                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED))));
     builder.register(new NdkLibraryDescription(ndkVersion));
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());
     builder.register(new ProjectConfigDescription());
-    builder.register(new PythonTestDescription(
-        pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
-        pythonPathToPythonTestMain.or(PythonTestDescription.PYTHON_PATH_TO_PYTHON_TEST_MAIN),
-        pythonEnv));
-    builder.register(new PythonBinaryDescription(
-        pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
-        pythonEnv));
+    builder.register(
+        new PythonTestDescription(
+            pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
+            pythonPathToPythonTestMain.or(PythonTestDescription.PYTHON_PATH_TO_PYTHON_TEST_MAIN),
+            pythonEnv));
+    builder.register(
+        new PythonBinaryDescription(
+            pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
+            pythonEnv));
     builder.register(new PythonLibraryDescription());
     builder.register(new RemoteFileDescription(downloadAtRuntimeOk, downloader));
     builder.register(new RobolectricTestDescription(javacEnv));

@@ -66,6 +66,8 @@ public class TypeCoercerFactory {
 
   private final TypeCoercer<AppleSource> appleSourceTypeCoercer;
 
+  private final TypeCoercer<OCamlSource> ocamlSourceTypeCoercer;
+
   private final TypeCoercer<?>[] nonContainerTypeCoercers;
 
   public TypeCoercerFactory() {
@@ -75,6 +77,7 @@ public class TypeCoercerFactory {
             sourcePathTypeCoercer,
             new PairTypeCoercer<>(sourcePathTypeCoercer, stringTypeCoercer),
             stringTypeCoercer);
+    ocamlSourceTypeCoercer = new OCamlSourceTypeCoercer(sourcePathTypeCoercer);
     nonContainerTypeCoercers = new TypeCoercer<?>[] {
         // special classes
         labelTypeCoercer,
@@ -97,6 +100,7 @@ public class TypeCoercerFactory {
 
         // other simple
         appleSourceTypeCoercer,
+        ocamlSourceTypeCoercer,
         new AppleBundleDestinationTypeCoercer(stringTypeCoercer),
         new BuildConfigFieldsTypeCoercer(),
         new UriTypeCoercer(),

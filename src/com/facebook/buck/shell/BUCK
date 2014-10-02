@@ -45,6 +45,7 @@ java_library(
     'RunShTestAndRecordResultStep.java',
     'ShellStep.java',
     'SymlinkFilesIntoDirectoryStep.java',
+    'Shell.java',
   ],
   deps = [
     '//third-party/java/guava:guava',

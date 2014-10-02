@@ -1,0 +1,22 @@
+ocaml_library(
+    name = 'plus_lib',
+    srcs = [
+        'plus.ml',
+    ],
+    visibility = [
+        'PUBLIC',
+    ]
+)
+
+ocaml_binary(
+    name = 'plus',
+    srcs = [
+        'main.ml',
+    ],
+    deps = [
+        ':plus_lib',
+    ],
+    visibility = [
+        'PUBLIC',
+    ]
+)

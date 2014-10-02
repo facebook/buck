@@ -1,0 +1,9 @@
+ocaml_binary(
+    name='main',
+    srcs=[
+        'main.ml'
+    ],
+    deps=[
+        '//plus:plus_lib'
+    ],
+)

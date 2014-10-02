@@ -1,0 +1,9 @@
+ocaml_binary(
+    name = 'ocaml_ext',
+    srcs = [
+        'main_plus.ml',
+    ],
+    deps = [
+        '//ocaml_ext_mac/third_party:plus',
+    ],
+)

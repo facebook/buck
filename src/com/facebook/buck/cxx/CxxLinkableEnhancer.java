@@ -16,23 +16,17 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -42,45 +36,6 @@ public class CxxLinkableEnhancer {
 
   // Utility class doesn't instantiate.
   private CxxLinkableEnhancer() {}
-
-  /**
-   * Collect up and merge all {@link NativeLinkableInput} objects from transitively traversing
-   * all unbroken dependency chains of {@link NativeLinkable} objects found via the passed in
-   * {@link BuildRule} roots.
-   */
-  @VisibleForTesting
-  protected static NativeLinkableInput getTransitiveNativeLinkableInput(
-      Iterable<? extends BuildRule> inputs,
-      NativeLinkable.Type depType) {
-
-    // Build up a graph of the inputs and their transitive dependencies, we'll use the graph
-    // to topologically sort the dependencies.
-    final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
-    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(inputs) {
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        if (rule instanceof NativeLinkable) {
-          graph.addNode(rule);
-          for (BuildRule dep : rule.getDeps()) {
-            if (dep instanceof NativeLinkable) {
-              graph.addEdge(rule, dep);
-            }
-          }
-          return rule.getDeps();
-        } else {
-          return ImmutableSet.of();
-        }
-      }
-    };
-    visitor.start();
-
-    // Collect and topologically sort our deps that contribute to the link.
-    return NativeLinkableInput.concat(
-        FluentIterable
-            .from(TopologicalSort.sort(graph, Predicates.<BuildRule>alwaysTrue()).reverse())
-            .filter(NativeLinkable.class)
-            .transform(NativeLinkables.getNativeLinkableInput(depType)));
-  }
 
   /**
    * Represents the link types.
@@ -117,9 +72,10 @@ public class CxxLinkableEnhancer {
 
     // Collect and topologically sort our deps that contribute to the link.
     NativeLinkableInput linkableInput =
-        getTransitiveNativeLinkableInput(
+        NativeLinkables.getTransitiveNativeLinkableInput(
             nativeLinkableDeps,
-            depType);
+            depType,
+            /* reverse */ true);
     ImmutableList<SourcePath> allInputs =
         ImmutableList.<SourcePath>builder()
             .addAll(objects)

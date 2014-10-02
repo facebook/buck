@@ -1,0 +1,1 @@
+print_string "It is a dummy!\n";;

@@ -339,9 +339,10 @@ public class CxxLinkableEnhancerTest {
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
     // in the bottom input.
     NativeLinkableInput totalInput =
-        CxxLinkableEnhancer.getTransitiveNativeLinkableInput(
+        NativeLinkables.getTransitiveNativeLinkableInput(
             ImmutableList.of(top),
-            NativeLinkable.Type.STATIC);
+            NativeLinkable.Type.STATIC,
+            /* reverse */ true);
     assertTrue(bottomInput.getArgs().contains(sentinel));
     assertFalse(totalInput.getArgs().contains(sentinel));
   }

@@ -1,0 +1,9 @@
+ocaml_binary(
+    name = 'clib',
+    srcs = [
+        'main.ml',
+    ],
+    deps = [
+        '//clib/plus:plus'
+    ],
+)
