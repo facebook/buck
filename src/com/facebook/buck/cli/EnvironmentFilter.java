@@ -29,7 +29,9 @@ public class EnvironmentFilter {
   // Always exclude environment variables with these names.
   private static final ImmutableSet<String> ENV_TO_REMOVE = ImmutableSet.of(
       // UUID added to environment by OS X.
-      "TERM_SESSION_ID");
+      "TERM_SESSION_ID",
+      // Build ID passed in from Python.
+      "BUCK_BUILD_ID");
 
   // Utility class, do not instantiate.
   private EnvironmentFilter() { }
