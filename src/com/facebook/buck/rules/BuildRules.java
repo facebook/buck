@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversers;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
@@ -42,9 +43,9 @@ public class BuildRules {
     ImmutableSortedSet.Builder<BuildRule> buildRules = ImmutableSortedSet.naturalOrder();
 
     for (BuildTarget target : buildTargets) {
-      BuildRule buildRule = ruleResolver.get(target);
-      if (buildRule != null) {
-        buildRules.add(buildRule);
+      Optional<BuildRule> buildRule = ruleResolver.getRuleOptional(target);
+      if (buildRule.isPresent()) {
+        buildRules.add(buildRule.get());
       } else if (!allowNonExistentRule) {
         throw new HumanReadableException("No rule for %s found when processing %s",
             target, invokingBuildTarget.getFullyQualifiedName());

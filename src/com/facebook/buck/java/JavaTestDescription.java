@@ -90,13 +90,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
       BuildRuleResolver resolver) {
     ImmutableSet.Builder<BuildRule> sourceUnderTest = ImmutableSet.builder();
     for (BuildTarget target : sourceUnderTestTargets) {
-      BuildRule rule = resolver.get(target);
-      if (rule == null) {
-        throw new HumanReadableException(
-            "Specified source under test for %s is not among its dependencies: %s",
-            owner,
-            target);
-      }
+      BuildRule rule = resolver.getRule(target);
       if (!(rule instanceof JavaLibrary)) {
         // In this case, the source under test specified in the build file was not a Java library
         // rule. Since EMMA requires the sources to be in Java, we will throw this exception and

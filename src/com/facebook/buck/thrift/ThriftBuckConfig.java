@@ -80,13 +80,13 @@ public class ThriftBuckConfig {
     SourcePath sourcePath;
 
     if (compilerTarget.isPresent()) {
-      BuildRule rule = resolver.get(compilerTarget.get());
-      if (rule == null) {
+      Optional<BuildRule> rule = resolver.getRuleOptional(compilerTarget.get());
+      if (!rule.isPresent()) {
         throw new HumanReadableException(
             ".buckconfig: thrift:compiler_target rule \"%s\" does not exists",
             compilerTarget.get());
       }
-      sourcePath = new BuildRuleSourcePath(rule);
+      sourcePath = new BuildRuleSourcePath(rule.get());
     } else if (compilerPath.isPresent()) {
       sourcePath = new PathSourcePath(compilerPath.get());
     } else {

@@ -368,8 +368,7 @@ public class AndroidBinaryGraphEnhancer {
           !buildTargetsToExcludeFromDex.contains(buildTarget),
           "JavaLibrary should have been excluded from target to dex: %s", buildTarget);
 
-      BuildRule libraryRule = ruleResolver.get(buildTarget);
-      Preconditions.checkNotNull(libraryRule);
+      BuildRule libraryRule = ruleResolver.getRule(buildTarget);
 
       // Skip uber R.java since AaptPackageResources takes care of dexing.
       if (libraryRule.equals(aaptPackageResources)) {
@@ -391,9 +390,9 @@ public class AndroidBinaryGraphEnhancer {
       BuildTarget preDexTarget = BuildTarget.builder(originalTarget)
           .addFlavor(DEX_FLAVOR)
           .build();
-      BuildRule preDexRule = ruleResolver.get(preDexTarget);
-      if (preDexRule != null) {
-        preDexDeps.add((DexProducedFromJavaLibrary) preDexRule);
+      Optional<BuildRule> preDexRule = ruleResolver.getRuleOptional(preDexTarget);
+      if (preDexRule.isPresent()) {
+        preDexDeps.add((DexProducedFromJavaLibrary) preDexRule.get());
         continue;
       }
 
@@ -401,7 +400,7 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleParams paramsForPreDex = buildRuleParams.copyWithChanges(
           BuildRuleType.PRE_DEX,
           preDexTarget,
-          ImmutableSortedSet.of(ruleResolver.get(javaLibrary.getBuildTarget())),
+          ImmutableSortedSet.of(ruleResolver.getRule(javaLibrary.getBuildTarget())),
           /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
       DexProducedFromJavaLibrary preDex =
           new DexProducedFromJavaLibrary(paramsForPreDex, javaLibrary);

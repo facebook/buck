@@ -158,7 +158,7 @@ public class AndroidBinaryGraphEnhancerTest {
         collection);
     BuildTarget dexMergeTarget =
         BuildTarget.builder("//java/com/example", "apk").setFlavor("dex_merge").build();
-    BuildRule dexMergeRule = ruleResolver.get(dexMergeTarget);
+    BuildRule dexMergeRule = ruleResolver.getRule(dexMergeTarget);
 
     assertEquals(dexMergeRule, preDexMergeRule);
 
@@ -175,11 +175,11 @@ public class AndroidBinaryGraphEnhancerTest {
 
     BuildRule preDexRule1 = depsForPreDexingIter.next();
     assertEquals("//java/com/example:dep1#dex", preDexRule1.getBuildTarget().toString());
-    assertNotNull(ruleResolver.get(preDexRule1.getBuildTarget()));
+    assertNotNull(ruleResolver.getRule(preDexRule1.getBuildTarget()));
 
     BuildRule preDexRule2 = depsForPreDexingIter.next();
     assertEquals("//java/com/example:lib#dex", preDexRule2.getBuildTarget().toString());
-    assertNotNull(ruleResolver.get(preDexRule2.getBuildTarget()));
+    assertNotNull(ruleResolver.getRule(preDexRule2.getBuildTarget()));
   }
 
   @Test
@@ -238,7 +238,7 @@ public class AndroidBinaryGraphEnhancerTest {
         result.getClasspathEntriesToDex());
     BuildTarget enhancedBuildConfigTarget = BuildTarget.builder(apkTarget).setFlavor(flavor)
         .build();
-    BuildRule enhancedBuildConfigRule = ruleResolver.get(enhancedBuildConfigTarget);
+    BuildRule enhancedBuildConfigRule = ruleResolver.getRule(enhancedBuildConfigTarget);
     assertTrue(enhancedBuildConfigRule instanceof AndroidBuildConfigJavaLibrary);
     AndroidBuildConfigJavaLibrary enhancedBuildConfigJavaLibrary =
         (AndroidBuildConfigJavaLibrary) enhancedBuildConfigRule;

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -119,13 +120,14 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         JavaLibrary javaLibrary = (JavaLibrary) rule;
         BuildTarget gwtModuleTarget = BuildTargets.createFlavoredBuildTarget(
             javaLibrary, JavaLibrary.GWT_MODULE_FLAVOR);
-        BuildRule gwtModule = resolver.get(gwtModuleTarget);
+        Optional<BuildRule> gwtModule = resolver.getRuleOptional(gwtModuleTarget);
 
-        // Note that gwtModule could be null if javaLibrary is a rule with no srcs of its own,
+        // Note that gwtModule could be absent if javaLibrary is a rule with no srcs of its own,
         // but a rule that exists only as a collection of deps.
-        if (gwtModule != null) {
-          extraDeps.add(gwtModule);
-          gwtModuleJarsBuilder.add(gwtModule.getPathToOutputFile());
+        if (gwtModule.isPresent()) {
+          extraDeps.add(gwtModule.get());
+          gwtModuleJarsBuilder.add(
+              Preconditions.checkNotNull(gwtModule.get().getPathToOutputFile()));
         }
 
         // Traverse all of the deps of this rule.

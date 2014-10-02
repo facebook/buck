@@ -66,7 +66,7 @@ public class PythonTestDescriptionTest {
     arg.sourceUnderTest = Optional.absent();
     PythonTest testRule = desc.createBuildRule(params, resolver, arg);
 
-    PythonBinary binRule = (PythonBinary) resolver.get(
+    PythonBinary binRule = (PythonBinary) resolver.getRule(
         desc.getBinaryBuildTarget(testRule.getBuildTarget()));
     assertNotNull(binRule);
 
@@ -102,7 +102,8 @@ public class PythonTestDescriptionTest {
     arg.baseModule = Optional.absent();
     resolver = new BuildRuleResolver();
     desc.createBuildRule(params, resolver, arg);
-    PythonBinary normalRule = (PythonBinary) resolver.get(desc.getBinaryBuildTarget(target));
+    PythonBinary normalRule = (PythonBinary) resolver.getRule(
+        desc.getBinaryBuildTarget(target));
     assertNotNull(normalRule);
     assertTrue(normalRule.getComponents().getModules().containsKey(
         target.getBasePath().resolve(sourceName)));
@@ -111,7 +112,8 @@ public class PythonTestDescriptionTest {
     arg.baseModule = Optional.of("blah");
     resolver = new BuildRuleResolver();
     desc.createBuildRule(params, resolver, arg);
-    PythonBinary baseModuleRule = (PythonBinary) resolver.get(desc.getBinaryBuildTarget(target));
+    PythonBinary baseModuleRule = (PythonBinary) resolver.getRule(
+        desc.getBinaryBuildTarget(target));
     assertNotNull(baseModuleRule);
     assertTrue(baseModuleRule.getComponents().getModules().containsKey(
         Paths.get(arg.baseModule.get()).resolve(sourceName)));

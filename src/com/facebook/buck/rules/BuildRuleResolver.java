@@ -17,15 +17,15 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 /**
  * Provides a mechanism for mapping between a {@link BuildTarget} and the {@link BuildRule} it
@@ -61,12 +61,18 @@ public class BuildRuleResolver {
   }
 
   /**
-   * Returns the {@link BuildRule} with the {@code fullyQualifiedName}.
-   * @param fullyQualifiedName if {@code null}, this method will return {@code null}
+   * Returns the {@link BuildRule} with the {@code buildTarget}.
    */
-  @Nullable
-  public BuildRule get(@Nullable BuildTarget fullyQualifiedName) {
-    return fullyQualifiedName == null ? null : buildRuleIndex.get(fullyQualifiedName);
+  public BuildRule getRule(BuildTarget buildTarget) {
+    BuildRule rule = buildRuleIndex.get(Preconditions.checkNotNull(buildTarget));
+    if (rule == null) {
+      throw new HumanReadableException("Rule for target '%s' could not be resolved.", buildTarget);
+    }
+    return rule;
+  }
+
+  public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+    return Optional.fromNullable(buildRuleIndex.get(Preconditions.checkNotNull(buildTarget)));
   }
 
   /**
@@ -78,7 +84,7 @@ public class BuildRuleResolver {
     BuildRule oldValue = buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
     if (oldValue != null) {
       throw new IllegalStateException("A build rule for this target has already been created: " +
-          buildRule.getBuildTarget());
+          oldValue.getBuildTarget());
     }
     return buildRule;
   }

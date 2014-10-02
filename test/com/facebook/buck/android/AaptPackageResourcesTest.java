@@ -120,8 +120,8 @@ public class AaptPackageResourcesTest {
     ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
     EasyMock.replay(resourcesFilter);
 
-    AndroidResource resourceOne = (AndroidResource) ruleResolver
-        .get(BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"));
+    AndroidResource resourceOne = (AndroidResource) ruleResolver.getRule(
+        BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"));
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
         BuildTarget.builder("//java/src/com/facebook/base", "apk")
@@ -202,9 +202,9 @@ public class AaptPackageResourcesTest {
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false);
 
-    AndroidResource resourceOne = (AndroidResource) ruleResolver.get(
+    AndroidResource resourceOne = (AndroidResource) ruleResolver.getRule(
         BuildTargetFactory.newInstance("//facebook/base:libraryOne_resources"));
-    AndroidResource resourceTwo = (AndroidResource) ruleResolver.get(
+    AndroidResource resourceTwo = (AndroidResource) ruleResolver.getRule(
         BuildTargetFactory.newInstance("//facebook/base:libraryTwo_resources"));
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().

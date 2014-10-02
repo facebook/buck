@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -88,9 +87,7 @@ public class TargetNodeToBuildRuleTransformer {
     ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = ruleResolver.get(target);
-      Preconditions.checkNotNull(rule);
-      rules.add(rule);
+      rules.add(ruleResolver.getRule(target));
     }
 
     return rules;

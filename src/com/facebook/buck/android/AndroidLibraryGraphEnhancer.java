@@ -97,7 +97,7 @@ public class AndroidLibraryGraphEnhancer {
     ImmutableSortedSet.Builder<BuildRule> actualDeps = ImmutableSortedSet.naturalOrder();
     for (HasAndroidResourceDeps dep : androidResourceDeps) {
       // If this ever returns null, something has gone horrifically awry.
-      actualDeps.add(ruleResolver.get(dep.getBuildTarget()));
+      actualDeps.add(ruleResolver.getRule(dep.getBuildTarget()));
     }
 
     BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(

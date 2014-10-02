@@ -165,7 +165,7 @@ public class CxxBinaryDescriptionTest {
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
-    BuildRule compileRule1 = resolver.get(
+    BuildRule compileRule1 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
             "test/bar.cpp",
@@ -183,7 +183,7 @@ public class CxxBinaryDescriptionTest {
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
-    BuildRule compileRule2 = resolver.get(
+    BuildRule compileRule2 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
             genSourceName,

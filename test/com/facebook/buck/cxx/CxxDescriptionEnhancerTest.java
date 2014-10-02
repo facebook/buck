@@ -108,7 +108,7 @@ public class CxxDescriptionEnhancerTest {
         ImmutableMap.of(yaccSourceName, yaccSource));
 
     // Grab the generated lex rule and verify it has the genrule as a dep.
-    Lex lex = (Lex) resolver.get(
+    Lex lex = (Lex) resolver.getRule(
         CxxDescriptionEnhancer.createLexBuildTarget(target, lexSourceName));
     assertNotNull(lex);
     assertEquals(
@@ -116,7 +116,7 @@ public class CxxDescriptionEnhancerTest {
         lex.getDeps());
 
     // Grab the generated yacc rule and verify it has no deps.
-    Yacc yacc = (Yacc) resolver.get(
+    Yacc yacc = (Yacc) resolver.getRule(
         CxxDescriptionEnhancer.createYaccBuildTarget(target, yaccSourceName));
     assertNotNull(yacc);
     assertEquals(
@@ -312,7 +312,7 @@ public class CxxDescriptionEnhancerTest {
         rule.getCxxPreprocessorInput());
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    BuildRule staticRule = resolver.get(
+    BuildRule staticRule = resolver.getRule(
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target));
     assertNotNull(staticRule);
     assertEquals(
@@ -331,7 +331,7 @@ public class CxxDescriptionEnhancerTest {
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
-    BuildRule staticCompileRule1 = resolver.get(
+    BuildRule staticCompileRule1 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
             "test/bar.cpp",
@@ -349,7 +349,7 @@ public class CxxDescriptionEnhancerTest {
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
-    BuildRule staticCompileRule2 = resolver.get(
+    BuildRule staticCompileRule2 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
             genSourceName,
@@ -367,7 +367,7 @@ public class CxxDescriptionEnhancerTest {
             .toSet());
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    BuildRule sharedRule = resolver.get(
+    BuildRule sharedRule = resolver.getRule(
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(target));
     assertNotNull(sharedRule);
     assertEquals(
@@ -387,7 +387,7 @@ public class CxxDescriptionEnhancerTest {
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
-    BuildRule sharedCompileRule1 = resolver.get(
+    BuildRule sharedCompileRule1 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
             "test/bar.cpp",
@@ -405,7 +405,7 @@ public class CxxDescriptionEnhancerTest {
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
-    BuildRule sharedCompileRule2 = resolver.get(
+    BuildRule sharedCompileRule2 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
             genSourceName,

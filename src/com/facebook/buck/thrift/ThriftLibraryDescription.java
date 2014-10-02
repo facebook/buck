@@ -24,12 +24,12 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
@@ -323,9 +323,8 @@ public class ThriftLibraryDescription
     // Lookup the thrift library corresponding to this rule.  We add an implicit dep onto
     // this rule in the findImplicitDepsFromParams method, so this should always exist by
     // the time we get here.
-    ThriftLibrary thriftLibrary = (ThriftLibrary) resolver.get(
-        target.getUnflavoredTarget());
-    Preconditions.checkNotNull(thriftLibrary);
+    ThriftLibrary thriftLibrary =
+        (ThriftLibrary) resolver.getRule(target.getUnflavoredTarget());
 
     // We implicitly pass the language-specific flavors of your thrift lib dependencies as
     // language specific deps to the language specific enhancer.

@@ -52,13 +52,7 @@ public class BuildRuleTypeCoercer extends LeafTypeCoercer<BuildRule> {
           filesystem,
           pathRelativeToProjectRoot,
           object);
-      BuildRule rule = buildRuleResolver.get(buildTarget);
-
-      if (rule == null) {
-        throw CoerceFailedException.simple(object, getOutputClass(), "No build rule found");
-      }
-
-      return rule;
+      return buildRuleResolver.getRule(buildTarget);
     } catch (CoerceFailedException e) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }

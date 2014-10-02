@@ -78,14 +78,14 @@ public class AndroidBinaryTest {
         null, /* resDirectory */
         null, /* assetDirectory */
         null /* nativeLibsDirectory */);
-    BuildRule libraryOneRule = ruleResolver.get(libraryOne.getBuildTarget());
+    BuildRule libraryOneRule = ruleResolver.getRule(libraryOne.getBuildTarget());
     BuildRule libraryTwo = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryTwo",
         ruleResolver,
         null, /* resDirectory */
         null, /* assetDirectory */
         null /* nativeLibsDirectory */);
-    BuildRule libraryTwoRule = ruleResolver.get(libraryTwo.getBuildTarget());
+    BuildRule libraryTwoRule = ruleResolver.getRule(libraryTwo.getBuildTarget());
 
     // One android_binary rule that depends on the two android_library rules.
     BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance(
