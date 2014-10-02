@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
+import com.android.common.annotations.Nullable;
 import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.TestType;
@@ -63,6 +64,7 @@ public class RobolectricTest extends JavaTest {
   private static final Function<HasAndroidResourceDeps, Path> RESOURCE_DIRECTORY_FUNCTION =
       new Function<HasAndroidResourceDeps, Path>() {
     @Override
+    @Nullable
     public Path apply(HasAndroidResourceDeps input) {
       return input.getRes();
     }

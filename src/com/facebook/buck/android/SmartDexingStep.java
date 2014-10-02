@@ -250,6 +250,7 @@ public class SmartDexingStep implements Step {
     private final Path outputPath;
     private final Path outputHashPath;
     private final EnumSet<Option> dxOptions;
+    @Nullable
     private String newInputsHash;
 
     public DxPseudoRule(
@@ -283,7 +284,9 @@ public class SmartDexingStep implements Step {
       Hasher hasher = Hashing.sha1().newHasher();
       for (Path src : srcs) {
         Preconditions.checkState(dexInputHashes.containsKey(src));
-        hasher.putBytes(dexInputHashes.get(src).getHash().getBytes(Charsets.UTF_8));
+        hasher.putBytes(
+            Preconditions.checkNotNull(dexInputHashes.get(src))
+                .getHash().getBytes(Charsets.UTF_8));
       }
       return hasher.hash().toString();
     }

@@ -104,7 +104,9 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               LOG.verbose("resource apk = %s", resourceApkHash);
               hasher.putUnencodedChars(resourceApkHash);
               // Next is the primary dex.  Same plan.
-              String primaryDexHash = preDexMerge.get().getPrimaryDexHash().toString();
+              String primaryDexHash = Preconditions.checkNotNull(
+                  preDexMerge.get().getPrimaryDexHash())
+                  .toString();
               LOG.verbose("primary dex = %s", primaryDexHash);
               hasher.putUnencodedChars(primaryDexHash);
               // Non-english strings packaged as assets.

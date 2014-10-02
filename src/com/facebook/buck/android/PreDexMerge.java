@@ -307,6 +307,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     return null;
   }
 
+  @Nullable
   public Sha1HashCode getPrimaryDexHash() {
     Preconditions.checkState(dexSplitMode.isShouldSplitDex());
     return buildOutputInitializer.getBuildOutput().primaryDexHash;
@@ -321,7 +322,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     @Nullable private final Sha1HashCode primaryDexHash;
     private final ImmutableSet<Path> secondaryDexDirectories;
 
-    BuildOutput(Sha1HashCode primaryDexHash, ImmutableSet<Path> secondaryDexDirectories) {
+    BuildOutput(@Nullable Sha1HashCode primaryDexHash, ImmutableSet<Path> secondaryDexDirectories) {
       this.primaryDexHash = primaryDexHash;
       this.secondaryDexDirectories = Preconditions.checkNotNull(secondaryDexDirectories);
     }

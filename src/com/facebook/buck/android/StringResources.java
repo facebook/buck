@@ -31,6 +31,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents string resources of types string, plural and array for a locale. Also responsible
  * for generating a custom format binary file for the resources.
@@ -114,6 +116,7 @@ public class StringResources {
    * </pre>
    * </p>
    */
+  @Nullable
   public byte[] getBinaryFileContent() {
     try (
       ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();

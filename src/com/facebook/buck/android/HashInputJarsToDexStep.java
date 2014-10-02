@@ -85,7 +85,8 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
               public void visit(FileLike fileLike) throws IOException {
                 String className = fileLike.getRelativePath().replaceAll("\\.class$", "");
                 if (classNamesToHashes.containsKey(className)) {
-                  HashCode classHash = classNamesToHashes.get(className);
+                  HashCode classHash =
+                      Preconditions.checkNotNull(classNamesToHashes.get(className));
                   hasher.putBytes(classHash.asBytes());
                 }
               }

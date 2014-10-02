@@ -274,7 +274,7 @@ public class CompileStringsStep implements Step {
       if (!resourceNameToIdMap.containsKey(resourceName)) {
         continue;
       }
-      int resourceId = resourceNameToIdMap.get(resourceName);
+      int resourceId = Preconditions.checkNotNull(resourceNameToIdMap.get(resourceName));
       // Ignore a resource if it has already been found.
       if (!stringsMap.containsKey(resourceId)) {
         stringsMap.put(resourceId, node.getTextContent());
@@ -296,7 +296,7 @@ public class CompileStringsStep implements Step {
       if (!resourceNameToIdMap.containsKey(resourceName)) {
         continue;
       }
-      int resourceId = resourceNameToIdMap.get(resourceName);
+      int resourceId = Preconditions.checkNotNull(resourceNameToIdMap.get(resourceName));
 
       // Ignore a resource if it has already been found.
       if (pluralsMap.containsKey(resourceId)) {
@@ -327,7 +327,7 @@ public class CompileStringsStep implements Step {
         continue;
       }
 
-      int resourceId = resourceNameToIdMap.get(resourceName);
+      int resourceId = Preconditions.checkNotNull(resourceNameToIdMap.get(resourceName));
       // Ignore a resource if it has already been found.
       if (arraysMap.containsKey(resourceId)) {
         continue;

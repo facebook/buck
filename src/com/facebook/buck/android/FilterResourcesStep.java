@@ -155,6 +155,7 @@ public class FilterResourcesStep implements Step {
         imageScaler != null);
 
     if (filterDrawables) {
+      Preconditions.checkNotNull(drawableFinder);
       Set<Path> drawables = drawableFinder.findDrawables(
           inResDirToOutResDirMap.keySet(),
           context.getProjectFilesystem());
@@ -219,6 +220,7 @@ public class FilterResourcesStep implements Step {
     Filters.Density targetDensity = Filters.Density.ORDERING.max(targetDensities);
 
     // Go over all the images that remain after filtering.
+    Preconditions.checkNotNull(drawableFinder);
     Collection<Path> drawables = drawableFinder.findDrawables(
         inResDirToOutResDirMap.values(),
         context.getProjectFilesystem());
@@ -232,6 +234,7 @@ public class FilterResourcesStep implements Step {
       Filters.Density density = qualifiers.density;
 
       // If the image has a qualifier but it's not the right one.
+      Preconditions.checkNotNull(targetDensities);
       if (!targetDensities.contains(density)) {
 
         // Replace density qualifier with target density using regular expression to match
@@ -249,6 +252,7 @@ public class FilterResourcesStep implements Step {
 
         // Make sure destination folder exists and perform downscaling.
         filesystem.createParentDirs(destination);
+        Preconditions.checkNotNull(imageScaler);
         imageScaler.scale(factor, drawable, destination, context);
 
         // Delete source file.
@@ -409,7 +413,9 @@ public class FilterResourcesStep implements Step {
 
   public static class Builder {
 
+    @Nullable
     private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
+    @Nullable
     private ResourceFilter resourceFilter;
     private boolean filterStrings = false;
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
@@ -438,7 +444,9 @@ public class FilterResourcesStep implements Step {
     }
 
     public FilterResourcesStep build() {
+      Preconditions.checkNotNull(resourceFilter);
       LOG.info("FilterResourcesStep.Builder: resource filter: %s", resourceFilter);
+      Preconditions.checkNotNull(inResDirToOutResDirMap);
       return new FilterResourcesStep(
           inResDirToOutResDirMap,
           resourceFilter.isEnabled(),
