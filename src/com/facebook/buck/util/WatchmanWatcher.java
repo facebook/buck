@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.timing.Clock;
 import com.fasterxml.jackson.core.JsonParser;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * A ProjectFilesystemWatcher implementation that uses a local watchman service.
@@ -352,6 +354,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       }
 
       @Override
+      @Nullable
       public Object context() {
         return null;
       }
@@ -370,7 +373,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   private static class PathEventBuilder {
 
     private WatchEvent.Kind<Path> kind;
-    private Path path;
+    @Nullable private Path path;
 
     PathEventBuilder() {
       this.kind = StandardWatchEventKinds.ENTRY_MODIFY;
@@ -404,6 +407,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         }
 
         @Override
+        @Nullable
         public Path context() {
           return path;
         }

@@ -153,7 +153,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       String newestVersion = "";
 
       for (Path potentialNdkPath :
-          projectFilesystem.getDirectoryContents(repositoryPath)) {
+          Preconditions.checkNotNull(projectFilesystem.getDirectoryContents(repositoryPath))) {
         if (potentialNdkPath.toFile().isDirectory()) {
           Optional<String> ndkVersion = findNdkVersionFromPath(potentialNdkPath);
           // For each directory found, first check to see if it is in fact something we

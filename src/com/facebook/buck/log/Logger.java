@@ -42,6 +42,8 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
+import javax.annotation.Nullable;
+
 // This is open source software that we'd like to modify as little as
 // possible, and it doesn't match our coding style.
 @SuppressWarnings({"PMD", "checkstyle:leftcurly", "checkstyle:rightcurly", "checkstyle:linelength"})
@@ -306,7 +308,7 @@ public class Logger
      * @param format a format string compatible with String.format()
      * @param args arguments for the format string
      */
-    public void warn(Throwable exception, String format, Object... args)
+    public void warn(@Nullable Throwable exception, String format, Object... args)
     {
         if (logger.isLoggable(WARNING)) {
             String message;
@@ -374,7 +376,7 @@ public class Logger
      * @param format a format string compatible with String.format()
      * @param args arguments for the format string
      */
-    public void error(Throwable exception, String format, Object... args)
+    public void error(@Nullable Throwable exception, String format, Object... args)
     {
         if (logger.isLoggable(SEVERE)) {
             String message;

@@ -20,6 +20,8 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
+import javax.annotation.Nullable;
+
 // TODO(mbolin): This should be renamed to DummyFileHashCache and moved under the test/ directory.
 public class NullFileHashCache implements FileHashCache {
 
@@ -29,6 +31,7 @@ public class NullFileHashCache implements FileHashCache {
   }
 
   @Override
+  @Nullable
   public HashCode get(Path path) {
     return null;
   }
