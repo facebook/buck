@@ -86,6 +86,8 @@ import java.net.Proxy;
 import java.nio.file.Path;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 /**
  * A registry of all the build rules types understood by Buck.
  */
@@ -93,6 +95,7 @@ public class KnownBuildRuleTypes {
 
   private final ImmutableMap<BuildRuleType, Description<?>> descriptions;
   private final ImmutableMap<String, BuildRuleType> types;
+  @Nullable
   private static volatile KnownBuildRuleTypes defaultRules = null;
 
   private KnownBuildRuleTypes(

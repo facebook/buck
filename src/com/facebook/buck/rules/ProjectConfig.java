@@ -96,6 +96,7 @@ public class ProjectConfig extends AbstractBuildRule {
    * @return the BuildRule that should determine the type of IDE project to create. This will be
    *     the srcRule, if it is present; otherwise, it will be the test rule.
    */
+  @Nullable
   public BuildRule getProjectRule() {
     if (getSrcRule() != null) {
       return getSrcRule();

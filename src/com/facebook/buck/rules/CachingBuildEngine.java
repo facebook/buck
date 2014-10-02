@@ -27,6 +27,7 @@ import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
@@ -205,7 +206,7 @@ public class CachingBuildEngine implements BuildEngine {
               // Make sure that all of the local files have the same values they would as if the
               // rule had been built locally.
               BuildRuleSuccess.Type success = result.getSuccess();
-              if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
+              if (success != null && success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
                 try {
                   boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
                   buildInfoRecorder.get().writeMetadataToDisk(clearExistingMetadata);
@@ -225,7 +226,7 @@ public class CachingBuildEngine implements BuildEngine {
               newFuture.set(buildRuleSuccess);
 
               // Finally, upload to the artifact cache.
-              if (result.getSuccess().shouldUploadResultingArtifact()) {
+              if (success != null && success.shouldUploadResultingArtifact()) {
                 buildInfoRecorder.get().performUploadToArtifactCache(context.getArtifactCache(),
                     eventBus);
               }
@@ -257,7 +258,7 @@ public class CachingBuildEngine implements BuildEngine {
               // It seems possible (albeit unlikely) that something could go wrong in
               // recordBuildRuleSuccess() after buildRuleResult has been resolved such that Buck
               // would attempt to resolve the future again, which would fail.
-              newFuture.setException(result.getFailure());
+              newFuture.setException(Preconditions.checkNotNull(result.getFailure()));
             }
 
             private void logBuildRuleFinished(BuildResult result) {
@@ -537,6 +538,7 @@ public class CachingBuildEngine implements BuildEngine {
     return result.get();
   }
 
+  @Nullable
   private AbiRule checkIfRuleOrBuildableIsAbiRule(BuildRule rule) {
     if (rule instanceof AbiRule) {
       return (AbiRule) rule;

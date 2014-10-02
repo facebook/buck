@@ -54,17 +54,18 @@ public class BuildContext {
   private final ImmutableMap<String, String> environment;
 
   private BuildContext(
-      ActionGraph actionGraph,
-      StepRunner stepRunner,
-      ProjectFilesystem projectFilesystem,
-      Clock clock,
-      ArtifactCache artifactCache,
-      JavaPackageFinder javaPackageFinder,
-      BuckEventBus events,
-      Supplier<String> androidBootclasspathSupplier,
-      BuildDependencies buildDependencies,
-      BuildId buildId,
-      ImmutableMap<String, String> environment) {
+      @Nullable ActionGraph actionGraph,
+      @Nullable StepRunner stepRunner,
+      @Nullable ProjectFilesystem projectFilesystem,
+      @Nullable Clock clock,
+      @Nullable ArtifactCache artifactCache,
+      @Nullable JavaPackageFinder javaPackageFinder,
+      @Nullable BuckEventBus events,
+      @Nullable Supplier<String> androidBootclasspathSupplier,
+      @Nullable BuildDependencies buildDependencies,
+      @Nullable BuildId buildId,
+      @Nullable ImmutableMap<String, String> environment) {
+
     this.actionGraph = Preconditions.checkNotNull(actionGraph);
     this.stepRunner = Preconditions.checkNotNull(stepRunner);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
@@ -173,15 +174,24 @@ public class BuildContext {
 
   public static class Builder {
 
+    @Nullable
     private ActionGraph actionGraph = null;
+    @Nullable
     private StepRunner stepRunner = null;
+    @Nullable
     private ProjectFilesystem projectFilesystem = null;
+    @Nullable
     private Clock clock = null;
+    @Nullable
     private ArtifactCache artifactCache = null;
+    @Nullable
     private JavaPackageFinder javaPackgeFinder = null;
+    @Nullable
     private BuckEventBus events = null;
+    @Nullable
     private Supplier<String> androidBootclasspathSupplier = null;
     private BuildDependencies buildDependencies = BuildDependencies.getDefault();
+    @Nullable
     private BuildId buildId = null;
     private ImmutableMap<String, String> environment = ImmutableMap.of();
 
@@ -191,6 +201,7 @@ public class BuildContext {
       if (androidBootclasspathSupplier == null) {
         setDefaultAndroidBootclasspathSupplier();
       }
+
       return new BuildContext(
           actionGraph,
           stepRunner,

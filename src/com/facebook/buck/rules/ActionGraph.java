@@ -23,14 +23,18 @@ import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 public class ActionGraph extends DefaultImmutableDirectedAcyclicGraph<BuildRule> {
 
+  @Nullable
   private Map<BuildTarget, BuildRule> index;
 
   public ActionGraph(MutableDirectedGraph<BuildRule> graph) {
     super(graph);
   }
 
+  @Nullable
   public BuildRule findBuildRuleByTarget(BuildTarget buildTarget) {
     if (index == null) {
       ImmutableMap.Builder<BuildTarget, BuildRule> builder = ImmutableMap.builder();
