@@ -44,6 +44,7 @@ import javax.annotation.Nullable;
 public abstract class ShellStep implements Step {
 
   /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
+  @Nullable
   private ImmutableList<String> shellCommandArgs;
 
   /** If specified, working directory will be different from project root. **/
@@ -71,6 +72,8 @@ public abstract class ShellStep implements Step {
 
   protected ShellStep(@Nullable File workingDirectory) {
     this.workingDirectory = workingDirectory;
+    this.stdout = Optional.<String>absent();
+    this.stderr = Optional.<String>absent();
   }
 
   /**
@@ -209,7 +212,7 @@ public abstract class ShellStep implements Step {
       // this is what the user might type in a shell to get the same behavior. The (...) syntax
       // introduces a subshell in which the command is only executed if cd was successful.
       return String.format("(cd %s && %s)",
-          Escaper.escapeAsBashString(workingDirectory.getPath()),
+          Escaper.escapeAsBashString(Preconditions.checkNotNull(workingDirectory).getPath()),
           shellCommand);
     }
   }
