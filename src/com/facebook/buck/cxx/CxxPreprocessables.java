@@ -46,7 +46,7 @@ public class CxxPreprocessables {
    * {@link SourcePath}.
    */
   public static ImmutableMap<Path, SourcePath> resolveHeaderMap(
-      BuildTarget target,
+      Path basePath,
       ImmutableMap<String, SourcePath> headers) {
 
     ImmutableMap.Builder<Path, SourcePath> headerMap = ImmutableMap.builder();
@@ -54,7 +54,7 @@ public class CxxPreprocessables {
     // Resolve the "names" of the headers to actual paths by prepending the base path
     // specified by the build target.
     for (ImmutableMap.Entry<String, SourcePath> ent : headers.entrySet()) {
-      Path path = target.getBasePath().resolve(ent.getKey());
+      Path path = basePath.resolve(ent.getKey());
       headerMap.put(path, ent.getValue());
     }
 

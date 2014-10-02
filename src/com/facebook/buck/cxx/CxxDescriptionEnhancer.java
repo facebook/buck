@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.util.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -75,10 +76,11 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<Path, SourcePath> parseHeaders(
       BuildTarget target,
       SourcePathResolver resolver,
+      Path namespace,
       Iterable<SourcePath> inputs) {
 
     return CxxPreprocessables.resolveHeaderMap(
-        target,
+        namespace,
         resolver.getSourcePathNames(
             target,
             "headers",
@@ -197,9 +199,10 @@ public class CxxDescriptionEnhancer {
       resolver.addToIndex(lex);
 
       // Record the output source and header as {@link BuildRuleSourcePath} objects.
-      lexYaccCxxSourcesBuilder.add(new CxxSource(
-          name + ".cc",
-          new BuildRuleSourcePath(lex, outputSource)));
+      lexYaccCxxSourcesBuilder.add(
+          new CxxSource(
+              name + ".cc",
+              new BuildRuleSourcePath(lex, outputSource)));
       lexYaccHeadersBuilder.put(
           params.getBuildTarget().getBasePath().resolve(name + ".h"),
           new BuildRuleSourcePath(lex, outputHeader));
@@ -501,16 +504,18 @@ public class CxxDescriptionEnhancer {
 
     // Extract the C/C++ sources from the constructor arg.
     ImmutableList<CxxSource> srcs =
-        CxxDescriptionEnhancer.parseCxxSources(
+        parseCxxSources(
             params.getBuildTarget(),
             pathResolver,
             args.srcs.or(ImmutableList.<SourcePath>of()));
 
     // Extract the header map from the our constructor arg.
     ImmutableMap<Path, SourcePath> headers =
-        CxxDescriptionEnhancer.parseHeaders(
+        parseHeaders(
             params.getBuildTarget(),
             pathResolver,
+            args.headerNamespace.transform(MorePaths.TO_PATH)
+                .or(params.getBuildTarget().getBasePath()),
             args.headers.or((ImmutableList.<SourcePath>of())));
 
     // Extract the lex sources.
@@ -529,7 +534,7 @@ public class CxxDescriptionEnhancer {
 
     // Setup the rules to run lex/yacc.
     CxxHeaderSourceSpec lexYaccSources =
-        CxxDescriptionEnhancer.createLexYaccBuildRules(
+        createLexYaccBuildRules(
             params,
             resolver,
             cxxPlatform,
@@ -540,11 +545,11 @@ public class CxxDescriptionEnhancer {
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
-    SymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTreeBuildRule(
+    SymlinkTree headerSymlinkTree = createHeaderSymlinkTreeBuildRule(
         params,
         resolver,
         headers);
-    CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
+    CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
         cxxPlatform,
         args.preprocessorFlags.or(ImmutableList.<String>of()),
@@ -557,7 +562,7 @@ public class CxxDescriptionEnhancer {
     // Generate the rules for setting up and headers, preprocessing, and compiling the input
     // sources and return the source paths for the object files.
     ImmutableList<SourcePath> objects =
-        CxxDescriptionEnhancer.createPreprocessAndCompileBuildRules(
+        createPreprocessAndCompileBuildRules(
             params,
             resolver,
             cxxPlatform,

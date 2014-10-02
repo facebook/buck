@@ -29,6 +29,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -90,6 +91,8 @@ public class CxxPythonExtensionDescription implements
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
             pathResolver,
+            args.headerNamespace.transform(MorePaths.TO_PATH)
+                .or(params.getBuildTarget().getBasePath()),
             args.headers.or((ImmutableList.<SourcePath>of())));
 
     // Extract the lex sources.

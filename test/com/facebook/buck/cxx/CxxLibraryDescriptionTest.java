@@ -146,6 +146,7 @@ public class CxxLibraryDescriptionTest {
     arg.linkWhole = Optional.absent();
     arg.lexSrcs = Optional.absent();
     arg.yaccSrcs = Optional.absent();
+    arg.headerNamespace = Optional.absent();
 
     // Instantiate a description and call its `createBuildRule` method.
     DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());

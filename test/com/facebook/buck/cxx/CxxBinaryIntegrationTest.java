@@ -305,4 +305,12 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", "//foo:binary_without_dep").assertFailure();
   }
 
+  @Test
+  public void testHeaderNamespace() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "header_namespace", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build", "//:test").assertSuccess();
+  }
+
 }

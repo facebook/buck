@@ -114,7 +114,7 @@ public class CxxPreprocessablesTest {
         target.getBasePath().resolve("foo/bar.h"), new TestSourcePath("header1.h"),
         target.getBasePath().resolve("foo/hello.h"), new TestSourcePath("header2.h"));
     ImmutableMap<Path, SourcePath> actual = CxxPreprocessables.resolveHeaderMap(
-        target, headerMap);
+        target.getBasePath(), headerMap);
     assertEquals(expected, actual);
   }
 

@@ -125,6 +125,7 @@ public class CxxPythonExtensionDescriptionTest {
     arg.lexSrcs = Optional.absent();
     arg.yaccSrcs = Optional.absent();
     arg.baseModule = Optional.absent();
+    arg.headerNamespace = Optional.absent();
     return arg;
   }
 

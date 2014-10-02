@@ -32,5 +32,6 @@ public class CxxConstructorArg {
   public Optional<ImmutableList<SourcePath>> lexSrcs;
   public Optional<ImmutableList<SourcePath>> yaccSrcs;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
+  public Optional<String> headerNamespace;
 }
 
