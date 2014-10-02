@@ -61,7 +61,7 @@ public class CxxTestDescriptionTest {
 
     // Test explicitly setting gtest works as well.
     params = new BuildRuleFactoryParams(
-        ImmutableMap.of("framework", CxxTestType.GTEST.toString()),
+        ImmutableMap.<String, Object>of("framework", CxxTestType.GTEST.toString()),
         filesystem,
         parser,
         target,

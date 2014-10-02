@@ -5,6 +5,11 @@ java_library(
     'PartialGraph.java',
     'ParseEvent.java',
     'TargetGraph.java',
+    'BuildFileSpec.java',
+    'TargetNodeSpec.java',
+    'BuildTargetSpec.java',
+    'RuleJsonPredicateSpec.java',
+    'MissingBuildFileException.java',
   ],
   deps = [
     ':project',

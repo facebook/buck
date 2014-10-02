@@ -159,7 +159,7 @@ public class ThriftCxxEnhancerTest {
       ImmutableSet<BuildTarget> expected) {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        ImmutableMap.of(
+        ImmutableMap.<String, Object>of(
             "cppOptions", ImmutableList.copyOf(options),
             "cpp2Options", ImmutableList.copyOf(options.toArray())),
         filesystem,

@@ -50,8 +50,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -85,11 +87,6 @@ public class Parser {
   private final CachedState state;
 
   private final ImmutableSet<Pattern> tempFilePatterns;
-
-  /**
-   * True if all build files have been parsed and so all rules are in the {@link CachedState}.
-   */
-  private boolean allBuildFilesParsed;
 
   private final RepositoryFactory repositoryFactory;
   // TODO(jacko): DELETE THESE!!!
@@ -251,46 +248,89 @@ public class Parser {
     boolean includesChanged = state.invalidateCacheOnIncludeChange(includes);
     boolean environmentChanged = state.invalidateCacheOnEnvironmentChange(env);
     boolean fileParsed = state.isParsed(buildFile);
-    return !includesChanged && !environmentChanged && (allBuildFilesParsed || fileParsed);
-  }
-
-  /**
-   * The cache is complete if all build files in the project were parsed and the includes and
-   * environment haven't changed since the rules were cached.
-   *
-   * @param includes the files to include before executing the build file.
-   * @param env the environment to execute the build file in.
-   * @return true if all build files have already been parsed and their rules are cached.
-   */
-  private synchronized boolean isCacheComplete(
-      Iterable<String> includes,
-      ImmutableMap<String, String> env) {
-    boolean includesChanged = state.invalidateCacheOnIncludeChange(includes);
-    boolean environmentChanged = state.invalidateCacheOnEnvironmentChange(env);
-    return !includesChanged && !environmentChanged && allBuildFilesParsed;
+    return !includesChanged && !environmentChanged && fileParsed;
   }
 
   private synchronized void invalidateCache() {
     state.invalidateAll();
-    allBuildFilesParsed = false;
   }
 
   /**
-   * @param buildTargets the build targets to generate a target graph for.
+   * @return a set of {@link BuildTarget} objects that this {@link TargetNodeSpec} refers to.
+   */
+  private ImmutableSet<BuildTarget> resolveTargetSpec(
+      TargetNodeSpec spec,
+      Iterable<String> defaultIncludes,
+      ProjectBuildFileParser buildFileParser,
+      ImmutableMap<String, String> environment)
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+
+    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
+
+    // Iterate over the build files the given target node spec returns.
+    for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(repository.getFilesystem())) {
+
+      // Format a proper error message for non-existent build files.
+      if (!repository.getFilesystem().isFile(buildFile)) {
+        throw new MissingBuildFileException(spec, buildFile);
+      }
+
+      // Build up a list of all target nodes from the build file.
+      List<Map<String, Object>> parsed = parseBuildFile(
+          repository.getFilesystem().resolve(buildFile),
+          defaultIncludes,
+          buildFileParser,
+          environment);
+      List<TargetNode<?>> nodes = Lists.newArrayListWithCapacity(parsed.size());
+      for (Map<String, Object> map : parsed) {
+        BuildTarget target = parseBuildTargetFromRawRule(map);
+        TargetNode<?> node = getTargetNode(target);
+        nodes.add(node);
+      }
+
+      // Call back into the target node spec to filter the relevant build targets.
+      targets.addAll(spec.filter(nodes));
+    }
+
+    return targets.build();
+  }
+
+  private ImmutableSet<BuildTarget> resolveTargetSpecs(
+      Iterable<? extends TargetNodeSpec> specs,
+      Iterable<String> defaultIncludes,
+      ProjectBuildFileParser buildFileParser,
+      ImmutableMap<String, String> environment)
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+
+    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
+
+    for (TargetNodeSpec spec : specs) {
+      targets.addAll(
+          resolveTargetSpec(
+              spec,
+              defaultIncludes,
+              buildFileParser,
+              environment));
+    }
+
+    return targets.build();
+  }
+
+  /**
+   * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
    * @param defaultIncludes the files to include before executing build files.
    * @param eventBus used to log events while parsing.
    * @return the target graph containing the build targets and their related targets.
    */
   public synchronized TargetGraph buildTargetGraph(
-      Iterable<BuildTarget> buildTargets,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
       Console console,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      boolean enableProfiling)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
-    // seed BuildTargets for the traversal.
-    postParseStartEvent(buildTargets, eventBus);
+
     TargetGraph graph = null;
     // TODO(jacko): Instantiating one ProjectBuildFileParser here isn't enough. We a collection of
     //              repo-specific parsers.
@@ -300,26 +340,50 @@ public class Parser {
                  console,
                  environment,
                  eventBus)) {
-      if (!isCacheComplete(defaultIncludes, environment)) {
-        Set<Path> buildTargetFiles = Sets.newHashSet();
-        for (BuildTarget buildTarget : buildTargets) {
-          Path buildFile = repository.getAbsolutePathToBuildFile(buildTarget);
-          boolean isNewElement = buildTargetFiles.add(buildFile);
-          if (isNewElement) {
-            parseBuildFile(buildFile, defaultIncludes, buildFileParser, environment);
-          }
-        }
-      }
+      buildFileParser.setEnableProfiling(enableProfiling);
 
-      graph = buildTargetGraph(
-          buildTargets,
+      // Resolve the target node specs to the build targets the represent.
+      ImmutableSet<BuildTarget> buildTargets = resolveTargetSpecs(
+          targetNodeSpecs,
           defaultIncludes,
           buildFileParser,
           environment);
-      return graph;
-    } finally {
-      eventBus.post(ParseEvent.finished(buildTargets, Optional.fromNullable(graph)));
+
+      postParseStartEvent(buildTargets, eventBus);
+
+      try {
+        graph = buildTargetGraph(
+            buildTargets,
+            defaultIncludes,
+            buildFileParser,
+            environment);
+        return graph;
+      } finally {
+        eventBus.post(ParseEvent.finished(buildTargets, Optional.fromNullable(graph)));
+      }
     }
+  }
+
+  /**
+   * @param buildTargets the build targets to generate a target graph for.
+   * @param defaultIncludes the files to include before executing build files.
+   * @param eventBus used to log events while parsing.
+   * @return the target graph containing the build targets and their related targets.
+   */
+  public TargetGraph buildTargetGraph(
+      Iterable<BuildTarget> buildTargets,
+      Iterable<String> defaultIncludes,
+      BuckEventBus eventBus,
+      Console console,
+      ImmutableMap<String, String> environment)
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+    return buildTargetGraph(
+        Iterables.transform(buildTargets, BuildTargetSpec.TO_BUILD_TARGET_SPEC),
+        defaultIncludes,
+        eventBus,
+        console,
+        environment,
+        /* enableProfiling */ false);
   }
 
   @Nullable
@@ -368,7 +432,6 @@ public class Parser {
                 TargetNode<?> depTargetNode = getTargetNode(buildTargetForDep);
                 if (depTargetNode == null) {
                   parseBuildFileContainingTarget(
-                      buildTarget,
                       buildTargetForDep,
                       defaultIncludes,
                       buildFileParser,
@@ -421,23 +484,11 @@ public class Parser {
    * {@link #filterAllTargetsInProject}, then this method should not be called.
    */
   private synchronized void parseBuildFileContainingTarget(
-      BuildTarget sourceTarget,
       BuildTarget buildTarget,
       Iterable<String> defaultIncludes,
       ProjectBuildFileParser buildFileParser,
       ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    if (isCacheComplete(defaultIncludes, environment)) {
-      // In this case, all of the build rules should have been loaded into the knownBuildTargets
-      // Map before this method was invoked. Therefore, there should not be any more build files to
-      // parse. This must be the result of traversing a non-existent dep in a build rule, so an
-      // error is reported to the user. Unfortunately, the source of the build file where the
-      // non-existent rule was declared is not known at this point, which is why it is not included
-      // in the error message. The best we can do is tell the user the target that included target
-      // as a dep.
-      throw new HumanReadableException(
-          "Unable to locate dependency \"%s\" for target \"%s\"", buildTarget, sourceTarget);
-    }
 
     Repository targetRepo =
         repositoryFactory.getRepositoryByCanonicalName(buildTarget.getRepository());
@@ -608,18 +659,13 @@ public class Parser {
       throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
           projectFilesystem.getRootPath(), filesystem.getRootPath()));
     }
-    if (!isCacheComplete(includes, environment)) {
-      state.invalidateAll();
-      parseRawRulesInternal(
-          ProjectBuildFileParser.getAllRulesInProject(
-              buildFileParserFactory,
-              includes,
-              console,
-              environment,
-              buckEventBus,
-              enableProfiling));
-      allBuildFilesParsed = true;
-    }
+    buildTargetGraph(
+        ImmutableList.of(new RuleJsonPredicateSpec(filter, filesystem.getIgnorePaths())),
+        includes,
+        buckEventBus,
+        console,
+        environment,
+        enableProfiling);
     return filterTargets(filter);
   }
 
@@ -874,9 +920,6 @@ public class Parser {
 
         // Remove all rules defined in path from cache.
         parsedBuildFiles.removeAll(path);
-
-        // All targets have no longer been parsed and cached.
-        allBuildFilesParsed = false;
       }
 
       // Recursively invalidate dependents.
@@ -994,4 +1037,5 @@ public class Parser {
       return memoizedTargetNodes.get(buildTarget);
     }
   }
+
 }

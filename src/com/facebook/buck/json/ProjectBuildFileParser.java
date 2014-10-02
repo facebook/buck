@@ -77,7 +77,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
   @Nullable private BufferedWriter buckPyStdinWriter;
 
   private final Path projectRoot;
-  private final ImmutableSet<Path> ignorePaths;
   private final ImmutableSet<Description<?>> descriptions;
   private final ImmutableList<String> commonIncludes;
   private final String pythonInterpreter;
@@ -103,7 +102,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
       BuckEventBus buckEventBus) {
     this.projectRoot = projectFilesystem.getRootPath();
     this.descriptions = Preconditions.checkNotNull(descriptions);
-    this.ignorePaths = projectFilesystem.getIgnorePaths();
     this.commonIncludes = ImmutableList.copyOf(commonIncludes);
     this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
     this.pathToBuckPy = Optional.absent();
@@ -232,39 +230,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add(include);
     }
 
-    for (Path path : ignorePaths) {
-      argBuilder.add("--ignore_path");
-      argBuilder.add(path.toString());
-    }
-
     return argBuilder.build();
-  }
-
-  /**
-   * Create, parse and destroy the parser in one step for an entire project.  This should
-   * only be used when the tree must be parsed without a specific target to be built or
-   * otherwise operated upon.
-   */
-  public static List<Map<String, Object>> getAllRulesInProject(
-      ProjectBuildFileParserFactory factory,
-      Iterable<String> includes,
-      Console console,
-      ImmutableMap<String, String> environment,
-      BuckEventBus buckEventBus,
-      boolean enableProfiling)
-      throws BuildFileParseException, InterruptedException {
-    try (ProjectBuildFileParser buildFileParser =
-             factory.createParser(
-                 includes,
-                 console,
-                 environment,
-                 buckEventBus)) {
-      buildFileParser.setServerMode(false);
-      buildFileParser.setEnableProfiling(enableProfiling);
-      return buildFileParser.getAllRulesInternal(Optional.<Path>absent());
-    } catch (IOException e) {
-      throw BuildFileParseException.createForGenericBuildFileParseError(e);
-    }
   }
 
   /**

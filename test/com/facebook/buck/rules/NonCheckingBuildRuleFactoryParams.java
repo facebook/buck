@@ -32,7 +32,7 @@ public final class NonCheckingBuildRuleFactoryParams {
   private NonCheckingBuildRuleFactoryParams() {}
 
   public static BuildRuleFactoryParams createNonCheckingBuildRuleFactoryParams(
-      Map<String, ?> instance,
+      Map<String, Object> instance,
       BuildTargetParser buildTargetParser,
       BuildTarget target) {
     return new BuildRuleFactoryParams(

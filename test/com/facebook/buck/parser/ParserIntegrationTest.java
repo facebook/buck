@@ -63,6 +63,7 @@ public class ParserIntegrationTest {
       workspace.runBuckCommand("build", "//:base");
     } catch (HumanReadableException e) {
       assertTrue(
+          e.getHumanReadableErrorMessage(),
           e.getHumanReadableErrorMessage().matches(
               "The build file that should contain //:bad-dep has already been parsed \\(" +
                   ".*\\), but //:bad-dep was not found. " +

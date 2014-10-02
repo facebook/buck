@@ -148,7 +148,7 @@ public class ThriftPythonEnhancerTest {
       ImmutableSet<BuildTarget> expected) {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        ImmutableMap.of("pyOptions", ImmutableList.copyOf(options)),
+        ImmutableMap.<String, Object>of("pyOptions", ImmutableList.copyOf(options)),
         filesystem,
         parser,
         TARGET,

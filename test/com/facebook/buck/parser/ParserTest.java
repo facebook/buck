@@ -1044,7 +1044,7 @@ public class ParserTest extends EasyMockSupport {
   }
 
   @Test
-  public void whenSingleTargetThenAllRulesRequestedThenRulesAreParsedTwice()
+  public void whenSingleTargetThenAllRulesRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
@@ -1066,7 +1066,7 @@ public class ParserTest extends EasyMockSupport {
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
 
-    assertEquals("Should have replaced build rules", 2, buildFileParserFactory.calls);
+    assertEquals("Should have replaced build rules", 1, buildFileParserFactory.calls);
   }
 
   @Test

@@ -113,26 +113,6 @@ def add_rule(rule, build_env):
     build_env.rules[rule_name] = rule
 
 
-def symlink_aware_walk(base):
-    """ Recursive symlink aware version of `os.walk`.
-
-    Will not traverse a symlink that refers to a previously visited ancestor of
-    the current directory.
-    """
-    visited_dirs = set()
-    for entry in os.walk(base, topdown=True, followlinks=True):
-        (root, dirs, _files) = entry
-        realdirpath = os.path.realpath(root)
-        if realdirpath in visited_dirs:
-            absdirpath = os.path.abspath(root)
-            if absdirpath.startswith(realdirpath):
-                dirs[:] = []
-                continue
-        visited_dirs.add(realdirpath)
-        yield entry
-    raise StopIteration
-
-
 def split_path(path):
     """Splits /foo/bar/baz.java into ['', 'foo', 'bar', 'baz.java']."""
     return path.split('/')
@@ -641,10 +621,6 @@ def main():
         action='append',
         dest='include')
     parser.add_option(
-        '--ignore_path',
-        action='append',
-        dest='ignore_paths')
-    parser.add_option(
         '--server',
         action='store_true',
         dest='server',
@@ -652,39 +628,14 @@ def main():
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
-    # example, it might be like "C:\project\.\rule".  We normalize it in order
-    # to make it consistent with ignore_paths.
+    # example, it might be like "C:\project\.\rule".
     project_root = os.path.abspath(options.project_root)
-
-    build_files = []
-    if args:
-        # The user has specified which build files to parse.
-        build_files = args
-    elif not options.server:
-        # Find all of the build files in the project root. Symlinks will not be
-        # traversed. Search must be done top-down so that directory filtering
-        # works as desired. options.ignore_paths may contain /, which is needed
-        # to be normalized in order to do string pattern matching.
-        ignore_paths = [
-            os.path.abspath(os.path.join(project_root, d))
-            for d in options.ignore_paths or []]
-        build_files = []
-        for dirpath, dirnames, filenames in symlink_aware_walk(project_root):
-            # Do not walk directories that contain generated/non-source files.
-            # All modifications to dirnames must occur in-place.
-            dirnames[:] = [
-                d for d in dirnames
-                if not (os.path.join(dirpath, d) in ignore_paths)]
-
-            if BUILD_RULES_FILE_NAME in filenames:
-                build_file = os.path.join(dirpath, BUILD_RULES_FILE_NAME)
-                build_files.append(build_file)
 
     buildFileProcessor = BuildFileProcessor(
         project_root,
         implicit_includes=options.include or [])
 
-    for build_file in build_files:
+    for build_file in args:
         values = buildFileProcessor.process(build_file)
         if options.server:
             print json.dumps(values)
