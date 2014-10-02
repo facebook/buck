@@ -17,9 +17,12 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
@@ -27,6 +30,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,6 +44,14 @@ public class PrebuiltCxxLibraryDescription
     implements Description<PrebuiltCxxLibraryDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("prebuilt_cxx_library");
+
+  private static final Flavor SHARED = new Flavor("shared");
+
+  private final CxxPlatform cxxPlatform;
+
+  public PrebuiltCxxLibraryDescription(CxxPlatform cxxPlatform) {
+    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
+  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -66,10 +78,45 @@ public class PrebuiltCxxLibraryDescription
     final String libName = args.libName.or(target.getShortNameOnly());
     final String soname = args.soname.or(String.format("lib%s.so", libName));
 
-    final Path sharedLibraryPath = target.getBasePath().resolve(libDir).resolve(
-        String.format("lib%s.so", libName));
-    final Path staticLibraryPath = target.getBasePath().resolve(libDir).resolve(
-        String.format("lib%s.a", libName));
+    final Path staticLibraryPath =
+        target.getBasePath()
+            .resolve(libDir)
+            .resolve(String.format("lib%s.a", libName));
+    final SourcePath staticLibrary = new PathSourcePath(staticLibraryPath);
+
+    // If a shared library doesn't exist for this prebuilt C/C++ library, we attempt to build
+    // one out of the static lib, which we assume is compiled using PIC.
+    final Path sharedLibraryPath;
+    final SourcePath sharedLibrary;
+    Path prebuiltSharedLibraryPath =
+        target.getBasePath()
+            .resolve(libDir)
+            .resolve(String.format("lib%s.so", libName));
+    if (params.getProjectFilesystem().exists(prebuiltSharedLibraryPath)) {
+      sharedLibraryPath = prebuiltSharedLibraryPath;
+      sharedLibrary = new PathSourcePath(sharedLibraryPath);
+    } else {
+      BuildTarget sharedLibraryTarget = BuildTargets.extendFlavoredBuildTarget(
+          params.getBuildTarget(),
+          SHARED);
+      sharedLibraryPath = BuildTargets.getBinPath(sharedLibraryTarget, "%s").resolve(soname);
+      CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+          cxxPlatform,
+          params,
+          ImmutableList.<String>of(),
+          ImmutableList.<String>of(),
+          BuildTargets.extendFlavoredBuildTarget(
+              params.getBuildTarget(),
+              SHARED),
+          CxxLinkableEnhancer.LinkType.SHARED,
+          Optional.of(soname),
+          sharedLibraryPath,
+          ImmutableList.of(staticLibrary),
+          NativeLinkable.Type.SHARED,
+          params.getDeps());
+      resolver.addToIndex(cxxLink);
+      sharedLibrary = new BuildRuleSourcePath(cxxLink);
+    }
 
     Function<String, Path> fullPathFn = new Function<String, Path>() {
       @Override
@@ -101,27 +148,22 @@ public class PrebuiltCxxLibraryDescription
       @Override
       public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
 
-        // We only want to link the whole archive if we're not doing a shared link AND
-        // this library isn't available externally at runtime.
-        boolean wholeArchive = linkWhole && !provided && type != Type.SHARED;
-
-        // Used the shared library if the input params has requested it, or if the
-        // library is externally available at runtime as a shared lib.
-        Path library = provided || type == Type.SHARED ?
-            sharedLibraryPath :
-            staticLibraryPath;
-
         // Build the library path and linker arguments that we pass through the
         // {@link NativeLinkable} interface for linking.
         ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
         ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
         if (!headerOnly) {
-          if (wholeArchive) {
-            linkerArgsBuilder.addAll(linker.linkWhole(library.toString()));
+          if (provided || type == Type.SHARED) {
+            librariesBuilder.add(sharedLibrary);
+            linkerArgsBuilder.add(sharedLibraryPath.toString());
           } else {
-            linkerArgsBuilder.add(library.toString());
+            librariesBuilder.add(staticLibrary);
+            if (linkWhole) {
+              linkerArgsBuilder.addAll(linker.linkWhole(staticLibraryPath.toString()));
+            } else {
+              linkerArgsBuilder.add(staticLibraryPath.toString());
+            }
           }
-          librariesBuilder.add(new PathSourcePath(library));
         }
         final ImmutableList<SourcePath> libraries = librariesBuilder.build();
         final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
@@ -139,7 +181,7 @@ public class PrebuiltCxxLibraryDescription
         if (!headerOnly && !provided) {
           nativeLibrariesBuilder.put(
               Paths.get(soname),
-              new PathSourcePath(sharedLibraryPath));
+              sharedLibrary);
         }
         ImmutableMap<Path, SourcePath> nativeLibraries = nativeLibrariesBuilder.build();
 

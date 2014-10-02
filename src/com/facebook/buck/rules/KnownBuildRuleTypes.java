@@ -232,7 +232,7 @@ public class KnownBuildRuleTypes {
     builder.register(new CxxBinaryDescription(cxxPlatform));
     builder.register(new CxxTestDescription(cxxPlatform));
     builder.register(new CxxLibraryDescription(cxxPlatform));
-    builder.register(new PrebuiltCxxLibraryDescription());
+    builder.register(new PrebuiltCxxLibraryDescription(cxxPlatform));
     builder.register(new CxxPythonExtensionDescription(cxxPlatform));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
