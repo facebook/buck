@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -31,7 +30,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -132,16 +130,9 @@ public class CxxLibraryDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
-    public Optional<ImmutableList<SourcePath>> srcs;
-    public Optional<ImmutableList<SourcePath>> headers;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableList<String>> compilerFlags;
-    public Optional<ImmutableList<String>> preprocessorFlags;
+  public static class Arg extends CxxConstructorArg {
     public Optional<ImmutableList<String>> propagatedPpFlags;
     public Optional<Boolean> linkWhole;
-    public Optional<ImmutableList<SourcePath>> lexSrcs;
-    public Optional<ImmutableList<SourcePath>> yaccSrcs;
   }
 
 }

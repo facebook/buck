@@ -36,7 +36,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -193,14 +192,7 @@ public class CxxPythonExtensionDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
-    public Optional<ImmutableList<SourcePath>> srcs;
-    public Optional<ImmutableList<SourcePath>> headers;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableList<String>> compilerFlags;
-    public Optional<ImmutableList<String>> preprocessorFlags;
-    public Optional<ImmutableList<SourcePath>> lexSrcs;
-    public Optional<ImmutableList<SourcePath>> yaccSrcs;
+  public static class Arg extends CxxConstructorArg {
     public Optional<String> baseModule;
   }
 

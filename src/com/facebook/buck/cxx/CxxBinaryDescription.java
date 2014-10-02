@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -24,11 +23,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -99,14 +95,6 @@ public class CxxBinaryDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
-    public Optional<ImmutableList<SourcePath>> srcs;
-    public Optional<ImmutableList<SourcePath>> headers;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableList<String>> compilerFlags;
-    public Optional<ImmutableList<String>> preprocessorFlags;
-    public Optional<ImmutableList<SourcePath>> lexSrcs;
-    public Optional<ImmutableList<SourcePath>> yaccSrcs;
-  }
+  public static class Arg extends CxxConstructorArg {}
 
 }
