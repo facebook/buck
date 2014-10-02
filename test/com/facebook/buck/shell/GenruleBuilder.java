@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -60,7 +59,7 @@ public class GenruleBuilder extends AbstractBuilder<GenruleDescription.Arg> {
     return this;
   }
 
-  public GenruleBuilder setDeps(@Nullable ImmutableSortedSet<BuildRule> deps) {
+  public GenruleBuilder setDeps(@Nullable ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.fromNullable(deps);
     return this;
   }

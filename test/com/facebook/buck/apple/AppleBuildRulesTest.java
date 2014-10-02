@@ -97,7 +97,7 @@ public class AppleBuildRulesTest {
     AppleBundleDescription.Arg xctestArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    xctestArg.binary = libraryRule;
+    xctestArg.binary = libraryRule.getBuildTarget();
     xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
     xctestArg.deps = Optional.absent();
 
@@ -115,11 +115,11 @@ public class AppleBuildRulesTest {
 
     AppleTestDescription.Arg arg =
         appleTestDescription.createUnpopulatedConstructorArg();
-    arg.testBundle = xctestRule;
+    arg.testBundle = xctestRule.getBuildTarget();
     arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
     arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule));
-    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
 
     BuildRule testRule = appleTestDescription.createBuildRule(
         params,
@@ -194,9 +194,9 @@ public class AppleBuildRulesTest {
     AppleBundleDescription.Arg bundleArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    bundleArg.binary = libraryRule;
+    bundleArg.binary = libraryRule.getBuildTarget();
     bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
-    bundleArg.deps = Optional.of(ImmutableSortedSet.of(libraryRule));
+    bundleArg.deps = Optional.of(ImmutableSortedSet.of(libraryRule.getBuildTarget()));
 
     BuildRule bundleRule = appleBundleDescription.createBuildRule(
         bundleParams,
@@ -216,12 +216,14 @@ public class AppleBuildRulesTest {
     rootArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     rootArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     rootArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-    rootArg.deps = Optional.of(ImmutableSortedSet.of(bundleRule, libraryRule));
+    rootArg.deps = Optional.of(
+        ImmutableSortedSet.of(bundleRule.getBuildTarget(), libraryRule.getBuildTarget()));
     rootArg.gid = Optional.absent();
     rootArg.headerPathPrefix = Optional.absent();
     rootArg.useBuckHeaderMaps = Optional.absent();
     BuildRule rootRule =
-        appleLibraryDescription.createBuildRule(rootParams, new BuildRuleResolver(), rootArg);
+        appleLibraryDescription.createBuildRule(rootParams, resolver, rootArg);
+    resolver.addToIndex(rootRule);
 
     Iterable<BuildRule> rules = AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
         AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,

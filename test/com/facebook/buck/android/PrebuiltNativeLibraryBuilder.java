@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
-import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -27,7 +26,7 @@ import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 public class PrebuiltNativeLibraryBuilder
-    extends AbstractBuilder<PrebuiltNativeLibraryDescription.Args> {
+    extends AbstractBuilder<PrebuiltNativeLibraryDescription.Arg> {
 
   private PrebuiltNativeLibraryBuilder(BuildTarget target) {
     super(new PrebuiltNativeLibraryDescription(), target);
@@ -47,7 +46,7 @@ public class PrebuiltNativeLibraryBuilder
     return this;
   }
 
-  public PrebuiltNativeLibraryBuilder setDeps(@Nullable ImmutableSortedSet<BuildRule> deps) {
+  public PrebuiltNativeLibraryBuilder setDeps(@Nullable ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.fromNullable(deps);
     return this;
   }

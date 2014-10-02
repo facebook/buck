@@ -136,7 +136,7 @@ public class AuditClasspathCommandTest {
         BuildTargetFactory.newInstance(
             "//:test-android-library"))
         .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
-        .addDep(javaLibrary)
+        .addDep(javaLibrary.getBuildTarget())
         .build(ruleResolver);
 
     BuildTarget keystoreBuildTarget = BuildTargetFactory.newInstance("//:keystore");
@@ -147,11 +147,12 @@ public class AuditClasspathCommandTest {
     AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:test-android-binary"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(keystore)
-        .setOriginalDeps(ImmutableSortedSet.of(androidLibrary, javaLibrary))
+        .setKeystore(keystore.getBuildTarget())
+        .setOriginalDeps(
+            ImmutableSortedSet.of(androidLibrary.getBuildTarget(), javaLibrary.getBuildTarget()))
         .build(ruleResolver);
     JavaTestBuilder.newJavaTestBuilder(BuildTargetFactory.newInstance("//:project-tests"))
-        .addDep(javaLibrary)
+        .addDep(javaLibrary.getBuildTarget())
         .setSourceUnderTest(ImmutableSortedSet.of(javaLibrary.getBuildTarget()))
         .addSrc(Paths.get("src/com/facebook/test/ProjectTests.java"))
         .build(ruleResolver);
@@ -223,7 +224,7 @@ public class AuditClasspathCommandTest {
         .build(ruleResolver);
     AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:test-android-library"))
         .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
-        .addDep(library)
+        .addDep(library.getBuildTarget())
         .build(ruleResolver);
 
     PartialGraph partialGraph = createGraphFromBuildRules(ruleResolver, targets);

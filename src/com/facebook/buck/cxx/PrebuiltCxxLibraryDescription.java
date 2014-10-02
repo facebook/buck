@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -164,7 +163,7 @@ public class PrebuiltCxxLibraryDescription
     public Optional<Boolean> provided;
     public Optional<Boolean> linkWhole;
     public Optional<String> soname;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 
 }

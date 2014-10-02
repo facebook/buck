@@ -62,12 +62,13 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
         params.getBuildTarget(),
-        params.getProjectFilesystem());
+        params.getProjectFilesystem(),
+        resolver);
     javacOptions.setAnnotationProcessingData(annotationParams);
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
-        params.copyWithExtraDeps(args.exportedDeps.get()),
+        params.copyWithExtraDeps(resolver.getAllRules(args.exportedDeps.get())),
         javacOptions.build(),
         ResourceDependencyMode.TRANSITIVE);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(

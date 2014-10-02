@@ -257,7 +257,7 @@ public class GenruleTest {
                 "baz").build())
         .setBash("cat $DEPS > $OUT")
         .setOut("deps.txt")
-        .setDeps(ImmutableSortedSet.of(dep))
+        .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
         .build(resolver, fakeFilesystem);
 
     AbstractGenruleStep genruleStep = ((Genrule) genrule).createGenruleStep();
@@ -329,7 +329,7 @@ public class GenruleTest {
         .newGenruleBuilder(BuildTarget.builder("//cheese", "cake").build())
         .setCmd("$(location //cheese:java")
         .setOut("cake")
-        .setDeps(ImmutableSortedSet.of(ruleWithNoOutput))
+        .setDeps(ImmutableSortedSet.of(ruleWithNoOutput.getBuildTarget()))
         .build(resolver);
 
     try {
@@ -355,7 +355,7 @@ public class GenruleTest {
         ruleResolver,
         originalCmd,
         contextBasePath,
-        ImmutableSortedSet.of(javaBinary));
+        ImmutableSortedSet.of(javaBinary.getBuildTarget()));
     AbstractGenruleStep genruleStep = buildable.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
@@ -383,7 +383,7 @@ public class GenruleTest {
         ruleResolver,
         originalCmd,
         contextBasePath,
-        ImmutableSortedSet.of(javaBinary));
+        ImmutableSortedSet.of(javaBinary.getBuildTarget()));
     AbstractGenruleStep genruleStep = buildable.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
@@ -418,7 +418,7 @@ public class GenruleTest {
         ruleResolver,
         originalCmd,
         contextBasePath,
-        ImmutableSortedSet.of(javaBinary));
+        ImmutableSortedSet.of(javaBinary.getBuildTarget()));
     AbstractGenruleStep genruleStep = buildable.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
@@ -443,7 +443,7 @@ public class GenruleTest {
         ruleResolver,
         originalCmd,
         contextBasePath,
-        ImmutableSortedSet.of(javaBinary));
+        ImmutableSortedSet.of(javaBinary.getBuildTarget()));
     AbstractGenruleStep genruleStep = rule.createGenruleStep();
 
     String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
@@ -503,7 +503,7 @@ public class GenruleTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator");
     return new JavaBinaryRuleBuilder(buildTarget)
-        .setDeps(ImmutableSortedSet.of(javaLibrary))
+        .setDeps(ImmutableSortedSet.of(javaLibrary.getBuildTarget()))
         .setMainClass("com.facebook.util.ManifestGenerator")
         .build(ruleResolver);
   }
@@ -511,7 +511,7 @@ public class GenruleTest {
   private BuildRule newGenruleBuilder(BuildRuleResolver ruleResolver,
                                 String originalCmd,
                                 Path contextBasePath,
-                                ImmutableSortedSet<BuildRule> deps) {
+                                ImmutableSortedSet<BuildTarget> deps) {
     BuildTarget target = BuildTargetFactory.newInstance(
         String.format("//%s:genrule", contextBasePath));
 

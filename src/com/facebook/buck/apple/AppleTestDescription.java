@@ -16,17 +16,15 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-
 import com.facebook.buck.rules.Label;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
-
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 public class AppleTestDescription implements Description<AppleTestDescription.Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("apple_test");
@@ -46,15 +44,20 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new AppleTest(params, args);
+    return new AppleTest(
+        params,
+        resolver.getRule(args.testBundle),
+        args.contacts.get(),
+        args.labels.get(),
+        resolver.getAllRules(args.sourceUnderTest.get()));
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public BuildRule testBundle;
+    public BuildTarget testBundle;
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
-    public Optional<ImmutableSortedSet<BuildRule>> sourceUnderTest;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

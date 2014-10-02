@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.python.PythonUtil;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -197,7 +196,7 @@ public class CxxPythonExtensionDescription implements
   public static class Arg {
     public Optional<ImmutableList<SourcePath>> srcs;
     public Optional<ImmutableList<SourcePath>> headers;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableList<String>> preprocessorFlags;
     public Optional<ImmutableList<SourcePath>> lexSrcs;

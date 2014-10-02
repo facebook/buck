@@ -67,7 +67,7 @@ public class JavaBinaryTest {
     BuildRule libraryRule = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
         .addSrc(Paths.get("java/com/facebook/base/Base.java"))
-        .addDep(guava)
+        .addDep(guava.getBuildTarget())
         .build(ruleResolver);
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(

@@ -192,7 +192,7 @@ public class CxxPythonExtensionDescriptionTest {
 
     // Create args with the above dep set and create the python extension.
     CxxPythonExtensionDescription.Arg arg = getDefaultArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(dep));
+    arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
     BuildRuleParams newParams = params.copyWithDeps(
         ImmutableSortedSet.<BuildRule>of(dep),
         ImmutableSortedSet.<BuildRule>of());

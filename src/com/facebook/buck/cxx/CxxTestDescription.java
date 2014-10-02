@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -84,18 +85,18 @@ public class CxxTestDescription implements
         test = new CxxGtestTest(
             testParams,
             cxxLink.getOutput(),
-            args.labels.or(ImmutableSet.<Label>of()),
-            args.contacts.or(ImmutableSet.<String>of()),
-            args.sourceUnderTest.or(ImmutableSet.<BuildRule>of()));
+            args.labels.get(),
+            args.contacts.get(),
+            resolver.getAllRules(args.sourceUnderTest.get()));
         break;
       }
       case BOOST: {
         test = new CxxBoostTest(
             testParams,
             cxxLink.getOutput(),
-            args.labels.or(ImmutableSet.<Label>of()),
-            args.contacts.or(ImmutableSet.<String>of()),
-            args.sourceUnderTest.or(ImmutableSet.<BuildRule>of()));
+            args.labels.get(),
+            args.contacts.get(),
+            resolver.getAllRules(args.sourceUnderTest.get()));
         break;
       }
       default: {
@@ -169,7 +170,7 @@ public class CxxTestDescription implements
   public class Arg extends CxxBinaryDescription.Arg {
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
-    public Optional<ImmutableSet<BuildRule>> sourceUnderTest;
+    public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<CxxTestType> framework;
   }
 

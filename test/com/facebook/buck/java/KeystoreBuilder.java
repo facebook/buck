@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.AbstractBuilder;
 
 import java.nio.file.Path;
@@ -42,7 +41,7 @@ public class KeystoreBuilder extends AbstractBuilder<KeystoreDescription.Arg> {
     return this;
   }
 
-  public KeystoreBuilder addDep(BuildRule dep) {
+  public KeystoreBuilder addDep(BuildTarget dep) {
     arg.deps = amend(arg.deps, dep);
     return this;
   }

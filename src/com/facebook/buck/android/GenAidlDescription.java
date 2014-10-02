@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -60,6 +60,6 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
     // relative to the build file directory.
     public String importPath;
 
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

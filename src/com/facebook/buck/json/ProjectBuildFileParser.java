@@ -272,7 +272,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  public List<Map<String, Object>> getAllRules(Path buildFile)
+  public List<Map<String, Object>> getAll(Path buildFile)
       throws BuildFileParseException {
     List<Map<String, Object>> result = getAllRulesAndMetaRules(buildFile);
 

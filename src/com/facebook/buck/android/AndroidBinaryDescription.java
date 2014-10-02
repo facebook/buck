@@ -32,9 +32,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -45,8 +47,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
-
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 public class AndroidBinaryDescription implements Description<AndroidBinaryDescription.Arg> {
 
@@ -83,14 +83,14 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    if (!(args.keystore instanceof Keystore)) {
+    BuildRule keystore = resolver.getRule(args.keystore);
+    if (!(keystore instanceof Keystore)) {
       throw new HumanReadableException(
           "In %s, keystore='%s' must be a keystore() but was %s().",
           params.getBuildTarget(),
-          args.keystore.getFullyQualifiedName(),
-          args.keystore.getType().getName());
+          keystore.getFullyQualifiedName(),
+          keystore.getType().getName());
     }
-    Keystore keystore = (Keystore) args.keystore;
 
     ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
         args.androidSdkProguardConfig.or(ProGuardObfuscateStep.SdkProguardType.DEFAULT);
@@ -146,7 +146,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         javacOptions,
         args.exopackage.or(false),
-        keystore,
+        (Keystore) keystore,
         args.buildConfigValues.get(),
         args.buildConfigValuesFile);
     AndroidBinaryGraphEnhancer.EnhancementResult result =
@@ -157,7 +157,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         proguardJarOverride,
         args.manifest,
         args.target,
-        keystore,
+        (Keystore) keystore,
         packageType,
         dexSplitMode,
         args.noDx.or(ImmutableSet.<BuildTarget>of()),
@@ -168,7 +168,8 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         args.cpuFilters.get(),
         resourceFilter,
         args.exopackage.or(false),
-        args.preprocessJavaClassesDeps.or(ImmutableSet.<BuildRule>of()),
+        resolver.getAllRules(
+            args.preprocessJavaClassesDeps.or(ImmutableSortedSet.<BuildTarget>of())),
         args.preprocessJavaClassesBash,
         rulesToExcludeFromDex,
         result);
@@ -212,9 +213,9 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
   public static class Arg {
     public SourcePath manifest;
     public String target;
-    public BuildRule keystore;
+    public BuildTarget keystore;
     public Optional<String> packageType;
-    public Optional<Set<BuildTarget>> noDx;
+    @Hint(isDep = false) public Optional<Set<BuildTarget>> noDx;
     public Optional<Boolean> useSplitDex;
     public Optional<Boolean> useLinearAllocSplitDex;
     public Optional<Boolean> minimizePrimaryDexSize;
@@ -234,7 +235,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<List<String>> resourceFilter;
     public Optional<Boolean> buildStringSourceMap;
     public Optional<Set<TargetCpuType>> cpuFilters;
-    public Optional<Set<BuildRule>> preprocessJavaClassesDeps;
+    public Optional<ImmutableSortedSet<BuildTarget>> preprocessJavaClassesDeps;
     public Optional<String> preprocessJavaClassesBash;
 
     /** This will never be absent after this Arg is populated. */
@@ -242,6 +243,6 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
 
     public Optional<SourcePath> buildConfigValuesFile;
 
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

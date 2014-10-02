@@ -54,7 +54,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     public Optional<SourcePath> gwtJar;
     public Optional<String> javadocUrl;
 
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 
   public static final BuildRuleType TYPE = new BuildRuleType("prebuilt_jar");

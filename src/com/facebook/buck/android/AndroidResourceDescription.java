@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -126,7 +127,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         params.copyWithDeps(
             androidResOnly(params.getDeclaredDeps()),
             androidResOnly(params.getExtraDeps())),
-        args.deps.get(),
+        resolver.getAllRules(args.deps.get()),
         args.res.orNull(),
         collectInputFiles(filesystem, args.res),
         args.rDotJavaPackage.orNull(),
@@ -197,6 +198,6 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     public Optional<String> rDotJavaPackage;
     public Optional<SourcePath> manifest;
 
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

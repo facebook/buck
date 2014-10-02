@@ -67,7 +67,7 @@ public class PythonBinaryDescriptionTest {
         PEX_PATH,
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.main = new TestSourcePath("blah.py");
     arg.baseModule = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);
@@ -91,7 +91,7 @@ public class PythonBinaryDescriptionTest {
         PEX_PATH,
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.main = new BuildRuleSourcePath(genrule);
     arg.baseModule = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);
@@ -111,7 +111,7 @@ public class PythonBinaryDescriptionTest {
         PEX_PATH,
         new PythonEnvironment(Paths.get("python"), new PythonVersion("2.5")));
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.main = new TestSourcePath("foo/" + mainName, mainName);
 
     // Run without a base module set and verify it defaults to using the build target

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -54,6 +54,6 @@ public class KeystoreDescription implements Description<KeystoreDescription.Arg>
     public Path store;
     public Path properties;
 
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

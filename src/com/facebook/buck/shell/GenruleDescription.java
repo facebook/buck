@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -101,6 +102,6 @@ public class GenruleDescription
     public Optional<String> cmdExe;
     public Optional<ImmutableList<SourcePath>> srcs;
 
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

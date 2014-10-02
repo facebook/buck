@@ -297,12 +297,12 @@ public class TargetsCommandTest {
     BuildRule javaLibrary = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//javasrc:java-library"))
         .addSrc(Paths.get("javasrc/JavaLibrary.java"))
-        .addDep(prebuiltJar)
+        .addDep(prebuiltJar.getBuildTarget())
         .build(ruleResolver);
     JavaTestBuilder
         .newJavaTestBuilder(BuildTargetFactory.newInstance("//javatest:test-java-library"))
         .addSrc(Paths.get("javatest/TestJavaLibrary.java"))
-        .addDep(javaLibrary)
+        .addDep(javaLibrary.getBuildTarget())
         .build(ruleResolver);
 
     List<String> targets = Lists.newArrayList();

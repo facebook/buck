@@ -80,7 +80,7 @@ public class AndroidLibraryTest {
     AndroidLibrary library = (AndroidLibrary) AndroidLibraryBuilder
         .createBuilder(libTarget)
         .addProcessor("MyProcessor")
-        .addProcessorBuildTarget(processorRule)
+        .addProcessorBuildTarget(processorRule.getBuildTarget())
         .build(ruleResolver);
 
     AnnotationProcessingData processingData = library.getAnnotationProcessingData();
@@ -97,8 +97,8 @@ public class AndroidLibraryTest {
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/foo:foo"))
         .addSrc(Paths.get("java/src/com/foo/Foo.java"))
         .setManifestFile(new PathSourcePath(Paths.get("java/src/com/foo/AndroidManifest.xml")))
-        .addExportedDep(libraryRule)
-        .addDep(libraryRule)
+        .addExportedDep(libraryRule.getBuildTarget())
+        .addDep(libraryRule.getBuildTarget())
         .build(ruleResolver);
   }
 

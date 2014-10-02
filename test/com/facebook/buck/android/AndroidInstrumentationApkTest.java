@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -92,28 +91,28 @@ public class AndroidInstrumentationApkTest {
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.
     AndroidBinaryBuilder androidBinaryBuilder = AndroidBinaryBuilder.createBuilder(
         BuildTarget.builder("//apps", "app").build());
-    ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.<BuildRule>of(
-        javaLibrary2,
-        javaLibrary3);
+    ImmutableSortedSet<BuildTarget> originalDepsTargets = ImmutableSortedSet.of(
+        javaLibrary2.getBuildTarget(),
+        javaLibrary3.getBuildTarget());
     androidBinaryBuilder
         .setManifest(new TestSourcePath("apps/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:18")
-        .setKeystore((Keystore) keystore)
-        .setOriginalDeps(originalDeps);
+        .setKeystore(keystore.getBuildTarget())
+        .setOriginalDeps(originalDepsTargets);
     AndroidBinary androidBinary = (AndroidBinary) androidBinaryBuilder.build(ruleResolver);
 
     // AndroidInstrumentationApk transitively depends on :lib1, :lib2, :lib3, and :lib4.
-    ImmutableSortedSet<BuildRule> apkOriginalDeps = ImmutableSortedSet.<BuildRule>of(
-        javaLibrary2,
-        javaLibrary4);
+    ImmutableSortedSet<BuildTarget> apkOriginalDepsTargets = ImmutableSortedSet.of(
+        javaLibrary2.getBuildTarget(),
+        javaLibrary4.getBuildTarget());
     AndroidInstrumentationApkDescription.Arg arg = new AndroidInstrumentationApkDescription.Arg();
-    arg.apk = androidBinary;
-    arg.deps = Optional.of(apkOriginalDeps);
+    arg.apk = androidBinary.getBuildTarget();
+    arg.deps = Optional.of(apkOriginalDepsTargets);
     arg.manifest = new TestSourcePath("apps/InstrumentationAndroidManifest.xml");
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
         BuildTarget.builder("//apps", "instrumentation").build())
-        .setDeps(apkOriginalDeps)
+        .setDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
         .setExtraDeps(ImmutableSortedSet.<BuildRule>of(androidBinary))
         .build();
     AndroidInstrumentationApk androidInstrumentationApk = (AndroidInstrumentationApk)

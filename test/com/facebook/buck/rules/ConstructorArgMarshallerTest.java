@@ -387,28 +387,6 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldSetBuildRulesIfRequested() throws ConstructorArgMarshalException {
-    class Dto {
-      public BuildRule directDep;
-    }
-
-    BuildTarget target = BuildTargetFactory.newInstance("//some/exmaple:target");
-    BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target);
-
-    BuildRuleResolver resolver = new BuildRuleResolver(ImmutableMap.of(target, rule));
-
-    Dto dto = new Dto();
-    marshaller.populate(
-        resolver,
-        filesystem,
-        buildRuleFactoryParams(ImmutableMap.<String, Object>of(
-            "directDep", target.getFullyQualifiedName())),
-        dto);
-
-    assertEquals(dto.directDep, rule);
-  }
-
-  @Test
   public void upperBoundGenericTypesCauseValuesToBeSetToTheUpperBound()
       throws ConstructorArgMarshalException {
 
@@ -535,29 +513,6 @@ public class ConstructorArgMarshallerTest {
     assertEquals(Optional.absent(), dto.defaultSourcePath);
     assertEquals(0, dto.primitiveNum);
     assertEquals(Integer.valueOf(0), dto.wrapperObjectNum);
-  }
-
-  @Test
-  public void shouldResolveBuildRulesFromTargetsAndAssignToFields()
-      throws ConstructorArgMarshalException {
-
-    class Dto {
-      public BuildRule rule;
-    }
-
-    BuildTarget target = BuildTargetFactory.newInstance("//i/love:lucy");
-    BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target);
-    BuildRuleResolver resolver = new BuildRuleResolver(ImmutableMap.of(target, rule));
-
-    Dto dto = new Dto();
-    marshaller.populate(
-        resolver,
-        filesystem,
-        buildRuleFactoryParams(
-            ImmutableMap.<String, Object>of("rule", target.getFullyQualifiedName())),
-        dto);
-
-    assertEquals(rule, dto.rule);
   }
 
   @Test

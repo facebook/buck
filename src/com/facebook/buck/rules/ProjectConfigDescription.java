@@ -15,9 +15,10 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 public class ProjectConfigDescription implements Description<ProjectConfigDescription.Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("project_config");
@@ -34,24 +35,24 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
 
   @Override
   public <A extends Arg> ProjectConfig createBuildRule(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
       A args) {
     return new ProjectConfig(
         params,
-        args.srcTarget.orNull(),
+        args.srcTarget.transform(resolver.getRuleFunction()).orNull(),
         args.srcRoots.orNull(),
-        args.testTarget.orNull(),
+        args.testTarget.transform(resolver.getRuleFunction()).orNull(),
         args.testRoots.orNull(),
         args.isIntellijPlugin.or(false));
   }
 
   @TargetName(name = "project_config")
   @SuppressFieldNotInitialized
-  public static class Arg {
-    public Optional<BuildRule> srcTarget;
+    public static class Arg {
+    public Optional<BuildTarget> srcTarget;
     public Optional<ImmutableList<String>> srcRoots;
-    public Optional<BuildRule> testTarget;
+    public Optional<BuildTarget> testTarget;
     public Optional<ImmutableList<String>> testRoots;
     public Optional<Boolean> isIntellijPlugin;
   }

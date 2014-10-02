@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
@@ -41,7 +41,7 @@ public class AppleNativeTargetDescriptionArg {
   public Optional<ImmutableList<AppleSource>> srcs;
   public Optional<ImmutableSortedSet<String>> frameworks;
   public Optional<ImmutableSortedSet<String>> weakFrameworks;
-  public Optional<ImmutableSortedSet<BuildRule>> deps;
+  public Optional<ImmutableSortedSet<BuildTarget>> deps;
   public Optional<String> gid;
   public Optional<String> headerPathPrefix;
   public Optional<Boolean> useBuckHeaderMaps;

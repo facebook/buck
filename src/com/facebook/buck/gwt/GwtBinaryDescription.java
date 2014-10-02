@@ -58,8 +58,8 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
   @SuppressFieldNotInitialized
   public static class Arg {
     public Optional<ImmutableSortedSet<String>> modules;
-    public Optional<ImmutableSortedSet<BuildRule>> moduleDeps;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> moduleDeps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
 
     /**
      * In practice, these may be values such as {@code -Xmx512m}.
@@ -110,7 +110,8 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     // Find all of the reachable JavaLibrary rules and grab their associated GwtModules.
     final ImmutableSortedSet.Builder<Path> gwtModuleJarsBuilder =
         ImmutableSortedSet.naturalOrder();
-    new AbstractDependencyVisitor(args.moduleDeps.get()) {
+    ImmutableSortedSet<BuildRule> moduleDependencies = resolver.getAllRules(args.moduleDeps.get());
+    new AbstractDependencyVisitor(moduleDependencies) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
         if (!(rule instanceof JavaLibrary)) {
@@ -145,7 +146,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         args.localWorkers.or(DEFAULT_NUM_LOCAL_WORKERS),
         args.strict.or(DEFAULT_STRICT),
         args.experimentalArgs.get(),
-        args.moduleDeps.get(),
+        moduleDependencies,
         gwtModuleJarsBuilder.build());
   }
 }

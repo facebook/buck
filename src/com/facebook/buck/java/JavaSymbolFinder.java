@@ -154,7 +154,7 @@ public class JavaSymbolFinder {
           if (parsedBuildFiles.containsKey(buckFile)) {
             rules = parsedBuildFiles.get(buckFile);
           } else {
-            rules = parser.getAllRules(buckFile);
+            rules = parser.getAll(buckFile);
             parsedBuildFiles.put(buckFile, rules);
           }
 

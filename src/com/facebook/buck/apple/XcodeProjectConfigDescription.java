@@ -16,13 +16,13 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 public class XcodeProjectConfigDescription
     implements Description<XcodeProjectConfigDescription.Arg> {
@@ -43,12 +43,15 @@ public class XcodeProjectConfigDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new XcodeProjectConfig(params, args);
+    return new XcodeProjectConfig(
+        params,
+        args.projectName,
+        resolver.getAllRules(args.rules));
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
     public String projectName;
-    public ImmutableSet<BuildRule> rules;
+    public ImmutableSortedSet<BuildTarget> rules;
   }
 }

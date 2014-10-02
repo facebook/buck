@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -53,7 +53,7 @@ public class XcodeNativeDescription implements Description<XcodeNativeDescriptio
   public static class Arg {
     @Hint(name = "xcodeproj")
     public SourcePath projectContainerPath;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<String> targetName;
     public Optional<String> buildableName;
   }

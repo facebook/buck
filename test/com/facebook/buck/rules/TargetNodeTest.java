@@ -39,11 +39,13 @@ import java.util.Map;
 public class TargetNodeTest {
 
   @Test
-  public void testIgnoreNonBuildRuleOrPathOrSourcePathArgument() throws NoSuchBuildTargetException {
+  public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
+      throws NoSuchBuildTargetException {
     Description<Arg> description = new TestDescription();
     TargetNode<Arg> targetNode = new TargetNode<>(
         description,
-        buildRuleFactoryParams(ImmutableMap.<String, Object>of(
+        buildRuleFactoryParams(
+            ImmutableMap.<String, Object>of(
                 "string", "//example/path:one",
                 "target", "//example/path:two")));
 
@@ -56,7 +58,8 @@ public class TargetNodeTest {
     Description<Arg> description = new TestDescription();
     TargetNode<Arg> targetNode = new TargetNode<>(
         description,
-        buildRuleFactoryParams(ImmutableMap.<String, Object>of(
+        buildRuleFactoryParams(
+            ImmutableMap.<String, Object>of(
                 "deps", ImmutableList.of("//example/path:one", "//example/path:two"),
                 "sourcePaths", ImmutableList.of("//example/path:four", "MyClass.java"),
                 "appleSource", "//example/path:five",
@@ -82,11 +85,12 @@ public class TargetNodeTest {
   }
 
   public class Arg {
-    public ImmutableSortedSet<BuildRule> deps;
+    public ImmutableSortedSet<BuildTarget> deps;
     public ImmutableSortedSet<SourcePath> sourcePaths;
     public Optional<AppleSource> appleSource;
     public Optional<Path> source;
     public Optional<String> string;
+    @Hint(isDep = false)
     public Optional<BuildTarget> target;
   }
 

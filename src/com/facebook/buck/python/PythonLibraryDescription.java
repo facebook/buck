@@ -16,8 +16,8 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.PythonLibraryDescription.Arg;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -45,7 +45,7 @@ public class PythonLibraryDescription implements Description<Arg> {
         ImmutableSortedSet<SourcePath>,
         ImmutableMap<String, SourcePath>>>
             resources;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<String> baseModule;
   }
 

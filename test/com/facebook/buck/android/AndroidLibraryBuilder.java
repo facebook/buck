@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
@@ -41,7 +40,7 @@ public class AndroidLibraryBuilder extends AbstractBuilder<AndroidLibraryDescrip
     return this;
   }
 
-  public AndroidLibraryBuilder addProcessorBuildTarget(BuildRule processorRule) {
+  public AndroidLibraryBuilder addProcessorBuildTarget(BuildTarget processorRule) {
     arg.annotationProcessorDeps = amend(arg.annotationProcessorDeps, processorRule);
     return this;
   }
@@ -51,12 +50,12 @@ public class AndroidLibraryBuilder extends AbstractBuilder<AndroidLibraryDescrip
     return this;
   }
 
-  public AndroidLibraryBuilder addDep(BuildRule rule) {
+  public AndroidLibraryBuilder addDep(BuildTarget rule) {
     arg.deps = amend(arg.deps, rule);
     return this;
   }
 
-  public AndroidLibraryBuilder addExportedDep(BuildRule rule) {
+  public AndroidLibraryBuilder addExportedDep(BuildTarget rule) {
     arg.exportedDeps = amend(arg.exportedDeps, rule);
     return this;
   }

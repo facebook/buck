@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -24,7 +25,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,7 +51,9 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    ImmutableSet<SourcePath> manifestFiles = findManifestFiles(args);
+    AndroidTransitiveDependencyGraph transitiveDependencyGraph =
+        new AndroidTransitiveDependencyGraph(resolver.getAllRules(args.deps.get()));
+    ImmutableSet<SourcePath> manifestFiles = transitiveDependencyGraph.findManifestFiles();
 
     // The only rules that need to be built before this AndroidManifest are those
     // responsible for generating the AndroidManifest.xml files in the manifestFiles set (and
@@ -81,13 +83,6 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
      * android_library rules will be filtered out to become dependent source files for the
      * {@link AndroidManifest}.
      */
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
-  }
-
-  @VisibleForTesting
-  static ImmutableSet<SourcePath> findManifestFiles(Arg args) {
-    AndroidTransitiveDependencyGraph transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(args.deps.get());
-    return transitiveDependencyGraph.findManifestFiles();
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

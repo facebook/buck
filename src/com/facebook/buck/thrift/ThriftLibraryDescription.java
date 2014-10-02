@@ -277,7 +277,7 @@ public class ThriftLibraryDescription
     ImmutableSortedSet<ThriftLibrary> thriftDeps =
         resolveThriftDeps(
             target,
-            args.deps.or(ImmutableSortedSet.<BuildRule>of()));
+            resolver.getAllRules(args.deps.or(ImmutableSortedSet.<BuildTarget>of())));
 
     // The unflavored version of this rule is responsible for setting up the the various
     // build rules to facilitate dependents including it's thrift sources.

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -49,14 +50,13 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    if (!(args.apk instanceof InstallableApk)) {
+    BuildRule installableApk = resolver.getRule(args.apk);
+    if (!(installableApk instanceof InstallableApk)) {
       throw new HumanReadableException("The 'apk' argument of %s, %s, must correspond to an " +
           "installable rule, such as android_binary() or apk_genrule().",
           params.getBuildTarget(),
           args.apk.getFullyQualifiedName());
     }
-
-    InstallableApk installableApk = (InstallableApk) args.apk;
 
     ImmutableList<SourcePath> srcs = args.srcs.get();
     ImmutableSortedSet<BuildRule> extraDeps =
@@ -72,12 +72,12 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
         args.bash,
         args.cmdExe,
         params.getPathAbsolutifier(),
-        installableApk);
+        (InstallableApk) installableApk);
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public BuildRule apk;
+    public BuildTarget apk;
 
     public String out;
     public Optional<String> bash;
@@ -85,6 +85,6 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
     public Optional<String> cmdExe;
     public Optional<ImmutableList<SourcePath>> srcs;
 
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

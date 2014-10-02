@@ -63,12 +63,13 @@ public class AndroidLibraryDescription implements Description<AndroidLibraryDesc
 
     AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
         params.getBuildTarget(),
-        params.getProjectFilesystem());
+        params.getProjectFilesystem(),
+        resolver);
     javacOptions.setAnnotationProcessingData(annotationParams);
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
-        params.copyWithExtraDeps(args.exportedDeps.get()),
+        params.copyWithExtraDeps(resolver.getAllRules(args.exportedDeps.get())),
         javacOptions.build(),
         ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
@@ -93,8 +94,8 @@ public class AndroidLibraryDescription implements Description<AndroidLibraryDesc
             params.getProjectFilesystem()),
         args.proguardConfig,
         args.postprocessClassesCommands.get(),
-        args.exportedDeps.get(),
-        args.providedDeps.get(),
+        resolver.getAllRules(args.exportedDeps.get()),
+        resolver.getAllRules(args.providedDeps.get()),
         additionalClasspathEntries,
         javacOptions.build(),
         args.resourcesRoot,

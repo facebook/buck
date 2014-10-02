@@ -469,7 +469,8 @@ public class ThriftCxxEnhancerTest {
     resolver.addToIndex(argDep);
     ThriftConstructorArg arg = new ThriftConstructorArg();
     arg.cpp2Options = Optional.absent();
-    arg.cpp2Deps = Optional.of(ImmutableSortedSet.of(argDep));
+    arg.cpp2Deps = Optional.of(
+        ImmutableSortedSet.of(argDep.getBuildTarget()));
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(

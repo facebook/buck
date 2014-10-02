@@ -20,10 +20,8 @@ import static com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 
 import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -53,12 +51,12 @@ public class AndroidBinaryBuilder extends AbstractBuilder<AndroidBinaryDescripti
     return this;
   }
 
-  public AndroidBinaryBuilder setOriginalDeps(ImmutableSortedSet<BuildRule> originalDeps) {
+  public AndroidBinaryBuilder setOriginalDeps(ImmutableSortedSet<BuildTarget> originalDeps) {
     arg.deps = Optional.of(originalDeps);
     return this;
   }
 
-  public AndroidBinaryBuilder setKeystore(Keystore keystore) {
+  public AndroidBinaryBuilder setKeystore(BuildTarget keystore) {
     arg.keystore = keystore;
     amend(arg.deps, keystore);
     return this;

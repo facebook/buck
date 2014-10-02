@@ -142,7 +142,7 @@ public class SeparatedProjectsGeneratorTest {
         "//foo/bar",
         "fooproject",
         resolver,
-        ImmutableSet.of(rule));
+        ImmutableSortedSet.of(rule.getBuildTarget()));
     resolver.addToIndex(configRule);
 
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
@@ -192,7 +192,7 @@ public class SeparatedProjectsGeneratorTest {
         "//foo/bar",
         "fooproject",
         resolver,
-        ImmutableSet.of(rule));
+        ImmutableSortedSet.of(rule.getBuildTarget()));
     resolver.addToIndex(configRule);
 
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
@@ -242,7 +242,7 @@ public class SeparatedProjectsGeneratorTest {
     AppleBundleDescription.Arg arg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    arg.binary = dynamicLibraryDep;
+    arg.binary = dynamicLibraryDep.getBuildTarget();
     arg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
     arg.deps = Optional.absent();
 
@@ -256,7 +256,7 @@ public class SeparatedProjectsGeneratorTest {
         "//foo/bar",
         "fooproject",
         resolver,
-        ImmutableSet.of(rule));
+        ImmutableSortedSet.of(rule.getBuildTarget()));
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(rule, configRule));
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
@@ -301,7 +301,7 @@ public class SeparatedProjectsGeneratorTest {
         "//foo",
         "fooproject",
         resolver,
-        ImmutableSet.of(rule));
+        ImmutableSortedSet.of(rule.getBuildTarget()));
     resolver.addToIndex(configRule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
@@ -401,7 +401,7 @@ public class SeparatedProjectsGeneratorTest {
         "//foo",
         "fooproject",
         resolver,
-        ImmutableSet.of(rule1, rule2));
+        ImmutableSortedSet.of(rule1.getBuildTarget(), rule2.getBuildTarget()));
     resolver.addToIndex(configRule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
@@ -478,7 +478,7 @@ public class SeparatedProjectsGeneratorTest {
         "//foo",
         "fooproject",
         resolver,
-        ImmutableSet.of(rule));
+        ImmutableSortedSet.of(rule.getBuildTarget()));
     resolver.addToIndex(configRule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
@@ -518,7 +518,7 @@ public class SeparatedProjectsGeneratorTest {
     AppleBundleDescription.Arg arg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    arg.binary = binaryDep;
+    arg.binary = binaryDep.getBuildTarget();
     arg.extension = Either.ofLeft(AppleBundleExtension.APP);
     arg.deps = Optional.absent();
 
@@ -539,7 +539,10 @@ public class SeparatedProjectsGeneratorTest {
         "//foo",
         "fooproject",
         resolver,
-        ImmutableSet.of(libraryRule, binaryRule, nativeRule));
+        ImmutableSortedSet.of(
+            libraryRule.getBuildTarget(),
+            binaryRule.getBuildTarget(),
+            nativeRule.getBuildTarget()));
     resolver.addToIndex(configRule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
@@ -572,7 +575,7 @@ public class SeparatedProjectsGeneratorTest {
         "//foo",
         "fooproject",
         resolver,
-        ImmutableSet.of(fooRule1));
+        ImmutableSortedSet.of(fooRule1.getBuildTarget()));
     resolver.addToIndex(fooConfigRule);
 
     BuildRule barRule2 = createBuildRuleWithDefaults(
@@ -586,7 +589,7 @@ public class SeparatedProjectsGeneratorTest {
         "//bar",
         "barproject",
         resolver,
-        ImmutableSet.of(barRule2));
+        ImmutableSortedSet.of(barRule2.getBuildTarget()));
     resolver.addToIndex(barConfigRule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
@@ -610,7 +613,7 @@ public class SeparatedProjectsGeneratorTest {
       String baseName,
       final String projectName,
       BuildRuleResolver resolver,
-      final ImmutableSet<BuildRule> buildRules) {
+      final ImmutableSortedSet<BuildTarget> buildRules) {
     return createBuildRuleWithDefaults(
         BuildTarget.builder(baseName, "project").build(),
         resolver,

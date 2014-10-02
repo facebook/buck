@@ -16,13 +16,13 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
@@ -45,11 +45,13 @@ public class AppleBundle extends AbstractBuildRule {
 
   AppleBundle(
       BuildRuleParams params,
-      AppleBundleDescription.Arg args) {
+      Either<AppleBundleExtension, String> extension,
+      Optional<SourcePath> infoPlist,
+      BuildRule binary) {
     super(params);
-    this.extension = Preconditions.checkNotNull(args.extension);
-    this.infoPlist = Preconditions.checkNotNull(args.infoPlist);
-    this.binary = args.binary;
+    this.extension = Preconditions.checkNotNull(extension);
+    this.infoPlist = Preconditions.checkNotNull(infoPlist);
+    this.binary = Preconditions.checkNotNull(binary);
   }
 
   /**

@@ -18,7 +18,6 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
@@ -35,12 +34,12 @@ public class JavaLibraryBuilder extends AbstractBuilder<JavaLibraryDescription.A
     return new JavaLibraryBuilder(target);
   }
 
-  public JavaLibraryBuilder addDep(BuildRule rule) {
+  public JavaLibraryBuilder addDep(BuildTarget rule) {
     arg.deps = amend(arg.deps, rule);
     return this;
   }
 
-  public JavaLibraryBuilder addExportedDep(BuildRule rule) {
+  public JavaLibraryBuilder addExportedDep(BuildTarget rule) {
     arg.exportedDeps = amend(arg.exportedDeps, rule);
     return this;
   }

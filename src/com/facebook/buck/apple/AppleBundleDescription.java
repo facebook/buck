@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -47,16 +47,20 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new AppleBundle(params, args);
+    return new AppleBundle(
+        params,
+        args.extension,
+        args.infoPlist,
+        resolver.getRule(args.binary));
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
     public Either<AppleBundleExtension, String> extension;
-    public BuildRule binary;
+    public BuildTarget binary;
     public Optional<SourcePath> infoPlist;
     public Optional<ImmutableMap<String, SourcePath>> headers;
     public Optional<ImmutableMap<AppleBundleDestination, SourcePath>> files;
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

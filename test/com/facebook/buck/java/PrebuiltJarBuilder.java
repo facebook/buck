@@ -18,7 +18,6 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 
 import java.nio.file.Path;
@@ -38,7 +37,7 @@ public class PrebuiltJarBuilder extends AbstractBuilder<PrebuiltJarDescription.A
     return this;
   }
 
-  public PrebuiltJarBuilder addDep(BuildRule dep) {
+  public PrebuiltJarBuilder addDep(BuildTarget dep) {
     arg.deps = amend(arg.deps, dep);
     return this;
   }

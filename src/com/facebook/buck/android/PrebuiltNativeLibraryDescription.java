@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class PrebuiltNativeLibraryDescription
-    implements Description<PrebuiltNativeLibraryDescription.Args> {
+    implements Description<PrebuiltNativeLibraryDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("prebuilt_native_library");
 
@@ -40,12 +40,12 @@ public class PrebuiltNativeLibraryDescription
   }
 
   @Override
-  public Args createUnpopulatedConstructorArg() {
-    return new Args();
+  public Arg createUnpopulatedConstructorArg() {
+    return new Arg();
   }
 
   @Override
-  public <A extends Args> PrebuiltNativeLibrary createBuildRule(
+  public <A extends Arg> PrebuiltNativeLibrary createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -66,10 +66,10 @@ public class PrebuiltNativeLibraryDescription
   }
 
   @SuppressFieldNotInitialized
-  public static class Args {
+  public static class Arg {
     public Optional<Boolean> isAsset;
     public Path nativeLibs;
 
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

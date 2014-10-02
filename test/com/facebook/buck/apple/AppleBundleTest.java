@@ -63,7 +63,7 @@ public class AppleBundleTest {
     arg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
     arg.infoPlist = Optional.absent();
     arg.deps = Optional.absent();
-    arg.binary = library;
+    arg.binary = library.getBuildTarget();
     arg.deps = Optional.of(ImmutableSortedSet.of(arg.binary));
 
     BuildRuleParams params =
@@ -99,7 +99,7 @@ public class AppleBundleTest {
     AppleBundleDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.extension = Either.ofRight("grplugin");
     arg.infoPlist = Optional.absent();
-    arg.binary = library;
+    arg.binary = library.getBuildTarget();
     arg.deps = Optional.of(ImmutableSortedSet.of(arg.binary));
 
     BuildRuleParams params =

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -61,7 +62,8 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
 
     AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
         params.getBuildTarget(),
-        params.getProjectFilesystem());
+        params.getProjectFilesystem(),
+        resolver);
     javacOptions.setAnnotationProcessingData(annotationParams);
 
     return new JavaTest(
@@ -110,7 +112,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
   public static class Arg extends JavaLibraryDescription.Arg {
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
-    public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<ImmutableList<String>> vmArgs;
     public Optional<TestType> testType;
   }

@@ -17,7 +17,7 @@
 package com.facebook.buck.extension;
 
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -54,6 +54,6 @@ public class BuckExtensionDescription implements Description<BuckExtensionDescri
     public ImmutableSortedSet<SourcePath> srcs;
     public Optional<ImmutableSortedSet<SourcePath>> resources;
 
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

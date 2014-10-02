@@ -18,7 +18,6 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -37,7 +36,7 @@ public class JavaTestBuilder extends AbstractBuilder<JavaTestDescription.Arg> {
     return new JavaTestBuilder(target);
   }
 
-  public JavaTestBuilder addDep(BuildRule rule) {
+  public JavaTestBuilder addDep(BuildTarget rule) {
     arg.deps = amend(arg.deps, rule);
     return this;
   }

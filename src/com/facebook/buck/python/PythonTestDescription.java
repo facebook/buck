@@ -237,7 +237,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                 .build(),
             params.getExtraDeps()),
         new BuildRuleSourcePath(binary),
-        args.sourceUnderTest.or(ImmutableSet.<BuildRule>of()),
+        resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
         args.labels.or(ImmutableSet.<Label>of()),
         args.contacts.or(ImmutableSet.<String>of()));
   }
@@ -246,7 +246,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   public static class Arg extends PythonLibraryDescription.Arg {
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
-    public Optional<ImmutableSet<BuildRule>> sourceUnderTest;
+    public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
   }
 
 }

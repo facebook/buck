@@ -106,8 +106,8 @@ public class ApkGenruleTest {
     AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
-        .setOriginalDeps(ImmutableSortedSet.of(androidLibRule))
-        .setKeystore(keystore)
+        .setOriginalDeps(ImmutableSortedSet.of(androidLibRule.getBuildTarget()))
+        .setKeystore(keystore.getBuildTarget())
         .build(ruleResolver);
   }
 
@@ -128,7 +128,7 @@ public class ApkGenruleTest {
     BuildTarget buildTarget = BuildTarget.builder("//src/com/facebook", "sign_fb4a").build();
     ApkGenruleDescription description = new ApkGenruleDescription();
     ApkGenruleDescription.Arg arg = description.createUnpopulatedConstructorArg();
-    arg.apk = new FakeInstallable(AndroidBinaryDescription.TYPE, apkTarget);
+    arg.apk = new FakeInstallable(AndroidBinaryDescription.TYPE, apkTarget).getBuildTarget();
     arg.bash = Optional.of("");
     arg.cmd = Optional.of("python signer.py $APK key.properties > $OUT");
     arg.cmdExe = Optional.of("");

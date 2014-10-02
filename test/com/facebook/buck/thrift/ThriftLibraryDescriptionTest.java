@@ -340,7 +340,7 @@ public class ThriftLibraryDescriptionTest {
     ThriftConstructorArg arg = desc.createUnpopulatedConstructorArg();
     arg.name = "thrift";
     arg.srcs = ImmutableMap.of(source, ImmutableList.<String>of());
-    arg.deps = Optional.of(ImmutableSortedSet.of((BuildRule) dep));
+    arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
     arg.flags = Optional.absent();
 
     // Build the thrift library rule and verify that it's setup correctly.

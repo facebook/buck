@@ -26,8 +26,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryDescription;
-import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -339,7 +339,7 @@ public class SchemeGeneratorTest {
     libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.of(ImmutableSortedSet.of(testDepRule));
+    libraryArg.deps = Optional.of(ImmutableSortedSet.of(testDepRule.getBuildTarget()));
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
     libraryArg.useBuckHeaderMaps = Optional.absent();
@@ -356,7 +356,7 @@ public class SchemeGeneratorTest {
     AppleBundleDescription.Arg xctestArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    xctestArg.binary = libraryRule;
+    xctestArg.binary = libraryRule.getBuildTarget();
     xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
     xctestArg.deps = Optional.absent();
 
@@ -372,11 +372,11 @@ public class SchemeGeneratorTest {
 
     AppleTestDescription.Arg arg =
         appleTestDescription.createUnpopulatedConstructorArg();
-    arg.testBundle = xctestRule;
+    arg.testBundle = xctestRule.getBuildTarget();
     arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
     arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule));
-    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
 
     BuildRule testRule = appleTestDescription.createBuildRule(params, resolver, arg);
     resolver.addToIndex(testRule);
@@ -514,7 +514,7 @@ public class SchemeGeneratorTest {
     AppleBundleDescription.Arg xctestArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    xctestArg.binary = libraryRule;
+    xctestArg.binary = libraryRule.getBuildTarget();
     xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
     xctestArg.deps = Optional.absent();
 
@@ -530,11 +530,11 @@ public class SchemeGeneratorTest {
 
     AppleTestDescription.Arg arg =
         appleTestDescription.createUnpopulatedConstructorArg();
-    arg.testBundle = xctestRule;
+    arg.testBundle = xctestRule.getBuildTarget();
     arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
     arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule));
-    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(rootRule));
+    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(rootRule.getBuildTarget()));
 
     BuildRule testRule = appleTestDescription.createBuildRule(params, resolver, arg);
     resolver.addToIndex(testRule);
@@ -963,7 +963,7 @@ public class SchemeGeneratorTest {
     AppleBundleDescription.Arg xctestArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    xctestArg.binary = libraryRule;
+    xctestArg.binary = libraryRule.getBuildTarget();
     xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
     xctestArg.deps = Optional.absent();
 
@@ -979,11 +979,11 @@ public class SchemeGeneratorTest {
 
     AppleTestDescription.Arg arg =
         appleTestDescription.createUnpopulatedConstructorArg();
-    arg.testBundle = xctestRule;
+    arg.testBundle = xctestRule.getBuildTarget();
     arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
     arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule));
-    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(libraryRule));
+    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(libraryRule.getBuildTarget()));
 
     BuildRule testRule = appleTestDescription.createBuildRule(params, resolver, arg);
     resolver.addToIndex(testRule);

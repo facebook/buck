@@ -334,14 +334,14 @@ public class DefaultJavaLibraryTest {
     BuildRule libraryTwo = JavaLibraryBuilder
         .createBuilder(libraryTwoTarget)
         .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
-        .addDep(libraryOne)
+        .addDep(libraryOne.getBuildTarget())
         .build(ruleResolver);
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
     BuildRule parent = JavaLibraryBuilder
         .createBuilder(parentTarget)
         .addSrc(Paths.get("java/src/com/parent/Meh.java"))
-        .addDep(libraryTwo)
+        .addDep(libraryTwo.getBuildTarget())
         .build(ruleResolver);
 
     assertEquals(
@@ -394,7 +394,7 @@ public class DefaultJavaLibraryTest {
     BuildRule libraryTwo = JavaLibraryBuilder
         .createBuilder(libraryTwoTarget)
         .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
-        .addDep(libraryOne)
+        .addDep(libraryOne.getBuildTarget())
         .build(ruleResolver);
 
     BuildContext buildContext = EasyMock.createMock(BuildContext.class);
@@ -494,9 +494,9 @@ public class DefaultJavaLibraryTest {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     BuildRule libraryOne = JavaLibraryBuilder
         .createBuilder(libraryOneTarget)
-        .addDep(notIncluded)
-        .addDep(included)
-        .addExportedDep(included)
+        .addDep(notIncluded.getBuildTarget())
+        .addDep(included.getBuildTarget())
+        .addExportedDep(included.getBuildTarget())
         .addSrc(Paths.get("java/src/com/libone/Bar.java"))
         .build(ruleResolver);
 
@@ -504,15 +504,15 @@ public class DefaultJavaLibraryTest {
     BuildRule libraryTwo = JavaLibraryBuilder
         .createBuilder(libraryTwoTarget)
         .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
-        .addDep(libraryOne)
-        .addExportedDep(libraryOne)
+        .addDep(libraryOne.getBuildTarget())
+        .addExportedDep(libraryOne.getBuildTarget())
         .build(ruleResolver);
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
     BuildRule parent = JavaLibraryBuilder
         .createBuilder(parentTarget)
         .addSrc(Paths.get("java/src/com/parent/Meh.java"))
-        .addDep(libraryTwo)
+        .addDep(libraryTwo.getBuildTarget())
         .build(ruleResolver);
 
     assertEquals(
@@ -714,11 +714,11 @@ public class DefaultJavaLibraryTest {
     // Create two rules, each of which depends on one of the //:common_XXX rules.
     BuildRule consumerNoExport = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//:consumer_no_export"))
-        .addDep(commonNoExport)
+        .addDep(commonNoExport.getBuildTarget())
         .build(ruleResolver);
     BuildRule consumerWithExport = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//:consumer_with_export"))
-        .addDep(commonWithExport)
+        .addDep(commonWithExport.getBuildTarget())
         .build(ruleResolver);
 
     // Verify getAbiKeyForDeps() for the two //:consumer_XXX rules.
@@ -1017,21 +1017,21 @@ public class DefaultJavaLibraryTest {
     BuildRule libraryTwo = JavaLibraryBuilder
         .createBuilder(libraryTwoTarget)
         .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
-        .addDep(libraryOne)
+        .addDep(libraryOne.getBuildTarget())
         .build(ruleResolver);
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
     BuildRule parent = JavaLibraryBuilder
         .createBuilder(parentTarget)
         .addSrc(Paths.get("java/src/com/parent/Meh.java"))
-        .addDep(libraryTwo)
+        .addDep(libraryTwo.getBuildTarget())
         .build(ruleResolver);
 
     BuildTarget grandparentTarget = BuildTargetFactory.newInstance("//:grandparent");
     BuildRule grandparent = JavaLibraryBuilder
         .createBuilder(grandparentTarget)
         .addSrc(Paths.get("java/src/com/parent/OldManRiver.java"))
-        .addDep(parent)
+        .addDep(parent.getBuildTarget())
         .build(ruleResolver);
 
     BuildContext context = createSuggestContext(ruleResolver,

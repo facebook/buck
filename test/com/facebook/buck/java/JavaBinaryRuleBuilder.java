@@ -18,7 +18,6 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
-import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -28,7 +27,7 @@ public class JavaBinaryRuleBuilder extends AbstractBuilder<JavaBinaryDescription
     super(new JavaBinaryDescription(), target);
   }
 
-  public JavaBinaryRuleBuilder setDeps(ImmutableSortedSet<BuildRule> deps) {
+  public JavaBinaryRuleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.of(deps);
     return this;
   }

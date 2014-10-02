@@ -38,6 +38,7 @@ class ParamInfo implements Comparable<ParamInfo> {
   private final boolean isOptional;
   private final String name;
   private final String pythonName;
+  private final boolean isDep;
   private final Field field;
 
   public ParamInfo(TypeCoercerFactory typeCoercerFactory, Field field) {
@@ -45,6 +46,7 @@ class ParamInfo implements Comparable<ParamInfo> {
     this.name = field.getName();
     Hint hint = field.getAnnotation(Hint.class);
     this.pythonName = determinePythonName(this.name, hint);
+    this.isDep = hint != null ? hint.isDep() : Hint.DEFAULT_IS_DEP;
 
     isOptional = Optional.class.isAssignableFrom(field.getType());
     this.typeCoercer = typeCoercerFactory.typeCoercerForType(Types.getFirstNonOptionalType(field));
@@ -60,6 +62,10 @@ class ParamInfo implements Comparable<ParamInfo> {
 
   public String getPythonName() {
     return pythonName;
+  }
+
+  public boolean isDep() {
+    return isDep;
   }
 
   /**
@@ -169,7 +175,7 @@ class ParamInfo implements Comparable<ParamInfo> {
   }
 
   private String determinePythonName(String javaName, @Nullable Hint hint) {
-    if (hint != null) {
+    if (hint != null && !Hint.DEFAULT_NAME.equals(hint.name())) {
       return hint.name();
     }
     return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, javaName);

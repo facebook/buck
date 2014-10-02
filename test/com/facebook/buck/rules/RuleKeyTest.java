@@ -75,7 +75,7 @@ public class RuleKeyTest {
     BuildRule libraryNoCommon = javaLibraryBuilder.build(ruleResolver1);
 
     // Create the same java_library() rule, but with a dep on //src/com/facebook/buck/cli:common.
-    javaLibraryBuilder.addDep(commonJavaLibrary);
+    javaLibraryBuilder.addDep(commonJavaLibrary.getBuildTarget());
     BuildRule libraryWithCommon = javaLibraryBuilder.build(ruleResolver2);
 
     // Assert that the RuleKeys are distinct.

@@ -110,7 +110,7 @@ public class AuditInputCommandTest {
     JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:test-android-library"))
         .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
         .addSrc(Paths.get("src/com/facebook/AndroidLibraryTwo.java"))
-        .addDep(rootRule)
+        .addDep(rootRule.getBuildTarget())
         .build(ruleResolver);
 
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.copyOf(

@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -46,7 +45,6 @@ public class TypeCoercerFactory {
   private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
-  private final TypeCoercer<BuildRule> buildRuleTypeCoercer;
 
   // This has no implementation, but is here so that constructor succeeds so that it can be queried.
   // This is only used for the visibility field, which is not actually handled by the coercer.
@@ -73,7 +71,6 @@ public class TypeCoercerFactory {
   public TypeCoercerFactory() {
     buildTargetTypeCoercer = new BuildTargetTypeCoercer();
     sourcePathTypeCoercer = new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
-    buildRuleTypeCoercer = new BuildRuleTypeCoercer(buildTargetTypeCoercer);
     appleSourceTypeCoercer = new AppleSourceTypeCoercer(
             sourcePathTypeCoercer,
             new PairTypeCoercer<>(sourcePathTypeCoercer, stringTypeCoercer),
@@ -84,7 +81,6 @@ public class TypeCoercerFactory {
         pathTypeCoercer,
         sourcePathTypeCoercer,
         buildTargetTypeCoercer,
-        buildRuleTypeCoercer,
         buildTargetPatternTypeCoercer,
 
         // identity

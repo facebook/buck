@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -52,10 +53,10 @@ public class AndroidManifestDescriptionTest {
 
     AndroidManifestDescription.Arg arg = new AndroidManifestDescription.Arg();
     arg.skeleton = skeleton;
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:baz")
-        .setDeps(arg.deps.get())
+        .setDeps(buildRuleResolver.getAllRules(arg.deps.get()))
         .build();
     AndroidManifest androidManifest = new AndroidManifestDescription()
         .createBuildRule(params, buildRuleResolver, arg);

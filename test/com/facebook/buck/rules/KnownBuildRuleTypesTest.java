@@ -29,6 +29,7 @@ import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavacVersion;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonEnvironment;
@@ -110,15 +111,15 @@ public class KnownBuildRuleTypesTest {
     arg.source = Optional.absent();
     arg.target = Optional.absent();
     arg.proguardConfig = Optional.absent();
-    arg.annotationProcessorDeps = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.annotationProcessorDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.annotationProcessorParams = Optional.of(ImmutableList.<String>of());
     arg.annotationProcessors = Optional.of(ImmutableSet.<String>of());
     arg.annotationProcessorOnly = Optional.absent();
     arg.postprocessClassesCommands = Optional.of(ImmutableList.<String>of());
     arg.resourcesRoot = Optional.absent();
-    arg.providedDeps = Optional.of(ImmutableSortedSet.<BuildRule>of());
-    arg.exportedDeps = Optional.of(ImmutableSortedSet.<BuildRule>of());
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.providedDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.exportedDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
   }
 
   private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes) {

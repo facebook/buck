@@ -31,7 +31,7 @@ public class ProjectConfigBuilder extends AbstractBuilder<ProjectConfigDescripti
     return new ProjectConfigBuilder(buildTarget);
   }
 
-  public ProjectConfigBuilder setSrcRule(@Nullable BuildRule srcRule) {
+  public ProjectConfigBuilder setSrcRule(@Nullable BuildTarget srcRule) {
     arg.srcTarget = Optional.fromNullable(srcRule);
     return this;
   }
@@ -41,7 +41,7 @@ public class ProjectConfigBuilder extends AbstractBuilder<ProjectConfigDescripti
     return this;
   }
 
-  public ProjectConfigBuilder setTestRule(@Nullable BuildRule testRule) {
+  public ProjectConfigBuilder setTestRule(@Nullable BuildTarget testRule) {
     arg.testTarget = Optional.fromNullable(testRule);
     return this;
   }

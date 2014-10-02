@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -55,7 +54,7 @@ public class PythonTestDescriptionTest {
         TEST_MAIN,
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.srcs = Optional.of(
         Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
             ImmutableSortedSet.<SourcePath>of(new TestSourcePath("blah.py"))));

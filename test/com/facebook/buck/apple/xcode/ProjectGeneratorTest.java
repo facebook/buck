@@ -795,7 +795,7 @@ public class ProjectGeneratorTest {
       AppleBundleDescription.Arg xctestArg =
           appleBundleDescription.createUnpopulatedConstructorArg();
       xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-      xctestArg.binary = dynamicLibraryDep;
+      xctestArg.binary = dynamicLibraryDep.getBuildTarget();
       xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
       xctestArg.deps = Optional.absent();
 
@@ -813,11 +813,11 @@ public class ProjectGeneratorTest {
 
       AppleTestDescription.Arg arg =
           appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule;
+      arg.testBundle = xctestRule.getBuildTarget();
       arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
       arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(xctestRule));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
+      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
 
       testRule = appleTestDescription.createBuildRule(
           params,
@@ -923,7 +923,7 @@ public class ProjectGeneratorTest {
           Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m"))));
       dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework"));
       dynamicLibraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(libraryRule));
+      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(libraryRule.getBuildTarget()));
       dynamicLibraryArg.gid = Optional.absent();
       dynamicLibraryArg.headerPathPrefix = Optional.absent();
       dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
@@ -942,7 +942,7 @@ public class ProjectGeneratorTest {
       AppleBundleDescription.Arg xctestArg =
           appleBundleDescription.createUnpopulatedConstructorArg();
       xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-      xctestArg.binary = dynamicLibraryDep;
+      xctestArg.binary = dynamicLibraryDep.getBuildTarget();
       xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
       xctestArg.deps = Optional.absent();
 
@@ -960,11 +960,11 @@ public class ProjectGeneratorTest {
 
       AppleTestDescription.Arg arg =
           appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule;
+      arg.testBundle = xctestRule.getBuildTarget();
       arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
       arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(xctestRule));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
+      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
 
       testRule = appleTestDescription.createBuildRule(
           params,
@@ -1103,7 +1103,7 @@ public class ProjectGeneratorTest {
       AppleBundleDescription.Arg xctestArg =
           appleBundleDescription.createUnpopulatedConstructorArg();
       xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-      xctestArg.binary = dynamicLibraryDep;
+      xctestArg.binary = dynamicLibraryDep.getBuildTarget();
       xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
       xctestArg.deps = Optional.absent();
 
@@ -1121,11 +1121,11 @@ public class ProjectGeneratorTest {
 
       AppleTestDescription.Arg arg =
           appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule;
+      arg.testBundle = xctestRule.getBuildTarget();
       arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
       arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(xctestRule));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
+      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
 
       testRule = appleTestDescription.createBuildRule(
           params,
@@ -1189,7 +1189,7 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg xctestArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    xctestArg.binary = dynamicLibraryDep;
+    xctestArg.binary = dynamicLibraryDep.getBuildTarget();
     xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
     xctestArg.deps = Optional.absent();
 
@@ -1207,11 +1207,11 @@ public class ProjectGeneratorTest {
 
     AppleTestDescription.Arg arg =
         appleTestDescription.createUnpopulatedConstructorArg();
-    arg.testBundle = xctestRule;
+    arg.testBundle = xctestRule.getBuildTarget();
     arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
     arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule));
-    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
 
     BuildRule rule = appleTestDescription.createBuildRule(
         params,
@@ -1331,7 +1331,7 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg arg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    arg.binary = dynamicLibraryDep;
+    arg.binary = dynamicLibraryDep.getBuildTarget();
     arg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
     arg.deps = Optional.absent();
 
@@ -1394,7 +1394,7 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg arg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    arg.binary = dynamicLibraryDep;
+    arg.binary = dynamicLibraryDep.getBuildTarget();
     arg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
     arg.deps = Optional.absent();
 
@@ -1532,7 +1532,7 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg arg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    arg.binary = dynamicLibraryDep;
+    arg.binary = dynamicLibraryDep.getBuildTarget();
     arg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
     arg.deps = Optional.absent();
 
@@ -1594,7 +1594,7 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg arg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    arg.binary = dynamicLibraryDep;
+    arg.binary = dynamicLibraryDep.getBuildTarget();
     arg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
     arg.deps = Optional.absent();
 
@@ -1752,7 +1752,7 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg fooBinArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     fooBinArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    fooBinArg.binary = fooBinBinary;
+    fooBinArg.binary = fooBinBinary.getBuildTarget();
     fooBinArg.extension = Either.ofLeft(AppleBundleExtension.APP);
     fooBinArg.deps = Optional.absent();
 
@@ -1786,7 +1786,7 @@ public class ProjectGeneratorTest {
       dynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
       dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
       dynamicLibraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(bazLib));
+      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
       dynamicLibraryArg.gid = Optional.absent();
       dynamicLibraryArg.headerPathPrefix = Optional.absent();
       dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
@@ -1805,7 +1805,7 @@ public class ProjectGeneratorTest {
       AppleBundleDescription.Arg xctestArg =
           appleBundleDescription.createUnpopulatedConstructorArg();
       xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-      xctestArg.binary = dynamicLibraryDep;
+      xctestArg.binary = dynamicLibraryDep.getBuildTarget();
       xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
       xctestArg.deps = Optional.absent();
 
@@ -1823,11 +1823,11 @@ public class ProjectGeneratorTest {
 
       AppleTestDescription.Arg arg =
           appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule;
+      arg.testBundle = xctestRule.getBuildTarget();
       arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
       arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(xctestRule));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib));
+      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
 
       bazTest = appleTestDescription.createBuildRule(
           params,
@@ -1854,7 +1854,7 @@ public class ProjectGeneratorTest {
       dynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
       dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
       dynamicLibraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(bazLib));
+      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
       dynamicLibraryArg.gid = Optional.absent();
       dynamicLibraryArg.headerPathPrefix = Optional.absent();
       dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
@@ -1873,7 +1873,7 @@ public class ProjectGeneratorTest {
       AppleBundleDescription.Arg xctestArg =
           appleBundleDescription.createUnpopulatedConstructorArg();
       xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-      xctestArg.binary = dynamicLibraryDep;
+      xctestArg.binary = dynamicLibraryDep.getBuildTarget();
       xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
       xctestArg.deps = Optional.absent();
 
@@ -1891,11 +1891,11 @@ public class ProjectGeneratorTest {
 
       AppleTestDescription.Arg arg =
           appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule;
+      arg.testBundle = xctestRule.getBuildTarget();
       arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
       arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(xctestRule));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib));
+      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
 
       fooLibTest = appleTestDescription.createBuildRule(
           params,
@@ -1921,7 +1921,7 @@ public class ProjectGeneratorTest {
       dynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
       dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
       dynamicLibraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(bazLib));
+      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
       dynamicLibraryArg.gid = Optional.absent();
       dynamicLibraryArg.headerPathPrefix = Optional.absent();
       dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
@@ -1940,7 +1940,7 @@ public class ProjectGeneratorTest {
       AppleBundleDescription.Arg xctestArg =
           appleBundleDescription.createUnpopulatedConstructorArg();
       xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-      xctestArg.binary = dynamicLibraryDep;
+      xctestArg.binary = dynamicLibraryDep.getBuildTarget();
       xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
       xctestArg.deps = Optional.absent();
 
@@ -1958,11 +1958,11 @@ public class ProjectGeneratorTest {
 
       AppleTestDescription.Arg arg =
           appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule;
+      arg.testBundle = xctestRule.getBuildTarget();
       arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
       arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(xctestRule));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib));
+      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
+      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
 
       fooBinTest = appleTestDescription.createBuildRule(
           params,
@@ -2049,7 +2049,8 @@ public class ProjectGeneratorTest {
     dependentDynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     dependentDynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     dependentDynamicLibraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-    dependentDynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentStaticLibrary));
+    dependentDynamicLibraryArg.deps =
+        Optional.of(ImmutableSortedSet.of(dependentStaticLibrary.getBuildTarget()));
     dependentDynamicLibraryArg.gid = Optional.absent();
     dependentDynamicLibraryArg.headerPathPrefix = Optional.absent();
     dependentDynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
@@ -2077,7 +2078,7 @@ public class ProjectGeneratorTest {
     libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentDynamicLibrary));
+    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentDynamicLibrary.getBuildTarget()));
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
     libraryArg.useBuckHeaderMaps = Optional.absent();
@@ -2097,9 +2098,9 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg bundleArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    bundleArg.binary = library;
+    bundleArg.binary = library.getBuildTarget();
     bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
-    bundleArg.deps = Optional.of(ImmutableSortedSet.of(library));
+    bundleArg.deps = Optional.of(ImmutableSortedSet.of(library.getBuildTarget()));
 
     BuildRule bundle = appleBundleDescription.createBuildRule(
         bundleParams,
@@ -2149,7 +2150,8 @@ public class ProjectGeneratorTest {
     dependentDynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     dependentDynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     dependentDynamicLibraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-    dependentDynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentStaticLibrary));
+    dependentDynamicLibraryArg.deps =
+        Optional.of(ImmutableSortedSet.of(dependentStaticLibrary.getBuildTarget()));
     dependentDynamicLibraryArg.gid = Optional.absent();
     dependentDynamicLibraryArg.headerPathPrefix = Optional.absent();
     dependentDynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
@@ -2169,9 +2171,10 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg dependentFrameworkArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     dependentFrameworkArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    dependentFrameworkArg.binary = dependentDynamicLibrary;
+    dependentFrameworkArg.binary = dependentDynamicLibrary.getBuildTarget();
     dependentFrameworkArg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
-    dependentFrameworkArg.deps = Optional.of(ImmutableSortedSet.of(dependentDynamicLibrary));
+    dependentFrameworkArg.deps =
+        Optional.of(ImmutableSortedSet.of(dependentDynamicLibrary.getBuildTarget()));
 
     BuildRule dependentFramework = appleBundleDescription.createBuildRule(
         dependentFrameworkParams,
@@ -2196,7 +2199,7 @@ public class ProjectGeneratorTest {
     libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentFramework));
+    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentFramework.getBuildTarget()));
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
     libraryArg.useBuckHeaderMaps = Optional.absent();
@@ -2216,9 +2219,9 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg bundleArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    bundleArg.binary = library;
+    bundleArg.binary = library.getBuildTarget();
     bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
-    bundleArg.deps = Optional.of(ImmutableSortedSet.of(library));
+    bundleArg.deps = Optional.of(ImmutableSortedSet.of(library.getBuildTarget()));
 
     BuildRule bundle = appleBundleDescription.createBuildRule(
         bundleParams,
@@ -2261,9 +2264,10 @@ public class ProjectGeneratorTest {
         appleBundleDescription.createUnpopulatedConstructorArg();
     dependentStaticFrameworkArg.infoPlist =
         Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    dependentStaticFrameworkArg.binary = dependentStaticLibrary;
+    dependentStaticFrameworkArg.binary = dependentStaticLibrary.getBuildTarget();
     dependentStaticFrameworkArg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
-    dependentStaticFrameworkArg.deps = Optional.of(ImmutableSortedSet.of(dependentStaticLibrary));
+    dependentStaticFrameworkArg.deps =
+        Optional.of(ImmutableSortedSet.of(dependentStaticLibrary.getBuildTarget()));
 
     BuildRule dependentStaticFramework = appleBundleDescription.createBuildRule(
         dependentStaticFrameworkParams,
@@ -2288,7 +2292,8 @@ public class ProjectGeneratorTest {
     dependentDynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     dependentDynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     dependentDynamicLibraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-    dependentDynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentStaticFramework));
+    dependentDynamicLibraryArg.deps =
+        Optional.of(ImmutableSortedSet.of(dependentStaticFramework.getBuildTarget()));
     dependentDynamicLibraryArg.gid = Optional.absent();
     dependentDynamicLibraryArg.headerPathPrefix = Optional.absent();
     dependentDynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
@@ -2308,9 +2313,10 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg dependentFrameworkArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     dependentFrameworkArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    dependentFrameworkArg.binary = dependentDynamicLibrary;
+    dependentFrameworkArg.binary = dependentDynamicLibrary.getBuildTarget();
     dependentFrameworkArg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
-    dependentFrameworkArg.deps = Optional.of(ImmutableSortedSet.of(dependentDynamicLibrary));
+    dependentFrameworkArg.deps =
+        Optional.of(ImmutableSortedSet.of(dependentDynamicLibrary.getBuildTarget()));
 
     BuildRule dependentFramework = appleBundleDescription.createBuildRule(
         dependentFrameworkParams,
@@ -2335,7 +2341,7 @@ public class ProjectGeneratorTest {
     libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentFramework));
+    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentFramework.getBuildTarget()));
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
     libraryArg.useBuckHeaderMaps = Optional.absent();
@@ -2355,9 +2361,9 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg bundleArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    bundleArg.binary = library;
+    bundleArg.binary = library.getBuildTarget();
     bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
-    bundleArg.deps = Optional.of(ImmutableSortedSet.of(library));
+    bundleArg.deps = Optional.of(ImmutableSortedSet.of(library.getBuildTarget()));
 
     BuildRule bundle = appleBundleDescription.createBuildRule(
         bundleParams,
@@ -2400,7 +2406,7 @@ public class ProjectGeneratorTest {
     libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
     libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     libraryArg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of());
+    libraryArg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     libraryArg.gid = Optional.absent();
     libraryArg.headerPathPrefix = Optional.absent();
     libraryArg.useBuckHeaderMaps = Optional.absent();
@@ -2420,9 +2426,9 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg bundleArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    bundleArg.binary = library;
+    bundleArg.binary = library.getBuildTarget();
     bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
-    bundleArg.deps = Optional.of(ImmutableSortedSet.of(library));
+    bundleArg.deps = Optional.of(ImmutableSortedSet.of(library.getBuildTarget()));
 
     BuildRule bundle = appleBundleDescription.createBuildRule(
         bundleParams,
@@ -2486,9 +2492,9 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg bundleArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    bundleArg.binary = bundleLibraryRule;
+    bundleArg.binary = bundleLibraryRule.getBuildTarget();
     bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
-    bundleArg.deps = Optional.of(ImmutableSortedSet.of(bundleLibraryRule));
+    bundleArg.deps = Optional.of(ImmutableSortedSet.of(bundleLibraryRule.getBuildTarget()));
 
     BuildRule bundleRule = appleBundleDescription.createBuildRule(
         bundleParams,
@@ -2551,9 +2557,9 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg bundleArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    bundleArg.binary = bundleLibraryRule;
+    bundleArg.binary = bundleLibraryRule.getBuildTarget();
     bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
-    bundleArg.deps = Optional.of(ImmutableSortedSet.of(bundleLibraryRule));
+    bundleArg.deps = Optional.of(ImmutableSortedSet.of(bundleLibraryRule.getBuildTarget()));
 
     BuildRule bundleRule = appleBundleDescription.createBuildRule(
         bundleParams,
@@ -2633,9 +2639,9 @@ public class ProjectGeneratorTest {
     AppleBundleDescription.Arg bundleArg =
         appleBundleDescription.createUnpopulatedConstructorArg();
     bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    bundleArg.binary = bundleLibraryRule;
+    bundleArg.binary = bundleLibraryRule.getBuildTarget();
     bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
-    bundleArg.deps = Optional.of(ImmutableSortedSet.of(bundleLibraryRule));
+    bundleArg.deps = Optional.of(ImmutableSortedSet.of(bundleLibraryRule.getBuildTarget()));
 
     BuildRule bundleRule = appleBundleDescription.createBuildRule(
         bundleParams,

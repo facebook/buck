@@ -128,7 +128,7 @@ public class CxxLibraryDescriptionTest {
 
     // Create the description arg.
     CxxLibraryDescription.Arg arg = new CxxLibraryDescription.Arg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildRule>of(dep));
+    arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
     arg.srcs = Optional.of(ImmutableList.<SourcePath>of(
         new TestSourcePath("test/bar.cpp"),
         new BuildRuleSourcePath(genSource)));

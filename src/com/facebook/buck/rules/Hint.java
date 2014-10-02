@@ -31,8 +31,16 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target({FIELD, METHOD})
 public @interface Hint {
+  public static final String DEFAULT_NAME = "";
+  public static final boolean DEFAULT_IS_DEP = true;
+
   /**
    * @return The name to use in preference to the field or property name (eg. "field_name")
    */
-  String name();
+  String name() default DEFAULT_NAME;
+
+  /**
+   * @return Whether to search the field's value for dependencies
+   */
+  boolean isDep() default DEFAULT_IS_DEP;
 }

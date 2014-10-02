@@ -50,12 +50,15 @@ public class AppleTest extends AbstractBuildRule implements TestRule {
 
   AppleTest(
       BuildRuleParams params,
-      AppleTestDescription.Arg arg) {
+      BuildRule testBundle,
+      ImmutableSet<String> contacts,
+      ImmutableSet<Label> labels,
+      ImmutableSet<BuildRule> sourceUnderTest) {
     super(params);
-    testBundle = Preconditions.checkNotNull(arg.testBundle);
-    contacts = Preconditions.checkNotNull(arg.contacts.get());
-    labels = Preconditions.checkNotNull(arg.labels.get());
-    sourceUnderTest = Preconditions.checkNotNull(arg.sourceUnderTest.get());
+    this.testBundle = Preconditions.checkNotNull(testBundle);
+    this.contacts = Preconditions.checkNotNull(contacts);
+    this.labels = Preconditions.checkNotNull(labels);
+    this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
   }
 
   /**

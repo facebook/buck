@@ -16,7 +16,7 @@
 
 package com.facebook.buck.thrift;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -30,14 +30,14 @@ public class ThriftConstructorArg {
 
   public String name;
   public ImmutableMap<SourcePath, ImmutableList<String>> srcs;
-  public Optional<ImmutableSortedSet<BuildRule>> deps;
+  public Optional<ImmutableSortedSet<BuildTarget>> deps;
 
   public Optional<ImmutableList<String>> flags;
 
   public Optional<ImmutableSet<String>> javaOptions;
 
-  public Optional<ImmutableSortedSet<BuildRule>> cppDeps;
-  public Optional<ImmutableSortedSet<BuildRule>> cpp2Deps;
+  public Optional<ImmutableSortedSet<BuildTarget>> cppDeps;
+  public Optional<ImmutableSortedSet<BuildTarget>> cpp2Deps;
   public Optional<ImmutableSet<String>> cppOptions;
   public Optional<ImmutableSet<String>> cpp2Options;
 

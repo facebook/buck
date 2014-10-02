@@ -16,16 +16,20 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Beta
 public class XcodeWorkspaceConfigDescription
@@ -44,16 +48,39 @@ public class XcodeWorkspaceConfigDescription
 
   @Override
   public <A extends Arg> XcodeWorkspaceConfig createBuildRule(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
       A args) {
-    return new XcodeWorkspaceConfig(params, args);
+    // Start out with the default action config names..
+    Map<SchemeActionType, String> newActionConfigNames = new HashMap<>(
+        SchemeActionType.DEFAULT_CONFIG_NAMES);
+    // And override them with any provided in the "action_config_names" map.
+    newActionConfigNames.putAll(args.actionConfigNames.get());
+
+    return new XcodeWorkspaceConfig(
+        params,
+        args.srcTarget.transform(resolver.getRuleFunction()),
+        resolver.getAllRules(args.extraTests.get()),
+        getWorkspaceNameFromArg(args),
+        ImmutableMap.copyOf(newActionConfigNames));
+  }
+
+  private String getWorkspaceNameFromArg(XcodeWorkspaceConfigDescription.Arg arg) {
+    if (arg.workspaceName.isPresent()) {
+      return arg.workspaceName.get();
+    } else if (arg.srcTarget.isPresent()) {
+      return arg.srcTarget.get().getShortName();
+    } else {
+      throw new HumanReadableException(
+          "Either workspace_name or src_target is required for rule %s",
+          this);
+    }
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Optional<BuildRule> srcTarget;
-    public Optional<ImmutableSet<BuildRule>> extraTests;
+    public Optional<BuildTarget> srcTarget;
+    public Optional<ImmutableSortedSet<BuildTarget>> extraTests;
     public Optional<String> workspaceName;
     public Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames;
   }

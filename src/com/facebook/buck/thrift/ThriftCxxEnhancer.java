@@ -189,7 +189,9 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     ImmutableSortedSet<BuildRule> allDeps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(deps)
-            .addAll((cpp2 ? args.cpp2Deps : args.cppDeps).or(ImmutableSortedSet.<BuildRule>of()))
+            .addAll(
+                resolver.getAllRules(
+                    (cpp2 ? args.cpp2Deps : args.cppDeps).or(ImmutableSortedSet.<BuildTarget>of())))
             .build();
 
     // Create language specific build params by using the deps we formed above.

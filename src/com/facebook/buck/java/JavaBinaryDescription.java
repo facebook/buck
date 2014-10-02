@@ -16,7 +16,7 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -61,7 +61,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
 
   @SuppressFieldNotInitialized
   public static class Args {
-    public Optional<ImmutableSortedSet<BuildRule>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<String> mainClass;
     public Optional<SourcePath> manifestFile;
     public Optional<Boolean> mergeManifests;

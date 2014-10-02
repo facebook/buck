@@ -56,7 +56,7 @@ public abstract class AbstractBuilder<A> {
 
   public final BuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem) {
     // The BuildRule determines its deps by extracting them from the rule parameters.
-    BuildRuleParams params = createBuildRuleParams(filesystem);
+    BuildRuleParams params = createBuildRuleParams(resolver, filesystem);
 
     BuildRule rule = description.createBuildRule(params, resolver, arg);
     resolver.addToIndex(rule);
@@ -64,7 +64,9 @@ public abstract class AbstractBuilder<A> {
   }
 
   @SuppressWarnings("unchecked")
-  private BuildRuleParams createBuildRuleParams(ProjectFilesystem filesystem) {
+  private BuildRuleParams createBuildRuleParams(
+      BuildRuleResolver resolver,
+      ProjectFilesystem filesystem) {
     // Not all rules have deps, but all rules call them deps. When they do, they're always optional.
     // Grab them in the unsafest way I know.
     FakeBuildRuleParamsBuilder builder = new FakeBuildRuleParamsBuilder(target)
@@ -78,9 +80,9 @@ public abstract class AbstractBuilder<A> {
         return builder.build();
       }
       // Here's a whole series of assumptions in one lump of a Bad Idea.
-      ImmutableSortedSet<BuildRule> deps =
-          (ImmutableSortedSet<BuildRule>) ((Optional<?>) optional).get();
-      return builder.setDeps(deps).build();
+      ImmutableSortedSet<BuildTarget> deps =
+          (ImmutableSortedSet<BuildTarget>) ((Optional<?>) optional).get();
+      return builder.setDeps(resolver.getAllRules(deps)).build();
     } catch (ReflectiveOperationException ignored) {
       // Field doesn't exist: no deps.
       return builder.build();

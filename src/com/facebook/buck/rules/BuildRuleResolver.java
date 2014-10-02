@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
@@ -74,6 +75,15 @@ public class BuildRuleResolver {
 
   public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
     return Optional.fromNullable(buildRuleIndex.get(Preconditions.checkNotNull(buildTarget)));
+  }
+
+  public Function<BuildTarget, BuildRule> getRuleFunction() {
+    return new Function<BuildTarget, BuildRule>() {
+      @Override
+      public BuildRule apply(BuildTarget input) {
+        return getRule(input);
+      }
+    };
   }
 
   public ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets) {

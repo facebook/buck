@@ -36,10 +36,13 @@ public class XcodeProjectConfig extends AbstractBuildRule {
   private final String projectName;
   private final ImmutableSet<BuildRule> rules;
 
-  public XcodeProjectConfig(BuildRuleParams params, XcodeProjectConfigDescription.Arg arg) {
+  public XcodeProjectConfig(
+      BuildRuleParams params,
+      String projectName,
+      ImmutableSet<BuildRule> rules) {
     super(params);
-    projectName = Preconditions.checkNotNull(arg.projectName);
-    rules = Preconditions.checkNotNull(arg.rules);
+    this.projectName = Preconditions.checkNotNull(projectName);
+    this.rules = Preconditions.checkNotNull(rules);
   }
 
   public ImmutableSet<BuildRule> getRules() {

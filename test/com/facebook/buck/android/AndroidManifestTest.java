@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -98,7 +97,7 @@ public class AndroidManifestTest {
     AndroidManifestDescription description = new AndroidManifestDescription();
     AndroidManifestDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.skeleton = new TestSourcePath("java/com/example/AndroidManifestSkeleton.xml");
-    arg.deps = Optional.<ImmutableSortedSet<BuildRule>>of(ImmutableSortedSet.<BuildRule>of());
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     return description.createBuildRule(buildRuleParams, new BuildRuleResolver(), arg);
   }
 

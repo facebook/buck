@@ -83,8 +83,8 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildRule javaLib = JavaLibraryBuilder
         .createBuilder(javaLibBuildTarget)
         .addSrc(Paths.get("java/com/example/Lib.java"))
-        .addDep(javaDep1)
-        .addDep(javaDep2)
+        .addDep(javaDep1.getBuildTarget())
+        .addDep(javaDep2.getBuildTarget())
         .build(ruleResolver);
 
     // Assume we are enhancing an android_binary rule whose only dep
