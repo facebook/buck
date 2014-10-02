@@ -27,6 +27,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -55,7 +56,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -201,7 +201,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public Collection<Path> getDirectoryContents(final Path pathRelativeToProjectRoot) {
+  public ImmutableCollection<Path> getDirectoryContents(final Path pathRelativeToProjectRoot) {
     Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
     return FluentIterable.from(fileContents.keySet()).filter(
         new Predicate<Path>() {
@@ -219,8 +219,8 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public Set<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
-    return new HashSet<>();
+  public ImmutableSet<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
+    return ImmutableSet.of();
   }
 
   @Override

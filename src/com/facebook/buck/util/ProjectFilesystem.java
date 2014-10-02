@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -74,8 +75,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
+
 import javax.annotation.Nullable;
+
 /**
  * An injectable service for interacting with the filesystem relative to the project root.
  */
@@ -321,11 +323,11 @@ public class ProjectFilesystem {
     Files.walkFileTree(root, fileVisitor);
   }
 
-  public Set<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
+  public ImmutableSet<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
     return getFilesUnderPath(pathRelativeToProjectRoot, Predicates.<Path>alwaysTrue());
   }
 
-  public Set<Path> getFilesUnderPath(
+  public ImmutableSet<Path> getFilesUnderPath(
       Path pathRelativeToProjectRoot,
       Predicate<Path> predicate) throws IOException {
     return getFilesUnderPath(
@@ -334,7 +336,7 @@ public class ProjectFilesystem {
         EnumSet.of(FileVisitOption.FOLLOW_LINKS));
   }
 
-  public Set<Path> getFilesUnderPath(
+  public ImmutableSet<Path> getFilesUnderPath(
       Path pathRelativeToProjectRoot,
       final Predicate<Path> predicate,
       EnumSet<FileVisitOption> visitOptions) throws IOException {
@@ -383,7 +385,7 @@ public class ProjectFilesystem {
   }
 
   @Nullable
-  public Collection<Path> getDirectoryContents(Path pathRelativeToProjectRoot) {
+  public ImmutableCollection<Path> getDirectoryContents(Path pathRelativeToProjectRoot) {
     Path path = getPathForRelativePath(pathRelativeToProjectRoot);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return ImmutableList.copyOf(stream);
