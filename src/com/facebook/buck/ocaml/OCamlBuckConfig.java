@@ -39,7 +39,7 @@ public class OCamlBuckConfig {
   }
 
   public Path getCCompiler() {
-    return cxxPlatform.getCxx().resolve();
+    return cxxPlatform.getCc().resolve();
   }
 
   public Optional<Path> getOCamlDepTool() {

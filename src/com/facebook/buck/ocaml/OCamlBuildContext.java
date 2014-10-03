@@ -43,11 +43,11 @@ public class OCamlBuildContext {
   private static final String OCAML_GENERATED_SOURCE_DIR = "gen";
 
   static final Path DEFAULT_OCAML_BYTECODE_COMPILER =
-      Paths.get("/usr/local/bin/ocamlc.opt");
-  static final Path DEFAULT_OCAML_YACC_COMPILER = Paths.get("/usr/local/bin/ocamlyacc");
-  static final Path DEFAULT_OCAML_LEX_COMPILER = Paths.get("/usr/local/bin/ocamllex.opt");
-  static final Path DEFAULT_OCAML_COMPILER = Paths.get("/usr/local/bin/ocamlopt.opt");
-  static final Path DEFAULT_OCAML_DEP_TOOL = Paths.get("/usr/local/bin/ocamldep.opt");
+      Paths.get("/usr/bin/ocamlc.opt");
+  static final Path DEFAULT_OCAML_YACC_COMPILER = Paths.get("/usr/bin/ocamlyacc");
+  static final Path DEFAULT_OCAML_LEX_COMPILER = Paths.get("/usr/bin/ocamllex.opt");
+  static final Path DEFAULT_OCAML_COMPILER = Paths.get("/usr/bin/ocamlopt.opt");
+  static final Path DEFAULT_OCAML_DEP_TOOL = Paths.get("/usr/bin/ocamldep.opt");
 
   @Nullable
   private Path ocamlDepTool;
