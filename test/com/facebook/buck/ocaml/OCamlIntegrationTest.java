@@ -58,7 +58,7 @@ public class OCamlIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//hello_ocaml:hello_ocaml");
-    BuildTarget lib = BuildTargetFactory.newInstance("//ocamllib:ocamllib");
+    BuildTarget lib = BuildTargetFactory.newInstance("//hello_ocaml:ocamllib");
     BuildTarget staticLib = createStaticLibraryBuildTarget(lib);
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -115,7 +115,7 @@ public class OCamlIntegrationTest {
     workspace.resetBuildLogFile();
 
     // Update the source file.
-    workspace.replaceFileContents("ocamllib/BUCK", "#INSERT_POINT", "'dummy.ml',");
+    workspace.replaceFileContents("hello_ocaml/BUCK", "#INSERT_POINT", "'../ocamllib/dummy.ml',");
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
@@ -128,14 +128,14 @@ public class OCamlIntegrationTest {
 
     workspace.resetBuildLogFile();
 
-    BuildTarget lib1 = BuildTargetFactory.newInstance("//ocamllib:ocamllib1");
+    BuildTarget lib1 = BuildTargetFactory.newInstance("//hello_ocaml:ocamllib1");
     BuildTarget staticLib1 = createStaticLibraryBuildTarget(lib1);
     // We rebuild if lib name changes
-    workspace.replaceFileContents("ocamllib/BUCK", "ocamllib", "ocamllib1");
+    workspace.replaceFileContents("hello_ocaml/BUCK", "name = 'ocamllib'", "name = 'ocamllib1'");
     workspace.replaceFileContents(
         "hello_ocaml/BUCK",
-        "//ocamllib:ocamllib",
-        "//ocamllib:ocamllib1");
+        ":ocamllib",
+        ":ocamllib1");
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
@@ -268,7 +268,7 @@ public class OCamlIntegrationTest {
         tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//plus:plus");
+    BuildTarget target = BuildTargetFactory.newInstance("//:plus");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
   }
 
@@ -294,7 +294,7 @@ public class OCamlIntegrationTest {
       workspace.setUp();
 
       BuildTarget target = BuildTargetFactory.newInstance("//ocaml_ext_mac:ocaml_ext");
-      BuildTarget libplus = BuildTargetFactory.newInstance("//ocaml_ext_mac/third_party:plus");
+      BuildTarget libplus = BuildTargetFactory.newInstance("//ocaml_ext_mac:plus");
 
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
       BuckBuildLog buildLog = workspace.getBuildLog();
@@ -313,7 +313,7 @@ public class OCamlIntegrationTest {
 
       workspace.resetBuildLogFile();
       workspace.replaceFileContents(
-          "ocaml_ext_mac/third_party/BUCK",
+          "ocaml_ext_mac/BUCK",
           "libplus_lib",
           "libplus_lib1");
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -335,8 +335,8 @@ public class OCamlIntegrationTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//clib:clib");
     BuildTarget libplus = createStaticLibraryBuildTarget(
-        BuildTargetFactory.newInstance("//clib/plus:plus"));
-    BuildTarget cclib = BuildTargetFactory.newInstance("//clib/cc:cc");
+        BuildTargetFactory.newInstance("//clib:plus"));
+    BuildTarget cclib = BuildTargetFactory.newInstance("//clib:cc");
 
     BuildTarget cclibbin = CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib);
     String sourceName = "cc.cpp";

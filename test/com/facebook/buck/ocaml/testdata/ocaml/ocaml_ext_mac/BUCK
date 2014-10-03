@@ -4,6 +4,17 @@ ocaml_binary(
         'main_plus.ml',
     ],
     deps = [
-        '//ocaml_ext_mac/third_party:plus',
+        ':plus',
     ],
+)
+
+prebuilt_ocaml_library(
+    name = 'plus',
+    lib_dir = 'third_party/lib',
+    native_lib = 'libplus_lib.cmxa',
+    bytecode_lib = 'libplus_lib.cma',
+    c_lib = 'libplus_lib.a',
+    visibility = [
+        'PUBLIC',
+    ]
 )

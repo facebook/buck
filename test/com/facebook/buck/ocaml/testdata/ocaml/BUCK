@@ -4,6 +4,29 @@ ocaml_binary(
         'main.ml'
     ],
     deps=[
-        '//plus:plus_lib'
+        ':plus_lib'
     ],
+)
+
+ocaml_library(
+    name = 'plus_lib',
+    srcs = [
+        'plus/plus.ml',
+    ],
+    visibility = [
+        'PUBLIC',
+    ]
+)
+
+ocaml_binary(
+    name = 'plus',
+    srcs = [
+        'plus/main.ml',
+    ],
+    deps = [
+        ':plus_lib',
+    ],
+    visibility = [
+        'PUBLIC',
+    ]
 )

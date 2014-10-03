@@ -4,6 +4,33 @@ ocaml_binary(
         'main.ml',
     ],
     deps = [
-        '//clib/plus:plus'
+        ':plus'
+    ],
+)
+
+ocaml_library(
+    name = 'plus',
+    srcs = [
+        'plus/plus_imp.c',
+        'plus/plus.ml',
+    ],
+    deps = [
+        ':cc'
+    ],
+    visibility = [
+        'PUBLIC'
+    ],
+)
+
+cxx_library(
+    name = 'cc',
+    srcs = [
+        'cc/cc.cpp',
+    ],
+    headers = [
+        'cc/cc.h',
+    ],
+    visibility = [
+        'PUBLIC',
     ],
 )

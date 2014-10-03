@@ -7,6 +7,20 @@ ocaml_binary(
         'hello_ocaml.ml',
     ],
     deps = [
-        '//ocamllib:ocamllib'
+        ':ocamllib'
     ],
+)
+
+ocaml_library(
+    name = 'ocamllib',
+    srcs = [
+        '../ocamllib/m1.ml',
+        '../ocamllib/m2.ml',
+        '../ocamllib/m3.ml',
+        '../ocamllib/mmain.ml',
+        #INSERT_POINT
+    ],
+    visibility = [
+        'PUBLIC'
+    ]
 )
