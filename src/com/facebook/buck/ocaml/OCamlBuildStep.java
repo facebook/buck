@@ -165,7 +165,7 @@ public class OCamlBuildStep implements Step {
       ExecutionContext context,
       ImmutableList<String> linkerInputs) throws InterruptedException {
     OCamlLinkStep linkStep = new OCamlLinkStep(
-        ocamlContext.getCCompiler(),
+        ocamlContext.getCxxCompiler(),
         ocamlContext.getOcamlCompiler(),
         ocamlContext.getOutput(),
         ocamlContext.getLinkableInput().getArgs(),
@@ -180,7 +180,7 @@ public class OCamlBuildStep implements Step {
       ExecutionContext context,
       ImmutableList<String> linkerInputs) throws InterruptedException {
     OCamlLinkStep linkStep = new OCamlLinkStep(
-        ocamlContext.getCCompiler(),
+        ocamlContext.getCxxCompiler(),
         ocamlContext.getOcamlBytecodeCompiler(),
         ocamlContext.getBytecodeOutput(),
         ocamlContext.getLinkableInput().getArgs(),

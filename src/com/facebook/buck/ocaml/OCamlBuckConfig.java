@@ -57,4 +57,8 @@ public class OCamlBuckConfig {
   public Optional<Path> getOCamlBytecodeCompiler() {
     return delegate.getPath("ocaml", "ocaml.bytecode.compiler");
   }
+
+  public Path getCxxCompiler() {
+    return cxxPlatform.getCxx().resolve();
+  }
 }

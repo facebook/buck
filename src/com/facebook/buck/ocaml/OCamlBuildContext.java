@@ -92,6 +92,8 @@ public class OCamlBuildContext {
   private ImmutableSet<Path> yaccInputs;
   @Nullable
   private ImmutableSet<Path> mlInput;
+  @Nullable
+  private Path cxxCompiler;
 
   public static Path getArchiveOutputPath(BuildTarget target) {
     return BuildTargets.getGenPath(
@@ -328,6 +330,10 @@ public class OCamlBuildContext {
         .set("flags", getFlags());
   }
 
+  public Path getCxxCompiler() {
+    return Preconditions.checkNotNull(cxxCompiler);
+  }
+
   public static class Builder {
     private OCamlBuildContext context;
 
@@ -335,6 +341,7 @@ public class OCamlBuildContext {
       this.context = Preconditions.checkNotNull(context);
       context.ocamlDepTool = config.getOCamlDepTool().or(DEFAULT_OCAML_DEP_TOOL);
       context.cCompiler = config.getCCompiler();
+      context.cxxCompiler = config.getCxxCompiler();
       context.ocamlCompiler = config.getOCamlCompiler().or(DEFAULT_OCAML_COMPILER);
       context.ocamlBytecodeCompiler = config.getOCamlBytecodeCompiler()
           .or(DEFAULT_OCAML_BYTECODE_COMPILER);

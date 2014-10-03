@@ -30,7 +30,7 @@ import java.nio.file.Path;
 public class OCamlLinkStep extends ShellStep {
 
   private final Path ocamlCompiler;
-  private final Path cCompiler;
+  private final Path cxxCompiler;
   private final ImmutableList<String> flags;
   private final Path output;
   private final ImmutableList<String> depInput;
@@ -41,7 +41,7 @@ public class OCamlLinkStep extends ShellStep {
   private final boolean isBytecode;
 
   public OCamlLinkStep(
-      Path cCompiler,
+      Path cxxCompiler,
       Path ocamlCompiler,
       Path output,
       ImmutableList<String> depInput,
@@ -52,7 +52,7 @@ public class OCamlLinkStep extends ShellStep {
     this.isLibrary = isLibrary;
     this.isBytecode = isBytecode;
     this.ocamlCompiler = Preconditions.checkNotNull(ocamlCompiler);
-    this.cCompiler = Preconditions.checkNotNull(cCompiler);
+    this.cxxCompiler = Preconditions.checkNotNull(cxxCompiler);
     this.flags = Preconditions.checkNotNull(flags);
     this.output = Preconditions.checkNotNull(output);
     this.depInput = Preconditions.checkNotNull(depInput);
@@ -94,7 +94,7 @@ public class OCamlLinkStep extends ShellStep {
         .add(ocamlCompiler.toString())
         .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS)
         .add("-cc")
-        .add(cCompiler.toString())
+        .add(cxxCompiler.toString())
         .addAll((isLibrary ? Optional.of("-a") : Optional.<String>absent()).asSet())
         .addAll((!isLibrary && isBytecode ?
                 Optional.of("-custom") :
