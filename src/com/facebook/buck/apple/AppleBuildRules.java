@@ -31,8 +31,6 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Iterator;
 
-import javax.annotation.Nullable;
-
 /**
  * Helpers for reading properties of Apple target build rules.
  */
@@ -212,7 +210,7 @@ public final class AppleBuildRules {
             buildRulesIterable,
             new Predicate<BuildRule>() {
               @Override
-              public boolean apply(@Nullable BuildRule input) {
+              public boolean apply(BuildRule input) {
                 if (!isXcodeTargetBuildRuleType(input.getType()) &&
                     XcodeNativeDescription.TYPE != input.getType()) {
                   return false;

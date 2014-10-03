@@ -59,7 +59,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     super(params);
     Preconditions.checkArgument(Iterables.all(args.dirs, new Predicate<Path>() {
               @Override
-              public boolean apply(@Nullable Path input) {
+              public boolean apply(Path input) {
                 return input.toString().endsWith(".xcassets");
               }
             }));

@@ -105,8 +105,6 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 public class ProjectGeneratorTest {
 
   private static final Path OUTPUT_DIRECTORY = Paths.get("_gen");
@@ -2526,10 +2524,8 @@ public class ProjectGeneratorTest {
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
-          @Nullable
           @Override
-          public AppleAssetCatalogDescription.Arg apply(
-              @Nullable AppleAssetCatalogDescription.Arg input) {
+          public AppleAssetCatalogDescription.Arg apply(AppleAssetCatalogDescription.Arg input) {
             input.dirs = ImmutableSet.of(Paths.get("AssetCatalog.xcassets"));
             return input;
           }
@@ -2591,10 +2587,8 @@ public class ProjectGeneratorTest {
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
-          @Nullable
           @Override
-          public AppleAssetCatalogDescription.Arg apply(
-              @Nullable AppleAssetCatalogDescription.Arg input) {
+          public AppleAssetCatalogDescription.Arg apply(AppleAssetCatalogDescription.Arg input) {
             input.dirs = ImmutableSet.of(Paths.get("AssetCatalog1.xcassets"));
             return input;
           }
@@ -2607,10 +2601,8 @@ public class ProjectGeneratorTest {
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
-          @Nullable
           @Override
-          public AppleAssetCatalogDescription.Arg apply(
-              @Nullable AppleAssetCatalogDescription.Arg input) {
+          public AppleAssetCatalogDescription.Arg apply(AppleAssetCatalogDescription.Arg input) {
             input.dirs = ImmutableSet.of(Paths.get("AssetCatalog2.xcassets"));
             input.copyToBundles = Optional.of(Boolean.TRUE);
             return input;

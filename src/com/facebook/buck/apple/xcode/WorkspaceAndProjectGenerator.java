@@ -50,8 +50,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
 
@@ -276,7 +274,7 @@ public class WorkspaceAndProjectGenerator {
         actionGraph,
         new Predicate<BuildRule>() {
           @Override
-          public boolean apply(@Nullable BuildRule input) {
+          public boolean apply(BuildRule input) {
             if (!includedTestRules.contains(input) ||
                 !AppleBuildRules.isXcodeTargetBuildRuleType(input.getType())) {
               return false;

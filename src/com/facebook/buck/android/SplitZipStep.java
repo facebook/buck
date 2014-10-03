@@ -77,7 +77,6 @@ public class SplitZipStep implements Step {
 
   // Transform Function that calls String.trim()
   private static final Function<String, String> STRING_TRIM = new Function<String, String>() {
-    @Nullable
     @Override
     public String apply(String line) {
       return line.trim();
@@ -87,9 +86,8 @@ public class SplitZipStep implements Step {
   // Transform Function that appends ".class"
   private static final Function<String, String> APPEND_CLASS_SUFFIX =
       new Function<String, String>() {
-        @Nullable
         @Override
-        public String apply(@Nullable String input) {
+        public String apply(String input) {
           return input + ".class";
         }
       };
@@ -105,9 +103,8 @@ public class SplitZipStep implements Step {
   // Transform Function that calls Type.GetObjectType.
   private static final Function<String, Type> TYPE_GET_OBJECT_TYPE =
       new Function<String, Type>() {
-        @Nullable
         @Override
-        public Type apply(@Nullable String input) {
+        public Type apply(String input) {
           return Type.getObjectType(input);
         }
       };

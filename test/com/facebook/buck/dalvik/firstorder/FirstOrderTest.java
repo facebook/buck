@@ -35,23 +35,19 @@ import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import javax.annotation.Nullable;
-
 public class FirstOrderTest {
 
   private static final Function<Class<?>, ClassNode> CLASS_NODE_FROM_CLASS =
       new Function<Class<?>, ClassNode>() {
-        @Nullable
         @Override
-        public ClassNode apply(@Nullable Class<?> input) {
+        public ClassNode apply(Class<?> input) {
           return loadClassNode(input);
         }
       };
 
   private static final Function<Class<?>, Type> TYPE_FROM_CLASS = new Function<Class<?>, Type>() {
-    @Nullable
     @Override
-    public Type apply(@Nullable Class<?> input) {
+    public Type apply(Class<?> input) {
       return Type.getType(input);
     }
   };

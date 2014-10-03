@@ -22,7 +22,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -31,8 +30,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Nullable;
 
 /**
  * If we end up creating both an obfuscator function and a deobfuscator function, it would be
@@ -108,10 +105,8 @@ class ProguardTranslatorFactory {
     final Map<String, String> map = builder.build();
 
     return new Function<String, String>() {
-      @Nullable
       @Override
-      public String apply(@Nullable String input) {
-        Preconditions.checkNotNull(input);
+      public String apply(String input) {
         String mapped = map.get(input);
         if (mapped != null) {
           return mapped;
