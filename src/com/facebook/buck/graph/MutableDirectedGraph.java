@@ -32,8 +32,6 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 /**
  * Represents a directed graph with unweighted edges. For a given source and sink node pair, there
  * is at most one directed edge connecting them in the graph.
@@ -176,7 +174,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   public ImmutableSet<ImmutableSet<T>> findCycles() {
     Set<Set<T>> cycles = Sets.filter(tarjan(), new Predicate<Set<T>>() {
       @Override
-      public boolean apply(@Nullable Set<T> stronglyConnectedComponent) {
+      public boolean apply(Set<T> stronglyConnectedComponent) {
         return stronglyConnectedComponent.size() > 1;
       }
     });
@@ -269,17 +267,21 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
       for (S sink : graph.getOutgoingNodesFor(node)) {
         if (!indexes.containsKey(sink)) {
           doStrongConnect(sink);
-          int lowlink = Math.min(lowlinks.get(node), lowlinks.get(sink));
+          int lowlink = Math.min(
+              Preconditions.checkNotNull(lowlinks.get(node)),
+              Preconditions.checkNotNull(lowlinks.get(sink)));
           lowlinks.put(node, lowlink);
         } else if (nodeStack.contains(sink)) {
           // TODO(mbolin): contains() is O(N), consider maintaining an index so it is O(1)?
-          int lowlink = Math.min(lowlinks.get(node), indexes.get(sink));
+          int lowlink = Math.min(
+              Preconditions.checkNotNull(lowlinks.get(node)),
+              Preconditions.checkNotNull(indexes.get(sink)));
           lowlinks.put(node, lowlink);
         }
       }
 
       // If node is a root node, then pop the stack and generate a strongly connected component.
-      if (lowlinks.get(node).equals(indexes.get(node))) {
+      if (Preconditions.checkNotNull(lowlinks.get(node)).equals(indexes.get(node))) {
         Set<S> stronglyConnectedComponent = Sets.newHashSet();
         S componentElement;
         do {

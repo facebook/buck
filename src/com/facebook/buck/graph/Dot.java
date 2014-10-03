@@ -21,6 +21,8 @@ import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 
+import javax.annotation.Nullable;
+
 public class Dot<T> {
 
   private final ImmutableDirectedAcyclicGraph<T> graph;
@@ -58,6 +60,7 @@ public class Dot<T> {
       }
 
       @Override
+      @Nullable
       public Object getResult() {
         return null;
       }

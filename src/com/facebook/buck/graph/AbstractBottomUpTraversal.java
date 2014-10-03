@@ -71,7 +71,9 @@ public abstract class AbstractBottomUpTraversal<T, V> {
           effectiveOutDegreesOfExplorableNodes.put(exploreCandidate,
               new AtomicInteger(Iterables.size(graph.getOutgoingNodesFor(exploreCandidate))));
         }
-        if (effectiveOutDegreesOfExplorableNodes.get(exploreCandidate).decrementAndGet() == 0) {
+        AtomicInteger outDegree = effectiveOutDegreesOfExplorableNodes.get(exploreCandidate);
+        Preconditions.checkNotNull(outDegree);
+        if (outDegree.decrementAndGet() == 0) {
           nodesToExplore.add(exploreCandidate);
         }
       }
