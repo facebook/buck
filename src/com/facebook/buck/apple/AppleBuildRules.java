@@ -31,6 +31,8 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Iterator;
 
+import javax.annotation.Nullable;
+
 /**
  * Helpers for reading properties of Apple target build rules.
  */
@@ -56,7 +58,7 @@ public final class AppleBuildRules {
   /**
    * Whether the build rule type is equivalent to some kind of Xcode target.
    */
-  public static boolean isXcodeTargetBuildRuleType(BuildRuleType type) {
+  public static boolean isXcodeTargetBuildRuleType(@Nullable BuildRuleType type) {
     return XCODE_TARGET_BUILD_RULE_TYPES.contains(type);
   }
 

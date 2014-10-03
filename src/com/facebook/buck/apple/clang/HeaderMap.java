@@ -112,9 +112,9 @@ public class HeaderMap {
       Bucket bucket = buckets[i];
       if (bucket != null) {
         visitor.apply(
-            getString(bucket.key),
-            getString(bucket.prefix),
-            getString(bucket.suffix));
+            Preconditions.checkNotNull(getString(bucket.key)),
+            Preconditions.checkNotNull(getString(bucket.prefix)),
+            Preconditions.checkNotNull(getString(bucket.suffix)));
       }
     }
   }

@@ -24,6 +24,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -236,7 +237,8 @@ public final class XcconfigStack {
         builder.put(aliased, new PredicatedConfigValue(
             aliased,
             empty,
-            ImmutableList.<TokenValue>of(TokenValue.interpolation(keyAliases.get(aliased)))));
+            ImmutableList.<TokenValue>of(TokenValue.interpolation(
+                    Preconditions.checkNotNull(keyAliases.get(aliased))))));
       }
       return new XcconfigStack(builder.build());
     }

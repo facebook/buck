@@ -23,9 +23,11 @@ import com.dd.plist.NSString;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXObject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
+import com.google.common.base.Preconditions;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
@@ -43,6 +45,7 @@ public class XcodeprojSerializer {
   private final PBXProject rootObject;
   private final NSDictionary objects;
   private final GidGenerator gidGenerator;
+  @Nullable
   private NSDictionary currentObject;
 
   public XcodeprojSerializer(GidGenerator gidGenerator, PBXProject project) {
@@ -74,6 +77,7 @@ public class XcodeprojSerializer {
    *
    * @see PBXObject#serializeInto
    */
+  @Nullable
   private String serializeObject(PBXObject obj) {
     if (obj.getGlobalID() == null) {
       obj.setGlobalID(obj.generateGid(gidGenerator));
@@ -105,22 +109,22 @@ public class XcodeprojSerializer {
   public void addField(String name, PBXObject obj) {
     if (obj != null) {
       String gid = serializeObject(obj);
-      currentObject.put(name, gid);
+      Preconditions.checkNotNull(currentObject).put(name, gid);
     }
   }
 
   public void addField(String name, int val) {
-    currentObject.put(name, val);
+    Preconditions.checkNotNull(currentObject).put(name, val);
   }
 
   public void addField(String name, String val) {
     if (val != null) {
-      currentObject.put(name, val);
+      Preconditions.checkNotNull(currentObject).put(name, val);
     }
   }
 
   public void addField(String name, boolean val) {
-    currentObject.put(name, val);
+    Preconditions.checkNotNull(currentObject).put(name, val);
   }
 
   public void addField(String name, List<? extends PBXObject> objectList) {
@@ -129,12 +133,12 @@ public class XcodeprojSerializer {
       String gid = serializeObject(objectList.get(i));
       array.setValue(i, new NSString(gid));
     }
-    currentObject.put(name, array);
+    Preconditions.checkNotNull(currentObject).put(name, array);
   }
 
   public void addField(String name, NSObject v) {
     if (v != null) {
-      currentObject.put(name, v);
+      Preconditions.checkNotNull(currentObject).put(name, v);
     }
   }
 }

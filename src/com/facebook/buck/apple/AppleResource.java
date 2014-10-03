@@ -38,6 +38,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 /**
  * Copies the image, sound, NIB/XIB, and other resources
  * of an iOS or OS X library.
@@ -141,6 +143,7 @@ public class AppleResource extends AbstractBuildRule {
   }
 
   @Override
+  @Nullable
   public Path getPathToOutputFile() {
     return null;
   }

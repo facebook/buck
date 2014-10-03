@@ -226,6 +226,7 @@ public class ProjectGenerator {
   // These fields are created/filled when creating the projects.
   private final PBXProject project;
   private final LoadingCache<BuildRule, Optional<PBXTarget>> buildRuleToXcodeTarget;
+  @Nullable
   private Document workspace = null;
   private boolean shouldPlaceAssetCatalogCompiler = false;
   private final ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToGeneratedTargetBuilder;
@@ -1895,7 +1896,7 @@ public class ProjectGenerator {
         rule.getType().equals(AppleBundleDescription.TYPE)) {
       if (isBuiltByCurrentProject(rule)) {
         PBXNativeTarget target = (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(rule).get();
-        return target.getProductReference();
+        return Preconditions.checkNotNull(target.getProductReference());
       } else {
         SourceTreePath productsPath = getProductsSourceTreePathForRule(rule);
         return project.getMainGroup()

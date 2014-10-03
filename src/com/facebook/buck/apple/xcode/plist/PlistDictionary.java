@@ -22,6 +22,8 @@ import com.google.common.collect.Maps;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 public class PlistDictionary extends PlistValue implements Iterable<Map.Entry<String, PlistValue>> {
   private Map<String, PlistValue> value;
 
@@ -29,6 +31,7 @@ public class PlistDictionary extends PlistValue implements Iterable<Map.Entry<St
     this.value = Maps.newHashMap();
   }
 
+  @Nullable
   public PlistValue get(String key) {
     return this.value.get(key);
   }

@@ -143,7 +143,7 @@ class SchemeGenerator {
               targetToProjectPathMap.get(target)
           ).toString(),
           target.getGlobalID(),
-          target.getProductReference().getName(),
+          Preconditions.checkNotNull(target.getProductReference()).getName(),
           blueprintName);
       buildRuleToBuildableReferenceMap.put(rule, buildableReference);
     }

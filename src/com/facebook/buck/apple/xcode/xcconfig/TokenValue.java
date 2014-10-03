@@ -19,6 +19,7 @@ package com.facebook.buck.apple.xcode.xcconfig;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Objects;
@@ -82,6 +83,7 @@ public class TokenValue {
   }
 
   @Override
+  @Nullable
   public String toString() {
     switch (type) {
       case LITERAL: return literalValue;
@@ -98,7 +100,8 @@ public class TokenValue {
         return this;
 
       case INTERPOLATION:
-        ImmutableList<TokenValue> newValue = interpolateList(function, interpolationValue);
+        ImmutableList<TokenValue> newValue =
+            interpolateList(function, Preconditions.checkNotNull(interpolationValue));
         if (newValue.size() == 1 && newValue.get(0).type == Type.LITERAL) {
           Optional<TokenValue> interpolated = function.apply(newValue.get(0).literalValue);
           if (interpolated.isPresent()) {
