@@ -826,7 +826,6 @@ public class BuckConfig {
    * @return The found python interpreter.
    */
   public String getPythonInterpreter() {
-    Preconditions.checkState(environment.containsKey("PATH"), "PATH is not defined.");
     Optional<String> configPath = getValue("tools", "python");
     if (configPath.isPresent()) {
       // Python path in config. Use it or report error if invalid.
