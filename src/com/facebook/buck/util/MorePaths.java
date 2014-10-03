@@ -24,7 +24,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -39,9 +38,6 @@ import java.util.Arrays;
 import javax.annotation.Nullable;
 
 public class MorePaths {
-
-  private static final boolean SYSTEM_PATH_SEPARATOR_IS_UNIX_PATH_SEPARATOR =
-      File.separator.equals("/");
 
   /** Utility class: do not instantiate. */
   private MorePaths() {}
@@ -58,11 +54,7 @@ public class MorePaths {
   }
 
   public static String pathWithUnixSeparators(Path path) {
-    if (SYSTEM_PATH_SEPARATOR_IS_UNIX_PATH_SEPARATOR) {
-      return path.toString();
-    } else {
-      return path.toString().replace(File.separator, "/");
-    }
+    return path.toString().replace("\\", "/");
   }
 
   /**
