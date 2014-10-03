@@ -183,7 +183,7 @@ public class CachingBuildEngine implements BuildEngine {
                   context,
                   onDiskBuildInfo,
                   buildInfoRecorder.get(),
-                  shouldTryToFetchFromCache(deps));
+                  shouldTryToFetchFromCache(rule, deps));
               if (result.getStatus() == BuildRuleStatus.SUCCESS) {
                 try {
                   recordBuildRuleSuccess(result);
@@ -383,12 +383,28 @@ public class CachingBuildEngine implements BuildEngine {
   /**
    * Returns {@code true} if none of the {@link BuildRuleSuccess} objects are built locally.
    */
-  private static boolean shouldTryToFetchFromCache(List<BuildRuleSuccess> ruleSuccesses) {
+  private static boolean shouldTryToFetchFromCache(
+      BuildRule rule,
+      List<BuildRuleSuccess> ruleSuccesses) {
+
+    // If this rule explicitly disables caching, we won't try to fetch.
+    if (rule.getCacheMode() == CacheMode.DISABLED) {
+      return false;
+    }
+
+    // Look through the results for our deps.  If a dependency used caching, but was built
+    // locally, use this as a heuristic to avoid fetching this rule from cache, since this
+    // will likely result in a miss.
+    //
+    // NOTE(agallagher): This is not true for caching indexed by a key not formed by recursively
+    // pulling in dependency's rule keys (e.g. input content based keys or ABI keys).
     for (BuildRuleSuccess success : ruleSuccesses) {
-      if (success.getType() == BuildRuleSuccess.Type.BUILT_LOCALLY) {
+      if (success.getType() == BuildRuleSuccess.Type.BUILT_LOCALLY &&
+          success.getRule().getCacheMode() == CacheMode.ENABLED) {
         return false;
       }
     }
+
     return true;
   }
 

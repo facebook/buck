@@ -96,6 +96,10 @@ public class BuildRuleSuccess {
     return type;
   }
 
+  public BuildRule getRule() {
+    return rule;
+  }
+
   @Override
   public String toString() {
     return rule.getFullyQualifiedName();

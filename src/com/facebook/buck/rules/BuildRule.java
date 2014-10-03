@@ -89,4 +89,7 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
 
   @Nullable
   public Path getPathToOutputFile();
+
+  public CacheMode getCacheMode();
+
 }

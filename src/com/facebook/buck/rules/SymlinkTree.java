@@ -93,6 +93,13 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
     return ImmutableList.of();
   }
 
+  // We never want to cache this step, as we're only writing symlinks, and caching can
+  // *only* ever make this slower.
+  @Override
+  public CacheMode getCacheMode() {
+    return CacheMode.DISABLED;
+  }
+
   // Since we're just setting up symlinks to existing files, we don't actually need to
   // re-run this rule if our deps change in any way.  We only need to re-run if our symlinks
   // or symlink targets change, which is modeled above in the rule key.
