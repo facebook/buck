@@ -77,6 +77,7 @@ import com.facebook.buck.thrift.ThriftLibraryDescription;
 import com.facebook.buck.thrift.ThriftPythonEnhancer;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -174,6 +175,8 @@ public class KnownBuildRuleTypes {
       JavaCompilerEnvironment javacEnv,
       PythonEnvironment pythonEnv) {
 
+    Platform platform = Platform.detect();
+
     Optional<String> ndkVersion = config.getNdkVersion();
     // If a NDK version isn't specified, we've got to reach into the runtime environment to find
     // out which one we will end up using.
@@ -185,10 +188,10 @@ public class KnownBuildRuleTypes {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
 
     // Construct the OCaml config wrapping the buck config.
-    OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(config);
+    OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
 
     // Construct the C/C++ config wrapping the buck config.
-    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(config);
+    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(platform, config);
 
     // Look up the path to the PEX builder script.
     Optional<Path> pythonPathToPex = config.getPath("python", "path_to_pex");

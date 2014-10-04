@@ -52,7 +52,7 @@ public class OCamlRuleBuilder {
   private OCamlRuleBuilder() {
   }
 
-  public static final Function<BuildRule, ImmutableList<String>> getLibInclude() {
+  public static Function<BuildRule, ImmutableList<String>> getLibInclude() {
     return
       new Function<BuildRule, ImmutableList<String>>() {
         @Override
@@ -102,6 +102,7 @@ public class OCamlRuleBuilder {
     final FluentIterable<Path> srcPaths = srcSourcePaths.transform(SourcePaths.TO_PATH);
 
     NativeLinkableInput linkableInput = NativeLinkables.getTransitiveNativeLinkableInput(
+        ocamlBuckConfig.getLinker(),
         params.getDeps(),
         NativeLinkable.Type.STATIC,
         /* reverse */ false);

@@ -103,7 +103,7 @@ public class CxxLibraryDescriptionTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(Type type) {
+      public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
         return new NativeLinkableInput(
             ImmutableList.<SourcePath>of(new BuildRuleSourcePath(archive)),
             ImmutableList.of(archiveOutput.toString()));

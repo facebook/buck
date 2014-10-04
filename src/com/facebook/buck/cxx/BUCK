@@ -21,6 +21,7 @@ java_library(
     '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test/selectors:selectors',
     '//src/com/facebook/buck/test:test',
+    '//src/com/facebook/buck/util/environment:platform',
     '//third-party/java/infer-annotations:infer-annotations',
   ],
   visibility = [

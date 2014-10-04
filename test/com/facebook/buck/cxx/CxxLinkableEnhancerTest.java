@@ -18,8 +18,10 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -43,16 +45,17 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 
 public class CxxLinkableEnhancerTest {
 
-  private static final SourcePath DEFAULT_LINKER = new TestSourcePath("linker");
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS = ImmutableList.<SourcePath>of(
       new TestSourcePath("a.o"),
       new TestSourcePath("b.o"),
       new TestSourcePath("c.o"));
   private static final ImmutableSortedSet<BuildRule> EMPTY_DEPS = ImmutableSortedSet.of();
+  private static final CxxPlatform CXX_PLATFORM = new DefaultCxxPlatform(new FakeBuckConfig());
 
   private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
 
@@ -69,7 +72,7 @@ public class CxxLinkableEnhancerTest {
     }
 
     @Override
-    public NativeLinkableInput getNativeLinkableInput(Type type) {
+    public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
       return type == Type.STATIC ? staticInput : sharedInput;
     }
 
@@ -106,8 +109,8 @@ public class CxxLinkableEnhancerTest {
 
     // Build the archive using a normal input the outputs of the genrules above.
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CXX_PLATFORM,
         params,
-        DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -153,8 +156,8 @@ public class CxxLinkableEnhancerTest {
             .setDeps(ImmutableSortedSet.of(dep))
             .build();
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CXX_PLATFORM,
         params,
-        DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -193,8 +196,8 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object and pass the native linkable above as the dep.
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CXX_PLATFORM,
         params,
-        DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -215,12 +218,15 @@ public class CxxLinkableEnhancerTest {
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
     String soname = "soname";
-    String sonameFlag = "-soname=" + soname;
+    ImmutableList<String> sonameArgs =
+        ImmutableList.copyOf(
+            CxxLinkableEnhancer.iXlinker(
+                CXX_PLATFORM.getLd().soname(soname)));
 
     // Construct a CxxLink object which links as an executable.
     CxxLink executable = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CXX_PLATFORM,
         params,
-        DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -231,12 +237,12 @@ public class CxxLinkableEnhancerTest {
         NativeLinkable.Type.STATIC,
         ImmutableSortedSet.<BuildRule>of());
     assertFalse(executable.getArgs().contains("-shared"));
-    assertFalse(executable.getArgs().contains(sonameFlag));
+    assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
 
     // Construct a CxxLink object which links as a shared lib.
     CxxLink shared = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CXX_PLATFORM,
         params,
-        DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -247,12 +253,12 @@ public class CxxLinkableEnhancerTest {
         NativeLinkable.Type.STATIC,
         ImmutableSortedSet.<BuildRule>of());
     assertTrue(shared.getArgs().contains("-shared"));
-    assertFalse(shared.getArgs().contains(sonameFlag));
+    assertEquals(Collections.indexOfSubList(shared.getArgs(), sonameArgs), -1);
 
     // Construct a CxxLink object which links as a shared lib with a SONAME.
     CxxLink sharedWithSoname = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CXX_PLATFORM,
         params,
-        DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -263,7 +269,7 @@ public class CxxLinkableEnhancerTest {
         NativeLinkable.Type.STATIC,
         ImmutableSortedSet.<BuildRule>of());
     assertTrue(sharedWithSoname.getArgs().contains("-shared"));
-    assertTrue(sharedWithSoname.getArgs().contains(sonameFlag));
+    assertNotEquals(Collections.indexOfSubList(sharedWithSoname.getArgs(), sonameArgs), -1);
   }
 
   @Test
@@ -285,8 +291,8 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links using static dependencies.
     CxxLink staticLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CXX_PLATFORM,
         params,
-        DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -301,8 +307,8 @@ public class CxxLinkableEnhancerTest {
 
     // Construct a CxxLink object which links using shared dependencies.
     CxxLink sharedLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CXX_PLATFORM,
         params,
-        DEFAULT_LINKER,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -318,6 +324,7 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinel = "bottom";
@@ -340,6 +347,7 @@ public class CxxLinkableEnhancerTest {
     // in the bottom input.
     NativeLinkableInput totalInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
+            cxxPlatform.getLd(),
             ImmutableList.of(top),
             NativeLinkable.Type.STATIC,
             /* reverse */ true);

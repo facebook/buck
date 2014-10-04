@@ -583,6 +583,37 @@ public class BuckConfigTest {
     assertArrayEquals("Should match value in environment.", expected, config.getEnv(name, ":"));
   }
 
+  private static enum TestEnum {
+    A,
+    B
+  }
+
+  @Test
+  public void getEnum() {
+    FakeBuckConfig config = new FakeBuckConfig(
+        ImmutableMap.<String, Map<String, String>>of("section",
+            ImmutableMap.of("field", "A")));
+    Optional<TestEnum> value = config.getEnum("section", "field", TestEnum.class);
+    assertEquals(Optional.of(TestEnum.A), value);
+  }
+
+  @Test
+  public void getEnumLowerCase() {
+    FakeBuckConfig config = new FakeBuckConfig(
+        ImmutableMap.<String, Map<String, String>>of("section",
+            ImmutableMap.of("field", "a")));
+    Optional<TestEnum> value = config.getEnum("section", "field", TestEnum.class);
+    assertEquals(Optional.of(TestEnum.A), value);
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void getEnumInvalidValue() {
+    FakeBuckConfig config = new FakeBuckConfig(
+        ImmutableMap.<String, Map<String, String>>of("section",
+            ImmutableMap.of("field", "C")));
+    config.getEnum("section", "field", TestEnum.class);
+  }
+
   private BuckConfig createWithDefaultFilesystem(Reader reader, @Nullable BuildTargetParser parser)
       throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
@@ -608,4 +639,5 @@ public class BuckConfigTest {
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
   }
+
 }

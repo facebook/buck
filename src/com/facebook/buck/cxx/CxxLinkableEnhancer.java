@@ -22,10 +22,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -51,34 +49,53 @@ public class CxxLinkableEnhancer {
   }
 
   /**
+   * Prefixes each of the given linker arguments with "-Xlinker" so that the compiler linker
+   * driver will pass these arguments directly down to the linker rather than interpreting them
+   * itself.
+   *
+   * e.g. ["-rpath", "hello/world"] -> ["-Xlinker", "-rpath", "-Xlinker", "hello/world"]
+   *
+   * @param args arguments for the linker.
+   * @return arguments to be passed to the compiler linker driver.
+   */
+  public static Iterable<String> iXlinker(Iterable<String> args) {
+    return MoreIterables.zipAndConcat(
+        Iterables.cycle("-Xlinker"),
+        args);
+  }
+
+  /**
    * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects
    * and a dependency tree of {@link NativeLinkable} dependencies.
    */
   public static CxxLink createCxxLinkableBuildRule(
+      CxxPlatform cxxPlatform,
       BuildRuleParams params,
-      SourcePath linker,
-      ImmutableList<String> cxxLdFlags,
-      ImmutableList<String> ldFlags,
+      ImmutableList<String> extraCxxLdFlags,
+      ImmutableList<String> extraLdFlags,
       BuildTarget target,
       LinkType linkType,
       Optional<String> soname,
       Path output,
-      Iterable<SourcePath> objects,
+      Iterable<SourcePath> inputs,
       NativeLinkable.Type depType,
-      Iterable<BuildRule> nativeLinkableDeps) {
+      Iterable<? extends BuildRule> nativeLinkableDeps) {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || linkType.equals(LinkType.SHARED));
 
+    Linker linker = cxxPlatform.getLd();
+
     // Collect and topologically sort our deps that contribute to the link.
     NativeLinkableInput linkableInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
+            linker,
             nativeLinkableDeps,
             depType,
             /* reverse */ true);
     ImmutableList<SourcePath> allInputs =
         ImmutableList.<SourcePath>builder()
-            .addAll(objects)
+            .addAll(inputs)
             .addAll(linkableInput.getInputs())
             .build();
 
@@ -94,31 +111,37 @@ public class CxxLinkableEnhancer {
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
+
+    // Pass any platform specific or extra linker flags.
+    argsBuilder.addAll(cxxPlatform.getCxxldflags());
+    argsBuilder.addAll(extraCxxLdFlags);
+    argsBuilder.addAll(iXlinker(cxxPlatform.getLdflags()));
+    argsBuilder.addAll(iXlinker(extraLdFlags));
+
+    // If we're doing a shared build, pass the necessary flags to the linker, including setting
+    // the soname.
     if (linkType == LinkType.SHARED) {
       argsBuilder.add("-shared");
     }
     if (soname.isPresent()) {
-      argsBuilder.add("-Xlinker", "-soname=" + soname.get());
+      argsBuilder.addAll(iXlinker(linker.soname(soname.get())));
     }
-    argsBuilder.addAll(cxxLdFlags);
-    argsBuilder.addAll(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle("-Xlinker"),
-            ldFlags));
-    argsBuilder.addAll(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle("-Xlinker"),
-            Iterables.concat(
-                FluentIterable.from(objects)
-                    .transform(SourcePaths.TO_PATH)
-                    .transform(Functions.toStringFunction()),
-                linkableInput.getArgs())));
+
+    // Add all the top-level inputs.  We wrap these in the --whole-archive since any top-level
+    // inputs, even if archives, should be fully linked in.
+    for (SourcePath input : inputs) {
+      argsBuilder.addAll(iXlinker(linker.linkWhole(input.resolve().toString())));
+    }
+
+    // Add all arguments from our dependencies.
+    argsBuilder.addAll(iXlinker(linkableInput.getArgs()));
+
     ImmutableList<String> args = argsBuilder.build();
 
     // Build the C/C++ link step.
     return new CxxLink(
         linkParams,
-        linker,
+        cxxPlatform.getCxxld(),
         output,
         allInputs,
         args);

@@ -39,6 +39,6 @@ public interface NativeLinkable {
 
   final BuildRuleType NATIVE_LINKABLE_TYPE = new BuildRuleType("link");
 
-  NativeLinkableInput getNativeLinkableInput(Type type);
+  NativeLinkableInput getNativeLinkableInput(Linker linker, Type type);
 
 }

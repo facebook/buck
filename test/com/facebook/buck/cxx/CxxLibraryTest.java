@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.python.PythonPackageComponents;
@@ -46,6 +47,7 @@ public class CxxLibraryTest {
   public void cxxLibraryInterfaces() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
 
     // Setup some dummy values for the header info.
     final BuildTarget headerTarget = BuildTargetFactory.newInstance("//:header");
@@ -76,7 +78,7 @@ public class CxxLibraryTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(Type type) {
+      public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
         return type == Type.STATIC ?
             new NativeLinkableInput(
                 ImmutableList.<SourcePath>of(new BuildRuleSourcePath(archive)),
@@ -116,7 +118,9 @@ public class CxxLibraryTest {
         ImmutableList.of(archiveOutput.toString()));
     assertEquals(
         expectedStaticNativeLinkableInput,
-        cxxLibrary.getNativeLinkableInput(NativeLinkable.Type.STATIC));
+        cxxLibrary.getNativeLinkableInput(
+            cxxPlatform.getLd(),
+            NativeLinkable.Type.STATIC));
 
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
@@ -125,7 +129,9 @@ public class CxxLibraryTest {
         ImmutableList.of(sharedLibraryOutput.toString()));
     assertEquals(
         expectedSharedNativeLinkableInput,
-        cxxLibrary.getNativeLinkableInput(NativeLinkable.Type.SHARED));
+        cxxLibrary.getNativeLinkableInput(
+            cxxPlatform.getLd(),
+            NativeLinkable.Type.SHARED));
 
     // Verify that we return the expected output for python packages.
     PythonPackageComponents expectedPythonPackageComponents = new PythonPackageComponents(

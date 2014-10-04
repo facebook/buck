@@ -20,6 +20,8 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -32,6 +34,11 @@ import java.nio.file.Paths;
  * A C/C++ platform described in the "cxx" section of .buckconfig, with reasonable system defaults.
  */
 public class DefaultCxxPlatform implements CxxPlatform {
+
+  private static enum LinkerType {
+    GNU,
+    DARWIN,
+  }
 
   private static final Path DEFAULT_AS = Paths.get("/usr/bin/as");
   private static final ImmutableList<String> DEFAULT_ASFLAGS = ImmutableList.of();
@@ -62,10 +69,16 @@ public class DefaultCxxPlatform implements CxxPlatform {
   private static final Path DEFAULT_YACC = Paths.get("/usr/bin/bison");
   private static final ImmutableList<String> DEFAULT_YACC_FLAGS = ImmutableList.of("-y");
 
+  private final Platform platform;
   private final BuckConfig delegate;
 
-  public DefaultCxxPlatform(BuckConfig delegate) {
+  public DefaultCxxPlatform(Platform platform, BuckConfig delegate) {
+    this.platform = Preconditions.checkNotNull(platform);
     this.delegate = Preconditions.checkNotNull(delegate);
+  }
+
+  public DefaultCxxPlatform(BuckConfig delegate) {
+    this(Platform.detect(), delegate);
   }
 
   private ImmutableList<String> getFlags(String section, String field, ImmutableList<String> def) {
@@ -150,9 +163,39 @@ public class DefaultCxxPlatform implements CxxPlatform {
     return getFlags("cxx", "cxxldflags", DEFAULT_CXXLDFLAGS);
   }
 
+  private LinkerType getLinkerTypeForPlatform() {
+    switch (platform) {
+      case LINUX:
+        return LinkerType.GNU;
+      case MACOS:
+        return LinkerType.DARWIN;
+      //$CASES-OMITTED$
+      default:
+        throw new HumanReadableException(
+            "cannot detect linker type, try explicitly setting it in " +
+            ".buckconfig's [cxx] ld_type section");
+    }
+  }
+
+  private LinkerType getLinkerType() {
+    Optional<LinkerType> type = delegate.getEnum("cxx", "ld_type", LinkerType.class);
+    return type.or(getLinkerTypeForPlatform());
+  }
+
   @Override
-  public SourcePath getLd() {
-    return getSourcePath("cxx", "ld", DEFAULT_LD);
+  public Linker getLd() {
+    SourcePath path = getSourcePath("cxx", "ld", DEFAULT_LD);
+    LinkerType type = getLinkerType();
+    switch (type) {
+      case GNU:
+        return new GnuLinker(path);
+      case DARWIN:
+        return new DarwinLinker(path);
+      // Add a "default" case, even thought we've handled all cases above, just to make the
+      // compiler happy.
+      default:
+        throw new IllegalStateException();
+    }
   }
 
   @Override

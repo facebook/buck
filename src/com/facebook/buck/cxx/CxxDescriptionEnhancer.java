@@ -404,10 +404,10 @@ public class CxxDescriptionEnhancer {
     final String sharedLibrarySoname = getSharedLibrarySoname(params.getBuildTarget());
     final Path sharedLibraryPath = getSharedLibraryOutputPath(params.getBuildTarget());
     final CxxLink sharedLibraryBuildRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        cxxPlatform,
         params,
-        cxxPlatform.getCxxld(),
-        cxxPlatform.getCxxldflags(),
-        cxxPlatform.getLdflags(),
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
         sharedLibraryTarget,
         CxxLinkableEnhancer.LinkType.SHARED,
         Optional.of(sharedLibrarySoname),
@@ -436,20 +436,17 @@ public class CxxDescriptionEnhancer {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(NativeLinkable.Type type) {
+      public NativeLinkableInput getNativeLinkableInput(Linker linker, NativeLinkable.Type type) {
 
         // Build up the arguments used to link this library.  If we're linking the
         // whole archive, wrap the library argument in the necessary "ld" flags.
         ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-        if (linkWhole && type == Type.STATIC) {
-          linkerArgsBuilder.add("--whole-archive");
-        }
-        linkerArgsBuilder.add(
-            type == Type.STATIC ?
-                staticLibraryPath.toString() :
-                sharedLibraryPath.toString());
-        if (linkWhole && type == Type.STATIC) {
-          linkerArgsBuilder.add("--no-whole-archive");
+        if (type == Type.SHARED) {
+          linkerArgsBuilder.add(sharedLibraryPath.toString());
+        } else if (linkWhole) {
+          linkerArgsBuilder.addAll(linker.linkWhole(staticLibraryPath.toString()));
+        } else {
+          linkerArgsBuilder.add(staticLibraryPath.toString());
         }
         final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
@@ -563,10 +560,10 @@ public class CxxDescriptionEnhancer {
     // target, so that it corresponds to the actual binary we build.
     Path output = getOutputPath(params.getBuildTarget());
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        cxxPlatform,
         params,
-        cxxPlatform.getCxxld(),
-        cxxPlatform.getCxxldflags(),
-        cxxPlatform.getLdflags(),
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
         createCxxLinkTarget(params.getBuildTarget()),
         CxxLinkableEnhancer.LinkType.EXECUTABLE,
         Optional.<String>absent(),

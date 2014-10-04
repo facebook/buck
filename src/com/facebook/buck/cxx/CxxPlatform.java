@@ -45,7 +45,7 @@ public interface CxxPlatform {
   SourcePath getCxxld();
   ImmutableList<String> getCxxldflags();
 
-  SourcePath getLd();
+  Linker getLd();
   ImmutableList<String> getLdflags();
 
   SourcePath getAr();

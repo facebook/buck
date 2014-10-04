@@ -69,6 +69,7 @@ import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -453,13 +454,29 @@ public class BuckConfig {
    */
   public BuildTarget getRequiredBuildTarget(String section, String field) {
     Optional<BuildTarget> target = getBuildTarget(section, field);
-    if (!target.isPresent()) {
-      throw new HumanReadableException(String.format(
-          ".buckconfig: %s:%s must be set",
-          section,
-          field));
+    return required(section, field, target);
+  }
+
+  public <T extends Enum<T>> Optional<T> getEnum(String section, String field, Class<T> clazz) {
+    Optional<String> value = getValue(section, field);
+    if (!value.isPresent()) {
+      return Optional.absent();
     }
-    return target.get();
+    try {
+      return Optional.of(Enum.valueOf(clazz, value.get().toUpperCase(Locale.ROOT)));
+    } catch (IllegalArgumentException e) {
+      throw new HumanReadableException(
+          ".buckconfig: %s:%s must be one of %s (was %s)",
+          section,
+          field,
+          clazz.getEnumConstants(),
+          value.get());
+    }
+  }
+
+  public <T extends Enum<T>> T getRequiredEnum(String section, String field, Class<T> clazz) {
+    Optional<T> value = getEnum(section, field, clazz);
+    return required(section, field, value);
   }
 
   /**
@@ -786,6 +803,16 @@ public class BuckConfig {
             propertyName,
             sectionName);
     }
+  }
+
+  private <T> T required(String section, String field, Optional<T> value) {
+    if (!value.isPresent()) {
+      throw new HumanReadableException(String.format(
+          ".buckconfig: %s:%s must be set",
+          section,
+          field));
+    }
+    return value.get();
   }
 
   @Override

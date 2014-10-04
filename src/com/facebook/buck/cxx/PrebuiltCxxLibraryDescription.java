@@ -99,7 +99,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(Type type) {
+      public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
 
         // We only want to link the whole archive if we're not doing a shared link AND
         // this library isn't available externally at runtime.
@@ -117,13 +117,11 @@ public class PrebuiltCxxLibraryDescription
         ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
         if (!headerOnly) {
           if (wholeArchive) {
-            linkerArgsBuilder.add("--whole-archive");
+            linkerArgsBuilder.addAll(linker.linkWhole(library.toString()));
+          } else {
+            linkerArgsBuilder.add(library.toString());
           }
           librariesBuilder.add(new PathSourcePath(library));
-          linkerArgsBuilder.add(library.toString());
-          if (wholeArchive) {
-            linkerArgsBuilder.add("--no-whole-archive");
-          }
         }
         final ImmutableList<SourcePath> libraries = librariesBuilder.build();
         final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();

@@ -150,6 +150,7 @@ public class CxxDescriptionEnhancerTest {
   public void linkWhole() {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
     DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(buckConfig);
+    Linker linker = new GnuLinker(new TestSourcePath("linker"));
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
@@ -174,9 +175,9 @@ public class CxxDescriptionEnhancerTest {
 
     // Verify that the linker args contains the link whole flags.
     assertFalse(normal.getNativeLinkableInput(
-        NativeLinkable.Type.STATIC).getArgs().contains("--whole-archive"));
+        linker, NativeLinkable.Type.STATIC).getArgs().contains("--whole-archive"));
     assertFalse(normal.getNativeLinkableInput(
-        NativeLinkable.Type.STATIC).getArgs().contains("--no-whole-archive"));
+        linker, NativeLinkable.Type.STATIC).getArgs().contains("--no-whole-archive"));
 
     // Create a cxx library using link whole.
     CxxLibrary linkWhole = CxxDescriptionEnhancer.createCxxLibraryBuildRules(
@@ -192,9 +193,9 @@ public class CxxDescriptionEnhancerTest {
 
     // Verify that the linker args contains the link whole flags.
     assertTrue(linkWhole.getNativeLinkableInput(
-        NativeLinkable.Type.STATIC).getArgs().contains("--whole-archive"));
+        linker, NativeLinkable.Type.STATIC).getArgs().contains("--whole-archive"));
     assertTrue(linkWhole.getNativeLinkableInput(
-        NativeLinkable.Type.STATIC).getArgs().contains("--no-whole-archive"));
+        linker, NativeLinkable.Type.STATIC).getArgs().contains("--no-whole-archive"));
   }
 
   @Test
@@ -248,7 +249,7 @@ public class CxxDescriptionEnhancerTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(Type type) {
+      public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
         return type == Type.STATIC ?
             new NativeLinkableInput(
                 ImmutableList.<SourcePath>of(new BuildRuleSourcePath(staticLibraryDep)),

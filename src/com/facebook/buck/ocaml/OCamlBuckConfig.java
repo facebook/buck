@@ -20,6 +20,8 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -30,9 +32,9 @@ public class OCamlBuckConfig {
   private final BuckConfig delegate;
   private final CxxPlatform cxxPlatform;
 
-  public OCamlBuckConfig(BuckConfig delegate) {
+  public OCamlBuckConfig(Platform platform, BuckConfig delegate) {
     this.delegate = Preconditions.checkNotNull(delegate);
-    cxxPlatform = new DefaultCxxPlatform(delegate);
+    cxxPlatform = new DefaultCxxPlatform(platform, delegate);
   }
 
   public Optional<Path> getOCamlCompiler() {
@@ -62,4 +64,9 @@ public class OCamlBuckConfig {
   public SourcePath getCxxCompiler() {
     return cxxPlatform.getCxx();
   }
+
+  public Linker getLinker() {
+    return cxxPlatform.getLd();
+  }
+
 }

@@ -149,10 +149,10 @@ public class CxxPythonExtensionDescription implements
     Path extensionModule = baseModule.resolve(extensionName);
     final Path extensionPath = getExtensionPath(extensionTarget);
     CxxLink extensionRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        cxxPlatform,
         params,
-        cxxPlatform.getCxxld(),
-        cxxPlatform.getCxxldflags(),
-        cxxPlatform.getLdflags(),
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
         extensionTarget,
         CxxLinkableEnhancer.LinkType.SHARED,
         Optional.of(extensionName),
