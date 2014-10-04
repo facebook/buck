@@ -40,7 +40,6 @@ public class AppleNativeTargetDescriptionArg {
           ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>> configs;
   public Optional<ImmutableList<AppleSource>> srcs;
   public Optional<ImmutableSortedSet<String>> frameworks;
-  public Optional<ImmutableSortedSet<String>> weakFrameworks;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
   public Optional<String> gid;
   public Optional<String> headerPathPrefix;

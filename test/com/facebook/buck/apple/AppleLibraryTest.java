@@ -54,7 +54,6 @@ public class AppleLibraryTest {
     arg.configs = Optional.of(
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
@@ -76,7 +75,6 @@ public class AppleLibraryTest {
     arg.configs = Optional.of(
         ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
     arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.weakFrameworks = Optional.of(ImmutableSortedSet.<String>of());
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();

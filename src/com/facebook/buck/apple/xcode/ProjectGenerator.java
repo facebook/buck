@@ -99,7 +99,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -600,15 +599,11 @@ public class ProjectGenerator {
       ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
       frameworksBuilder.addAll(buildable.getFrameworks());
       collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
-      ImmutableSet.Builder<String> weakFrameworksBuilder = ImmutableSet.builder();
-      weakFrameworksBuilder.addAll(buildable.getWeakFrameworks());
-      collectRecursiveWeakFrameworkDependencies(rule, weakFrameworksBuilder);
       addFrameworksBuildPhase(
           rule.getBuildTarget(),
           target,
           project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
           frameworksBuilder.build(),
-          weakFrameworksBuilder.build(),
           collectRecursiveLibraryDependencies(rule));
     }
     if (includeResources) {
@@ -1415,23 +1410,14 @@ public class ProjectGenerator {
       PBXNativeTarget target,
       PBXGroup sharedFrameworksGroup,
       Iterable<String> frameworks,
-      Iterable<String> weakFrameworks,
       Iterable<PBXFileReference> archives) {
     PBXFrameworksBuildPhase frameworksBuildPhase = new PBXFrameworksBuildPhase();
     target.getBuildPhases().add(frameworksBuildPhase);
-
-    // If a framework is listed as both weak and strong, prefer strong.
-    Set<String> includedWeakFrameworks = Sets.difference(
-        ImmutableSortedSet.copyOf(weakFrameworks),
-        ImmutableSortedSet.copyOf(frameworks));
-
-    for (String framework : Iterables.concat(frameworks, includedWeakFrameworks)) {
+    for (String framework : frameworks) {
       Path path = Paths.get(framework);
 
       String firstElement =
         Preconditions.checkNotNull(Iterables.getFirst(path, Paths.get(""))).toString();
-
-      PBXBuildFile buildFile;
 
       if (firstElement.startsWith("$")) { // NOPMD - length() > 0 && charAt(0) == '$' is ridiculous
         Optional<PBXReference.SourceTree> sourceTree =
@@ -1441,8 +1427,7 @@ public class ProjectGenerator {
           PBXFileReference fileReference =
               sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
                   new SourceTreePath(sourceTree.get(), sdkRootRelativePath));
-          buildFile = new PBXBuildFile(fileReference);
-          frameworksBuildPhase.getFiles().add(buildFile);
+          frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
         } else {
           throw new HumanReadableException(String.format(
               "Unknown SourceTree: %s in build target: %s. Should be one of: %s",
@@ -1464,14 +1449,7 @@ public class ProjectGenerator {
                 new SourceTreePath(
                     PBXReference.SourceTree.GROUP,
                     relativizeBuckRelativePathToGeneratedProject(buildTarget, path.toString())));
-        buildFile = new PBXBuildFile(fileReference);
-        frameworksBuildPhase.getFiles().add(buildFile);
-      }
-
-      if (includedWeakFrameworks.contains(framework)) {
-        NSDictionary settings = new NSDictionary();
-        settings.put("ATTRIBUTES", new NSArray(new NSString("Weak")));
-        buildFile.setSettings(Optional.of(settings));
+        frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
       }
     }
 
@@ -1738,8 +1716,7 @@ public class ProjectGenerator {
               public String apply(BuildRule input) {
                 return getHeaderSearchPathForRule(input);
               }
-            }
-        )
+            })
         .toSet();
   }
 
@@ -1816,24 +1793,10 @@ public class ProjectGenerator {
                AppleBuildRules.RecursiveRuleDependenciesMode.LINKING,
                rule,
                AppleLibraryDescription.TYPE)) {
-      AbstractAppleNativeTargetBuildRule buildRule =
-          (AbstractAppleNativeTargetBuildRule) Preconditions.checkNotNull(ruleDependency);
       // TODO(user): Add support to xcode_native rule for framework dependencies
-      frameworksBuilder.addAll(buildRule.getFrameworks());
-    }
-  }
-
-  private void collectRecursiveWeakFrameworkDependencies(
-      BuildRule rule,
-      ImmutableSet.Builder<String> weakFrameworksBuilder) {
-    for (BuildRule ruleDependency :
-        AppleBuildRules.getRecursiveRuleDependenciesOfType(
-            AppleBuildRules.RecursiveRuleDependenciesMode.LINKING,
-            rule,
-            AppleLibraryDescription.TYPE)) {
-      AbstractAppleNativeTargetBuildRule buildRule =
-          (AbstractAppleNativeTargetBuildRule) Preconditions.checkNotNull(ruleDependency);
-      weakFrameworksBuilder.addAll(buildRule.getWeakFrameworks());
+      AppleLibrary appleLibrary =
+          (AppleLibrary) Preconditions.checkNotNull(ruleDependency);
+      frameworksBuilder.addAll(appleLibrary.getFrameworks());
     }
   }
 
@@ -1984,8 +1947,7 @@ public class ProjectGenerator {
           public boolean apply(BuildRule input) {
             return requestedTypes.contains(input.getType());
           }
-        }
-    );
+        });
   }
 
   @SuppressWarnings("incomplete-switch")
