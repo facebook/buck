@@ -96,10 +96,6 @@ public class AndroidManifest extends AbstractBuildRule {
     return builder;
   }
 
-  public SourcePath getSkeletonFile() {
-    return skeletonFile;
-  }
-
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,

@@ -129,10 +129,6 @@ public class PrebuiltJar extends AbstractBuildRule
     return sourceJar;
   }
 
-  public Optional<SourcePath> getGwtJar() {
-    return gwtJar;
-  }
-
   public Optional<String> getJavadocUrl() {
     return javadocUrl;
   }
