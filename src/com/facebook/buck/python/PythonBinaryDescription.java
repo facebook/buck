@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -65,7 +66,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       A args) {
 
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
-    String mainName = args.main.getName();
+    String mainName = SourcePaths.getSourcePathName(params.getBuildTarget(), args.main);
     Path mainModule = baseModule.resolve(mainName);
 
     // Build up the list of all components going into the python binary.

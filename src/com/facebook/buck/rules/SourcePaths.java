@@ -17,8 +17,11 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -137,7 +140,7 @@ public class SourcePaths {
     Map<String, SourcePath> resolved = Maps.newHashMap();
 
     for (SourcePath path : sourcePaths) {
-      String name = path.getName();
+      String name = getSourcePathName(target, path);
       SourcePath old = resolved.put(name, path);
       if (old != null) {
         throw new HumanReadableException(String.format(
@@ -149,6 +152,30 @@ public class SourcePaths {
     }
 
     return ImmutableMap.copyOf(resolved);
+  }
+
+  public static String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+    if (sourcePath instanceof BuildRuleSourcePath) {
+      return getNameForRule(((BuildRuleSourcePath) sourcePath).getRule());
+    }
+    Preconditions.checkArgument(sourcePath instanceof PathSourcePath);
+    Path path = (Path) sourcePath.asReference();
+    return MorePaths.relativize(target.getBasePath(), path).toString();
+  }
+
+  private static String getNameForRule(BuildRule rule) {
+    // This is called by the constructors before rule has been checked for nullity
+    Preconditions.checkNotNull(rule);
+
+    // If this build rule implements `HasOutputName`, then return the output name
+    // it provides.
+    if (rule instanceof HasOutputName) {
+      HasOutputName hasOutputName = (HasOutputName) rule;
+      return hasOutputName.getOutputName();
+    }
+
+    // Otherwise, fall back to using the short name of rule's build target.
+    return rule.getBuildTarget().getShortNameOnly();
   }
 
 }

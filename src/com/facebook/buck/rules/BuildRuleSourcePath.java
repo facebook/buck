@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -30,40 +29,19 @@ import java.nio.file.Path;
 public class BuildRuleSourcePath extends AbstractSourcePath {
 
   private final BuildRule rule;
-  private final String name;
   private final Optional<Path> resolvedPath;
 
   public BuildRuleSourcePath(BuildRule rule) {
-    this(rule, getNameForRule(rule), Optional.<Path>absent());
-  }
-
-  public BuildRuleSourcePath(BuildRule rule, String name) {
-    this(rule, name, Optional.<Path>absent());
+    this(rule, Optional.<Path>absent());
   }
 
   public BuildRuleSourcePath(BuildRule rule, Path path) {
-    this(rule, getNameForRule(rule), Optional.of(path));
+    this(rule, Optional.of(path));
   }
 
-  private BuildRuleSourcePath(BuildRule rule, String name, Optional<Path> path) {
+  private BuildRuleSourcePath(BuildRule rule, Optional<Path> path) {
     this.rule = Preconditions.checkNotNull(rule);
-    this.name = Preconditions.checkNotNull(name);
     this.resolvedPath = Preconditions.checkNotNull(path);
-  }
-
-  private static String getNameForRule(BuildRule rule) {
-    // This is called by the constructors before rule has been checked for nullity
-    Preconditions.checkNotNull(rule);
-
-    // If this build rule implements `HasOutputName`, then return the output name
-    // it provides.
-    if (rule instanceof HasOutputName) {
-      HasOutputName hasOutputName = (HasOutputName) rule;
-      return hasOutputName.getOutputName();
-    }
-
-    // Otherwise, fall back to using the short name of rule's build target.
-    return rule.getBuildTarget().getShortNameOnly();
   }
 
   @Override
@@ -83,11 +61,6 @@ public class BuildRuleSourcePath extends AbstractSourcePath {
   @Override
   public BuildRule asReference() {
     return rule;
-  }
-
-  @Override
-  public String getName() {
-    return name;
   }
 
   public BuildRule getRule() {

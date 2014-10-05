@@ -20,10 +20,6 @@ import java.nio.file.Paths;
 
 public class TestSourcePath extends PathSourcePath {
 
-  public TestSourcePath(String path, String name) {
-    super(Paths.get(path), name);
-  }
-
   public TestSourcePath(String path) {
     super(Paths.get(path));
   }

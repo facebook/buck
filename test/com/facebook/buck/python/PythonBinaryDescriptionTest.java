@@ -112,7 +112,7 @@ public class PythonBinaryDescriptionTest {
         new PythonEnvironment(Paths.get("python"), new PythonVersion("2.5")));
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.main = new TestSourcePath("foo/" + mainName, mainName);
+    arg.main = new TestSourcePath("foo/" + mainName);
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.

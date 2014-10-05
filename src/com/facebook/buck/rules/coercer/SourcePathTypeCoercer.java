@@ -74,7 +74,7 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
           filesystem,
           pathRelativeToProjectRoot,
           object);
-      return new PathSourcePath(path, String.valueOf(object));
+      return new PathSourcePath(path);
     }
   }
 }

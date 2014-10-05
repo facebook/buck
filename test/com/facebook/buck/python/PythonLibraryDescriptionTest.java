@@ -43,7 +43,7 @@ public class PythonLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     String sourceName = "main.py";
-    SourcePath source = new TestSourcePath("foo/" + sourceName, sourceName);
+    SourcePath source = new TestSourcePath("foo/" + sourceName);
     PythonLibraryDescription desc = new PythonLibraryDescription();
     PythonLibraryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.absent();

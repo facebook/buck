@@ -81,7 +81,7 @@ public class PythonTestDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     String sourceName = "main.py";
-    SourcePath source = new TestSourcePath("foo/" + sourceName, sourceName);
+    SourcePath source = new TestSourcePath("foo/" + sourceName);
     PythonTestDescription desc = new PythonTestDescription(
         PEX_PATH,
         TEST_MAIN,

@@ -68,15 +68,10 @@ public class SourcePathsTest {
     // Test that constructing a PathSourcePath without an explicit name resolves to the
     // string representation of the path.
     PathSourcePath pathSourcePath1 = new PathSourcePath(path);
-    String actual1 = pathSourcePath1.getName();
+    String actual1 = SourcePaths.getSourcePathName(
+        BuildTargetFactory.newInstance("//:test"),
+        pathSourcePath1);
     assertEquals(path.toString(), actual1);
-
-    // Test that constructing a PathSourcePath *with* an explicit name resolves to that
-    // name.
-    String explicitName = "blah";
-    PathSourcePath pathSourcePath2 = new PathSourcePath(path, explicitName);
-    String actual2 = pathSourcePath2.getName();
-    assertEquals(explicitName, actual2);
   }
 
   @Test
@@ -91,7 +86,9 @@ public class SourcePathsTest {
         .setOut(out)
         .build(resolver);
     BuildRuleSourcePath buildRuleSourcePath1 = new BuildRuleSourcePath(genrule);
-    String actual1 = buildRuleSourcePath1.getName();
+    String actual1 = SourcePaths.getSourcePathName(
+        BuildTargetFactory.newInstance("//:test"),
+        buildRuleSourcePath1);
     assertEquals(out, actual1);
 
     // Test that using other BuildRule types resolves to the short name.
@@ -99,7 +96,9 @@ public class SourcePathsTest {
     FakeBuildRule fakeBuildRule = new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(fakeBuildTarget).build());
     BuildRuleSourcePath buildRuleSourcePath2 = new BuildRuleSourcePath(fakeBuildRule);
-    String actual2 = buildRuleSourcePath2.getName();
+    String actual2 = SourcePaths.getSourcePathName(
+        BuildTargetFactory.newInstance("//:test"),
+        buildRuleSourcePath2);
     assertEquals(fakeBuildTarget.getShortNameOnly(), actual2);
   }
 
@@ -107,8 +106,8 @@ public class SourcePathsTest {
   public void getSourcePathNamesThrowsOnDuplicates() {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     String parameter = "srcs";
-    PathSourcePath pathSourcePath1 = new PathSourcePath(Paths.get("a"), "same_name");
-    PathSourcePath pathSourcePath2 = new PathSourcePath(Paths.get("b"), "same_name");
+    PathSourcePath pathSourcePath1 = new PathSourcePath(Paths.get("same_name"));
+    PathSourcePath pathSourcePath2 = new PathSourcePath(Paths.get("same_name"));
 
     // Try to resolve these source paths, with the same name, together and verify that an
     // exception is thrown.

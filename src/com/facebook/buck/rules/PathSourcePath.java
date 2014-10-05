@@ -23,15 +23,9 @@ import java.nio.file.Path;
 public class PathSourcePath extends AbstractSourcePath {
 
   private final Path relativePath;
-  private final String name;
-
-  public PathSourcePath(Path relativePath, String name) {
-    this.relativePath = Preconditions.checkNotNull(relativePath);
-    this.name = Preconditions.checkNotNull(name);
-  }
 
   public PathSourcePath(Path relativePath) {
-    this(relativePath, relativePath.toString());
+    this.relativePath = Preconditions.checkNotNull(relativePath);
   }
 
   @Override
@@ -42,11 +36,6 @@ public class PathSourcePath extends AbstractSourcePath {
   @Override
   public Path asReference() {
     return relativePath;
-  }
-
-  @Override
-  public String getName() {
-    return name;
   }
 
 }
