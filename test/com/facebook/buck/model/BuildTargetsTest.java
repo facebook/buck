@@ -18,6 +18,12 @@ package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
@@ -53,6 +59,61 @@ public class BuildTargetsTest {
     BuildTarget fooBarBaz = BuildTargets.extendFlavoredBuildTarget(fooBar, new Flavor("baz"));
     assertTrue(fooBarBaz.isFlavored());
     assertEquals("//foo:bar#baz,hello", fooBarBaz.getFullyQualifiedName());
+  }
+
+  @Test
+  public void propagateFlavorDomain() {
+    BuildTarget parent = BuildTargetFactory.newInstance("//:parent#flavor");
+    Flavor flavor = new Flavor("flavor");
+    FlavorDomain<?> domain = new FlavorDomain<>(
+        "test",
+        ImmutableMap.of(flavor, "something"));
+    BuildTarget child = BuildTargetFactory.newInstance("//:child");
+    ImmutableSortedSet<BuildTarget> result = BuildTargets.propagateFlavorDomains(
+        parent,
+        ImmutableList.<FlavorDomain<?>>of(domain),
+        ImmutableList.of(child));
+    assertEquals(
+        ImmutableSortedSet.of(BuildTargets.extendFlavoredBuildTarget(child, flavor)),
+        result);
+  }
+
+  @Test
+  public void propagateFlavorDomainFailsIfParentHasNoFlavor() {
+    BuildTarget parent = BuildTargetFactory.newInstance("//:parent");
+    Flavor flavor = new Flavor("flavor");
+    FlavorDomain<?> domain = new FlavorDomain<>(
+        "test",
+        ImmutableMap.of(flavor, "something"));
+    BuildTarget child = BuildTargetFactory.newInstance("//:child");
+    try {
+      BuildTargets.propagateFlavorDomains(
+          parent,
+          ImmutableList.<FlavorDomain<?>>of(domain),
+          ImmutableList.of(child));
+      fail("should have thrown");
+    } catch (HumanReadableException e) {
+      assertTrue(e.getMessage().contains("no flavor for"));
+    }
+  }
+
+  @Test
+  public void propagateFlavorDomainFailsIfChildAlreadyFlavored() {
+    BuildTarget parent = BuildTargetFactory.newInstance("//:parent#flavor");
+    Flavor flavor = new Flavor("flavor");
+    FlavorDomain<?> domain = new FlavorDomain<>(
+        "test",
+        ImmutableMap.of(flavor, "something"));
+    BuildTarget child = BuildTargetFactory.newInstance("//:child#flavor");
+    try {
+      BuildTargets.propagateFlavorDomains(
+          parent,
+          ImmutableList.<FlavorDomain<?>>of(domain),
+          ImmutableList.of(child));
+      fail("should have thrown");
+    } catch (HumanReadableException e) {
+      assertTrue(e.getMessage().contains("already has flavor"));
+    }
   }
 
 }

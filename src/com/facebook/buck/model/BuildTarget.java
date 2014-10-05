@@ -305,6 +305,11 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
       return addFlavor(new Flavor(flavor));
     }
 
+    public Builder addFlavors(Iterable<Flavor> flavors) {
+      this.flavors.addAll(flavors);
+      return this;
+    }
+
     public BuildTarget build() {
       return new BuildTarget(repository, baseName, shortName, flavors.build());
     }

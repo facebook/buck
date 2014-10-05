@@ -17,11 +17,16 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 
 /**
  * Static helpers for working with build targets.
@@ -112,10 +117,80 @@ public class BuildTargets {
   }
 
   /**
-   * @return a new flavored {@link BuildTarget} by merging any existing flavor with the
+   * @return a new flavored {@link BuildTarget} by merging any existing flavors with the
    *         given flavor.
    */
   public static BuildTarget extendFlavoredBuildTarget(BuildTarget target, Flavor flavor) {
     return BuildTarget.builder(target).addFlavor(flavor).build();
   }
+
+  /**
+   * @return a new flavored {@link BuildTarget} by merging any existing flavors with the
+   *         given flavors.
+   */
+  public static BuildTarget extendFlavoredBuildTarget(
+      BuildTarget target,
+      Iterable<Flavor> flavors) {
+    return BuildTarget.builder(target).addFlavors(flavors).build();
+  }
+
+  /**
+   * Propagate flavors represented by the given {@link FlavorDomain} objects from a parent
+   * target to it's dependencies.
+   */
+  public static ImmutableSortedSet<BuildTarget> propagateFlavorDomains(
+      BuildTarget target,
+      Iterable<FlavorDomain<?>> domains,
+      Iterable<BuildTarget> deps) {
+
+    Set<Flavor> flavors = Sets.newHashSet();
+
+    // For each flavor domain, extract the corresponding flavor from the parent target and
+    // verify that each dependency hasn't already set this flavor.
+    for (FlavorDomain<?> domain : domains) {
+
+      // Now extract all relevant domain flavors from our parent target.
+      Optional<Flavor> flavor;
+      try {
+        flavor = domain.getFlavor(target.getFlavors());
+      } catch (FlavorDomainException e) {
+        throw new HumanReadableException("%s: %s", target, e.getMessage());
+      }
+      if (!flavor.isPresent()) {
+        throw new HumanReadableException(
+            "%s: no flavor for \"%s\"",
+            target,
+            domain.getName());
+      }
+      flavors.add(flavor.get());
+
+      // First verify that our deps are not already flavored for our given domains.
+      for (BuildTarget dep : deps) {
+        Optional<Flavor> depFlavor;
+        try {
+          depFlavor = domain.getFlavor(dep.getFlavors());
+        } catch (FlavorDomainException e) {
+          throw new HumanReadableException("%s: dep %s: %s", target, dep, e.getMessage());
+        }
+        if (depFlavor.isPresent()) {
+          throw new HumanReadableException(
+              "%s: dep %s already has flavor for \"%s\" : %s",
+              target,
+              dep,
+              domain.getName(),
+              flavor.get());
+        }
+      }
+    }
+
+    ImmutableSortedSet.Builder<BuildTarget> flavoredDeps = ImmutableSortedSet.naturalOrder();
+
+    // Now flavor each dependency with the relevant flavors.
+    for (BuildTarget dep : deps) {
+      flavoredDeps.add(BuildTargets.extendFlavoredBuildTarget(dep, flavors));
+    }
+
+    return flavoredDeps.build();
+  }
+
 }
