@@ -1,4 +1,4 @@
-/*   
+/*
 
   Copyright 2004-2012, Martian Software, Inc.
 
@@ -13,7 +13,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
-  
+
 */
 
 /**
@@ -149,9 +149,9 @@ void handleError () {
   LPVOID lpMsgBuf;
   int error = GetLastError();
 
-  FormatMessage( 
-    FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-    FORMAT_MESSAGE_FROM_SYSTEM | 
+  FormatMessage(
+    FORMAT_MESSAGE_ALLOCATE_BUFFER |
+    FORMAT_MESSAGE_FROM_SYSTEM |
     FORMAT_MESSAGE_IGNORE_INSERTS,
     NULL,
     error,
@@ -165,7 +165,7 @@ void handleError () {
 
   /* Free the buffer. */
   LocalFree( lpMsgBuf );
- 
+
   cleanUpAndExit(error);
 }
 #endif
@@ -181,28 +181,28 @@ void handleError () {
  * @return total bytes written or 0 if failure
  */
 int sendAll(SOCKET s, char *buf, int len) {
-  int total = 0;      
-  int bytesleft = len; 
+  int total = 0;
+  int bytesleft = len;
   int n = 0;
-    
+
   while(total < len) {
     n = send(s, buf+total, bytesleft, 0);
-    
-    if (n == -1) { 
+
+    if (n == -1) {
       break;
     }
-    
+
     total += n;
     bytesleft -= n;
   }
 
-  return n==-1 ? 0:total; 
+  return n==-1 ? 0:total;
 }
 
 /**
  * Sends a chunk noting the specified payload size and chunk type.
  * Waits for sending mutex on Win32.
- * 
+ *
  * @param size the payload size
  * @param chunkType the chunk type identifier
  */
@@ -244,10 +244,10 @@ void sendChunk(unsigned int size, char chunkType, char* buf) {
  */
 int sendFileArg(char *filename) {
   int i, f;
-  
+
   if ((f = open(filename, O_RDONLY)) < 0) {
     perror("--nailgun-filearg");
-    return 1;  
+    return 1;
   }
 
   i = read(f, buf, BUFSIZE);
@@ -260,7 +260,7 @@ int sendFileArg(char *filename) {
     return 1;
   }
   sendChunk(0, CHUNKTYPE_LONGARG, buf);
-  
+
   close(f);
   return 0;
 }
@@ -293,12 +293,12 @@ void handleSocketClose() {
 void recvToFD(HANDLE destFD, char *buf, unsigned long len) {
   unsigned long bytesRead = 0;
   int bytesCopied;
-  
+
   while (bytesRead < len) {
     unsigned long bytesRemaining = len - bytesRead;
     int bytesToRead = (BUFSIZE < bytesRemaining) ? BUFSIZE : bytesRemaining;
     int thisPass = 0;
-    
+
     thisPass = recv(nailgunsocket, buf, bytesToRead, MSG_WAITALL);
 	if (thisPass == 0) {
 	  handleSocketClose();
@@ -322,7 +322,7 @@ void recvToFD(HANDLE destFD, char *buf, unsigned long len) {
       #else
         bytesCopied += write(destFD, buf + bytesCopied, thisPass - bytesCopied);
       #endif
-    }  
+    }
   }
 }
 
@@ -349,15 +349,15 @@ void processExit(char *buf, unsigned long len) {
   int exitcode;
   int bytesToRead = (BUFSIZE - 1 < len) ? BUFSIZE - 1 : len;
   int bytesRead = recvToBuffer(bytesToRead);
-  
+
   if (bytesRead < 0) {
     handleSocketClose();
   }
-  
+
   buf[bytesRead] = 0;
-  
+
   exitcode = atoi(buf);
-  
+
   cleanUpAndExit(exitcode);
 }
 
@@ -399,7 +399,7 @@ HANDLE createEvent(BOOL manualReset) {
 }
 
 DWORD WINAPI sendHeartbeats(LPVOID lpParameter) {
-		
+
 	/* this could be made more efficient by only sending heartbeats when stdin chunks aren't being sent */
 	for (;;) {
 		Sleep(HEARTBEAT_TIMEOUT_MILLIS);
@@ -466,7 +466,7 @@ int processStdin() {
  */
 void initSockets () {
   WSADATA win_socket_data;     /* required to initialise winsock */
-  
+
   WSAStartup(2, &win_socket_data);
 
   /* create flow control event and mutex */
@@ -482,7 +482,7 @@ void initSockets () {
 void initIo () {
   /* create non-blocking console io */
   AllocConsole();
-  
+
   NG_STDIN_FILENO = GetStdHandle(STD_INPUT_HANDLE);
   NG_STDOUT_FILENO = GetStdHandle(STD_OUTPUT_HANDLE);
   NG_STDERR_FILENO = GetStdHandle(STD_ERROR_HANDLE);
@@ -500,7 +500,7 @@ void winStartInput () {
   securityAttributes.bInheritHandle = TRUE;
   securityAttributes.lpSecurityDescriptor = NULL;
   securityAttributes.nLength = 0;
-  
+
   if (!CreateThread(&securityAttributes, 0, &processStdin, NULL, 0, &threadId)) {
     handleError();
   }
@@ -526,9 +526,9 @@ void processnailgunstream() {
       | ((buf[1] << 16) & 0x00ff0000)
       | ((buf[2] << 8) & 0x0000ff00)
       | ((buf[3]) & 0x000000ff);
-  
+
     chunkType = buf[4];
-  
+
     switch(chunkType) {
       case CHUNKTYPE_STDOUT: recvToFD(NG_STDOUT_FILENO, buf, len);
             break;
@@ -599,7 +599,7 @@ void usage(int exitcode) {
   fprintf(stderr, "          (to execute an aliased class, where \"alias\"\n");
   fprintf(stderr, "           is both the alias for the class and a symbolic\n");
   fprintf(stderr, "           link to the ng client)\n\n");
-  
+
   fprintf(stderr, "where options include:\n");
   fprintf(stderr, "   --nailgun-D<name>=<value>   set/override a client environment variable\n");
   fprintf(stderr, "   --nailgun-version           print product version and exit\n");
@@ -609,7 +609,7 @@ void usage(int exitcode) {
   fprintf(stderr, "                               if set, otherwise localhost)\n");
   fprintf(stderr, "   --nailgun-port              to specify the port of the nailgun server\n");
   fprintf(stderr, "                               (default is NAILGUN_PORT environment variable\n");
-  fprintf(stderr, "                               if set, otherwise 2113)\n");  
+  fprintf(stderr, "                               if set, otherwise 2113)\n");
   fprintf(stderr, "   --nailgun-filearg FILE      places the entire contents of FILE into the\n");
   fprintf(stderr, "                               next argument, which is interpreted as a string\n");
   fprintf(stderr, "                               using the server's default character set.  May be\n");
@@ -641,19 +641,19 @@ int main(int argc, char *argv[], char *env[]) {
   #ifdef WIN32
   initSockets();
   #endif
-  
+
   /* start with environment variable.  default to localhost if not defined. */
   nailgun_server = getenv("NAILGUN_SERVER");
   if (nailgun_server == NULL) {
     nailgun_server = "127.0.0.1";
   }
-  
+
   /* start with environment variable.  default to normal nailgun port if not defined */
   nailgun_port = getenv("NAILGUN_PORT");
   if (nailgun_port == NULL) {
     nailgun_port = NAILGUN_PORT_DEFAULT;
   }
-  
+
   /* look at the command used to launch this program.  if it was "ng", then the actual
      command to issue to the server must be specified as another argument.  if it
      wasn't ng, assume that the desired command name was symlinked to ng in the user's
@@ -668,14 +668,14 @@ int main(int argc, char *argv[], char *env[]) {
      display usage and exit.  Don't handle -h|--help if a command other than
      ng or ng.exe was used, since the appropriate nail should then handle
      --help. */
-  if (cmd == NULL && 
-        (argc == 1 || 
+  if (cmd == NULL &&
+        (argc == 1 ||
 	  (argc == 2 && strcmp("--help", argv[1]) == 0) ||
 	  (argc == 2 && strcmp("-h", argv[1]) == 0))) usage(0);
-     
+
   firstArgIndex = 1;
 
-  /* quite possibly the lamest commandline parsing ever. 
+  /* quite possibly the lamest commandline parsing ever.
      look for the two args we care about (--nailgun-server and
      --nailgun-port) and NULL them and their parameters after
      reading them if found.  later, when we send args to the
@@ -713,15 +713,15 @@ int main(int argc, char *argv[], char *env[]) {
   if (cmd == NULL) {
     usage(NAILGUN_BAD_ARGUMENTS);
   }
-  
-  /* jump through a series of connection hoops */  
+
+  /* jump through a series of connection hoops */
   hostinfo = gethostbyname(nailgun_server);
 
   if (hostinfo == NULL) {
     fprintf(stderr, "Unknown host: %s\n", nailgun_server);
     cleanUpAndExit(NAILGUN_CONNECT_FAILED);
   }
- 
+
   port = atoi(nailgun_port);
 
   if ((nailgunsocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -729,18 +729,18 @@ int main(int argc, char *argv[], char *env[]) {
     cleanUpAndExit(NAILGUN_SOCKET_FAILED);
   }
 
-  server_addr.sin_family = AF_INET;    
+  server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(port);
   server_addr.sin_addr = *(struct in_addr *) hostinfo->h_addr;
-  
+
   memset(&(server_addr.sin_zero), '\0', 8);
 
   if (connect(nailgunsocket, (struct sockaddr *)&server_addr,
     sizeof(struct sockaddr)) == -1) {
     perror("connect");
     cleanUpAndExit(NAILGUN_CONNECT_FAILED);
-  } 
-    
+  }
+
   /* ok, now we're connected.  first send all of the command line
      arguments for the server, if any.  remember that we may have
      marked some arguments NULL if we read them to specify the
@@ -753,30 +753,30 @@ int main(int argc, char *argv[], char *env[]) {
     }
   }
 
-  /* now send environment */  
+  /* now send environment */
   sendText(CHUNKTYPE_ENV, NAILGUN_FILESEPARATOR);
   sendText(CHUNKTYPE_ENV, NAILGUN_PATHSEPARATOR);
   for(i = 0; env[i]; ++i) {
     sendText(CHUNKTYPE_ENV, env[i]);
   }
-  
+
   /* now send the working directory */
   cwd = getcwd(NULL, 0);
   sendText(CHUNKTYPE_DIR, cwd);
   free(cwd);
-  
+
   /* and finally send the command.  this marks the point at which
      streams are linked between client and server. */
   sendText(CHUNKTYPE_CMD, cmd);
 
-  
-  /* initialise the std-* handles and the thread to send stdin to the server */ 
+
+  /* initialise the std-* handles and the thread to send stdin to the server */
   #ifdef WIN32
   initIo();
   winStartInput();
   #endif
 
-  /* stream forwarding loop */	
+  /* stream forwarding loop */
   while(1) {
     #ifndef WIN32
       FD_ZERO(&readfds);
@@ -793,7 +793,7 @@ int main(int argc, char *argv[], char *env[]) {
       if(select (nailgunsocket + 1, &readfds, NULL, NULL, &readtimeout) == -1) {
 	  perror("select");
       }
-	  
+
       if (FD_ISSET(nailgunsocket, &readfds)) {
     #endif
 	processnailgunstream();
@@ -809,7 +809,7 @@ int main(int argc, char *argv[], char *env[]) {
 	  sendHeartbeat();
       }
     #endif
-  }  
+  }
 
   /* normal termination is triggered by the server, and so occurs in processExit(), above */
 }
