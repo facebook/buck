@@ -42,15 +42,19 @@ class DependentModule {
   private final String type;
 
   @JsonProperty
+  @Nullable
   String scope;
 
   @JsonProperty
+  @Nullable
   private String name;
 
   @JsonProperty
+  @Nullable
   private String moduleName;
 
   @JsonProperty
+  @Nullable
   private Boolean forTests;
 
   /**
@@ -77,6 +81,7 @@ class DependentModule {
    *
    * @return the target that declared this module or null.
    */
+  @Nullable
   public String getTargetName() {
     if (target == null) {
       return null;
@@ -94,15 +99,15 @@ class DependentModule {
 
   String getLibraryName() {
     Preconditions.checkState(isLibrary());
-    return name;
+    return Preconditions.checkNotNull(name);
   }
 
   String getModuleName() {
     Preconditions.checkState(isModule());
-    return moduleName;
+    return Preconditions.checkNotNull(moduleName);
   }
 
-  static DependentModule newLibrary(BuildTarget owningTarget, String libraryName) {
+  static DependentModule newLibrary(@Nullable BuildTarget owningTarget, String libraryName) {
     DependentModule module = new DependentModule(LIBRARY_DEPENDENCY_TYPE, owningTarget);
     module.name = libraryName;
     return module;

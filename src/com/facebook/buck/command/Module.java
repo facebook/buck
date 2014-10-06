@@ -31,6 +31,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.SortedSet;
 
+import javax.annotation.Nullable;
+
 @JsonInclude(Include.NON_NULL)
 @VisibleForTesting
 final class Module {
@@ -60,9 +62,12 @@ final class Module {
   /**
    * Let intellij generate the gen directory to specific path.
    */
+  @Nullable
   @JsonProperty String moduleGenPath;
 
+  @Nullable
   @JsonProperty String name;
+  @Nullable
   @JsonProperty String pathToImlFile;
   @JsonProperty List<SourceFolder> sourceFolders = Lists.newArrayList();
   @JsonProperty Boolean isRootModule = false;
@@ -71,20 +76,31 @@ final class Module {
    * &lt;excludeFolder> elements must be sorted alphabetically in an .iml file.
    */
   @JsonProperty SortedSet<SourceFolder> excludeFolders = Sets.newTreeSet(ALPHABETIZER);
+  @Nullable
   @JsonProperty List<DependentModule> dependencies;
 
   // ANDROID_BINARY / ANDROID_LIBRARY
+  @Nullable
   @JsonProperty Boolean hasAndroidFacet;
+  @Nullable
   @JsonProperty Boolean isAndroidLibraryProject;
+  @Nullable
   @JsonProperty String proguardConfigPath;
+  @Nullable
   @JsonProperty String resFolder;
+  @Nullable
   @JsonProperty String keystorePath;
+  @Nullable
   @JsonProperty String androidManifest;
+  @Nullable
   @JsonProperty String nativeLibs;
+  @Nullable
   @JsonProperty Boolean isIntelliJPlugin;
 
   // Annotation processing
+  @Nullable
   @JsonProperty String annotationGenPath;
+  @Nullable
   @JsonProperty Boolean annotationGenIsForTest;
 
   Module(BuildRule srcRule, BuildTarget target) {
@@ -93,7 +109,7 @@ final class Module {
   }
 
   String getModuleDirectoryPathWithSlash() {
-    int lastSlashIndex = pathToImlFile.lastIndexOf('/');
+    int lastSlashIndex = Preconditions.checkNotNull(pathToImlFile).lastIndexOf('/');
     if (lastSlashIndex < 0) {
       return "";
     } else {

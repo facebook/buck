@@ -162,6 +162,7 @@ public class Build implements Closeable {
     AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>> traversal =
         new AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>>(graph) {
 
+      @Nullable
       private String androidPlatformTargetId = null;
 
       private boolean isEncounteredAndroidRuleInTraversal = false;

@@ -276,7 +276,7 @@ public class Project {
   File writeProjectDotPropertiesFile(Module module, Map<String, Module> nameToModuleIndex)
       throws IOException {
     SortedSet<String> references = Sets.newTreeSet();
-    for (DependentModule dependency : module.dependencies) {
+    for (DependentModule dependency : Preconditions.checkNotNull(module.dependencies)) {
       if (!dependency.isModule()) {
         continue;
       }
@@ -385,7 +385,7 @@ public class Project {
   }
 
   private Module createModuleForProjectConfig(ProjectConfig projectConfig) throws IOException {
-    BuildRule projectRule = projectConfig.getProjectRule();
+    BuildRule projectRule = Preconditions.checkNotNull(projectConfig.getProjectRule());
     Preconditions.checkState(
         projectRule instanceof JavaLibrary ||
         projectRule instanceof JavaBinary ||
@@ -674,7 +674,7 @@ public class Project {
 
   @VisibleForTesting
   static void addRootExcludes(Module module,
-      BuildRule buildRule,
+      @Nullable BuildRule buildRule,
       ProjectFilesystem projectFilesystem) {
     // If in the root of the project, specify ignored paths.
     if (buildRule != null && buildRule.getBuildTarget().getBasePathWithSlash().isEmpty()) {
@@ -743,7 +743,7 @@ public class Project {
 
       // Inspect all of the library dependencies. If the corresponding JAR file is in the set of
       // noDxJars, then either change its scope to "COMPILE" or "PROVIDED", as appropriate.
-      for (DependentModule dependentModule : module.dependencies) {
+      for (DependentModule dependentModule : Preconditions.checkNotNull(module.dependencies)) {
         if (!dependentModule.isLibrary()) {
           continue;
         }
@@ -767,7 +767,7 @@ public class Project {
       for (Path entry : classpathEntriesToDex) {
         String libraryName = getIntellijNameForBinaryJar(entry);
         DependentModule dependency = DependentModule.newLibrary(null, libraryName);
-        module.dependencies.add(dependency);
+        Preconditions.checkNotNull(module.dependencies).add(dependency);
       }
     }
   }
@@ -913,7 +913,7 @@ public class Project {
     } else {
       Path basePath = rule.getBuildTarget().getBasePath();
       if (basePathToAliasMap != null && basePathToAliasMap.containsKey(basePath)) {
-        name = basePathToAliasMap.get(basePath);
+        name = Preconditions.checkNotNull(basePathToAliasMap.get(basePath));
       } else {
         name = rule.getBuildTarget().getBasePath().toString();
         name = name.replace('/', '_');
@@ -1091,7 +1091,9 @@ public class Project {
   static class SerializablePrebuiltJarRule {
     @JsonProperty private final String name;
     @JsonProperty private final String binaryJar;
+    @Nullable
     @JsonProperty private final String sourceJar;
+    @Nullable
     @JsonProperty private final String javadocUrl;
 
     private SerializablePrebuiltJarRule(BuildRule rule) {
