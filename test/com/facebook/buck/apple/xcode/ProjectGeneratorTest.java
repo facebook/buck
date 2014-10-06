@@ -1559,12 +1559,29 @@ public class ProjectGeneratorTest {
   public void testAppleBundleRuleForDynamicFramework() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
-    BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "dynamic").setFlavor(
-            AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        resolver);
+    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
+    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
+
+    BuildRuleParams dynamicLibraryParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//dep", "dynamic").setFlavor(
+            AppleLibraryDescription.DYNAMIC_LIBRARY).build())
+            .setType(AppleLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg dynamicLibraryArg =
+        appleLibraryDescription.createUnpopulatedConstructorArg();
+    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
+    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
+        ImmutableMap.<String, String>of());
+    dynamicLibraryArg.configs = Optional.of(
+        ImmutableMap.of("Debug", ImmutableList.of(argConfig, argSettings, argConfig, argSettings)));
+    dynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
+    dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
+    dynamicLibraryArg.deps = Optional.absent();
+    dynamicLibraryArg.gid = Optional.absent();
+    dynamicLibraryArg.headerPathPrefix = Optional.absent();
+    dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
+    BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
+        dynamicLibraryParams, resolver, dynamicLibraryArg);
     resolver.addToIndex(dynamicLibraryDep);
 
     BuildRuleParams params =
@@ -1587,18 +1604,26 @@ public class ProjectGeneratorTest {
     resolver.addToIndex(rule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
+        createPartialGraphFromBuildRules(ImmutableSortedSet.of(rule)),
+        ImmutableSet.of(rule.getBuildTarget()),
+        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
     projectGenerator.createXcodeProjects();
 
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "//foo:bundle");
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
     assertEquals(target.getProductType(), PBXTarget.ProductType.FRAMEWORK);
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
     assertEquals("bundle.framework", productReference.getName());
     assertEquals(Optional.of("wrapper.framework"), productReference.getExplicitFileType());
+
+    assertHasConfigurations(target, "Debug");
+    XCBuildConfiguration configuration =
+        target.getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+    NSDictionary settings = configuration.getBuildSettings();
+    assertEquals(
+        new NSString("framework"),
+        settings.get("WRAPPER_EXTENSION"));
   }
 
   @Test

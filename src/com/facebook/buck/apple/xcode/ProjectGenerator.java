@@ -566,6 +566,10 @@ public class ProjectGenerator {
       extraSettingsBuilder.put("USE_HEADERMAP", "NO");
     }
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
+    if (rule.getType().equals(AppleBundleDescription.TYPE)) {
+      AppleBundle bundle = (AppleBundle) rule;
+      defaultSettingsBuilder.put("WRAPPER_EXTENSION", bundle.getExtensionString());
+    }
     defaultSettingsBuilder.put("PUBLIC_HEADERS_FOLDER_PATH",
         getHeaderOutputPathForRule(buildable.getHeaderPathPrefix()));
     if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
