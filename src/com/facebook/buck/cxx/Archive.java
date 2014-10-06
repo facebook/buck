@@ -27,6 +27,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -53,7 +54,7 @@ public class Archive extends AbstractBuildRule {
   }
 
   @Override
-  protected Iterable<Path> getInputsToCompareToOutput() {
+  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return SourcePaths.toPaths(inputs);
   }
 

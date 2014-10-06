@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -70,7 +71,7 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
   }
 
   @Override
-  protected Iterable<Path> getInputsToCompareToOutput() {
+  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of(input.resolve());
   }
 

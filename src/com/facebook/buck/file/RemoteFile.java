@@ -27,6 +27,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -65,7 +66,7 @@ public class RemoteFile extends AbstractBuildRule {
   }
 
   @Override
-  protected Iterable<Path> getInputsToCompareToOutput() {
+  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return ImmutableSet.of();
   }
 

@@ -20,11 +20,11 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
-import java.util.Collection;
 
 import javax.annotation.Nullable;
 
@@ -111,7 +111,7 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
    * resource rules that they depend on change. This allows the buildables to avoid waiting for
    * this rule to finish.
    */
-  Collection<Path> getInputsToCompareToOutput();
+  ImmutableCollection<Path> getInputsToCompareToOutput();
 
   /**
    * @return boolean indicating whether this resource rule has whitelisted strings.

@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -51,7 +52,7 @@ public class CxxLink extends AbstractBuildRule {
   }
 
   @Override
-  protected Iterable<Path> getInputsToCompareToOutput() {
+  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return SourcePaths.toPaths(inputs);
   }
 

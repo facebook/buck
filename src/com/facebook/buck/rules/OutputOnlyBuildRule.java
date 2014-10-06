@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -54,7 +55,7 @@ public class OutputOnlyBuildRule extends AbstractBuildRule {
   }
 
   @Override
-  protected Iterable<Path> getInputsToCompareToOutput() {
+  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of();
   }
 

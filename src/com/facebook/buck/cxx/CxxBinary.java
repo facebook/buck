@@ -25,6 +25,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -41,7 +42,7 @@ public class CxxBinary extends AbstractBuildRule implements BinaryBuildRule {
   }
 
   @Override
-  protected Iterable<Path> getInputsToCompareToOutput() {
+  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of();
   }
 

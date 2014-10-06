@@ -39,7 +39,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
@@ -107,7 +106,6 @@ import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1100,8 +1098,8 @@ public class DefaultJavaLibraryTest {
         .addResource(new TestSourcePath("becgkaifhjd.txt"))
         .build(new BuildRuleResolver(), filesystem);
 
-    Collection<Path> inputs1 = rule1.getInputsToCompareToOutput();
-    Collection<Path> inputs2 = rule2.getInputsToCompareToOutput();
+    Iterable<Path> inputs1 = rule1.getInputsToCompareToOutput();
+    Iterable<Path> inputs2 = rule2.getInputsToCompareToOutput();
     assertEquals(ImmutableList.copyOf(inputs1), ImmutableList.copyOf(inputs2));
 
     ImmutableMap.Builder<String, String> fileHashes = ImmutableMap.builder();
@@ -1115,8 +1113,8 @@ public class DefaultJavaLibraryTest {
 
     RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(rule1);
     RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(rule2);
-    ((AbstractBuildRule) rule1).appendToRuleKey(builder1);
-    ((AbstractBuildRule) rule2).appendToRuleKey(builder2);
+    rule1.appendToRuleKey(builder1);
+    rule2.appendToRuleKey(builder2);
     RuleKey.Builder.RuleKeyPair pair1 = builder1.build();
     RuleKey.Builder.RuleKeyPair pair2 = builder2.build();
     assertEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());

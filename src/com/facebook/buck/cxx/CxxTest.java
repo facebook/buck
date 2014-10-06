@@ -36,6 +36,7 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -65,7 +66,7 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  protected Iterable<Path> getInputsToCompareToOutput() {
+  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of();
   }
 

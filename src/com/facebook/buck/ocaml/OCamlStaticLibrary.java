@@ -29,6 +29,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -96,7 +97,7 @@ class OCamlStaticLibrary extends AbstractBuildRule implements OCamlLibrary {
   }
 
   @Override
-  protected Iterable<Path> getInputsToCompareToOutput() {
+  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of();
   }
 

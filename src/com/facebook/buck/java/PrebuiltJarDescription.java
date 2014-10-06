@@ -124,7 +124,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
 
     BuildRule buildRule = new AbstractBuildRule(params) {
       @Override
-      protected Iterable<Path> getInputsToCompareToOutput() {
+      protected ImmutableCollection<Path> getInputsToCompareToOutput() {
         return inputsToCompareToOutput;
       }
 

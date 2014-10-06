@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -89,7 +90,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     return inputsToCompareToOutputs;
   }
 
-  protected abstract Iterable<Path> getInputsToCompareToOutput();
+  protected abstract ImmutableCollection<Path> getInputsToCompareToOutput();
 
   @Override
   public final int compareTo(HasBuildTarget that) {
