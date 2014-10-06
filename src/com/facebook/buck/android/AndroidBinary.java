@@ -602,7 +602,7 @@ public class AndroidBinary extends AbstractBuildRule implements
           this.getBuildTarget(),
           commandString,
           preprocessJavaClassesDeps,
-          preprocessJavaClassesInDir.toFile()) {
+          context.getProjectRoot().resolve(preprocessJavaClassesInDir).toFile()) {
 
         @Override
         protected void addEnvironmentVariables(
