@@ -204,7 +204,7 @@ public class MiniAapt implements Step {
 
       String dirname = dir.getFileName().toString();
       if (dirname.startsWith("values")) {
-        if (!dirname.equals("values") && !dirname.startsWith("values-")) {
+        if (isAValuesDir(dirname)) {
           throw new ResourceParseException("'%s' is not a valid values directory.", dir);
         }
         processValues(filesystem, eventBus, dir);
@@ -351,6 +351,11 @@ public class MiniAapt implements Step {
       ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
     for (Path path : filesystem.getFilesUnderPath(resDirectory, ENDS_WITH_XML)) {
+      String dirname = resDirectory.relativize(path).getName(0).toString();
+      if (!resDirectory.equals(path.getParent()) && isAValuesDir(dirname)) {
+        // Ignore files under values* directories.
+        continue;
+      }
       processXmlFile(filesystem, path, references);
     }
   }
@@ -403,6 +408,10 @@ public class MiniAapt implements Step {
 
   private static String sanitizeName(String rawName) {
     return rawName.replaceAll("[.:]", "_");
+  }
+
+  private static boolean isAValuesDir(String dirname) {
+    return dirname.equals("values") || dirname.startsWith("values-");
   }
 
   @VisibleForTesting
