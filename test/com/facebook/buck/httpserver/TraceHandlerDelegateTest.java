@@ -68,7 +68,7 @@ public class TraceHandlerDelegateTest extends EasyMockSupport {
         response);
     verifyAll();
 
-    String expectedScriptTag = "<script src=\"/tracedata/abcdef?callback=onTraceLoaded\">";
+    String expectedScriptTag = "<script src=\"/tracedata/abcdef?callback=onTracesLoaded\">";
     String html = stringWriter.toString();
     assertThat(html, containsString(expectedScriptTag));
     assertThat(html, containsString("buck build buck"));

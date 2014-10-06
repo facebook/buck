@@ -24,6 +24,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 
+import com.google.common.base.Charsets;
+
 import org.easymock.EasyMockSupport;
 import org.eclipse.jetty.server.Request;
 import org.junit.Test;
@@ -31,10 +33,12 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 
 import javax.servlet.ServletException;
@@ -97,7 +101,44 @@ public class TraceDataHandlerTest extends EasyMockSupport {
         response);
     verifyAll();
 
-    assertEquals("{\"foo\":\"bar\"}", stringWriter.toString());
+    assertEquals("[{\"foo\":\"bar\"}]", stringWriter.toString());
+  }
+
+  @Test
+  public void testHandleGetWithMultipleTrace() throws IOException, ServletException {
+    Request baseRequest = createMock(Request.class);
+    expect(baseRequest.getMethod()).andReturn("GET");
+    expect(baseRequest.getPathInfo()).andReturn("/abcdef");
+    expect(baseRequest.getParameter("callback")).andReturn(null);
+    baseRequest.setHandled(true);
+    HttpServletRequest request = createMock(HttpServletRequest.class);
+
+    HttpServletResponse response = createMock(HttpServletResponse.class);
+    response.setStatus(200);
+    response.setContentType("application/javascript; charset=utf-8");
+    StringWriter stringWriter = new StringWriter();
+    PrintWriter printWriter = new PrintWriter(stringWriter);
+    expect(response.getWriter()).andReturn(printWriter);
+    response.flushBuffer();
+
+    TracesHelper tracesHelper = createMock(TracesHelper.class);
+    Iterable<InputStream> traces = Arrays.<InputStream>asList(
+        new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
+        new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
+    expect(tracesHelper.getInputsForTraces("abcdef")).andReturn(traces);
+
+    TraceDataHandler traceDataHandler = new TraceDataHandler(tracesHelper);
+
+    replayAll();
+    traceDataHandler.handle("/trace/abcdef",
+        baseRequest,
+        request,
+        response);
+    verifyAll();
+
+    assertEquals(
+        "[{\"foo\":\"bar\"},{\"baz\":\"blech\"}]",
+        stringWriter.toString());
   }
 
   @Test
@@ -138,6 +179,43 @@ public class TraceDataHandlerTest extends EasyMockSupport {
         response);
     verifyAll();
 
-    assertEquals("my.callback({\"foo\":\"bar\"});\n", stringWriter.toString());
+    assertEquals("my.callback([{\"foo\":\"bar\"}]);\n", stringWriter.toString());
+  }
+
+  @Test
+  public void testHandleGetWithMultipleTraceCallback() throws IOException, ServletException {
+    Request baseRequest = createMock(Request.class);
+    expect(baseRequest.getMethod()).andReturn("GET");
+    expect(baseRequest.getPathInfo()).andReturn("/abcdef");
+    expect(baseRequest.getParameter("callback")).andReturn("my.callback");
+    baseRequest.setHandled(true);
+    HttpServletRequest request = createMock(HttpServletRequest.class);
+
+    HttpServletResponse response = createMock(HttpServletResponse.class);
+    response.setStatus(200);
+    response.setContentType("application/javascript; charset=utf-8");
+    StringWriter stringWriter = new StringWriter();
+    PrintWriter printWriter = new PrintWriter(stringWriter);
+    expect(response.getWriter()).andReturn(printWriter);
+    response.flushBuffer();
+
+    TracesHelper tracesHelper = createMock(TracesHelper.class);
+    Iterable<InputStream> traces = Arrays.<InputStream>asList(
+        new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
+        new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
+    expect(tracesHelper.getInputsForTraces("abcdef")).andReturn(traces);
+
+    TraceDataHandler traceDataHandler = new TraceDataHandler(tracesHelper);
+
+    replayAll();
+    traceDataHandler.handle("/trace/abcdef?callback=my.callback",
+        baseRequest,
+        request,
+        response);
+    verifyAll();
+
+    assertEquals(
+        "my.callback([{\"foo\":\"bar\"},{\"baz\":\"blech\"}]);\n",
+        stringWriter.toString());
   }
 }

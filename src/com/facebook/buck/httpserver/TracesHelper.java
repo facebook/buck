@@ -21,6 +21,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -86,10 +87,11 @@ public class TracesHelper {
     return projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR);
   }
 
-  InputStream getInputForTrace(String id) throws IOException {
+  Iterable<InputStream> getInputsForTraces(String id) throws IOException {
     Preconditions.checkNotNull(id);
     Path pathToTrace = getPathToTrace(id);
-    return projectFilesystem.getInputStreamForRelativePath(pathToTrace);
+    // TODO(user): Support multiple traces per build ID.
+    return ImmutableList.of(projectFilesystem.getInputStreamForRelativePath(pathToTrace));
   }
 
   TraceAttributes getTraceAttributesFor(String id) {

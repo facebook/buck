@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -91,11 +92,25 @@ class TraceDataHandler extends AbstractHandler {
       }
     }
 
-    try (
-        InputStream input = tracesHelper.getInputForTrace(id);
-        InputStreamReader inputStreamReader = new InputStreamReader(input)) {
-      CharStreams.copy(inputStreamReader, responseWriter);
+    responseWriter.write("[");
+
+    Iterator<InputStream> traceStreams = tracesHelper.getInputsForTraces(id).iterator();
+    boolean isFirst = true;
+
+    while (traceStreams.hasNext()) {
+      if (!isFirst) {
+        responseWriter.write(",");
+      } else {
+        isFirst = false;
+      }
+      try (
+          InputStream input = traceStreams.next();
+          InputStreamReader inputStreamReader = new InputStreamReader(input)) {
+        CharStreams.copy(inputStreamReader, responseWriter);
+      }
     }
+
+    responseWriter.write("]");
 
     if (hasValidCallbackParam) {
       responseWriter.write(");\n");

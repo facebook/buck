@@ -26,9 +26,9 @@
 <script src="/static/trace_viewer.js"></script>
 <script>
 {literal}
-var onTraceLoaded = function(trace) {
+var onTracesLoaded = function(traces) {
   var model = new tracing.TraceModel();
-  model.importTraces([trace]);
+  model.importTraces(traces);
 
   var viewEl = tracing.TimelineView();
   viewEl.model = model;
@@ -36,7 +36,7 @@ var onTraceLoaded = function(trace) {
 };
 {/literal}
 </script>
-<script src="/tracedata/{$traceId}?callback=onTraceLoaded"></script>
+<script src="/tracedata/{$traceId}?callback=onTracesLoaded"></script>
 
 {call buck.footer /}
 {/template}
