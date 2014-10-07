@@ -86,9 +86,9 @@ public class Generator {
     final String defaultFieldVisibility = clazz.getDefaultFieldVisibility();
     for (ParcelableField field : clazz.getFields()) {
       if (field.getJsonProperty() != null) {
-        String jsonProperty = field.getJsonProperty().isEmpty()
+        String jsonProperty = Preconditions.checkNotNull(field.getJsonProperty()).isEmpty()
             ? ""
-            : String.format("(\"%s\")", field.getJsonProperty());
+            : String.format("(\"%s\")", Preconditions.checkNotNull(field.getJsonProperty()));
         out.appendLine("  @JsonProperty%s", jsonProperty);
       }
 

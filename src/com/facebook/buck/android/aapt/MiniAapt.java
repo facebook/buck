@@ -194,7 +194,8 @@ public class MiniAapt implements Step {
    */
   private void collectResources(ProjectFilesystem filesystem, BuckEventBus eventBus)
       throws IOException, ResourceParseException {
-    Collection<Path> contents = filesystem.getDirectoryContents(resDirectory);
+    Collection<Path> contents =
+        Preconditions.checkNotNull(filesystem.getDirectoryContents(resDirectory));
     for (Path dir : contents) {
       if (!filesystem.isDirectory(dir) && !filesystem.isIgnored(dir)) {
         eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring file '%s'.", dir));
@@ -226,7 +227,7 @@ public class MiniAapt implements Step {
       throw new ResourceParseException("'%s' is not a valid resource sub-directory.", dir);
     }
 
-    for (Path resourceFile : filesystem.getDirectoryContents(dir)) {
+    for (Path resourceFile : Preconditions.checkNotNull(filesystem.getDirectoryContents(dir))) {
       if (filesystem.isHidden(resourceFile)) {
         continue;
       }

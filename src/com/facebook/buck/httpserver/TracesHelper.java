@@ -35,6 +35,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.annotation.Nullable;
+
 /**
  * Utility to help with reading data from build trace files.
  */
@@ -79,6 +81,7 @@ public class TracesHelper {
     }
   }
 
+  @Nullable
   File[] listTraceFiles() {
     return projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR);
   }

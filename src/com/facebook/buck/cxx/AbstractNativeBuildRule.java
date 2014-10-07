@@ -144,7 +144,7 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
     for (BuildRule dep : getDeps()) {
       // Only c++ static libraries are supported for now.
       if (dep instanceof CxxLibrary) {
-        objectFiles.add(dep.getPathToOutputFile());
+        objectFiles.add(Preconditions.checkNotNull(dep.getPathToOutputFile()));
       }
     }
 

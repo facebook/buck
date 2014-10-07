@@ -162,7 +162,7 @@ public class JavaSymbolFinder {
             String type = (String) ruleMap.get("type");
             if (javaRuleTypes.contains(type)) {
               @SuppressWarnings("unchecked")
-              List<String> srcs = (List<String>) ruleMap.get("srcs");
+              List<String> srcs = (List<String>) Preconditions.checkNotNull(ruleMap.get("srcs"));
               if (isSourceFilePathInSrcsList(sourceFile, srcs, buckFile.getParent())) {
                 Path buckFileDir = buckFile.getParent();
                 String baseName = "//" + (buckFileDir != null ? buckFileDir : "");
