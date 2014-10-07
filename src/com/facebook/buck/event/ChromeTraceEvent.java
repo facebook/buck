@@ -25,8 +25,6 @@ import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 /**
  * Json format for Chrome Trace events that can be viewed in chrome://tracing.
  * https://code.google.com/p/trace-viewer/wiki/TraceEventFormat
@@ -63,7 +61,6 @@ public class ChromeTraceEvent {
   private final long processId;
   private final long threadId;
   private final long microTime;
-  @Nullable
   private final ImmutableMap<String, String> args;
 
   public ChromeTraceEvent(@JsonProperty("cat") String category,
@@ -109,7 +106,7 @@ public class ChromeTraceEvent {
 
   @JsonProperty("args")
   public Map<String, String> getArgs() {
-    return args;
+    return Preconditions.checkNotNull(args);
   }
 
   @JsonProperty("cat")

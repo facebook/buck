@@ -23,6 +23,8 @@ import com.google.common.base.Preconditions;
 
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
 /**
  * Base class for all build events. Using this makes it easy to add a wildcard listener
  * to the event bus.
@@ -34,6 +36,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   private long timestamp;
   private long nanoTime;
   private long threadId;
+  @Nullable
   private BuildId buildId;
 
   protected AbstractBuckEvent() {
@@ -81,7 +84,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   @Override
   public BuildId getBuildId() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
-    return buildId;
+    return Preconditions.checkNotNull(buildId);
   }
 
   @Override
