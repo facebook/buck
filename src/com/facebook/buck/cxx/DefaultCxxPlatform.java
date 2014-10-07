@@ -220,7 +220,7 @@ public class DefaultCxxPlatform implements CxxPlatform {
 
   @Override
   public ImmutableList<String> getLexFlags() {
-    return getFlags("cxx", "yaccflags", DEFAULT_LEX_FLAGS);
+    return getFlags("cxx", "lexflags", DEFAULT_LEX_FLAGS);
   }
 
   @Override
