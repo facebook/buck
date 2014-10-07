@@ -37,7 +37,14 @@ class _TraceEventPhases(object):
 
 
 class Tracing(object):
-    _trace_events = []
+    _trace_events = [
+        {
+            'name': 'process_name',
+            'ph': _TraceEventPhases.METADATA,
+            'pid': os.getpid(),
+            'args': {'name': 'buck.py'}
+        }
+    ]
 
     def __init__(self, name, args={}):
         self.name = name

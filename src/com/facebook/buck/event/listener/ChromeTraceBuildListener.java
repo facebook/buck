@@ -101,6 +101,19 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       }
     };
     this.tracesToKeep = tracesToKeep;
+    addProcessMetadataEvent();
+  }
+
+  private void addProcessMetadataEvent() {
+    eventList.add(
+        new ChromeTraceEvent(
+            "buck",
+            "process_name",
+            ChromeTraceEvent.Phase.METADATA,
+            /* processId */ 0,
+            /* threadId */ 0,
+            /* microTime */ 0,
+            ImmutableMap.of("name", "buck")));
   }
 
   @VisibleForTesting
