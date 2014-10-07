@@ -37,8 +37,6 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   private final Supplier<Optional<Path>> sdkSupplier;
   private final Supplier<Optional<Path>> ndkSupplier;
 
-
-
   public DefaultAndroidDirectoryResolver(
       ProjectFilesystem projectFilesystem,
       Optional<String> targetNdkVersion,
@@ -59,7 +57,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
         Suppliers.memoize(new Supplier<Optional<Path>>() {
           @Override
           public Optional<Path> get() {
-            return getNdkPathFromNdkDir().or(getNdkPathFromNdkRepository());
+            return getNdkPathFromNdkRepository().or(getNdkPathFromNdkDir());
           }
         });
   }
