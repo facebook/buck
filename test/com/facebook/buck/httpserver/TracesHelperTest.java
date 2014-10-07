@@ -24,6 +24,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -145,5 +146,23 @@ public class TracesHelperTest {
             BuckConstant.BUCK_TRACE_DIR.resolve("build.2.trace"),
             BuckConstant.BUCK_TRACE_DIR.resolve("build.1.trace")),
         helper.listTraceFilesByLastModified());
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testInputsForTracesThrowsWhenEmpty() throws IOException {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
+        new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
+    projectFilesystem.mkdirs(BuckConstant.BUCK_TRACE_DIR);
+    TracesHelper helper = new TracesHelper(projectFilesystem);
+    helper.getInputsForTraces("nonexistent");
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testTraceAttributesThrowsWhenEmpty() throws IOException {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
+        new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
+    projectFilesystem.mkdirs(BuckConstant.BUCK_TRACE_DIR);
+    TracesHelper helper = new TracesHelper(projectFilesystem);
+    helper.getTraceAttributesFor("nonexistent");
   }
 }

@@ -102,20 +102,31 @@ public class TracesHelper {
         }
     };
 
-    return lastModifiedOrdering.immutableSortedCopy(
-        projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR));
+    ImmutableCollection<Path> traces =
+        projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR);
+    if (traces != null) {
+      return lastModifiedOrdering.immutableSortedCopy(traces);
+    } else {
+      return ImmutableList.<Path>of();
+    }
   }
 
   Iterable<InputStream> getInputsForTraces(String id) throws IOException {
     Preconditions.checkNotNull(id);
-    Path pathToTrace = getPathToTrace(id);
-    // TODO(user): Support multiple traces per build ID.
-    return ImmutableList.of(projectFilesystem.getInputStreamForRelativePath(pathToTrace));
+    ImmutableList.Builder<InputStream> tracesBuilder = ImmutableList.builder();
+    for (Path p : getPathsToTraces(id)) {
+      tracesBuilder.add(projectFilesystem.getInputStreamForRelativePath(p));
+    }
+    return tracesBuilder.build();
   }
 
   TraceAttributes getTraceAttributesFor(String id) throws IOException {
-    Path pathToTrace = getPathToTrace(id);
-    return getTraceAttributesFor(pathToTrace);
+    for (Path p : getPathsToTraces(id)) {
+      if (isTraceForBuild(p, id)) {
+        return getTraceAttributesFor(p);
+      }
+    }
+    throw new HumanReadableException("Could not find a build trace with id %s.", id);
   }
 
   /**
@@ -160,19 +171,40 @@ public class TracesHelper {
     }
   }
 
-  private Path getPathToTrace(String id) {
+  private boolean isTraceForBuild(Path path, String id) {
+    String testPrefix = "build.";
+    String testSuffix = "." + id + ".trace";
+    String name = path.getFileName().toString();
+    return name.startsWith(testPrefix) && name.endsWith(testSuffix);
+  }
+
+  /**
+   * Returns a collection of paths containing traces for the specified build ID.
+   *
+   * A given build might have more than one trace file (for example,
+   * the buck.py launcher has its own trace file).
+   */
+  private ImmutableCollection<Path> getPathsToTraces(String id) {
     Preconditions.checkNotNull(id);
     Preconditions.checkArgument(TracesHandlerDelegate.TRACE_ID_PATTERN.matcher(id).matches());
 
-    String testPrefix = "build.";
-    String testSuffix = "." + id + ".trace";
-    for (Path path : projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR)) {
-      String name = path.getFileName().toString();
-      if (name.endsWith(testSuffix) && name.startsWith(testPrefix)) {
-        return path;
+    ImmutableList.Builder<Path> tracesBuilder = ImmutableList.builder();
+    ImmutableCollection<Path> directoryContents =
+        projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR);
+    if (directoryContents != null) {
+      for (Path path : directoryContents) {
+        String name = path.getFileName().toString();
+        if (name.endsWith("." + id + ".trace")) {
+          tracesBuilder.add(path);
+        }
       }
     }
 
-    throw new HumanReadableException("Could not find a build trace with id %s.", id);
+    ImmutableList<Path> traces = tracesBuilder.build();
+    if (traces.isEmpty()) {
+      throw new HumanReadableException("Could not find a build trace with id %s.", id);
+    } else {
+      return traces;
+    }
   }
 }
