@@ -44,6 +44,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,9 +52,9 @@ import com.google.common.eventbus.Subscribe;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
@@ -122,28 +123,38 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       return;
     }
 
-    ImmutableList<File> filesSortedByModified = FluentIterable.
-        from(Arrays.asList(projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR))).
-        filter(new Predicate<File>() {
-          @Override
-          public boolean apply(File input) {
-            return input.getName().matches(TRACE_FILE_PATTERN);
-          }
-        }).
-        toSortedList(new Comparator<File>() {
-          @Override
-          public int compare(File a, File b) {
-            return Long.signum(b.lastModified() - a.lastModified());
-          }
-        });
+    try {
+      ImmutableList<Path> pathsSortedByModified = FluentIterable.
+          from(projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR)).
+          filter(new Predicate<Path>() {
+            @Override
+            public boolean apply(Path input) {
+              return input.getFileName().toString().matches(TRACE_FILE_PATTERN);
+            }
+          }).
+          toSortedList(new Comparator<Path>() {
+            @Override
+            public int compare(Path a, Path b) {
+              try {
+                return Long.signum(
+                    projectFilesystem.getLastModifiedTime(b) -
+                    projectFilesystem.getLastModifiedTime(a));
+              } catch (IOException e) {
+                throw Throwables.propagate(e);
+              }
+            }
+          });
 
-    if (filesSortedByModified.size() > tracesToKeep) {
-      ImmutableList<File> filesToRemove =
-          filesSortedByModified.subList(tracesToKeep, filesSortedByModified.size());
-      LOG.debug("Deleting old traces: %s", filesToRemove);
-      for (File file : filesToRemove) {
-        file.delete();
+      if (pathsSortedByModified.size() > tracesToKeep) {
+        ImmutableList<Path> pathsToRemove =
+            pathsSortedByModified.subList(tracesToKeep, pathsSortedByModified.size());
+        LOG.debug("Deleting old traces: %s", pathsToRemove);
+        for (Path path : pathsToRemove) {
+          projectFilesystem.deleteFileAtPath(path);
+        }
       }
+    } catch (IOException e) {
+      LOG.error(e, "Couldn't delete old traces from %s", BuckConstant.BUCK_TRACE_DIR);
     }
   }
 

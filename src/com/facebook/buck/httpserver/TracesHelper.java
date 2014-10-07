@@ -82,7 +82,7 @@ public class TracesHelper {
     }
   }
 
-  ImmutableCollection<Path> listTraceFilesByLastModified() {
+  ImmutableCollection<Path> listTraceFilesByLastModified() throws IOException {
     Ordering<Path> lastModifiedOrdering = new Ordering<Path>() {
         @Override
         public int compare(Path left, Path right) {
@@ -102,13 +102,8 @@ public class TracesHelper {
         }
     };
 
-    ImmutableCollection<Path> traces =
-        projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR);
-    if (traces != null) {
-      return lastModifiedOrdering.immutableSortedCopy(traces);
-    } else {
-      return ImmutableList.<Path>of();
-    }
+    return lastModifiedOrdering.immutableSortedCopy(
+        projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR));
   }
 
   Iterable<InputStream> getInputsForTraces(String id) throws IOException {
@@ -184,19 +179,15 @@ public class TracesHelper {
    * A given build might have more than one trace file (for example,
    * the buck.py launcher has its own trace file).
    */
-  private ImmutableCollection<Path> getPathsToTraces(String id) {
+  private ImmutableCollection<Path> getPathsToTraces(String id) throws IOException {
     Preconditions.checkNotNull(id);
     Preconditions.checkArgument(TracesHandlerDelegate.TRACE_ID_PATTERN.matcher(id).matches());
 
     ImmutableList.Builder<Path> tracesBuilder = ImmutableList.builder();
-    ImmutableCollection<Path> directoryContents =
-        projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR);
-    if (directoryContents != null) {
-      for (Path path : directoryContents) {
-        String name = path.getFileName().toString();
-        if (name.endsWith("." + id + ".trace")) {
-          tracesBuilder.add(path);
-        }
+    for (Path path : projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR)) {
+      String name = path.getFileName().toString();
+      if (name.endsWith("." + id + ".trace")) {
+        tracesBuilder.add(path);
       }
     }
 

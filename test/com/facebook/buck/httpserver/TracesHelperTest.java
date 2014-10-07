@@ -121,7 +121,7 @@ public class TracesHelperTest {
   }
 
   @Test
-  public void testSortByLastModified() {
+  public void testSortByLastModified() throws IOException {
     SettableFakeClock clock = new SettableFakeClock(0L, 0L);
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(clock);
     clock.setCurrentTimeMillis(1);

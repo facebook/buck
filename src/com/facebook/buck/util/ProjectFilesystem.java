@@ -76,8 +76,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
-import javax.annotation.Nullable;
-
 /**
  * An injectable service for interacting with the filesystem relative to the project root.
  */
@@ -368,12 +366,8 @@ public class ProjectFilesystem {
    *
    * // @deprecated Replaced by {@link #getDirectoryContents}
    */
-  @Nullable
-  public File[] listFiles(Path pathRelativeToProjectRoot) {
+  public File[] listFiles(Path pathRelativeToProjectRoot) throws IOException {
     Collection<Path> paths = getDirectoryContents(pathRelativeToProjectRoot);
-    if (paths == null) {
-      return null;
-    }
 
     File[] result = new File[paths.size()];
     return Collections2.transform(paths, new Function<Path, File>() {
@@ -384,13 +378,11 @@ public class ProjectFilesystem {
     }).toArray(result);
   }
 
-  @Nullable
-  public ImmutableCollection<Path> getDirectoryContents(Path pathRelativeToProjectRoot) {
+  public ImmutableCollection<Path> getDirectoryContents(Path pathRelativeToProjectRoot)
+      throws IOException {
     Path path = getPathForRelativePath(pathRelativeToProjectRoot);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return ImmutableList.copyOf(stream);
-    } catch (IOException e) {
-      return null;
     }
   }
 

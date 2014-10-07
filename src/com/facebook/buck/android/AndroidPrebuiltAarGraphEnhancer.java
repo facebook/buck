@@ -50,7 +50,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -205,11 +204,23 @@ class AndroidPrebuiltAarGraphEnhancer {
       steps.add(new AbstractExecutionStep("create_uber_classes_jar") {
         @Override
         public int execute(ExecutionContext context) {
-          Path classesJar = unpackDirectory.resolve("classes.jar");
-          Path libsDirectory = unpackDirectory.resolve("libs");
           ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-          if (!projectFilesystem.exists(libsDirectory) ||
-              projectFilesystem.listFiles(libsDirectory).length == 0) {
+          Path libsDirectory = unpackDirectory.resolve("libs");
+          boolean dirDoesNotExistOrIsEmpty;
+          if (!projectFilesystem.exists(libsDirectory)) {
+            dirDoesNotExistOrIsEmpty = true;
+          } else {
+            try {
+              dirDoesNotExistOrIsEmpty =
+                  projectFilesystem.getDirectoryContents(libsDirectory).isEmpty();
+            } catch (IOException e) {
+              context.logError(e, "Failed to get directory contents of %s", libsDirectory);
+              return 1;
+            }
+          }
+
+          Path classesJar = unpackDirectory.resolve("classes.jar");
+          if (dirDoesNotExistOrIsEmpty) {
             try {
               projectFilesystem.copy(classesJar, uberClassesJar, CopySourceMode.FILE);
             } catch (IOException e) {
@@ -220,8 +231,11 @@ class AndroidPrebuiltAarGraphEnhancer {
             // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
             ImmutableSet.Builder<Path> entriesToJarBuilder = ImmutableSet.builder();
             entriesToJarBuilder.add(classesJar);
-            for (File file : projectFilesystem.listFiles(libsDirectory)) {
-              entriesToJarBuilder.add(file.toPath());
+            try {
+              entriesToJarBuilder.addAll(projectFilesystem.getDirectoryContents(libsDirectory));
+            } catch (IOException e) {
+              context.logError(e, "Failed to get directory contents of %s", libsDirectory);
+              return 1;
             }
 
             ImmutableSet<Path> entriesToJar = entriesToJarBuilder.build();
