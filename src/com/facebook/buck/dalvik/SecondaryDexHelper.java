@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Helper to write to secondary DEX files.
  */
@@ -34,6 +36,8 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
   private final ZipSplitter.CanaryStrategy canaryStrategy;
 
   private int currentSecondaryIndex;
+
+  @Nullable
   private ZIP_OUTPUT_STREAM_HELPER currentSecondaryOut;
   private boolean newSecondaryOutOnNextEntry;
   private ImmutableList.Builder<File> secondaryFiles;
@@ -54,6 +58,7 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
     secondaryFiles = ImmutableList.builder();
   }
 
+  @Nullable
   ZIP_OUTPUT_STREAM_HELPER getCurrentOutput() {
     return currentSecondaryOut;
   }

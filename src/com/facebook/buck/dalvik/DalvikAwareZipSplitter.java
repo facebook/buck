@@ -38,6 +38,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * Alternative to {@link DefaultZipSplitter} that uses estimates from {@link DalvikStatsTool}
  * to determine how many classes to pack into a dex.
@@ -73,6 +75,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private final DexSplitStrategy dexSplitStrategy;
 
   private final MySecondaryDexHelper secondaryDexWriter;
+
+  @Nullable
   private DalvikAwareOutputStreamHelper primaryOut;
 
   /**
@@ -150,6 +154,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       @Override
       public void visit(FileLike entry) throws IOException {
         String relativePath = entry.getRelativePath();
+        Preconditions.checkNotNull(primaryOut);
         if (requiredInPrimaryZip.apply(relativePath)) {
           primaryOut.putEntry(entry);
         } else if (wantedInPrimaryZip.contains(relativePath)) {
@@ -172,6 +177,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     classpathTraverser.traverse(new ClasspathTraversal(inFiles, filesystem) {
       @Override
       public void visit(FileLike entry) throws IOException {
+        Preconditions.checkNotNull(primaryOut);
         if (primaryOut.containsEntry(entry)) {
           return;
         }

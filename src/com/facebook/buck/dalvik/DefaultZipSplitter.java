@@ -33,6 +33,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 public class DefaultZipSplitter implements ZipSplitter {
 
   private final Set<Path> inFiles;
@@ -45,6 +47,7 @@ public class DefaultZipSplitter implements ZipSplitter {
   private final long zipSizeHardLimit;
   private final ProjectFilesystem filesystem;
 
+  @Nullable
   private DefaultZipOutputStreamHelper primaryOut;
   private long remainingSize;
 
@@ -173,6 +176,7 @@ public class DefaultZipSplitter implements ZipSplitter {
     //     we're trying to maximize the size of the primary zip.
     //
     // Otherwise, the entry will be added to the secondary zip.
+    Preconditions.checkNotNull(primaryOut);
     boolean canFitAllRemaining = remainingSize + primaryOut.getCurrentSize() <= zipSizeHardLimit;
 
     if ((canFitAllRemaining &&

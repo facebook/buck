@@ -17,6 +17,7 @@
 package com.facebook.buck.dalvik;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -190,6 +191,7 @@ public class DalvikStatsTool {
     private boolean isInterface;
     private ImmutableSet.Builder<MethodReference> methodReferenceBuilder;
 
+    @Nullable
     private String className;
 
     private StatsClassVisitor(Map<Pattern, Integer> penalties) {
@@ -260,6 +262,7 @@ public class DalvikStatsTool {
           footprint += 4;
         }
       }
+      Preconditions.checkNotNull(className);
       methodReferenceBuilder.add(new MethodReference(className, name, desc));
       return methodVisitor;
     }
@@ -268,6 +271,7 @@ public class DalvikStatsTool {
     public void visitOuterClass(String owner, String name, String desc) {
       super.visitOuterClass(owner, name, desc);
       if (name != null) {
+        Preconditions.checkNotNull(className);
         methodReferenceBuilder.add(new MethodReference(className, name, desc));
       }
     }

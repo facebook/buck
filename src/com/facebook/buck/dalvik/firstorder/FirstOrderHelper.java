@@ -86,7 +86,7 @@ public class FirstOrderHelper {
 
     FirstOrderTypeInfo info = knownTypes.get(type);
     if (info != null) {
-      addTypeAndSupers(info.superType);
+      addTypeAndSupers(Preconditions.checkNotNull(info.superType));
 
       for (Type interfaceType : info.interfaceTypes) {
         addTypeAndSupers(interfaceType);

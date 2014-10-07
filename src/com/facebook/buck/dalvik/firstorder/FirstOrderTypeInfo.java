@@ -25,10 +25,13 @@ import org.objectweb.asm.Type;
 
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 class FirstOrderTypeInfo {
 
   final Type type;
   final Type superType;
+
   final ImmutableSet<Type> interfaceTypes;
   final ImmutableSet<Type> observedDependencies;
 
@@ -49,12 +52,18 @@ class FirstOrderTypeInfo {
 
   static class Builder {
 
+    @Nullable
     private Type mType;
+
+    @Nullable
     private Type mSuperType;
+
     private final Set<Type> mInterfaceTypes = Sets.newHashSet();
     private final Set<Type> mObservedDependencies = Sets.newHashSet();
 
     FirstOrderTypeInfo build() {
+      Preconditions.checkNotNull(mType);
+      Preconditions.checkNotNull(mSuperType);
       return new FirstOrderTypeInfo(
           mType,
           mSuperType,
