@@ -16,41 +16,30 @@
 
 package com.facebook.buck.httpserver;
 
-import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
-import com.facebook.buck.testutil.FakeInputStreams;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
-import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
-public class TracesHelperTest extends EasyMockSupport {
+public class TracesHelperTest {
 
   @Test
   public void testGetTraceAttributesForId() throws IOException {
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-
-    File traceFile = createMock(File.class);
-    String name = "build.a.trace";
-    expect(traceFile.getName()).andStubReturn(name);
-    Path pathToTraceFile = BuckConstant.BUCK_TRACE_DIR.resolve(name);
-    expect(traceFile.toPath()).andReturn(pathToTraceFile);
-    expect(projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR)).andStubReturn(
-        new File[] {traceFile});
-
-    expect(traceFile.lastModified()).andStubReturn(1000L);
-    expect(projectFilesystem.getFileForRelativePath(pathToTraceFile)).andStubReturn(traceFile);
-    String buckBuildJson =
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
+        new FakeClock(TimeUnit.MILLISECONDS.toNanos(1000L)));
+    projectFilesystem.writeContentsToPath(
         "[" +
           "{" +
             "\"cat\":\"buck\"," +
@@ -61,11 +50,8 @@ public class TracesHelperTest extends EasyMockSupport {
             "\"ts\":5621911884918," +
             "\"args\":{\"command_args\":\"buck\"}" +
           "}" +
-        "]";
-    expect(projectFilesystem.getInputStreamForRelativePath(pathToTraceFile))
-        .andReturn(FakeInputStreams.createInputStreamFromString(buckBuildJson));
-
-    replayAll();
+        "]",
+        BuckConstant.BUCK_TRACE_DIR.resolve("build.a.trace"));
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("a");
@@ -78,25 +64,13 @@ public class TracesHelperTest extends EasyMockSupport {
     // We cannot verify the contents of getFormattedDateTime() because they may vary depending on
     // timezone and locale.
     assertNotNull(Strings.emptyToNull(traceAttributes.getFormattedDateTime()));
-
-    verifyAll();
   }
 
   @Test
   public void testGetTraceAttributesForJsonWithoutName() throws IOException {
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-
-    File traceFile = createMock(File.class);
-    String name = "build.b.trace";
-    expect(traceFile.getName()).andStubReturn(name);
-    Path pathToTraceFile = BuckConstant.BUCK_TRACE_DIR.resolve(name);
-    expect(traceFile.toPath()).andReturn(pathToTraceFile);
-    expect(projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR)).andStubReturn(
-        new File[] {traceFile});
-
-    expect(traceFile.lastModified()).andStubReturn(2000L);
-    expect(projectFilesystem.getFileForRelativePath(pathToTraceFile)).andStubReturn(traceFile);
-    String buckBuildJson =
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
+        new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
+    projectFilesystem.writeContentsToPath(
         "[" +
           "{" +
             "\"cat\":\"buck\"," +
@@ -106,11 +80,8 @@ public class TracesHelperTest extends EasyMockSupport {
             "\"ts\":5621911884918," +
             "\"args\":{\"command_args\":\"buck\"}" +
           "}" +
-        "]";
-    expect(projectFilesystem.getInputStreamForRelativePath(pathToTraceFile))
-        .andReturn(FakeInputStreams.createInputStreamFromString(buckBuildJson));
-
-    replayAll();
+        "]",
+        BuckConstant.BUCK_TRACE_DIR.resolve("build.b.trace"));
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("b");
@@ -120,25 +91,13 @@ public class TracesHelperTest extends EasyMockSupport {
         Optional.absent(),
         traceAttributes.getCommand());
     assertEquals(2000L, traceAttributes.getLastModifiedTime());
-
-    verifyAll();
   }
 
   @Test
   public void testGetTraceAttributesForJsonWithoutCommandArgs() throws IOException {
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-
-    File traceFile = createMock(File.class);
-    String name = "build.c.trace";
-    expect(traceFile.getName()).andStubReturn(name);
-    Path pathToTraceFile = BuckConstant.BUCK_TRACE_DIR.resolve(name);
-    expect(traceFile.toPath()).andReturn(pathToTraceFile);
-    expect(projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR)).andStubReturn(
-        new File[] {traceFile});
-
-    expect(traceFile.lastModified()).andStubReturn(2000L);
-    expect(projectFilesystem.getFileForRelativePath(pathToTraceFile)).andStubReturn(traceFile);
-    String buckBuildJson =
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
+        new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
+    projectFilesystem.writeContentsToPath(
         "[" +
           "{" +
             "\"cat\":\"buck\"," +
@@ -147,11 +106,8 @@ public class TracesHelperTest extends EasyMockSupport {
             "\"tid\":1," +
             "\"ts\":5621911884918" +
           "}" +
-        "]";
-    expect(projectFilesystem.getInputStreamForRelativePath(pathToTraceFile))
-        .andReturn(FakeInputStreams.createInputStreamFromString(buckBuildJson));
-
-    replayAll();
+        "]",
+        BuckConstant.BUCK_TRACE_DIR.resolve("build.c.trace"));
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("c");
@@ -161,7 +117,33 @@ public class TracesHelperTest extends EasyMockSupport {
         Optional.absent(),
         traceAttributes.getCommand());
     assertEquals(2000L, traceAttributes.getLastModifiedTime());
+  }
 
-    verifyAll();
+  @Test
+  public void testSortByLastModified() {
+    SettableFakeClock clock = new SettableFakeClock(0L, 0L);
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(clock);
+    clock.setCurrentTimeMillis(1);
+    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.1.trace"));
+    clock.setCurrentTimeMillis(4);
+    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.4.trace"));
+    clock.setCurrentTimeMillis(2);
+    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.2.trace"));
+    clock.setCurrentTimeMillis(5);
+    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.5.trace"));
+    clock.setCurrentTimeMillis(3);
+    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.3.trace"));
+    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.3b.trace"));
+
+    TracesHelper helper = new TracesHelper(projectFilesystem);
+    assertEquals(
+        ImmutableList.of(
+            BuckConstant.BUCK_TRACE_DIR.resolve("build.5.trace"),
+            BuckConstant.BUCK_TRACE_DIR.resolve("build.4.trace"),
+            BuckConstant.BUCK_TRACE_DIR.resolve("build.3b.trace"),
+            BuckConstant.BUCK_TRACE_DIR.resolve("build.3.trace"),
+            BuckConstant.BUCK_TRACE_DIR.resolve("build.2.trace"),
+            BuckConstant.BUCK_TRACE_DIR.resolve("build.1.trace")),
+        helper.listTraceFilesByLastModified());
   }
 }

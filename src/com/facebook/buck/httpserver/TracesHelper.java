@@ -21,13 +21,15 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,8 +37,6 @@ import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import javax.annotation.Nullable;
 
 /**
  * Utility to help with reading data from build trace files.
@@ -82,9 +82,28 @@ public class TracesHelper {
     }
   }
 
-  @Nullable
-  File[] listTraceFiles() {
-    return projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR);
+  ImmutableCollection<Path> listTraceFilesByLastModified() {
+    Ordering<Path> lastModifiedOrdering = new Ordering<Path>() {
+        @Override
+        public int compare(Path left, Path right) {
+          try {
+            long rightModTime = projectFilesystem.getLastModifiedTime(right);
+            long leftModTime = projectFilesystem.getLastModifiedTime(left);
+            // We want descending order, so we compare right to left instead of left to right.
+            int result = Long.signum(rightModTime - leftModTime);
+            if (result != 0) {
+              return result;
+            } else {
+              return right.compareTo(left);
+            }
+          } catch (IOException e) {
+            throw Throwables.propagate(e);
+          }
+        }
+    };
+
+    return lastModifiedOrdering.immutableSortedCopy(
+        projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR));
   }
 
   Iterable<InputStream> getInputsForTraces(String id) throws IOException {
@@ -94,9 +113,9 @@ public class TracesHelper {
     return ImmutableList.of(projectFilesystem.getInputStreamForRelativePath(pathToTrace));
   }
 
-  TraceAttributes getTraceAttributesFor(String id) {
+  TraceAttributes getTraceAttributesFor(String id) throws IOException {
     Path pathToTrace = getPathToTrace(id);
-    return getTraceAttributesFor(projectFilesystem.getFileForRelativePath(pathToTrace));
+    return getTraceAttributesFor(pathToTrace);
   }
 
   /**
@@ -105,16 +124,15 @@ public class TracesHelper {
    * This method tries to be reasonably tolerant of changes to the .trace file schema, returning
    * {@link Optional#absent()} if it does not find the fields in the JSON that it expects.
    */
-  TraceAttributes getTraceAttributesFor(File traceFile) {
-    long lastModifiedTime = traceFile.lastModified();
-    Path pathToTrace = BuckConstant.BUCK_TRACE_DIR.resolve(traceFile.getName());
+  TraceAttributes getTraceAttributesFor(Path pathToTrace) throws IOException {
+    long lastModifiedTime = projectFilesystem.getLastModifiedTime(pathToTrace);
     Optional<String> command = parseCommandFrom(pathToTrace);
     return new TraceAttributes(command, lastModifiedTime);
   }
 
   private Optional<String> parseCommandFrom(Path pathToTrace) {
     try (
-        InputStream input = projectFilesystem.getInputStreamForRelativePath(pathToTrace);
+        InputStream input = projectFilesystem.newFileInputStream(pathToTrace);
         JsonReader jsonReader = new JsonReader(new InputStreamReader(input))) {
       jsonReader.beginArray();
       Gson gson = new Gson();
@@ -148,10 +166,10 @@ public class TracesHelper {
 
     String testPrefix = "build.";
     String testSuffix = "." + id + ".trace";
-    for (File traceFile : projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR)) {
-      String name = traceFile.getName();
+    for (Path path : projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR)) {
+      String name = path.getFileName().toString();
       if (name.endsWith(testSuffix) && name.startsWith(testPrefix)) {
-        return traceFile.toPath();
+        return path;
       }
     }
 

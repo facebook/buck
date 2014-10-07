@@ -18,37 +18,19 @@ package com.facebook.buck.httpserver;
 
 import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyListData;
 import com.google.template.soy.data.SoyMapData;
 
 import org.eclipse.jetty.server.Request;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
-
-  /**
-   * The file that was modified most recently will be listed first. Ties are broken by
-   * lexicographical sorting by normalized file path.
-   */
-  @VisibleForTesting
-  static final Comparator<File> SORT_BY_LAST_MODIFIED = new Comparator<File>() {
-    @Override
-    public int compare(File file1, File file2) {
-      long lastModifiedTimeDifference = file2.lastModified() - file1.lastModified();
-      if (lastModifiedTimeDifference != 0) {
-        return Long.signum(lastModifiedTimeDifference);
-      }
-
-      return file1.toPath().normalize().compareTo(file2.toPath().normalize());
-    }
-  };
 
   /**
    * Regex pattern that can be used as a parameter to {@link Pattern#compile(String)} to match a
@@ -79,13 +61,12 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
   }
 
   @VisibleForTesting
-  SoyListData getTraces() {
-    File[] traceFiles = tracesHelper.listTraceFiles();
-    Arrays.sort(traceFiles, SORT_BY_LAST_MODIFIED);
+  SoyListData getTraces() throws IOException {
+    ImmutableCollection<Path> traceFiles = tracesHelper.listTraceFilesByLastModified();
 
     SoyListData traces = new SoyListData();
-    for (File file : traceFiles) {
-      String name = file.getName();
+    for (Path path : traceFiles) {
+      String name = path.getFileName().toString();
       Matcher matcher = TRACE_FILE_NAME_PATTERN.matcher(name);
       if (!matcher.matches()) {
         // Could be build.trace or launch.xxx.trace.
@@ -96,7 +77,7 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
       trace.put("name", name);
       trace.put("id", matcher.group(1));
 
-      TraceAttributes traceAttributes = tracesHelper.getTraceAttributesFor(file);
+      TraceAttributes traceAttributes = tracesHelper.getTraceAttributesFor(path);
       trace.put("dateTime", traceAttributes.getFormattedDateTime());
       if (traceAttributes.getCommand().isPresent()) {
         trace.put("command", traceAttributes.getCommand().get());
