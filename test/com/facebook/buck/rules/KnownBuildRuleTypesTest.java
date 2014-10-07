@@ -283,7 +283,7 @@ public class KnownBuildRuleTypesTest {
     AndroidLibraryDescription.Arg arg = new AndroidLibraryDescription.Arg();
     populateJavaArg(arg);
     arg.manifest = Optional.absent();
-    AndroidLibrary rule = description.createBuildRule(
+    AndroidLibrary rule = (AndroidLibrary) description.createBuildRule(
         buildRuleParams,
         new BuildRuleResolver(),
         arg);
@@ -317,7 +317,7 @@ public class KnownBuildRuleTypesTest {
     AndroidLibraryDescription.Arg arg = new AndroidLibraryDescription.Arg();
     populateJavaArg(arg);
     arg.manifest = Optional.absent();
-    AndroidLibrary rule = description.createBuildRule(
+    AndroidLibrary rule = (AndroidLibrary) description.createBuildRule(
         buildRuleParams,
         new BuildRuleResolver(),
         arg);
