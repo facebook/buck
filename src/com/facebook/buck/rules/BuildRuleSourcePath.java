@@ -58,6 +58,10 @@ public class BuildRuleSourcePath extends AbstractSourcePath {
     return path;
   }
 
+  public Optional<Path> getResolvedPath() {
+    return resolvedPath;
+  }
+
   @Override
   public BuildRule asReference() {
     return rule;

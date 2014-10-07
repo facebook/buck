@@ -97,6 +97,7 @@ java_library(
     'RuleKeyBuilderFactory.java',
     'Sha1HashCode.java',
     'SourcePath.java',
+    'SourcePathResolver.java',
     'SourcePaths.java',
     'SourceRoot.java',
     'TargetName.java',
