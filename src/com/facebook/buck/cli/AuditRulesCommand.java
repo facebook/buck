@@ -26,7 +26,6 @@ import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -173,7 +172,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
 
       // Write out the properties and their corresponding values.
       for (String property : properties) {
-        String displayValue = createDisplayString(rawRule.get(property));
+        String displayValue = createDisplayString(INDENT, rawRule.get(property));
         out.printf("%s%s = %s,\n", INDENT, property, displayValue);
       }
 
@@ -188,6 +187,10 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
    */
   @VisibleForTesting
   static String createDisplayString(@Nullable Object value) {
+    return createDisplayString("", value);
+  }
+
+  static String createDisplayString(String indent, @Nullable Object value) {
     if (value == null) {
       return "None";
     } else if (value instanceof Boolean) {
@@ -199,12 +202,28 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
     } else if (value instanceof List) {
       StringBuilder out = new StringBuilder("[\n");
 
-      String indent = Strings.repeat(INDENT, 2);
+      String indentPlus1 = indent + INDENT;
       for (Object item : (List<?>) value) {
-        out.append(indent).append(createDisplayString(item)).append(",\n");
+        out.append(indentPlus1)
+            .append(createDisplayString(indentPlus1, item))
+            .append(",\n");
       }
 
-      out.append(INDENT).append("]");
+      out.append(indent).append("]");
+      return out.toString();
+    } else if (value instanceof Map) {
+      StringBuilder out = new StringBuilder("{\n");
+
+      String indentPlus1 = indent + INDENT;
+      for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+        out.append(indentPlus1)
+            .append(createDisplayString(indentPlus1, entry.getKey()))
+            .append(": ")
+            .append(createDisplayString(indentPlus1, entry.getValue()))
+            .append(",\n");
+      }
+
+      out.append(indent).append("}");
       return out.toString();
     } else {
       throw new IllegalStateException();
