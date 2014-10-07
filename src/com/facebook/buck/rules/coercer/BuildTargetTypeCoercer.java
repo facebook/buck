@@ -41,10 +41,6 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    if (object instanceof BuildTarget) {
-      return (BuildTarget) object;
-    }
-
     if (object instanceof String) {
       String param = (String) object;
       try {
