@@ -145,7 +145,9 @@ public class OCamlRuleBuilder {
     if (isLibrary) {
       final OCamlBuild ocamlLibraryBuild = new OCamlBuild(
           compileParams,
-          ocamlContext);
+          ocamlContext,
+          ocamlBuckConfig.getCCompiler(),
+          ocamlBuckConfig.getCxxCompiler());
 
       resolver.addToIndex(ocamlLibraryBuild);
 
@@ -157,7 +159,11 @@ public class OCamlRuleBuilder {
           ocamlContext,
           ocamlLibraryBuild);
     } else {
-      return new OCamlBuild(compileParams, ocamlContext);
+      return new OCamlBuild(
+          compileParams,
+          ocamlContext,
+          ocamlBuckConfig.getCCompiler(),
+          ocamlBuckConfig.getCxxCompiler());
     }
   }
 

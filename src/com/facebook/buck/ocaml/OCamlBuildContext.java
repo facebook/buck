@@ -57,8 +57,6 @@ public class OCamlBuildContext {
   private Path ocamlBytecodeCompiler;
   private boolean isLibrary;
   @Nullable
-  private Path cCompiler;
-  @Nullable
   private ImmutableList<String> flags;
   @Nullable
   private Path output;
@@ -92,8 +90,6 @@ public class OCamlBuildContext {
   private ImmutableSet<Path> yaccInputs;
   @Nullable
   private ImmutableSet<Path> mlInput;
-  @Nullable
-  private Path cxxCompiler;
 
   public static Path getArchiveOutputPath(BuildTarget target) {
     return BuildTargets.getGenPath(
@@ -170,10 +166,6 @@ public class OCamlBuildContext {
 
   public boolean isLibrary() {
     return isLibrary;
-  }
-
-  public Path getCCompiler() {
-    return Preconditions.checkNotNull(cCompiler);
   }
 
   public ImmutableList<String> getFlags() {
@@ -322,7 +314,6 @@ public class OCamlBuildContext {
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
         .setInput("ocamlDepTool", getOcamlDepTool())
-        .setInput("cCompiler", getCCompiler())
         .setInput("ocamlCompiler", getOcamlCompiler())
         .setInput("ocamlBytecodeCompiler", getOcamlBytecodeCompiler())
         .setInput("yaccCompiler", getYaccCompiler())
@@ -330,18 +321,12 @@ public class OCamlBuildContext {
         .set("flags", getFlags());
   }
 
-  public Path getCxxCompiler() {
-    return Preconditions.checkNotNull(cxxCompiler);
-  }
-
   public static class Builder {
-    private OCamlBuildContext context;
+    private final OCamlBuildContext context;
 
     private Builder(OCamlBuildContext context, OCamlBuckConfig config) {
       this.context = Preconditions.checkNotNull(context);
       context.ocamlDepTool = config.getOCamlDepTool().or(DEFAULT_OCAML_DEP_TOOL);
-      context.cCompiler = config.getCCompiler();
-      context.cxxCompiler = config.getCxxCompiler();
       context.ocamlCompiler = config.getOCamlCompiler().or(DEFAULT_OCAML_COMPILER);
       context.ocamlBytecodeCompiler = config.getOCamlBytecodeCompiler()
           .or(DEFAULT_OCAML_BYTECODE_COMPILER);
@@ -411,7 +396,6 @@ public class OCamlBuildContext {
 
     OCamlBuildContext build() {
       Preconditions.checkNotNull(context.getOcamlDepTool());
-      Preconditions.checkNotNull(context.getCCompiler());
       Preconditions.checkNotNull(context.getOcamlCompiler());
       Preconditions.checkNotNull(context.getOcamlBytecodeCompiler());
       Preconditions.checkNotNull(context.getYaccCompiler());

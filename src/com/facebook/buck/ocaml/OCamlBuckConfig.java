@@ -19,6 +19,7 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatform;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -38,8 +39,8 @@ public class OCamlBuckConfig {
     return delegate.getPath("ocaml", "ocaml.compiler");
   }
 
-  public Path getCCompiler() {
-    return cxxPlatform.getCc().resolve();
+  public SourcePath getCCompiler() {
+    return cxxPlatform.getCc();
   }
 
   public Optional<Path> getOCamlDepTool() {
@@ -58,7 +59,7 @@ public class OCamlBuckConfig {
     return delegate.getPath("ocaml", "ocaml.bytecode.compiler");
   }
 
-  public Path getCxxCompiler() {
-    return cxxPlatform.getCxx().resolve();
+  public SourcePath getCxxCompiler() {
+    return cxxPlatform.getCxx();
   }
 }

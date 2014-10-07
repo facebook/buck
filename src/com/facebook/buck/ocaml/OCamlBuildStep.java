@@ -40,12 +40,21 @@ import java.nio.file.Paths;
 public class OCamlBuildStep implements Step {
 
   private static final Path OCAML_DEBUG = Paths.get("/usr/local/bin/ocamldebug");
-  private final OCamlBuildContext ocamlContext;
-  private final boolean hasGeneratedSources;
-  private OCamlDepToolStep depToolStep;
 
-  public OCamlBuildStep(OCamlBuildContext ocamlContext) {
+  private final OCamlBuildContext ocamlContext;
+  private final Path cCompiler;
+  private final Path cxxCompiler;
+
+  private final boolean hasGeneratedSources;
+  private final OCamlDepToolStep depToolStep;
+
+  public OCamlBuildStep(
+      OCamlBuildContext ocamlContext,
+      Path cCompiler,
+      Path cxxCompiler) {
     this.ocamlContext = Preconditions.checkNotNull(ocamlContext);
+    this.cCompiler = Preconditions.checkNotNull(cCompiler);
+    this.cxxCompiler = Preconditions.checkNotNull(cxxCompiler);
 
     hasGeneratedSources = ocamlContext.getLexInput().size() > 0 ||
         ocamlContext.getYaccInput().size() > 0;
@@ -53,8 +62,7 @@ public class OCamlBuildStep implements Step {
     this.depToolStep = new OCamlDepToolStep(
         this.ocamlContext.getOcamlDepTool(),
         ocamlContext.getMLInput(),
-        this.ocamlContext.getIncludeFlags(/* excludeDeps */ true)
-    );
+        this.ocamlContext.getIncludeFlags(/* excludeDeps */ true));
   }
 
   @Override
@@ -148,7 +156,7 @@ public class OCamlBuildStep implements Step {
       Path outputPath = ocamlContext.getCOutput(cSrc);
       linkerInputs.add(outputPath.toString());
       Step compileStep = new OCamlCCompileStep(
-          ocamlContext.getCCompiler(),
+          cCompiler,
           ocamlContext.getOcamlCompiler(),
           outputPath,
           cSrc,
@@ -165,7 +173,7 @@ public class OCamlBuildStep implements Step {
       ExecutionContext context,
       ImmutableList<String> linkerInputs) throws InterruptedException {
     OCamlLinkStep linkStep = new OCamlLinkStep(
-        ocamlContext.getCxxCompiler(),
+        cxxCompiler,
         ocamlContext.getOcamlCompiler(),
         ocamlContext.getOutput(),
         ocamlContext.getLinkableInput().getArgs(),
@@ -180,7 +188,7 @@ public class OCamlBuildStep implements Step {
       ExecutionContext context,
       ImmutableList<String> linkerInputs) throws InterruptedException {
     OCamlLinkStep linkStep = new OCamlLinkStep(
-        ocamlContext.getCxxCompiler(),
+        cxxCompiler,
         ocamlContext.getOcamlBytecodeCompiler(),
         ocamlContext.getBytecodeOutput(),
         ocamlContext.getLinkableInput().getArgs(),
@@ -268,7 +276,7 @@ public class OCamlBuildStep implements Step {
       }
       final ImmutableList<String> compileFlags = getCompileFlags(false);
       Step compileStep = new OCamlMLCompileStep(
-          ocamlContext.getCCompiler(),
+          cCompiler,
           ocamlContext.getOcamlCompiler(),
           outputPath,
           Paths.get(inputOutput),
@@ -302,7 +310,7 @@ public class OCamlBuildStep implements Step {
       }
       final ImmutableList<String> compileFlags = getCompileFlags(/* excludeDeps */ false);
       Step compileBytecodeStep = new OCamlMLCompileStep(
-          ocamlContext.getCCompiler(),
+          cCompiler,
           ocamlContext.getOcamlBytecodeCompiler(),
           outputPath,
           Paths.get(inputOutput),
