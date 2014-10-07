@@ -23,3 +23,11 @@ prebuilt_jar(
   binary_jar = 'org.jacoco.report-0.7.2.201409121644.jar',
   source_jar = 'org.jacoco.report-0.7.2.201409121644-sources.jar',
 )
+
+prebuilt_jar(
+  name = 'agent',
+  binary_jar = 'jacocoagent.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)

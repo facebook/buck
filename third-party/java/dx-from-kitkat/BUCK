@@ -6,3 +6,11 @@ java_library(
   ],
   visibility = ['PUBLIC'],
 )
+
+export_file(
+  name = 'etc_dx',
+  src = 'etc/dx',
+  visibility = [
+    'PUBLIC',
+  ],
+)

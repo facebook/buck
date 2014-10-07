@@ -141,3 +141,25 @@ java_library(
     '//test/com/facebook/buck/testutil/integration:integration',
   ],
 )
+
+java_binary(
+  name = 'main',
+  deps = [
+    ':cli',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+genrule(
+  name = 'main-fixed',
+  out = 'main-fixed.jar',
+  cmd = 'zip --output-file $OUT $(location :main) -d META-INF/MANIFEST.MF',
+  srcs = [
+    ':main',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

@@ -97,11 +97,14 @@ class BuckProject:
                         stdout=open(os.devnull, 'w'))
 
     def create_buckd_tmp_dir(self):
+        if self.buckd_tmp_dir is not None:
+            return self.buckd_tmp_dir
         tmp_dir_parent = os.path.join(self.buckd_dir, "tmp")
         if not os.path.exists(tmp_dir_parent):
             os.makedirs(tmp_dir_parent)
         self.buckd_tmp_dir = tempfile.mkdtemp(prefix="buck_run.",
                                               dir=tmp_dir_parent)
+        return self.buckd_tmp_dir
 
     def save_buckd_port(self, port):
         write_contents_to_file(self.buckd_port_file, port)

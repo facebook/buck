@@ -2,29 +2,37 @@
 from __future__ import print_function
 import os
 import sys
-from buck_repo import BuckRepo, BuckRepoException, Command
+import zipfile
+from buck_tool import BuckToolException, RestartBuck
 from buck_project import BuckProject, NoBuckConfigFoundException
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-def main():
+def main(argv):
     with BuckProject.from_current_dir() as project:
-        bin_dir = os.path.join(os.path.dirname(THIS_DIR), 'bin')
-        buck_repo = BuckRepo(bin_dir, project, Command.BUCKD)
-        if '--help' in sys.argv:
+        # Try to detect if we're running a PEX by checking if we were invoked
+        # via a zip file.
+        if zipfile.is_zipfile(argv[0]):
+            from buck_package import BuckPackage
+            buck_repo = BuckPackage(project)
+        else:
+            from buck_repo import BuckRepo
+            buck_repo = BuckRepo(THIS_DIR, project)
+        if '--help' in argv:
             print("Specify --kill to kill buckd.", file=sys.stderr)
-            sys.exit(0)
+            return 0
         buck_repo.kill_buckd()
         if '--kill' in sys.argv:
-            sys.exit(0)
-        exit_code = buck_repo.launch_buckd()
-        sys.exit(exit_code)
+            return 0
+        return buck_repo.launch_buckd()
 
 if __name__ == "__main__":
     try:
-        main()
-    except (BuckRepoException, NoBuckConfigFoundException) as e:
+        sys.exit(main(sys.argv))
+    except RestartBuck:
+        os.execvp(sys.argv[0], sys.argv)
+    except (BuckToolException, NoBuckConfigFoundException) as e:
         print(str(e), file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:

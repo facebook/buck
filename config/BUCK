@@ -1,0 +1,13 @@
+export_file(
+  name = 'log4j.properties',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+export_file(
+  name = 'logging.properties',
+  visibility = [
+    'PUBLIC',
+  ],
+)

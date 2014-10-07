@@ -3,7 +3,8 @@ from __future__ import print_function
 import os
 import signal
 import sys
-from buck_repo import BuckRepo, BuckRepoException, Command
+import zipfile
+from buck_tool import BuckToolException, RestartBuck
 from buck_project import BuckProject, NoBuckConfigFoundException
 from tracing import Tracing
 import uuid
@@ -11,7 +12,7 @@ import uuid
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-def main():
+def main(argv):
     try:
         java_home = os.getenv("JAVA_HOME", "")
         path = os.getenv("PATH", "")
@@ -26,18 +27,25 @@ def main():
         with Tracing("main"):
             with BuckProject.from_current_dir() as project:
                 tracing_dir = os.path.join(project.get_buck_out_log_dir(), 'traces')
-                bin_dir = os.path.join(os.path.dirname(THIS_DIR), 'bin')
-                buck_repo = BuckRepo(bin_dir, project, Command.BUCK)
-                exit_code = buck_repo.launch_buck(build_id)
-                sys.exit(exit_code)
+                # Try to detect if we're running a PEX by checking if we were invoked
+                # via a zip file.
+                if zipfile.is_zipfile(argv[0]):
+                    from buck_package import BuckPackage
+                    buck_repo = BuckPackage(project)
+                else:
+                    from buck_repo import BuckRepo
+                    buck_repo = BuckRepo(THIS_DIR, project)
+                return buck_repo.launch_buck(build_id)
     finally:
         if tracing_dir:
             Tracing.write_to_dir(tracing_dir, build_id)
 
 if __name__ == "__main__":
     try:
-        main()
-    except (BuckRepoException, NoBuckConfigFoundException) as e:
+        sys.exit(main(sys.argv))
+    except RestartBuck:
+        os.execvp(sys.argv[0], sys.argv)
+    except (BuckToolException, NoBuckConfigFoundException) as e:
         print(str(e), file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:

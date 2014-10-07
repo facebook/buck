@@ -48,3 +48,17 @@ python_test(
     ':asset_catalogs_compiler',
   ],
 )
+
+export_file(
+  name = 'compile_asset_catalogs.py',
+  visibility = [
+    'PUBLIC'
+  ]
+)
+
+export_file(
+  name = 'compile_asset_catalogs_build_phase.sh',
+  visibility = [
+    'PUBLIC'
+  ]
+)

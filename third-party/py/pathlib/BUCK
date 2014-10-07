@@ -4,3 +4,10 @@ python_library(
     base_module='',
     visibility=['PUBLIC'],
 )
+
+export_file(
+  name = 'pathlib.py',
+  visibility=[
+    'PUBLIC',
+  ],
+)

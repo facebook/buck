@@ -36,3 +36,10 @@ java_library(
     '//test/com/facebook/buck/command:command',
   ],
 )
+
+export_file(
+  name = 'intellij.py',
+  visibility = [
+    'PUBLIC',
+  ],
+)

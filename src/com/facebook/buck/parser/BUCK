@@ -95,3 +95,10 @@ python_test(
     '//third-party/py/pathlib:pathlib',
   ],
 )
+
+export_file(
+  name = 'buck.py',
+  visibility = [
+    'PUBLIC',
+  ],
+)

@@ -46,3 +46,28 @@ java_library(
   visibility = [
   ],
 )
+
+java_binary(
+  name = 'junit-bin',
+  deps = [
+    ':testng',
+    ':junit',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+# Strip out classes we don't want automatically added to the classpath for
+# tests, leaving just the extra buck classes.
+genrule(
+  name = 'junit-bin-fixed',
+  out = 'junit-bin-fixed.jar',
+  cmd = 'unzip -q -o $(location :junit-bin) -d . && zip $OUT -r . -i com/facebook/buck/\*',
+  srcs = [
+    ':junit-bin',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

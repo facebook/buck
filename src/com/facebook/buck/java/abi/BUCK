@@ -31,3 +31,13 @@ java_library(
     'PUBLIC',
   ],
 )
+
+java_binary(
+  name = 'abi-bin',
+  deps = [
+    ':abi',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

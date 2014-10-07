@@ -1,0 +1,6 @@
+export_file(
+  name = 'agent.apk',
+  visibility = [
+    'PUBLIC',
+  ],
+)

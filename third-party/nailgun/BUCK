@@ -1,0 +1,9 @@
+cxx_binary(
+  name='ng',
+  srcs=[
+    'nailgun-client/ng.c',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
