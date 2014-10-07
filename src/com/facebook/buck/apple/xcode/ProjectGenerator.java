@@ -388,21 +388,15 @@ public class ProjectGenerator {
     Optional<AbstractAppleNativeTargetBuildRule> nativeTargetRule;
     if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
       AppleLibrary library = (AppleLibrary) rule;
-      result = Optional.of(
-          (PBXTarget) generateAppleLibraryTarget(
-              project, rule, library));
+      result = Optional.<PBXTarget>of(generateAppleLibraryTarget(project, rule, library));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(library);
     } else if (rule.getType().equals(AppleBinaryDescription.TYPE)) {
       AppleBinary binary = (AppleBinary) rule;
-      result = Optional.of(
-          (PBXTarget) generateAppleBinaryTarget(
-              project, rule, binary));
+      result = Optional.<PBXTarget>of(generateAppleBinaryTarget(project, rule, binary));
       nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
     } else if (rule.getType().equals(AppleBundleDescription.TYPE)) {
       AppleBundle bundle = (AppleBundle) rule;
-      result = Optional.of(
-          (PBXTarget) generateAppleBundleTarget(
-              project, rule, bundle));
+      result = Optional.<PBXTarget>of(generateAppleBundleTarget(project, bundle));
       nativeTargetRule = Optional.of((AbstractAppleNativeTargetBuildRule) bundle.getBinary());
     } else if (rule.getType().equals(AppleTestDescription.TYPE)) {
       AppleTest test = (AppleTest) rule;
@@ -410,9 +404,7 @@ public class ProjectGenerator {
         AppleBundle bundle = (AppleBundle) test.getTestBundle();
         if (bundle.getExtensionValue().isPresent() &&
             AppleBuildRules.isXcodeTargetTestBundleExtension(bundle.getExtensionValue().get())) {
-          result = Optional.of(
-              (PBXTarget) generateAppleBundleTarget(
-                  project, bundle, bundle));
+          result = Optional.<PBXTarget>of(generateAppleBundleTarget(project, bundle));
           nativeTargetRule = Optional.of((AbstractAppleNativeTargetBuildRule) bundle.getBinary());
         } else {
           throw new HumanReadableException("Incorrect extension: " + bundle.getExtensionString());
@@ -440,7 +432,6 @@ public class ProjectGenerator {
 
   private PBXNativeTarget generateAppleBundleTarget(
       PBXProject project,
-      BuildRule rule,
       AppleBundle bundle)
       throws IOException {
     Optional<Path> infoPlistPath;
@@ -452,24 +443,25 @@ public class ProjectGenerator {
 
     PBXNativeTarget target = generateBinaryTarget(
         project,
-        rule,
+        bundle,
         (AbstractAppleNativeTargetBuildRule) bundle.getBinary(),
         bundleToTargetProductType(bundle),
         "%s." + bundle.getExtensionString(),
         infoPlistPath,
         /* includeFrameworks */ true,
-        /* includeResources */ true);
+        collectRecursiveResources(bundle),
+        collectRecursiveAssetCatalogs(bundle));
 
     // -- copy any binary and bundle targets into this bundle
     Iterable<BuildRule> copiedRules = AppleBuildRules.getRecursiveRuleDependenciesOfType(
         AppleBuildRules.RecursiveRuleDependenciesMode.COPYING,
-        rule,
+        bundle,
         AppleLibraryDescription.TYPE,
         AppleBinaryDescription.TYPE,
         AppleBundleDescription.TYPE);
     generateCopyFilesBuildPhases(project, target, copiedRules);
 
-    addPostBuildScriptPhasesForDependencies(rule, target);
+    addPostBuildScriptPhasesForDependencies(bundle, target);
 
     project.getTargets().add(target);
     LOG.debug("Generated iOS bundle target %s", target);
@@ -489,7 +481,8 @@ public class ProjectGenerator {
         "%s",
         Optional.<Path>absent(),
         /* includeFrameworks */ true,
-        /* includeResources */ false);
+        ImmutableList.<AppleResource>of(),
+        ImmutableList.<AppleAssetCatalog>of());
     project.getTargets().add(target);
     LOG.debug("Generated Apple binary target %s", target);
     return target;
@@ -510,7 +503,8 @@ public class ProjectGenerator {
         AppleLibrary.getOutputFileNameFormat(buildable.getLinkedDynamically()),
         Optional.<Path>absent(),
         /* includeFrameworks */ buildable.getLinkedDynamically(),
-        /* includeResources */ false);
+        ImmutableList.<AppleResource>of(),
+        ImmutableList.<AppleAssetCatalog>of());
     project.getTargets().add(target);
     LOG.debug("Generated iOS library target %s", target);
     return target;
@@ -553,7 +547,8 @@ public class ProjectGenerator {
       String productOutputFormat,
       Optional<Path> infoPlistOptional,
       boolean includeFrameworks,
-      boolean includeResources)
+      Iterable<AppleResource> resources,
+      Iterable<AppleAssetCatalog> assetCatalogs)
       throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule), productType);
     setNativeTargetGid(target, buildable);
@@ -614,13 +609,14 @@ public class ProjectGenerator {
           frameworksBuilder.build(),
           collectRecursiveLibraryDependencies(rule));
     }
-    if (includeResources) {
-      addResourcesBuildPhase(
-          target,
-          targetGroup,
-          collectRecursiveResources(rule, AppleResourceDescription.TYPE));
-      addAssetCatalogBuildPhase(target, targetGroup, collectRecursiveAssetCatalogs(rule));
+
+    if (!Iterables.isEmpty(resources)) {
+      addResourcesBuildPhase(target, targetGroup, resources);
     }
+    if (!Iterables.isEmpty(assetCatalogs)) {
+      addAssetCatalogBuildPhase(target, targetGroup, assetCatalogs);
+    }
+
     addCoreDataModelBuildPhase(
         targetGroup,
         collectCoreDataModels(rule.getDeps()));
@@ -1912,13 +1908,11 @@ public class ProjectGenerator {
    * @param rule  Build rule at the tip of the traversal.
    * @return The recursive resource buildables.
    */
-  private Iterable<AppleResource> collectRecursiveResources(
-      BuildRule rule,
-      BuildRuleType resourceRuleType) {
+  private static Iterable<AppleResource> collectRecursiveResources(BuildRule rule) {
     Iterable<BuildRule> resourceRules = AppleBuildRules.getRecursiveRuleDependenciesOfType(
         AppleBuildRules.RecursiveRuleDependenciesMode.COPYING,
         rule,
-        resourceRuleType);
+        AppleResourceDescription.TYPE);
     ImmutableSet.Builder<AppleResource> resources = ImmutableSet.builder();
     for (BuildRule resourceRule : resourceRules) {
       AppleResource resource =
@@ -1931,7 +1925,7 @@ public class ProjectGenerator {
   /**
    * Collect asset catalogs from recursive dependencies.
    */
-  private Iterable<AppleAssetCatalog> collectRecursiveAssetCatalogs(BuildRule rule) {
+  private static Iterable<AppleAssetCatalog> collectRecursiveAssetCatalogs(BuildRule rule) {
     Iterable<BuildRule> assetCatalogRules = AppleBuildRules.getRecursiveRuleDependenciesOfType(
         AppleBuildRules.RecursiveRuleDependenciesMode.COPYING,
         rule,
@@ -1945,7 +1939,7 @@ public class ProjectGenerator {
     return assetCatalogs.build();
   }
 
-  private Iterable<BuildRule> getRuleDependenciesOfType(
+  private static Iterable<BuildRule> getRuleDependenciesOfType(
       final Iterable<BuildRule> rules, BuildRuleType... types) {
     final ImmutableSet<BuildRuleType> requestedTypes = ImmutableSet.copyOf(types);
     return Iterables.filter(

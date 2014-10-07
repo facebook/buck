@@ -2127,7 +2127,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:final");
     assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/dynamic.dylib"));
   }
@@ -2246,7 +2246,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:final");
     assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
   }
@@ -2386,7 +2386,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:final");
     assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
   }
@@ -2450,7 +2450,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:final");
     assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases ", 1, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.<String>of());
   }
