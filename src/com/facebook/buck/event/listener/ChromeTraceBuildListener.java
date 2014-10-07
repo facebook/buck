@@ -146,18 +146,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       File traceOutput = projectFilesystem.getFileForRelativePath(tracePath);
       projectFilesystem.createParentDirs(tracePath);
 
-      ImmutableList<ChromeTraceEvent> tsSortedEvents = FluentIterable.
-          from(eventList).
-          toSortedList(new Comparator<ChromeTraceEvent>() {
-            @Override
-            public int compare(ChromeTraceEvent a, ChromeTraceEvent b) {
-              return Long.signum(a.getMicroTime() - b.getMicroTime());
-            }
-          });
-
       ObjectMapper mapper = new ObjectMapper();
       LOG.debug("Writing Chrome trace to %s", tracePath);
-      mapper.writeValue(traceOutput, tsSortedEvents);
+      mapper.writeValue(traceOutput, eventList);
 
       String symlinkPath = String.format("%s/build.trace",
           BuckConstant.BUCK_TRACE_DIR);

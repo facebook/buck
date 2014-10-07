@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.CommandEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ChromeTraceEvent;
@@ -58,13 +57,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.eventbus.EventBus;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -155,8 +152,6 @@ public class ChromeTraceBuildListenerTest {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock,
         new BuildId("ChromeTraceBuildListenerTestBuildId"));
-    Supplier<Long> threadIdSupplier = BuckEventBusFactory.getThreadIdSupplierFor(eventBus);
-    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
     eventBus.register(listener);
 
     eventBus.post(CommandEvent.started("party",
@@ -172,26 +167,12 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(BuildRuleEvent.started(rule));
     eventBus.post(StepEvent.started(step, "I'm a Fake Step!"));
 
-    // Intentionally fire events out of order to verify sorting happens.
-    BuckEvent stepFinished = StepEvent.finished(step, "I'm a Fake Step!", 0);
-    stepFinished.configure(fakeClock.currentTimeMillis(),
-        fakeClock.nanoTime(),
-        threadIdSupplier.get(),
-        eventBus.getBuildId());
-
-
-    BuckEvent ruleFinished = BuildRuleEvent.finished(
+    eventBus.post(StepEvent.finished(step, "I'm a Fake Step!", 0));
+    eventBus.post(BuildRuleEvent.finished(
         rule,
         BuildRuleStatus.SUCCESS,
         CacheResult.MISS,
-        Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY));
-    ruleFinished.configure(fakeClock.currentTimeMillis(),
-        fakeClock.nanoTime(),
-        threadIdSupplier.get(),
-        eventBus.getBuildId());
-
-    rawEventBus.post(ruleFinished);
-    rawEventBus.post(stepFinished);
+        Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)));
 
     try (TraceEventLogger ignored = TraceEventLogger.start(
         eventBus, "planning", ImmutableMap.of("nefarious", "true")
