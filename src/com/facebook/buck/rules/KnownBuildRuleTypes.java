@@ -40,12 +40,12 @@ import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxTestDescription;
-import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPythonExtensionDescription;
+import com.facebook.buck.cxx.CxxTestDescription;
+import com.facebook.buck.cxx.DefaultCxxPlatform;
+import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
@@ -222,32 +222,49 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
+    builder.register(new AppleBinaryDescription());
     builder.register(new AppleBundleDescription());
+    builder.register(new AppleLibraryDescription(cxxPlatform));
+    builder.register(new AppleResourceDescription());
     builder.register(new AppleTestDescription());
     builder.register(new BuckExtensionDescription());
     builder.register(new CoreDataModelDescription());
-    builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
-    builder.register(new PrebuiltOCamlLibraryDescription());
-    builder.register(new OCamlLibraryDescription(ocamlBuckConfig));
     builder.register(new CxxBinaryDescription(cxxPlatform));
-    builder.register(new CxxTestDescription(cxxPlatform));
     builder.register(new CxxLibraryDescription(cxxPlatform));
-    builder.register(new PrebuiltCxxLibraryDescription(cxxPlatform));
     builder.register(new CxxPythonExtensionDescription(cxxPlatform));
+    builder.register(new CxxTestDescription(cxxPlatform));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
     builder.register(new GenParcelableDescription());
     builder.register(new GwtBinaryDescription());
-    builder.register(new KeystoreDescription());
+    builder.register(new IosPostprocessResourcesDescription());
     builder.register(new JavaBinaryDescription());
     builder.register(new JavaLibraryDescription(javacEnv));
     builder.register(new JavaTestDescription(javacEnv));
-    builder.register(new AppleLibraryDescription(cxxPlatform));
-    builder.register(new AppleBinaryDescription());
-    builder.register(new IosPostprocessResourcesDescription());
-    builder.register(new AppleResourceDescription());
-    builder.register(new JavaBinaryDescription());
+    builder.register(new KeystoreDescription());
+    builder.register(new NdkLibraryDescription(ndkVersion));
+    builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
+    builder.register(new OCamlLibraryDescription(ocamlBuckConfig));
+    builder.register(new PrebuiltCxxLibraryDescription(cxxPlatform));
+    builder.register(new PrebuiltJarDescription());
+    builder.register(new PrebuiltNativeLibraryDescription());
+    builder.register(new PrebuiltOCamlLibraryDescription());
+    builder.register(new ProjectConfigDescription());
+    builder.register(
+        new PythonBinaryDescription(
+            pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
+            pythonEnv));
+    builder.register(new PythonLibraryDescription());
+    builder.register(
+        new PythonTestDescription(
+            pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
+            pythonPathToPythonTestMain.or(PythonTestDescription.PYTHON_PATH_TO_PYTHON_TEST_MAIN),
+            pythonEnv));
+    builder.register(new RemoteFileDescription(downloadAtRuntimeOk, downloader));
+    builder.register(new RobolectricTestDescription(javacEnv));
+    builder.register(new ShBinaryDescription());
+    builder.register(new ShTestDescription());
     builder.register(
         new ThriftLibraryDescription(
             thriftBuckConfig,
@@ -257,24 +274,6 @@ public class KnownBuildRuleTypes {
                 new ThriftCxxEnhancer(thriftBuckConfig, cxxPlatform, /* cpp2 */ true),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED))));
-    builder.register(new NdkLibraryDescription(ndkVersion));
-    builder.register(new PrebuiltJarDescription());
-    builder.register(new PrebuiltNativeLibraryDescription());
-    builder.register(new ProjectConfigDescription());
-    builder.register(
-        new PythonTestDescription(
-            pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
-            pythonPathToPythonTestMain.or(PythonTestDescription.PYTHON_PATH_TO_PYTHON_TEST_MAIN),
-            pythonEnv));
-    builder.register(
-        new PythonBinaryDescription(
-            pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
-            pythonEnv));
-    builder.register(new PythonLibraryDescription());
-    builder.register(new RemoteFileDescription(downloadAtRuntimeOk, downloader));
-    builder.register(new RobolectricTestDescription(javacEnv));
-    builder.register(new ShBinaryDescription());
-    builder.register(new ShTestDescription());
     builder.register(new XcodeNativeDescription());
     builder.register(new XcodeProjectConfigDescription());
     builder.register(new XcodeWorkspaceConfigDescription());
