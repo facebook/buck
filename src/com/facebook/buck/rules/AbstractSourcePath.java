@@ -21,6 +21,11 @@ package com.facebook.buck.rules;
  */
 abstract class AbstractSourcePath implements SourcePath {
 
+  /**
+   * @return An opaque representation of the source path in a stable manner.
+   */
+  protected abstract Object asReference();
+
   @Override
   public int compareTo(SourcePath o) {
     if (o == this) {
@@ -37,11 +42,11 @@ abstract class AbstractSourcePath implements SourcePath {
 
   @Override
   public boolean equals(Object that) {
-    if (that == null || !(that instanceof SourcePath)) {
+    if (that == null || !(that instanceof AbstractSourcePath)) {
       return false;
     }
 
-    return asReference().equals(((SourcePath) that).asReference());
+    return asReference().equals(((AbstractSourcePath) that).asReference());
   }
 
   @Override

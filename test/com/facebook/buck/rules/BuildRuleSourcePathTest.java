@@ -77,7 +77,7 @@ public class BuildRuleSourcePathTest {
 
     BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
 
-    assertEquals(rule, path.asReference());
+    assertEquals(rule, path.getRule());
   }
 
   @Test
@@ -87,7 +87,7 @@ public class BuildRuleSourcePathTest {
     FakeBuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target, pathResolver);
     Path path = Paths.get("blah");
     BuildRuleSourcePath buildRuleSourcePath = new BuildRuleSourcePath(rule, path);
-    assertEquals(rule, buildRuleSourcePath.asReference());
+    assertEquals(rule, buildRuleSourcePath.getRule());
     assertEquals(path, pathResolver.getPath(buildRuleSourcePath));
   }
 

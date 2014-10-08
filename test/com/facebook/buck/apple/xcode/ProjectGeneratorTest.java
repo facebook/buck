@@ -1647,7 +1647,7 @@ public class ProjectGeneratorTest {
         new Function<CoreDataModelDescription.Arg, CoreDataModelDescription.Arg>() {
           @Override
           public CoreDataModelDescription.Arg apply(CoreDataModelDescription.Arg args) {
-            args.path = new TestSourcePath("foo.xcdatamodel").asReference();
+            args.path = new TestSourcePath("foo.xcdatamodel").getRelativePath();
             return args;
           }
         });

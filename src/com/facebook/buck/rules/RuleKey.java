@@ -294,12 +294,11 @@ public class RuleKey {
     }
 
     private Builder setInputVal(SourcePath path) {
-      Object ref = path.asReference();
-      if (ref instanceof BuildRule) {
-        return setVal(((BuildRule) ref).getRuleKey());
+      if (path instanceof BuildRuleSourcePath) {
+        return setVal(((BuildRuleSourcePath) path).getRule().getRuleKey());
       } else {
-        Preconditions.checkArgument(ref instanceof Path);
-        return setInputVal((Path) ref);
+        Preconditions.checkArgument(path instanceof PathSourcePath);
+        return setInputVal(((PathSourcePath) path).getRelativePath());
       }
     }
 
@@ -317,11 +316,10 @@ public class RuleKey {
       if (val != null) {
         for (SourcePath path : val) {
           setVal(path.toString());
-          Object ref = path.asReference();
-          if (ref instanceof BuildRule) {
-            setVal(((BuildRule) ref).getRuleKey());
+          if (path instanceof BuildRuleSourcePath) {
+            setVal(((BuildRuleSourcePath) path).getRule().getRuleKey());
           } else {
-            setVal(String.valueOf(ref));
+            setVal(((PathSourcePath) path).getRelativePath().toString());
           }
         }
       }

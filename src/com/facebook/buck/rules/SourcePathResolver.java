@@ -44,7 +44,7 @@ public class SourcePathResolver {
 
   public Path getPath(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
-      return (Path) sourcePath.asReference();
+      return ((PathSourcePath) sourcePath).getRelativePath();
     }
     Preconditions.checkArgument(sourcePath instanceof BuildRuleSourcePath);
     BuildRuleSourcePath buildRuleSourcePath = (BuildRuleSourcePath) sourcePath;
@@ -120,7 +120,7 @@ public class SourcePathResolver {
       return getNameForRule(((BuildRuleSourcePath) sourcePath).getRule());
     }
     Preconditions.checkArgument(sourcePath instanceof PathSourcePath);
-    Path path = (Path) sourcePath.asReference();
+    Path path = ((PathSourcePath) sourcePath).getRelativePath();
     return MorePaths.relativize(target.getBasePath(), path).toString();
   }
 

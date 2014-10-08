@@ -48,7 +48,7 @@ public class BuildRuleSourcePath extends AbstractSourcePath {
   }
 
   @Override
-  public BuildRule asReference() {
+  protected BuildRule asReference() {
     return rule;
   }
 

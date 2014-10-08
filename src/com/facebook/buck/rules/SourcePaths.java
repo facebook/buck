@@ -50,14 +50,14 @@ public class SourcePaths {
       new Function<PathSourcePath, Path>() {
         @Override
         public Path apply(PathSourcePath input) {
-          return input.asReference();
+          return input.getRelativePath();
         }
       };
   public static final Function<BuildRuleSourcePath, BuildRule> TO_BUILD_RULE_REFERENCES =
       new Function<BuildRuleSourcePath, BuildRule>() {
         @Override
         public BuildRule apply(BuildRuleSourcePath input) {
-          return input.asReference();
+          return input.getRule();
         }
       };
 

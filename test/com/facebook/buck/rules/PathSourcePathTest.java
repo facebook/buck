@@ -43,6 +43,6 @@ public class PathSourcePathTest {
     Path expected = Paths.get("cheese");
     PathSourcePath path = new PathSourcePath(expected);
 
-    assertEquals(expected, path.asReference());
+    assertEquals(expected, path.getRelativePath());
   }
 }

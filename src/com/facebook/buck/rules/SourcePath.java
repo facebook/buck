@@ -21,9 +21,4 @@ package com.facebook.buck.rules;
  */
 public interface SourcePath extends Comparable<SourcePath>  {
 
-  /**
-   * @return a representation of path in a stable manner that does not involve calling {#resolve()}
-   */
-  public Object asReference();
-
 }
