@@ -17,7 +17,9 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
@@ -47,6 +49,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 
 public class CxxLibraryDescriptionTest {
 
@@ -147,6 +150,7 @@ public class CxxLibraryDescriptionTest {
     arg.lexSrcs = Optional.absent();
     arg.yaccSrcs = Optional.absent();
     arg.headerNamespace = Optional.absent();
+    arg.soname = Optional.absent();
 
     // Instantiate a description and call its `createBuildRule` method.
     DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
@@ -221,6 +225,56 @@ public class CxxLibraryDescriptionTest {
         FluentIterable.from(compileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
+  }
+
+  @Test
+  public void overrideSoname() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    String soname = "test_soname";
+
+    // Create the description arg.
+    CxxLibraryDescription.Arg arg = new CxxLibraryDescription.Arg();
+    arg.deps = Optional.absent();
+    arg.srcs = Optional.absent();
+    arg.headers = Optional.absent();
+    arg.compilerFlags = Optional.absent();
+    arg.propagatedPpFlags = Optional.absent();
+    arg.preprocessorFlags = Optional.absent();
+    arg.linkWhole = Optional.absent();
+    arg.lexSrcs = Optional.absent();
+    arg.yaccSrcs = Optional.absent();
+    arg.headerNamespace = Optional.absent();
+    arg.soname = Optional.of(soname);
+
+    // Setup the build params we'll pass to description when generating the build rules.
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
+        .build();
+
+    // Instantiate a description and call its `createBuildRule` method.
+    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig);
+    CxxLibrary rule = description.createBuildRule(params, resolver, arg);
+
+    Linker linker = cxxBuckConfig.getLd();
+    NativeLinkableInput input = rule.getNativeLinkableInput(
+        linker,
+        NativeLinkable.Type.SHARED);
+
+    ImmutableList<SourcePath> inputs = input.getInputs();
+    assertEquals(inputs.size(), 1);
+    SourcePath sourcePath = inputs.get(0);
+    assertTrue(sourcePath instanceof BuildRuleSourcePath);
+    BuildRuleSourcePath buildRuleSourcePath = (BuildRuleSourcePath) sourcePath;
+    BuildRule buildRule = buildRuleSourcePath.getRule();
+    assertTrue(buildRule instanceof CxxLink);
+    CxxLink cxxLink = (CxxLink) buildRule;
+    ImmutableList<String> args = cxxLink.getArgs();
+    assertNotEquals(
+        -1,
+        Collections.indexOfSubList(
+            args,
+            ImmutableList.copyOf(CxxLinkableEnhancer.iXlinker(linker.soname(soname)))));
   }
 
 }

@@ -365,7 +365,9 @@ public class CxxDescriptionEnhancer {
       final ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
       ImmutableList<CxxSource> sources,
-      final boolean linkWhole) {
+      final boolean linkWhole,
+      Optional<String> soname) {
+
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
@@ -413,7 +415,7 @@ public class CxxDescriptionEnhancer {
 
     // Setup the rules to link the shared library.
     final BuildTarget sharedLibraryTarget = createSharedLibraryBuildTarget(params.getBuildTarget());
-    final String sharedLibrarySoname = getSharedLibrarySoname(params.getBuildTarget());
+    final String sharedLibrarySoname = soname.or(getSharedLibrarySoname(params.getBuildTarget()));
     final Path sharedLibraryPath = getSharedLibraryOutputPath(params.getBuildTarget());
     final CxxLink sharedLibraryBuildRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,

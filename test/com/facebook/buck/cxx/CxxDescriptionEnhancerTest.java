@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -174,7 +175,8 @@ public class CxxDescriptionEnhancerTest {
         /* headers */ ImmutableMap.<Path, SourcePath>of(),
         /* compilerFlags */ ImmutableList.<String>of(),
         /* sources */ ImmutableList.of(source),
-        /* linkWhole */ false);
+        /* linkWhole */ false,
+        /* soname */ Optional.<String>absent());
 
     // Verify that the linker args contains the link whole flags.
     assertFalse(normal.getNativeLinkableInput(
@@ -192,7 +194,8 @@ public class CxxDescriptionEnhancerTest {
         /* headers */ ImmutableMap.<Path, SourcePath>of(),
         /* compilerFlags */ ImmutableList.<String>of(),
         /* sources */ ImmutableList.of(source),
-        /* linkWhole */ true);
+        /* linkWhole */ true,
+        /* soname */ Optional.<String>absent());
 
     // Verify that the linker args contains the link whole flags.
     assertTrue(linkWhole.getNativeLinkableInput(
@@ -300,7 +303,8 @@ public class CxxDescriptionEnhancerTest {
         ImmutableList.of(
             new CxxSource(sourceName, new TestSourcePath(sourceName)),
             new CxxSource(genSourceName, new BuildRuleSourcePath(genSource))),
-        /* linkWhole */ false);
+        /* linkWhole */ false,
+        /* soname */ Optional.<String>absent());
 
     // Verify the C/C++ preprocessor input is setup correctly.
     assertEquals(

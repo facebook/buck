@@ -210,7 +210,8 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         spec.getCxxHeaders(),
         /* compilerFlags */ ImmutableList.<String>of(),
         spec.getCxxSources(),
-        /* linkWhole */ false);
+        /* linkWhole */ false,
+        /* soname */ Optional.<String>absent());
   }
 
   private ImmutableSet<BuildTarget> getImplicitDepsFromOptions(

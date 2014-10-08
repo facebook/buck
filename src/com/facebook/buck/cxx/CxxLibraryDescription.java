@@ -116,7 +116,8 @@ public class CxxLibraryDescription implements
             .addAll(srcs)
             .addAll(lexYaccSources.getCxxSources())
             .build(),
-        args.linkWhole.or(false));
+        args.linkWhole.or(false),
+        args.soname);
   }
 
   @Override
@@ -138,6 +139,7 @@ public class CxxLibraryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
     public Optional<ImmutableList<String>> propagatedPpFlags;
+    public Optional<String> soname;
     public Optional<Boolean> linkWhole;
   }
 
