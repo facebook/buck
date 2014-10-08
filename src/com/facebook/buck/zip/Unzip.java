@@ -16,6 +16,7 @@
 
 package com.facebook.buck.zip;
 
+import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.MorePosixFilePermissions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -149,12 +150,7 @@ public class Unzip {
           Set<PosixFilePermission> permissions =
               MorePosixFilePermissions.fromMode(entry.getExternalAttributes() >> 16);
           if (permissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
-            // TODO(user): Currently, at least for POSIX filesystems, this just
-            // adds execute permissions for the owner.  However, it might be nice to
-            // add these for all roles (e.g. owner, group, other) that already have
-            // read perms (e.g. rw-r----- => rwx-r-x--, instead of rw-r----- =>
-            // rwxr-----).
-            target.toFile().setExecutable(/* executable */ true, /* ownerOnly */ true);
+            MoreFiles.makeExecutable(target.toFile());
           }
 
         }

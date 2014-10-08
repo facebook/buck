@@ -17,7 +17,10 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +32,10 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -200,4 +206,85 @@ public class MoreFilesTest {
         ImmutableList.of(fileW, fileZ, fileY, fileX),
         Arrays.asList(files));
   }
+
+  @Test
+  public void testMakeExecutable() throws IOException {
+    File file = tmp.newFile();
+
+    // If the file system does not support the executable permission, skip the test
+    assumeTrue(file.setExecutable(false));
+    assertFalse("File should not be executable", file.canExecute());
+    MoreFiles.makeExecutable(file);
+    assertTrue("File should be executable", file.canExecute());
+
+    assumeTrue(file.setExecutable(true));
+    assertTrue("File should be executable", file.canExecute());
+    MoreFiles.makeExecutable(file);
+    assertTrue("File should be executable", file.canExecute());
+  }
+
+  @Test
+  public void testMakeExecutableOnPosix() throws IOException {
+    assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+
+    File file = tmp.newFile();
+    Path path = file.toPath();
+
+    java.nio.file.Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("r--------"));
+    MoreFiles.makeExecutable(file);
+    assertEquals(
+        "Owner's execute permission should have been set",
+        "r-x------",
+        PosixFilePermissions.toString(java.nio.file.Files.getPosixFilePermissions(path)));
+
+    java.nio.file.Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("---r-----"));
+    MoreFiles.makeExecutable(file);
+    assertEquals(
+        "Group's execute permission should have been set",
+        "---r-x---",
+        PosixFilePermissions.toString(java.nio.file.Files.getPosixFilePermissions(path)));
+
+    java.nio.file.Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("------r--"));
+    MoreFiles.makeExecutable(file);
+    assertEquals(
+        "Others' execute permission should have been set",
+        "------r-x",
+        PosixFilePermissions.toString(java.nio.file.Files.getPosixFilePermissions(path)));
+
+    java.nio.file.Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("r--r--r--"));
+    MoreFiles.makeExecutable(file);
+    assertEquals(
+        "All execute permissions should have been set",
+        "r-xr-xr-x",
+        PosixFilePermissions.toString(java.nio.file.Files.getPosixFilePermissions(path)));
+
+    java.nio.file.Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("r-xrw-rwx"));
+    MoreFiles.makeExecutable(file);
+    assertEquals(
+        "Only group's execute permission should have been set",
+        "r-xrwxrwx",
+        PosixFilePermissions.toString(java.nio.file.Files.getPosixFilePermissions(path)));
+
+    java.nio.file.Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("-w---x-wx"));
+    MoreFiles.makeExecutable(file);
+    assertEquals(
+        "No permissions should have been changed",
+        "-w---x-wx",
+        PosixFilePermissions.toString(java.nio.file.Files.getPosixFilePermissions(path)));
+
+    java.nio.file.Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("---------"));
+    MoreFiles.makeExecutable(file);
+    assertEquals(
+        "No permissions should have been changed",
+        "---------",
+        PosixFilePermissions.toString(java.nio.file.Files.getPosixFilePermissions(path)));
+
+    java.nio.file.Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rwxrwxrwx"));
+    MoreFiles.makeExecutable(file);
+    assertEquals(
+        "No permissions should have been changed",
+        "rwxrwxrwx",
+        PosixFilePermissions.toString(java.nio.file.Files.getPosixFilePermissions(path)));
+  }
+
 }

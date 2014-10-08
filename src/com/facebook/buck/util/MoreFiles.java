@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -35,10 +36,12 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public final class MoreFiles {
 
@@ -212,6 +215,37 @@ public final class MoreFiles {
 
     for (int i = 0; i < files.length; i++) {
       files[i] = fileAccessedEntries[i].getFile();
+    }
+  }
+
+  /**
+   * Tries to make the specified file executable. For file systems that do support the POSIX-style
+   * permissions, the executable permission is set for each category of users that already has the
+   * read permission.
+   *
+   * If the file system does not support the executable permission or the operation fails,
+   * a {@code java.io.IOException} is thrown.
+   */
+  public static void makeExecutable(File file) throws IOException {
+    if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+      Path path = file.toPath();
+      Set<PosixFilePermission> permissions = java.nio.file.Files.getPosixFilePermissions(path);
+
+      if (permissions.contains(PosixFilePermission.OWNER_READ)) {
+        permissions.add(PosixFilePermission.OWNER_EXECUTE);
+      }
+      if (permissions.contains(PosixFilePermission.GROUP_READ)) {
+        permissions.add(PosixFilePermission.GROUP_EXECUTE);
+      }
+      if (permissions.contains(PosixFilePermission.OTHERS_READ)) {
+        permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+      }
+
+      java.nio.file.Files.setPosixFilePermissions(path, permissions);
+    } else {
+      if (!file.setExecutable(/* executable */ true, /* ownerOnly */ true)) {
+        throw new IOException("The file could not be made executable");
+      }
     }
   }
 
