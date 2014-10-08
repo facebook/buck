@@ -74,11 +74,12 @@ public class CxxDescriptionEnhancer {
    */
   public static ImmutableMap<Path, SourcePath> parseHeaders(
       BuildTarget target,
+      SourcePathResolver resolver,
       Iterable<SourcePath> inputs) {
 
     return CxxPreprocessables.resolveHeaderMap(
         target,
-        SourcePaths.getSourcePathNames(
+        resolver.getSourcePathNames(
             target,
             "headers",
             inputs));
@@ -90,10 +91,11 @@ public class CxxDescriptionEnhancer {
    */
   public static ImmutableList<CxxSource> parseCxxSources(
       BuildTarget target,
+      SourcePathResolver resolver,
       Iterable<SourcePath> inputs) {
 
     return CxxCompilableEnhancer.resolveCxxSources(
-        SourcePaths.getSourcePathNames(
+        resolver.getSourcePathNames(
             target,
             "srcs",
             inputs));
@@ -495,29 +497,32 @@ public class CxxDescriptionEnhancer {
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Extract the C/C++ sources from the constructor arg.
     ImmutableList<CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
             params.getBuildTarget(),
+            pathResolver,
             args.srcs.or(ImmutableList.<SourcePath>of()));
 
     // Extract the header map from the our constructor arg.
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
+            pathResolver,
             args.headers.or((ImmutableList.<SourcePath>of())));
 
     // Extract the lex sources.
     ImmutableMap<String, SourcePath> lexSrcs =
-        SourcePaths.getSourcePathNames(
+        pathResolver.getSourcePathNames(
             params.getBuildTarget(),
             "lexSrcs",
             args.lexSrcs.or(ImmutableList.<SourcePath>of()));
 
     // Extract the yacc sources.
     ImmutableMap<String, SourcePath> yaccSrcs =
-        SourcePaths.getSourcePathNames(
+        pathResolver.getSourcePathNames(
             params.getBuildTarget(),
             "yaccSrcs",
             args.yaccSrcs.or(ImmutableList.<SourcePath>of()));

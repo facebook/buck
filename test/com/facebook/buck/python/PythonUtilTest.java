@@ -20,7 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
@@ -38,9 +40,9 @@ public class PythonUtilTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ImmutableMap<Path, SourcePath> srcs = PythonUtil.toModuleMap(
         target,
+        new SourcePathResolver(new BuildRuleResolver()),
         "srcs",
-        target.getBasePath(),
-        Optional.of(
+        target.getBasePath(), Optional.of(
             Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
                 ImmutableMap.<String, SourcePath>of(
                     "hello.py", new TestSourcePath("goodbye.py")))));

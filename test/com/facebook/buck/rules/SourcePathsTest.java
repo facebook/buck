@@ -69,7 +69,7 @@ public class SourcePathsTest {
     // Test that constructing a PathSourcePath without an explicit name resolves to the
     // string representation of the path.
     PathSourcePath pathSourcePath1 = new PathSourcePath(path);
-    String actual1 = SourcePaths.getSourcePathName(
+    String actual1 = new SourcePathResolver(new BuildRuleResolver()).getSourcePathName(
         BuildTargetFactory.newInstance("//:test"),
         pathSourcePath1);
     assertEquals(path.toString(), actual1);
@@ -78,6 +78,7 @@ public class SourcePathsTest {
   @Test
   public void getSourcePathNameOnBuildRuleSourcePath() {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Verify that wrapping a genrule in a BuildRuleSourcePath resolves to the output name of
     // that genrule.
@@ -87,7 +88,7 @@ public class SourcePathsTest {
         .setOut(out)
         .build(resolver);
     BuildRuleSourcePath buildRuleSourcePath1 = new BuildRuleSourcePath(genrule);
-    String actual1 = SourcePaths.getSourcePathName(
+    String actual1 = pathResolver.getSourcePathName(
         BuildTargetFactory.newInstance("//:test"),
         buildRuleSourcePath1);
     assertEquals(out, actual1);
@@ -96,9 +97,9 @@ public class SourcePathsTest {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//:fake");
     FakeBuildRule fakeBuildRule = new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(fakeBuildTarget).build(),
-        new SourcePathResolver(resolver));
+        pathResolver);
     BuildRuleSourcePath buildRuleSourcePath2 = new BuildRuleSourcePath(fakeBuildRule);
-    String actual2 = SourcePaths.getSourcePathName(
+    String actual2 = pathResolver.getSourcePathName(
         BuildTargetFactory.newInstance("//:test"),
         buildRuleSourcePath2);
     assertEquals(fakeBuildTarget.getShortNameOnly(), actual2);
@@ -114,7 +115,7 @@ public class SourcePathsTest {
     // Try to resolve these source paths, with the same name, together and verify that an
     // exception is thrown.
     try {
-      SourcePaths.getSourcePathNames(
+      new SourcePathResolver(new BuildRuleResolver()).getSourcePathNames(
           target,
           parameter,
           ImmutableList.<SourcePath>of(pathSourcePath1, pathSourcePath2));

@@ -23,7 +23,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -55,29 +55,32 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Extract the C/C++ sources from the constructor arg.
     ImmutableList<CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
             params.getBuildTarget(),
+            pathResolver,
             args.srcs.or(ImmutableList.<SourcePath>of()));
 
     // Extract the header map from the our constructor arg.
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
+            pathResolver,
             args.headers.or((ImmutableList.<SourcePath>of())));
 
     // Extract the lex sources.
     ImmutableMap<String, SourcePath> lexSrcs =
-        SourcePaths.getSourcePathNames(
+        pathResolver.getSourcePathNames(
             params.getBuildTarget(),
             "lexSrcs",
             args.lexSrcs.or(ImmutableList.<SourcePath>of()));
 
     // Extract the yacc sources.
     ImmutableMap<String, SourcePath> yaccSrcs =
-        SourcePaths.getSourcePathNames(
+        pathResolver.getSourcePathNames(
             params.getBuildTarget(),
             "yaccSrcs",
             args.yaccSrcs.or(ImmutableList.<SourcePath>of()));

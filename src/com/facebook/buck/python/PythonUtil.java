@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
@@ -38,6 +39,7 @@ public class PythonUtil {
 
   public static ImmutableMap<Path, SourcePath> toModuleMap(
       BuildTarget target,
+      SourcePathResolver resolver,
       String parameter,
       Path baseModule,
       Optional<Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>> inputs) {
@@ -49,7 +51,7 @@ public class PythonUtil {
     final ImmutableMap<String, SourcePath> namesAndSourcePaths;
 
     if (inputs.get().isLeft()) {
-      namesAndSourcePaths = SourcePaths.getSourcePathNames(
+      namesAndSourcePaths = resolver.getSourcePathNames(
           target,
           parameter,
           inputs.get().getLeft());

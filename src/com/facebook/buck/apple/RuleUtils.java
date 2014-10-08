@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Pair;
 import com.facebook.buck.util.HumanReadableException;
@@ -49,13 +48,11 @@ public class RuleUtils {
       ImmutableList.Builder<GroupedSource> outputSources,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputHeaderPaths) {
-    if (SourcePaths.isSourcePathExtensionInSet(
-        resolver,
+    if (resolver.isSourcePathExtensionInSet(
         sourcePath,
         FileExtensions.CLANG_SOURCES)) {
       outputSourcePaths.add(sourcePath);
-    } else if (SourcePaths.isSourcePathExtensionInSet(
-        resolver,
+    } else if (resolver.isSourcePathExtensionInSet(
         sourcePath,
         FileExtensions.CLANG_HEADERS)) {
       outputHeaderPaths.add(sourcePath);

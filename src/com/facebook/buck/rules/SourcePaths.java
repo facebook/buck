@@ -16,24 +16,14 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
-import com.google.common.io.Files;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -109,63 +99,6 @@ public class SourcePaths {
     return FluentIterable.from(paths)
         .transform(TO_SOURCE_PATH)
         .toSortedSet(Ordering.natural());
-  }
-
-  public static boolean isSourcePathExtensionInSet(
-      SourcePathResolver resolver,
-      SourcePath sourcePath,
-      Set<String> extensions) {
-    return extensions.contains(Files.getFileExtension(resolver.getPath(sourcePath).toString()));
-  }
-
-  /**
-   * Resolved the logical names for a group of SourcePath objects into a map, throwing an
-   * error on duplicates.
-   */
-  public static ImmutableMap<String, SourcePath> getSourcePathNames(
-      BuildTarget target,
-      String parameter,
-      Iterable<SourcePath> sourcePaths) {
-
-    Map<String, SourcePath> resolved = Maps.newHashMap();
-
-    for (SourcePath path : sourcePaths) {
-      String name = getSourcePathName(target, path);
-      SourcePath old = resolved.put(name, path);
-      if (old != null) {
-        throw new HumanReadableException(String.format(
-            "%s: parameter '%s': duplicate entries for '%s'",
-            target,
-            parameter,
-            name));
-      }
-    }
-
-    return ImmutableMap.copyOf(resolved);
-  }
-
-  public static String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-    if (sourcePath instanceof BuildRuleSourcePath) {
-      return getNameForRule(((BuildRuleSourcePath) sourcePath).getRule());
-    }
-    Preconditions.checkArgument(sourcePath instanceof PathSourcePath);
-    Path path = (Path) sourcePath.asReference();
-    return MorePaths.relativize(target.getBasePath(), path).toString();
-  }
-
-  private static String getNameForRule(BuildRule rule) {
-    // This is called by the constructors before rule has been checked for nullity
-    Preconditions.checkNotNull(rule);
-
-    // If this build rule implements `HasOutputName`, then return the output name
-    // it provides.
-    if (rule instanceof HasOutputName) {
-      HasOutputName hasOutputName = (HasOutputName) rule;
-      return hasOutputName.getOutputName();
-    }
-
-    // Otherwise, fall back to using the short name of rule's build target.
-    return rule.getBuildTarget().getShortNameOnly();
   }
 
 }

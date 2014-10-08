@@ -254,8 +254,9 @@ public class ThriftLibraryDescription
       throw new HumanReadableException("%s: %s", target, e.getMessage());
     }
 
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ImmutableMap<String, SourcePath> namedSources =
-        SourcePaths.getSourcePathNames(target, "srcs", args.srcs.keySet());
+        pathResolver.getSourcePathNames(target, "srcs", args.srcs.keySet());
 
     // The dependencies listed in "deps", which should all be of type "ThriftLibrary".
     ImmutableSortedSet<ThriftLibrary> thriftDeps =
@@ -277,7 +278,6 @@ public class ThriftLibraryDescription
       ImmutableMap<Path, SourcePath> includes = includesBuilder.build();
 
       // Create the symlink tree build rule and add it to the resolver.
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
       Path includeRoot = getIncludeRoot(target);
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
       SymlinkTree symlinkTree = new SymlinkTree(

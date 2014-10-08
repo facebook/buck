@@ -65,20 +65,21 @@ public class PythonLibraryDescription implements Description<Arg> {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
     return new PythonLibrary(
         params,
-        new SourcePathResolver(resolver),
+        pathResolver,
         PythonUtil.toModuleMap(
             params.getBuildTarget(),
+            pathResolver,
             "srcs",
-            baseModule,
-            args.srcs),
+            baseModule, args.srcs),
         PythonUtil.toModuleMap(
             params.getBuildTarget(),
+            pathResolver,
             "resources",
-            baseModule,
-            args.resources));
+            baseModule, args.resources));
   }
 
 }

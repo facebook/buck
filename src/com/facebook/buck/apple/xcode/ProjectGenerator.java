@@ -71,7 +71,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShellStep;
@@ -943,8 +942,7 @@ public class ProjectGenerator {
     for (GroupedSource groupedSource : groupedSources) {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
-          if (SourcePaths.isSourcePathExtensionInSet(
-              resolver,
+          if (resolver.isSourcePathExtensionInSet(
               groupedSource.getSourcePath(),
               FileExtensions.CLANG_HEADERS)) {
             addSourcePathToHeaderMaps(
@@ -980,8 +978,7 @@ public class ProjectGenerator {
     for (GroupedSource groupedSource : groupedSources) {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
-          if (SourcePaths.isSourcePathExtensionInSet(
-              resolver,
+          if (resolver.isSourcePathExtensionInSet(
               groupedSource.getSourcePath(),
               FileExtensions.CLANG_HEADERS)) {
             addSourcePathToHeadersBuildPhase(
