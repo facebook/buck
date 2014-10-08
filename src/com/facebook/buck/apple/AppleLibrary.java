@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.CompilerStep;
 import com.facebook.buck.cxx.ArchiveStep;
+import com.facebook.buck.cxx.CompilerStep;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
@@ -29,9 +29,8 @@ import java.nio.file.Path;
 
 public class AppleLibrary extends AbstractAppleNativeTargetBuildRule {
 
-  SourcePath archiver;
-
   private final boolean linkedDynamically;
+  private final SourcePath archiver;
 
   public AppleLibrary(
       BuildRuleParams params,
