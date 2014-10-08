@@ -22,6 +22,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.java.AccumulateClassNamesStep;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibrary;
@@ -67,6 +68,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
@@ -644,6 +646,16 @@ public class AndroidBinary extends AbstractBuildRule implements
           buildableContext);
     }
 
+    Supplier<Map<String, HashCode>> classNamesToHashesSupplier;
+    boolean classFilesHaveChanged = preprocessJavaClassesBash.isPresent() ||
+        packageType.isBuildWithObfuscation();
+
+    if (classFilesHaveChanged) {
+      classNamesToHashesSupplier = addAccumulateClassNamesStep(classpathEntriesToDex, steps);
+    } else {
+      classNamesToHashesSupplier = packageableCollection.classNamesToHashesSupplier;
+    }
+
     // Create the final DEX (or set of DEX files in the case of split dex).
     // The APK building command needs to take a directory of raw files, so primaryDexPath
     // can only contain .dex files from this build rule.
@@ -671,7 +683,7 @@ public class AndroidBinary extends AbstractBuildRule implements
 
       addDexingSteps(
           classpathEntriesToDex,
-          packageableCollection.classNamesToHashesSupplier,
+          classNamesToHashesSupplier,
           secondaryDexDirectoriesBuilder,
           steps,
           primaryDexPath);
@@ -680,6 +692,36 @@ public class AndroidBinary extends AbstractBuildRule implements
     }
 
     return new DexFilesInfo(primaryDexPath, secondaryDexDirectoriesBuilder.build());
+  }
+
+  public Supplier<Map<String, HashCode>> addAccumulateClassNamesStep(
+      final ImmutableSet<Path> classPathEntriesToDex,
+      ImmutableList.Builder<Step> steps) {
+    final ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
+
+    steps.add(
+        new AbstractExecutionStep("collect_all_class_names") {
+          @Override
+          public int execute(ExecutionContext context) {
+            for (Path path : classPathEntriesToDex) {
+              Optional<ImmutableSortedMap<String, HashCode>> hashes =
+                  AccumulateClassNamesStep.calculateClassHashes(context, path);
+              if (!hashes.isPresent()) {
+                return 1;
+              }
+              builder.putAll(hashes.get());
+            }
+            return 0;
+          }
+        });
+
+    return Suppliers.memoize(
+        new Supplier<Map<String, HashCode>>() {
+          @Override
+          public Map<String, HashCode> get() {
+            return builder.build();
+          }
+        });
   }
 
   public AndroidPackageableCollection getAndroidPackageableCollection() {

@@ -127,7 +127,7 @@ public class AccumulateClassNamesStep implements Step {
   /**
    * @return an Optional that will be absent if there was an error.
    */
-  private Optional<ImmutableSortedMap<String, HashCode>> calculateClassHashes(
+  public static Optional<ImmutableSortedMap<String, HashCode>> calculateClassHashes(
       ExecutionContext context, Path path) {
     final ImmutableSortedMap.Builder<String, HashCode> classNamesBuilder =
         ImmutableSortedMap.naturalOrder();
@@ -156,7 +156,7 @@ public class AccumulateClassNamesStep implements Step {
     try {
       new DefaultClasspathTraverser().traverse(traversal);
     } catch (IOException e) {
-      context.logError(e, "Error accumulating class names for %s.", pathToJarOrClassesDirectory);
+      context.logError(e, "Error accumulating class names for %s.", path);
       return Optional.absent();
     }
 

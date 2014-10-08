@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -366,5 +368,23 @@ public class AndroidBinaryIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
 
     buildLog.assertTargetHadMatchingDepsAbi(EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testPreprocessorForcesReDex() throws IOException {
+    String output;
+
+    workspace.runBuckCommand("build", "//java/com/preprocess:disassemble").assertSuccess();
+    output = workspace.getFileContents("buck-out/gen/java/com/preprocess/content.txt");
+    assertThat(output, containsString("content=2"));
+
+    workspace.replaceFileContents(
+        "java/com/preprocess/convert.py",
+        "content=2",
+        "content=3");
+
+    workspace.runBuckCommand("build", "//java/com/preprocess:disassemble").assertSuccess();
+    output = workspace.getFileContents("buck-out/gen/java/com/preprocess/content.txt");
+    assertThat(output, containsString("content=3"));
   }
 }
