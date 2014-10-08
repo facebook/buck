@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -42,20 +41,6 @@ public class BuildRuleSourcePath extends AbstractSourcePath {
   private BuildRuleSourcePath(BuildRule rule, Optional<Path> path) {
     this.rule = Preconditions.checkNotNull(rule);
     this.resolvedPath = Preconditions.checkNotNull(path);
-  }
-
-  @Override
-  public Path resolve() {
-    if (resolvedPath.isPresent()) {
-      return resolvedPath.get();
-    }
-
-    Path path = rule.getPathToOutputFile();
-    if (path == null) {
-      throw new HumanReadableException("No known output for: %s", rule);
-    }
-
-    return path;
   }
 
   public Optional<Path> getResolvedPath() {

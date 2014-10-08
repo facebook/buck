@@ -29,11 +29,6 @@ public class PathSourcePath extends AbstractSourcePath {
   }
 
   @Override
-  public Path resolve() {
-    return relativePath;
-  }
-
-  @Override
   public Path asReference() {
     return relativePath;
   }

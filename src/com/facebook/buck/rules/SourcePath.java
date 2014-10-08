@@ -16,20 +16,10 @@
 
 package com.facebook.buck.rules;
 
-import java.nio.file.Path;
-
 /**
  * Represents a source that is required to build a rule (typically a file).
  */
 public interface SourcePath extends Comparable<SourcePath>  {
-
-  /**
-   * Converts this SourcePath to the {@link Path} it represents. Note, this method should only be
-   * called while a rule is executing.
-   *
-   * @return the Path which this instance represents.
-   */
-  public Path resolve();
 
   /**
    * @return a representation of path in a stable manner that does not involve calling {#resolve()}

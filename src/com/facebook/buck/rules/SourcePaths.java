@@ -24,7 +24,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -64,13 +63,6 @@ public class SourcePaths {
           return input.asReference();
         }
       };
-  public static final Function<SourcePath, Path> TO_PATH =
-      new Function<SourcePath, Path>() {
-        @Override
-        public Path apply(SourcePath input) {
-          return input.resolve();
-        }
-      };
   public static final Function<BuildRuleSourcePath, BuildRule> TO_BUILD_RULE_REFERENCES =
       new Function<BuildRuleSourcePath, BuildRule>() {
         @Override
@@ -106,11 +98,6 @@ public class SourcePaths {
         .filter(BuildRuleSourcePath.class)
         .transform(TO_BUILD_RULE_REFERENCES)
         .toList();
-  }
-
-  public static ImmutableList<Path> toPaths(Iterable<? extends SourcePath> sourcePaths) {
-    // Maintain ordering and duplication if necessary.
-    return FluentIterable.from(sourcePaths).transform(TO_PATH).toList();
   }
 
   public static ImmutableSortedSet<SourcePath> toSourcePathsSortedByNaturalOrder(
