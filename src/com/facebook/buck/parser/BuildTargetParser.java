@@ -128,6 +128,7 @@ public class BuildTargetParser {
       shortName = shortName.substring(0, hashIndex);
     }
 
+    Preconditions.checkNotNull(baseName);
     String fullyQualifiedName = new StringBuilder(baseName.length() + shortName.length() + 2)
         .append(baseName).append(':').append(shortName).toString();
     if (!fullyQualifiedName.startsWith(BUILD_RULE_PREFIX)) {

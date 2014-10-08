@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 public class XCVersionGroup extends PBXReference {
   private Optional<PBXFileReference> currentVersion;
 
@@ -35,7 +37,7 @@ public class XCVersionGroup extends PBXReference {
   private final LoadingCache<SourceTreePath, PBXFileReference> fileReferencesBySourceTreePath;
 
 
-  public XCVersionGroup(String name, String path, SourceTree sourceTree) {
+  public XCVersionGroup(String name, @Nullable String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
     children = Lists.newArrayList();
 

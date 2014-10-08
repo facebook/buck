@@ -21,6 +21,8 @@ import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
 
+import javax.annotation.Nullable;
+
 /**
  * Reference to a concrete file.
  */
@@ -28,7 +30,7 @@ public class PBXFileReference extends PBXReference {
   private Optional<String> explicitFileType;
   private Optional<String> lastKnownFileType;
 
-  public PBXFileReference(String name, String path, SourceTree sourceTree) {
+  public PBXFileReference(String name, @Nullable String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
 
     // this is necessary to prevent O(n^2) behavior in xcode project loading

@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Locale;
 
+import javax.annotation.Nullable;
+
 /**
  * Decorator of PrintStreams that tracks whether or not that stream has been written to.  This is
  * used to wrap stdout and stderr to track if anyone else but the class responsible for formatting
@@ -104,7 +106,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
   }
 
   @Override
-  public synchronized void print(String s) {
+  public synchronized void print(@Nullable String s) {
     dirty = true;
     delegate.print(s);
   }
