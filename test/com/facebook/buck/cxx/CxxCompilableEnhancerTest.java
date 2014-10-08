@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +44,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Map;
 
 public class CxxCompilableEnhancerTest {
 
@@ -83,7 +87,7 @@ public class CxxCompilableEnhancerTest {
     CxxCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         resolver,
-        CXX_PLATFORM.getCxx(),
+        CXX_PLATFORM,
         cxxPreprocessorInput,
         ImmutableList.<String>of(),
         /* pic */ false,
@@ -114,7 +118,7 @@ public class CxxCompilableEnhancerTest {
     CxxCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         resolver,
-        CXX_PLATFORM.getCxx(),
+        CXX_PLATFORM,
         cxxPreprocessorInput,
         ImmutableList.<String>of(),
         /* pic */ false,
@@ -146,7 +150,7 @@ public class CxxCompilableEnhancerTest {
     CxxCompile noPic = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         resolver,
-        CXX_PLATFORM.getCxx(),
+        CXX_PLATFORM,
         cxxPreprocessorInput,
         ImmutableList.<String>of(),
         /* pic */ false,
@@ -164,7 +168,7 @@ public class CxxCompilableEnhancerTest {
     CxxCompile pic = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         resolver,
-        CXX_PLATFORM.getCxx(),
+        CXX_PLATFORM,
         cxxPreprocessorInput,
         ImmutableList.<String>of(),
         /* pic */ true,
@@ -176,6 +180,42 @@ public class CxxCompilableEnhancerTest {
             name,
             /* pic */ true),
         pic.getBuildTarget());
+  }
+
+  @Test
+  public void compilerFlagsFromPlatformArePropagated() {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
+    CxxPreprocessorInput cxxPreprocessorInput = new CxxPreprocessorInput(
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableList.<Path>of(),
+        ImmutableList.<Path>of());
+
+    CxxSource cxxSource = new CxxSource("source.cpp", new TestSourcePath("source.cpp"));
+
+    ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
+    CxxPlatform platform = new DefaultCxxPlatform(
+        new FakeBuckConfig(
+            ImmutableMap.<String, Map<String, String>>of(
+                "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags)))));
+
+    // Verify that platform flags make it to the compile rule.
+    CxxCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
+        params,
+        resolver,
+        platform,
+        cxxPreprocessorInput,
+        ImmutableList.<String>of(),
+        /* pic */ false,
+        cxxSource);
+    assertNotEquals(
+        -1,
+        Collections.indexOfSubList(cxxCompile.getFlags(), platformFlags));
   }
 
 }

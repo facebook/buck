@@ -101,7 +101,7 @@ public class CxxCompilableEnhancer {
   public static CxxCompile createCompileBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePath compiler,
+      CxxPlatform platform,
       CxxPreprocessorInput preprocessorInput,
       ImmutableList<String> compilerFlags,
       boolean pic,
@@ -142,11 +142,12 @@ public class CxxCompilableEnhancer {
     return new CxxCompile(
         compileParams,
         new SourcePathResolver(resolver),
-        compiler,
+        cxx ? platform.getCxx() : platform.getCc(),
         ImmutableList.<String>builder()
             .add("-x", cxx ? "c++" : "c")
             .addAll((pic ? Optional.of("-fPIC") : Optional.<String>absent()).asSet())
             .addAll(cxx ? preprocessorInput.getCxxppflags() : preprocessorInput.getCppflags())
+            .addAll(cxx ? platform.getCxxflags() : platform.getCflags())
             .addAll(compilerFlags)
             .build(),
         getCompileOutputPath(target, source.getName()),
@@ -163,7 +164,7 @@ public class CxxCompilableEnhancer {
   public static ImmutableSortedSet<BuildRule> createCompileBuildRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePath compiler,
+      CxxPlatform platform,
       CxxPreprocessorInput preprocessorInput,
       ImmutableList<String> compilerFlags,
       boolean pic,
@@ -177,7 +178,7 @@ public class CxxCompilableEnhancer {
       rules.add(createCompileBuildRule(
           params,
           resolver,
-          compiler,
+          platform,
           preprocessorInput,
           compilerFlags,
           pic,

@@ -321,7 +321,7 @@ public class CxxDescriptionEnhancer {
     ImmutableSortedSet<BuildRule> objectRules = CxxCompilableEnhancer.createCompileBuildRules(
         params,
         resolver,
-        config.getCxx(),
+        config,
         cxxPreprocessorInput,
         compilerFlags,
         pic,
