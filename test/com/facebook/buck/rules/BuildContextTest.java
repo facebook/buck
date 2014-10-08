@@ -153,6 +153,8 @@ public class BuildContextTest {
         .build();
 
     buildContext.logError(new RuntimeException(), "Error detail: %s", "BUILD_ID");
-    assertEquals(ImmutableList.of("Error detail: BUILD_ID"), listener.getLogMessages());
+    assertEquals(
+        ImmutableList.of("Error detail: BUILD_ID\njava.lang.RuntimeException"),
+        listener.getLogMessages());
   }
 }

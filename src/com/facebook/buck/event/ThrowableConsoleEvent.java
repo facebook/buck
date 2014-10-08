@@ -38,10 +38,11 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
   }
 
   private static String combineThrowableAndMessage(Throwable throwable, String message) {
-    if (throwable.getMessage() == null) {
-      return message;
+    String desc = message + "\n" + throwable.getClass().getCanonicalName();
+    if (throwable.getMessage() != null) {
+      desc += ": " + throwable.getMessage();
     }
-    return message + "\n" + throwable.getMessage();
+    return desc;
   }
 
   public Throwable getThrowable() {
