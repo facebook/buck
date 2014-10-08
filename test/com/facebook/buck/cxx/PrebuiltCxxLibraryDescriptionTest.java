@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -306,8 +307,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   public void missingSharedLibsAreAutoBuilt() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
-    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.exists(EasyMock.anyObject(Path.class))).andReturn(false);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
         .setProjectFilesystem(filesystem)
         .build();
@@ -318,6 +318,22 @@ public class PrebuiltCxxLibraryDescriptionTest {
     SourcePath input = nativeLinkableInput.getInputs().get(0);
     assertTrue(input instanceof BuildRuleSourcePath);
     assertTrue(((BuildRuleSourcePath) input).getRule() instanceof CxxLink);
+  }
+
+  @Test
+  public void missingSharedLibsAreNotAutoBuiltForHeaderOnlyRules() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
+    arg.headerOnly = Optional.of(true);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
+        .setProjectFilesystem(filesystem)
+        .build();
+    CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
+        CXX_PLATFORM.getLd(),
+        NativeLinkable.Type.SHARED);
+    assertTrue(nativeLinkableInput.getInputs().isEmpty());
   }
 
 }

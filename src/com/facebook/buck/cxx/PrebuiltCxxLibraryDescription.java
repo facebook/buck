@@ -94,7 +94,7 @@ public class PrebuiltCxxLibraryDescription
         target.getBasePath()
             .resolve(libDir)
             .resolve(String.format("lib%s.so", libName));
-    if (params.getProjectFilesystem().exists(prebuiltSharedLibraryPath)) {
+    if (headerOnly || params.getProjectFilesystem().exists(prebuiltSharedLibraryPath)) {
       sharedLibraryPath = prebuiltSharedLibraryPath;
       sharedLibrary = new PathSourcePath(sharedLibraryPath);
     } else {
