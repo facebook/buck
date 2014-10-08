@@ -231,7 +231,7 @@ public class ParserTest extends EasyMockSupport {
         eventBus,
         new TestConsole(),
         ImmutableMap.<String, String>of());
-    ActionGraph actionGraph = targetGraph.buildActionGraph(Optional.<BuildRuleResolver>absent());
+    ActionGraph actionGraph = targetGraph.buildActionGraph(new BuildRuleResolver());
     BuildRule fooRule = actionGraph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
     BuildRule barRule = actionGraph.findBuildRuleByTarget(barTarget);
@@ -981,7 +981,7 @@ public class ParserTest extends EasyMockSupport {
         defaultIncludes,
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of()).buildActionGraph(Optional.<BuildRuleResolver>absent());
+        ImmutableMap.<String, String>of()).buildActionGraph(new BuildRuleResolver());
 
     BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);

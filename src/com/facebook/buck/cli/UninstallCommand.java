@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -67,7 +66,7 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
           options.getDefaultIncludes(),
           getBuckEventBus(),
           console,
-          environment).buildActionGraph(Optional.<BuildRuleResolver>absent());
+          environment).buildActionGraph(new BuildRuleResolver());
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

@@ -31,7 +31,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -84,7 +83,7 @@ public class CrossRepoTargetsIntegrationTest {
         ImmutableList.<String>of(),
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of()).buildActionGraph(Optional.<BuildRuleResolver>absent());
+        ImmutableMap.<String, String>of()).buildActionGraph(new BuildRuleResolver());
 
     BuildRule mainRule = graph.findBuildRuleByTarget(mainTarget);
     assertEquals(mainTarget, mainRule.getBuildTarget());

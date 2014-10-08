@@ -590,7 +590,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         eventBus,
         console,
         environment,
-        predicates.size() > 0 ? Optional.<BuildRuleResolver>absent() : Optional.of(resolver));
+        predicates.size() > 0 ? new BuildRuleResolver() : resolver);
 
     graphs.add(partialGraph);
 
@@ -628,9 +628,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           eventBus,
           console,
           environment,
-          i == predicates.size() - 1 ?
-              Optional.of(resolver) :
-              Optional.<BuildRuleResolver>absent());
+          i == predicates.size() - 1 ? resolver : new BuildRuleResolver());
 
       graphs.add(partialGraph);
     }
