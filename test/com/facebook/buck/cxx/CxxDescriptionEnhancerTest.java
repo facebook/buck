@@ -35,14 +35,15 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -55,11 +56,13 @@ public class CxxDescriptionEnhancerTest {
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
+      SourcePathResolver resolver,
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
             .setDeps(ImmutableSortedSet.copyOf(deps))
-            .build());
+            .build(),
+        resolver);
   }
 
   @Test
@@ -202,6 +205,7 @@ public class CxxDescriptionEnhancerTest {
   @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void createCxxLibraryBuildRules() {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Setup a normal C++ source
     String sourceName = "test/bar.cpp";
@@ -223,17 +227,17 @@ public class CxxDescriptionEnhancerTest {
         .build(resolver);
 
     // Setup a C/C++ library that we'll depend on form the C/C++ binary description.
-    final BuildRule header = createFakeBuildRule("//:header");
-    final BuildRule headerSymlinkTree = createFakeBuildRule("//:symlink");
+    final BuildRule header = createFakeBuildRule("//:header", pathResolver);
+    final BuildRule headerSymlinkTree = createFakeBuildRule("//:symlink", pathResolver);
     final Path headerSymlinkTreeRoot = Paths.get("symlink/tree/root");
-    final BuildRule staticLibraryDep = createFakeBuildRule("//:static");
+    final BuildRule staticLibraryDep = createFakeBuildRule("//:static", pathResolver);
     final Path staticLibraryOutput = Paths.get("output/path/lib.a");
-    final BuildRule sharedLibraryDep = createFakeBuildRule("//:shared");
+    final BuildRule sharedLibraryDep = createFakeBuildRule("//:shared", pathResolver);
     final Path sharedLibraryOutput = Paths.get("output/path/lib.so");
     final String sharedLibrarySoname = "soname";
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     BuildRuleParams depParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(depTarget);
-    CxxLibrary dep = new CxxLibrary(depParams) {
+    CxxLibrary dep = new CxxLibrary(depParams, pathResolver) {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {

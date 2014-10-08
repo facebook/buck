@@ -37,6 +37,7 @@ import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -140,6 +141,7 @@ public class AndroidResource extends AbstractBuildRule
 
   protected AndroidResource(
       BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable final Path res,
       ImmutableSortedSet<Path> resSrcs,
@@ -148,7 +150,7 @@ public class AndroidResource extends AbstractBuildRule
       ImmutableSortedSet<Path> assetsSrcs,
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings) {
-    super(buildRuleParams);
+    super(buildRuleParams, resolver);
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
           "When the 'res' is specified for android_resource() %s, at least one of 'package' or " +
@@ -269,7 +271,8 @@ public class AndroidResource extends AbstractBuildRule
           AndroidManifestReader androidManifestReader;
           try {
             androidManifestReader = DefaultAndroidManifestReader.forPath(
-                manifestFile.resolve(), context.getProjectFilesystem());
+                getResolver().getPath(manifestFile),
+                context.getProjectFilesystem());
           } catch (IOException e) {
             context.logError(e, "Failed to create AndroidManifestReader for %s.", manifestFile);
             return 1;
@@ -394,7 +397,7 @@ public class AndroidResource extends AbstractBuildRule
       collector.addAssetsDirectory(getBuildTarget(), assets);
     }
     if (manifestFile != null) {
-      collector.addManifestFile(getBuildTarget(), manifestFile.resolve());
+      collector.addManifestFile(getBuildTarget(), getResolver().getPath(manifestFile));
     }
   }
 

@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -64,9 +65,10 @@ public class CxxLinkableEnhancerTest {
 
     public FakeNativeLinkable(
         BuildRuleParams params,
+        SourcePathResolver resolver,
         NativeLinkableInput staticInput,
         NativeLinkableInput sharedInput) {
-      super(params);
+      super(params, resolver);
       this.staticInput = Preconditions.checkNotNull(staticInput);
       this.sharedInput = Preconditions.checkNotNull(sharedInput);
     }
@@ -80,6 +82,7 @@ public class CxxLinkableEnhancerTest {
 
   private static FakeNativeLinkable createNativeLinkable(
       String target,
+      SourcePathResolver resolver,
       NativeLinkableInput staticNativeLinkableInput,
       NativeLinkableInput sharedNativeLinkableInput,
       BuildRule... deps) {
@@ -87,6 +90,7 @@ public class CxxLinkableEnhancerTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
             .setDeps(ImmutableSortedSet.copyOf(deps))
             .build(),
+        resolver,
         staticNativeLinkableInput,
         sharedNativeLinkableInput);
   }
@@ -111,6 +115,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        new SourcePathResolver(resolver),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -142,6 +147,7 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void testThatOriginalBuildParamsDepsDoNotPropagateToArchive() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
 
     // Create an `Archive` rule using build params with an existing dependency,
     // as if coming from a `TargetNode` which had declared deps.  These should *not*
@@ -149,7 +155,7 @@ public class CxxLinkableEnhancerTest {
     // it's immediate inputs.
     BuildRule dep = new FakeBuildRule(
         BuildRuleParamsFactory.createTrivialBuildRuleParams(
-            BuildTargetFactory.newInstance("//:fake")));
+            BuildTargetFactory.newInstance("//:fake")), pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:archive");
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dummy"))
@@ -158,6 +164,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        pathResolver,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -175,13 +182,14 @@ public class CxxLinkableEnhancerTest {
   @Test
   public void testThatBuildTargetsFromNativeLinkableDepsContributeToActualDeps() {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
     // Create a dummy build rule and add it to the resolver.
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//:fake");
     FakeBuildRule fakeBuildRule = new FakeBuildRule(
-        new FakeBuildRuleParamsBuilder(fakeBuildTarget).build());
+        new FakeBuildRuleParamsBuilder(fakeBuildTarget).build(), pathResolver);
     resolver.addToIndex(fakeBuildRule);
 
     // Create a native linkable dep and have it list the fake build rule above as a link
@@ -191,6 +199,7 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(
         "//:dep",
+        pathResolver,
         nativeLinkableInput,
         nativeLinkableInput);
 
@@ -198,6 +207,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        pathResolver,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -214,6 +224,7 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void createCxxLinkableBuildRuleExecutableVsShared() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
@@ -227,6 +238,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink executable = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        pathResolver,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -243,6 +255,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink shared = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        pathResolver,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -259,6 +272,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink sharedWithSoname = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        pathResolver,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -274,6 +288,7 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void createCxxLinkableBuildRuleStaticVsSharedDeps() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
@@ -287,12 +302,15 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput sharedInput = new NativeLinkableInput(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(sharedArg));
-    FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep", staticInput, sharedInput);
+    FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep",
+        pathResolver,
+        staticInput, sharedInput);
 
     // Construct a CxxLink object which links using static dependencies.
     CxxLink staticLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        pathResolver,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -309,6 +327,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink sharedLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
+        pathResolver,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
@@ -325,23 +344,24 @@ public class CxxLinkableEnhancerTest {
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
     CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinel = "bottom";
     NativeLinkableInput bottomInput = new NativeLinkableInput(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(sentinel));
-    BuildRule bottom = createNativeLinkable("//:bottom", bottomInput, bottomInput);
+    BuildRule bottom = createNativeLinkable("//:bottom", pathResolver, bottomInput, bottomInput);
 
     // Create a non-native linkable that sits in the middle of the dep chain, preventing
     // traversals to the bottom native linkable.
-    BuildRule middle = new FakeBuildRule("//:middle", bottom);
+    BuildRule middle = new FakeBuildRule("//:middle", pathResolver, bottom);
 
     // Create a native linkable that sits at the top of the dep chain.
     NativeLinkableInput topInput = new NativeLinkableInput(
         ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of());
-    BuildRule top = createNativeLinkable("//:top", topInput, topInput, middle);
+    BuildRule top = createNativeLinkable("//:top", pathResolver, topInput, topInput, middle);
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
     // in the bottom input.

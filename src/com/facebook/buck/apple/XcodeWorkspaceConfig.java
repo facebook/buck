@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -43,11 +44,12 @@ public class XcodeWorkspaceConfig extends AbstractBuildRule {
 
   protected XcodeWorkspaceConfig(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Optional<BuildRule> srcTarget,
       ImmutableSet<BuildRule> extraTests,
       String workspaceName,
       ImmutableMap<SchemeActionType, String> actionConfigNames) {
-    super(params);
+    super(params, resolver);
     this.srcTarget = Preconditions.checkNotNull(srcTarget);
     this.extraTests = Preconditions.checkNotNull(extraTests);
     this.workspaceName = Preconditions.checkNotNull(workspaceName);

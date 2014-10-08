@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -38,8 +39,8 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
     super(graph);
   }
 
-  public ActionGraph buildActionGraph() {
-    final BuildRuleResolver ruleResolver = new BuildRuleResolver();
+  public ActionGraph buildActionGraph(Optional<BuildRuleResolver> ruleResolverOptional) {
+    final BuildRuleResolver ruleResolver = ruleResolverOptional.or(new BuildRuleResolver());
     final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
 
     final TargetNodeToBuildRuleTransformer transformer = new TargetNodeToBuildRuleTransformer();

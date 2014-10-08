@@ -124,8 +124,11 @@ public class SourcePaths {
         .toSortedSet(Ordering.natural());
   }
 
-  public static boolean isSourcePathExtensionInSet(SourcePath sourcePath, Set<String> extensions) {
-    return extensions.contains(Files.getFileExtension(sourcePath.resolve().toString()));
+  public static boolean isSourcePathExtensionInSet(
+      SourcePathResolver resolver,
+      SourcePath sourcePath,
+      Set<String> extensions) {
+    return extensions.contains(Files.getFileExtension(resolver.getPath(sourcePath).toString()));
   }
 
   /**

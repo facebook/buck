@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -49,12 +50,13 @@ public class RemoteFile extends AbstractBuildRule {
 
   public RemoteFile(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       boolean isBuildTimeDownloadingOk,
       Downloader downloader,
       URI uri,
       HashCode sha1,
       String out) {
-    super(params);
+    super(params, resolver);
     this.isBuildTimeDownloadingOk = isBuildTimeDownloadingOk;
     this.uri = Preconditions.checkNotNull(uri);
     this.sha1 = Preconditions.checkNotNull(sha1);

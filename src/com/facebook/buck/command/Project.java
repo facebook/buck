@@ -38,6 +38,7 @@ import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.ProjectConfig;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -130,6 +131,7 @@ public class Project {
    */
   private static final boolean GENERATE_PROPERTIES_FILES = false;
 
+  private final SourcePathResolver resolver;
   private final ImmutableSet<ProjectConfig> rules;
   private final ActionGraph actionGraph;
   private final BuildFileTree buildFileTree;
@@ -143,7 +145,9 @@ public class Project {
   private final String pythonInterpreter;
   private final ObjectMapper objectMapper;
 
-  public Project(ImmutableSet<ProjectConfig> rules,
+  public Project(
+      SourcePathResolver resolver,
+      ImmutableSet<ProjectConfig> rules,
       ActionGraph actionGraph,
       Map<Path, String> basePathToAliasMap,
       JavaPackageFinder javaPackageFinder,
@@ -153,6 +157,7 @@ public class Project {
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
       ObjectMapper objectMapper) {
+    this.resolver = Preconditions.checkNotNull(resolver);
     this.rules = Preconditions.checkNotNull(rules);
     this.actionGraph = Preconditions.checkNotNull(actionGraph);
     this.buildFileTree = new InMemoryBuildFileTree(
@@ -959,7 +964,18 @@ public class Project {
     List<SerializablePrebuiltJarRule> libraries = Lists.newArrayListWithCapacity(
         libraryJars.size());
     for (BuildRule libraryJar : libraryJars) {
-      libraries.add(new SerializablePrebuiltJarRule(libraryJar));
+      Preconditions.checkState(libraryJar instanceof PrebuiltJar);
+      String name = getIntellijNameForRule(libraryJar, null /* basePathToAliasMap */);
+
+      PrebuiltJar prebuiltJar = (PrebuiltJar) libraryJar;
+
+      String binaryJar = resolver.getPath(prebuiltJar.getBinaryJar()).toString();
+      String sourceJar = null;
+      if (prebuiltJar.getSourceJar().isPresent()) {
+        sourceJar = prebuiltJar.getSourceJar().get().toString();
+      }
+      String javadocUrl = prebuiltJar.getJavadocUrl().orNull();
+      libraries.add(new SerializablePrebuiltJarRule(name, binaryJar, sourceJar, javadocUrl));
     }
 
     Map<String, Object> config = ImmutableMap.<String, Object>of(
@@ -1096,19 +1112,15 @@ public class Project {
     @Nullable
     @JsonProperty private final String javadocUrl;
 
-    private SerializablePrebuiltJarRule(BuildRule rule) {
-      Preconditions.checkState(rule instanceof PrebuiltJar);
-      this.name = getIntellijNameForRule(rule, null /* basePathToAliasMap */);
-
-      PrebuiltJar prebuiltJar = (PrebuiltJar) rule;
-
-      this.binaryJar = prebuiltJar.getBinaryJar().resolve().toString();
-      if (prebuiltJar.getSourceJar().isPresent()) {
-        this.sourceJar = prebuiltJar.getSourceJar().get().toString();
-      } else {
-        this.sourceJar = null;
-      }
-      this.javadocUrl = prebuiltJar.getJavadocUrl().orNull();
+    private SerializablePrebuiltJarRule(
+        String name,
+        String binaryJar,
+        @Nullable String sourceJar,
+        @Nullable String javadocUrl) {
+      this.name = Preconditions.checkNotNull(name);
+      this.binaryJar = Preconditions.checkNotNull(binaryJar);
+      this.sourceJar = sourceJar;
+      this.javadocUrl = javadocUrl;
     }
 
     @Override

@@ -39,6 +39,7 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.EchoStep;
@@ -165,6 +166,7 @@ public class AndroidBinary extends AbstractBuildRule implements
    */
   AndroidBinary(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Optional<Path> proguardJarOverride,
       SourcePath manifest,
       String target,
@@ -183,7 +185,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       Optional<String> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult) {
-    super(params);
+    super(params, resolver);
     this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
@@ -787,7 +789,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     ImmutableSet.Builder<Path> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
     if (proguardConfig.isPresent()) {
-      proguardConfigsBuilder.add(proguardConfig.get().resolve());
+      proguardConfigsBuilder.add(getResolver().getPath(proguardConfig.get()));
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.
@@ -887,6 +889,8 @@ public class AndroidBinary extends AbstractBuildRule implements
           proguardFullConfigFile,
           proguardMappingFile,
           dexSplitMode,
+          dexSplitMode.getPrimaryDexScenarioFile().transform(getResolver().getPathFunction()),
+          dexSplitMode.getPrimaryDexClassesFile().transform(getResolver().getPathFunction()),
           zipSplitReportDir);
       steps.add(splitZipCommand);
 

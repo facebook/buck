@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OutputOnlyBuildRule;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -85,6 +86,8 @@ class AndroidPrebuiltAarGraphEnhancer {
       BuildRuleParams originalBuildRuleParams,
       SourcePath aarFile,
       BuildRuleResolver ruleResolver) {
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
     // unzip_aar
     BuildTarget originalBuildTarget = originalBuildRuleParams.getBuildTarget();
     BuildRuleParams unzipAarParams = originalBuildRuleParams.copyWithChanges(
@@ -92,7 +95,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_UNZIP_FLAVOR),
         originalBuildRuleParams.getDeclaredDeps(),
         originalBuildRuleParams.getExtraDeps());
-    UnzipAar unzipAar = new UnzipAar(unzipAarParams, aarFile);
+    UnzipAar unzipAar = new UnzipAar(unzipAarParams, pathResolver, aarFile);
     ruleResolver.addToIndex(unzipAar);
 
     // unzip_aar#aar_classes_jar
@@ -102,7 +105,9 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(unzipAar),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
     OutputOnlyBuildRule classesJar = new OutputOnlyBuildRule(
-        classesJarParams, unzipAar.getPathToClassesJar());
+        classesJarParams,
+        pathResolver,
+        unzipAar.getPathToClassesJar());
     ruleResolver.addToIndex(classesJar);
 
     // prebuilt_jar
@@ -113,6 +118,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
     PrebuiltJar prebuiltJar = new PrebuiltJar(
         /* params */ prebuiltJarParams,
+        pathResolver,
         new BuildRuleSourcePath(classesJar),
         /* sourceJar */ Optional.<SourcePath>absent(),
         /* gwtJar */ Optional.<SourcePath>absent(),
@@ -126,7 +132,9 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(unzipAar),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
     OutputOnlyBuildRule manifest = new OutputOnlyBuildRule(
-        manifestParams, unzipAar.getAndroidManifest());
+        manifestParams,
+        pathResolver,
+        unzipAar.getAndroidManifest());
     ruleResolver.addToIndex(manifest);
 
     // android_resource
@@ -142,6 +150,7 @@ class AndroidPrebuiltAarGraphEnhancer {
 
     AndroidResource androidResource = new AndroidResource(
         androidResourceParams,
+        pathResolver,
         /* deps */ ImmutableSortedSet.<BuildRule>of(unzipAar),
         unzipAar.getResDirectory(),
         resSrcs,
@@ -163,6 +172,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
     return new AndroidPrebuiltAar(
         androidLibraryParams,
+        pathResolver,
         unzipAar.getProguardConfig(),
         prebuiltJar,
         androidResource);
@@ -174,8 +184,11 @@ class AndroidPrebuiltAarGraphEnhancer {
     private final Path unpackDirectory;
     private final Path uberClassesJar;
 
-    private UnzipAar(BuildRuleParams buildRuleParams, SourcePath aarFile) {
-      super(buildRuleParams);
+    private UnzipAar(
+        BuildRuleParams buildRuleParams,
+        SourcePathResolver resolver,
+        SourcePath aarFile) {
+      super(buildRuleParams, resolver);
       this.aarFile = Preconditions.checkNotNull(aarFile);
       this.unpackDirectory = BuildTargets.getBinPath(
           buildRuleParams.getBuildTarget(),
@@ -190,7 +203,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         BuildableContext buildableContext) {
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
       steps.add(new MakeCleanDirectoryStep(unpackDirectory));
-      steps.add(new UnzipStep(aarFile.resolve(), unpackDirectory));
+      steps.add(new UnzipStep(getResolver().getPath(aarFile), unpackDirectory));
       steps.add(new TouchStep(getProguardConfig()));
       steps.add(new MkdirStep(getAssetsDirectory()));
 

@@ -23,10 +23,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
@@ -56,6 +58,7 @@ public class YaccTest {
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
@@ -71,6 +74,7 @@ public class YaccTest {
         ruleKeyBuilderFactory,
         new Yacc(
             params,
+            pathResolver,
             DEFAULT_YACC,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_PREFIX,
@@ -81,6 +85,7 @@ public class YaccTest {
         ruleKeyBuilderFactory,
         new Yacc(
             params,
+            pathResolver,
             new TestSourcePath("different"),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_PREFIX,
@@ -92,6 +97,7 @@ public class YaccTest {
         ruleKeyBuilderFactory,
         new Yacc(
             params,
+            pathResolver,
             DEFAULT_YACC,
             ImmutableList.of("-different"),
             DEFAULT_OUTPUT_PREFIX,
@@ -103,6 +109,7 @@ public class YaccTest {
         ruleKeyBuilderFactory,
         new Yacc(
             params,
+            pathResolver,
             DEFAULT_YACC,
             DEFAULT_FLAGS,
             Paths.get("different"),
@@ -114,6 +121,7 @@ public class YaccTest {
         ruleKeyBuilderFactory,
         new Yacc(
             params,
+            pathResolver,
             DEFAULT_YACC,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_PREFIX,

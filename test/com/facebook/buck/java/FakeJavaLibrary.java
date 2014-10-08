@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -51,9 +52,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   public FakeJavaLibrary(
       BuildTarget target,
+      SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
     this(JavaLibraryDescription.TYPE,
         target,
+        resolver,
         deps,
         BuildTargetPattern.PUBLIC);
   }
@@ -61,14 +64,15 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   public FakeJavaLibrary(
       BuildRuleType type,
       BuildTarget target,
+      SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
-    super(type, target, deps, visibilityPatterns);
+    super(type, target, resolver, deps, visibilityPatterns);
     this.visibilityPatterns = visibilityPatterns;
   }
 
-  public FakeJavaLibrary(BuildTarget target) {
-    super(JavaLibraryDescription.TYPE, target);
+  public FakeJavaLibrary(BuildTarget target, SourcePathResolver resolver) {
+    super(JavaLibraryDescription.TYPE, target, resolver);
   }
 
   @Override
@@ -102,8 +106,8 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getJavaSrcs() {
-    return srcs;
+  public ImmutableSortedSet<Path> getJavaSrcs() {
+    return ImmutableSortedSet.copyOf(getResolver().getAllPaths(srcs));
   }
 
   public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<Path> srcs) {

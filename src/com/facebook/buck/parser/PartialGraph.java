@@ -21,9 +21,11 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -97,7 +99,8 @@ public class PartialGraph {
         parser,
         eventBus,
         console,
-        environment);
+        environment,
+        Optional.<BuildRuleResolver>absent());
   }
 
   public static PartialGraph createPartialGraph(
@@ -105,7 +108,9 @@ public class PartialGraph {
       Iterable<String> includes,
       Parser parser,
       BuckEventBus eventBus,
-      Console console, ImmutableMap<String, String> environment)
+      Console console,
+      ImmutableMap<String, String> environment,
+      Optional<BuildRuleResolver> ruleResolver)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Preconditions.checkNotNull(parser);
 
@@ -116,7 +121,7 @@ public class PartialGraph {
         includes,
         eventBus,
         console,
-        environment).buildActionGraph();
+        environment).buildActionGraph(ruleResolver);
 
     return new PartialGraph(graph, targets);
   }

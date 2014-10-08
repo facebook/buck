@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -86,7 +87,7 @@ public class AuditOwnerCommandTest {
         BuildRuleParams params,
         BuildRuleResolver resolver,
         A args) {
-      return new FakeBuildRule(params);
+      return new FakeBuildRule(params, new SourcePathResolver(resolver));
     }
 
     public static class FakeArg {

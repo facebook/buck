@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CompilerStep;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -28,9 +29,10 @@ public class AppleBinary extends AbstractAppleNativeTargetBuildRule {
 
   public AppleBinary(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       AppleNativeTargetDescriptionArg arg,
       TargetSources targetSources) {
-    super(params, arg, targetSources);
+    super(params, resolver, arg, targetSources);
   }
 
   @Override

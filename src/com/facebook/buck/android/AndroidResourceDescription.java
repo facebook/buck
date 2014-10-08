@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -127,6 +128,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         params.copyWithDeps(
             androidResOnly(params.getDeclaredDeps()),
             androidResOnly(params.getExtraDeps())),
+        new SourcePathResolver(resolver),
         resolver.getAllRules(args.deps.get()),
         args.res.orNull(),
         collectInputFiles(filesystem, args.res),

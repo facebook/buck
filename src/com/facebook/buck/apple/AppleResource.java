@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -69,9 +70,10 @@ public class AppleResource extends AbstractBuildRule {
 
   AppleResource(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       DirectoryTraverser directoryTraverser,
       AppleResourceDescription.Arg args) {
-    super(params);
+    super(params, resolver);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
     this.dirs = ImmutableSortedSet.copyOf(args.dirs);
     this.files = ImmutableSortedSet.copyOf(args.files);
@@ -164,7 +166,7 @@ public class AppleResource extends AbstractBuildRule {
     }
 
     for (SourcePath file : files) {
-      steps.add(CopyStep.forFile(file.resolve(), outputDirectory));
+      steps.add(CopyStep.forFile(getResolver().getPath(file), outputDirectory));
     }
 
     // TODO(grp): Support copying variant resources like Xcode.

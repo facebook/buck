@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -68,6 +69,7 @@ public class PrebuiltCxxLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       final A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     final BuildTarget target = params.getBuildTarget();
 
@@ -103,6 +105,7 @@ public class PrebuiltCxxLibraryDescription
       CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
           cxxPlatform,
           params,
+          pathResolver,
           ImmutableList.<String>of(),
           ImmutableList.<String>of(),
           BuildTargets.extendFlavoredBuildTarget(
@@ -131,7 +134,7 @@ public class PrebuiltCxxLibraryDescription
         .transform(fullPathFn)
         .toList();
 
-    return new CxxLibrary(params) {
+    return new CxxLibrary(params, pathResolver) {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {

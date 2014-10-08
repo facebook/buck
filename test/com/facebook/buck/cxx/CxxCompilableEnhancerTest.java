@@ -32,6 +32,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,11 +49,13 @@ public class CxxCompilableEnhancerTest {
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
+      SourcePathResolver resolver,
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
             .setDeps(ImmutableSortedSet.copyOf(deps))
-            .build());
+            .build(),
+        resolver);
   }
 
   @Test
@@ -61,7 +64,9 @@ public class CxxCompilableEnhancerTest {
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     BuildRuleResolver resolver = new BuildRuleResolver();
 
-    FakeBuildRule dep = resolver.addToIndex(createFakeBuildRule("//:dep1"));
+    FakeBuildRule dep = resolver.addToIndex(createFakeBuildRule(
+            "//:dep1",
+            new SourcePathResolver(new BuildRuleResolver())));
 
     CxxPreprocessorInput cxxPreprocessorInput = new CxxPreprocessorInput(
         ImmutableSet.of(dep.getBuildTarget()),
@@ -102,7 +107,7 @@ public class CxxCompilableEnhancerTest {
         ImmutableList.<Path>of());
 
     String name = "foo/bar.cpp";
-    FakeBuildRule dep = createFakeBuildRule("//:test");
+    FakeBuildRule dep = createFakeBuildRule("//:test", new SourcePathResolver(resolver));
     SourcePath input = new BuildRuleSourcePath(dep);
     CxxSource cxxSource = new CxxSource(name, input);
 

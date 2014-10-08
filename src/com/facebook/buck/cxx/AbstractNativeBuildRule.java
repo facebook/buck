@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -59,10 +60,11 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
 
   public AbstractNativeBuildRule(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> headers,
       ImmutableMap<SourcePath, String> perSrcFileFlags) {
-    super(params);
+    super(params, resolver);
     this.headers = Preconditions.checkNotNull(headers);
     this.srcs = Preconditions.checkNotNull(srcs);
     this.perSrcFileFlags = Preconditions.checkNotNull(perSrcFileFlags);
@@ -116,7 +118,7 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
     addMkdirStepIfNeeded(createdDirectories, steps, getPathToOutputFile().getParent());
 
     for (SourcePath src : srcs) {
-      Path srcFile = src.resolve();
+      Path srcFile = getResolver().getPath(src);
       // We expect srcFile to be relative to the buck root
       Preconditions.checkState(!srcFile.isAbsolute());
       Path parent = srcFile.getParent();
@@ -133,7 +135,7 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
       steps.add(new CompilerStep(
             /* compiler */ getCompiler(),
             /* shouldLink */ false,
-            /* srcs */ ImmutableSortedSet.of(src.resolve()),
+            /* srcs */ ImmutableSortedSet.of(srcFile),
             /* outputFile */ objectFile,
             /* shouldAddProjectRootToIncludePaths */ true,
             /* includePaths */ ImmutableSortedSet.<Path>of(),

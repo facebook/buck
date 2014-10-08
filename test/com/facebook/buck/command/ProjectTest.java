@@ -43,6 +43,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.ProjectConfigBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
@@ -104,6 +105,7 @@ public class ProjectTest {
     // android_resouce android_res/base:res
     BuildRule androidResRule = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(new SourcePathResolver(ruleResolver))
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:res"))
             .setRes(Paths.get("android_res/base/res"))
             .setRDotJavaPackage("com.facebook")
@@ -604,8 +606,10 @@ public class ProjectTest {
   public void testSrcRoots() throws IOException {
     // Create a project_config() with src_roots=None.
     BuildRuleResolver ruleResolver1 = new BuildRuleResolver();
+
     BuildRule resBuildRule = ruleResolver1.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(new SourcePathResolver(ruleResolver1))
             .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:res"))
             .build());
     ProjectConfig projectConfigNullSrcRoots = (ProjectConfig) ProjectConfigBuilder
@@ -716,6 +720,7 @@ public class ProjectTest {
 
     ImmutableMap<Path, String> basePathToAliasMap = ImmutableMap.of();
     Project project = new Project(
+        new SourcePathResolver(ruleResolver),
         projectConfigs,
         actionGraph,
         basePathToAliasMap,
@@ -746,6 +751,7 @@ public class ProjectTest {
   @Test
   public void testNdkLibraryHasCorrectPath() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     // Build up a the graph that corresponds to:
     //
@@ -758,7 +764,7 @@ public class ProjectTest {
     // )
 
     BuildTarget fooJni = BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni");
-    NdkLibrary ndkLibrary = NdkLibraryBuilder.createNdkLibrary(fooJni)
+    NdkLibrary ndkLibrary = NdkLibraryBuilder.createNdkLibrary(fooJni, pathResolver)
         .addSrc(Paths.get("Android.mk"))
         .build();
 
@@ -835,13 +841,14 @@ public class ProjectTest {
 
   @Test
   public void testDoNotIgnoreAllOfBuckOut() {
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     ImmutableSet<Path> ignorePaths = ImmutableSet.of(Paths.get("buck-out"), Paths.get(".git"));
     EasyMock.expect(projectFilesystem.getIgnorePaths()).andReturn(ignorePaths);
     EasyMock.replay(projectFilesystem);
 
     BuildTarget buildTarget = BuildTarget.builder("//", "base").build();
-    BuildRule buildRule = new FakeBuildRule(JavaLibraryDescription.TYPE, buildTarget);
+    BuildRule buildRule = new FakeBuildRule(JavaLibraryDescription.TYPE, buildTarget, resolver);
     Module module = new Module(buildRule, buildTarget);
 
     Project.addRootExcludes(module, buildRule, projectFilesystem);

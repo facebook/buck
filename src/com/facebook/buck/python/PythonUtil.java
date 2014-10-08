@@ -80,21 +80,6 @@ public class PythonUtil {
     return MorePaths.pathWithUnixSeparators(name).replace('/', '.');
   }
 
-  /**
-   * Convert a set of SourcePaths to a map of Paths mapped to themselves,
-   * appropriate for being put into a PythonPackageComponents instance.
-   */
-  public static ImmutableMap<Path, Path> getPathMapFromSourcePaths(
-      ImmutableMap<Path, SourcePath> sourcePaths) {
-    ImmutableMap.Builder<Path, Path> paths = ImmutableMap.builder();
-    for (ImmutableMap.Entry<Path, SourcePath> src : sourcePaths.entrySet()) {
-      paths.put(
-          src.getKey(),
-          src.getValue().resolve());
-    }
-    return paths.build();
-  }
-
   public static ImmutableSortedSet<BuildRule> getDepsFromComponents(
       PythonPackageComponents components) {
     return ImmutableSortedSet.<BuildRule>naturalOrder()

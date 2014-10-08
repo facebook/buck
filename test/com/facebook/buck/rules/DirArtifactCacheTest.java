@@ -316,7 +316,10 @@ public class DirArtifactCacheTest {
     private final File file;
 
     private BuildRuleForTest(File file) {
-      super(TYPE, BuildTarget.builder("//foo", file.getName()).build());
+      super(
+          TYPE,
+          BuildTarget.builder("//foo", file.getName()).build(),
+          new SourcePathResolver(new BuildRuleResolver()));
       this.file = Preconditions.checkNotNull(file);
     }
 

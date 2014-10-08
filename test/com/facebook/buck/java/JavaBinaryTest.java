@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
@@ -77,6 +78,7 @@ public class JavaBinaryTest {
     // java_binary //java/com/facebook/base:Main
     JavaBinary javaBinary = new JavaBinary(
         params,
+        new SourcePathResolver(ruleResolver),
         "com.facebook.base.Main",
         null,
         /* merge manifests */ true,

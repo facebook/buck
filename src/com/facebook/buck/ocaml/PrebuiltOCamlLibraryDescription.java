@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
@@ -71,6 +72,7 @@ public class PrebuiltOCamlLibraryDescription
 
     return new PrebuiltOCamlLibrary(
         params,
+        new SourcePathResolver(resolver),
         nativeLib,
         bytecodeLib,
         staticNativeLibraryPath,

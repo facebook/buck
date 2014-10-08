@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
@@ -71,6 +72,7 @@ public class CxxLinkableEnhancer {
   public static CxxLink createCxxLinkableBuildRule(
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
+      SourcePathResolver resolver,
       ImmutableList<String> extraCxxLdFlags,
       ImmutableList<String> extraLdFlags,
       BuildTarget target,
@@ -130,7 +132,7 @@ public class CxxLinkableEnhancer {
     // Add all the top-level inputs.  We wrap these in the --whole-archive since any top-level
     // inputs, even if archives, should be fully linked in.
     for (SourcePath input : inputs) {
-      argsBuilder.addAll(iXlinker(linker.linkWhole(input.resolve().toString())));
+      argsBuilder.addAll(iXlinker(linker.linkWhole(resolver.getPath(input).toString())));
     }
 
     // Add all arguments from our dependencies.
@@ -141,6 +143,7 @@ public class CxxLinkableEnhancer {
     // Build the C/C++ link step.
     return new CxxLink(
         linkParams,
+        resolver,
         cxxPlatform.getCxxld(),
         output,
         allInputs,

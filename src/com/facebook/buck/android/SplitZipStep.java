@@ -21,7 +21,6 @@ import com.facebook.buck.dalvik.DefaultZipSplitterFactory;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.dalvik.ZipSplitterFactory;
 import com.facebook.buck.dalvik.firstorder.FirstOrderHelper;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -123,6 +122,7 @@ public class SplitZipStep implements Step {
   private final Path pathToReportDir;
 
   private final Optional<Path> primaryDexScenarioFile;
+  private final Optional<Path> primaryDexClassesFile;
 
   @Nullable
   private List<File> outputFiles;
@@ -150,6 +150,8 @@ public class SplitZipStep implements Step {
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile,
       DexSplitMode dexSplitMode,
+      Optional<Path> primaryDexScenarioFile,
+      Optional<Path> primaryDexClassesFile,
       Path pathToReportDir) {
     this.inputPathsToSplit = ImmutableSet.copyOf(inputPathsToSplit);
     this.secondaryJarMetaPath = Preconditions.checkNotNull(secondaryJarMetaPath);
@@ -159,10 +161,10 @@ public class SplitZipStep implements Step {
     this.proguardFullConfigFile = Preconditions.checkNotNull(proguardFullConfigFile);
     this.proguardMappingFile = Preconditions.checkNotNull(proguardMappingFile);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
+    this.primaryDexScenarioFile = Preconditions.checkNotNull(primaryDexScenarioFile);
+    this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
     this.pathToReportDir = Preconditions.checkNotNull(pathToReportDir);
 
-    this.primaryDexScenarioFile = dexSplitMode.getPrimaryDexScenarioFile()
-        .transform(SourcePaths.TO_PATH);
     Preconditions.checkArgument(
         proguardFullConfigFile.isPresent() == proguardMappingFile.isPresent(),
         "ProGuard configuration and mapping must both be present or absent.");
@@ -267,8 +269,6 @@ public class SplitZipStep implements Step {
       throws IOException {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
-    Optional<Path> primaryDexClassesFile = dexSplitMode.getPrimaryDexClassesFile()
-        .transform(SourcePaths.TO_PATH);
     if (primaryDexClassesFile.isPresent()) {
       Iterable<String> classes = FluentIterable
           .from(context.getProjectFilesystem().readLines(primaryDexClassesFile.get()))

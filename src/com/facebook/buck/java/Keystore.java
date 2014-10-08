@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -35,8 +36,8 @@ public class Keystore extends AbstractBuildRule {
   private final Path pathToStore;
   private final Path pathToProperties;
 
-  Keystore(BuildRuleParams params, Path store, Path properties) {
-    super(params);
+  Keystore(BuildRuleParams params, SourcePathResolver resolver, Path store, Path properties) {
+    super(params, resolver);
     this.pathToStore = Preconditions.checkNotNull(store);
     this.pathToProperties = Preconditions.checkNotNull(properties);
   }

@@ -18,8 +18,10 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Charsets;
@@ -42,8 +44,9 @@ public class GenerateManifestStepTest {
 
   @Before
   public void setUp() {
-    manifestPath = testDataPath("AndroidManifest.xml").resolve();
-    skeletonPath = testDataPath("AndroidManifestSkeleton.xml").resolve();
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    manifestPath = resolver.getPath(testDataPath("AndroidManifest.xml"));
+    skeletonPath = resolver.getPath(testDataPath("AndroidManifestSkeleton.xml"));
   }
 
   @After
@@ -66,7 +69,8 @@ public class GenerateManifestStepTest {
 
     GenerateManifestStep manifestCommand = new GenerateManifestStep(
         skeletonPath,
-        libraryManifestFiles.build(),
+        ImmutableSet.copyOf(new SourcePathResolver(new BuildRuleResolver()).getAllPaths(
+                libraryManifestFiles.build())),
         manifestPath);
     int result = manifestCommand.execute(context);
 

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -63,17 +64,22 @@ public class ThriftPythonEnhancerTest {
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
+      SourcePathResolver resolver,
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
             .setDeps(ImmutableSortedSet.copyOf(deps))
-            .build());
+            .build(),
+        resolver);
   }
 
-  private static ThriftCompiler createFakeThriftCompiler(String target) {
+  private static ThriftCompiler createFakeThriftCompiler(
+      String target,
+      SourcePathResolver resolver) {
     return new ThriftCompiler(
         BuildRuleParamsFactory.createTrivialBuildRuleParams(
             BuildTargetFactory.newInstance(target)),
+        resolver,
         new TestSourcePath("compiler"),
         ImmutableList.<String>of(),
         Paths.get("output"),
@@ -210,6 +216,7 @@ public class ThriftPythonEnhancerTest {
   @Test
   public void createBuildRule() {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams =
         BuildRuleParamsFactory.createTrivialBuildRuleParams(TARGET);
 
@@ -221,17 +228,17 @@ public class ThriftPythonEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test1.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source1"),
+            createFakeThriftCompiler("//:thrift_source1", pathResolver),
             ImmutableList.<String>of(),
             Paths.get("output1")),
         "test2.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source2"),
+            createFakeThriftCompiler("//:thrift_source2", pathResolver),
             ImmutableList.<String>of(),
             Paths.get("output2")));
 
     // Create a dummy implicit dep to pass in.
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.<BuildRule>of(
-        createFakeBuildRule("//:dep"));
+        createFakeBuildRule("//:dep", pathResolver));
 
     // Run the enhancer to create the language specific build rule.
     PythonLibrary library = ENHANCER.createBuildRule(
@@ -249,6 +256,7 @@ public class ThriftPythonEnhancerTest {
   public void baseModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//test:test");
     BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams =
         BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
@@ -259,7 +267,7 @@ public class ThriftPythonEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source"),
+            createFakeThriftCompiler("//:thrift_source", pathResolver),
             ImmutableList.<String>of(),
             Paths.get("output")));
 

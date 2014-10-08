@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -49,8 +50,11 @@ public class XcodeNative extends AbstractBuildRule {
   private final String targetName;
   private final String buildableName;
 
-  public XcodeNative(BuildRuleParams params, XcodeNativeDescription.Arg arg) {
-    super(params);
+  public XcodeNative(
+      BuildRuleParams params,
+      SourcePathResolver resolver,
+      XcodeNativeDescription.Arg arg) {
+    super(params, resolver);
     this.projectContainerPath = Preconditions.checkNotNull(arg.projectContainerPath);
 
     String shortName = params.getBuildTarget().getShortNameOnly();

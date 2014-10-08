@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -61,9 +62,10 @@ public class ShTest extends AbstractBuildRule implements TestRule {
 
   protected ShTest(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       SourcePath test,
       Set<Label> labels) {
-    super(params);
+    super(params, resolver);
     this.test = Preconditions.checkNotNull(test);
     this.labels = ImmutableSet.copyOf(labels);
   }
@@ -124,7 +126,7 @@ public class ShTest extends AbstractBuildRule implements TestRule {
 
     // Return a single command that runs an .sh file with no arguments.
     Step runTest = new RunShTestAndRecordResultStep(
-        test.resolve(),
+        getResolver().getPath(test),
         getPathToTestOutputResult());
 
     return ImmutableList.of(mkdirClean, runTest);

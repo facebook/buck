@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey.Builder;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -82,6 +83,7 @@ public class GwtBinary extends AbstractBuildRule {
    */
   GwtBinary(
       BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
       ImmutableSortedSet<String> modules,
       List<String> vmArgs,
       Style style,
@@ -92,7 +94,7 @@ public class GwtBinary extends AbstractBuildRule {
       List<String> experimentalArgs,
       ImmutableSortedSet<BuildRule> moduleDeps,
       ImmutableSortedSet<Path> gwtModuleJars) {
-    super(buildRuleParams);
+    super(buildRuleParams, resolver);
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.outputFile = BuildTargets.getGenPath(
         buildTarget,

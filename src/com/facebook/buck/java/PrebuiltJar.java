@@ -37,6 +37,7 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -77,11 +78,12 @@ public class PrebuiltJar extends AbstractBuildRule
 
   public PrebuiltJar(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       SourcePath binaryJar,
       Optional<SourcePath> sourceJar,
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl) {
-    super(params);
+    super(params, resolver);
     this.binaryJar = Preconditions.checkNotNull(binaryJar);
     this.sourceJar = Preconditions.checkNotNull(sourceJar);
     this.gwtJar = Preconditions.checkNotNull(gwtJar);
@@ -94,7 +96,7 @@ public class PrebuiltJar extends AbstractBuildRule
           public ImmutableSetMultimap<JavaLibrary, Path> get() {
             ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
                 ImmutableSetMultimap.builder();
-            classpathEntries.put(PrebuiltJar.this, getBinaryJar().resolve());
+            classpathEntries.put(PrebuiltJar.this, getResolver().getPath(getBinaryJar()));
             classpathEntries.putAll(Classpaths.getClasspathEntries(
                     PrebuiltJar.this.getDeclaredDeps()));
             return classpathEntries.build();
@@ -107,7 +109,7 @@ public class PrebuiltJar extends AbstractBuildRule
           public ImmutableSetMultimap<JavaLibrary, Path> get() {
             ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
                 ImmutableSetMultimap.builder();
-            classpathEntries.put(PrebuiltJar.this, getBinaryJar().resolve());
+            classpathEntries.put(PrebuiltJar.this, getResolver().getPath(getBinaryJar()));
             return classpathEntries.build();
           }
         });
@@ -179,11 +181,11 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries() {
-    return ImmutableSetMultimap.<JavaLibrary, Path>of(this, getBinaryJar().resolve());
+    return ImmutableSetMultimap.<JavaLibrary, Path>of(this, getResolver().getPath(getBinaryJar()));
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getJavaSrcs() {
+  public ImmutableSortedSet<Path> getJavaSrcs() {
     return ImmutableSortedSet.of();
   }
 
@@ -218,8 +220,8 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    collector.addClasspathEntry(this, getBinaryJar().resolve());
-    collector.addPathToThirdPartyJar(getBuildTarget(), getBinaryJar().resolve());
+    collector.addClasspathEntry(this, getResolver().getPath(getBinaryJar()));
+    collector.addPathToThirdPartyJar(getBuildTarget(), getResolver().getPath(getBinaryJar()));
   }
 
   class CalculateAbiStep implements Step {
@@ -237,7 +239,7 @@ public class PrebuiltJar extends AbstractBuildRule
       // the contents of its .class files rather than just hashing its contents.
       String fileSha1;
       try {
-        fileSha1 = context.getProjectFilesystem().computeSha1(binaryJar.resolve());
+        fileSha1 = context.getProjectFilesystem().computeSha1(getResolver().getPath(binaryJar));
       } catch (IOException e) {
         context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
         return 1;
@@ -263,7 +265,7 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @Override
   public Path getPathToOutputFile() {
-    return getBinaryJar().resolve();
+    return getResolver().getPath(getBinaryJar());
   }
 
   @Override

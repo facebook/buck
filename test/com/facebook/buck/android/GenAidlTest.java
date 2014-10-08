@@ -28,8 +28,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -58,7 +60,11 @@ public class GenAidlTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    GenAidl genAidlRule = new GenAidl(params, pathToAidl, importPath);
+    GenAidl genAidlRule = new GenAidl(
+        params,
+        new SourcePathResolver(new BuildRuleResolver()),
+        pathToAidl,
+        importPath);
 
     GenAidlDescription description = new GenAidlDescription();
     assertEquals(GenAidlDescription.TYPE, description.getBuildRuleType());

@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -53,13 +54,16 @@ public class NdkLibraryTest {
 
   @Test
   public void testSimpleNdkLibraryRule() throws IOException {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildContext context = null;
 
     String basePath = "java/src/com/facebook/base";
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
     NdkLibrary ndkLibrary =
-        NdkLibraryBuilder.createNdkLibrary(BuildTargetFactory.newInstance(
-                String.format("//%s:base", basePath)))
+        NdkLibraryBuilder.createNdkLibrary(
+            BuildTargetFactory.newInstance(
+                String.format("//%s:base", basePath)),
+            pathResolver)
             .setNdkVersion("r8b")
             .addSrc(Paths.get(basePath + "/Application.mk"))
             .addSrc(Paths.get(basePath + "/main.cpp"))

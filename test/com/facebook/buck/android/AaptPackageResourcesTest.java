@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -69,6 +70,7 @@ public class AaptPackageResourcesTest {
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         params,
+        new SourcePathResolver(new BuildRuleResolver()),
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         ImmutableList.<HasAndroidResourceDeps>of(),
@@ -131,6 +133,7 @@ public class AaptPackageResourcesTest {
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         params,
+        new SourcePathResolver(ruleResolver),
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         ImmutableList.<HasAndroidResourceDeps>of(),
@@ -192,6 +195,7 @@ public class AaptPackageResourcesTest {
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         params,
+        new SourcePathResolver(ruleResolver),
         /* manifest */ new TestSourcePath("facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         ImmutableList.<HasAndroidResourceDeps>of(),

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.GenruleDescription;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
@@ -42,7 +43,9 @@ public class AndroidManifestDescriptionTest {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
 
     BuildRule ruleWithOutput = new FakeBuildRule(
-        GenruleDescription.TYPE, BuildTargetFactory.newInstance("//foo:bar")) {
+        GenruleDescription.TYPE,
+        BuildTargetFactory.newInstance("//foo:bar"),
+        new SourcePathResolver(buildRuleResolver)) {
       @Override
       public Path getPathToOutputFile() {
         return Paths.get("buck-out/gen/foo/bar/AndroidManifest.xml");

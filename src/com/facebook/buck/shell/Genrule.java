@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
@@ -125,20 +126,21 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
 
   protected Genrule(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       List<SourcePath> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
       String out,
       final Function<Path, Path> relativeToAbsolutePathFunction) {
-    super(params);
+    super(params, resolver);
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = Preconditions.checkNotNull(cmd);
     this.bash = Preconditions.checkNotNull(bash);
     this.cmdExe = Preconditions.checkNotNull(cmdExe);
     this.srcsToAbsolutePaths = FluentIterable
         .from(srcs)
-        .transform(SourcePaths.TO_PATH)
+        .transform(resolver.getPathFunction())
         .toMap(new Function<Path, Path>() {
           @Override
           public Path apply(Path src) {
@@ -195,7 +197,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
   }
 
   public ImmutableList<Path> getSrcs() {
-    return SourcePaths.toPaths(srcs);
+    return getResolver().getAllPaths(srcs);
   }
 
   protected void addEnvironmentVariables(ExecutionContext context,

@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
@@ -50,6 +51,7 @@ public class AndroidPackageableCollectorTest {
   @Test
   public void testFindTransitiveDependencies() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path prebuiltNativeLibraryPath = Paths.get("java/com/facebook/prebuilt_native_library/libs");
     projectFilesystem.mkdirs(prebuiltNativeLibraryPath);
@@ -71,7 +73,8 @@ public class AndroidPackageableCollectorTest {
     BuildRule ndkLibrary =
         NdkLibraryBuilder
             .createNdkLibrary(BuildTargetFactory.newInstance(
-                "//java/com/facebook/native_library:library"))
+                "//java/com/facebook/native_library:library"),
+                pathResolver)
             .addSrc(Paths.get("Android.mk"))
             .setIsAsset(false).build();
     ruleResolver.addToIndex(ndkLibrary);
@@ -99,6 +102,7 @@ public class AndroidPackageableCollectorTest {
     BuildTarget manifestTarget = BuildTargetFactory.newInstance("//java/src/com/facebook:res");
     AndroidResource manifestRule = AndroidResourceRuleBuilder
         .newBuilder()
+        .setResolver(pathResolver)
         .setBuildTarget(manifestTarget)
         .setManifest(
             new PathSourcePath(Paths.get("java/src/com/facebook/module/AndroidManifest.xml")))
@@ -194,8 +198,10 @@ public class AndroidPackageableCollectorTest {
   @Test
   public void testGetAndroidResourceDeps() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildRule c = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
             .setRes(Paths.get("res_c"))
             .setRDotJavaPackage("com.facebook")
@@ -203,6 +209,7 @@ public class AndroidPackageableCollectorTest {
 
     BuildRule b = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
             .setRes(Paths.get("res_b"))
             .setRDotJavaPackage("com.facebook")
@@ -211,6 +218,7 @@ public class AndroidPackageableCollectorTest {
 
     BuildRule d = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
             .setRes(Paths.get("res_d"))
             .setRDotJavaPackage("com.facebook")
@@ -219,6 +227,7 @@ public class AndroidPackageableCollectorTest {
 
     AndroidResource a = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
             .setRes(Paths.get("res_a"))
             .setRDotJavaPackage("com.facebook")

@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Function;
@@ -57,13 +58,16 @@ public class ApkGenrule extends Genrule implements InstallableApk {
 
   ApkGenrule(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       List<SourcePath> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
       Function<Path, Path> relativeToAbsolutePathFunction,
       InstallableApk apk) {
-    super(params,
+    super(
+        params,
+        resolver,
         srcs,
         cmd,
         bash,

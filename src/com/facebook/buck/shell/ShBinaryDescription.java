@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -46,7 +47,7 @@ public class ShBinaryDescription implements Description<ShBinaryDescription.Arg>
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new ShBinary(params, args.main, args.resources.get());
+    return new ShBinary(params, new SourcePathResolver(resolver), args.main, args.resources.get());
   }
 
   @SuppressFieldNotInitialized

@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -54,9 +55,10 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   AppleAssetCatalog(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Supplier<ImmutableCollection<Path>> inputPathsSupplier,
       AppleAssetCatalogDescription.Arg args) {
-    super(params);
+    super(params, resolver);
     Preconditions.checkArgument(Iterables.all(args.dirs, new Predicate<Path>() {
               @Override
               public boolean apply(Path input) {

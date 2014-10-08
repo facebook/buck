@@ -40,6 +40,7 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
       A args) {
     return new ProjectConfig(
         params,
+        new SourcePathResolver(resolver),
         args.srcTarget.transform(resolver.getRuleFunction()).orNull(),
         args.srcRoots.orNull(),
         args.testTarget.transform(resolver.getRuleFunction()).orNull(),

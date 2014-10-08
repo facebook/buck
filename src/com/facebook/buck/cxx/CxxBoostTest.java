@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
@@ -63,11 +64,12 @@ public class CxxBoostTest extends CxxTest {
 
   public CxxBoostTest(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Path binary,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
-    super(params, labels, contacts, sourceUnderTest);
+    super(params, resolver, labels, contacts, sourceUnderTest);
     this.binary = Preconditions.checkNotNull(binary);
   }
 

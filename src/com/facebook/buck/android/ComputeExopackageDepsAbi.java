@@ -28,6 +28,7 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -66,12 +67,13 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
 
   public ComputeExopackageDepsAbi(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       AndroidPackageableCollection packageableCollection,
       AaptPackageResources aaptPackageResources,
       Optional<PackageStringAssets> packageStringAssets,
       Optional<PreDexMerge> preDexMerge,
       Keystore keystore) {
-    super(params);
+    super(params, resolver);
     this.packageableCollection = Preconditions.checkNotNull(packageableCollection);
     this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);

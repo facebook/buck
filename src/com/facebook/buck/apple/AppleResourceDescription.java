@@ -21,14 +21,14 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
-
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 /**
  * Description for an apple_resource rule which copies resource files to the built bundle.
@@ -54,6 +54,7 @@ public class AppleResourceDescription implements Description<AppleResourceDescri
       A args) {
     return new AppleResource(
         params,
+        new SourcePathResolver(resolver),
         new DefaultDirectoryTraverser(),
         args);
   }

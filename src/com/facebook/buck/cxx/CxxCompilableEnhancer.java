@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -140,6 +141,7 @@ public class CxxCompilableEnhancer {
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     return new CxxCompile(
         compileParams,
+        new SourcePathResolver(resolver),
         compiler,
         ImmutableList.<String>builder()
             .add("-x", cxx ? "c++" : "c")

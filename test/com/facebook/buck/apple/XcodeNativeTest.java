@@ -19,9 +19,10 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-
 import com.google.common.base.Optional;
 
 import org.junit.Test;
@@ -37,6 +38,7 @@ public class XcodeNativeTest {
     arg.buildableName = Optional.absent();
     XcodeNative xcodeNative = new XcodeNative(
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//test", "test").build()).build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         arg);
 
     assertEquals(new TestSourcePath("foo.xcodeproj"), xcodeNative.getProjectContainerPath());

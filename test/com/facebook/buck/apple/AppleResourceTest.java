@@ -19,10 +19,12 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -61,6 +63,7 @@ public class AppleResourceTest {
     AppleResource appleResource = new AppleResource(
         new FakeBuildRuleParamsBuilder(
             BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         new FakeDirectoryTraverser(),
         args);
 
@@ -83,6 +86,7 @@ public class AppleResourceTest {
     AppleResource appleResource = new AppleResource(
         new FakeBuildRuleParamsBuilder(
             BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         new FakeDirectoryTraverser(),
         args);
 
@@ -116,6 +120,7 @@ public class AppleResourceTest {
     AppleResource appleResource = new AppleResource(
         new FakeBuildRuleParamsBuilder(
             BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         new FakeDirectoryTraverser(),
         args);
 
@@ -155,6 +160,7 @@ public class AppleResourceTest {
     AppleResource appleResource = new AppleResource(
         new FakeBuildRuleParamsBuilder(
             BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         // Pretend that MyLibrary.bundle contains two files: an image and a sound file.
         new FakeDirectoryTraverser(
             ImmutableMap.<String, Collection<FakeDirectoryTraverser.Entry>>of(
@@ -190,6 +196,7 @@ public class AppleResourceTest {
     AppleResource appleResource = new AppleResource(
         new FakeBuildRuleParamsBuilder(
             BuildTarget.builder("//path/to/app", "MyApp").build()).build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         new FakeDirectoryTraverser(),
         args);
 

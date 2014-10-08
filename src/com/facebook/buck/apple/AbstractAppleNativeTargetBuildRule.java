@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.AbstractNativeBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -40,9 +41,15 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
 
   public AbstractAppleNativeTargetBuildRule(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       AppleNativeTargetDescriptionArg arg,
       TargetSources targetSources) {
-    super(params, targetSources.srcPaths, targetSources.headerPaths, targetSources.perFileFlags);
+    super(
+        params,
+        resolver,
+        targetSources.srcPaths,
+        targetSources.headerPaths,
+        targetSources.perFileFlags);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs.get());
     frameworks = Preconditions.checkNotNull(arg.frameworks.get());
     srcs = Preconditions.checkNotNull(targetSources.srcs);

@@ -50,14 +50,6 @@ public class SymlinkTreeTest {
   private ImmutableMap<Path, SourcePath> links;
   private Path outputPath;
 
-  private ImmutableMap<Path, Path> resolveLinks(ImmutableMap<Path, SourcePath> links) {
-    ImmutableMap.Builder<Path, Path> resolvedLinks = ImmutableMap.builder();
-    for (ImmutableMap.Entry<Path, SourcePath> entry : links.entrySet()) {
-      resolvedLinks.put(entry.getKey(), entry.getValue().resolve());
-    }
-    return resolvedLinks.build();
-  }
-
   @Before
   public void setUp() throws IOException {
 
@@ -85,6 +77,7 @@ public class SymlinkTreeTest {
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new SymlinkTree(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         outputPath,
         links);
 
@@ -100,7 +93,9 @@ public class SymlinkTreeTest {
     // Verify the build steps are as expected.
     ImmutableList<Step> expectedBuildSteps = ImmutableList.of(
         new MakeCleanDirectoryStep(outputPath),
-        new SymlinkTreeStep(outputPath, resolveLinks(links)));
+        new SymlinkTreeStep(
+            outputPath,
+            new SourcePathResolver(new BuildRuleResolver()).getMappedPaths(links)));
     ImmutableList<Step> actualBuildSteps = symlinkTreeBuildRule.getBuildSteps(
         buildContext,
         buildableContext);
@@ -120,6 +115,7 @@ public class SymlinkTreeTest {
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
     AbstractBuildRule modifiedSymlinkTreeBuildRule = new SymlinkTree(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         outputPath,
         ImmutableMap.<Path, SourcePath>of(
             Paths.get("different/link"), new PathSourcePath(aFile)));
@@ -152,7 +148,8 @@ public class SymlinkTreeTest {
     RuleKey.Builder.RuleKeyPair pair1 = builder1.build();
 
     // Change the contents of the target of the link.
-    Path existingFile = links.values().asList().get(0).resolve();
+    Path existingFile =
+        new SourcePathResolver(new BuildRuleResolver()).getPath(links.values().asList().get(0));
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key

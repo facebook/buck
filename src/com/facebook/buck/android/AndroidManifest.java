@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -32,6 +33,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -74,9 +76,10 @@ public class AndroidManifest extends AbstractBuildRule {
 
   protected AndroidManifest(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       SourcePath skeletonFile,
       Set<SourcePath> manifestFiles) {
-    super(params);
+    super(params, resolver);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     BuildTarget buildTarget = params.getBuildTarget();
@@ -112,8 +115,8 @@ public class AndroidManifest extends AbstractBuildRule {
     commands.add(new MkdirStep(pathToOutputFile.getParent()));
 
     commands.add(new GenerateManifestStep(
-        skeletonFile.resolve(),
-        manifestFiles,
+        getResolver().getPath(skeletonFile),
+        ImmutableSet.copyOf(getResolver().getAllPaths(manifestFiles)),
         getPathToOutputFile()));
 
     buildableContext.recordArtifact(pathToOutputFile);

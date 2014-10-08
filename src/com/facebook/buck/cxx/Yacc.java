@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -43,11 +44,12 @@ public class Yacc extends AbstractBuildRule {
 
   public Yacc(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       SourcePath yacc,
       ImmutableList<String> flags,
       Path outputPrefix,
       SourcePath input) {
-    super(params);
+    super(params, resolver);
     this.yacc = Preconditions.checkNotNull(yacc);
     this.flags = Preconditions.checkNotNull(flags);
     this.outputPrefix = Preconditions.checkNotNull(outputPrefix);
@@ -90,7 +92,11 @@ public class Yacc extends AbstractBuildRule {
         new MkdirStep(outputPrefix.getParent()),
         new RmStep(getHeaderOutputPath(outputPrefix), /* shouldForceDeletion */ true),
         new RmStep(getSourceOutputPath(outputPrefix), /* shouldForceDeletion */ true),
-        new YaccStep(yacc.resolve(), flags, outputPrefix, input.resolve()));
+        new YaccStep(
+            getResolver().getPath(yacc),
+            flags,
+            outputPrefix,
+            getResolver().getPath(input)));
   }
 
   @Nullable

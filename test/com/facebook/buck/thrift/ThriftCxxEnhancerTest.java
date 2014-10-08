@@ -33,6 +33,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -66,17 +67,22 @@ public class ThriftCxxEnhancerTest {
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
+      SourcePathResolver resolver,
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
             .setDeps(ImmutableSortedSet.copyOf(deps))
-            .build());
+            .build(),
+        resolver);
   }
 
-  private static ThriftCompiler createFakeThriftCompiler(String target) {
+  private static ThriftCompiler createFakeThriftCompiler(
+      String target,
+      SourcePathResolver resolver) {
     return new ThriftCompiler(
         BuildRuleParamsFactory.createTrivialBuildRuleParams(
             BuildTargetFactory.newInstance(target)),
+        resolver,
         new TestSourcePath("compiler"),
         ImmutableList.<String>of(),
         Paths.get("output"),
@@ -462,11 +468,12 @@ public class ThriftCxxEnhancerTest {
   @Test
   public void createBuildRule() {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams =
         BuildRuleParamsFactory.createTrivialBuildRuleParams(TARGET);
 
     // Add a dummy dependency to the constructor arg to make sure it gets through.
-    BuildRule argDep = createFakeBuildRule("//:arg_dep");
+    BuildRule argDep = createFakeBuildRule("//:arg_dep", pathResolver);
     resolver.addToIndex(argDep);
     ThriftConstructorArg arg = new ThriftConstructorArg();
     arg.cpp2Options = Optional.absent();
@@ -476,16 +483,16 @@ public class ThriftCxxEnhancerTest {
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test1.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source1"),
+            createFakeThriftCompiler("//:thrift_source1", pathResolver),
             ImmutableList.<String>of(),
             Paths.get("output1")),
         "test2.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source2"),
+            createFakeThriftCompiler("//:thrift_source2", pathResolver),
             ImmutableList.<String>of(),
             Paths.get("output2")));
 
     // Create a dummy implicit dep to pass in.
-    BuildRule dep = createFakeBuildRule("//:dep");
+    BuildRule dep = createFakeBuildRule("//:dep", pathResolver);
     resolver.addToIndex(dep);
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.<BuildRule>of(dep);
 

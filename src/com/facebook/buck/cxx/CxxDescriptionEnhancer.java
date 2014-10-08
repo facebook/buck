@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.annotations.VisibleForTesting;
@@ -159,6 +160,7 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<String, SourcePath> lexSrcs,
       ImmutableList<String> yaccFlags,
       ImmutableMap<String, SourcePath> yaccSrcs) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     ImmutableList.Builder<CxxSource> lexYaccCxxSourcesBuilder = ImmutableList.builder();
     ImmutableMap.Builder<Path, SourcePath> lexYaccHeadersBuilder = ImmutableMap.builder();
@@ -181,6 +183,7 @@ public class CxxDescriptionEnhancer {
               ImmutableSortedSet.copyOf(
                   SourcePaths.filterBuildRuleInputs(ImmutableList.of(source))),
               ImmutableSortedSet.<BuildRule>of()),
+          pathResolver,
           config.getLex(),
           ImmutableList.<String>builder()
               .addAll(config.getLexFlags())
@@ -217,6 +220,7 @@ public class CxxDescriptionEnhancer {
               ImmutableSortedSet.copyOf(
                   SourcePaths.filterBuildRuleInputs(ImmutableList.of(source))),
               ImmutableSortedSet.<BuildRule>of()),
+          pathResolver,
           config.getYacc(),
           ImmutableList.<String>builder()
               .addAll(config.getYaccFlags())
@@ -251,6 +255,7 @@ public class CxxDescriptionEnhancer {
     BuildTarget headerSymlinkTreeTarget = createHeaderSymlinkTreeTarget(params.getBuildTarget());
     Path headerSymlinkTreeRoot = getHeaderSymlinkTreePath(params.getBuildTarget());
     final SymlinkTree headerSymlinkTree = CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
+        new SourcePathResolver(resolver),
         headerSymlinkTreeTarget,
         params,
         headerSymlinkTreeRoot,
@@ -356,6 +361,7 @@ public class CxxDescriptionEnhancer {
       ImmutableList<String> compilerFlags,
       ImmutableList<CxxSource> sources,
       final boolean linkWhole) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -382,6 +388,7 @@ public class CxxDescriptionEnhancer {
     final BuildTarget staticLibraryTarget = createStaticLibraryBuildTarget(params.getBuildTarget());
     final Path staticLibraryPath =  Archives.getArchiveOutputPath(staticLibraryTarget);
     final Archive staticLibraryBuildRule = Archives.createArchiveRule(
+        pathResolver,
         staticLibraryTarget,
         params,
         cxxPlatform.getAr(),
@@ -406,6 +413,7 @@ public class CxxDescriptionEnhancer {
     final CxxLink sharedLibraryBuildRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
+        pathResolver,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         sharedLibraryTarget,
@@ -421,7 +429,7 @@ public class CxxDescriptionEnhancer {
     // to get information about this rule (e.g. how this rule contributes to the C/C++
     // preprocessor or linker).  Long-term this should probably be collapsed into the
     // TargetGraph when it becomes exposed to build rule creation.
-    return new CxxLibrary(params) {
+    return new CxxLibrary(params, pathResolver) {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
@@ -562,6 +570,7 @@ public class CxxDescriptionEnhancer {
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
+        new SourcePathResolver(resolver),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         createCxxLinkTarget(params.getBuildTarget()),

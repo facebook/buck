@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -38,9 +39,10 @@ public class XcodeProjectConfig extends AbstractBuildRule {
 
   public XcodeProjectConfig(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       String projectName,
       ImmutableSet<BuildRule> rules) {
-    super(params);
+    super(params, resolver);
     this.projectName = Preconditions.checkNotNull(projectName);
     this.rules = Preconditions.checkNotNull(rules);
   }

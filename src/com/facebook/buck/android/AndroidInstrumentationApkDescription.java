@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -115,6 +116,7 @@ public class AndroidInstrumentationApkDescription
 
     return new AndroidInstrumentationApk(
         params.copyWithExtraDeps(enhancementResult.getFinalDeps()),
+        new SourcePathResolver(resolver),
         args.manifest,
         apkUnderTest,
         rulesToExcludeFromDex,

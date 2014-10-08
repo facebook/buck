@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -50,11 +51,12 @@ public class AppleTest extends AbstractBuildRule implements TestRule {
 
   AppleTest(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       BuildRule testBundle,
       ImmutableSet<String> contacts,
       ImmutableSet<Label> labels,
       ImmutableSet<BuildRule> sourceUnderTest) {
-    super(params);
+    super(params, resolver);
     this.testBundle = Preconditions.checkNotNull(testBundle);
     this.contacts = Preconditions.checkNotNull(contacts);
     this.labels = Preconditions.checkNotNull(labels);

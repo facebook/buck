@@ -23,10 +23,12 @@ import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,6 +46,7 @@ public class BuckExtensionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//example:extension");
     BuckExtension buildable = new BuckExtension(
         new FakeBuildRuleParamsBuilder(target).build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.of(new TestSourcePath("ExampleExtension.java")),
         ImmutableSortedSet.<SourcePath>of());
 

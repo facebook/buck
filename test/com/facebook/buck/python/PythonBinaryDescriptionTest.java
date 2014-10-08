@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -55,6 +56,7 @@ public class PythonBinaryDescriptionTest {
         BuildTargetFactory.newInstance("//:lib"));
     PythonLibrary lib = new PythonLibrary(
         libParams,
+        new SourcePathResolver(resolver),
         ImmutableMap.<Path, SourcePath>of(
             Paths.get("hello"), new BuildRuleSourcePath(genrule)),
         ImmutableMap.<Path, SourcePath>of());

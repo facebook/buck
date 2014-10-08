@@ -33,7 +33,7 @@ public class PathSourcePathTest {
   public void shouldResolveFilesUsingTheBuildContextsFileSystem() {
     PathSourcePath path = new PathSourcePath(Paths.get("cheese"));
 
-    Path resolved = path.resolve();
+    Path resolved = new SourcePathResolver(new BuildRuleResolver()).getPath(path);
 
     assertEquals(Paths.get("cheese"), resolved);
   }

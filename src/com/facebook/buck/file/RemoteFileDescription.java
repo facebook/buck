@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -53,12 +54,21 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
 
   @Override
   public <A extends Arg> BuildRule createBuildRule(
-      BuildRuleParams params, BuildRuleResolver resolver, A args) {
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
     HashCode sha1 = HashCode.fromString(args.sha1);
 
     String out = args.out.or(params.getBuildTarget().getShortName());
 
-    return new RemoteFile(params, isBuildTimeDownloadingOk, downloader, args.url, sha1, out);
+    return new RemoteFile(
+        params,
+        new SourcePathResolver(resolver),
+        isBuildTimeDownloadingOk,
+        downloader,
+        args.url,
+        sha1,
+        out);
   }
 
   @SuppressFieldNotInitialized

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -35,8 +36,8 @@ public class CxxBinary extends AbstractBuildRule implements BinaryBuildRule {
   private final Path output;
   private final CxxLink rule;
 
-  public CxxBinary(BuildRuleParams params, Path output, CxxLink rule) {
-    super(params);
+  public CxxBinary(BuildRuleParams params, SourcePathResolver resolver, Path output, CxxLink rule) {
+    super(params, resolver);
     this.output = Preconditions.checkNotNull(output);
     this.rule = Preconditions.checkNotNull(rule);
   }

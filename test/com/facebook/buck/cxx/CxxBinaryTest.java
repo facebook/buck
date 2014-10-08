@@ -19,7 +19,9 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
@@ -38,7 +40,11 @@ public class CxxBinaryTest {
     filesystem.touch(bin);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:target")
         .build();
-    CxxBinary binary = new CxxBinary(params, bin, EasyMock.createMock(CxxLink.class));
+    CxxBinary binary = new CxxBinary(
+        params,
+        new SourcePathResolver(new BuildRuleResolver()),
+        bin,
+        EasyMock.createMock(CxxLink.class));
     ImmutableList<String> command = binary.getExecutableCommand(filesystem);
     assertTrue(Paths.get(command.get(0)).isAbsolute());
   }

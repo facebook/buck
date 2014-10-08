@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
@@ -51,6 +52,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
       A args) {
     return new JavaBinary(
         params,
+        new SourcePathResolver(resolver),
         args.mainClass.orNull(),
         args.manifestFile.orNull(),
         args.mergeManifests.or(true),

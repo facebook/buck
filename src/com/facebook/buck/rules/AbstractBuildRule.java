@@ -40,17 +40,19 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final ImmutableSortedSet<BuildRule> deps;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final BuildRuleType buildRuleType;
+  private final SourcePathResolver resolver;
   /** @see #getInputsToCompareToOutput()  */
   @Nullable private Iterable<Path> inputsToCompareToOutputs;
   @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
 
-  protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
+  protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
     Preconditions.checkNotNull(buildRuleParams);
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.deps = buildRuleParams.getDeps();
     this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
     this.buildRuleType = buildRuleParams.getBuildRuleType();
+    this.resolver = Preconditions.checkNotNull(resolver);
   }
 
   @Override
@@ -80,6 +82,10 @@ public abstract class AbstractBuildRule implements BuildRule {
   @Override
   public final BuildRuleType getType() {
     return buildRuleType;
+  }
+
+  public final SourcePathResolver getResolver() {
+    return resolver;
   }
 
   @Override

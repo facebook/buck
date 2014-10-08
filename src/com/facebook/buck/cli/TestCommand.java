@@ -36,7 +36,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.IndividualTestEvent;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -203,10 +202,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       JavaLibrary rule,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       ProjectFilesystem filesystem) {
-    ImmutableSet<SourcePath> javaSrcPaths = rule.getJavaSrcs();
+    ImmutableSet<Path> javaSrcs = rule.getJavaSrcs();
 
-    // A Java library rule with just resource files has an empty javaSrcPaths.
-    if (javaSrcPaths.isEmpty()) {
+    // A Java library rule with just resource files has an empty javaSrcs.
+    if (javaSrcs.isEmpty()) {
       return ImmutableSet.of();
     }
 
@@ -223,12 +222,12 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // folders for the source paths.
     Set<String> srcFolders = Sets.newHashSet();
     loopThroughSourcePath:
-    for (SourcePath javaSrcPath : javaSrcPaths) {
-      if (!MorePaths.isGeneratedFile(javaSrcPath.resolve())) {
+    for (Path javaSrcPath : javaSrcs) {
+      if (!MorePaths.isGeneratedFile(javaSrcPath)) {
         // If the source path is already under a known source folder, then we can skip this
         // source path.
         for (String srcFolder : srcFolders) {
-          if (javaSrcPath.resolve().startsWith(srcFolder)) {
+          if (javaSrcPath.startsWith(srcFolder)) {
             continue loopThroughSourcePath;
           }
         }
@@ -237,7 +236,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         // root.
         ImmutableSortedSet<String> pathsFromRoot = defaultJavaPackageFinder.getPathsFromRoot();
         for (String root : pathsFromRoot) {
-          if (javaSrcPath.resolve().startsWith(root)) {
+          if (javaSrcPath.startsWith(root)) {
             srcFolders.add(root);
             continue loopThroughSourcePath;
           }
@@ -246,7 +245,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         // Traverse the file system from the parent directory of the java file until we hit the
         // parent of the src root directory.
         ImmutableSet<String> pathElements = defaultJavaPackageFinder.getPathElements();
-        File directory = filesystem.getFileForRelativePath(javaSrcPath.resolve().getParent());
+        File directory = filesystem.getFileForRelativePath(javaSrcPath.getParent());
         while (directory != null && !pathElements.contains(directory.getName())) {
           directory = directory.getParentFile();
         }

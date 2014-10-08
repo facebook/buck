@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -46,13 +47,14 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   public PrebuiltOCamlLibrary(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       String nativeLib,
       String bytecodeLib,
       SourcePath staticNativeLibraryPath,
       SourcePath staticCLibraryPath,
       SourcePath bytecodeLibraryPath,
       Path libPath) {
-    super(params);
+    super(params, resolver);
     this.nativeLib = nativeLib;
     this.bytecodeLib = bytecodeLib;
     this.staticNativeLibraryPath = staticNativeLibraryPath;
@@ -91,8 +93,9 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
     // Build the library path and linker arguments that we pass through the
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
-    librariesBuilder.add(new BuildRuleSourcePath(this, staticNativeLibraryPath.resolve()));
-    librariesBuilder.add(new BuildRuleSourcePath(this, staticCLibraryPath.resolve()));
+    librariesBuilder.add(
+        new BuildRuleSourcePath(this, getResolver().getPath(staticNativeLibraryPath)));
+    librariesBuilder.add(new BuildRuleSourcePath(this, getResolver().getPath(staticCLibraryPath)));
     final ImmutableList<SourcePath> libraries = librariesBuilder.build();
 
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();

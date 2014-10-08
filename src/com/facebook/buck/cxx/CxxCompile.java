@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
@@ -47,6 +48,7 @@ public class CxxCompile extends AbstractBuildRule {
 
   public CxxCompile(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       SourcePath compiler,
       ImmutableList<String> flags,
       Path output,
@@ -54,7 +56,7 @@ public class CxxCompile extends AbstractBuildRule {
       ImmutableList<Path> includeRoots,
       ImmutableList<Path> systemIncludeRoots,
       ImmutableMap<Path, SourcePath> includes) {
-    super(params);
+    super(params, resolver);
     this.compiler = Preconditions.checkNotNull(compiler);
     this.flags = Preconditions.checkNotNull(flags);
     this.output = Preconditions.checkNotNull(output);
@@ -66,7 +68,7 @@ public class CxxCompile extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of(input.resolve());
+    return ImmutableList.of(getResolver().getPath(input));
   }
 
   @Override
@@ -82,7 +84,7 @@ public class CxxCompile extends AbstractBuildRule {
     // search path, and therefore can accurately capture header file renames.
     for (Path path : ImmutableSortedSet.copyOf(includes.keySet())) {
       SourcePath source = includes.get(path);
-      builder.setInput("include(" + path + ")", source.resolve());
+      builder.setInput("include(" + path + ")", getResolver().getPath(source));
     }
 
     return builder;
@@ -96,10 +98,10 @@ public class CxxCompile extends AbstractBuildRule {
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new CxxCompileStep(
-            compiler.resolve(),
+            getResolver().getPath(compiler),
             flags,
             output,
-            input.resolve(),
+            getResolver().getPath(input),
             includeRoots,
             systemIncludeRoots));
   }

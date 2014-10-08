@@ -27,12 +27,14 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -53,6 +55,7 @@ public class JavaSourceJarTest {
   public void outputNameShouldIndicateThatTheOutputIsASrcZip() {
     JavaSourceJar rule = new JavaSourceJar(
         new FakeBuildRuleParamsBuilder("//example:target").build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<SourcePath>of());
 
     Path output = rule.getPathToOutputFile();
@@ -62,10 +65,11 @@ public class JavaSourceJarTest {
 
   @Test
   public void shouldOnlyIncludePathBasedSources() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     SourcePath fileBased = new TestSourcePath("some/path/File.java");
     SourcePath ruleBased = new BuildRuleSourcePath(
         new FakeBuildRule(JavaLibraryDescription.TYPE,
-        BuildTargetFactory.newInstance("//cheese:cake")));
+        BuildTargetFactory.newInstance("//cheese:cake"), pathResolver));
 
     JavaPackageFinder finderStub = createNiceMock(JavaPackageFinder.class);
     expect(finderStub.findJavaPackageFolderForPath((String) anyObject())).andStubReturn("cheese");
@@ -76,9 +80,12 @@ public class JavaSourceJarTest {
 
     JavaSourceJar rule = new JavaSourceJar(
         new FakeBuildRuleParamsBuilder("//example:target").build(),
+        pathResolver,
         ImmutableSortedSet.of(fileBased, ruleBased));
 
-    assertEquals(ImmutableList.of(fileBased.resolve()), rule.getInputsToCompareToOutput());
+    assertEquals(
+        ImmutableList.of(pathResolver.getPath(fileBased)),
+        rule.getInputsToCompareToOutput());
 
     BuildContext buildContext = FakeBuildContext.newBuilder(new FakeProjectFilesystem())
         .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))

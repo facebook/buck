@@ -18,8 +18,6 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -55,8 +53,8 @@ public class JavaTestGetClassNamesIntegrationTest {
   @Test
   public void testGetClassNamesForSources() {
     Path classesFolder = Paths.get("default.jar");
-    Set<SourcePath> sources = ImmutableSet.<SourcePath>of(
-        new TestSourcePath("src/com/facebook/DummyTest.java"));
+    Set<Path> sources = ImmutableSet.of(
+        Paths.get("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
         JavaTest.CompiledClassFileFinder.getClassNamesForSources(
             sources,
@@ -68,8 +66,8 @@ public class JavaTestGetClassNamesIntegrationTest {
   @Test
   public void testGetClassNamesForSourcesWithInnerClasses() {
     Path classesFolder = Paths.get("case1.jar");
-    Set<SourcePath> sources = ImmutableSet.<SourcePath>of(
-        new TestSourcePath("src/com/facebook/DummyTest.java"));
+    Set<Path> sources = ImmutableSet.of(
+        Paths.get("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
         JavaTest.CompiledClassFileFinder.getClassNamesForSources(
             sources,
@@ -81,8 +79,8 @@ public class JavaTestGetClassNamesIntegrationTest {
   @Test
   public void testGetClassNamesForSourcesWithMultipleTopLevelClasses() {
     Path classesFolder = Paths.get("case2.jar");
-    Set<SourcePath> sources = ImmutableSet.<SourcePath>of(
-        new TestSourcePath("src/com/facebook/DummyTest.java"));
+    Set<Path> sources = ImmutableSet.of(
+        Paths.get("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
         JavaTest.CompiledClassFileFinder.getClassNamesForSources(
             sources,
@@ -94,9 +92,9 @@ public class JavaTestGetClassNamesIntegrationTest {
   @Test
   public void testGetClassNamesForSourcesWithImperfectHeuristic() {
     Path classesFolder = Paths.get("case2fail.jar");
-    Set<SourcePath> sources = ImmutableSet.<SourcePath>of(
-        new TestSourcePath("src/com/facebook/feed/DummyTest.java"),
-        new TestSourcePath("src/com/facebook/nav/OtherDummyTest.java"));
+    Set<Path> sources = ImmutableSet.of(
+        Paths.get("src/com/facebook/feed/DummyTest.java"),
+        Paths.get("src/com/facebook/nav/OtherDummyTest.java"));
     Set<String> classNames =
         JavaTest.CompiledClassFileFinder.getClassNamesForSources(
             sources,

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -80,11 +81,12 @@ public class NdkLibrary extends AbstractBuildRule
 
   protected NdkLibrary(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Set<SourcePath> sources,
       List<String> flags,
       boolean isAsset,
       Optional<String> ndkVersion) {
-    super(params);
+    super(params, resolver);
     this.isAsset = isAsset;
 
     BuildTarget buildTarget = params.getBuildTarget();

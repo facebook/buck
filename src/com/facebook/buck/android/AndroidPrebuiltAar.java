@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -38,11 +39,13 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
 
   public AndroidPrebuiltAar(
       BuildRuleParams androidLibraryParams,
+      SourcePathResolver resolver,
       Path proguardConfig,
       PrebuiltJar prebuiltJar,
       AndroidResource androidResource) {
     super(
         androidLibraryParams,
+        resolver,
         /* srcs */ ImmutableSortedSet.<SourcePath>of(),
         /* resources */ ImmutableSortedSet.<SourcePath>of(),
         Optional.of(proguardConfig),

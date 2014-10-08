@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -95,6 +96,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
     return new NdkLibrary(
         params,
+        new SourcePathResolver(resolver),
         srcs.build(),
         args.flags.get(),
         args.isAsset.or(false),

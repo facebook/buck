@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -57,12 +58,13 @@ public class PythonTest extends AbstractBuildRule implements TestRule {
 
   public PythonTest(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       SourcePath binary,
       ImmutableSet<BuildRule> sourceUnderTest,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts) {
 
-    super(params);
+    super(params, resolver);
 
     this.binary = Preconditions.checkNotNull(binary);
     this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
@@ -77,7 +79,7 @@ public class PythonTest extends AbstractBuildRule implements TestRule {
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
         ProjectFilesystem fs = context.getProjectFilesystem();
         return ImmutableList.of(
-            fs.resolve(binary.resolve()).toString(),
+            fs.resolve(getResolver().getPath(binary)).toString(),
             "-o", fs.resolve(getPathToTestOutputResult()).toString());
       }
 

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -62,6 +63,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final BuildRuleParams buildRuleParams;
   private final BuildRuleResolver ruleResolver;
+  private final SourcePathResolver pathResolver;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ResourceFilter resourceFilter;
   private final SourcePath manifest;
@@ -102,6 +104,7 @@ public class AndroidBinaryGraphEnhancer {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
     this.ruleResolver = Preconditions.checkNotNull(ruleResolver);
+    this.pathResolver = new SourcePathResolver(ruleResolver);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.resourceFilter = Preconditions.checkNotNull(resourcesFilter);
     this.manifest = Preconditions.checkNotNull(manifest);
@@ -148,6 +151,7 @@ public class AndroidBinaryGraphEnhancer {
           /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
       ResourcesFilter resourcesFilter = new ResourcesFilter(
           paramsForResourcesFilter,
+          pathResolver,
           resourceDetails.resourceDirectories,
           resourceDetails.whitelistedStringDirectories,
           resourceCompressionMode,
@@ -171,6 +175,7 @@ public class AndroidBinaryGraphEnhancer {
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         paramsForAaptPackageResources,
+        pathResolver,
         manifest,
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.resourcesWithNonEmptyResDir),
@@ -195,6 +200,7 @@ public class AndroidBinaryGraphEnhancer {
       packageStringAssets = Optional.of(
           new PackageStringAssets(
               paramsForPackageStringAssets,
+              pathResolver,
               filteredResourcesProvider,
               aaptPackageResources));
       ruleResolver.addToIndex(packageStringAssets.get());
@@ -253,6 +259,7 @@ public class AndroidBinaryGraphEnhancer {
       computeExopackageDepsAbi = Optional.of(
           new ComputeExopackageDepsAbi(
               paramsForComputeExopackageAbi,
+              pathResolver,
               packageableCollection,
               aaptPackageResources,
               packageStringAssets,
@@ -342,6 +349,7 @@ public class AndroidBinaryGraphEnhancer {
                 createBuildTargetWithFlavor(new Flavor("dex_" + flavor.getName())),
                 ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary),
                 /* extraDeps */ ImmutableSortedSet.<BuildRule>of()),
+            pathResolver,
             buildConfigJavaLibrary);
         ruleResolver.addToIndex(buildConfigDex);
         enhancedDeps.add(buildConfigDex);
@@ -403,7 +411,7 @@ public class AndroidBinaryGraphEnhancer {
           ImmutableSortedSet.of(ruleResolver.getRule(javaLibrary.getBuildTarget())),
           /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
       DexProducedFromJavaLibrary preDex =
-          new DexProducedFromJavaLibrary(paramsForPreDex, javaLibrary);
+          new DexProducedFromJavaLibrary(paramsForPreDex, pathResolver, javaLibrary);
       ruleResolver.addToIndex(preDex);
       preDexDeps.add(preDex);
     }
@@ -417,6 +425,7 @@ public class AndroidBinaryGraphEnhancer {
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
     PreDexMerge preDexMerge = new PreDexMerge(
         paramsForPreDexMerge,
+        pathResolver,
         primaryDexPath,
         dexSplitMode,
         allPreDexDeps,

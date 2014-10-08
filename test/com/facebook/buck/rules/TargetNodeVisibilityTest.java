@@ -214,7 +214,7 @@ public class TargetNodeVisibilityTest {
         BuildRuleParams params,
         BuildRuleResolver resolver,
         A args) {
-      return new FakeBuildRule(params);
+      return new FakeBuildRule(params, new SourcePathResolver(resolver));
     }
 
     public static class FakeArg {

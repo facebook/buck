@@ -70,6 +70,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleDescription;
@@ -210,6 +211,7 @@ public class ProjectGenerator {
           PosixFilePermission.GROUP_READ,
           PosixFilePermission.OTHERS_READ));
 
+  private final SourcePathResolver resolver;
   private final ImmutableSet<BuildRule> rulesToBuild;
   private final ProjectFilesystem projectFilesystem;
   private final ExecutionContext executionContext;
@@ -243,6 +245,7 @@ public class ProjectGenerator {
   private Set<String> nativeTargetGIDs;
 
   public ProjectGenerator(
+      SourcePathResolver resolver,
       Iterable<BuildRule> rulesToBuild,
       Set<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
@@ -250,6 +253,7 @@ public class ProjectGenerator {
       Path outputDirectory,
       String projectName,
       Set<Option> options) {
+    this.resolver = Preconditions.checkNotNull(resolver);
     this.rulesToBuild = ImmutableSet.copyOf(rulesToBuild);
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
@@ -338,6 +342,7 @@ public class ProjectGenerator {
 
       if (options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
         setProjectLevelConfigs(
+            resolver,
             project,
             repoRootRelativeToOutputDirectory,
             collectProjectLevelConfigsIfIdenticalOrFail(
@@ -441,7 +446,7 @@ public class ProjectGenerator {
       throws IOException {
     Optional<Path> infoPlistPath;
     if (bundle.getInfoPlist().isPresent()) {
-      infoPlistPath = Optional.of(bundle.getInfoPlist().get().resolve());
+      infoPlistPath = Optional.of(resolver.getPath(bundle.getInfoPlist().get()));
     } else {
       infoPlistPath = Optional.absent();
     }
@@ -742,7 +747,7 @@ public class ProjectGenerator {
                   new SourceTreePath(
                       PBXReference.SourceTree.SOURCE_ROOT,
                       repoRootRelativeToOutputDirectory.resolve(
-                          layers.targetLevelConfigFile.get().resolve()).normalize()));
+                          resolver.getPath(layers.targetLevelConfigFile.get())).normalize()));
           outputConfiguration.setBaseConfigurationReference(fileReference);
 
           NSDictionary inlineSettings = new NSDictionary();
@@ -939,8 +944,9 @@ public class ProjectGenerator {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
           if (SourcePaths.isSourcePathExtensionInSet(
-                  groupedSource.getSourcePath(),
-                  FileExtensions.CLANG_HEADERS)) {
+              resolver,
+              groupedSource.getSourcePath(),
+              FileExtensions.CLANG_HEADERS)) {
             addSourcePathToHeaderMaps(
                 groupedSource.getSourcePath(),
                 prefix,
@@ -975,13 +981,14 @@ public class ProjectGenerator {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
           if (SourcePaths.isSourcePathExtensionInSet(
-                  groupedSource.getSourcePath(),
-                  FileExtensions.CLANG_HEADERS)) {
-              addSourcePathToHeadersBuildPhase(
-                  groupedSource.getSourcePath(),
-                  sourcesGroup,
-                  headersBuildPhase,
-                  sourceFlags);
+              resolver,
+              groupedSource.getSourcePath(),
+              FileExtensions.CLANG_HEADERS)) {
+            addSourcePathToHeadersBuildPhase(
+                groupedSource.getSourcePath(),
+                sourcesGroup,
+                headersBuildPhase,
+                sourceFlags);
           } else {
             addSourcePathToSourcesBuildPhase(
                 groupedSource.getSourcePath(),
@@ -1013,7 +1020,7 @@ public class ProjectGenerator {
       PBXGroup sourcesGroup,
       PBXSourcesBuildPhase sourcesBuildPhase,
       ImmutableMap<SourcePath, String> sourceFlags) {
-    Path path = sourcePath.resolve();
+    Path path = resolver.getPath(sourcePath);
     PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
@@ -1059,10 +1066,10 @@ public class ProjectGenerator {
     if (headerFlags != null) {
       visibility = HeaderVisibility.fromString(headerFlags);
     }
-    String fileName = headerPath.resolve().getFileName().toString();
+    String fileName = resolver.getPath(headerPath).getFileName().toString();
     String prefixedFileName = prefix.resolve(fileName).toString();
     Path value =
-        projectFilesystem.getPathForRelativePath(headerPath.resolve())
+        projectFilesystem.getPathForRelativePath(resolver.getPath(headerPath))
             .toAbsolutePath().normalize();
 
     // Add an entry Prefix/File.h -> AbsolutePathTo/File.h
@@ -1088,7 +1095,7 @@ public class ProjectGenerator {
       PBXGroup headersGroup,
       Optional<PBXHeadersBuildPhase> headersBuildPhase,
       ImmutableMap<SourcePath, String> sourceFlags) {
-    Path path = headerPath.resolve();
+    Path path = resolver.getPath(headerPath);
     Path repoRootRelativePath = repoRootRelativeToOutputDirectory.resolve(path);
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
@@ -1133,7 +1140,7 @@ public class ProjectGenerator {
     target.getBuildPhases().add(phase);
     for (AppleResource resource : resources) {
       Iterable<Path> paths = Iterables.concat(
-          SourcePaths.toPaths(resource.getFiles()),
+          resolver.getAllPaths(resource.getFiles()),
           resource.getDirs());
       for (Path path : paths) {
         PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
@@ -1155,7 +1162,7 @@ public class ProjectGenerator {
         phase.getFiles().add(buildFile);
 
         for (String childVirtualName : contents.keySet()) {
-          Path childPath = contents.get(childVirtualName).resolve();
+          Path childPath = resolver.getPath(contents.get(childVirtualName));
           SourceTreePath sourceTreePath = new SourceTreePath(
               PBXReference.SourceTree.SOURCE_ROOT,
               repoRootRelativeToOutputDirectory.resolve(childPath));
@@ -1585,7 +1592,7 @@ public class ProjectGenerator {
           builder.addSettingsFromFile(
               projectFilesystem,
               searchPaths,
-              layer.getSourcePath().get().resolve());
+              resolver.getPath(layer.getSourcePath().get()));
           break;
         case INLINE_SETTINGS:
           ImmutableMap<String, String> entries = layer.getInlineSettings().get();
@@ -2033,6 +2040,7 @@ public class ProjectGenerator {
   }
 
   private static void setProjectLevelConfigs(
+      SourcePathResolver resolver,
       PBXProject project,
       Path repoRootRelativeToOutputDirectory,
       ImmutableMap<String, ConfigInXcodeLayout> configs) {
@@ -2051,7 +2059,7 @@ public class ProjectGenerator {
               new SourceTreePath(
                   PBXReference.SourceTree.SOURCE_ROOT,
                   repoRootRelativeToOutputDirectory.resolve(
-                      config.projectLevelConfigFile.get().resolve()).normalize()));
+                      resolver.getPath(config.projectLevelConfigFile.get())).normalize()));
       outputConfig.setBaseConfigurationReference(fileReference);
 
       NSDictionary inlineSettings = new NSDictionary();

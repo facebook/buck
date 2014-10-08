@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -98,11 +99,12 @@ public class ResourcesFilter extends AbstractBuildRule
 
   public ResourcesFilter(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       ImmutableList<Path> resDirectories,
       ImmutableSet<Path> whitelistedStringDirs,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesStep.ResourceFilter resourceFilter) {
-    super(params);
+    super(params, resolver);
     this.resDirectories = Preconditions.checkNotNull(resDirectories);
     this.whitelistedStringDirs = Preconditions.checkNotNull(whitelistedStringDirs);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);

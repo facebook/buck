@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -53,6 +54,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   @VisibleForTesting
   public AndroidLibrary(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
       Optional<Path> proguardConfig,
@@ -66,6 +68,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       boolean isPrebuiltAar) {
     super(
         params,
+        resolver,
         srcs,
         resources,
         proguardConfig,
@@ -105,7 +108,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   public void addToCollector(AndroidPackageableCollector collector) {
     super.addToCollector(collector);
     if (manifestFile.isPresent()) {
-      collector.addManifestFile(getBuildTarget(), manifestFile.get().resolve());
+      collector.addManifestFile(getBuildTarget(), getResolver().getPath(manifestFile.get()));
     }
   }
 

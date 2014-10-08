@@ -22,7 +22,6 @@ import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.java.JavacStepUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +43,7 @@ public class RDotJava {
   private RDotJava() {}
 
   static JavacStep createJavacStepForUberRDotJavaFiles(
-      Set<SourcePath> javaSourceFilePaths,
+      Set<Path> javaSourceFilePaths,
       Path outputDirectory,
       JavacOptions javacOptions,
       BuildTarget buildTarget) {
@@ -57,7 +56,7 @@ public class RDotJava {
   }
 
   static JavacStep createJavacStepForDummyRDotJavaFiles(
-      Set<? extends SourcePath> javaSourceFilePaths,
+      Set<Path> javaSourceFilePaths,
       Path outputDirectory,
       Optional<Path> pathToOutputAbiFile,
       JavacOptions javacOptions,

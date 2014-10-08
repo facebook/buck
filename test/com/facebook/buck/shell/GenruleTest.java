@@ -43,6 +43,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -242,7 +243,10 @@ public class GenruleTest {
   public void testDepsEnvironmentVariableIsComplete() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget depTarget = BuildTarget.builder("//foo", "bar").build();
-    BuildRule dep = new FakeBuildRule(JavaLibraryDescription.TYPE, depTarget) {
+    BuildRule dep = new FakeBuildRule(
+        JavaLibraryDescription.TYPE,
+        depTarget,
+        new SourcePathResolver(new BuildRuleResolver())) {
       @Override
       public Path getPathToOutputFile() {
         return Paths.get("buck-out/gen/foo/bar.jar");

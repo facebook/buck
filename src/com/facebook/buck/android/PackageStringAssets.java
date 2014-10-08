@@ -27,6 +27,7 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.zip.ZipStep;
@@ -57,9 +58,10 @@ public class PackageStringAssets extends AbstractBuildRule
 
   public PackageStringAssets(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       FilteredResourcesProvider filteredResourcesProvider,
       AaptPackageResources aaptPackageResources) {
-    super(params);
+    super(params, resolver);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
     this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);

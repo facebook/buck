@@ -49,6 +49,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.ExecutionContext;
@@ -97,6 +98,7 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSet.of(rule));
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        new SourcePathResolver(resolver),
         projectFilesystem,
         partialGraph.getActionGraph(),
         executionContext,
@@ -120,6 +122,7 @@ public class SeparatedProjectsGeneratorTest {
     PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.<BuildRule>of());
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        new SourcePathResolver(resolver),
         projectFilesystem,
         partialGraph.getActionGraph(),
         executionContext,
@@ -149,6 +152,7 @@ public class SeparatedProjectsGeneratorTest {
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(rule, configRule));
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        new SourcePathResolver(resolver),
         projectFilesystem,
         partialGraph.getActionGraph(),
         executionContext,
@@ -199,6 +203,7 @@ public class SeparatedProjectsGeneratorTest {
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(rule, configRule));
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        new SourcePathResolver(resolver),
         projectFilesystem,
         partialGraph.getActionGraph(),
         executionContext,
@@ -261,6 +266,7 @@ public class SeparatedProjectsGeneratorTest {
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(rule, configRule));
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        new SourcePathResolver(resolver),
         projectFilesystem,
         partialGraph.getActionGraph(),
         executionContext,
@@ -306,6 +312,7 @@ public class SeparatedProjectsGeneratorTest {
     resolver.addToIndex(configRule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        new SourcePathResolver(resolver),
         projectFilesystem,
         createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)).getActionGraph(),
         executionContext,
@@ -406,6 +413,7 @@ public class SeparatedProjectsGeneratorTest {
     resolver.addToIndex(configRule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        new SourcePathResolver(resolver),
         projectFilesystem,
         createPartialGraphFromBuildRules(
             ImmutableSet.of(configRule, rule1, rule2)).getActionGraph(),
@@ -483,6 +491,7 @@ public class SeparatedProjectsGeneratorTest {
     resolver.addToIndex(configRule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        new SourcePathResolver(resolver),
         projectFilesystem,
         createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)).getActionGraph(),
         executionContext,
@@ -547,6 +556,7 @@ public class SeparatedProjectsGeneratorTest {
     resolver.addToIndex(configRule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        new SourcePathResolver(resolver),
         projectFilesystem,
         createPartialGraphFromBuildRules(
             ImmutableSet.of(configRule, libraryRule, binaryRule, nativeRule)).getActionGraph(),
@@ -594,6 +604,7 @@ public class SeparatedProjectsGeneratorTest {
     resolver.addToIndex(barConfigRule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        new SourcePathResolver(resolver),
         projectFilesystem,
         createPartialGraphFromBuildRules(
             ImmutableSet.of(fooRule1, barRule2, fooConfigRule, barConfigRule)).getActionGraph(),

@@ -22,8 +22,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
@@ -86,7 +84,7 @@ public class JavacInMemoryStep extends JavacStep {
 
   public JavacInMemoryStep(
       Path outputDirectory,
-      Set<? extends SourcePath> javaSourceFilePaths,
+      Set<Path> javaSourceFilePaths,
       Set<Path> transitiveClasspathEntries,
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
@@ -150,7 +148,6 @@ public class JavacInMemoryStep extends JavacStep {
       try {
         context.getProjectFilesystem().writeLinesToPath(
             FluentIterable.from(javaSourceFilePaths)
-                .transform(SourcePaths.TO_PATH)
                 .transform(Functions.toStringFunction()),
             pathToSrcsList.get());
       } catch (IOException e) {
@@ -331,9 +328,7 @@ public class JavacInMemoryStep extends JavacStep {
       StandardJavaFileManager fileManager,
       Function<Path, Path> absolutifier) throws IOException {
     List<JavaFileObject> compilationUnits = Lists.newArrayList();
-    for (SourcePath srcPath : javaSourceFilePaths) {
-      Path path = srcPath.resolve();
-
+    for (Path path : javaSourceFilePaths) {
       if (path.toString().endsWith(".java")) {
         // For an ordinary .java file, create a corresponding JavaFileObject.
         Iterable<? extends JavaFileObject> javaFileObjects = fileManager.getJavaFileObjects(

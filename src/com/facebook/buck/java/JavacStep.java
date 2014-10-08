@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -63,7 +62,7 @@ public abstract class JavacStep implements Step {
   // TODO(user) s/protected/get...()/g
   protected final Path outputDirectory;
 
-  protected final Set<SourcePath> javaSourceFilePaths;
+  protected final Set<Path> javaSourceFilePaths;
 
   protected final JavacOptions javacOptions;
 
@@ -123,7 +122,7 @@ public abstract class JavacStep implements Step {
 
   public JavacStep(
       Path outputDirectory,
-      Set<? extends SourcePath> javaSourceFilePaths,
+      Set<Path> javaSourceFilePaths,
       Set<Path> transitiveClasspathEntries,
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
@@ -286,7 +285,7 @@ public abstract class JavacStep implements Step {
   }
 
   @VisibleForTesting
-  Set<SourcePath> getSrcs() {
+  Set<Path> getSrcs() {
     return javaSourceFilePaths;
   }
 

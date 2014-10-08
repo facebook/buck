@@ -47,18 +47,19 @@ public class AbstractDependencyVisitorTest {
     //            /   \        /   \     \
     //          E       D    C       B     A
     //
-    BuildRule ruleA = createRule("A");
-    BuildRule ruleB = createRule("B");
-    BuildRule ruleC = createRule("C");
-    BuildRule ruleD = createRule("D");
-    BuildRule ruleE = createRule("E");
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRule ruleA = createRule("A", pathResolver);
+    BuildRule ruleB = createRule("B", pathResolver);
+    BuildRule ruleC = createRule("C", pathResolver);
+    BuildRule ruleD = createRule("D", pathResolver);
+    BuildRule ruleE = createRule("E", pathResolver);
 
-    BuildRule ruleF = createRule("F", ruleE, ruleD);
-    BuildRule ruleG = createRule("G");
-    BuildRule ruleH = createRule("H", ruleC, ruleB);
-    BuildRule ruleI = createRule("I", ruleA);
+    BuildRule ruleF = createRule("F", pathResolver, ruleE, ruleD);
+    BuildRule ruleG = createRule("G", pathResolver);
+    BuildRule ruleH = createRule("H", pathResolver, ruleC, ruleB);
+    BuildRule ruleI = createRule("I", pathResolver, ruleA);
 
-    BuildRule initialRule = createRule("J", ruleF, ruleG, ruleH, ruleI);
+    BuildRule initialRule = createRule("J", pathResolver, ruleF, ruleG, ruleH, ruleI);
 
     final List<BuildRule> buildRuleTraversalOrder = Lists.newArrayList();
     new AbstractDependencyVisitor(initialRule) {
@@ -94,18 +95,19 @@ public class AbstractDependencyVisitorTest {
     //            /   \        /   \     \
     //          5       4    3       2     1
     //
-    BuildRule rule1 = createRule("1");
-    BuildRule rule2 = createRule("2");
-    BuildRule rule3 = createRule("3");
-    BuildRule rule4 = createRule("4");
-    BuildRule rule5 = createRule("5");
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRule rule1 = createRule("1", pathResolver);
+    BuildRule rule2 = createRule("2", pathResolver);
+    BuildRule rule3 = createRule("3", pathResolver);
+    BuildRule rule4 = createRule("4", pathResolver);
+    BuildRule rule5 = createRule("5", pathResolver);
 
-    BuildRule rule6 = createRule("6", rule5, rule4);
-    BuildRule rule7 = createRule("7");
-    BuildRule rule8 = createRule("8", rule3, rule2);
-    BuildRule rule9 = createRule("9", rule1);
+    BuildRule rule6 = createRule("6", pathResolver, rule5, rule4);
+    BuildRule rule7 = createRule("7", pathResolver);
+    BuildRule rule8 = createRule("8", pathResolver, rule3, rule2);
+    BuildRule rule9 = createRule("9", pathResolver, rule1);
 
-    BuildRule initialRule = createRule("10", rule6, rule7, rule8, rule9);
+    BuildRule initialRule = createRule("10", pathResolver, rule6, rule7, rule8, rule9);
 
     final List<BuildRule> buildRuleTraversalOrder = Lists.newArrayList();
 
@@ -134,11 +136,12 @@ public class AbstractDependencyVisitorTest {
         buildRuleTraversalOrder);
   }
 
-  private FakeJavaLibrary createRule(String name, BuildRule... deps) {
+  private FakeJavaLibrary createRule(String name, SourcePathResolver resolver, BuildRule... deps) {
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     FakeJavaLibrary rule = new FakeJavaLibrary(
         JavaLibraryDescription.TYPE,
         BuildTarget.builder(BUILD_RULE_BASE_NAME, name).build(),
+        resolver,
         ImmutableSortedSet.copyOf(deps),
         visibilityPatterns);
     return rule;

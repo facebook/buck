@@ -38,11 +38,12 @@ public class BuildRuleSourcePathTest {
 
   @Test
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
-    BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target);
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target, pathResolver);
     BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
 
     try {
-      path.resolve();
+      pathResolver.getPath(path);
       fail();
     } catch (HumanReadableException e) {
       assertEquals("No known output for: " + target.getFullyQualifiedName(), e.getMessage());
@@ -51,7 +52,8 @@ public class BuildRuleSourcePathTest {
 
   @Test
   public void mustUseProjectFilesystemToResolvePathToFile() {
-    BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target) {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target, pathResolver) {
       @Override
       public Path getPathToOutputFile() {
         return Paths.get("cheese");
@@ -60,7 +62,7 @@ public class BuildRuleSourcePathTest {
 
     BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
 
-    Path resolved = path.resolve();
+    Path resolved = pathResolver.getPath(path);
 
     assertEquals(Paths.get("cheese"), resolved);
   }
@@ -68,7 +70,10 @@ public class BuildRuleSourcePathTest {
   @Test
   public void shouldReturnTheBuildRuleAsTheReference() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target);
+    FakeBuildRule rule = new FakeBuildRule(
+        new BuildRuleType("example"),
+        target,
+        new SourcePathResolver(new BuildRuleResolver()));
 
     BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
 
@@ -77,12 +82,13 @@ public class BuildRuleSourcePathTest {
 
   @Test
   public void explicitlySetPath() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target);
+    FakeBuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target, pathResolver);
     Path path = Paths.get("blah");
     BuildRuleSourcePath buildRuleSourcePath = new BuildRuleSourcePath(rule, path);
     assertEquals(rule, buildRuleSourcePath.asReference());
-    assertEquals(path, buildRuleSourcePath.resolve());
+    assertEquals(path, pathResolver.getPath(buildRuleSourcePath));
   }
 
 }

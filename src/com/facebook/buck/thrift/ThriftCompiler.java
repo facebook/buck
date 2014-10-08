@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Preconditions;
@@ -51,6 +52,7 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
 
   public ThriftCompiler(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       SourcePath compiler,
       ImmutableList<String> flags,
       Path outputDir,
@@ -59,7 +61,7 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
       ImmutableSet<String> options,
       ImmutableList<Path> includeRoots,
       ImmutableMap<Path, SourcePath> includes) {
-    super(params);
+    super(params, resolver);
     this.compiler = Preconditions.checkNotNull(compiler);
     this.flags = Preconditions.checkNotNull(flags);
     this.outputDir = Preconditions.checkNotNull(outputDir);
@@ -72,13 +74,13 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of(input.resolve());
+    return ImmutableList.of(getResolver().getPath(input));
   }
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
-        .setInput("compiler", compiler.resolve())
+        .setInput("compiler", getResolver().getPath(compiler))
         .set("flags", flags)
         .set("outputDir", outputDir.toString())
         .set("options", ImmutableSortedSet.copyOf(options))
@@ -90,7 +92,7 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
     // we can match the contents hash up with where it was laid out in the include search path.
     for (Path path : ImmutableSortedSet.copyOf(includes.keySet())) {
       SourcePath source = includes.get(path);
-      builder.setInput("include(" + path + ")", source.resolve());
+      builder.setInput("include(" + path + ")", getResolver().getPath(source));
     }
 
     return builder;
@@ -105,10 +107,10 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(outputDir),
         new ThriftCompilerStep(
-            compiler.resolve(),
+            getResolver().getPath(compiler),
             flags,
             outputDir,
-            input.resolve(),
+            getResolver().getPath(input),
             language,
             options,
             includeRoots));

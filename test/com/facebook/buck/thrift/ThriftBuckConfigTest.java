@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
@@ -45,11 +46,13 @@ public class ThriftBuckConfigTest {
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
+      SourcePathResolver resolver,
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
             .setDeps(ImmutableSortedSet.copyOf(deps))
-            .build());
+            .build(),
+        resolver);
   }
 
   @Test
@@ -90,7 +93,9 @@ public class ThriftBuckConfigTest {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Create a build rule that represents the thrift rule.
-    FakeBuildRule thriftRule = createFakeBuildRule("//:thrift_target");
+    FakeBuildRule thriftRule = createFakeBuildRule(
+        "//:thrift_target",
+        new SourcePathResolver(resolver));
     resolver.addToIndex(thriftRule);
 
     // Now try to lookup the compiler, which should fail since nothing was set.
@@ -123,13 +128,15 @@ public class ThriftBuckConfigTest {
 
     // Verify that the returned SourcePath wraps the compiler path correctly.
     assertTrue(compiler instanceof PathSourcePath);
-    assertTrue(compiler.resolve().equals(filesystem.resolve(thriftPath)));
+    assertTrue(
+        new SourcePathResolver(resolver).getPath(compiler).equals(filesystem.resolve(thriftPath)));
   }
 
   @Test
   public void getCompilerSucceedsIfJustCompilerTargetIsSet() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    BuildRule thriftRule = createFakeBuildRule("//thrift:target");
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRule thriftRule = createFakeBuildRule("//thrift:target", pathResolver);
     BuildTarget thriftTarget = thriftRule.getBuildTarget();
 
     // Add the thrift rule to the resolver.

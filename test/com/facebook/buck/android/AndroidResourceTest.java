@@ -33,6 +33,7 @@ import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Strings;
@@ -57,6 +58,7 @@ public class AndroidResourceTest {
     BuildTarget buildTarget = BuildTarget.builder("//java/src/com/facebook/base", "res").build();
     AndroidResource androidResource = new AndroidResource(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         Paths.get("java/src/com/facebook/base/res"),
         ImmutableSortedSet.of(
@@ -89,6 +91,7 @@ public class AndroidResourceTest {
 
   @Test
   public void testRuleKeyForDifferentInputFilenames() throws IOException {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     String commonHash = Strings.repeat("a", 40);
     FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
             "java/src/com/facebook/base/res/drawable/A.xml", commonHash,
@@ -103,6 +106,7 @@ public class AndroidResourceTest {
         .build();
 
     AndroidResource androidResource1 = AndroidResourceRuleBuilder.newBuilder()
+        .setResolver(pathResolver)
         .setBuildRuleParams(params)
         .setRes(Paths.get("java/src/com/facebook/base/res"))
         .setResSrcs(ImmutableSortedSet.of(
@@ -116,6 +120,7 @@ public class AndroidResourceTest {
         .build();
 
     AndroidResource androidResource2 = AndroidResourceRuleBuilder.newBuilder()
+        .setResolver(pathResolver)
         .setBuildRuleParams(params)
         .setRes(Paths.get("java/src/com/facebook/base/res"))
         .setResSrcs(ImmutableSortedSet.of(
@@ -139,8 +144,11 @@ public class AndroidResourceTest {
   @Test
   public void testAbiKeyExcludesEmptyResources() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
     BuildRule resourceRule1 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res1"))
@@ -148,6 +156,7 @@ public class AndroidResourceTest {
     setAndroidResourceBuildOutput(resourceRule1, "a");
     BuildRule resourceRule2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
             .build());
@@ -156,6 +165,7 @@ public class AndroidResourceTest {
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of(resourceRule1, resourceRule2);
     BuildRule resourceRule3 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res3"))
             .setDeps(deps)
             .setBuildRuleParams(
@@ -183,6 +193,7 @@ public class AndroidResourceTest {
   public void testGetRDotJavaPackageWhenPackageIsSpecified() {
     AndroidResource androidResource = new AndroidResource(
         new FakeBuildRuleParamsBuilder("//foo:bar").build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         Paths.get("foo/res"),
         ImmutableSortedSet.<Path>of(Paths.get("foo/res/values/strings.xml")),
@@ -198,6 +209,7 @@ public class AndroidResourceTest {
   public void testGetRDotJavaPackageWhenPackageIsNotSpecified() {
     AndroidResource androidResource = new AndroidResource(
         new FakeBuildRuleParamsBuilder("//foo:bar").build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         Paths.get("foo/res"),
         ImmutableSortedSet.<Path>of(Paths.get("foo/res/values/strings.xml")),

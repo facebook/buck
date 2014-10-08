@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -49,6 +50,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       A args) {
     return new AppleBundle(
         params,
+        new SourcePathResolver(resolver),
         args.extension,
         args.infoPlist,
         resolver.getRule(args.binary));

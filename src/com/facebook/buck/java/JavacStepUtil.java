@@ -20,7 +20,6 @@ import static com.facebook.buck.java.JavacStep.SuggestBuildRules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -32,7 +31,7 @@ public class JavacStepUtil {
 
   public static JavacStep createJavacStep(
       Path outputDirectory,
-      Set<? extends SourcePath> javaSourceFilePaths,
+      Set<Path> javaSourceFilePaths,
       Set<Path> transitiveClasspathEntries,
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,

@@ -44,6 +44,7 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -172,6 +173,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   public DefaultJavaLibrary(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
       Optional<Path> proguardConfig,
@@ -181,7 +183,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> resourcesRoot) {
-    super(params);
+    super(params, resolver);
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -445,8 +447,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getJavaSrcs() {
-    return srcs;
+  public ImmutableSortedSet<Path> getJavaSrcs() {
+    return ImmutableSortedSet.copyOf(getResolver().getAllPaths(srcs));
   }
 
   @Override
@@ -590,6 +592,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     }
     steps.add(
         new CopyResourcesStep(
+            getResolver(),
             getBuildTarget(),
             resources,
             outputDirectory,

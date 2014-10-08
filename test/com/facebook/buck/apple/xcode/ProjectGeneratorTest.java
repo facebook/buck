@@ -71,6 +71,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
@@ -562,8 +563,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryConfiguresOutputPaths() throws IOException {
-    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
-    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
+    Path rawXcconfigFile = Paths.get("Test.xcconfig");
+    SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
+    projectFilesystem.writeContentsToPath("", rawXcconfigFile);
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
@@ -610,8 +612,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryConfiguresDynamicLibraryOutputPaths() throws IOException {
-    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
-    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
+    Path rawXcconfigFile = Paths.get("Test.xcconfig");
+    SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
+    projectFilesystem.writeContentsToPath("", rawXcconfigFile);
 
     BuildTarget buildTarget = BuildTarget.builder("//hi", "lib")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
@@ -661,8 +664,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryDoesntOverrideHeaderOutputPath() throws IOException {
-    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
-    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
+    Path rawXcconfigFile = Paths.get("Test.xcconfig");
+    SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
+    projectFilesystem.writeContentsToPath("", rawXcconfigFile);
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
@@ -714,8 +718,9 @@ public class ProjectGeneratorTest {
   public void testAppleLibraryDependentsSearchHeadersAndLibraries() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
-    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
-    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
+    Path rawXcconfigFile = Paths.get("Test.xcconfig");
+    SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
+    projectFilesystem.writeContentsToPath("", rawXcconfigFile);
 
     BuildRule libraryRule;
     BuildRule testRule;
@@ -851,8 +856,9 @@ public class ProjectGeneratorTest {
   public void testAppleLibraryDependentsInheritSearchPaths() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
-    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
-    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
+    Path rawXcconfigFile = Paths.get("Test.xcconfig");
+    SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
+    projectFilesystem.writeContentsToPath("", rawXcconfigFile);
 
     BuildRule libraryRule;
     BuildRule testRule;
@@ -996,8 +1002,9 @@ public class ProjectGeneratorTest {
   public void testAppleLibraryTransitiveDependentsSearchHeadersAndLibraries() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
-    SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
-    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
+    Path rawXcconfigFile = Paths.get("Test.xcconfig");
+    SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
+    projectFilesystem.writeContentsToPath("", rawXcconfigFile);
 
     BuildRule libraryDepRule;
     BuildRule libraryRule;
@@ -1560,7 +1567,9 @@ public class ProjectGeneratorTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
-    projectFilesystem.writeContentsToPath("", xcconfigFile.resolve());
+    projectFilesystem.writeContentsToPath(
+        "",
+        new SourcePathResolver(resolver).getPath(xcconfigFile));
 
     BuildRuleParams dynamicLibraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//dep", "dynamic").setFlavor(
@@ -2989,6 +2998,7 @@ public class ProjectGeneratorTest {
         .build();
 
     return new ProjectGenerator(
+        new SourcePathResolver(new BuildRuleResolver()),
         partialGraph.getActionGraph().getNodes(),
         initialBuildTargets,
         projectFilesystem,

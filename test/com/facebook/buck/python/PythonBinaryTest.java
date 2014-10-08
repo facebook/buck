@@ -21,11 +21,13 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -55,6 +57,7 @@ public class PythonBinaryTest {
     PythonBinary binary = new PythonBinary(
         BuildRuleParamsFactory.createTrivialBuildRuleParams(
             BuildTargetFactory.newInstance("//:bin")),
+        new SourcePathResolver(new BuildRuleResolver()),
         Paths.get("dummy_path_to_pex"),
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")),
         Paths.get("main.py"),

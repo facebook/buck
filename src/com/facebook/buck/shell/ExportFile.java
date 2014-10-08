@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -81,8 +82,8 @@ public class ExportFile extends AbstractBuildRule {
   private final Path out;
 
   @VisibleForTesting
-  ExportFile(BuildRuleParams params, ExportFileDescription.Arg args) {
-    super(params);
+  ExportFile(BuildRuleParams params, SourcePathResolver resolver, ExportFileDescription.Arg args) {
+    super(params, resolver);
     BuildTarget target = params.getBuildTarget();
     if (args.src.isPresent()) {
       this.src = args.src.get();
@@ -114,7 +115,7 @@ public class ExportFile extends AbstractBuildRule {
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
         .add(new MkdirStep(out.getParent()))
-        .add(CopyStep.forFile(src.resolve(), out));
+        .add(CopyStep.forFile(getResolver().getPath(src), out));
 
     buildableContext.recordArtifact(out);
     return builder.build();

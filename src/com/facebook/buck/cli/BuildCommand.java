@@ -26,6 +26,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
@@ -113,7 +114,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
           options.getDefaultIncludes(),
           getBuckEventBus(),
           console,
-          environment).buildActionGraph();
+          environment).buildActionGraph(Optional.<BuildRuleResolver>absent());
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

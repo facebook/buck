@@ -23,11 +23,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -97,7 +98,7 @@ public class AndroidBuildConfigTest {
         ImmutableList.of("boolean DEBUG = false", "String FOO = \"BAR\""));
     EasyMock.replay(projectFilesystem);
 
-    ReadValuesStep step = new ReadValuesStep(new PathSourcePath(pathToValues));
+    ReadValuesStep step = new ReadValuesStep(pathToValues);
     ExecutionContext context = TestExecutionContext
         .newBuilder()
         .setProjectFilesystem(projectFilesystem)
@@ -121,6 +122,7 @@ public class AndroidBuildConfigTest {
         .build();
     return new AndroidBuildConfig(
         params,
+        new SourcePathResolver(new BuildRuleResolver()),
         /* javaPackage */ "com.example",
         /* values */ BuildConfigFields.empty(),
         /* valuesFile */ Optional.<SourcePath>absent(),

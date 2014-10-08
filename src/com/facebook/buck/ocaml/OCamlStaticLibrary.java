@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -46,11 +47,12 @@ class OCamlStaticLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   public OCamlStaticLibrary(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       BuildRuleParams compileParams,
       ImmutableList<String> linkerFlags,
       FluentIterable<Path> srcPaths,
       OCamlBuildContext ocamlContext, OCamlBuild ocamlLibraryBuild) {
-    super(params);
+    super(params, resolver);
     this.linkerFlags = linkerFlags;
     this.srcPaths = srcPaths;
     this.ocamlContext = ocamlContext;

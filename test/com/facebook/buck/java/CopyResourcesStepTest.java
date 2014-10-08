@@ -19,7 +19,9 @@ import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -34,6 +36,7 @@ import java.util.List;
 public class CopyResourcesStepTest {
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     // Files:
     // android/java/BUILD
     // android/java/src/com/facebook/base/data.json
@@ -42,6 +45,7 @@ public class CopyResourcesStepTest {
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
 
     CopyResourcesStep step = new CopyResourcesStep(
+        resolver,
         buildTarget,
         ImmutableSet.of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),
@@ -70,6 +74,7 @@ public class CopyResourcesStepTest {
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
 
     CopyResourcesStep step = new CopyResourcesStep(
+        new SourcePathResolver(new BuildRuleResolver()),
         buildTarget,
         ImmutableSet.<SourcePath>of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),
@@ -100,6 +105,7 @@ public class CopyResourcesStepTest {
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
 
     CopyResourcesStep step = new CopyResourcesStep(
+        new SourcePathResolver(new BuildRuleResolver()),
         buildTarget,
         ImmutableSet.of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),

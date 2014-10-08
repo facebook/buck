@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -120,6 +121,7 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
     // will use this to pull the generated sources into packages/PEXs.
     return new PythonLibrary(
         langParams,
+        new SourcePathResolver(resolver),
         modules,
         ImmutableMap.<Path, SourcePath>of());
   }

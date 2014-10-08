@@ -172,7 +172,10 @@ public class ConstructorArgMarshallerTest {
     }
 
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
-    FakeBuildRule rule = new FakeBuildRule(ruleType, target);
+    FakeBuildRule rule = new FakeBuildRule(
+        ruleType,
+        target,
+        new SourcePathResolver(new BuildRuleResolver()));
     ruleResolver.addToIndex(rule);
     Dto dto = new Dto();
     marshaller.populate(
@@ -394,9 +397,10 @@ public class ConstructorArgMarshallerTest {
       public List<? extends SourcePath> yup;
     }
 
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildRule rule = new FakeBuildRule(
         new BuildRuleType("example"),
-        BuildTargetFactory.newInstance("//will:happen"));
+        BuildTargetFactory.newInstance("//will:happen"), pathResolver);
     ruleResolver.addToIndex(rule);
     Dto dto = new Dto();
     marshaller.populate(
@@ -407,7 +411,7 @@ public class ConstructorArgMarshallerTest {
         dto);
 
     BuildRuleSourcePath path = new BuildRuleSourcePath(
-        new FakeBuildRule(ruleType, rule.getBuildTarget()));
+        new FakeBuildRule(ruleType, rule.getBuildTarget(), pathResolver));
     assertEquals(ImmutableList.of(path), dto.yup);
   }
 
@@ -452,7 +456,8 @@ public class ConstructorArgMarshallerTest {
 
     FakeBuildRule expectedRule = new FakeBuildRule(
         ruleType,
-        BuildTargetFactory.newInstance("//example/path:path"));
+        BuildTargetFactory.newInstance("//example/path:path"),
+        new SourcePathResolver(new BuildRuleResolver()));
     ruleResolver.addToIndex(expectedRule);
 
     ImmutableMap<String, Object> args = ImmutableMap.<String, Object>builder()
@@ -521,9 +526,13 @@ public class ConstructorArgMarshallerTest {
       public ImmutableSortedSet<SourcePath> srcs;
     }
 
+    BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:manifest");
-    BuildRule rule = new FakeBuildRule(new BuildRuleType("py"), target);
-    BuildRuleResolver resolver = new BuildRuleResolver(ImmutableMap.of(target, rule));
+    BuildRule rule = new FakeBuildRule(
+        new BuildRuleType("py"),
+        target,
+        new SourcePathResolver(resolver));
+    resolver.addToIndex(rule);
 
     Dto dto = new Dto();
     marshaller.populate(

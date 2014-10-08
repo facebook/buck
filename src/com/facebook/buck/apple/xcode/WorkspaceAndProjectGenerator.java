@@ -31,6 +31,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -53,6 +54,7 @@ import java.util.Set;
 public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
 
+  private final SourcePathResolver resolver;
   private final ProjectFilesystem projectFilesystem;
   private final ActionGraph projectGraph;
   private final ExecutionContext executionContext;
@@ -62,6 +64,7 @@ public class WorkspaceAndProjectGenerator {
   private final ImmutableSet<BuildRule> extraTestBundleRules;
 
   public WorkspaceAndProjectGenerator(
+      SourcePathResolver resolver,
       ProjectFilesystem projectFilesystem,
       ActionGraph projectGraph,
       ExecutionContext executionContext,
@@ -69,6 +72,7 @@ public class WorkspaceAndProjectGenerator {
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       Multimap<BuildRule, AppleTest> sourceRuleToTestRules,
       Iterable<BuildRule> extraTestBundleRules) {
+    this.resolver = Preconditions.checkNotNull(resolver);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.projectGraph = Preconditions.checkNotNull(projectGraph);
     this.executionContext = Preconditions.checkNotNull(executionContext);
@@ -145,6 +149,7 @@ public class WorkspaceAndProjectGenerator {
       if (generator == null) {
         LOG.debug("Generating project for rule %s", xcodeProjectConfig);
         generator = new ProjectGenerator(
+            resolver,
             projectGraph.getNodes(),
             initialTargets,
             projectFilesystem,
@@ -169,7 +174,7 @@ public class WorkspaceAndProjectGenerator {
     for (XcodeNative buildable : Iterables.filter(
         projectGraph.getNodes(),
         XcodeNative.class)) {
-      Path projectPath = buildable.getProjectContainerPath().resolve();
+      Path projectPath = resolver.getPath(buildable.getProjectContainerPath());
       Path pbxprojectPath = projectPath.resolve("project.pbxproj");
       String targetName = buildable.getTargetName();
 

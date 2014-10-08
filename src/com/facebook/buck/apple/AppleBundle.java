@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
@@ -45,10 +46,11 @@ public class AppleBundle extends AbstractBuildRule {
 
   AppleBundle(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Either<AppleBundleExtension, String> extension,
       Optional<SourcePath> infoPlist,
       BuildRule binary) {
-    super(params);
+    super(params, resolver);
     this.extension = Preconditions.checkNotNull(extension);
     this.infoPlist = Preconditions.checkNotNull(infoPlist);
     this.binary = Preconditions.checkNotNull(binary);

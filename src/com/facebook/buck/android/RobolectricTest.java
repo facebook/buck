@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
 import com.google.common.annotations.VisibleForTesting;
@@ -72,6 +73,7 @@ public class RobolectricTest extends JavaTest {
 
   protected RobolectricTest(
       BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
       Set<SourcePath> srcs,
       Set<SourcePath> resources,
       Set<Label> labels,
@@ -85,6 +87,7 @@ public class RobolectricTest extends JavaTest {
       Optional<DummyRDotJava> optionalDummyRDotJava) {
     super(
         buildRuleParams,
+        resolver,
         srcs,
         resources,
         labels,

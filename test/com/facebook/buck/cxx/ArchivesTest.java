@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -67,6 +68,7 @@ public class ArchivesTest {
 
     // Build the archive using a normal input the outputs of the genrules above.
     Archive archive = Archives.createArchiveRule(
+        new SourcePathResolver(resolver),
         target,
         params,
         DEFAULT_ARCHIVER,
@@ -94,6 +96,7 @@ public class ArchivesTest {
 
   @Test
   public void testThatOriginalBuildParamsDepsDoNotPropagateToArchive() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
 
     // Create an `Archive` rule using build params with an existing dependency,
     // as if coming from a `TargetNode` which had declared deps.  These should *not*
@@ -101,13 +104,14 @@ public class ArchivesTest {
     // it's immediate inputs.
     BuildRule dep = new FakeBuildRule(
         BuildRuleParamsFactory.createTrivialBuildRuleParams(
-            BuildTargetFactory.newInstance("//:fake")));
+            BuildTargetFactory.newInstance("//:fake")), pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:archive");
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dummy"))
             .setDeps(ImmutableSortedSet.of(dep))
             .build();
     Archive archive = Archives.createArchiveRule(
+        pathResolver,
         target,
         params,
         DEFAULT_ARCHIVER,

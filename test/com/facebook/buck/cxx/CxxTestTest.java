@@ -24,8 +24,10 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -54,6 +56,7 @@ public class CxxTestTest {
     public FakeCxxTest() {
       super(
           createBuildParams(),
+          new SourcePathResolver(new BuildRuleResolver()),
           ImmutableSet.<Label>of(),
           ImmutableSet.<String>of(),
           ImmutableSet.<BuildRule>of());

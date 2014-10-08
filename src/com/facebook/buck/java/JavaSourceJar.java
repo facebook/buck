@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -54,8 +55,9 @@ public class JavaSourceJar extends AbstractBuildRule {
 
   public JavaSourceJar(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       ImmutableSortedSet<SourcePath> sources) {
-    super(params);
+    super(params, resolver);
     this.sources = Preconditions.checkNotNull(sources);
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(target, String.format("%%s%s", JavacStep.SRC_ZIP));

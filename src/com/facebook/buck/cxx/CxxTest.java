@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -56,10 +57,11 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule {
 
   public CxxTest(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
-    super(params);
+    super(params, resolver);
     this.labels = Preconditions.checkNotNull(labels);
     this.contacts = Preconditions.checkNotNull(contacts);
     this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);

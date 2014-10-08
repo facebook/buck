@@ -46,7 +46,8 @@ public class SourcePathsTest {
   public void testFilterInputsToCompareToOutputExcludesBuildTargetSourcePaths() {
     FakeBuildRule rule = new FakeBuildRule(
         new BuildRuleType("example"),
-        BuildTargetFactory.newInstance("//java/com/facebook:facebook"));
+        BuildTargetFactory.newInstance("//java/com/facebook:facebook"),
+        new SourcePathResolver(new BuildRuleResolver()));
 
     Iterable<? extends SourcePath> sourcePaths = ImmutableList.of(
         new TestSourcePath("java/com/facebook/Main.java"),
@@ -94,7 +95,8 @@ public class SourcePathsTest {
     // Test that using other BuildRule types resolves to the short name.
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//:fake");
     FakeBuildRule fakeBuildRule = new FakeBuildRule(
-        new FakeBuildRuleParamsBuilder(fakeBuildTarget).build());
+        new FakeBuildRuleParamsBuilder(fakeBuildTarget).build(),
+        new SourcePathResolver(resolver));
     BuildRuleSourcePath buildRuleSourcePath2 = new BuildRuleSourcePath(fakeBuildRule);
     String actual2 = SourcePaths.getSourcePathName(
         BuildTargetFactory.newInstance("//:test"),

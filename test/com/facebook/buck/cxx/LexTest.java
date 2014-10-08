@@ -23,10 +23,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
@@ -57,6 +59,7 @@ public class LexTest {
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
@@ -72,6 +75,7 @@ public class LexTest {
         ruleKeyBuilderFactory,
         new Lex(
             params,
+            pathResolver,
             DEFAULT_LEX,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_SOURCE,
@@ -83,6 +87,7 @@ public class LexTest {
         ruleKeyBuilderFactory,
         new Lex(
             params,
+            pathResolver,
             new TestSourcePath("different"),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_SOURCE,
@@ -95,6 +100,7 @@ public class LexTest {
         ruleKeyBuilderFactory,
         new Lex(
             params,
+            pathResolver,
             DEFAULT_LEX,
             ImmutableList.of("-different"),
             DEFAULT_OUTPUT_SOURCE,
@@ -107,6 +113,7 @@ public class LexTest {
         ruleKeyBuilderFactory,
         new Lex(
             params,
+            pathResolver,
             DEFAULT_LEX,
             DEFAULT_FLAGS,
             Paths.get("different"),
@@ -119,6 +126,7 @@ public class LexTest {
         ruleKeyBuilderFactory,
         new Lex(
             params,
+            pathResolver,
             DEFAULT_LEX,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_SOURCE,
@@ -131,6 +139,7 @@ public class LexTest {
         ruleKeyBuilderFactory,
         new Lex(
             params,
+            pathResolver,
             DEFAULT_LEX,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_SOURCE,

@@ -17,7 +17,9 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Pair;
@@ -54,6 +56,7 @@ public class RuleUtilsTest {
                             new TestSourcePath("blech.m"), "-fobjc-arc"))))));
 
     RuleUtils.extractSourcePaths(
+        new SourcePathResolver(new BuildRuleResolver()),
         sources,
         perFileCompileFlags,
         sourcePaths,
@@ -95,6 +98,7 @@ public class RuleUtilsTest {
         AppleSource.ofSourcePath(new TestSourcePath("beeble.c")));
 
     RuleUtils.extractSourcePaths(
+        new SourcePathResolver(new BuildRuleResolver()),
         sources,
         perFileCompileFlags,
         sourcePaths,
@@ -138,6 +142,7 @@ public class RuleUtilsTest {
                             new TestSourcePath("blech.mm"), "-fobjc-arc"))))));
 
     RuleUtils.extractSourcePaths(
+        new SourcePathResolver(new BuildRuleResolver()),
         sources,
         perFileCompileFlags,
         sourcePaths,

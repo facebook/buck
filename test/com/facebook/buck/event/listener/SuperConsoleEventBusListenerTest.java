@@ -31,11 +31,13 @@ import com.facebook.buck.parser.TargetGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeProcessExecutor;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.step.FakeStep;
 import com.facebook.buck.step.StepEvent;
@@ -78,6 +80,7 @@ public class SuperConsoleEventBusListenerTest {
 
   @Test
   public void testSimpleBuild() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
     EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
@@ -89,11 +92,13 @@ public class SuperConsoleEventBusListenerTest {
     FakeBuildRule fakeRule = new FakeBuildRule(
         GenruleDescription.TYPE,
         fakeTarget,
+        pathResolver,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
     FakeBuildRule cachedRule = new FakeBuildRule(
         GenruleDescription.TYPE,
         cachedTarget,
+        pathResolver,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 

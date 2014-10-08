@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -56,6 +57,7 @@ public class Archives {
    * provide the input {@link com.facebook.buck.rules.SourcePath}.
    */
   public static Archive createArchiveRule(
+      SourcePathResolver resolver,
       BuildTarget target,
       BuildRuleParams originalParams,
       SourcePath archiver,
@@ -74,6 +76,7 @@ public class Archives {
 
     return new Archive(
         archiveParams,
+        resolver,
         archiver,
         output,
         inputs);

@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -79,6 +80,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
   protected JavaTest(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Set<SourcePath> srcs,
       Set<SourcePath> resources,
       Set<Label> labels,
@@ -92,6 +94,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       Optional<Path> resourcesRoot) {
     super(
         params,
+        resolver,
         srcs,
         resources,
         proguardConfig,
@@ -394,7 +397,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
      */
     @VisibleForTesting
     static Set<String>  getClassNamesForSources(
-        Set<SourcePath> sources,
+        Set<Path> sources,
         @Nullable Path jarFilePath,
         ProjectFilesystem projectFilesystem) {
       if (jarFilePath == null) {
@@ -402,8 +405,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       }
 
       final Set<String> sourceClassNames = Sets.newHashSetWithExpectedSize(sources.size());
-      for (SourcePath sourcePath : sources) {
-        Path path = sourcePath.resolve();
+      for (Path path : sources) {
         String source = path.toString();
         int lastSlashIndex = source.lastIndexOf('/');
         if (lastSlashIndex >= 0) {

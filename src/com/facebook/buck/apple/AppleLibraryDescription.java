@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -62,10 +63,12 @@ public class AppleLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     return new AppleLibrary(
         params,
+        pathResolver,
         args,
-        TargetSources.ofAppleSources(args.srcs.get()),
+        TargetSources.ofAppleSources(pathResolver, args.srcs.get()),
         cxxPlatform.getAr(),
         params.getBuildTarget().getFlavors().contains(DYNAMIC_LIBRARY));
   }

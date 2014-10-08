@@ -117,6 +117,8 @@ public class SplitZipStepTest {
             Optional.<SourcePath>of(new TestSourcePath("the/manifest.txt")),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
             /* isPrimaryDexScenarioOverflowAllowed */ false),
+        Optional.<Path>absent(),
+        Optional.of(Paths.get("the/manifest.txt")),
         /* pathToReportDir */ Paths.get(""));
     List<String> linesInManifestFile = ImmutableList.of(
         "com/google/common/collect/ImmutableSortedSet",
@@ -186,6 +188,8 @@ public class SplitZipStepTest {
             Optional.<SourcePath>of(new TestSourcePath("the/manifest.txt")),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
             /* isPrimaryDexScenarioOverflowAllowed */ false),
+        Optional.<Path>absent(),
+        Optional.of(Paths.get("the/manifest.txt")),
         /* pathToReportDir */ Paths.get(""));
     List<String> linesInMappingFile = ImmutableList.of(
         "foo.bar.MappedPrimary -> foo.bar.a:",
@@ -269,6 +273,8 @@ public class SplitZipStepTest {
             /* primaryDexClassesFile */ Optional.<SourcePath>absent(),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
             /* isPrimaryDexScenarioOverflowAllowed */ false),
+        Optional.<Path>absent(),
+        Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);

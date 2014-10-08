@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.HumanReadableException;
@@ -200,6 +201,7 @@ public class ThriftLibraryDescription
                       .addAll(includeTreeRules)
                       .build(),
                   ImmutableSortedSet.<BuildRule>of()),
+              new SourcePathResolver(resolver),
               compiler,
               flags,
               outputDir,
@@ -275,6 +277,7 @@ public class ThriftLibraryDescription
       ImmutableMap<Path, SourcePath> includes = includesBuilder.build();
 
       // Create the symlink tree build rule and add it to the resolver.
+      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
       Path includeRoot = getIncludeRoot(target);
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
       SymlinkTree symlinkTree = new SymlinkTree(
@@ -283,6 +286,7 @@ public class ThriftLibraryDescription
               symlinkTreeTarget,
               ImmutableSortedSet.<BuildRule>of(),
               ImmutableSortedSet.<BuildRule>of()),
+          pathResolver,
           includeRoot,
           includes);
       resolver.addToIndex(symlinkTree);
@@ -291,6 +295,7 @@ public class ThriftLibraryDescription
       // about this rule from the action graph.
       return new ThriftLibrary(
           params,
+          pathResolver,
           thriftDeps,
           symlinkTree,
           includes);

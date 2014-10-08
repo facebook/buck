@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,7 +47,11 @@ public class BuckExtensionDescription implements Description<BuckExtensionDescri
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new BuckExtension(params, args.srcs, args.resources.get());
+    return new BuckExtension(
+        params,
+        new SourcePathResolver(resolver),
+        args.srcs,
+        args.resources.get());
   }
 
   @SuppressFieldNotInitialized

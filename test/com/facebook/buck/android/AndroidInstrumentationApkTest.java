@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -43,11 +44,13 @@ public class AndroidInstrumentationApkTest {
 
   @Test
   public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     final FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(
-        BuildTarget.builder("//java/com/example", "lib1").build());
+        BuildTarget.builder("//java/com/example", "lib1").build(), pathResolver);
 
     FakeJavaLibrary javaLibrary2 = new FakeJavaLibrary(
         BuildTarget.builder("//java/com/example", "lib2").build(),
+        pathResolver,
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary1)) {
       @Override
       public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
@@ -60,10 +63,11 @@ public class AndroidInstrumentationApkTest {
     };
 
     final FakeJavaLibrary javaLibrary3 = new FakeJavaLibrary(
-        BuildTarget.builder("//java/com/example", "lib3").build());
+        BuildTarget.builder("//java/com/example", "lib3").build(), pathResolver);
 
     FakeJavaLibrary javaLibrary4 = new FakeJavaLibrary(
         BuildTarget.builder("//java/com/example", "lib4").build(),
+        pathResolver,
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary3)) {
       @Override
       public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {

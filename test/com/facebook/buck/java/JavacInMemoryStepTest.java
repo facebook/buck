@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Joiner;
@@ -81,7 +80,7 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
   private JavacInMemoryStep createTestStep(BuildDependencies buildDependencies) {
     return new JavacInMemoryStep(
           /* outputDirectory */ Paths.get("."),
-          /* javaSourceFilePaths */ ImmutableSet.of(new TestSourcePath("foobar.java")),
+          /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
           /* transitiveClasspathEntries */
             ImmutableSet.of(Paths.get("bar.jar"), Paths.get("foo.jar")),
           /* declaredClasspathEntries */ ImmutableSet.of(Paths.get("foo.jar")),

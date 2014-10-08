@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
@@ -62,31 +63,36 @@ public class ThriftLibraryDescriptionTest {
 
   private static FakeBuildRule createFakeBuildRule(
       BuildTarget target,
+      SourcePathResolver resolver,
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(ImmutableSortedSet.copyOf(deps))
-            .build());
+            .build(),
+        resolver);
   }
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
+      SourcePathResolver resolver,
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
             .setDeps(ImmutableSortedSet.copyOf(deps))
-            .build());
+            .build(),
+        resolver);
   }
 
   private static SymlinkTree createFakeSymlinkTree(
       BuildTarget target,
+      SourcePathResolver resolver,
       Path root,
       BuildRule... deps) {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(ImmutableSortedSet.copyOf(deps))
             .build();
-    return new SymlinkTree(params, root, ImmutableMap.<Path, SourcePath>of());
+    return new SymlinkTree(params, resolver, root, ImmutableMap.<Path, SourcePath>of());
   }
 
   private static class FakeThriftLanguageSpecificEnhancer
@@ -135,7 +141,7 @@ public class ThriftLibraryDescriptionTest {
 
       return new FakeBuildRule(
           BuildRuleParamsFactory.createTrivialBuildRuleParams(
-              BuildTargetFactory.newInstance("//:fake-lang")));
+              BuildTargetFactory.newInstance("//:fake-lang")), new SourcePathResolver(resolver));
     }
 
     @Override
@@ -162,6 +168,7 @@ public class ThriftLibraryDescriptionTest {
   @Test
   public void createThriftCompilerBuildRulesHasCorrectDeps() {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     String language = "fake";
@@ -222,9 +229,11 @@ public class ThriftLibraryDescriptionTest {
     Path includeRoot = desc.getIncludeRoot(unflavoredTarget);
     SymlinkTree thriftIncludeSymlinkTree = createFakeSymlinkTree(
         desc.createThriftIncludeSymlinkTreeTarget(unflavoredTarget),
+        pathResolver,
         includeRoot);
     ThriftLibrary lib = new ThriftLibrary(
         unflavoredParams,
+        pathResolver,
         ImmutableSortedSet.<ThriftLibrary>of(),
         thriftIncludeSymlinkTree,
         ImmutableMap.<Path, SourcePath>of());
@@ -273,7 +282,7 @@ public class ThriftLibraryDescriptionTest {
         rule.getDeps());
 
     // Create a build rule that represents the thrift rule.
-    FakeBuildRule thriftRule = createFakeBuildRule("//thrift:target");
+    FakeBuildRule thriftRule = createFakeBuildRule("//thrift:target", pathResolver);
     resolver.addToIndex(thriftRule);
     filesystem.mkdirs(thriftRule.getBuildTarget().getBasePath());
     filesystem.touch(thriftRule.getBuildTarget().getBuildFilePath());
@@ -310,6 +319,7 @@ public class ThriftLibraryDescriptionTest {
   @Test
   public void createBuildRuleForUnflavoredTargetCreateThriftLibrary() {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
     BuildRuleParams unflavoredParams =
         BuildRuleParamsFactory.createTrivialBuildRuleParams(unflavoredTarget);
@@ -328,9 +338,11 @@ public class ThriftLibraryDescriptionTest {
     // Create a dep and verify it gets attached.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     Path depIncludeRoot = desc.getIncludeRoot(depTarget);
-    SymlinkTree depIncludeSymlinkTree = createFakeSymlinkTree(depTarget, depIncludeRoot);
+    SymlinkTree depIncludeSymlinkTree =
+        createFakeSymlinkTree(depTarget, pathResolver, depIncludeRoot);
     ThriftLibrary dep = new ThriftLibrary(
         BuildRuleParamsFactory.createTrivialBuildRuleParams(depTarget),
+        pathResolver,
         ImmutableSortedSet.<ThriftLibrary>of(),
         depIncludeSymlinkTree,
         ImmutableMap.<Path, SourcePath>of());
@@ -358,12 +370,13 @@ public class ThriftLibraryDescriptionTest {
   @Test
   public void createBuildRuleWithFlavoredTargetCallsEnhancerCorrectly() {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup the default values returned by the language specific enhancer.
     String language = "fake";
     Flavor flavor = new Flavor("fake");
-    final BuildRule implicitDep = createFakeBuildRule("//implicit:dep");
+    final BuildRule implicitDep = createFakeBuildRule("//implicit:dep", pathResolver);
     resolver.addToIndex(implicitDep);
     filesystem.mkdirs(implicitDep.getBuildTarget().getBasePath());
     filesystem.touch(implicitDep.getBuildTarget().getBuildFilePath());
@@ -398,7 +411,7 @@ public class ThriftLibraryDescriptionTest {
     final ImmutableList<String> thriftServices2 = ImmutableList.of();
 
     // Create a build rule that represents the thrift rule.
-    final FakeBuildRule thriftRule = createFakeBuildRule("//thrift:target");
+    final FakeBuildRule thriftRule = createFakeBuildRule("//thrift:target", pathResolver);
     resolver.addToIndex(thriftRule);
     filesystem.mkdirs(thriftRule.getBuildTarget().getBasePath());
     filesystem.touch(thriftRule.getBuildTarget().getBuildFilePath());
@@ -414,7 +427,8 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup the include rules.
     final BuildRule thriftIncludeSymlinkTree = createFakeBuildRule(
-        desc.createThriftIncludeSymlinkTreeTarget(unflavoredTarget));
+        desc.createThriftIncludeSymlinkTreeTarget(unflavoredTarget),
+        pathResolver);
 
     // Setup our language enhancer
     FakeThriftLanguageSpecificEnhancer enhancer =
@@ -516,11 +530,12 @@ public class ThriftLibraryDescriptionTest {
 
   @Test
   public void findDepsFromParamsSetsUpDepsForFlavoredTarget() {
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Create the thrift target and implicit dep.
     BuildTarget thriftTarget = BuildTargetFactory.newInstance("//bar:thrift_compiler");
-    FakeBuildRule implicitDep = createFakeBuildRule("//foo:implicit_dep");
+    FakeBuildRule implicitDep = createFakeBuildRule("//foo:implicit_dep", resolver);
 
     // Setup the default values returned by the language specific enhancer.
     String language = "fake";

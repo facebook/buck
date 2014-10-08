@@ -35,8 +35,11 @@ public class OutputOnlyBuildRule extends AbstractBuildRule {
 
   private final Path pathToOutputFile;
 
-  public OutputOnlyBuildRule(BuildRuleParams buildRuleParams, Path pathToOutputFile) {
-    super(buildRuleParams);
+  public OutputOnlyBuildRule(
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
+      Path pathToOutputFile) {
+    super(buildRuleParams, resolver);
     this.pathToOutputFile = Preconditions.checkNotNull(pathToOutputFile);
   }
 

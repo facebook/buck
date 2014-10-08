@@ -23,11 +23,11 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -159,13 +159,14 @@ public class JavacInMemoryStepIntegrationTest {
   @Test
   public void shouldWriteResolvedBuildRuleSourcePathsToClassesFile()
       throws IOException, InterruptedException {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
 
     BuildRuleSourcePath sourcePath = new BuildRuleSourcePath(
-        new FakeBuildRule("//:fake"),
+        new FakeBuildRule("//:fake", pathResolver),
         Paths.get("Example.java"));
 
     JavacInMemoryStep javac = createJavac(
-        /* javaSourceFilePaths */ ImmutableSet.<SourcePath>of(sourcePath),
+        /* javaSourceFilePaths */ ImmutableSet.of(pathResolver.getPath(sourcePath)),
         /* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.execute(executionContext);
@@ -178,7 +179,7 @@ public class JavacInMemoryStepIntegrationTest {
   }
 
   private JavacInMemoryStep createJavac(
-      ImmutableSet<SourcePath> javaSourceFilePaths,
+      ImmutableSet<Path> javaSourceFilePaths,
       boolean withSyntaxError)
       throws IOException {
 
@@ -210,7 +211,7 @@ public class JavacInMemoryStepIntegrationTest {
 
   private JavacInMemoryStep createJavac(boolean withSyntaxError) throws IOException {
     return createJavac(
-        /* javaSourceFilePaths */ ImmutableSet.<SourcePath>of(new TestSourcePath("Example.java")),
+        /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("Example.java")),
         withSyntaxError);
   }
 

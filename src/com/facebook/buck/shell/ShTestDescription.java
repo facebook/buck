@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,7 +47,7 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new ShTest(params, args.test, args.labels.get());
+    return new ShTest(params, new SourcePathResolver(resolver), args.test, args.labels.get());
   }
 
   @SuppressFieldNotInitialized

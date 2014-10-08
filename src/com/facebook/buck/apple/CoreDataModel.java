@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -53,9 +54,10 @@ public class CoreDataModel extends AbstractBuildRule {
 
   CoreDataModel(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Supplier<ImmutableCollection<Path>> inputPathsSupplier,
       CoreDataModelDescription.Arg args) {
-    super(params);
+    super(params, resolver);
     this.extension = Files.getFileExtension(args.path.getFileName().toString());
     Preconditions.checkArgument(
         CORE_DATA_MODEL_EXTENSION.equals(extension) ||

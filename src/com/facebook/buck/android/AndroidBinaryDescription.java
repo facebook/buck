@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -154,6 +155,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
 
     return new AndroidBinary(
         params.copyWithExtraDeps(result.getFinalDeps()),
+        new SourcePathResolver(resolver),
         proguardJarOverride,
         args.manifest,
         args.target,

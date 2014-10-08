@@ -19,6 +19,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -34,10 +35,11 @@ public class NdkLibraryBuilder {
     // Utility class
   }
 
-  public static Builder createNdkLibrary(BuildTarget target) {
-    return new Builder(target);
+  public static Builder createNdkLibrary(BuildTarget target, SourcePathResolver resolver) {
+    return new Builder(target, resolver);
   }
   public static class Builder {
+    private final SourcePathResolver resolver;
     @Nullable
     private BuildTarget buildTarget = null;
     private ImmutableSet.Builder<SourcePath> sources = ImmutableSet.builder();
@@ -45,8 +47,9 @@ public class NdkLibraryBuilder {
     private boolean isAsset = false;
     private Optional<String> ndkVersion = Optional.absent();
 
-    public Builder(BuildTarget buildTarget) {
+    public Builder(BuildTarget buildTarget, SourcePathResolver resolver) {
       this.buildTarget = Preconditions.checkNotNull(buildTarget);
+      this.resolver = Preconditions.checkNotNull(resolver);
     }
 
     public Builder addSrc(Path source) {
@@ -72,6 +75,7 @@ public class NdkLibraryBuilder {
     public NdkLibrary build() {
       return new NdkLibrary(
           new FakeBuildRuleParamsBuilder(buildTarget).setType(NdkLibraryDescription.TYPE).build(),
+          resolver,
           sources.build(),
           flags.build(),
           isAsset,

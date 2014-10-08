@@ -29,6 +29,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FlavorableDescription;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -79,13 +80,14 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildTarget target = params.getBuildTarget();
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
 
     if (target.getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(params, args.srcs.get());
+      return new JavaSourceJar(params, pathResolver, args.srcs.get());
     }
 
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
@@ -96,6 +98,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
     return new DefaultJavaLibrary(
         params,
+        pathResolver,
         args.srcs.get(),
         validateResources(args, params.getProjectFilesystem()),
         args.proguardConfig,
@@ -202,6 +205,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     BuildTarget originalBuildTarget = buildRule.getBuildTarget();
 
     Optional<GwtModule> gwtModuleOptional = tryCreateGwtModule(
+        new SourcePathResolver(ruleResolver),
         originalBuildTarget,
         projectFilesystem,
         ruleKeyBuilderFactory,
@@ -222,6 +226,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
    */
   @VisibleForTesting
   static Optional<GwtModule> tryCreateGwtModule(
+      SourcePathResolver resolver,
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
@@ -254,6 +259,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             projectFilesystem,
             ruleKeyBuilderFactory,
             BuildRuleType.GWT_MODULE),
+        resolver,
         filesForGwtModule);
     return Optional.of(gwtModule);
   }

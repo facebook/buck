@@ -32,6 +32,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -122,6 +123,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
    */
   private static BuildRule createTestModulesSourceBuildRule(
       BuildRuleParams params,
+      BuildRuleResolver resolver,
       final Path outputPath,
       ImmutableSet<String> testModules) {
 
@@ -136,7 +138,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
     final String contents = getTestModulesListContents(testModules);
 
-    return new AbstractBuildRule(newParams) {
+    return new AbstractBuildRule(newParams, new SourcePathResolver(resolver)) {
 
       @Override
       protected ImmutableCollection<Path> getInputsToCompareToOutput() {
@@ -172,6 +174,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
 
@@ -199,6 +202,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     // add it to the build.
     BuildRule testModulesBuildRule = createTestModulesSourceBuildRule(
         params,
+        resolver,
         getTestModulesListPath(params.getBuildTarget()),
         testModules);
     resolver.addToIndex(testModulesBuildRule);
@@ -223,6 +227,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         ImmutableSortedSet.<BuildRule>of());
     PythonBinary binary = new PythonBinary(
         binaryParams,
+        pathResolver,
         pathToPex,
         pythonEnvironment,
         getTestMainName(),
@@ -237,6 +242,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                 .add(binary)
                 .build(),
             params.getExtraDeps()),
+        pathResolver,
         new BuildRuleSourcePath(binary),
         resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
         args.labels.or(ImmutableSet.<Label>of()),

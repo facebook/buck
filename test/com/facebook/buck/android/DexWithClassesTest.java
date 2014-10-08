@@ -23,7 +23,9 @@ import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
@@ -36,8 +38,9 @@ public class DexWithClassesTest {
 
   @Test
   public void testIntermediateDexRuleToDexWithClasses() {
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget javaLibraryTarget = BuildTarget.builder("//java/com/example", "lib").build();
-    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget) {
+    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
         return ImmutableSortedMap.of("com/example/Main", HashCode.fromString("cafebabe"));
@@ -48,7 +51,7 @@ public class DexWithClassesTest {
         BuildTarget.builder("//java/com/example", "lib").setFlavor("dex").build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, javaLibrary) {
+        new DexProducedFromJavaLibrary(params, resolver, javaLibrary) {
       @Override
       public int getLinearAllocEstimate() {
         return 1600;
@@ -64,8 +67,9 @@ public class DexWithClassesTest {
 
   @Test
   public void testIntermediateDexRuleToDexWithClassesWhenIntermediateDexHasNoClasses() {
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget javaLibraryTarget = BuildTarget.builder("//java/com/example", "lib").build();
-    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget) {
+    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
         return ImmutableSortedMap.of();
@@ -76,7 +80,7 @@ public class DexWithClassesTest {
         BuildTarget.builder("//java/com/example", "lib").setFlavor("dex").build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, javaLibrary) {
+        new DexProducedFromJavaLibrary(params, resolver, javaLibrary) {
       @Override
       public int getLinearAllocEstimate() {
         return 1600;

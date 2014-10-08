@@ -19,8 +19,10 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -45,6 +47,7 @@ public class ShTestTest extends EasyMockSupport {
         new FakeBuildRuleParamsBuilder(
             BuildTarget.builder("//test/com/example", "my_sh_test").build())
             .build(),
+        new SourcePathResolver(new BuildRuleResolver()),
         new TestSourcePath("run_test.sh"),
         /* labels */ ImmutableSet.<Label>of());
 

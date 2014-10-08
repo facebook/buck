@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
@@ -49,7 +51,7 @@ public class ArchiveStepIntegrationTest {
     CxxPlatform platform = new DefaultCxxPlatform(new FakeBuckConfig());
 
     // Build up the paths to various files the archive step will use.
-    Path archiver = platform.getAr().resolve();
+    Path archiver = new SourcePathResolver(new BuildRuleResolver()).getPath(platform.getAr());
     Path output = filesystem.resolve(Paths.get("output.a"));
     Path relativeInput = Paths.get("input.dat");
     Path input = filesystem.resolve(relativeInput);

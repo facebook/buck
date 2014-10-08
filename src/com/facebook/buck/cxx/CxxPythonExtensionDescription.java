@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -74,9 +75,10 @@ public class CxxPythonExtensionDescription implements
   @Override
   public <A extends Arg> CxxPythonExtension createBuildRule(
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      BuildRuleResolver ruleResolver,
       A args) {
 
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     // Extract the C/C++ sources from the constructor arg.
     ImmutableList<CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
@@ -106,7 +108,7 @@ public class CxxPythonExtensionDescription implements
     CxxHeaderSourceSpec lexYaccSources =
         CxxDescriptionEnhancer.createLexYaccBuildRules(
             params,
-            resolver,
+            ruleResolver,
             cxxPlatform,
             ImmutableList.<String>of(),
             lexSrcs,
@@ -117,7 +119,7 @@ public class CxxPythonExtensionDescription implements
     // and all dependencies.
     SymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTreeBuildRule(
         params,
-        resolver,
+        ruleResolver,
         headers);
     CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
         params,
@@ -132,7 +134,7 @@ public class CxxPythonExtensionDescription implements
     ImmutableList<SourcePath> picObjects =
         CxxDescriptionEnhancer.createPreprocessAndCompileBuildRules(
             params,
-            resolver,
+            ruleResolver,
             cxxPlatform,
             cxxPreprocessorInput,
             args.compilerFlags.or(ImmutableList.<String>of()),
@@ -151,6 +153,7 @@ public class CxxPythonExtensionDescription implements
     CxxLink extensionRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
+        pathResolver,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         extensionTarget,
@@ -160,7 +163,7 @@ public class CxxPythonExtensionDescription implements
         picObjects,
         NativeLinkable.Type.SHARED,
         params.getDeps());
-    resolver.addToIndex(extensionRule);
+    ruleResolver.addToIndex(extensionRule);
 
     // Create the CppLibrary rule that dependents can reference from the action graph
     // to get information about this rule (e.g. how this rule contributes to the C/C++
@@ -168,6 +171,7 @@ public class CxxPythonExtensionDescription implements
     // TargetGraph when it becomes exposed to build rule creation.
     return new CxxPythonExtension(
         params,
+        pathResolver,
         extensionModule,
         new BuildRuleSourcePath(extensionRule),
         extensionRule);

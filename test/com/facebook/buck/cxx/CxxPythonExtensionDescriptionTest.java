@@ -35,6 +35,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -60,21 +61,23 @@ public class CxxPythonExtensionDescriptionTest {
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
+      SourcePathResolver resolver,
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
             .setDeps(ImmutableSortedSet.copyOf(deps))
-            .build());
+            .build(), resolver);
   }
 
   private static BuildRule createFakeCxxLibrary(
       String target,
+      SourcePathResolver resolver,
       BuildRule... deps) {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
             .setDeps(ImmutableSortedSet.copyOf(deps))
             .build();
-    return new CxxLibrary(params) {
+    return new CxxLibrary(params, resolver) {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
@@ -98,7 +101,9 @@ public class CxxPythonExtensionDescriptionTest {
   public void setUp() {
     target = BuildTargetFactory.newInstance("//:target");
     params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
-    pythonDep = createFakeCxxLibrary("//:python_dep");
+    pythonDep = createFakeCxxLibrary(
+        "//:python_dep",
+        new SourcePathResolver(new BuildRuleResolver()));
 
     // Setup a buck config with the python_dep as an entry.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
@@ -145,14 +150,15 @@ public class CxxPythonExtensionDescriptionTest {
   @Test
   public void createBuildRuleNativeLinkableDep() {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Setup a C/C++ library that we'll depend on form the C/C++ binary description.
-    final BuildRule sharedLibraryDep = createFakeBuildRule("//:shared");
+    final BuildRule sharedLibraryDep = createFakeBuildRule("//:shared", pathResolver);
     final Path sharedLibraryOutput = Paths.get("output/path/lib.so");
     final String sharedLibrarySoname = "soname";
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     BuildRuleParams depParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(depTarget);
-    CxxLibrary dep = new CxxLibrary(depParams) {
+    CxxLibrary dep = new CxxLibrary(depParams, pathResolver) {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {

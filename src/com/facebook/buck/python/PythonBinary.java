@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -50,11 +51,12 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   protected PythonBinary(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Path pathToPex,
       PythonEnvironment pythonEnvironment,
       Path main,
       PythonPackageComponents components) {
-    super(params);
+    super(params, resolver);
     this.pathToPex = Preconditions.checkNotNull(pathToPex);
     this.pythonEnvironment = Preconditions.checkNotNull(pythonEnvironment);
     this.main = Preconditions.checkNotNull(main);
@@ -106,7 +108,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
         "resource", components.getResources(),
         "nativeLibraries", components.getNativeLibraries()).entrySet()) {
       for (Path name : ImmutableSortedSet.copyOf(part.getValue().keySet())) {
-        Path src = part.getValue().get(name).resolve();
+        Path src = getResolver().getPath(part.getValue().get(name));
         builder.setInput(part.getKey() + ":" + name, src);
       }
     }
@@ -136,9 +138,9 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
         pythonEnvironment.getPythonPath(),
         binPath,
         PythonUtil.toModuleName(getBuildTarget(), main.toString()),
-        PythonUtil.getPathMapFromSourcePaths(components.getModules()),
-        PythonUtil.getPathMapFromSourcePaths(components.getResources()),
-        PythonUtil.getPathMapFromSourcePaths(components.getNativeLibraries())));
+        getResolver().getMappedPaths(components.getModules()),
+        getResolver().getMappedPaths(components.getResources()),
+        getResolver().getMappedPaths(components.getNativeLibraries())));
 
     // Record the executable package for caching.
     buildableContext.recordArtifact(getBinPath());

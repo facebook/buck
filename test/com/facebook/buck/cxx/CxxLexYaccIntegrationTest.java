@@ -22,6 +22,8 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -47,9 +49,10 @@ public class CxxLexYaccIntegrationTest {
 
   @Before
   public void setUp() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
-    assumeExists(cxxBuckConfig.getLex().resolve());
-    assumeExists(cxxBuckConfig.getYacc().resolve());
+    assumeExists(pathResolver.getPath(cxxBuckConfig.getLex()));
+    assumeExists(pathResolver.getPath(cxxBuckConfig.getYacc()));
   }
 
   @Test

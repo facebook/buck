@@ -45,6 +45,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -128,7 +129,10 @@ public class ApkGenruleTest {
     BuildTarget buildTarget = BuildTarget.builder("//src/com/facebook", "sign_fb4a").build();
     ApkGenruleDescription description = new ApkGenruleDescription();
     ApkGenruleDescription.Arg arg = description.createUnpopulatedConstructorArg();
-    arg.apk = new FakeInstallable(AndroidBinaryDescription.TYPE, apkTarget).getBuildTarget();
+    arg.apk = new FakeInstallable(
+        AndroidBinaryDescription.TYPE,
+        apkTarget,
+        new SourcePathResolver(ruleResolver)).getBuildTarget();
     arg.bash = Optional.of("");
     arg.cmd = Optional.of("python signer.py $APK key.properties > $OUT");
     arg.cmdExe = Optional.of("");
@@ -251,8 +255,11 @@ public class ApkGenruleTest {
 
   private static class FakeInstallable extends FakeBuildRule implements InstallableApk {
 
-    public FakeInstallable(BuildRuleType type, BuildTarget buildTarget) {
-      super(type, buildTarget);
+    public FakeInstallable(
+        BuildRuleType type,
+        BuildTarget buildTarget,
+        SourcePathResolver resolver) {
+      super(type, buildTarget, resolver);
     }
 
     @Override

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.google.common.base.Function;
@@ -92,6 +93,7 @@ public class OCamlRuleBuilder {
       boolean isLibrary,
       ImmutableList<String> argFlags,
       final ImmutableList<String> linkerFlags) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     ImmutableList<String> includes = FluentIterable.from(params.getDeps())
         .transformAndConcat(getLibInclude())
@@ -99,7 +101,8 @@ public class OCamlRuleBuilder {
 
     final FluentIterable<SourcePath> srcSourcePaths = FluentIterable.from(srcs).transform(
         OCamlSource.TO_SOURCE_PATH);
-    final FluentIterable<Path> srcPaths = srcSourcePaths.transform(SourcePaths.TO_PATH);
+    final FluentIterable<Path> srcPaths =
+        srcSourcePaths.transform(pathResolver.getPathFunction());
 
     NativeLinkableInput linkableInput = NativeLinkables.getTransitiveNativeLinkableInput(
         ocamlBuckConfig.getLinker(),
@@ -133,7 +136,7 @@ public class OCamlRuleBuilder {
             FluentIterable.from(params.getDeps())
                 .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
 
-    final OCamlBuildContext ocamlContext = OCamlBuildContext.builder(ocamlBuckConfig)
+    final OCamlBuildContext ocamlContext = OCamlBuildContext.builder(ocamlBuckConfig, pathResolver)
         .setFlags(flags)
         .setIncludes(includes)
         .setOcamlInput(ocamlInput)
@@ -146,6 +149,7 @@ public class OCamlRuleBuilder {
     if (isLibrary) {
       final OCamlBuild ocamlLibraryBuild = new OCamlBuild(
           compileParams,
+          pathResolver,
           ocamlContext,
           ocamlBuckConfig.getCCompiler(),
           ocamlBuckConfig.getCxxCompiler());
@@ -154,6 +158,7 @@ public class OCamlRuleBuilder {
 
       return new OCamlStaticLibrary(
           params,
+          pathResolver,
           compileParams,
           linkerFlags,
           srcPaths,
@@ -162,6 +167,7 @@ public class OCamlRuleBuilder {
     } else {
       return new OCamlBuild(
           compileParams,
+          pathResolver,
           ocamlContext,
           ocamlBuckConfig.getCCompiler(),
           ocamlBuckConfig.getCxxCompiler());

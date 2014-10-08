@@ -20,6 +20,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -54,7 +55,11 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
     ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
     Supplier<ImmutableCollection<Path>> inputPathsSupplier =
         RuleUtils.subpathsOfPathsSupplier(projectFilesystem, args.dirs);
-    return new AppleAssetCatalog(params, inputPathsSupplier, args);
+    return new AppleAssetCatalog(
+        params,
+        new SourcePathResolver(resolver),
+        inputPathsSupplier,
+        args);
   }
 
   @SuppressFieldNotInitialized

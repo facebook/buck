@@ -49,6 +49,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -99,11 +100,13 @@ public class TargetsCommandTest {
   private SortedMap<String, BuildRule> buildBuildTargets(String outputFile,
       String name,
       String baseName) {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     SortedMap<String, BuildRule> buildRules = Maps.newTreeMap();
     BuildTarget buildTarget = BuildTarget.builder(baseName, name).build();
     FakeBuildRule buildRule = new FakeBuildRule(
         JavaLibraryDescription.TYPE,
         buildTarget,
+        pathResolver,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
     buildRule.setOutputFile(outputFile);

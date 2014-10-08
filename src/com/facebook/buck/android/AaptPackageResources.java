@@ -37,6 +37,7 @@ import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -97,6 +98,7 @@ public class AaptPackageResources extends AbstractBuildRule
 
   AaptPackageResources(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
@@ -106,7 +108,7 @@ public class AaptPackageResources extends AbstractBuildRule
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap) {
-    super(params);
+    super(params, resolver);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
     this.resourceDeps = Preconditions.checkNotNull(resourceDeps);
@@ -201,7 +203,8 @@ public class AaptPackageResources extends AbstractBuildRule
 
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
     // commands to ensure that it is available at the desired path.
-    steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(), getAndroidManifestXml()));
+    steps.add(
+        new MkdirAndSymlinkFileStep(getResolver().getPath(manifest), getAndroidManifestXml()));
 
     // Copy the transitive closure of files in assets to a single directory, if any.
     // TODO(mbolin): Older versions of aapt did not support multiple -A flags, so we can probably
@@ -341,7 +344,7 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
     JavacStep javac = RDotJava.createJavacStepForUberRDotJavaFiles(
-        mergeStep.getRDotJavaFiles(),
+        ImmutableSet.copyOf(getResolver().getAllPaths(mergeStep.getRDotJavaFiles())),
         rDotJavaBin,
         javacOptions,
         getBuildTarget());

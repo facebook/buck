@@ -298,7 +298,8 @@ public class RuleKey {
       if (ref instanceof BuildRule) {
         return setVal(((BuildRule) ref).getRuleKey());
       } else {
-        return setInputVal(path.resolve());
+        Preconditions.checkArgument(ref instanceof Path);
+        return setInputVal((Path) ref);
       }
     }
 

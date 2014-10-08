@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -152,8 +152,8 @@ public class OCamlBuildContext {
     };
   }
 
-  public static Builder builder(OCamlBuckConfig config) {
-    return new Builder(new OCamlBuildContext(), config);
+  public static Builder builder(OCamlBuckConfig config, SourcePathResolver resolver) {
+    return new Builder(new OCamlBuildContext(), config, resolver);
   }
 
   public Path getOcamlDepTool() {
@@ -323,9 +323,14 @@ public class OCamlBuildContext {
 
   public static class Builder {
     private final OCamlBuildContext context;
+    private final SourcePathResolver resolver;
 
-    private Builder(OCamlBuildContext context, OCamlBuckConfig config) {
+    private Builder(
+        OCamlBuildContext context,
+        OCamlBuckConfig config,
+        SourcePathResolver resolver) {
       this.context = Preconditions.checkNotNull(context);
+      this.resolver = Preconditions.checkNotNull(resolver);
       context.ocamlDepTool = config.getOCamlDepTool().or(DEFAULT_OCAML_DEP_TOOL);
       context.ocamlCompiler = config.getOCamlCompiler().or(DEFAULT_OCAML_COMPILER);
       context.ocamlBytecodeCompiler = config.getOCamlBytecodeCompiler()
@@ -347,7 +352,7 @@ public class OCamlBuildContext {
 
       context.input = Preconditions.checkNotNull(input);
       FluentIterable<Path> inputPaths = FluentIterable.from(context.input)
-          .transform(SourcePaths.TO_PATH);
+          .transform(resolver.getPathFunction());
 
       context.cInput = inputPaths.filter(OCamlUtil.ext(OCamlCompilables.OCAML_C)).toSet();
       context.lexInput = inputPaths.filter(OCamlUtil.ext(OCamlCompilables.OCAML_MLL)).toSet();

@@ -49,12 +49,13 @@ public class ProjectConfig extends AbstractBuildRule {
 
   protected ProjectConfig(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       @Nullable BuildRule srcRule,
       @Nullable List<String> srcRoots,
       @Nullable BuildRule testRule,
       @Nullable List<String> testRoots,
       boolean isIntelliJPlugin) {
-    super(params);
+    super(params, resolver);
     Preconditions.checkArgument(srcRule != null || testRule != null,
         "At least one of src_target or test_target must be specified in %s.",
         params.getBuildTarget().getFullyQualifiedName());

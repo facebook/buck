@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Pair;
@@ -43,13 +44,20 @@ public class RuleUtils {
   private RuleUtils() {}
 
   private static void addSourcePathToBuilders(
+      SourcePathResolver resolver,
       SourcePath sourcePath,
       ImmutableList.Builder<GroupedSource> outputSources,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputHeaderPaths) {
-    if (SourcePaths.isSourcePathExtensionInSet(sourcePath, FileExtensions.CLANG_SOURCES)) {
+    if (SourcePaths.isSourcePathExtensionInSet(
+        resolver,
+        sourcePath,
+        FileExtensions.CLANG_SOURCES)) {
       outputSourcePaths.add(sourcePath);
-    } else if (SourcePaths.isSourcePathExtensionInSet(sourcePath, FileExtensions.CLANG_HEADERS)) {
+    } else if (SourcePaths.isSourcePathExtensionInSet(
+        resolver,
+        sourcePath,
+        FileExtensions.CLANG_HEADERS)) {
       outputHeaderPaths.add(sourcePath);
     }
     outputSources.add(GroupedSource.ofSourcePath(sourcePath));
@@ -70,6 +78,7 @@ public class RuleUtils {
    * @param items input list of sources
    */
   public static void extractSourcePaths(
+      SourcePathResolver resolver,
       ImmutableList.Builder<GroupedSource> outputSources,
       ImmutableMap.Builder<SourcePath, String> outputPerFileFlags,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
@@ -79,6 +88,7 @@ public class RuleUtils {
       switch (item.getType()) {
         case SOURCE_PATH:
           addSourcePathToBuilders(
+              resolver,
               item.getSourcePath(),
               outputSources,
               outputSourcePaths,
@@ -87,6 +97,7 @@ public class RuleUtils {
         case SOURCE_PATH_WITH_FLAGS:
           Pair<SourcePath, String> pair = item.getSourcePathWithFlags();
           addSourcePathToBuilders(
+              resolver,
               pair.getFirst(),
               outputSources,
               outputSourcePaths,
@@ -99,6 +110,7 @@ public class RuleUtils {
           ImmutableList<AppleSource> sourceGroupItems = sourceGroup.getSecond();
           ImmutableList.Builder<GroupedSource> nestedSourceGroups = ImmutableList.builder();
           extractSourcePaths(
+              resolver,
               nestedSourceGroups,
               outputPerFileFlags,
               outputSourcePaths,

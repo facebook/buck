@@ -33,22 +33,29 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
 
   private final ImmutableSet<Label> labels;
 
-  public FakeTestRule(BuildRuleType type,
-                       ImmutableSet<Label> labels,
-                       BuildTarget target,
-                       ImmutableSortedSet<BuildRule> deps,
-                       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
+  public FakeTestRule(
+      BuildRuleType type,
+      ImmutableSet<Label> labels,
+      BuildTarget target,
+      SourcePathResolver resolver,
+      ImmutableSortedSet<BuildRule> deps,
+      ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     this(
-        labels,
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(deps)
             .setVisibility(visibilityPatterns)
             .setType(type)
-            .build());
+            .build(),
+        resolver,
+        labels
+    );
   }
 
-  public FakeTestRule(ImmutableSet<Label> labels, BuildRuleParams buildRuleParams) {
-    super(buildRuleParams);
+  public FakeTestRule(
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
+      ImmutableSet<Label> labels) {
+    super(buildRuleParams, resolver);
     this.labels = labels;
   }
 

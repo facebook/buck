@@ -20,6 +20,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePathResolver;
 
 public class AppleBinaryDescription implements Description<AppleNativeTargetDescriptionArg> {
   public static final BuildRuleType TYPE = new BuildRuleType("apple_binary");
@@ -39,9 +40,11 @@ public class AppleBinaryDescription implements Description<AppleNativeTargetDesc
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     return new AppleBinary(
         params,
+        pathResolver,
         args,
-        TargetSources.ofAppleSources(args.srcs.get()));
+        TargetSources.ofAppleSources(pathResolver, args.srcs.get()));
   }
 }

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -68,13 +69,14 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule,
 
   public JavaBinary(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       @Nullable String mainClass,
       @Nullable SourcePath manifestFile,
       boolean mergeManifests,
       @Nullable Path metaInfDirectory,
       ImmutableSet<String> blacklist,
       DirectoryTraverser directoryTraverser) {
-    super(params);
+    super(params, resolver);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
@@ -143,7 +145,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule,
     }
 
     Path outputFile = getPathToOutputFile();
-    Path manifestPath = manifestFile == null ? null : manifestFile.resolve();
+    Path manifestPath = manifestFile == null ? null : getResolver().getPath(manifestFile);
     Step jar = new JarDirectoryStep(
         outputFile,
         includePaths,

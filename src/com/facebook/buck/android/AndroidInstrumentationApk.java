@@ -20,6 +20,7 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -43,11 +44,14 @@ public class AndroidInstrumentationApk extends AndroidBinary {
 
   AndroidInstrumentationApk(
       BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
       SourcePath manifest,
       AndroidBinary apkUnderTest,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult) {
-    super(buildRuleParams,
+    super(
+        buildRuleParams,
+        resolver,
         /* proguardJarOverride */ Optional.<Path>absent(),
         manifest,
         apkUnderTest.getTarget(),

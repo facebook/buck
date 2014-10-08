@@ -51,6 +51,7 @@ public class IosPostprocessResourcesDescription
     A args) {
     return new IosPostprocessResources(
       params,
+      resolver,
       /* srcs */ ImmutableList.<SourcePath>of(),
       args.cmd,
       /* bash */ Optional.<String>absent(),

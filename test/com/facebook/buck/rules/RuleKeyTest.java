@@ -154,7 +154,10 @@ public class RuleKeyTest {
   @Test
   public void ensureSetsAreHandledProperly() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target);
+    FakeBuildRule rule = new FakeBuildRule(
+        new BuildRuleType("example"),
+        target,
+        new SourcePathResolver(new BuildRuleResolver()));
     rule.setRuleKey(RuleKey.TO_RULE_KEY.apply("cafebabe"));
     rule.setOutputFile("cheese.txt");
 
@@ -241,9 +244,10 @@ public class RuleKeyTest {
 
   @Test
   public void setInputBuildRuleSourcePath() {
-    FakeBuildRule fake1 = new FakeBuildRule("//:fake1");
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    FakeBuildRule fake1 = new FakeBuildRule("//:fake1", pathResolver);
     fake1.setRuleKey(RuleKey.TO_RULE_KEY.apply("deadbeef"));
-    FakeBuildRule fake2 = new FakeBuildRule("//:fake2");
+    FakeBuildRule fake2 = new FakeBuildRule("//:fake2", pathResolver);
     fake2.setRuleKey(RuleKey.TO_RULE_KEY.apply("feeddeed"));
 
     // Verify that just changing the path of the build rule doesn't affect the rule key.

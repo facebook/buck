@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -67,6 +68,7 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
 
     return new ApkGenrule(
         params.copyWithExtraDeps(extraDeps),
+        new SourcePathResolver(resolver),
         srcs,
         args.cmd,
         args.bash,

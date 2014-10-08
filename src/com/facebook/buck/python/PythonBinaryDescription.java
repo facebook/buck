@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -85,6 +86,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         ImmutableSortedSet.<BuildRule>of());
     return new PythonBinary(
         binaryParams,
+        new SourcePathResolver(resolver),
         pathToPex,
         pythonEnvironment,
         mainModule,

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -42,10 +43,11 @@ public class CxxPythonExtension extends AbstractBuildRule implements PythonPacka
 
   public CxxPythonExtension(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       Path module,
       SourcePath output,
       CxxLink rule) {
-    super(params);
+    super(params, resolver);
     this.module = Preconditions.checkNotNull(module);
     this.output = Preconditions.checkNotNull(output);
     this.rule = Preconditions.checkNotNull(rule);

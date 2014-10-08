@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -44,9 +45,10 @@ public class PythonLibrary extends AbstractBuildRule implements PythonPackagable
 
   public PythonLibrary(
       BuildRuleParams params,
+      SourcePathResolver resolver,
       ImmutableMap<Path, SourcePath> srcs,
       ImmutableMap<Path, SourcePath> resources) {
-    super(params);
+    super(params, resolver);
     this.srcs = Preconditions.checkNotNull(srcs);
     this.resources = Preconditions.checkNotNull(resources);
   }

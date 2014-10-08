@@ -52,11 +52,11 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -168,7 +168,7 @@ public class DefaultJavaLibraryTest {
     assertNotNull("Expected a JavacInMemoryCommand in the command list.", step);
     JavacInMemoryStep javac = (JavacInMemoryStep) step;
     assertEquals("Should compile Main.java rather than generated R.java.",
-        ImmutableSet.of(new PathSourcePath(src)),
+        ImmutableSet.of(src),
         javac.getSrcs());
   }
 
@@ -358,7 +358,9 @@ public class DefaultJavaLibraryTest {
     // libraryOne responds like an ordinary prebuilt_jar with no dependencies. We have to use a
     // FakeJavaLibraryRule so that we can override the behavior of getAbiKey().
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    FakeJavaLibrary libraryOne = new FakeJavaLibrary(libraryOneTarget) {
+    FakeJavaLibrary libraryOne = new FakeJavaLibrary(
+        libraryOneTarget,
+        new SourcePathResolver(new BuildRuleResolver())) {
       @Override
       public Sha1HashCode getAbiKey() {
         return new Sha1HashCode(Strings.repeat("cafebabe", 5));
@@ -953,6 +955,7 @@ public class DefaultJavaLibraryTest {
 
     return new DefaultJavaLibrary(
         buildRuleParams,
+        new SourcePathResolver(new BuildRuleResolver()),
         srcsAsPaths,
         /* resources */ ImmutableSet.<SourcePath>of(),
         /* proguardConfig */ Optional.<Path>absent(),
@@ -1394,6 +1397,7 @@ public class DefaultJavaLibraryTest {
 
       return new AndroidLibrary(
           buildRuleParams,
+          new SourcePathResolver(new BuildRuleResolver()),
           ImmutableSet.of(new TestSourcePath(src)),
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<Path>absent(),
@@ -1424,7 +1428,7 @@ public class DefaultJavaLibraryTest {
     private final String abiKeyHash;
 
     public FakeJavaAbiRule(BuildRuleType type, BuildTarget buildTarget, String abiKeyHash) {
-      super(type, buildTarget);
+      super(type, buildTarget, new SourcePathResolver(new BuildRuleResolver()));
       this.abiKeyHash = abiKeyHash;
     }
 

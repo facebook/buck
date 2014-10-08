@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -68,6 +69,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
 
     return new JavaTest(
         params,
+        new SourcePathResolver(resolver),
         args.srcs.get(),
         JavaLibraryDescription.validateResources(
             args,
