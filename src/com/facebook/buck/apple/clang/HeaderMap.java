@@ -20,38 +20,45 @@ import static java.lang.Math.max;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
-import java.io.PrintStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
 /**
- * Add support for reading and generating clang header maps
- *
  * Header maps are essentially hash maps from strings to paths (coded as two strings: a prefix and
  * a suffix).
- *
- * No spec is available but we conform to the reader class here:
- *     http://clang.llvm.org/doxygen/HeaderMap_8h_source.html
- *
- * Note: currently we don't support offsets greater than MAX_SIGNED_INT
+ * <p>
+ * This class provides support for reading and generating clang header maps.
+ * No spec is available but we conform to the
+ * <a href="http://clang.llvm.org/doxygen/HeaderMap_8h_source.html">reader class defined in the
+ * Clang documentation</a>.
+ * <p>
+ * Note: currently we don't support offsets greater than MAX_SIGNED_INT.
  */
 public class HeaderMap {
 
-  // Hashtable buckets
-  // Note: This notion of bucket is slightly more abstract than the one on disk
-  // (string offsets being already swapped/shifted)
+  /**
+   * Bucket in the hashtable that is a {@link HeaderMap}.
+   * Note: This notion of bucket is slightly more abstract than the one on disk (string offsets
+   * being already swapped/shifted).
+   */
   private static class Bucket {
-    final int key;        // Offset of the key string into stringBytes.
-    final int prefix;     // Offset of the value prefix into stringBytes.
-    final int suffix;     // Offset of the value suffix into stringBytes.
+    /** Offset of the key string into stringBytes. */
+    final int key;
+
+    /** Offset of the value prefix into stringBytes. */
+    final int prefix;
+
+    /** Offset of the value suffix into stringBytes. */
+    final int suffix;
 
     Bucket(int key, int prefix, int suffix) {
       this.key = key;
@@ -62,23 +69,30 @@ public class HeaderMap {
 
   private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
-  private int numEntries;      // Number of entries in the string table.
-  private int numBuckets;      // Number of buckets (always a power of 2).
-  private int maxValueLength;  // Length of longest result path (excluding nul).
+  /** Number of entries in the string table. */
+  private int numEntries;
+
+  /** Number of buckets (always a power of 2). */
+  private int numBuckets;
+
+  /** Length of longest result path (excluding {@code null}). */
+  private int maxValueLength;
 
   // data containers
   private Bucket[] buckets;
   private byte[] stringBytes; // actually chars to make debugging easier
   private int stringBytesActualLength;
 
-  // map to help share strings
+  /** Map to help share strings. */
   private Map<String, Integer> addedStrings;
 
   private HeaderMap(int numBuckets, int stringBytesLength) {
-    Preconditions.checkState(numBuckets > 0, "The number of buckets must be greater than 0");
-    Preconditions.checkState(stringBytesLength > 0,
+    Preconditions.checkArgument(numBuckets > 0, "The number of buckets must be greater than 0");
+    Preconditions.checkArgument(
+        stringBytesLength > 0,
         "The size of the string array must be greater than 0");
-    Preconditions.checkState((numBuckets & (numBuckets - 1)) == 0,
+    Preconditions.checkArgument(
+        (numBuckets & (numBuckets - 1)) == 0,
         "The number of buckets must be a power of 2");
 
     this.numEntries = 0;
@@ -88,7 +102,7 @@ public class HeaderMap {
     this.buckets = new Bucket[numBuckets];
     this.stringBytes = new byte[stringBytesLength];
     this.stringBytesActualLength = 0;
-    this.addedStrings = new HashMap<String, Integer>();
+    this.addedStrings = Maps.newHashMap();
   }
 
   public int getNumEntries() {
@@ -121,33 +135,25 @@ public class HeaderMap {
 
   @Override
   public String toString() {
-    final StringBuffer buffer = new StringBuffer();
-
-    visit(new HeaderMapVisitor() {
-      @Override
-      public void apply(String str, String prefix, String suffix) {
-        buffer.append("\"");
-        buffer.append(str);
-        buffer.append("\" -> \"");
-        buffer.append(prefix);
-        buffer.append(suffix);
-        buffer.append("\"\n");
-      }
-    });
-
-    return buffer.toString();
+    StringBuilder builder = new StringBuilder();
+    print(builder);
+    return builder.toString();
   }
 
-  public void print(final PrintStream stream) {
+  public void print(final Appendable stream) {
     visit(new HeaderMapVisitor() {
       @Override
       public void apply(String str, String prefix, String suffix) {
-        stream.print("\"");
-        stream.print(str);
-        stream.print("\" -> \"");
-        stream.print(prefix);
-        stream.print(suffix);
-        stream.print("\"\n");
+        try {
+          stream.append("\"");
+          stream.append(str);
+          stream.append("\" -> \"");
+          stream.append(prefix);
+          stream.append(suffix);
+          stream.append("\"\n");
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
       }
     });
   }
@@ -362,8 +368,8 @@ public class HeaderMap {
   // ------------- Internals -----------
 
   private static int hashKey(String str) {
-    // ASCII lowercase is part of the format
-    // UTF8 is the standard filesystem charset
+    // ASCII lowercase is part of the format.
+    // UTF8 is the standard filesystem charset.
     return hashKey(Ascii.toLowerCase(str).getBytes(DEFAULT_CHARSET));
   }
 
@@ -378,7 +384,7 @@ public class HeaderMap {
   private enum AddResult {
     OK,
     FAILURE_FULL,
-    FAILURE_ALREADY_PRESENT
+    FAILURE_ALREADY_PRESENT,
   };
 
   @SuppressWarnings("PMD.UnusedPrivateMethod") // PMD has a bad heuristic here.
@@ -412,7 +418,7 @@ public class HeaderMap {
 
   @Nullable
   private String getString(int offset) {
-    Preconditions.checkState(offset >= 0 && offset <= stringBytesActualLength);
+    Preconditions.checkArgument(offset >= 0 && offset <= stringBytesActualLength);
 
     StringBuffer buffer = new StringBuffer();
     byte b = 0;
@@ -422,7 +428,7 @@ public class HeaderMap {
     }
 
     if (offset == stringBytesActualLength) {
-      // we reached the end of the array without finding a 0
+      // We reached the end of the array without finding a 0.
       return null;
     }
     return buffer.toString();
