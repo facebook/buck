@@ -16,12 +16,34 @@ java_test(
   ]
 )
 
+java_library(
+  name = 'testutil',
+  srcs = [
+    'ProjectGeneratorTestUtils.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/apple/xcode:xcode',
+    '//src/com/facebook/buck/apple:rules',
+    '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/parser:PartialGraphFactory',
+    '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//third-party/java/junit:junit',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)
+
 java_test(
   name = 'project_generator',
   srcs = [
     'Matchers.java',
     'ProjectGeneratorTest.java',
-    'ProjectGeneratorTestUtils.java',
     'ProjectParserTest.java',
     'SchemeGeneratorTest.java',
     'SeparatedProjectsGeneratorTest.java',
@@ -29,6 +51,7 @@ java_test(
   ],
   source_under_test = ['//src/com/facebook/buck/apple/xcode:project_generator'],
   deps = [
+    ':testutil',
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest-core',
@@ -56,7 +79,6 @@ java_test(
     '//src/com/facebook/buck/cli:config',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/model:BuildTargetFactory',
-    '//test/com/facebook/buck/parser:PartialGraphFactory',
     '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/shell:testutil',
     '//test/com/facebook/buck/step:testutil',

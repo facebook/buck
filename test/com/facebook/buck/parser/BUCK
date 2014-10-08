@@ -56,7 +56,7 @@ java_library(
   visibility = [
     '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/command:command',
-    '//test/com/facebook/buck/apple/xcode:project_generator',
+    '//test/com/facebook/buck/apple/xcode:testutil',
   ],
 )
 

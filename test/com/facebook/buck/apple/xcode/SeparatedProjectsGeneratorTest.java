@@ -19,6 +19,7 @@ package com.facebook.buck.apple.xcode;
 import static com.facebook.buck.apple.xcode.Matchers.isTargetWithName;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createAppleBundleBuildRule;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
 import static org.hamcrest.Matchers.hasItem;
@@ -33,8 +34,8 @@ import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
@@ -44,13 +45,10 @@ import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -239,23 +237,12 @@ public class SeparatedProjectsGeneratorTest {
         resolver);
     resolver.addToIndex(dynamicLibraryDep);
 
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bin").build())
-            .setDeps(ImmutableSortedSet.of(dynamicLibraryDep))
-            .setType(AppleBundleDescription.TYPE)
-            .build();
-
-    AppleBundleDescription.Arg arg =
-        appleBundleDescription.createUnpopulatedConstructorArg();
-    arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    arg.binary = dynamicLibraryDep.getBuildTarget();
-    arg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
-    arg.deps = Optional.absent();
-
-    BuildRule rule = appleBundleDescription.createBuildRule(
-        params,
+    BuildRule rule = createAppleBundleBuildRule(
+        BuildTarget.builder("//foo", "bin").build(),
         resolver,
-        arg);
+        appleBundleDescription,
+        dynamicLibraryDep,
+        AppleBundleExtension.FRAMEWORK);
     resolver.addToIndex(rule);
 
     BuildRule configRule = createXcodeProjectConfigRule(
@@ -519,23 +506,12 @@ public class SeparatedProjectsGeneratorTest {
         resolver);
     resolver.addToIndex(binaryDep);
 
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "binary").build())
-            .setDeps(ImmutableSortedSet.of(binaryDep))
-            .setType(AppleBundleDescription.TYPE)
-            .build();
-
-    AppleBundleDescription.Arg arg =
-        appleBundleDescription.createUnpopulatedConstructorArg();
-    arg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    arg.binary = binaryDep.getBuildTarget();
-    arg.extension = Either.ofLeft(AppleBundleExtension.APP);
-    arg.deps = Optional.absent();
-
-    BuildRule binaryRule = appleBundleDescription.createBuildRule(
-        params,
+    BuildRule binaryRule = createAppleBundleBuildRule(
+        BuildTarget.builder("//foo", "binary").build(),
         resolver,
-        arg);
+        appleBundleDescription,
+        binaryDep,
+        AppleBundleExtension.APP);
     resolver.addToIndex(binaryRule);
 
     BuildRule nativeRule = createBuildRuleWithDefaults(

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createAppleBundleBuildRule;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
@@ -89,23 +89,12 @@ public class AppleBuildRulesTest {
         appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg);
     resolver.addToIndex(libraryRule);
 
-    BuildRuleParams xctestParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "xctest").build())
-            .setDeps(ImmutableSortedSet.of(libraryRule))
-            .setType(AppleBundleDescription.TYPE)
-            .build();
-
-    AppleBundleDescription.Arg xctestArg =
-        appleBundleDescription.createUnpopulatedConstructorArg();
-    xctestArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    xctestArg.binary = libraryRule.getBuildTarget();
-    xctestArg.extension = Either.ofLeft(AppleBundleExtension.XCTEST);
-    xctestArg.deps = Optional.absent();
-
-    BuildRule xctestRule = appleBundleDescription.createBuildRule(
-        xctestParams,
+    BuildRule xctestRule = createAppleBundleBuildRule(
+        BuildTarget.builder("//foo", "xctest").build(),
         resolver,
-        xctestArg);
+        appleBundleDescription,
+        libraryRule,
+        AppleBundleExtension.XCTEST);
     resolver.addToIndex(xctestRule);
 
     BuildRuleParams params =
@@ -184,23 +173,12 @@ public class AppleBuildRulesTest {
         appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg);
     resolver.addToIndex(libraryRule);
 
-    BuildRuleParams bundleParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bundle").build())
-            .setDeps(ImmutableSortedSet.of(libraryRule))
-            .setType(AppleBundleDescription.TYPE)
-            .build();
-
-    AppleBundleDescription.Arg bundleArg =
-        appleBundleDescription.createUnpopulatedConstructorArg();
-    bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    bundleArg.binary = libraryRule.getBuildTarget();
-    bundleArg.extension = Either.ofLeft(AppleBundleExtension.BUNDLE);
-    bundleArg.deps = Optional.of(ImmutableSortedSet.of(libraryRule.getBuildTarget()));
-
-    BuildRule bundleRule = appleBundleDescription.createBuildRule(
-        bundleParams,
+    BuildRule bundleRule = createAppleBundleBuildRule(
+        BuildTarget.builder("//foo", "bundle").build(),
         resolver,
-        bundleArg);
+        appleBundleDescription,
+        libraryRule,
+        AppleBundleExtension.XCTEST);
     resolver.addToIndex(bundleRule);
 
     BuildRuleParams rootParams =
