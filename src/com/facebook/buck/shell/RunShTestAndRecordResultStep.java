@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -77,6 +78,11 @@ public class RunShTestAndRecordResultStep implements Step {
         protected ImmutableList<String> getShellCommandInternal(
             ExecutionContext context) {
           return ImmutableList.of(pathToShellScript.toString());
+        }
+
+        @Override
+        public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+          return ImmutableMap.of("NO_BUCKD", "1");
         }
 
         @Override

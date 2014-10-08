@@ -553,6 +553,21 @@ public class GenruleTest {
   }
 
   @Test
+  public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    Genrule genrule = (Genrule) GenruleBuilder.newGenruleBuilder(target)
+        .setBash("true")
+        .setOut("/dev/null")
+        .build(resolver);
+
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    genrule.addEnvironmentVariables(TestExecutionContext.newInstance(), builder);
+
+    assertEquals("1", builder.build().get("NO_BUCKD"));
+  }
+
+  @Test
   public void testGetShellCommand() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     String bash = "rm -rf /usr";

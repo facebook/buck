@@ -222,6 +222,9 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
       environmentVariablesBuilder.put("DX", android.getDxExecutable().toString());
       environmentVariablesBuilder.put("ZIPALIGN", android.getZipalignExecutable().toString());
     }
+
+    // TODO(user): This shouldn't be necessary. Speculatively disabling.
+    environmentVariablesBuilder.put("NO_BUCKD", "1");
   }
 
   private void transformNames(Set<BuildRule> processedBuildRules,
