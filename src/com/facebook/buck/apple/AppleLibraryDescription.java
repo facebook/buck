@@ -25,13 +25,28 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
+
+import java.util.Set;
 
 public class AppleLibraryDescription implements
     Description<AppleNativeTargetDescriptionArg>, Flavored {
   public static final BuildRuleType TYPE = new BuildRuleType("apple_library");
 
   public static final Flavor DYNAMIC_LIBRARY = new Flavor("dynamic");
+
+  private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+      Flavor.DEFAULT,
+      DYNAMIC_LIBRARY);
+
+  private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
+    @Override
+    public boolean apply(Flavor flavor) {
+      return SUPPORTED_FLAVORS.contains(flavor);
+    }
+  };
 
   private final CxxPlatform cxxPlatform;
 
@@ -51,11 +66,7 @@ public class AppleLibraryDescription implements
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    boolean match = true;
-    for (Flavor flavor : flavors) {
-      match &= DYNAMIC_LIBRARY.equals(flavor) || Flavor.DEFAULT.equals(flavor);
-    }
-    return match;
+    return FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR);
   }
 
   @Override
