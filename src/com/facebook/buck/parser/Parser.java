@@ -446,8 +446,12 @@ public class Parser {
                 }
                 depTargetNode.checkVisibility(buildTarget);
                 deps.add(buildTargetForDep);
-              } catch (BuildTargetException | BuildFileParseException e) {
-                throw new HumanReadableException(e);
+              } catch (HumanReadableException | BuildTargetException | BuildFileParseException e) {
+                throw new HumanReadableException(
+                    e,
+                    "Couldn't get dependency %s of target %s.",
+                    buildTargetForDep,
+                    buildTarget);
               }
             }
 
@@ -555,6 +559,7 @@ public class Parser {
   @VisibleForTesting
   synchronized void parseRawRulesInternal(Iterable<Map<String, Object>> rules)
       throws BuildTargetException, IOException {
+    LOG.verbose("Parsing raw rules, state before parse %s", state);
     for (Map<String, Object> map : rules) {
 
       if (isMetaRule(map)) {
@@ -573,6 +578,7 @@ public class Parser {
 
       state.put(target, map);
     }
+    LOG.verbose("Finished parsing raw rules, state after parse %s", state);
   }
 
   /**
@@ -717,6 +723,8 @@ public class Parser {
         }
       }
 
+      LOG.verbose("Invalidating dependents for path %s, cache state %s", path, state);
+
       // Invalidate the raw rules and targets dependent on this file.
       state.invalidateDependents(path);
 
@@ -858,9 +866,20 @@ public class Parser {
     }
 
     public void invalidateAll() {
+      LOG.debug("Invalidating all cached data.");
       parsedBuildFiles.clear();
       memoizedTargetNodes.clear();
       targetsToFile.clear();
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "%s memoized=%s parsed=%s targets-to-files=%s",
+          super.toString(),
+          memoizedTargetNodes,
+          parsedBuildFiles,
+          targetsToFile);
     }
 
     /**
@@ -910,20 +929,27 @@ public class Parser {
       path = normalize(path);
 
       if (parsedBuildFiles.containsKey(path)) {
-        LOG.debug("Parser invalidating %s cache", path.toAbsolutePath());
+        LOG.debug("Parser invalidating %s cache", path);
 
         // Remove all targets defined by path from cache.
         for (Map<String, Object> rawRule : parsedBuildFiles.get(path)) {
           BuildTarget target = parseBuildTargetFromRawRule(rawRule);
+          LOG.verbose("Removing target %s defined by %s", target, path);
           memoizedTargetNodes.remove(target);
         }
 
         // Remove all rules defined in path from cache.
-        parsedBuildFiles.removeAll(path);
+        List<?> removed = parsedBuildFiles.removeAll(path);
+        LOG.verbose("Removed parsed build files %s defined by %s", removed, path);
+      } else {
+        LOG.debug("Parsed build files does not contain %s, not invalidating", path);
       }
 
+
+      List<Path> dependents = buildFileDependents.get(path);
+      LOG.verbose("Invalidating dependents %s of path %s", dependents, path);
       // Recursively invalidate dependents.
-      for (Path dependent : buildFileDependents.get(path)) {
+      for (Path dependent : dependents) {
 
         if (!dependent.equals(path)) {
           invalidateDependents(dependent);
@@ -931,7 +957,8 @@ public class Parser {
       }
 
       // Dependencies will be repopulated when files are re-parsed.
-      buildFileDependents.removeAll(path);
+      List<?> removedDependents = buildFileDependents.removeAll(path);
+      LOG.verbose("Removed build file dependents %s defined by %s", removedDependents, path);
     }
 
     public boolean isParsed(Path buildFile) {
@@ -943,7 +970,9 @@ public class Parser {
     }
 
     public void put(BuildTarget target, Map<String, Object> rawRules) {
-      parsedBuildFiles.put(normalize(target.getBuildFilePath()), rawRules);
+      Path normalized = normalize(target.getBuildFilePath());
+      LOG.verbose("Adding rules for parsed build file %s", normalized);
+      parsedBuildFiles.put(normalized, rawRules);
 
       targetsToFile.put(
           target,

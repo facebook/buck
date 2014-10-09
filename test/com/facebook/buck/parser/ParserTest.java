@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
+import org.junit.rules.ExpectedException;
 
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -98,6 +99,8 @@ public class ParserTest extends EasyMockSupport {
 
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
   private ImmutableSet<Pattern> tempFilePatterns = ImmutableSet.of(Pattern.compile(".*\\.swp$"));
 
   @Before
@@ -295,6 +298,12 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void testInvalidDepFromValidFile()
       throws IOException, BuildFileParseException, BuildTargetException, InterruptedException {
+    // Ensure an exception with a specific message is thrown.
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Couldn't get dependency //java/com/facebook/invalid/lib:missing_rule of target " +
+        "//java/com/facebook/invalid:foo.");
+
     // Execute buildTargetGraph() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "invalid");
 
@@ -314,22 +323,12 @@ public class ParserTest extends EasyMockSupport {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
-    try {
-      testParser.buildTargetGraph(
-          buildTargets,
-          defaultIncludes,
-          BuckEventBusFactory.newInstance(),
-          new TestConsole(),
-          ImmutableMap.<String, String>of());
-      fail("HumanReadableException should be thrown");
-    } catch (HumanReadableException e) {
-      assertEquals(
-          "No rule found when resolving target " +
-              "//java/com/facebook/invalid/lib:missing_rule in build file " +
-              "//java/com/facebook/invalid/lib/BUCK",
-          e.getHumanReadableErrorMessage()
-      );
-    }
+  testParser.buildTargetGraph(
+      buildTargets,
+      defaultIncludes,
+      BuckEventBusFactory.newInstance(),
+      new TestConsole(),
+      ImmutableMap.<String, String>of());
   }
 
   @Test

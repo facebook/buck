@@ -17,8 +17,8 @@
 package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import org.junit.rules.ExpectedException;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -33,6 +33,8 @@ import java.io.IOException;
 public class ParserIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testParserFilesAreSandboxed() throws IOException {
@@ -53,25 +55,17 @@ public class ParserIntegrationTest {
    */
   @Test
   public void testParseRuleWithBadDependency() throws IOException {
+    // Ensure an exception with a specific message is thrown.
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("Couldn't get dependency //:bad-dep of target //:base.");
+
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "parse_rule_with_bad_dependency",
         temporaryFolder);
     workspace.setUp();
 
-    try {
-      workspace.runBuckCommand("build", "//:base");
-    } catch (HumanReadableException e) {
-      assertTrue(
-          e.getHumanReadableErrorMessage(),
-          e.getHumanReadableErrorMessage().matches(
-              "The build file that should contain //:bad-dep has already been parsed \\(" +
-                  ".*\\), but //:bad-dep was not found. " +
-                  "Please make sure that //:bad-dep is defined in " +
-                  ".*\\."));
-      return;
-    }
-    fail("An exception should have been thrown because of a bad dependency.");
+    workspace.runBuckCommand("build", "//:base");
   }
 
   /**
