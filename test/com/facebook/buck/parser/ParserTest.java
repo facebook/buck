@@ -1141,6 +1141,65 @@ public class ParserTest extends EasyMockSupport {
     }
   }
 
+  @Test
+  public void whenBuildFilePathChangedThenFlavorsOfTargetsInPathAreInvalidated() throws Exception {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("foo");
+    tempDir.newFolder("bar");
+
+    File testFooBuckFile = tempDir.newFile(
+        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'foo', visibility=['PUBLIC'])\n",
+        testFooBuckFile,
+        Charsets.UTF_8);
+
+    File testBarBuckFile = tempDir.newFile(
+        "bar/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+            "java_library(name = 'bar',\n" +
+            "  deps = ['//foo:foo'])\n",
+        testBarBuckFile,
+        Charsets.UTF_8);
+
+    // Fetch //bar:bar#src to put it in cache.
+    BuildTarget barTarget = BuildTarget.builder("//bar", "bar").setFlavor("src").build();
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
+    Iterable<String> defaultIncludes = ImmutableList.of();
+
+    parser.buildTargetGraph(
+        buildTargets,
+        defaultIncludes,
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        ImmutableMap.<String, String>of());
+
+    // Rewrite //bar:bar so it doesn't depend on //foo:foo any more.
+    // Delete foo/BUCK and invalidate the cache, which should invalidate
+    // the cache entry for //bar:bar#src.
+    testFooBuckFile.delete();
+    Files.write(
+            "java_library(name = 'bar')\n",
+        testBarBuckFile,
+        Charsets.UTF_8);
+    WatchEvent<Path> deleteEvent = createPathEvent(
+        Paths.get("foo").resolve(BuckConstant.BUILD_RULES_FILE_NAME),
+        StandardWatchEventKinds.ENTRY_DELETE);
+    parser.onFileSystemChange(deleteEvent);
+    WatchEvent<Path> modifyEvent = createPathEvent(
+        Paths.get("bar").resolve(BuckConstant.BUILD_RULES_FILE_NAME),
+        StandardWatchEventKinds.ENTRY_MODIFY);
+    parser.onFileSystemChange(modifyEvent);
+
+    parser.buildTargetGraph(
+        buildTargets,
+        defaultIncludes,
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        ImmutableMap.<String, String>of());
+  }
+
   private Iterable<Map<String, Object>> emptyBuildTargets() {
     return Sets.newHashSet();
   }
