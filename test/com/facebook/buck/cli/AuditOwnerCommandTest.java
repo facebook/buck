@@ -112,6 +112,7 @@ public class AuditOwnerCommandTest {
         ImmutableSet.<BuildTargetPattern>of());
   }
 
+  // TODO(natthu): Use the testutil FakeProjectFilesystem instead.
   private static class FakeProjectFilesystem extends ProjectFilesystem {
     public FakeProjectFilesystem() {
       super(new File("."));
@@ -294,6 +295,36 @@ public class AuditOwnerCommandTest {
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
     assertEquals(inputPaths, report.inputsWithNoOwners);
+  }
+
+  @Test
+  public void verifyInputsAgainstRulesThatListDirectoryInputs()
+      throws IOException, InterruptedException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
+      @Override
+      public File getFileForRelativePath(String pathRelativeToProjectRoot) {
+        return new ExistingFile(getRootPath(), pathRelativeToProjectRoot);
+      }
+    };
+
+    // Inputs that should be treated as existing files
+    ImmutableSet<String> inputs = ImmutableSet.of(
+        "java/somefolder/badfolder/somefile.java",
+        "java/somefolder/perfect.java");
+    ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
+
+    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    TargetNode<?> targetNode = createTargetNode(
+        target,
+        ImmutableSet.of(Paths.get("java/somefolder")));
+
+    AuditOwnerCommand command = createAuditOwnerCommand(filesystem);
+    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(targetNode, inputs, false);
+    assertTrue(report.owners.containsKey(targetNode));
+    assertEquals(inputPaths, report.owners.get(targetNode));
+    assertTrue(report.nonFileInputs.isEmpty());
+    assertTrue(report.nonExistentInputs.isEmpty());
+    assertTrue(report.inputsWithNoOwners.isEmpty());
   }
 
   /**
