@@ -22,6 +22,7 @@ import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule;
+import com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule.HeaderMapType;
 import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinary;
@@ -198,10 +199,6 @@ public class ProjectGenerator {
       System.getProperty(
           "buck.path_override_for_asset_catalog_build_phase",
           null);
-
-  private static final String PUBLIC_HEADER_MAP_SUFFIX = "-public-headers.hmap";
-  private static final String TARGET_HEADER_MAP_SUFFIX = "-target-headers.hmap";
-  private static final String TARGET_USER_HEADER_MAP_SUFFIX = "-target-user-headers.hmap";
 
   private static final FileAttribute<?> READ_ONLY_FILE_ATTRIBUTE =
     PosixFilePermissions.asFileAttribute(
@@ -387,13 +384,13 @@ public class ProjectGenerator {
     Optional<PBXTarget> result;
     Optional<AbstractAppleNativeTargetBuildRule> nativeTargetRule;
     if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
-      AppleLibrary library = (AppleLibrary) rule;
-      result = Optional.<PBXTarget>of(generateAppleLibraryTarget(project, rule, library));
-      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(library);
+      AppleLibrary appleLibrary = (AppleLibrary) rule;
+      result = Optional.<PBXTarget>of(generateAppleLibraryTarget(project, appleLibrary));
+      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(appleLibrary);
     } else if (rule.getType().equals(AppleBinaryDescription.TYPE)) {
-      AppleBinary binary = (AppleBinary) rule;
-      result = Optional.<PBXTarget>of(generateAppleBinaryTarget(project, rule, binary));
-      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(binary);
+      AppleBinary appleBinary = (AppleBinary) rule;
+      result = Optional.<PBXTarget>of(generateAppleBinaryTarget(project, appleBinary));
+      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(appleBinary);
     } else if (rule.getType().equals(AppleBundleDescription.TYPE)) {
       AppleBundle bundle = (AppleBundle) rule;
       result = Optional.<PBXTarget>of(generateAppleBundleTarget(project, bundle));
@@ -468,15 +465,12 @@ public class ProjectGenerator {
     return target;
   }
 
-  private PBXNativeTarget generateAppleBinaryTarget(
-      PBXProject project,
-      BuildRule rule,
-      AppleBinary buildable)
+  private PBXNativeTarget generateAppleBinaryTarget(PBXProject project, AppleBinary appleBinary)
       throws IOException {
     PBXNativeTarget target = generateBinaryTarget(
         project,
-        rule,
-        buildable,
+        appleBinary,
+        appleBinary,
         PBXTarget.ProductType.TOOL,
         "%s",
         Optional.<Path>absent(),
@@ -490,19 +484,18 @@ public class ProjectGenerator {
 
   private PBXNativeTarget generateAppleLibraryTarget(
       PBXProject project,
-      BuildRule rule,
-      AppleLibrary buildable)
+      AppleLibrary appleLibrary)
       throws IOException {
-    PBXTarget.ProductType productType = buildable.getLinkedDynamically() ?
+    PBXTarget.ProductType productType = appleLibrary.getLinkedDynamically() ?
         PBXTarget.ProductType.DYNAMIC_LIBRARY : PBXTarget.ProductType.STATIC_LIBRARY;
     PBXNativeTarget target = generateBinaryTarget(
         project,
-        rule,
-        buildable,
+        appleLibrary,
+        appleLibrary,
         productType,
-        AppleLibrary.getOutputFileNameFormat(buildable.getLinkedDynamically()),
+        AppleLibrary.getOutputFileNameFormat(appleLibrary.getLinkedDynamically()),
         Optional.<Path>absent(),
-        /* includeFrameworks */ buildable.getLinkedDynamically(),
+        /* includeFrameworks */ appleLibrary.getLinkedDynamically(),
         ImmutableList.<AppleResource>of(),
         ImmutableList.<AppleAssetCatalog>of());
     project.getTargets().add(target);
@@ -510,12 +503,15 @@ public class ProjectGenerator {
     return target;
   }
 
-  private void writeHeaderMap(HeaderMap headerMap, BuildTarget target, String suffix)
+  private void writeHeaderMap(
+      HeaderMap headerMap,
+      AbstractAppleNativeTargetBuildRule buildRule,
+      HeaderMapType headerMapType)
       throws IOException {
     if (headerMap.getNumEntries() == 0) {
       return;
     }
-    Path headerMapFile = getHeaderMapPathForTarget(target, suffix);
+    Path headerMapFile = buildRule.getPathToHeaderMap(headerMapType).get();
     headerMaps.add(headerMapFile);
     projectFilesystem.mkdirs(headerMapFile.getParent());
     if (shouldGenerateReadOnlyFiles()) {
@@ -542,7 +538,7 @@ public class ProjectGenerator {
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       BuildRule rule,
-      AbstractAppleNativeTargetBuildRule buildable,
+      AbstractAppleNativeTargetBuildRule appleBuildRule,
       PBXTarget.ProductType productType,
       String productOutputFormat,
       Optional<Path> infoPlistOptional,
@@ -551,7 +547,7 @@ public class ProjectGenerator {
       Iterable<AppleAssetCatalog> assetCatalogs)
       throws IOException {
     PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule), productType);
-    setNativeTargetGid(target, buildable);
+    setNativeTargetGid(target, appleBuildRule);
 
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
@@ -561,7 +557,7 @@ public class ProjectGenerator {
       Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(infoPlistOptional.get());
       extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
     }
-    if (buildable.getUseBuckHeaderMaps()) {
+    if (appleBuildRule.getUseBuckHeaderMaps()) {
       extraSettingsBuilder.put("USE_HEADERMAP", "NO");
     }
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
@@ -570,7 +566,7 @@ public class ProjectGenerator {
       defaultSettingsBuilder.put("WRAPPER_EXTENSION", bundle.getExtensionString());
     }
     defaultSettingsBuilder.put("PUBLIC_HEADERS_FOLDER_PATH",
-        getHeaderOutputPathForRule(buildable.getHeaderPathPrefix()));
+        getHeaderOutputPathForRule(appleBuildRule.getHeaderPathPrefix()));
     if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
       defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", getObjectOutputPathForRule(rule));
     }
@@ -578,7 +574,7 @@ public class ProjectGenerator {
         rule,
         target,
         targetGroup,
-        buildable.getConfigurations(),
+        appleBuildRule.getConfigurations(),
         extraSettingsBuilder.build(),
         defaultSettingsBuilder.build(),
         ImmutableMap.<String, String>of());
@@ -587,20 +583,20 @@ public class ProjectGenerator {
     // TODO(Task #3772930): Go through all dependencies of the rule
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
-    if (rule != buildable) {
-      addRunScriptBuildPhasesForDependencies(buildable, target);
+    if (rule != appleBuildRule) {
+      addRunScriptBuildPhasesForDependencies(appleBuildRule, target);
     }
     addBuildPhasesGroupsAndHeaderMapsForSourcesAndHeaders(
-        rule.getBuildTarget(),
+        appleBuildRule,
         target,
         targetGroup,
-        buildable.getHeaderPathPrefix(),
-        buildable.getUseBuckHeaderMaps(),
-        buildable.getSrcs(),
-        buildable.getPerFileFlags());
+        appleBuildRule.getHeaderPathPrefix(),
+        appleBuildRule.getUseBuckHeaderMaps(),
+        appleBuildRule.getSrcs(),
+        appleBuildRule.getPerFileFlags());
     if (includeFrameworks) {
       ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
-      frameworksBuilder.addAll(buildable.getFrameworks());
+      frameworksBuilder.addAll(appleBuildRule.getFrameworks());
       collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
       addFrameworksBuildPhase(
           rule.getBuildTarget(),
@@ -879,7 +875,7 @@ public class ProjectGenerator {
    * @param sourceFlags    Source path to flag mapping.
    */
   private void addBuildPhasesGroupsAndHeaderMapsForSourcesAndHeaders(
-      BuildTarget buildTarget,
+      AbstractAppleNativeTargetBuildRule buildRule,
       PBXNativeTarget target,
       PBXGroup targetGroup,
       Optional<String> headerPathPrefix,
@@ -918,12 +914,12 @@ public class ProjectGenerator {
           publicMapBuilder,
           targetMapBuilder,
           targetUserMapBuilder,
-          Paths.get(headerPathPrefix.or(getProductName(buildTarget))),
+          Paths.get(headerPathPrefix.or(getProductName(buildRule.getBuildTarget()))),
           groupedSources,
           sourceFlags);
-      writeHeaderMap(publicMapBuilder.build(), buildTarget, PUBLIC_HEADER_MAP_SUFFIX);
-      writeHeaderMap(targetMapBuilder.build(), buildTarget, TARGET_HEADER_MAP_SUFFIX);
-      writeHeaderMap(targetUserMapBuilder.build(), buildTarget, TARGET_USER_HEADER_MAP_SUFFIX);
+      writeHeaderMap(publicMapBuilder.build(), buildRule, HeaderMapType.PUBLIC_HEADER_MAP);
+      writeHeaderMap(targetMapBuilder.build(), buildRule, HeaderMapType.TARGET_HEADER_MAP);
+      writeHeaderMap(targetUserMapBuilder.build(), buildRule, HeaderMapType.TARGET_USER_HEADER_MAP);
     }
 
   }
@@ -1650,15 +1646,15 @@ public class ProjectGenerator {
         headerPathPrefix.or("$TARGET_NAME"));
   }
 
-  private Path getHeaderMapPathForTarget(BuildTarget target, String suffix) {
-    Path targetPath = target.getBasePath();
-    String fileName = getProductName(target) + suffix;
-    return BuckConstant.BUCK_OUTPUT_PATH.resolve(targetPath).resolve(fileName);
-  }
-
-  private String getHeaderMapRelativePathForRule(BuildRule rule, String suffix) {
-    Path filePath = getHeaderMapPathForTarget(rule.getBuildTarget(), suffix);
-    return repoRootRelativeToOutputDirectory.resolve(filePath).toString();
+  /**
+   * @param appleRule Must have a header map or an exception will be thrown.
+   */
+  private String getHeaderMapRelativePathForRule(
+      AbstractAppleNativeTargetBuildRule appleRule,
+      HeaderMapType headerMapType) {
+    Optional<Path> filePath = appleRule.getPathToHeaderMap(headerMapType);
+    Preconditions.checkState(filePath.isPresent(), "%s does not have a header map.", appleRule);
+    return repoRootRelativeToOutputDirectory.resolve(filePath.get()).toString();
   }
 
   private String getHeaderSearchPathForRule(BuildRule rule) {
@@ -1728,7 +1724,8 @@ public class ProjectGenerator {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (hasBuckHeaderMaps(rule)) {
-      builder.add(getHeaderMapRelativePathForRule(rule, TARGET_HEADER_MAP_SUFFIX));
+      AbstractAppleNativeTargetBuildRule appleRule = (AbstractAppleNativeTargetBuildRule) rule;
+      builder.add(getHeaderMapRelativePathForRule(appleRule, HeaderMapType.TARGET_HEADER_MAP));
     }
 
     for (BuildRule input :
@@ -1737,7 +1734,8 @@ public class ProjectGenerator {
             rule,
             AppleLibraryDescription.TYPE)) {
       if (hasBuckHeaderMaps(input)) {
-        builder.add(getHeaderMapRelativePathForRule(input, PUBLIC_HEADER_MAP_SUFFIX));
+        AbstractAppleNativeTargetBuildRule appleRule = (AbstractAppleNativeTargetBuildRule) input;
+        builder.add(getHeaderMapRelativePathForRule(appleRule, HeaderMapType.PUBLIC_HEADER_MAP));
       }
     }
 
@@ -1746,8 +1744,10 @@ public class ProjectGenerator {
 
   private ImmutableSet<String> collectUserHeaderMaps(BuildRule rule) {
     if (hasBuckHeaderMaps(rule)) {
-      return ImmutableSet.of(getHeaderMapRelativePathForRule(rule,
-          TARGET_USER_HEADER_MAP_SUFFIX));
+      AbstractAppleNativeTargetBuildRule appleRule = (AbstractAppleNativeTargetBuildRule) rule;
+      return ImmutableSet.of(getHeaderMapRelativePathForRule(
+          appleRule,
+          HeaderMapType.TARGET_USER_HEADER_MAP));
     } else {
       return ImmutableSet.of();
     }

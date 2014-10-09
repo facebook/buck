@@ -459,15 +459,15 @@ public class ProjectGeneratorTest {
     List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
     assertThat(headerMaps, hasSize(3));
 
-    assertEquals("buck-out/foo/lib-public-headers.hmap", headerMaps.get(0).toString());
+    assertEquals("buck-out/gen/foo/lib-public-headers.hmap", headerMaps.get(0).toString());
     assertThatHeaderMapFileContains(
-        "buck-out/foo/lib-public-headers.hmap",
+        "buck-out/gen/foo/lib-public-headers.hmap",
         ImmutableMap.<String, String>of("lib/bar.h", "bar.h")
     );
 
-    assertEquals("buck-out/foo/lib-target-headers.hmap", headerMaps.get(1).toString());
+    assertEquals("buck-out/gen/foo/lib-target-headers.hmap", headerMaps.get(1).toString());
     assertThatHeaderMapFileContains(
-        "buck-out/foo/lib-target-headers.hmap",
+        "buck-out/gen/foo/lib-target-headers.hmap",
         ImmutableMap.<String, String>of(
             "lib/foo.h", "foo.h",
             "lib/bar.h", "bar.h",
@@ -475,9 +475,9 @@ public class ProjectGeneratorTest {
             )
     );
 
-    assertEquals("buck-out/foo/lib-target-user-headers.hmap", headerMaps.get(2).toString());
+    assertEquals("buck-out/gen/foo/lib-target-user-headers.hmap", headerMaps.get(2).toString());
     assertThatHeaderMapFileContains(
-        "buck-out/foo/lib-target-user-headers.hmap",
+        "buck-out/gen/foo/lib-target-user-headers.hmap",
         ImmutableMap.<String, String>of(
             "foo.h", "foo.h",
             "bar.h", "bar.h",

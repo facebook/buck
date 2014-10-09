@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.AbstractNativeBuildRule;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -26,10 +27,26 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 /**
  * A build rule that has configuration ready for Xcode-like build systems.
  */
 public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeBuildRule {
+
+  public static enum HeaderMapType {
+    PUBLIC_HEADER_MAP("-public-headers.hmap"),
+    TARGET_HEADER_MAP("-target-headers.hmap"),
+    TARGET_USER_HEADER_MAP("-target-user-headers.hmap"),
+    ;
+
+    private final String suffix;
+
+    private HeaderMapType(String suffix) {
+      this.suffix = suffix;
+    }
+  }
+
 
   private final ImmutableMap<String, XcodeRuleConfiguration> configurations;
   private final ImmutableList<GroupedSource> srcs;
@@ -103,6 +120,14 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
    * @return A boolean whether Buck should generate header maps for this project.
    */
   public boolean getUseBuckHeaderMaps() { return useBuckHeaderMaps; }
+
+  public Optional<Path> getPathToHeaderMap(HeaderMapType headerMapType) {
+    if (!getUseBuckHeaderMaps()) {
+      return Optional.absent();
+    }
+
+    return Optional.of(BuildTargets.getGenPath(getBuildTarget(), "%s" + headerMapType.suffix));
+  }
 
   @Override
   protected String getCompiler() {
