@@ -171,13 +171,6 @@ void handleError () {
 #endif
 
 /**
- * Exits the client if the nailgun server ungracefully shut down the connection.
- */
-void handleSocketClose() {
-  cleanUpAndExit(NAILGUN_CONNECTION_BROKEN);
-}
-
-/**
  * Writes everything in the specified buffer to the specified
  * socket handle.
  *
@@ -216,7 +209,6 @@ int sendAll(SOCKET s, char *buf, int len) {
 void sendChunk(unsigned int size, char chunkType, char* buf) {
   /* buffer used for reading and writing chunk headers */
   char header[CHUNK_HEADER_LEN];
-  int bytesSent;
 
   header[0] = (size >> 24) & 0xff;
   header[1] = (size >> 16) & 0xff;
@@ -232,13 +224,9 @@ void sendChunk(unsigned int size, char chunkType, char* buf) {
   gettimeofday(&sendtime, NULL);
 #endif
 
-  bytesSent = sendAll(nailgunsocket, header, CHUNK_HEADER_LEN);
-  if (bytesSent != 0 && size > 0) {
-	  bytesSent = sendAll(nailgunsocket, buf, size);
-  }
-  if (bytesSent == 0) {
-    perror("send");
-    handleSocketClose();
+  sendAll(nailgunsocket, header, CHUNK_HEADER_LEN);
+  if (size > 0) {
+	  sendAll(nailgunsocket, buf, size);
   }
 
 #ifdef WIN32
@@ -289,6 +277,13 @@ void sendText(char chunkType, char *text) {
 }
 
 /**
+ * Exits the client if the nailgun server ungracefully shut down the connection.
+ */
+void handleSocketClose() {
+  cleanUpAndExit(NAILGUN_CONNECTION_BROKEN);
+}
+
+/**
  * Receives len bytes from the nailgun socket and copies them to the specified file descriptor.
  * Used to route data to stdout or stderr on the client.
  *
@@ -305,10 +300,9 @@ void recvToFD(HANDLE destFD, char *buf, unsigned long len) {
     int thisPass = 0;
 
     thisPass = recv(nailgunsocket, buf, bytesToRead, MSG_WAITALL);
-    if (thisPass == 0 || thisPass == -1) {
-      perror("recv");
-      handleSocketClose();
-    }
+	if (thisPass == 0) {
+	  handleSocketClose();
+	}
     bytesRead += thisPass;
 
     bytesCopied = 0;
@@ -326,12 +320,7 @@ void recvToFD(HANDLE destFD, char *buf, unsigned long len) {
 
         bytesCopied += thisWrite;
       #else
-        int bytesWritten = write(destFD, buf + bytesCopied, thisPass - bytesCopied);
-        if (bytesWritten == -1) {
-          perror("write");
-          handleSocketClose();
-        }
-        bytesCopied += bytesWritten;
+        bytesCopied += write(destFD, buf + bytesCopied, thisPass - bytesCopied);
       #endif
     }
   }
@@ -341,11 +330,10 @@ unsigned long recvToBuffer(unsigned long len) {
   unsigned long bytesRead = 0;
   while(bytesRead < len) {
     int thisPass = recv(nailgunsocket, buf + bytesRead, len - bytesRead, MSG_WAITALL);
-    if (thisPass == 0 || thisPass == -1) {
-        perror("recv");
-        handleSocketClose();
-    }
-    bytesRead += thisPass;
+	if (thisPass == 0) {
+      handleSocketClose();
+	}
+	bytesRead += thisPass;
   }
   return bytesRead;
 }
@@ -760,11 +748,7 @@ int main(int argc, char *argv[], char *env[]) {
   for(i = firstArgIndex; i < argc; ++i) {
     if (argv[i] != NULL) {
       if (!strcmp("--nailgun-filearg", argv[i])) {
-        int sendResult = sendFileArg(argv[++i]);
-        if (sendResult != 0) {
-          perror("send");
-          handleSocketClose();
-        }
+        sendFileArg(argv[++i]);
       } else sendText(CHUNKTYPE_ARG, argv[i]);
     }
   }
@@ -815,15 +799,10 @@ int main(int argc, char *argv[], char *env[]) {
 	processnailgunstream();
     #ifndef WIN32
       } else if (FD_ISSET(NG_STDIN_FILENO, &readfds)) {
-        int result = processStdin();
-        if (result == -1) {
-          perror("read");
-          handleSocketClose();
-        }
-        if (result == 0) {
-          FD_CLR(NG_STDIN_FILENO, &readfds);
-          eof = 1;
-        }
+	if (!processStdin()) {
+	  FD_CLR(NG_STDIN_FILENO, &readfds);
+	  eof = 1;
+	}
       }
       gettimeofday(&currenttime, NULL);
       if (intervalMillis(currenttime, sendtime) > HEARTBEAT_TIMEOUT_MILLIS) {
