@@ -143,6 +143,7 @@ public class CxxCompilableEnhancer {
         compileParams,
         new SourcePathResolver(resolver),
         cxx ? platform.getCxx() : platform.getCc(),
+        Optional.<CxxCompile.Plugin>absent(),
         ImmutableList.<String>builder()
             .add("-x", cxx ? "c++" : "c")
             .addAll((pic ? Optional.of("-fPIC") : Optional.<String>absent()).asSet())

@@ -25,6 +25,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -35,10 +36,12 @@ import java.nio.file.Path;
 
 /**
  * A build rule which preprocesses, compiles, and assembles a C/C++ source.
+ * It supports the execution of one plugin during the compilation.
  */
 public class CxxCompile extends AbstractBuildRule {
 
   private final SourcePath compiler;
+  private final Optional<Plugin> plugin;
   private final ImmutableList<String> flags;
   private final Path output;
   private final SourcePath input;
@@ -50,6 +53,7 @@ public class CxxCompile extends AbstractBuildRule {
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath compiler,
+      Optional<Plugin> plugin,
       ImmutableList<String> flags,
       Path output,
       SourcePath input,
@@ -59,6 +63,7 @@ public class CxxCompile extends AbstractBuildRule {
     super(params, resolver);
     this.compiler = Preconditions.checkNotNull(compiler);
     this.flags = Preconditions.checkNotNull(flags);
+    this.plugin = Preconditions.checkNotNull(plugin);
     this.output = Preconditions.checkNotNull(output);
     this.input = Preconditions.checkNotNull(input);
     this.includeRoots = Preconditions.checkNotNull(includeRoots);
@@ -78,6 +83,12 @@ public class CxxCompile extends AbstractBuildRule {
         .set("flags", flags)
         .set("output", output.toString());
 
+    if (plugin.isPresent()) {
+      Plugin p = plugin.get();
+      builder.setInput("plugin-" + p.getName(), p.getPath());
+      builder.set("plugin-" + p.getName() + "-flags", p.getFlags());
+    }
+
     // Hash the layout of each potentially included C/C++ header file and it's contents.
     // We do this here, rather than returning them from `getInputsToCompareToOutput` so
     // that we can match the contents hash up with where it was laid out in the include
@@ -94,12 +105,20 @@ public class CxxCompile extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+    ImmutableList<String> allFlags =
+        plugin.isPresent() ?
+            ImmutableList.<String>builder()
+                .addAll(flags)
+                .addAll(plugin.get().flags)
+                .build()
+            : flags;
+
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new CxxCompileStep(
             getResolver().getPath(compiler),
-            flags,
+            allFlags,
             output,
             getResolver().getPath(input),
             includeRoots,
@@ -113,6 +132,10 @@ public class CxxCompile extends AbstractBuildRule {
 
   public SourcePath getCompiler() {
     return compiler;
+  }
+
+  public Optional<Plugin> getPlugin() {
+    return plugin;
   }
 
   public ImmutableList<String> getFlags() {
@@ -137,6 +160,29 @@ public class CxxCompile extends AbstractBuildRule {
 
   public ImmutableMap<Path, SourcePath> getIncludes() {
     return includes;
+  }
+
+  public static class Plugin {
+
+    private String name;
+    private Path path;
+    private ImmutableList<String> flags;
+
+    public Plugin(String name, Path plugin, ImmutableList<String> flags) {
+      this.name = Preconditions.checkNotNull(name);
+      this.path = Preconditions.checkNotNull(plugin);
+      this.flags = Preconditions.checkNotNull(flags);
+
+      Preconditions.checkState(!name.isEmpty(), "Empty plugin name not allowed.");
+      Preconditions.checkState(!flags.isEmpty(), "Empty plugin flags not allowed.");
+    }
+
+    public String getName() { return name; }
+
+    public Path getPath() { return path; }
+
+    public ImmutableList<String> getFlags() { return flags; }
+
   }
 
 }
