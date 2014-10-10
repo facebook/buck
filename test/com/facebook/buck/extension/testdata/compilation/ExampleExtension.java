@@ -39,7 +39,7 @@ public class ExampleExtension extends AbstractBuildRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return null;
+    return ImmutableList.of();
   }
 
   @Override

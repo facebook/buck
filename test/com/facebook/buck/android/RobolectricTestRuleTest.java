@@ -70,7 +70,7 @@ public class RobolectricTestRuleTest {
 
     @Override
     public ImmutableCollection<Path> getInputsToCompareToOutput() {
-      return null;
+      return ImmutableList.of();
     }
 
     @Override

@@ -77,7 +77,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return null;
+    return ImmutableList.of();
   }
 
   @Override

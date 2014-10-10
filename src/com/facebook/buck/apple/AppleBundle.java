@@ -89,9 +89,8 @@ public class AppleBundle extends AbstractBuildRule {
   }
 
   @Override
-  @Nullable
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return null;
+    return ImmutableList.of();
   }
 
   @Override

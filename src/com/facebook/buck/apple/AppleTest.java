@@ -86,9 +86,8 @@ public class AppleTest extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  @Nullable
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return null;
+    return ImmutableList.of();
   }
 
   @Override
