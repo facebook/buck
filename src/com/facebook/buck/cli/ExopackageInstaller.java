@@ -382,7 +382,7 @@ public class ExopackageInstaller {
 
   private ImmutableMap<String, String> getRequiredDexFiles() throws IOException {
     ImmutableMap.Builder<String, String> hashToBasenameBuilder = ImmutableMap.builder();
-    for (String line : projectFilesystem.readLines(exopackageInfo.metadata)) {
+    for (String line : projectFilesystem.readLines(exopackageInfo.dexMetadata)) {
       List<String> parts = Splitter.on(' ').splitToList(line);
       if (parts.size() < 2) {
         throw new RuntimeException("Illegal line in metadata file: " + line);
@@ -492,7 +492,7 @@ public class ExopackageInstaller {
           try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
             com.google.common.io.Files.write(
                 com.google.common.io.Files.toString(
-                    exopackageInfo.metadata.toFile(),
+                    exopackageInfo.dexMetadata.toFile(),
                     Charsets.UTF_8)
                     .replaceAll(
                       "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ",

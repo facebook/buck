@@ -38,11 +38,11 @@ public interface InstallableApk extends BuildRule {
   public Optional<ExopackageInfo> getExopackageInfo();
 
   public static class ExopackageInfo {
-    public final Path metadata;
+    public final Path dexMetadata;
     public final Path dexDirectory;
 
-    public ExopackageInfo(Path metadata, Path dexDirectory) {
-      this.metadata = Preconditions.checkNotNull(metadata);
+    public ExopackageInfo(Path dexMetadata, Path dexDirectory) {
+      this.dexMetadata = Preconditions.checkNotNull(dexMetadata);
       this.dexDirectory = Preconditions.checkNotNull(dexDirectory);
     }
   }
