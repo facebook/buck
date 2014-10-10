@@ -600,10 +600,8 @@ public class AndroidBinary extends AbstractBuildRule implements
           /* bash */ preprocessJavaClassesBash,
           /* cmdExe */ Optional.<String>absent());
       steps.add(new AbstractGenruleStep(
-          AndroidBinaryDescription.TYPE,
           this.getBuildTarget(),
           commandString,
-          preprocessJavaClassesDeps,
           context.getProjectRoot().resolve(preprocessJavaClassesInDir).toFile()) {
 
         @Override

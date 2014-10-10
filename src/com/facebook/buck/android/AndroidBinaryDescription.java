@@ -26,6 +26,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -36,12 +37,19 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroException;
+import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -58,6 +66,13 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
    * 1MB of which is taken up by the framework, so that leaves 4MB.
    */
   private static final long DEFAULT_LINEAR_ALLOC_HARD_LIMIT = 4 * 1024 * 1024;
+
+  private static final BuildTargetParser BUILD_TARGET_PARSER = new BuildTargetParser();
+  private static final MacroHandler MACRO_HANDLER =
+      new MacroHandler(
+          ImmutableMap.<String, MacroExpander>of(
+              "exe", new ExecutableMacroExpander(BUILD_TARGET_PARSER),
+              "location", new LocationMacroExpander(BUILD_TARGET_PARSER)));
 
   private final JavacOptions javacOptions;
   private final Optional<Path> proguardJarOverride;
@@ -81,8 +96,8 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
 
   @Override
   public <A extends Arg> AndroidBinary createBuildRule(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
       A args) {
     BuildRule keystore = resolver.getRule(args.keystore);
     if (!(keystore instanceof Keystore)) {
@@ -153,6 +168,22 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     AndroidBinaryGraphEnhancer.EnhancementResult result =
         graphEnhancer.createAdditionalBuildables();
 
+    Function<String, String> expandMacros =
+        new Function<String, String>() {
+          @Override
+          public String apply(String input) {
+            try {
+              return MACRO_HANDLER.expand(
+                  params.getBuildTarget(),
+                  resolver,
+                  params.getProjectFilesystem(),
+                  input);
+            } catch (MacroException e) {
+              throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
+            }
+          }
+        };
+
     return new AndroidBinary(
         params.copyWithExtraDeps(result.getFinalDeps()),
         new SourcePathResolver(resolver),
@@ -172,7 +203,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         args.exopackage.or(false),
         resolver.getAllRules(
             args.preprocessJavaClassesDeps.or(ImmutableSortedSet.<BuildTarget>of())),
-        args.preprocessJavaClassesBash,
+        args.preprocessJavaClassesBash.transform(expandMacros),
         rulesToExcludeFromDex,
         result);
   }

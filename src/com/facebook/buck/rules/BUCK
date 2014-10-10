@@ -29,6 +29,7 @@ java_library(
     '//src/com/facebook/buck/python:rules',
     '//src/com/facebook/buck/ocaml:rules',
     '//src/com/facebook/buck/cxx:rules',
+    '//src/com/facebook/buck/rules/macros:macros',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/thrift:rules',
     '//src/com/facebook/buck/util:constants',

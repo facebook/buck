@@ -17,74 +17,32 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
 public abstract class AbstractGenruleStep extends ShellStep {
 
-  /**
-   * Matches either a relative or fully-qualified build target wrapped in <tt>${}</tt>, unless the
-   * <code>$</code> is preceded by a backslash.
-   *
-   * Given the input: $(exe //foo:bar), capturing groups are
-   * 1: $(exe //foo:bar)
-   * 2: exe
-   * 3: //foo:bar
-   * 4: //foo
-   * 5: :bar
-   * If we match against $(location :bar), the capturing groups are:
-   * 1: $(location :bar)
-   * 2: location
-   * 3: :bar
-   * 4: null
-   * 5: :bar
-   */
-  @VisibleForTesting
-  static final Pattern BUILD_TARGET_PATTERN = Pattern.compile(
-      // We want a negative lookbehind to ensure we don't have a '\$', which is why this starts off
-      // in such an interesting way.
-      "(?<!\\\\)(\\$\\((exe|location)\\s+((\\/\\/[^:]*)?(:[^\\)]+))\\))");
-
   private final CommandString commandString;
-  private final ImmutableSortedSet<BuildRule> depsToSubstituteInCommandString;
-  private final BuildRuleType type;
   private final BuildTarget target;
 
   public AbstractGenruleStep(
-      BuildRuleType type,
       BuildTarget target,
       CommandString commandString,
-      Set<BuildRule> depsToSubstituteInCommandString,
       @Nullable File workingDirectory) {
     super(workingDirectory);
-    this.type = type;
     this.target = target;
     this.commandString = Preconditions.checkNotNull(commandString);
-    this.depsToSubstituteInCommandString = ImmutableSortedSet.copyOf(
-        depsToSubstituteInCommandString);
   }
 
   public static class CommandString {
@@ -124,28 +82,24 @@ public abstract class AbstractGenruleStep extends ShellStep {
     //   "(/bin/bash -c) or (cmd.exe /c) cmd" (All platforms)
     String command;
     if (context.getPlatform() == Platform.WINDOWS) {
-      String commandInUse;
       if (!commandString.cmdExe.or("").isEmpty()) {
-        commandInUse = commandString.cmdExe.get();
+        command = commandString.cmdExe.get();
       } else if (!commandString.cmd.or("").isEmpty()) {
-        commandInUse = commandString.cmd.get();
+        command = commandString.cmd.get();
       } else {
         throw new HumanReadableException("You must specify either cmd_exe or cmd for genrule %s.",
             getFullyQualifiedName());
       }
-      command = replaceMatches(context.getProjectFilesystem(), commandInUse);
       return new ExecutionArgsAndCommand(ImmutableList.of("cmd.exe", "/c"), command);
     } else {
-      String commandInUse;
       if (!commandString.bash.or("").isEmpty()) {
-        commandInUse = commandString.bash.get();
+        command = commandString.bash.get();
       } else if (!commandString.cmd.or("").isEmpty()) {
-        commandInUse = commandString.cmd.get();
+        command = commandString.cmd.get();
       } else {
         throw new HumanReadableException("You must specify either bash or cmd for genrule %s.",
             getFullyQualifiedName());
       }
-      command = replaceMatches(context.getProjectFilesystem(), commandInUse);
       return new ExecutionArgsAndCommand(ImmutableList.of("/bin/bash", "-e", "-c"), command);
     }
   }
@@ -184,102 +138,6 @@ public abstract class AbstractGenruleStep extends ShellStep {
   @Override
   protected boolean shouldPrintStderr(Verbosity verbosity) {
     return true;
-  }
-
-  /**
-   * @return the cmd with binary and location build targets interpolated as either commands or the
-   *     location of the outputs of those targets.
-   */
-  @VisibleForTesting
-  String replaceMatches(ProjectFilesystem filesystem, String command) {
-    Matcher matcher = BUILD_TARGET_PATTERN.matcher(command);
-    StringBuffer buffer = new StringBuffer();
-    Map<String, BuildRule> fullyQualifiedNameToBuildRule = null;
-    while (matcher.find()) {
-      if (fullyQualifiedNameToBuildRule == null) {
-        fullyQualifiedNameToBuildRule = Maps.newHashMap();
-        for (BuildRule dep : depsToSubstituteInCommandString) {
-          fullyQualifiedNameToBuildRule.put(dep.getFullyQualifiedName(), dep);
-        }
-      }
-
-      String buildTarget = matcher.group(3);
-      String base = matcher.group(4);
-      if (base == null) {
-        // This is a relative build target, so make it fully qualified.
-        buildTarget = String.format("//%s%s", target.getBasePath(), buildTarget);
-      }
-      BuildRule matchingRule = fullyQualifiedNameToBuildRule.get(buildTarget);
-      if (matchingRule == null) {
-        throw new HumanReadableException("No dep named %s for %s %s, cmd was %s",
-            buildTarget, type.getName(), getFullyQualifiedName(), command);
-      }
-
-      String replacement;
-      switch (matcher.group(2)) {
-        case "exe":
-          replacement = getExecutableReplacementFrom(filesystem, command, matchingRule);
-          break;
-
-        case "location":
-          Path path = getLocationReplacementFrom(filesystem, matchingRule);
-          if (path == null) {
-            throw new HumanReadableException(
-                "%s: there is no output generated by %s", target, matchingRule.getBuildTarget());
-          }
-          replacement = path.toString();
-          break;
-
-        default:
-          throw new HumanReadableException("Unable to determine replacement for '%s' in target %s",
-              matcher.group(2), getFullyQualifiedName());
-      }
-
-      // `replacement` may contain Windows style directory separator backslash (\), which will be
-      // considered as escape character. Escape them.
-      matcher.appendReplacement(buffer, replacement.replace("\\", "\\\\"));
-    }
-    matcher.appendTail(buffer);
-    return buffer.toString();
-  }
-
-  @Nullable
-  private Path getLocationReplacementFrom(ProjectFilesystem filesystem, BuildRule matchingRule) {
-    Path output = matchingRule.getPathToOutputFile();
-    if (output == null) {
-      return null;
-    }
-    return filesystem.resolve(output);
-  }
-
-  /**
-   * A build rule can be executable in one of two ways: either by being a file with the executable
-   * bit set, or by the rule being a {@link com.facebook.buck.rules.BinaryBuildRule}.
-   *
-   * @param filesystem The project file system to resolve files with.
-   * @param cmd The command being executed.
-   * @param matchingRule The BuildRule which may or may not be an executable.
-   * @return A string which can be inserted to cause matchingRule to be executed.
-   */
-  private String getExecutableReplacementFrom(
-      ProjectFilesystem filesystem,
-      String cmd,
-      BuildRule matchingRule) {
-    if (matchingRule instanceof BinaryBuildRule) {
-      return Joiner.on(' ').join(((BinaryBuildRule) matchingRule).getExecutableCommand(filesystem));
-    }
-
-    File output = filesystem.getFileForRelativePath(matchingRule.getPathToOutputFile());
-    if (output != null && output.exists() && output.canExecute()) {
-      return output.getAbsolutePath();
-    }
-
-    throw new HumanReadableException(
-        "%s must correspond to a binary rule or file in %s for %s %s",
-        matchingRule,
-        cmd,
-        type.getName(),
-        getFullyQualifiedName());
   }
 
   private static class ExecutionArgsAndCommand {

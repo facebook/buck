@@ -267,10 +267,8 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     File workingDirectory = new File(absolutePathToSrcDirectory.toString());
 
     return new AbstractGenruleStep(
-        getType(),
         getBuildTarget(),
         new CommandString(cmd, bash, cmdExe),
-        getDeps(),
         workingDirectory) {
       @Override
       protected void addEnvironmentVariables(
