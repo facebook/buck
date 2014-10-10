@@ -67,8 +67,6 @@ java_library(
     'BuildEngine.java',
     'BuildInfo.java',
     'BuildInfoRecorder.java',
-    'BuildRuleBuilder.java',
-    'BuildRuleFactory.java',
     'BuildRuleFactoryParams.java',
     'BuildRuleResolver.java',
     'BuildRuleParams.java',

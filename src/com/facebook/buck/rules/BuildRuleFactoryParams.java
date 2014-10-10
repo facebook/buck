@@ -32,9 +32,6 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-/**
- * A set of parameters passed to a {@link BuildRuleFactory}.
- */
 public final class BuildRuleFactoryParams {
 
   private final Map<String, Object> instance;

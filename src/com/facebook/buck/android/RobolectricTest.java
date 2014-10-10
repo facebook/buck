@@ -126,7 +126,7 @@ public class RobolectricTest extends JavaTest {
       Optional<TargetDevice> targetDevice) {
     super.onAmendVmArgs(vmArgsBuilder, targetDevice);
     Preconditions.checkState(optionalDummyRDotJava.isPresent(),
-        "DummyRDotJava must have been created by the BuildRuleBuilder!");
+        "DummyRDotJava must have been created!");
     vmArgsBuilder.add(getRobolectricResourceDirectories(
         optionalDummyRDotJava.get().getAndroidResourceDeps()));
   }
