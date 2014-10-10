@@ -156,6 +156,7 @@ public class AndroidBinary extends AbstractBuildRule implements
   private final Path primaryDexPath;
   private final boolean exopackage;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
+  private final Function<String, String> macroExpander;
   private final Optional<String> preprocessJavaClassesBash;
   protected final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
   protected final AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult;
@@ -183,6 +184,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       ResourceFilter resourceFilter,
       boolean exopackage,
       Set<BuildRule> preprocessJavaClassesDeps,
+      Function<String, String> macroExpander,
       Optional<String> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult) {
@@ -203,6 +205,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
     this.exopackage = exopackage;
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
+    this.macroExpander = Preconditions.checkNotNull(macroExpander);
     this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
     this.rulesToExcludeFromDex = Preconditions.checkNotNull(rulesToExcludeFromDex);
     this.enhancementResult = Preconditions.checkNotNull(enhancementResult);
@@ -295,6 +298,10 @@ public class AndroidBinary extends AbstractBuildRule implements
 
   public ImmutableSortedSet<BuildRule> getPreprocessJavaClassesDeps() {
     return preprocessJavaClassesDeps;
+  }
+
+  public Function<String, String> getMacroExpander() {
+    return macroExpander;
   }
 
   public Optional<String> getPreprocessJavaClassesBash() {
@@ -598,7 +605,7 @@ public class AndroidBinary extends AbstractBuildRule implements
 
       AbstractGenruleStep.CommandString commandString = new AbstractGenruleStep.CommandString(
           /* cmd */ Optional.<String>absent(),
-          /* bash */ preprocessJavaClassesBash,
+          /* bash */ preprocessJavaClassesBash.transform(macroExpander),
           /* cmdExe */ Optional.<String>absent());
       steps.add(new AbstractGenruleStep(
           this.getBuildTarget(),

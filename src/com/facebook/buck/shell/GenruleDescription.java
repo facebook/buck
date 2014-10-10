@@ -35,7 +35,6 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -71,8 +70,8 @@ public class GenruleDescription
 
   @Override
   public <A extends Arg> Genrule createBuildRule(
-      final BuildRuleParams params,
-      final BuildRuleResolver resolver,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
@@ -81,30 +80,17 @@ public class GenruleDescription
         .addAll(params.getExtraDeps())
         .addAll(pathResolver.filterBuildRuleInputs(srcs))
         .build();
-
-    Function<String, String> expandMacros =
-        new Function<String, String>() {
-          @Override
-          public String apply(String input) {
-            try {
-              return macroHandler.expand(
-                  params.getBuildTarget(),
-                  resolver,
-                  params.getProjectFilesystem(),
-                  input);
-            } catch (MacroException e) {
-              throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-            }
-          }
-        };
-
     return new Genrule(
         params.copyWithExtraDeps(extraDeps),
         pathResolver,
         srcs,
-        args.cmd.transform(expandMacros),
-        args.bash.transform(expandMacros),
-        args.cmdExe.transform(expandMacros),
+        macroHandler.getExpander(
+            params.getBuildTarget(),
+            resolver,
+            params.getProjectFilesystem()),
+        args.cmd,
+        args.bash,
+        args.cmdExe,
         args.out,
         params.getPathAbsolutifier());
   }

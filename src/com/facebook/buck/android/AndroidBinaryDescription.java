@@ -39,12 +39,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -168,22 +166,6 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     AndroidBinaryGraphEnhancer.EnhancementResult result =
         graphEnhancer.createAdditionalBuildables();
 
-    Function<String, String> expandMacros =
-        new Function<String, String>() {
-          @Override
-          public String apply(String input) {
-            try {
-              return MACRO_HANDLER.expand(
-                  params.getBuildTarget(),
-                  resolver,
-                  params.getProjectFilesystem(),
-                  input);
-            } catch (MacroException e) {
-              throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
-            }
-          }
-        };
-
     return new AndroidBinary(
         params.copyWithExtraDeps(result.getFinalDeps()),
         new SourcePathResolver(resolver),
@@ -203,7 +185,11 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         args.exopackage.or(false),
         resolver.getAllRules(
             args.preprocessJavaClassesDeps.or(ImmutableSortedSet.<BuildTarget>of())),
-        args.preprocessJavaClassesBash.transform(expandMacros),
+        MACRO_HANDLER.getExpander(
+            params.getBuildTarget(),
+            resolver,
+            params.getProjectFilesystem()),
+        args.preprocessJavaClassesBash,
         rulesToExcludeFromDex,
         result);
   }

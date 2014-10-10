@@ -68,6 +68,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getResourceFilter(),
         /* exopackage */ false,
         apkUnderTest.getPreprocessJavaClassesDeps(),
+        apkUnderTest.getMacroExpander(),
         apkUnderTest.getPreprocessJavaClassesBash(),
         rulesToExcludeFromDex,
         enhancementResult);

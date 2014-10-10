@@ -108,6 +108,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
    */
   protected final ImmutableList<SourcePath> srcs;
 
+  protected final Function<String, String> macroExpander;
   protected final Optional<String> cmd;
   protected final Optional<String> bash;
   protected final Optional<String> cmdExe;
@@ -127,6 +128,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
       BuildRuleParams params,
       SourcePathResolver resolver,
       List<SourcePath> srcs,
+      Function<String, String> macroExpander,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
@@ -134,6 +136,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
       final Function<Path, Path> relativeToAbsolutePathFunction) {
     super(params, resolver);
     this.srcs = ImmutableList.copyOf(srcs);
+    this.macroExpander = Preconditions.checkNotNull(macroExpander);
     this.cmd = Preconditions.checkNotNull(cmd);
     this.bash = Preconditions.checkNotNull(bash);
     this.cmdExe = Preconditions.checkNotNull(cmdExe);
@@ -267,7 +270,10 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
 
     return new AbstractGenruleStep(
         getBuildTarget(),
-        new CommandString(cmd, bash, cmdExe),
+        new CommandString(
+            cmd.transform(macroExpander),
+            bash.transform(macroExpander),
+            cmdExe.transform(macroExpander)),
         workingDirectory) {
       @Override
       protected void addEnvironmentVariables(

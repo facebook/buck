@@ -18,7 +18,9 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -54,15 +56,28 @@ public class MacroHandler {
    *     <li> platform
    * </ol>
    **/
-  private static final Pattern MACRO_PATTERN =
-      // We want a negative look-behind to ensure we don't have a '\$', which is why this starts
-      // off in such an interesting way.
-      Pattern.compile("(?<!\\\\)\\$\\(([^)\\s]+)(?: ([^)]*))?\\)");
+  private static final Pattern MACRO_PATTERN = Pattern.compile("\\$\\(([^)\\s]+)(?: ([^)]*))?\\)");
 
   private final ImmutableMap<String, MacroExpander> expanders;
 
   public MacroHandler(ImmutableMap<String, MacroExpander> expanders) {
     this.expanders = Preconditions.checkNotNull(expanders);
+  }
+
+  public Function<String, String> getExpander(
+      final BuildTarget target,
+      final BuildRuleResolver resolver,
+      final ProjectFilesystem filesystem) {
+    return new Function<String, String>() {
+      @Override
+      public String apply(String blob) {
+        try {
+          return expand(target, resolver, filesystem, blob);
+        } catch (MacroException e) {
+          throw new HumanReadableException("%s: %s", target, e.getMessage());
+        }
+      }
+    };
   }
 
   public MacroHandler extend(ImmutableMap<String, MacroExpander> additionalExpanders) {
@@ -94,6 +109,13 @@ public class MacroHandler {
     int lastEnd = 0;
     Matcher matcher = MACRO_PATTERN.matcher(blob);
     while (matcher.find()) {
+
+      // If the match is preceded by a backslash, skip this match but drop the backslash.
+      if (matcher.start() > 0 && blob.charAt(matcher.start() - 1) == '\\') {
+        expanded.append(blob.substring(lastEnd, matcher.start() - 1));
+        expanded.append(blob.substring(matcher.start(), matcher.end()));
+        continue;
+      }
 
       // Add everything from the original string since the last match to this one.
       expanded.append(blob.substring(lastEnd, matcher.start()));
@@ -128,6 +150,9 @@ public class MacroHandler {
     // extract for their respective macros.
     Matcher matcher = MACRO_PATTERN.matcher(blob);
     while (matcher.find()) {
+      if (matcher.start() > 0 && blob.charAt(matcher.start() - 1) == '\\') {
+        continue;
+      }
       String name = matcher.group(1);
       String input = Optional.fromNullable(matcher.group(2)).or("");
       targets.addAll(getExpander(name).extractTargets(target, input));
