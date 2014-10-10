@@ -139,12 +139,14 @@ public class CxxDescriptionEnhancerTest {
             new BuildRuleSourcePath(lex, lexOutputHeader),
             target.getBasePath().resolve(yaccSourceName + ".h"),
             new BuildRuleSourcePath(yacc, yaccOutputHeader)),
-        ImmutableList.of(
+        ImmutableMap.of(
+            lexSourceName + ".cc",
             new CxxSource(
-                lexSourceName + ".cc",
+                CxxSource.Type.CXX,
                 new BuildRuleSourcePath(lex, lexOutputSource)),
+            yaccSourceName + ".cc",
             new CxxSource(
-                yaccSourceName + ".cc",
+                CxxSource.Type.CXX,
                 new BuildRuleSourcePath(yacc, yaccOutputSource))));
     assertEquals(expected, actual);
   }
@@ -162,7 +164,7 @@ public class CxxDescriptionEnhancerTest {
 
     String sourceName = "test.cc";
     CxxSource source = new CxxSource(
-        sourceName,
+        CxxSource.Type.CXX,
         new TestSourcePath(sourceName));
 
     // First, create a cxx library without using link whole.
@@ -174,7 +176,7 @@ public class CxxDescriptionEnhancerTest {
         /* propagatedPpFlags */ ImmutableList.<String>of(),
         /* headers */ ImmutableMap.<Path, SourcePath>of(),
         /* compilerFlags */ ImmutableList.<String>of(),
-        /* sources */ ImmutableList.of(source),
+        /* sources */ ImmutableMap.of(sourceName, source),
         /* linkWhole */ false,
         /* soname */ Optional.<String>absent());
 
@@ -193,7 +195,7 @@ public class CxxDescriptionEnhancerTest {
         /* propagatedPpFlags */ ImmutableList.<String>of(),
         /* headers */ ImmutableMap.<Path, SourcePath>of(),
         /* compilerFlags */ ImmutableList.<String>of(),
-        /* sources */ ImmutableList.of(source),
+        /* sources */ ImmutableMap.of(sourceName, source),
         /* linkWhole */ true,
         /* soname */ Optional.<String>absent());
 
@@ -300,9 +302,9 @@ public class CxxDescriptionEnhancerTest {
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(genHeaderName), new BuildRuleSourcePath(genHeader)),
         ImmutableList.<String>of(),
-        ImmutableList.of(
-            new CxxSource(sourceName, new TestSourcePath(sourceName)),
-            new CxxSource(genSourceName, new BuildRuleSourcePath(genSource))),
+        ImmutableMap.of(
+            sourceName, new CxxSource(CxxSource.Type.CXX, new TestSourcePath(sourceName)),
+            genSourceName, new CxxSource(CxxSource.Type.CXX, new BuildRuleSourcePath(genSource))),
         /* linkWhole */ false,
         /* soname */ Optional.<String>absent());
 

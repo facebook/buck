@@ -30,6 +30,9 @@ public interface CxxPlatform {
   SourcePath getAs();
   ImmutableList<String> getAsflags();
 
+  SourcePath getAspp();
+  ImmutableList<String> getAsppflags();
+
   SourcePath getCc();
   ImmutableList<String> getCflags();
 

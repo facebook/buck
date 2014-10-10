@@ -18,30 +18,66 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Describes a C/C++ source and the various paths it uses from input to output.
  */
 public class CxxSource {
 
-  // The logical, BUCK-file-relative name for the source as listed in the "srcs" parameter.
-  private final String name;
+  public static enum Type {
 
-  // The path to the source file.
-  private final SourcePath source;
+    C("c", "c"),
+    CXX("c++", "cc", "cp", "cxx", "cpp", "CPP", "c++", "C"),
+    C_CPP_OUTPUT("c-cpp-output", "i"),
+    CXX_CPP_OUTPUT("c++-cpp-output", "ii"),
+    ASSEMBLER("assembler", "s"),
+    ASSEMBLER_WITH_CPP("assembler-with-cpp", "S"),
+    ;
 
-  public CxxSource(String name, SourcePath source) {
-    this.name = Preconditions.checkNotNull(name);
-    this.source = Preconditions.checkNotNull(source);
+    private final String language;
+    private final ImmutableSet<String> extensions;
+
+    private Type(String language, String... extensions) {
+      this.language = Preconditions.checkNotNull(language);
+      this.extensions = ImmutableSet.copyOf(extensions);
+    }
+
+    public static Optional<Type> fromExtension(String extension) {
+      for (Type type : values()) {
+        if (type.extensions.contains(extension)) {
+          return Optional.of(type);
+        }
+      }
+      return Optional.absent();
+    }
+
+    public String getLanguage() {
+      return language;
+    }
+
+    public ImmutableSet<String> getExtensions() {
+      return extensions;
+    }
+
   }
 
-  public String getName() {
-    return name;
+  private final Type type;
+  private final SourcePath path;
+
+  public CxxSource(Type type, SourcePath path) {
+    this.type = Preconditions.checkNotNull(type);
+    this.path = Preconditions.checkNotNull(path);
   }
 
-  public SourcePath getSource() {
-    return source;
+  public Type getType() {
+    return type;
+  }
+
+  public SourcePath getPath() {
+    return path;
   }
 
   @Override
@@ -57,11 +93,11 @@ public class CxxSource {
 
     CxxSource cxxSource = (CxxSource) o;
 
-    if (!name.equals(cxxSource.name)) {
+    if (!type.equals(cxxSource.type)) {
       return false;
     }
 
-    if (!source.equals(cxxSource.source)) {
+    if (!path.equals(cxxSource.path)) {
       return false;
     }
 
@@ -70,7 +106,7 @@ public class CxxSource {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(name, source);
+    return Objects.hashCode(type, path);
   }
 
 }

@@ -59,7 +59,7 @@ public class CxxLibraryDescription implements
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Extract the C/C++ sources from the constructor arg.
-    ImmutableList<CxxSource> srcs =
+    ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
             params.getBuildTarget(),
             pathResolver,
@@ -112,9 +112,9 @@ public class CxxLibraryDescription implements
             .putAll(lexYaccSources.getCxxHeaders())
             .build(),
         args.compilerFlags.or(ImmutableList.<String>of()),
-        ImmutableList.<CxxSource>builder()
-            .addAll(srcs)
-            .addAll(lexYaccSources.getCxxSources())
+        ImmutableMap.<String, CxxSource>builder()
+            .putAll(srcs)
+            .putAll(lexYaccSources.getCxxSources())
             .build(),
         args.linkWhole.or(false),
         args.soname);

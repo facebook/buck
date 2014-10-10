@@ -134,7 +134,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     ImmutableSet<String> options =
         (cpp2 ? args.cpp2Options : args.cppOptions).or(ImmutableSet.<String>of());
 
-    ImmutableList.Builder<CxxSource> cxxSourcesBuilder = ImmutableList.builder();
+    ImmutableMap.Builder<String, CxxSource> cxxSourcesBuilder = ImmutableMap.builder();
     ImmutableMap.Builder<Path, SourcePath> headersBuilder = ImmutableMap.builder();
 
     for (ImmutableMap.Entry<String, ThriftSource> ent : sources.entrySet()) {
@@ -151,9 +151,10 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         String extension = Files.getFileExtension(name);
 
         if (CxxCompilables.SOURCE_EXTENSIONS.contains(extension)) {
-          cxxSourcesBuilder.add(
+          cxxSourcesBuilder.put(
+              name,
               new CxxSource(
-                  name,
+                  CxxSource.Type.fromExtension(extension).get(),
                   new BuildRuleSourcePath(source.getCompileRule(), outputDir.resolve(name))));
         } else if (CxxCompilables.HEADER_EXTENSIONS.contains(extension)) {
           headersBuilder.put(

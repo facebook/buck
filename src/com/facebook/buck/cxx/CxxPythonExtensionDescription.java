@@ -80,7 +80,7 @@ public class CxxPythonExtensionDescription implements
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     // Extract the C/C++ sources from the constructor arg.
-    ImmutableList<CxxSource> srcs =
+    ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
             params.getBuildTarget(),
             pathResolver,
@@ -127,7 +127,6 @@ public class CxxPythonExtensionDescription implements
         headers);
     CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
         params,
-        cxxPlatform,
         args.preprocessorFlags.or(ImmutableList.<String>of()),
         headerSymlinkTree,
         ImmutableMap.<Path, SourcePath>builder()
@@ -143,9 +142,9 @@ public class CxxPythonExtensionDescription implements
             cxxPreprocessorInput,
             args.compilerFlags.or(ImmutableList.<String>of()),
             /* pic */ true,
-            ImmutableList.<CxxSource>builder()
-                .addAll(srcs)
-                .addAll(lexYaccSources.getCxxSources())
+            ImmutableMap.<String, CxxSource>builder()
+                .putAll(srcs)
+                .putAll(lexYaccSources.getCxxSources())
                 .build());
 
     // Setup the rules to link the shared library.

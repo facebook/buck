@@ -91,7 +91,7 @@ public class CxxDescriptionEnhancer {
    * @return a list {@link CxxSource} objects formed by parsing the input {@link SourcePath}
    *    objects for the "srcs" parameter.
    */
-  public static ImmutableList<CxxSource> parseCxxSources(
+  public static ImmutableMap<String, CxxSource> parseCxxSources(
       BuildTarget target,
       SourcePathResolver resolver,
       Iterable<SourcePath> inputs) {
@@ -166,7 +166,7 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<String, SourcePath> yaccSrcs) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    ImmutableList.Builder<CxxSource> lexYaccCxxSourcesBuilder = ImmutableList.builder();
+    ImmutableMap.Builder<String, CxxSource> lexYaccCxxSourcesBuilder = ImmutableMap.builder();
     ImmutableMap.Builder<Path, SourcePath> lexYaccHeadersBuilder = ImmutableMap.builder();
 
     // Loop over all lex sources, generating build rule for each one and adding the sources
@@ -199,9 +199,10 @@ public class CxxDescriptionEnhancer {
       resolver.addToIndex(lex);
 
       // Record the output source and header as {@link BuildRuleSourcePath} objects.
-      lexYaccCxxSourcesBuilder.add(
+      lexYaccCxxSourcesBuilder.put(
+          name + ".cc",
           new CxxSource(
-              name + ".cc",
+              CxxSource.Type.CXX,
               new BuildRuleSourcePath(lex, outputSource)));
       lexYaccHeadersBuilder.put(
           params.getBuildTarget().getBasePath().resolve(name + ".h"),
@@ -236,9 +237,10 @@ public class CxxDescriptionEnhancer {
       resolver.addToIndex(yacc);
 
       // Record the output source and header as {@link BuildRuleSourcePath} objects.
-      lexYaccCxxSourcesBuilder.add(
+      lexYaccCxxSourcesBuilder.put(
+          name + ".cc",
           new CxxSource(
-              name + ".cc",
+              CxxSource.Type.CXX,
               new BuildRuleSourcePath(yacc, Yacc.getSourceOutputPath(outputPrefix))));
 
       lexYaccHeadersBuilder.put(
@@ -272,7 +274,6 @@ public class CxxDescriptionEnhancer {
 
   public static CxxPreprocessorInput combineCxxPreprocessorInput(
       BuildRuleParams params,
-      CxxPlatform config,
       ImmutableList<String> preprocessorFlags,
       SymlinkTree headerSymlinkTree,
       ImmutableMap<Path, SourcePath> headers) {
@@ -287,14 +288,8 @@ public class CxxDescriptionEnhancer {
         ImmutableList.of(
             new CxxPreprocessorInput(
                 ImmutableSet.of(headerSymlinkTree.getBuildTarget()),
-                /* cppflags */ ImmutableList.<String>builder()
-                    .addAll(config.getCppflags())
-                    .addAll(preprocessorFlags)
-                    .build(),
-                /* cxxppflags */ ImmutableList.<String>builder()
-                    .addAll(config.getCxxppflags())
-                    .addAll(preprocessorFlags)
-                    .build(),
+                /* cppflags */ preprocessorFlags,
+                /* cxxppflags */ preprocessorFlags,
                 /* includes */ headers,
                 /* includeRoots */ ImmutableList.of(headerSymlinkTree.getRoot()),
                 /* systemIncludeRoots */ ImmutableList.<Path>of()),
@@ -316,7 +311,7 @@ public class CxxDescriptionEnhancer {
       CxxPreprocessorInput cxxPreprocessorInput,
       ImmutableList<String> compilerFlags,
       boolean pic,
-      ImmutableList<CxxSource> sources) {
+      ImmutableMap<String, CxxSource> sources) {
 
     ImmutableSortedSet<BuildRule> objectRules = CxxCompilableEnhancer.createCompileBuildRules(
         params,
@@ -364,7 +359,7 @@ public class CxxDescriptionEnhancer {
       final ImmutableList<String> propagatedPpFlags,
       final ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
-      ImmutableList<CxxSource> sources,
+      ImmutableMap<String, CxxSource> sources,
       final boolean linkWhole,
       Optional<String> soname) {
 
@@ -376,7 +371,6 @@ public class CxxDescriptionEnhancer {
         createHeaderSymlinkTreeBuildRule(params, resolver, headers);
     CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
-        cxxPlatform,
         preprocessorFlags,
         headerSymlinkTree,
         headers);
@@ -505,7 +499,7 @@ public class CxxDescriptionEnhancer {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Extract the C/C++ sources from the constructor arg.
-    ImmutableList<CxxSource> srcs =
+    ImmutableMap<String, CxxSource> srcs =
         parseCxxSources(
             params.getBuildTarget(),
             pathResolver,
@@ -553,7 +547,6 @@ public class CxxDescriptionEnhancer {
         headers);
     CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
-        cxxPlatform,
         args.preprocessorFlags.or(ImmutableList.<String>of()),
         headerSymlinkTree,
         ImmutableMap.<Path, SourcePath>builder()
@@ -571,9 +564,9 @@ public class CxxDescriptionEnhancer {
             cxxPreprocessorInput,
             args.compilerFlags.or(ImmutableList.<String>of()),
             /* pic */ false,
-            ImmutableList.<CxxSource>builder()
-                .addAll(srcs)
-                .addAll(lexYaccSources.getCxxSources())
+            ImmutableMap.<String, CxxSource>builder()
+                .putAll(srcs)
+                .putAll(lexYaccSources.getCxxSources())
                 .build());
 
     // Generate the final link rule.  We use the top-level target as the link rule's

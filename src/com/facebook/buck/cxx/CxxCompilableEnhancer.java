@@ -27,11 +27,13 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
@@ -43,19 +45,44 @@ public class CxxCompilableEnhancer {
   private static final BuildRuleType COMPILE_TYPE = new BuildRuleType("compile");
 
   /**
-   * Resolve the map of names to SourcePaths to a list of CxxSource objects.
+   * Prefixes each of the given assembler arguments with "-Xassembler" so that the compiler
+   * assembler driver will pass these arguments directly down to the linker rather than
+   * interpreting them itself.
+   *
+   * e.g. ["--fatal-warnings"] -> ["-Xassembler", "--fatal-warnings"]
+   *
+   * @param args arguments for the assembler.
+   * @return arguments to be passed to the compiler assembler driver.
    */
-  public static ImmutableList<CxxSource> resolveCxxSources(
+  public static Iterable<String> iXassembler(Iterable<String> args) {
+    return MoreIterables.zipAndConcat(
+        Iterables.cycle("-Xassembler"),
+        args);
+  }
+
+  /**
+   * Resolve the map of names to SourcePaths to a map of names to CxxSource objects.
+   */
+  public static ImmutableMap<String, CxxSource> resolveCxxSources(
       ImmutableMap<String, SourcePath> sources) {
 
-    ImmutableList.Builder<CxxSource> cxxSources = ImmutableList.builder();
+    ImmutableMap.Builder<String, CxxSource> cxxSources = ImmutableMap.builder();
 
     // For each entry in the input C/C++ source, build a CxxSource object to wrap
     // it's name, input path, and output object file path.
     for (ImmutableMap.Entry<String, SourcePath> ent : sources.entrySet()) {
-      cxxSources.add(
+      String extension = Files.getFileExtension(ent.getKey());
+      Optional<CxxSource.Type> type = CxxSource.Type.fromExtension(extension);
+      if (!type.isPresent()) {
+        throw new HumanReadableException(
+            "invalid extension \"%s\": %s",
+            extension,
+            ent.getKey());
+      }
+      cxxSources.put(
+          ent.getKey(),
           new CxxSource(
-              ent.getKey(),
+              type.get(),
               ent.getValue()));
     }
 
@@ -66,10 +93,7 @@ public class CxxCompilableEnhancer {
    * @return the object file name for the given source name.
    */
   private static String getOutputName(String name) {
-    String base = Files.getNameWithoutExtension(name);
-    String ext = Files.getFileExtension(name);
-    Preconditions.checkArgument(CxxCompilables.SOURCE_EXTENSIONS.contains(ext));
-    return base + ".o";
+    return Files.getNameWithoutExtension(name) + ".o";
   }
 
   /**
@@ -105,54 +129,120 @@ public class CxxCompilableEnhancer {
       CxxPreprocessorInput preprocessorInput,
       ImmutableList<String> compilerFlags,
       boolean pic,
+      String name,
       CxxSource source) {
 
     BuildTarget target = createCompileBuildTarget(
         params.getBuildTarget(),
-        source.getName(),
+        name,
         pic);
 
-    boolean cxx = !Files.getFileExtension(source.getName()).equals("c");
+    ImmutableSortedSet.Builder<BuildRule> dependencies = ImmutableSortedSet.naturalOrder();
 
-    // The customized build rule params for each compilation.
-    BuildRuleParams compileParams = params.copyWithChanges(
-        COMPILE_TYPE,
-        target,
-        // Compile rules don't inherit any of the declared deps.
-        /* declaredDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
-            // Depend on the rule that generates the sources and headers we're compiling.
-            .addAll(
-                SourcePaths.filterBuildRuleInputs(
-                    ImmutableList.<SourcePath>builder()
-                        .add(source.getSource())
-                        .addAll(preprocessorInput.getIncludes().values())
-                        .build()))
-                // Also add in extra deps from the preprocessor input, such as the symlink tree
-                // rules.
-            .addAll(
-                BuildRules.toBuildRulesFor(
-                    params.getBuildTarget(),
-                    resolver,
-                    preprocessorInput.getRules(),
-                    false))
-            .build(),
-        /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
+    // If a build rule generates our input source, add that as a dependency.
+    dependencies.addAll(SourcePaths.filterBuildRuleInputs(ImmutableList.of(source.getPath())));
+
+    // Add additional dependencies only for preprocessing.
+    if (source.getType() == CxxSource.Type.C ||
+        source.getType() == CxxSource.Type.CXX ||
+        source.getType() == CxxSource.Type.ASSEMBLER_WITH_CPP) {
+
+      // Depend on the rule that generates the sources and headers we're compiling.
+      dependencies.addAll(
+          SourcePaths.filterBuildRuleInputs(
+              ImmutableList.<SourcePath>builder()
+                  .add(source.getPath())
+                  .addAll(preprocessorInput.getIncludes().values())
+                  .build()));
+
+      // Also add in extra deps from the preprocessor input, such as the symlink tree
+      // rules.
+      dependencies.addAll(
+          BuildRules.toBuildRulesFor(
+              params.getBuildTarget(),
+              resolver,
+              preprocessorInput.getRules(),
+              false));
+    }
+
+    // Pick the compiler to use.  Basically, if we're dealing with C++ sources, use the C++
+    // compiler, and the C compiler for everything.
+    SourcePath compiler;
+    if (source.getType() == CxxSource.Type.CXX ||
+        source.getType() == CxxSource.Type.CXX_CPP_OUTPUT) {
+      compiler = platform.getCxx();
+    } else {
+      compiler = platform.getCc();
+    }
+
+    ImmutableList.Builder<String> args = ImmutableList.builder();
+
+    // We explicitly identify our source rather then let the compiler guess based on the
+    // extension.
+    args.add("-x", source.getType().getLanguage());
+
+    // If we're dealing with a C++ source that can be preprocessed, add in the various C++
+    // preprocessor flags.
+    if (source.getType() == CxxSource.Type.CXX) {
+      args.addAll(preprocessorInput.getCxxppflags());
+      args.addAll(platform.getCxxppflags());
+    }
+
+    // If we're dealing with a C source that can be preprocessed, add in the various C
+    // preprocessor flags.
+    if (source.getType() == CxxSource.Type.C) {
+      args.addAll(preprocessorInput.getCppflags());
+      args.addAll(platform.getCppflags());
+    }
+
+    // If we're dealing with assembly source that can be preprocessed, add in the platform
+    // specific preprocessor flags.
+    if (source.getType() == CxxSource.Type.ASSEMBLER_WITH_CPP) {
+      args.addAll(platform.getAsppflags());
+    }
+
+    // If we're dealing with a C source that can be compiled, add the platform C compiler flags.
+    if (source.getType() == CxxSource.Type.C ||
+        source.getType() == CxxSource.Type.C_CPP_OUTPUT) {
+      args.addAll(platform.getCflags());
+    }
+
+    // If we're dealing with a C++ source that can be compiled, add the platform C++ compiler
+    // flags.
+    if (source.getType() == CxxSource.Type.CXX ||
+        source.getType() == CxxSource.Type.CXX_CPP_OUTPUT) {
+      args.addAll(platform.getCxxflags());
+    }
+
+    // Add in explicit additional compiler flags, if we're compiling.
+    if (source.getType() == CxxSource.Type.C ||
+        source.getType() == CxxSource.Type.C_CPP_OUTPUT ||
+        source.getType() == CxxSource.Type.CXX ||
+        source.getType() == CxxSource.Type.CXX_CPP_OUTPUT) {
+      args.addAll(compilerFlags);
+    }
+
+    // All source types require assembling, so add in platform-specific assembler flags.
+    args.addAll(iXassembler(platform.getAsflags()));
+
+    // If we're using pic, add in the appropriate flag.
+    if (pic) {
+      args.add("-fPIC");
+    }
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     return new CxxCompile(
-        compileParams,
+        params.copyWithChanges(
+            COMPILE_TYPE,
+            target,
+            dependencies.build(),
+            ImmutableSortedSet.<BuildRule>of()),
         new SourcePathResolver(resolver),
-        cxx ? platform.getCxx() : platform.getCc(),
+        compiler,
         Optional.<CxxCompile.Plugin>absent(),
-        ImmutableList.<String>builder()
-            .add("-x", cxx ? "c++" : "c")
-            .addAll((pic ? Optional.of("-fPIC") : Optional.<String>absent()).asSet())
-            .addAll(cxx ? preprocessorInput.getCxxppflags() : preprocessorInput.getCppflags())
-            .addAll(cxx ? platform.getCxxflags() : platform.getCflags())
-            .addAll(compilerFlags)
-            .build(),
-        getCompileOutputPath(target, source.getName()),
-        source.getSource(),
+        args.build(),
+        getCompileOutputPath(target, name),
+        source.getPath(),
         preprocessorInput.getIncludeRoots(),
         preprocessorInput.getSystemIncludeRoots(),
         preprocessorInput.getIncludes());
@@ -169,13 +259,13 @@ public class CxxCompilableEnhancer {
       CxxPreprocessorInput preprocessorInput,
       ImmutableList<String> compilerFlags,
       boolean pic,
-      Iterable<CxxSource> sources) {
+      ImmutableMap<String, CxxSource> sources) {
 
     ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
 
     // Iterate over the input C/C++ sources that we need to preprocess, assemble, and compile,
     // and generate compile rules for them.
-    for (CxxSource source : sources) {
+    for (ImmutableMap.Entry<String, CxxSource> entry : sources.entrySet()) {
       rules.add(createCompileBuildRule(
           params,
           resolver,
@@ -183,7 +273,8 @@ public class CxxCompilableEnhancer {
           preprocessorInput,
           compilerFlags,
           pic,
-          source));
+          entry.getKey(),
+          entry.getValue()));
     }
 
     return rules.build();

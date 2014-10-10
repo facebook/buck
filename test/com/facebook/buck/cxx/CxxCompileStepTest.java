@@ -67,7 +67,6 @@ public class CxxCompileStepTest {
     ImmutableList<String> expected = ImmutableList.<String>builder()
         .add(compiler.toString())
         .add("-c")
-        .add("-g")
         .addAll(flags)
         .add("-o", output.toString())
         .addAll(

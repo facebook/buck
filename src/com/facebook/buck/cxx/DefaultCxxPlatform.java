@@ -43,6 +43,9 @@ public class DefaultCxxPlatform implements CxxPlatform {
   private static final Path DEFAULT_AS = Paths.get("/usr/bin/as");
   private static final ImmutableList<String> DEFAULT_ASFLAGS = ImmutableList.of();
 
+  private static final Path DEFAULT_ASPP = Paths.get("/usr/bin/gcc");
+  private static final ImmutableList<String> DEFAULT_ASPPFLAGS = ImmutableList.of();
+
   private static final Path DEFAULT_CC = Paths.get("/usr/bin/gcc");
   private static final ImmutableList<String> DEFAULT_CFLAGS = ImmutableList.of();
 
@@ -111,6 +114,16 @@ public class DefaultCxxPlatform implements CxxPlatform {
   @Override
   public ImmutableList<String> getAsflags() {
     return getFlags("cxx", "asflags", DEFAULT_ASFLAGS);
+  }
+
+  @Override
+  public SourcePath getAspp() {
+    return getSourcePath("cxx", "aspp", DEFAULT_ASPP);
+  }
+
+  @Override
+  public ImmutableList<String> getAsppflags() {
+    return getFlags("cxx", "asppflags", DEFAULT_ASPPFLAGS);
   }
 
   @Override

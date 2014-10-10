@@ -63,7 +63,6 @@ public class CxxCompileStep extends ShellStep {
     return ImmutableList.<String>builder()
         .add(compiler.toString())
         .add("-c")
-        .add("-g")
         .addAll(flags)
         .add("-o", output.toString())
         .addAll(
