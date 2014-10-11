@@ -203,7 +203,9 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
         paths.scratchDir,
         dexSplitMode.getLinearAllocHardLimit(),
         dexSplitMode.getDexStore(),
-        paths.jarfilesSubdir);
+        paths.jarfilesSubdir,
+        dexSplitMode.getCheckLinearAllocLimit(),
+        dexSplitMode.getPrimaryDexPatternsExcluded());
     final PreDexedFilesSorter.Result sortResult =
         preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(context, steps);
 

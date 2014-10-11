@@ -209,10 +209,10 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
   }
 
   private DexSplitMode createDexSplitMode(Arg args) {
-    // Exopackage builds default to JAR, otherwise, default to RAW.
-    DexStore defaultDexStore = args.exopackage.or(false)
-        ? DexStore.JAR
-        : DexStore.RAW;
+    // Exopackage or isPrimaryDexPatternsExcluded builds default to JAR,otherwise, default to RAW.
+    DexStore defaultDexStore = (args.exopackage.or(false) || args.primaryDexPatternsExcluded.or(false))
+       ? DexStore.JAR
+       : DexStore.RAW;
     DexSplitStrategy dexSplitStrategy = args.minimizePrimaryDexSize.or(false)
         ? DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
         : DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
@@ -225,7 +225,9 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         args.primaryDexPatterns.or(ImmutableList.<String>of()),
         args.primaryDexClassesFile,
         args.primaryDexScenarioFile,
-        args.primaryDexScenarioOverflowAllowed.or(false));
+        args.primaryDexScenarioOverflowAllowed.or(false),
+        args.checkLinearAllocLimit.or(true),
+        args.primaryDexPatternsExcluded.or(false));
   }
 
   private PackageType getPackageType(Arg args) {
@@ -275,6 +277,12 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<BuildConfigFields> buildConfigValues;
 
     public Optional<SourcePath> buildConfigValuesFile;
+
+    /** Exclude primaryDexPatterns in primary dex*/
+    public Optional<Boolean> primaryDexPatternsExcluded;
+
+    /** whether check linearAllocLimit or not */
+    public Optional<Boolean> checkLinearAllocLimit;
 
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
