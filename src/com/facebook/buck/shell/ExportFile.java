@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -76,8 +77,9 @@ import java.util.Collections;
  * of the file to be saved.
  */
 // TODO(simons): Extend to also allow exporting a rule.
-public class ExportFile extends AbstractBuildRule {
+public class ExportFile extends AbstractBuildRule implements HasOutputName {
 
+  private final String name;
   private final SourcePath src;
   private final Path out;
 
@@ -85,14 +87,16 @@ public class ExportFile extends AbstractBuildRule {
   ExportFile(BuildRuleParams params, SourcePathResolver resolver, ExportFileDescription.Arg args) {
     super(params, resolver);
     BuildTarget target = params.getBuildTarget();
+
+    this.name = args.out.or(target.getShortName());
+
     if (args.src.isPresent()) {
       this.src = args.src.get();
     } else {
       this.src = new PathSourcePath(target.getBasePath().resolve(target.getShortName()));
     }
 
-    final String outName = args.out.or(target.getShortName());
-    this.out = BuckConstant.GEN_PATH.resolve(target.getBasePath()).resolve(outName);
+    this.out = BuckConstant.GEN_PATH.resolve(target.getBasePath()).resolve(this.name);
   }
 
   @Override
@@ -125,4 +129,10 @@ public class ExportFile extends AbstractBuildRule {
   public Path getPathToOutputFile() {
     return out;
   }
+
+  @Override
+  public String getOutputName() {
+    return name;
+  }
+
 }

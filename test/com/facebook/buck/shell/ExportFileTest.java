@@ -167,6 +167,20 @@ public class ExportFileTest {
         singleton(Paths.get("example.html")), exportFile.getInputsToCompareToOutput());
   }
 
+  @Test
+  public void getOutputName() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
+    args.src = Optional.absent();
+    args.out = Optional.of("cake");
+    ExportFile exportFile = new ExportFile(
+        new FakeBuildRuleParamsBuilder(target).build(),
+        pathResolver,
+        args);
+    assertEquals("cake", exportFile.getOutputName());
+  }
+
   private BuildContext getBuildContext(File root) {
     return BuildContext.builder()
         .setProjectFilesystem(new ProjectFilesystem(root))
