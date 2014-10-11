@@ -1,0 +1,11 @@
+python_library(
+  name = 'twitter-commons',
+  base_module = '',
+  srcs = glob(['**/*.py']),
+  deps = [
+    '//third-party/py/setuptools:pkg_resources',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

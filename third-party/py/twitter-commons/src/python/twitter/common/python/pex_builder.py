@@ -199,24 +199,6 @@ class PEXBuilder(object):
       Write enough of distribute into the .pex .bootstrap directory so that
       we can be fully self-contained.
     """
-    wrote_setuptools = False
-    setuptools = DistributionHelper.distribution_from_path(
-        self._interpreter.get_location('setuptools'),
-        name='setuptools')
-
-    if setuptools is None:
-      raise RuntimeError('Failed to find setuptools while building pex!')
-
-    for fn, content_stream in DistributionHelper.walk_data(setuptools):
-      if fn == 'pkg_resources.py' or fn.startswith('_markerlib'):
-        self._chroot.write(content_stream.read(), os.path.join(self.BOOTSTRAP_DIR, fn), 'resource')
-        wrote_setuptools = True
-
-    if not wrote_setuptools:
-      raise RuntimeError(
-          'Failed to extract pkg_resources from setuptools.  Perhaps pants was linked with an '
-          'incompatible setuptools.')
-
     libraries = (
       'twitter.common.python',
       'twitter.common.python.http',

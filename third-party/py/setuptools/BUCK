@@ -1,0 +1,17 @@
+python_library(
+  name = 'pkg_resources',
+  base_module = '',
+  srcs = [
+    'pkg_resources.py',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+export_file(
+  name = 'pkg_resources.py',
+  visibility = [
+    'PUBLIC',
+  ],
+)

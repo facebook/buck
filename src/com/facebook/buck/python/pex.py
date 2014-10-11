@@ -7,19 +7,35 @@ import json
 import shutil
 import tempfile
 import optparse
+import zipfile
 
-# Find the buck repo root relative this file.  We'll use this
-# to find the PEX library components and a recent version of
-# setuptools, all hosted in buck's third-party dir.
-BUCK_ROOT = os.sep.join(__file__.split(os.sep)[:-6])
+# Try to detect if we're running from source via the buck repo by
+# looking for the .arcconfig file.  If found, add the appropriate
+# deps to our python path, so we can find the twitter libs and
+# setuptools at runtime.  Also, locate the `pkg_resources` modules
+# via our local setuptools import.
+if not zipfile.is_zipfile(sys.argv[0]):
+    buck_root = os.sep.join(__file__.split(os.sep)[:-6])
+    sys.path.insert(0, os.path.join(
+        buck_root,
+        'third-party/py/twitter-commons/src/python'))
+    sys.path.insert(0, os.path.join(
+        buck_root, 'third-party/py/setuptools'))
+    pkg_resources_py = os.path.join(
+        buck_root,
+        'third-party/py/setuptools/pkg_resources.py')
 
+# Otherwise, we're running from a PEX, so import the `pkg_resources`
+# module via a resource.
+else:
+    import pkg_resources
+    pkg_resources_py_tmp = tempfile.NamedTemporaryFile(
+        prefix='pkg_resources.py')
+    pkg_resources_py_tmp.write(
+        pkg_resources.resource_string(__name__, 'pkg_resources.py'))
+    pkg_resources_py_tmp.flush()
+    pkg_resources_py = pkg_resources_py_tmp.name
 
-# Add the path to the PEX library code, and the version of setuptools
-# it requires, to our path and import the key parts we need.
-sys.path.insert(0, os.path.join(
-    BUCK_ROOT,
-    'third-party/py/twitter-commons/src/python'))
-sys.path.insert(0, os.path.join(BUCK_ROOT, 'third-party/py/setuptools'))
 from twitter.common.python.pex_builder import PEXBuilder
 from twitter.common.python.interpreter import PythonInterpreter
 
@@ -63,8 +79,7 @@ def main():
         interpreter = PythonInterpreter(
             options.python,
             PythonInterpreter.from_binary(options.python).identity,
-            extras={('setuptools', '1.0'):
-                    os.path.join(BUCK_ROOT, 'third-party/py/setuptools')})
+            extras={})
 
         pex_builder = PEXBuilder(
             path=tmp_dir,
@@ -80,6 +95,11 @@ def main():
 
         # Set the starting point for this PEX.
         pex_builder.info.entry_point = options.entry_point
+
+        # Copy in our version of `pkg_resources`.
+        pex_builder.add_source(
+            dereference_symlinks(pkg_resources_py),
+            os.path.join(pex_builder.BOOTSTRAP_DIR, 'pkg_resources.py'))
 
         # Add the sources listed in the manifest.
         for dst, src in manifest['modules'].iteritems():
