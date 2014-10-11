@@ -36,8 +36,11 @@ import java.nio.file.Paths;
 public class PythonBinaryDescription implements Description<PythonBinaryDescription.Arg> {
 
   public static final Path DEFAULT_PATH_TO_PEX =
-      Paths.get(System.getProperty("buck.buck_dir", System.getProperty("user.dir")))
-          .resolve("src/com/facebook/buck/python/pex.py");
+      Paths.get(
+          System.getProperty(
+              "buck.path_to_pex",
+              "src/com/facebook/buck/python/pex.py"))
+          .toAbsolutePath();
 
   public static final BuildRuleType TYPE = new BuildRuleType("python_binary");
 
