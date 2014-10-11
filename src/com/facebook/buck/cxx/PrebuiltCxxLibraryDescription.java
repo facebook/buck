@@ -64,7 +64,7 @@ public class PrebuiltCxxLibraryDescription
   }
 
   @Override
-  public <A extends Arg> CxxLibrary createBuildRule(
+  public <A extends Arg> AbstractCxxLibrary createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       final A args) {
@@ -133,7 +133,7 @@ public class PrebuiltCxxLibraryDescription
         .transform(fullPathFn)
         .toList();
 
-    return new CxxLibrary(params, pathResolver) {
+    return new AbstractCxxLibrary(params, pathResolver) {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {

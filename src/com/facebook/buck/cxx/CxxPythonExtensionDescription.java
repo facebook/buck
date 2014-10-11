@@ -28,7 +28,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -78,35 +77,19 @@ public class CxxPythonExtensionDescription implements
       A args) {
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    // Extract the C/C++ sources from the constructor arg.
-    ImmutableMap<String, CxxSource> srcs =
-        CxxDescriptionEnhancer.parseCxxSources(
-            params.getBuildTarget(),
-            pathResolver,
-            args.srcs.or(ImmutableList.<SourcePath>of()));
 
-    // Extract the header map from the our constructor arg.
+    // Extract all C/C++ sources from the constructor arg.
+    ImmutableMap<String, CxxSource> srcs =
+        CxxDescriptionEnhancer.parseCxxSources(params, ruleResolver, args);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            params.getBuildTarget(),
-            pathResolver,
-            args.headerNamespace.transform(MorePaths.TO_PATH)
-                .or(params.getBuildTarget().getBasePath()),
-            args.headers.or((ImmutableList.<SourcePath>of())));
-
-    // Extract the lex sources.
+            params,
+            ruleResolver,
+            args);
     ImmutableMap<String, SourcePath> lexSrcs =
-        pathResolver.getSourcePathNames(
-            params.getBuildTarget(),
-            "lexSrcs",
-            args.lexSrcs.or(ImmutableList.<SourcePath>of()));
-
-    // Extract the yacc sources.
+        CxxDescriptionEnhancer.parseLexSources(params, ruleResolver, args);
     ImmutableMap<String, SourcePath> yaccSrcs =
-        pathResolver.getSourcePathNames(
-            params.getBuildTarget(),
-            "yaccSrcs",
-            args.yaccSrcs.or(ImmutableList.<SourcePath>of()));
+        CxxDescriptionEnhancer.parseYaccSources(params, ruleResolver, args);
 
     CxxHeaderSourceSpec lexYaccSources =
         CxxDescriptionEnhancer.createLexYaccBuildRules(

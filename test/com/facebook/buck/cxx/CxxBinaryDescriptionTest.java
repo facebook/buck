@@ -34,6 +34,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.base.Optional;
@@ -91,7 +92,7 @@ public class CxxBinaryDescriptionTest {
     final Path archiveOutput = Paths.get("output/path/lib.a");
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     BuildRuleParams depParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(depTarget);
-    CxxLibrary dep = new CxxLibrary(depParams, pathResolver) {
+    AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
@@ -131,12 +132,18 @@ public class CxxBinaryDescriptionTest {
     // Create the description arg.
     CxxBinaryDescription.Arg arg = new CxxBinaryDescription.Arg();
     arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
-    arg.srcs = Optional.of(ImmutableList.<SourcePath>of(
-        new TestSourcePath("test/bar.cpp"),
-        new BuildTargetSourcePath(genSource.getBuildTarget())));
-    arg.headers = Optional.of(ImmutableList.<SourcePath>of(
-        new TestSourcePath("test/bar.h"),
-        new BuildTargetSourcePath(genHeader.getBuildTarget())));
+    arg.srcs =
+        Optional.of(
+            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+                ImmutableList.<SourcePath>of(
+                    new TestSourcePath("test/bar.cpp"),
+                    new BuildTargetSourcePath(genSource.getBuildTarget()))));
+    arg.headers =
+        Optional.of(
+            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+                ImmutableList.<SourcePath>of(
+                    new TestSourcePath("test/bar.h"),
+                    new BuildTargetSourcePath(genHeader.getBuildTarget()))));
     arg.compilerFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
     arg.langPreprocessorFlags = Optional.absent();

@@ -71,7 +71,7 @@ public class CxxPythonExtensionDescriptionTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
             .setDeps(ImmutableSortedSet.copyOf(deps))
             .build();
-    return new CxxLibrary(params, resolver) {
+    return new AbstractCxxLibrary(params, resolver) {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
@@ -154,7 +154,7 @@ public class CxxPythonExtensionDescriptionTest {
     final String sharedLibrarySoname = "soname";
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     BuildRuleParams depParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(depTarget);
-    CxxLibrary dep = new CxxLibrary(depParams, pathResolver) {
+    AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {

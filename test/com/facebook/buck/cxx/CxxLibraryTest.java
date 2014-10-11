@@ -67,7 +67,7 @@ public class CxxLibraryTest {
     final String sharedLibrarySoname = "lib.so";
 
     // Construct a CxxLibrary object to test.
-    CxxLibrary cxxLibrary = new CxxLibrary(params, pathResolver) {
+    AbstractCxxLibrary cxxLibrary = new AbstractCxxLibrary(params, pathResolver) {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
@@ -145,7 +145,7 @@ public class CxxLibraryTest {
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
     assertNull(cxxLibrary.getPathToOutputFile());
-    assertTrue(ImmutableList.copyOf(cxxLibrary.getInputsToCompareToOutput()).isEmpty());
+    assertTrue(ImmutableList.copyOf(cxxLibrary.getInputs()).isEmpty());
   }
 
 }

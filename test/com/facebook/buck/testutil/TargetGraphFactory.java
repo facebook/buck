@@ -43,9 +43,14 @@ public class TargetGraphFactory {
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     for (TargetNode<?> node : map.values()) {
       for (BuildTarget dep : node.getDeps()) {
-        graph.addEdge(node, Preconditions.checkNotNull(map.get(dep)));
+        graph.addEdge(node, Preconditions.checkNotNull(map.get(dep), dep));
       }
     }
     return new TargetGraph(graph, ImmutableMap.copyOf(unflavoredMap));
   }
+
+  public static TargetGraph newInstance(TargetNode<?>... nodes) {
+    return newInstance(ImmutableSet.copyOf(nodes));
+  }
+
 }

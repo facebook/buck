@@ -106,7 +106,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .setProjectFilesystem(filesystem)
         .build();
     EasyMock.replay(filesystem);
-    CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -155,7 +155,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .setProjectFilesystem(filesystem)
         .build();
     EasyMock.replay(filesystem);
-    CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -202,7 +202,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .setProjectFilesystem(filesystem)
         .build();
     EasyMock.replay(filesystem);
-    CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -249,7 +249,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .setProjectFilesystem(filesystem)
         .build();
     EasyMock.replay(filesystem);
-    CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -295,7 +295,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
         .setProjectFilesystem(filesystem)
         .build();
-    CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
         CXX_PLATFORM.getLd(),
         NativeLinkable.Type.SHARED);
@@ -313,7 +313,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
         .setProjectFilesystem(filesystem)
         .build();
-    CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
         CXX_PLATFORM.getLd(),
         NativeLinkable.Type.SHARED);

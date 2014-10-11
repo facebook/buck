@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -26,8 +27,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 @SuppressFieldNotInitialized
 public class CxxConstructorArg {
-  public Optional<ImmutableList<SourcePath>> srcs;
-  public Optional<ImmutableList<SourcePath>> headers;
+  public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>> srcs;
+  public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>> headers;
   public Optional<ImmutableList<String>> compilerFlags;
   public Optional<ImmutableList<String>> preprocessorFlags;
   public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags;
