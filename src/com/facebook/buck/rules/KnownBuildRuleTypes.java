@@ -42,6 +42,7 @@ import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPythonExtensionDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
@@ -164,6 +165,7 @@ public class KnownBuildRuleTypes {
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
 
     // Construct the C/C++ config wrapping the buck config.
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
     DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(platform, config);
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
@@ -201,10 +203,10 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleTestDescription());
     builder.register(new BuckExtensionDescription());
     builder.register(new CoreDataModelDescription());
-    builder.register(new CxxBinaryDescription(cxxPlatform));
-    builder.register(new CxxLibraryDescription(cxxPlatform));
-    builder.register(new CxxPythonExtensionDescription(cxxPlatform));
-    builder.register(new CxxTestDescription(cxxPlatform));
+    builder.register(new CxxBinaryDescription(cxxBuckConfig, cxxPlatform));
+    builder.register(new CxxLibraryDescription(cxxBuckConfig, cxxPlatform));
+    builder.register(new CxxPythonExtensionDescription(cxxBuckConfig, cxxPlatform));
+    builder.register(new CxxTestDescription(cxxBuckConfig, cxxPlatform));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
@@ -242,8 +244,16 @@ public class KnownBuildRuleTypes {
             thriftBuckConfig,
             ImmutableList.of(
                 new ThriftJavaEnhancer(thriftBuckConfig, javacEnv),
-                new ThriftCxxEnhancer(thriftBuckConfig, cxxPlatform, /* cpp2 */ false),
-                new ThriftCxxEnhancer(thriftBuckConfig, cxxPlatform, /* cpp2 */ true),
+                new ThriftCxxEnhancer(
+                    thriftBuckConfig,
+                    cxxBuckConfig,
+                    cxxPlatform,
+                    /* cpp2 */ false),
+                new ThriftCxxEnhancer(
+                    thriftBuckConfig,
+                    cxxBuckConfig,
+                    cxxPlatform,
+                    /* cpp2 */ true),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED))));
     builder.register(new XcodeProjectConfigDescription());

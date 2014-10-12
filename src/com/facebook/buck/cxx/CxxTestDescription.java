@@ -38,9 +38,11 @@ public class CxxTestDescription implements
   private static final BuildRuleType TYPE = new BuildRuleType("cxx_test");
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
 
-  public CxxTestDescription(CxxPlatform cxxPlatform) {
+  public CxxTestDescription(CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
+    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
     this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
   }
 
@@ -118,7 +120,7 @@ public class CxxTestDescription implements
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
     if (!constructorArg.lexSrcs.get().isEmpty()) {
-      deps.add(cxxPlatform.getLexDep().toString());
+      deps.add(cxxBuckConfig.getLexDep().toString());
     }
 
     CxxTestType type = constructorArg.framework.or(getDefaultTestType());

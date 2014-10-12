@@ -202,7 +202,7 @@ public class CxxDescriptionEnhancer {
   public static CxxHeaderSourceSpec createLexYaccBuildRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CxxPlatform config,
+      CxxPlatform cxxPlatform,
       ImmutableList<String> lexFlags,
       ImmutableMap<String, SourcePath> lexSrcs,
       ImmutableList<String> yaccFlags,
@@ -231,9 +231,9 @@ public class CxxDescriptionEnhancer {
                   pathResolver.filterBuildRuleInputs(ImmutableList.of(source))),
               ImmutableSortedSet.<BuildRule>of()),
           pathResolver,
-          config.getLex(),
+          cxxPlatform.getLex(),
           ImmutableList.<String>builder()
-              .addAll(config.getLexFlags())
+              .addAll(cxxPlatform.getLexFlags())
               .addAll(lexFlags)
               .build(),
           outputSource,
@@ -270,9 +270,9 @@ public class CxxDescriptionEnhancer {
                   pathResolver.filterBuildRuleInputs(ImmutableList.of(source))),
               ImmutableSortedSet.<BuildRule>of()),
           pathResolver,
-          config.getYacc(),
+          cxxPlatform.getYacc(),
           ImmutableList.<String>builder()
-              .addAll(config.getYaccFlags())
+              .addAll(cxxPlatform.getYaccFlags())
               .addAll(yaccFlags)
               .build(),
           outputPrefix,

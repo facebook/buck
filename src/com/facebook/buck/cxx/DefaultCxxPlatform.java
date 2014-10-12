@@ -237,11 +237,6 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public BuildTarget getLexDep() {
-    return delegate.getRequiredBuildTarget("cxx", "lex_dep");
-  }
-
-  @Override
   public SourcePath getYacc() {
     return getSourcePath("cxx", "yacc", DEFAULT_YACC);
   }
@@ -249,11 +244,6 @@ public class DefaultCxxPlatform implements CxxPlatform {
   @Override
   public ImmutableList<String> getYaccFlags() {
     return getFlags("cxx", "yaccflags", DEFAULT_YACC_FLAGS);
-  }
-
-  @Override
-  public BuildTarget getPythonDep() {
-    return delegate.getRequiredBuildTarget("cxx", "python_dep");
   }
 
   @Override

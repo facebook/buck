@@ -59,9 +59,11 @@ public class CxxPythonExtensionDescription implements
 
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_python_extension");
 
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
 
-  public CxxPythonExtensionDescription(CxxPlatform cxxPlatform) {
+  public CxxPythonExtensionDescription(CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
+    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
     this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
   }
 
@@ -208,10 +210,10 @@ public class CxxPythonExtensionDescription implements
       Arg constructorArg) {
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
-    deps.add(cxxPlatform.getPythonDep().toString());
+    deps.add(cxxBuckConfig.getPythonDep().toString());
 
     if (constructorArg.lexSrcs.isPresent() && !constructorArg.lexSrcs.get().isEmpty()) {
-      deps.add(cxxPlatform.getLexDep().toString());
+      deps.add(cxxBuckConfig.getLexDep().toString());
     }
 
     return deps.build();

@@ -149,8 +149,9 @@ public class CxxPythonExtensionDescriptionTest {
         ImmutableMap.<String, Map<String, String>>of(
             "cxx", ImmutableMap.of(
                 "python_dep", pythonDep.toString())));
-    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(buckConfig);
-    desc = new CxxPythonExtensionDescription(cxxBuckConfig);
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+    desc = new CxxPythonExtensionDescription(cxxBuckConfig, cxxPlatform);
   }
 
   private CxxPythonExtensionDescription.Arg getDefaultArg() {

@@ -56,12 +56,9 @@ public interface CxxPlatform {
 
   SourcePath getLex();
   ImmutableList<String> getLexFlags();
-  BuildTarget getLexDep();
 
   SourcePath getYacc();
   ImmutableList<String> getYaccFlags();
-
-  BuildTarget getPythonDep();
 
   BuildTarget getGtestDep();
 

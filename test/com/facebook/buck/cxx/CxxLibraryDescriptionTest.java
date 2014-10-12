@@ -178,8 +178,9 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
 
     // Instantiate a description and call its `createBuildRule` method.
-    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig);
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
+    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatform);
     CxxLibraryDescription.Arg arg = description.createEmptyConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
     arg.srcs =
@@ -227,7 +228,7 @@ public class CxxLibraryDescriptionTest {
         rule.getCxxPreprocessorInput());
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxBuckConfig.getLd(), NativeLinkable.Type.STATIC);
+    rule.getNativeLinkableInput(cxxPlatform.getLd(), NativeLinkable.Type.STATIC);
     BuildRule archiveRule = resolver.getRule(
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target));
     assertNotNull(archiveRule);
@@ -292,8 +293,9 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
 
     // Instantiate a description and call its `createBuildRule` method.
-    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig);
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
+    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatform);
     CxxLibraryDescription.Arg arg = description.createEmptyConstructorArg();
     arg.soname = Optional.of(soname);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
@@ -301,7 +303,7 @@ public class CxxLibraryDescriptionTest {
         .build();
     CxxLibrary rule = (CxxLibrary) description.createBuildRule(params, resolver, arg);
 
-    Linker linker = cxxBuckConfig.getLd();
+    Linker linker = cxxPlatform.getLd();
     NativeLinkableInput input = rule.getNativeLinkableInput(
         linker,
         NativeLinkable.Type.SHARED);
@@ -326,9 +328,10 @@ public class CxxLibraryDescriptionTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     FakeBuckConfig buckConfig = new FakeBuckConfig();
-    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(buckConfig);
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
     Linker linker = new GnuLinker(new TestSourcePath("linker"));
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig);
+    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatform);
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
@@ -455,8 +458,10 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
 
     // Construct C/C++ library build rules.
-    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig);
+    FakeBuckConfig buckConfig = new FakeBuckConfig();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatform);
     CxxLibraryDescription.Arg arg = description.createEmptyConstructorArg();
     arg.headers =
         Optional.of(
@@ -496,7 +501,7 @@ public class CxxLibraryDescriptionTest {
         rule.getCxxPreprocessorInput());
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxBuckConfig.getLd(), NativeLinkable.Type.STATIC);
+    rule.getNativeLinkableInput(cxxPlatform.getLd(), NativeLinkable.Type.STATIC);
     BuildRule staticRule = resolver.getRule(
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target));
     assertNotNull(staticRule);
@@ -552,7 +557,7 @@ public class CxxLibraryDescriptionTest {
             .toSet());
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxBuckConfig.getLd(), NativeLinkable.Type.SHARED);
+    rule.getNativeLinkableInput(cxxPlatform.getLd(), NativeLinkable.Type.SHARED);
     BuildRule sharedRule = resolver.getRule(
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(target));
     assertNotNull(sharedRule);

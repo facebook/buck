@@ -64,9 +64,11 @@ public class CxxLibraryDescription implements
               CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED,
               CxxDescriptionEnhancer.STATIC_FLAVOR, Type.STATIC));
 
+  private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
 
-  public CxxLibraryDescription(CxxPlatform cxxPlatform) {
+  public CxxLibraryDescription(CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
+    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
     this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
   }
 
@@ -481,7 +483,7 @@ public class CxxLibraryDescription implements
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
     if (constructorArg.lexSrcs.isPresent() && !constructorArg.lexSrcs.get().isEmpty()) {
-      deps.add(cxxPlatform.getLexDep().toString());
+      deps.add(cxxBuckConfig.getLexDep().toString());
     }
 
     return deps.build();

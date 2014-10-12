@@ -16,6 +16,7 @@
 
 package com.facebook.buck.thrift;
 
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxCompilables;
@@ -51,10 +52,11 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
   public ThriftCxxEnhancer(
       ThriftBuckConfig thriftBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       boolean cpp2) {
     this.thriftBuckConfig = Preconditions.checkNotNull(thriftBuckConfig);
-    this.cxxLibraryDescription = new CxxLibraryDescription(cxxPlatform);
+    this.cxxLibraryDescription = new CxxLibraryDescription(cxxBuckConfig, cxxPlatform);
     this.cpp2 = cpp2;
   }
 

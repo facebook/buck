@@ -19,6 +19,7 @@ package com.facebook.buck.thrift;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -49,15 +50,18 @@ public class ThriftCxxEnhancerTest {
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:test#cpp");
   private static final FakeBuckConfig BUCK_CONFIG = new FakeBuckConfig();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
-  private static final DefaultCxxPlatform CXX_BUCK_CONFIG =
+  private static final CxxBuckConfig CXX_BUCK_CONFIG = new CxxBuckConfig(BUCK_CONFIG);
+  private static final DefaultCxxPlatform CXX_PLATFORM =
       new DefaultCxxPlatform(BUCK_CONFIG);
   private static final ThriftCxxEnhancer ENHANCER_CPP = new ThriftCxxEnhancer(
       THRIFT_BUCK_CONFIG,
       CXX_BUCK_CONFIG,
+      CXX_PLATFORM,
       /* cpp2 */ false);
   private static final ThriftCxxEnhancer ENHANCER_CPP2 = new ThriftCxxEnhancer(
       THRIFT_BUCK_CONFIG,
       CXX_BUCK_CONFIG,
+      CXX_PLATFORM,
       /* cpp2 */ true);
 
   private static FakeBuildRule createFakeBuildRule(
@@ -186,10 +190,12 @@ public class ThriftCxxEnhancerTest {
     ThriftCxxEnhancer cppEnhancerWithSettings = new ThriftCxxEnhancer(
         thriftBuckConfig,
         CXX_BUCK_CONFIG,
+        CXX_PLATFORM,
         /* cpp2 */ false);
     ThriftCxxEnhancer cpp2EnhancerWithSettings = new ThriftCxxEnhancer(
         thriftBuckConfig,
         CXX_BUCK_CONFIG,
+        CXX_PLATFORM,
         /* cpp2 */ true);
 
     // With no options we just need to find the C/C++ thrift library.
@@ -458,7 +464,7 @@ public class ThriftCxxEnhancerTest {
     // Create a dummy implicit dep to pass in.
     BuildRule dep = createFakeBuildRule("//:dep", pathResolver);
     resolver.addToIndex(dep);
-    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.<BuildRule>of(dep);
+    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of(dep);
 
     // Run the enhancer to create the language specific build rule.
     ENHANCER_CPP2.createBuildRule(
