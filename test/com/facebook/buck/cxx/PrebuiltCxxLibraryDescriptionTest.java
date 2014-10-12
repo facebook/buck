@@ -22,29 +22,60 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonPackageComponents;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PrebuiltCxxLibraryDescriptionTest {
+
+  private <T> TargetNode<?> createTargetNode(
+      BuildTarget target,
+      Description<T> description,
+      T arg) {
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        new FakeProjectFilesystem(),
+        new BuildTargetParser(),
+        target,
+        new FakeRuleKeyBuilderFactory());
+    try {
+      return new TargetNode<>(
+          description,
+          arg,
+          params,
+          ImmutableSet.<BuildTarget>of(),
+          ImmutableSet.<BuildTargetPattern>of());
+    } catch (NoSuchBuildTargetException e) {
+      throw Throwables.propagate(e);
+    }
+  }
 
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:target");
   private static final CxxPlatform CXX_PLATFORM = new DefaultCxxPlatform(new FakeBuckConfig());
@@ -100,13 +131,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
   public void createBuildRuleDefault() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
-    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.exists(EasyMock.anyObject(Path.class))).andReturn(true);
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
         .setProjectFilesystem(filesystem)
         .build();
-    EasyMock.replay(filesystem);
-    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -149,13 +178,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
     arg.headerOnly = Optional.of(true);
-    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.exists(EasyMock.anyObject(Path.class))).andReturn(true);
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
         .setProjectFilesystem(filesystem)
         .build();
-    EasyMock.replay(filesystem);
-    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -196,13 +223,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
     arg.provided = Optional.of(true);
-    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.exists(EasyMock.anyObject(Path.class))).andReturn(true);
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
         .setProjectFilesystem(filesystem)
         .build();
-    EasyMock.replay(filesystem);
-    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -243,13 +268,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
     arg.includeDirs = Optional.of(ImmutableList.of("test"));
-    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.exists(EasyMock.anyObject(Path.class))).andReturn(true);
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
         .setProjectFilesystem(filesystem)
         .build();
-    EasyMock.replay(filesystem);
-    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -294,8 +317,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
         .setProjectFilesystem(filesystem)
+        .setTargetGraph(
+            TargetGraphFactory.newInstance(
+                createTargetNode(TARGET, DESC, arg)))
         .build();
-    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
         CXX_PLATFORM.getLd(),
         NativeLinkable.Type.SHARED);
@@ -313,7 +339,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
         .setProjectFilesystem(filesystem)
         .build();
-    AbstractCxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
         CXX_PLATFORM.getLd(),
         NativeLinkable.Type.SHARED);

@@ -16,19 +16,14 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -69,36 +64,12 @@ public class CxxLibrary extends AbstractCxxLibrary {
     this.soname = Preconditions.checkNotNull(soname);
   }
 
-  private <T> BuildRule requireBuildRule(TargetNode<T> node, Flavor... flavors) {
-    BuildTarget target = BuildTargets.extendFlavoredBuildTarget(
-        getBuildTarget(),
-        ImmutableSet.copyOf(flavors));
-    Optional<BuildRule> rule = ruleResolver.getRuleOptional(target);
-    if (!rule.isPresent()) {
-      Description<T> description = node.getDescription();
-      T args = node.getConstructorArg();
-      rule = Optional.of(
-          description.createBuildRule(
-              params.copyWithChanges(
-                  params.getBuildRuleType(),
-                  target,
-                  params.getDeclaredDeps(),
-                  params.getExtraDeps()),
-              ruleResolver,
-              args));
-      ruleResolver.addToIndex(rule.get());
-    }
-    return rule.get();
-  }
-
-  private BuildRule requireBuildRule(Flavor... flavors) {
-    TargetNode<?> node = params.getTargetGraph().get(getBuildTarget());
-    return requireBuildRule(node, flavors);
-  }
-
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput() {
-    BuildRule rule = requireBuildRule(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
+    BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
+        params,
+        ruleResolver,
+        CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     Preconditions.checkState(rule instanceof SymlinkTree);
     SymlinkTree symlinkTree = (SymlinkTree) rule;
     return CxxPreprocessorInput.builder()
@@ -120,10 +91,16 @@ public class CxxLibrary extends AbstractCxxLibrary {
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     if (type == Type.SHARED) {
       Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(getBuildTarget());
-      libraryRule = requireBuildRule(CxxDescriptionEnhancer.SHARED_FLAVOR);
+      libraryRule = CxxDescriptionEnhancer.requireBuildRule(
+          params,
+          ruleResolver,
+          CxxDescriptionEnhancer.SHARED_FLAVOR);
       linkerArgsBuilder.add(sharedLibraryPath.toString());
     } else {
-      libraryRule = requireBuildRule(CxxDescriptionEnhancer.STATIC_FLAVOR);
+      libraryRule = CxxDescriptionEnhancer.requireBuildRule(
+          params,
+          ruleResolver,
+          CxxDescriptionEnhancer.STATIC_FLAVOR);
       Path staticLibraryPath = CxxDescriptionEnhancer.getStaticLibraryPath(getBuildTarget());
       if (linkWhole) {
         linkerArgsBuilder.addAll(linker.linkWhole(staticLibraryPath.toString()));
@@ -142,7 +119,10 @@ public class CxxLibrary extends AbstractCxxLibrary {
   public PythonPackageComponents getPythonPackageComponents() {
     String sharedLibrarySoname =
         soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget()));
-    BuildRule sharedLibraryBuildRule = requireBuildRule(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
+        params,
+        ruleResolver,
+        CxxDescriptionEnhancer.SHARED_FLAVOR);
     return new PythonPackageComponents(
         /* modules */ ImmutableMap.<Path, SourcePath>of(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
