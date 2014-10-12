@@ -18,16 +18,20 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.python.PythonUtil;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -37,10 +41,21 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 public class CxxPythonExtensionDescription implements
     Description<CxxPythonExtensionDescription.Arg>,
     ImplicitDepsInferringDescription<CxxPythonExtensionDescription.Arg> {
+
+  private static enum Type {
+    EXTENSION,
+  }
+
+  private static final FlavorDomain<Type> LIBRARY_TYPE =
+      new FlavorDomain<>(
+          "C/C++ Library Type",
+          ImmutableMap.of(
+              CxxDescriptionEnhancer.SHARED_FLAVOR, Type.EXTENSION));
 
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_python_extension");
 
@@ -67,16 +82,14 @@ public class CxxPythonExtensionDescription implements
 
   @VisibleForTesting
   protected Path getExtensionPath(BuildTarget target) {
-    return BuildTargets.getBinPath(target, "%s/" + getExtensionName(target));
+    return BuildTargets.getBinPath(getExtensionTarget(target), "%s")
+        .resolve(getExtensionName(target));
   }
 
-  @Override
-  public <A extends Arg> CxxPythonExtension createBuildRule(
+  private <A extends Arg> BuildRule createExtensionBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       A args) {
-
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -132,36 +145,56 @@ public class CxxPythonExtensionDescription implements
                 .build());
 
     // Setup the rules to link the shared library.
-    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
-    final BuildTarget extensionTarget = getExtensionTarget(params.getBuildTarget());
     String extensionName = getExtensionName(params.getBuildTarget());
-    Path extensionModule = baseModule.resolve(extensionName);
-    final Path extensionPath = getExtensionPath(extensionTarget);
-    CxxLink extensionRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+    Path extensionPath = getExtensionPath(params.getBuildTarget());
+    return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
-        pathResolver,
+        new SourcePathResolver(ruleResolver),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
-        extensionTarget,
+        getExtensionTarget(params.getBuildTarget()),
         CxxLinkableEnhancer.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,
         picObjects,
         NativeLinkable.Type.SHARED,
         params.getDeps());
-    ruleResolver.addToIndex(extensionRule);
 
-    // Create the CppLibrary rule that dependents can reference from the action graph
-    // to get information about this rule (e.g. how this rule contributes to the C/C++
-    // preprocessor or linker).  Long-term this should probably be collapsed into the
-    // TargetGraph when it becomes exposed to build rule creation.
+  }
+
+  @Override
+  public <A extends Arg> BuildRule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      A args) {
+
+    // See if we're building a particular "type" of this library, and if so, extract
+    // it as an enum.
+    Optional<Map.Entry<Flavor, Type>> type;
+    try {
+      type = LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget().getFlavors());
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
+    }
+
+    // If we *are* building a specific type of this lib, call into the type specific
+    // rule builder methods.  Currently, we only support building a shared lib from the
+    // pre-existing static lib, which we do here.
+    if (type.isPresent()) {
+      Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
+      return createExtensionBuildRule(params, ruleResolver, args);
+    }
+
+    // Otherwise, we return the generic placeholder of this library, that dependents can use
+    // get the real build rules via querying the action graph.
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
     return new CxxPythonExtension(
         params,
+        ruleResolver,
         pathResolver,
-        extensionModule,
-        new BuildTargetSourcePath(extensionRule.getBuildTarget()),
-        extensionRule);
+        baseModule.resolve(getExtensionName(params.getBuildTarget())));
   }
 
   @Override
@@ -177,7 +210,7 @@ public class CxxPythonExtensionDescription implements
 
     deps.add(cxxPlatform.getPythonDep().toString());
 
-    if (!constructorArg.lexSrcs.get().isEmpty()) {
+    if (constructorArg.lexSrcs.isPresent() && !constructorArg.lexSrcs.get().isEmpty()) {
       deps.add(cxxPlatform.getLexDep().toString());
     }
 

@@ -18,78 +18,46 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
-import javax.annotation.Nullable;
+public class CxxPythonExtension extends NoopBuildRule implements PythonPackagable {
 
-public class CxxPythonExtension extends AbstractBuildRule implements PythonPackagable {
-
+  private final BuildRuleParams params;
+  private final BuildRuleResolver ruleResolver;
   private final Path module;
-  private final SourcePath output;
-  private final CxxLink rule;
 
   public CxxPythonExtension(
       BuildRuleParams params,
-      SourcePathResolver resolver,
-      Path module,
-      SourcePath output,
-      CxxLink rule) {
-    super(params, resolver);
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      Path module) {
+    super(params, pathResolver);
+    this.params = Preconditions.checkNotNull(params);
+    this.ruleResolver = Preconditions.checkNotNull(ruleResolver);
     this.module = Preconditions.checkNotNull(module);
-    this.output = Preconditions.checkNotNull(output);
-    this.rule = Preconditions.checkNotNull(rule);
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .set("module", module.toString());
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    return ImmutableList.of();
-  }
-
-  @Nullable
-  @Override
-  public Path getPathToOutputFile() {
-    return null;
   }
 
   @Override
   public PythonPackageComponents getPythonPackageComponents() {
+    BuildRule extension =
+        CxxDescriptionEnhancer.requireBuildRule(
+            params,
+            ruleResolver,
+            CxxDescriptionEnhancer.SHARED_FLAVOR);
+    SourcePath output = new BuildTargetSourcePath(extension.getBuildTarget());
     return new PythonPackageComponents(
         ImmutableMap.of(module, output),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of());
-  }
-
-  public Path getModule() {
-    return module;
-  }
-
-  public CxxLink getRule() {
-    return rule;
   }
 
 }

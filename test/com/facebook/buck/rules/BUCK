@@ -4,6 +4,7 @@ java_library(
     'AbstractNodeBuilder.java',
     'BuildRuleParamsFactory.java',
     'DefaultKnownBuildRuleTypes.java',
+    'EmptyDescription.java',
     'FakeBuildableContext.java',
     'FakeBuildContext.java',
     'FakeBuildRule.java',

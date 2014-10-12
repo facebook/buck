@@ -33,6 +33,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -520,6 +521,9 @@ public class CxxDescriptionEnhancer {
       BuildRuleResolver ruleResolver,
       Flavor... flavors) {
     TargetNode<?> node = params.getTargetGraph().get(params.getBuildTarget());
+    Preconditions.checkNotNull(
+        node,
+        String.format("%s not in target graph", params.getBuildTarget()));
     return requireBuildRule(params, ruleResolver, node, flavors);
   }
 
