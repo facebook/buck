@@ -159,6 +159,7 @@ public class CxxCompilableEnhancerTest {
     assertEquals(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
+            CXX_PLATFORM.asFlavor(),
             name,
             /* pic */ false),
         noPic.getBuildTarget());
@@ -178,6 +179,7 @@ public class CxxCompilableEnhancerTest {
     assertEquals(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
+            CXX_PLATFORM.asFlavor(),
             name,
             /* pic */ true),
         pic.getBuildTarget());

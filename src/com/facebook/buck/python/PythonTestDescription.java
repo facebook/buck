@@ -16,9 +16,12 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -36,6 +39,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -62,14 +66,20 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   private final Path pathToPex;
   private final Path pathToPythonTestMain;
   private final PythonEnvironment pythonEnvironment;
+  private final CxxPlatform defaultCxxPlatform;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
       Path pathToPex,
       Path pathToPythonTestMain,
-      PythonEnvironment pythonEnvironment) {
+      PythonEnvironment pythonEnvironment,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.pathToPex = Preconditions.checkNotNull(pathToPex);
     this.pathToPythonTestMain = Preconditions.checkNotNull(pathToPythonTestMain);
     this.pythonEnvironment = Preconditions.checkNotNull(pythonEnvironment);
+    this.defaultCxxPlatform = Preconditions.checkNotNull(defaultCxxPlatform);
+    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
 
   @Override
@@ -174,8 +184,18 @@ public class PythonTestDescription implements Description<PythonTestDescription.
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
+    // Extract the platform from the flavor, falling back to the default platform if none are
+    // found.
+    CxxPlatform cxxPlatform;
+    try {
+      cxxPlatform = cxxPlatforms.getValue(
+          params.getBuildTarget().getFlavors()).or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
+    }
+
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
 
     ImmutableMap<Path, SourcePath> srcs = PythonUtil.toModuleMap(
@@ -219,7 +239,8 @@ public class PythonTestDescription implements Description<PythonTestDescription.
             .build(),
         resources,
         ImmutableMap.<Path, SourcePath>of());
-    PythonPackageComponents allComponents = PythonUtil.getAllComponents(params, testComponents);
+    PythonPackageComponents allComponents =
+        PythonUtil.getAllComponents(params, testComponents, cxxPlatform);
 
     // Build the PEX using a python binary rule with the minimum dependencies.
     BuildRuleParams binaryParams = params.copyWithChanges(

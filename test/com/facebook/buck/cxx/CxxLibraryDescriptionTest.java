@@ -17,15 +17,16 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -59,14 +60,29 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Set;
 
 public class CxxLibraryDescriptionTest {
+
+  private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
+    for (T item : items) {
+      assertThat(container, Matchers.hasItem(item));
+    }
+  }
+
+  private static <T> void assertNotContains(ImmutableList<T> container, Iterable<T> items) {
+    for (T item : items) {
+      assertThat(container, Matchers.not(Matchers.hasItem(item)));
+    }
+  }
 
   private GenruleDescription.Arg createEmptyGenruleDescriptionArg() {
     GenruleDescription.Arg arg = new GenruleDescription().createUnpopulatedConstructorArg();
@@ -146,7 +162,7 @@ public class CxxLibraryDescriptionTest {
     AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput() {
+      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
         return CxxPreprocessorInput.builder()
             .setRules(
                 ImmutableSet.of(
@@ -157,14 +173,14 @@ public class CxxLibraryDescriptionTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
+      public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
         return new NativeLinkableInput(
             ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
       }
 
       @Override
-      public PythonPackageComponents getPythonPackageComponents() {
+      public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
         return new PythonPackageComponents(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
@@ -179,8 +195,12 @@ public class CxxLibraryDescriptionTest {
 
     // Instantiate a description and call its `createBuildRule` method.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
-    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatform);
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    FlavorDomain<CxxPlatform> cxxPlatforms =
+        new FlavorDomain<>(
+            "C/C++ Platform",
+            ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
+    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
     CxxLibraryDescription.Arg arg = description.createEmptyConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
     arg.srcs =
@@ -214,7 +234,9 @@ public class CxxLibraryDescriptionTest {
         CxxPreprocessorInput.builder()
             .setRules(
                 ImmutableSet.of(
-                    CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)))
+                    CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                        target,
+                        cxxPlatform.asFlavor())))
             .setIncludes(
                 ImmutableMap.<Path, SourcePath>of(
                     Paths.get(headerName),
@@ -223,23 +245,27 @@ public class CxxLibraryDescriptionTest {
                     new BuildTargetSourcePath(genHeader.getBuildTarget())))
             .setIncludeRoots(
                 ImmutableList.of(
-                    CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target)))
+                    CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                        target,
+                        cxxPlatform.asFlavor())))
             .build(),
-        rule.getCxxPreprocessorInput());
+        rule.getCxxPreprocessorInput(cxxPlatform));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform.getLd(), NativeLinkable.Type.STATIC);
+    rule.getNativeLinkableInput(cxxPlatform, NativeLinkable.Type.STATIC);
     BuildRule archiveRule = resolver.getRule(
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target));
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target, cxxPlatform.asFlavor()));
     assertNotNull(archiveRule);
     assertEquals(
         ImmutableSet.of(
             CxxCompilableEnhancer.createCompileBuildTarget(
                 target,
+                cxxPlatform.asFlavor(),
                 "test/bar.cpp",
                 /* pic */ false),
             CxxCompilableEnhancer.createCompileBuildTarget(
                 target,
+                cxxPlatform.asFlavor(),
                 genSourceName,
                 /* pic */ false)),
         FluentIterable.from(archiveRule.getDeps())
@@ -251,6 +277,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule compileRule1 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
+            cxxPlatform.asFlavor(),
             "test/bar.cpp",
             /* pic */ false));
     assertNotNull(compileRule1);
@@ -259,7 +286,7 @@ public class CxxLibraryDescriptionTest {
             genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor())),
         FluentIterable.from(compileRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -269,6 +296,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule compileRule2 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
+            cxxPlatform.asFlavor(),
             genSourceName,
             /* pic */ false));
     assertNotNull(compileRule2);
@@ -278,7 +306,7 @@ public class CxxLibraryDescriptionTest {
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor())),
         FluentIterable.from(compileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -294,8 +322,12 @@ public class CxxLibraryDescriptionTest {
 
     // Instantiate a description and call its `createBuildRule` method.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
-    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatform);
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    FlavorDomain<CxxPlatform> cxxPlatforms =
+        new FlavorDomain<>(
+            "C/C++ Platform",
+            ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
+    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
     CxxLibraryDescription.Arg arg = description.createEmptyConstructorArg();
     arg.soname = Optional.of(soname);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
@@ -305,7 +337,7 @@ public class CxxLibraryDescriptionTest {
 
     Linker linker = cxxPlatform.getLd();
     NativeLinkableInput input = rule.getNativeLinkableInput(
-        linker,
+        cxxPlatform,
         NativeLinkable.Type.SHARED);
 
     ImmutableList<SourcePath> inputs = input.getInputs();
@@ -329,12 +361,21 @@ public class CxxLibraryDescriptionTest {
 
     FakeBuckConfig buckConfig = new FakeBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
-    Linker linker = new GnuLinker(new TestSourcePath("linker"));
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatform);
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+    FlavorDomain<CxxPlatform> cxxPlatforms =
+        new FlavorDomain<>(
+            "C/C++ Platform",
+            ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
+    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
+
+    // Lookup the link whole flags.
+    Path staticLib = CxxDescriptionEnhancer.getStaticLibraryPath(target, cxxPlatform.asFlavor());
+    Linker linker = cxxPlatform.getLd();
+    Set<String> linkWholeFlags = Sets.newHashSet(linker.linkWhole(staticLib.toString()));
+    linkWholeFlags.remove(staticLib.toString());
 
     // First, create a cxx library without using link whole.
     CxxLibraryDescription.Arg normalArg = description.createEmptyConstructorArg();
@@ -344,12 +385,9 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary normal = (CxxLibrary) description.createBuildRule(normalParams, resolver, normalArg);
 
     // Verify that the linker args contains the link whole flags.
-    assertFalse(
-        normal.getNativeLinkableInput(
-            linker, NativeLinkable.Type.STATIC).getArgs().contains("--whole-archive"));
-    assertFalse(
-        normal.getNativeLinkableInput(
-            linker, NativeLinkable.Type.STATIC).getArgs().contains("--no-whole-archive"));
+    assertNotContains(
+        normal.getNativeLinkableInput(cxxPlatform, NativeLinkable.Type.STATIC).getArgs(),
+        linkWholeFlags);
 
     // Create a cxx library using link whole.
     CxxLibraryDescription.Arg linkWholeArg = description.createEmptyConstructorArg();
@@ -361,12 +399,9 @@ public class CxxLibraryDescriptionTest {
         (CxxLibrary) description.createBuildRule(linkWholeParams, resolver, linkWholeArg);
 
     // Verify that the linker args contains the link whole flags.
-    assertTrue(
-        linkWhole.getNativeLinkableInput(
-            linker, NativeLinkable.Type.STATIC).getArgs().contains("--whole-archive"));
-    assertTrue(
-        linkWhole.getNativeLinkableInput(
-            linker, NativeLinkable.Type.STATIC).getArgs().contains("--no-whole-archive"));
+    assertContains(
+        linkWhole.getNativeLinkableInput(cxxPlatform, NativeLinkable.Type.STATIC).getArgs(),
+        linkWholeFlags);
   }
 
   @Test
@@ -414,7 +449,7 @@ public class CxxLibraryDescriptionTest {
     AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput() {
+      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
         return CxxPreprocessorInput.builder()
             .setRules(
                 ImmutableSet.of(
@@ -425,7 +460,7 @@ public class CxxLibraryDescriptionTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
+      public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
         return type == Type.STATIC ?
             new NativeLinkableInput(
                 ImmutableList.<SourcePath>of(
@@ -438,7 +473,7 @@ public class CxxLibraryDescriptionTest {
       }
 
       @Override
-      public PythonPackageComponents getPythonPackageComponents() {
+      public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
         return new PythonPackageComponents(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
@@ -460,8 +495,12 @@ public class CxxLibraryDescriptionTest {
     // Construct C/C++ library build rules.
     FakeBuckConfig buckConfig = new FakeBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatform);
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+    FlavorDomain<CxxPlatform> cxxPlatforms =
+        new FlavorDomain<>(
+            "C/C++ Platform",
+            ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
+    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
     CxxLibraryDescription.Arg arg = description.createEmptyConstructorArg();
     arg.headers =
         Optional.of(
@@ -489,30 +528,36 @@ public class CxxLibraryDescriptionTest {
         CxxPreprocessorInput.builder()
             .setRules(
                 ImmutableSet.of(
-                    CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)))
+                    CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                        target,
+                        cxxPlatform.asFlavor())))
             .setIncludes(
                 ImmutableMap.<Path, SourcePath>of(
                     Paths.get(genHeaderName),
                     new BuildTargetSourcePath(genHeader.getBuildTarget())))
             .setIncludeRoots(
                 ImmutableList.of(
-                    CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target)))
+                    CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                        target,
+                        cxxPlatform.asFlavor())))
             .build(),
-        rule.getCxxPreprocessorInput());
+        rule.getCxxPreprocessorInput(cxxPlatform));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform.getLd(), NativeLinkable.Type.STATIC);
+    rule.getNativeLinkableInput(cxxPlatform, NativeLinkable.Type.STATIC);
     BuildRule staticRule = resolver.getRule(
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target));
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target, cxxPlatform.asFlavor()));
     assertNotNull(staticRule);
     assertEquals(
         ImmutableSet.of(
             CxxCompilableEnhancer.createCompileBuildTarget(
                 target,
+                cxxPlatform.asFlavor(),
                 "test/bar.cpp",
                 /* pic */ false),
             CxxCompilableEnhancer.createCompileBuildTarget(
                 target,
+                cxxPlatform.asFlavor(),
                 genSourceName,
                 /* pic */ false)),
         FluentIterable.from(staticRule.getDeps())
@@ -524,6 +569,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule staticCompileRule1 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
+            cxxPlatform.asFlavor(),
             "test/bar.cpp",
             /* pic */ false));
     assertNotNull(staticCompileRule1);
@@ -532,7 +578,7 @@ public class CxxLibraryDescriptionTest {
             genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor())),
         FluentIterable.from(staticCompileRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -542,6 +588,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule staticCompileRule2 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
+            cxxPlatform.asFlavor(),
             genSourceName,
             /* pic */ false));
     assertNotNull(staticCompileRule2);
@@ -551,25 +598,27 @@ public class CxxLibraryDescriptionTest {
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor())),
         FluentIterable.from(staticCompileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform.getLd(), NativeLinkable.Type.SHARED);
+    rule.getNativeLinkableInput(cxxPlatform, NativeLinkable.Type.SHARED);
     BuildRule sharedRule = resolver.getRule(
-        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(target));
+        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(target, cxxPlatform.asFlavor()));
     assertNotNull(sharedRule);
     assertEquals(
         ImmutableSet.of(
             sharedLibraryDep.getBuildTarget(),
             CxxCompilableEnhancer.createCompileBuildTarget(
                 target,
+                cxxPlatform.asFlavor(),
                 "test/bar.cpp",
                 /* pic */ true),
             CxxCompilableEnhancer.createCompileBuildTarget(
                 target,
+                cxxPlatform.asFlavor(),
                 genSourceName,
                 /* pic */ true)),
         FluentIterable.from(sharedRule.getDeps())
@@ -581,6 +630,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule sharedCompileRule1 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
+            cxxPlatform.asFlavor(),
             "test/bar.cpp",
             /* pic */ true));
     assertNotNull(sharedCompileRule1);
@@ -589,7 +639,7 @@ public class CxxLibraryDescriptionTest {
             genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor())),
         FluentIterable.from(sharedCompileRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -599,6 +649,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule sharedCompileRule2 = resolver.getRule(
         CxxCompilableEnhancer.createCompileBuildTarget(
             target,
+            cxxPlatform.asFlavor(),
             genSourceName,
             /* pic */ true));
     assertNotNull(sharedCompileRule2);
@@ -608,7 +659,7 @@ public class CxxLibraryDescriptionTest {
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor())),
         FluentIterable.from(sharedCompileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -622,7 +673,7 @@ public class CxxLibraryDescriptionTest {
             new BuildTargetSourcePath(sharedRule.getBuildTarget())));
     assertEquals(
         expectedPythonPackageComponents,
-        rule.getPythonPackageComponents());
+        rule.getPythonPackageComponents(cxxPlatform));
   }
 
 }

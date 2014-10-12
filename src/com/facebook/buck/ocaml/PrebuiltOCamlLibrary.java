@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -84,7 +84,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
+  public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
     Preconditions.checkArgument(
         type == Type.STATIC,
         "Only supporting static linking in OCaml");

@@ -44,6 +44,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPythonExtensionDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatform;
@@ -59,6 +60,8 @@ import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarDescription;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.ocaml.OCamlBinaryDescription;
 import com.facebook.buck.ocaml.OCamlBuckConfig;
 import com.facebook.buck.ocaml.OCamlLibraryDescription;
@@ -166,7 +169,11 @@ public class KnownBuildRuleTypes {
 
     // Construct the C/C++ config wrapping the buck config.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
-    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(platform, config);
+    DefaultCxxPlatform defaultCxxPlatform = new DefaultCxxPlatform(platform, config);
+    FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
+        "C/C++ platform",
+        ImmutableMap.<Flavor, CxxPlatform>of(
+            defaultCxxPlatform.asFlavor(), defaultCxxPlatform));
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
@@ -203,10 +210,10 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleTestDescription());
     builder.register(new BuckExtensionDescription());
     builder.register(new CoreDataModelDescription());
-    builder.register(new CxxBinaryDescription(cxxBuckConfig, cxxPlatform));
-    builder.register(new CxxLibraryDescription(cxxBuckConfig, cxxPlatform));
-    builder.register(new CxxPythonExtensionDescription(cxxBuckConfig, cxxPlatform));
-    builder.register(new CxxTestDescription(cxxBuckConfig, cxxPlatform));
+    builder.register(new CxxBinaryDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
+    builder.register(new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms));
+    builder.register(new CxxPythonExtensionDescription(cxxBuckConfig, cxxPlatforms));
+    builder.register(new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
@@ -220,7 +227,7 @@ public class KnownBuildRuleTypes {
     builder.register(new NdkLibraryDescription(ndkVersion));
     builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
     builder.register(new OCamlLibraryDescription(ocamlBuckConfig));
-    builder.register(new PrebuiltCxxLibraryDescription(cxxPlatform));
+    builder.register(new PrebuiltCxxLibraryDescription(cxxPlatforms));
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());
     builder.register(new PrebuiltOCamlLibraryDescription());
@@ -228,13 +235,17 @@ public class KnownBuildRuleTypes {
     builder.register(
         new PythonBinaryDescription(
             pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
-            pythonEnv));
+            pythonEnv,
+            defaultCxxPlatform,
+            cxxPlatforms));
     builder.register(new PythonLibraryDescription());
     builder.register(
         new PythonTestDescription(
             pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
             pythonPathToPythonTestMain.or(PythonTestDescription.PYTHON_PATH_TO_PYTHON_TEST_MAIN),
-            pythonEnv));
+            pythonEnv,
+            defaultCxxPlatform,
+            cxxPlatforms));
     builder.register(new RemoteFileDescription(downloadAtRuntimeOk, downloader));
     builder.register(new RobolectricTestDescription(javacEnv));
     builder.register(new ShBinaryDescription());
@@ -247,12 +258,12 @@ public class KnownBuildRuleTypes {
                 new ThriftCxxEnhancer(
                     thriftBuckConfig,
                     cxxBuckConfig,
-                    cxxPlatform,
+                    cxxPlatforms,
                     /* cpp2 */ false),
                 new ThriftCxxEnhancer(
                     thriftBuckConfig,
                     cxxBuckConfig,
-                    cxxPlatform,
+                    cxxPlatforms,
                     /* cpp2 */ true),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED))));

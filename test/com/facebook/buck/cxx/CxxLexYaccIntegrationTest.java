@@ -61,6 +61,7 @@ public class CxxLexYaccIntegrationTest {
         this, "lexyacc", tmp);
     workspace.setUp();
 
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:main");
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "main.cpp";
@@ -69,14 +70,16 @@ public class CxxLexYaccIntegrationTest {
     BuildTarget yaccTarget = CxxDescriptionEnhancer.createYaccBuildTarget(target, yaccSourceName);
     BuildTarget yaccCompileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
         target,
+        cxxPlatform.asFlavor(),
         yaccSourceName + ".cc",
         /* pic */ false);
     BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
         target,
+        cxxPlatform.asFlavor(),
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target);
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor());
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.

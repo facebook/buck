@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -42,16 +43,18 @@ public class CxxBinaryIntegrationTest {
         this, "simple", tmp);
     workspace.setUp();
 
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "simple.cpp";
     String sourceFull = "foo/" + sourceName;
     BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
         target,
+        cxxPlatform.asFlavor(),
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target);
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor());
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.
@@ -129,6 +132,7 @@ public class CxxBinaryIntegrationTest {
         this, "simple", tmp);
     workspace.setUp();
 
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple_with_header");
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "simple_with_header.cpp";
@@ -136,10 +140,11 @@ public class CxxBinaryIntegrationTest {
     String headerFull = "foo/" + headerName;
     BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
         target,
+        cxxPlatform.asFlavor(),
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target);
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor());
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.
@@ -187,15 +192,17 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
 
     // Setup variables pointing to the sources and targets of the top-level binary rule.
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:binary_with_dep");
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "foo.cpp";
     BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
         target,
+        cxxPlatform.asFlavor(),
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target);
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor());
 
     // Setup variables pointing to the sources and targets of the library dep.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//foo:library_with_header");
@@ -206,11 +213,13 @@ public class CxxBinaryIntegrationTest {
     BuildTarget depCompileTarget =
         CxxCompilableEnhancer.createCompileBuildTarget(
             depTarget,
+            cxxPlatform.asFlavor(),
             depSourceName,
             /* pic */ false);
     BuildTarget depHeaderSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(depTarget);
-    BuildTarget depArchiveTarget = CxxDescriptionEnhancer.createStaticLibraryBuildTarget(depTarget);
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(depTarget, cxxPlatform.asFlavor());
+    BuildTarget depArchiveTarget =
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(depTarget, cxxPlatform.asFlavor());
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.

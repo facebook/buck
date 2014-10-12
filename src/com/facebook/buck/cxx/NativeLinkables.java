@@ -34,12 +34,12 @@ public class NativeLinkables {
    * {@link NativeLinkable}.
    */
   public static Function<NativeLinkable, NativeLinkableInput> getNativeLinkableInput(
-      final Linker linker,
+      final CxxPlatform cxxPlatform,
       final NativeLinkable.Type type) {
     return new Function<NativeLinkable, NativeLinkableInput>() {
       @Override
       public NativeLinkableInput apply(NativeLinkable input) {
-        return input.getNativeLinkableInput(linker, type);
+        return input.getNativeLinkableInput(cxxPlatform, type);
       }
     };
   }
@@ -51,7 +51,7 @@ public class NativeLinkables {
    * {@link com.facebook.buck.rules.BuildRule} roots.
    */
   public static NativeLinkableInput getTransitiveNativeLinkableInput(
-      Linker linker,
+      CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       NativeLinkable.Type depType,
       boolean reverse) {
@@ -68,7 +68,7 @@ public class NativeLinkables {
         FluentIterable
             .from(reverse ? sorted.reverse() : sorted)
             .filter(NativeLinkable.class)
-            .transform(getNativeLinkableInput(linker, depType)));
+            .transform(getNativeLinkableInput(cxxPlatform, depType)));
   }
 
 }

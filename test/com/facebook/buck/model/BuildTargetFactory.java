@@ -18,7 +18,6 @@ package com.facebook.buck.model;
 
 import com.google.common.base.Preconditions;
 
-
 /**
  * Exposes some {@link com.facebook.buck.model.BuildTarget} logic that is only visible for testing.
  */

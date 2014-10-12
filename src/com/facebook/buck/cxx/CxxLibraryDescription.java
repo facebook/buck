@@ -65,11 +65,13 @@ public class CxxLibraryDescription implements
               CxxDescriptionEnhancer.STATIC_FLAVOR, Type.STATIC));
 
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform cxxPlatform;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
-  public CxxLibraryDescription(CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
+  public CxxLibraryDescription(
+      CxxBuckConfig cxxBuckConfig,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
-    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
+    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
 
   private static final Flavor LEX_YACC_SOURCE_FLAVOR = new Flavor("lex_yacc_sources");
@@ -82,6 +84,7 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources) {
     BuildTarget lexYaccTarget = createLexYaccSourcesBuildTarget(params.getBuildTarget());
@@ -120,19 +123,25 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMap<Path, SourcePath> headers) {
 
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(params.getBuildTarget());
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            params.getBuildTarget(),
+            cxxPlatform.asFlavor());
     Path headerSymlinkTreeRoot =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(params.getBuildTarget());
+        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+            params.getBuildTarget(),
+            cxxPlatform.asFlavor());
 
     CxxHeaderSourceSpec lexYaccSources = requireLexYaccSources(
         params,
         ruleResolver,
         pathResolver,
+        cxxPlatform,
         lexSources,
         yaccSources);
 
@@ -157,12 +166,15 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMap<Path, SourcePath> headers) {
 
     BuildTarget headerTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(params.getBuildTarget());
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            params.getBuildTarget(),
+            cxxPlatform.asFlavor());
 
     // Check the cache...
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(headerTarget);
@@ -175,6 +187,7 @@ public class CxxLibraryDescription implements
             params,
             ruleResolver,
             pathResolver,
+            cxxPlatform,
             lexSources,
             yaccSources,
             headers);
@@ -188,6 +201,7 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
@@ -201,6 +215,7 @@ public class CxxLibraryDescription implements
             params,
             ruleResolver,
             pathResolver,
+            cxxPlatform,
             lexSources,
             yaccSources,
             headers);
@@ -209,12 +224,14 @@ public class CxxLibraryDescription implements
             params,
             ruleResolver,
             pathResolver,
+            cxxPlatform,
             lexSources,
             yaccSources);
 
     CxxPreprocessorInput cxxPreprocessorInputFromDependencies =
         CxxDescriptionEnhancer.combineCxxPreprocessorInput(
             params,
+            cxxPlatform,
             preprocessorFlags,
             headerSymlinkTree,
             ImmutableMap.<Path, SourcePath>builder()
@@ -245,6 +262,7 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
@@ -257,6 +275,7 @@ public class CxxLibraryDescription implements
         params,
         ruleResolver,
         pathResolver,
+        cxxPlatform,
         lexSources,
         yaccSources,
         preprocessorFlags,
@@ -267,9 +286,13 @@ public class CxxLibraryDescription implements
 
     // Write a build rule to create the archive for this C/C++ library.
     BuildTarget staticTarget =
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(params.getBuildTarget());
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
+            params.getBuildTarget(),
+            cxxPlatform.asFlavor());
     Path staticLibraryPath =
-        CxxDescriptionEnhancer.getStaticLibraryPath(params.getBuildTarget());
+        CxxDescriptionEnhancer.getStaticLibraryPath(
+            params.getBuildTarget(),
+            cxxPlatform.asFlavor());
     Archive staticLibraryBuildRule = Archives.createArchiveRule(
         pathResolver,
         staticTarget,
@@ -290,6 +313,7 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
@@ -303,6 +327,7 @@ public class CxxLibraryDescription implements
         params,
         ruleResolver,
         pathResolver,
+        cxxPlatform,
         lexSources,
         yaccSources,
         preprocessorFlags,
@@ -313,10 +338,14 @@ public class CxxLibraryDescription implements
 
     // Setup the rules to link the shared library.
     BuildTarget sharedTarget =
-        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(params.getBuildTarget());
+        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
+            params.getBuildTarget(),
+            cxxPlatform.asFlavor());
     String sharedLibrarySoname =
         soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(params.getBuildTarget()));
-    Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(params.getBuildTarget());
+    Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
+        params.getBuildTarget(),
+        cxxPlatform.asFlavor());
     CxxLink sharedLibraryBuildRule =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxPlatform,
@@ -364,11 +393,13 @@ public class CxxLibraryDescription implements
   public <A extends Arg> SymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
       A args) {
     return createHeaderSymlinkTree(
         params,
         resolver,
         new SourcePathResolver(resolver),
+        cxxPlatform,
         CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args));
@@ -380,11 +411,13 @@ public class CxxLibraryDescription implements
   public <A extends Arg> Archive createStaticLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
       A args) {
     return createStaticLibrary(
         params,
         resolver,
         new SourcePathResolver(resolver),
+        cxxPlatform,
         CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         CxxPreprocessorFlags.fromArgs(
@@ -401,11 +434,13 @@ public class CxxLibraryDescription implements
   public <A extends Arg> CxxLink createSharedLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
       A args) {
     return createSharedLibrary(
         params,
         resolver,
         new SourcePathResolver(resolver),
+        cxxPlatform,
         CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         CxxPreprocessorFlags.fromArgs(
@@ -423,11 +458,13 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       A args) {
 
-    // See if we're building a particular "type" of this library, and if so, extract
-    // it as an enum.
+    // See if we're building a particular "type" and "platform" of this library, and if so, extract
+    // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type;
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform;
     try {
       type = LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget().getFlavors());
+      platform = cxxPlatforms.getFlavorAndValue(params.getBuildTarget().getFlavors());
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }
@@ -448,11 +485,23 @@ public class CxxLibraryDescription implements
               params.getDeclaredDeps(),
               params.getExtraDeps());
       if (type.get().getValue().equals(Type.HEADERS)) {
-        return createHeaderSymlinkTreeBuildRule(typeParams, resolver, args);
+        return createHeaderSymlinkTreeBuildRule(
+            typeParams,
+            resolver,
+            platform.get().getValue(),
+            args);
       } else if (type.get().getValue().equals(Type.SHARED)) {
-        return createSharedLibraryBuildRule(typeParams, resolver, args);
+        return createSharedLibraryBuildRule(
+            typeParams,
+            resolver,
+            platform.get().getValue(),
+            args);
       } else {
-        return createStaticLibraryBuildRule(typeParams, resolver, args);
+        return createStaticLibraryBuildRule(
+            typeParams,
+            resolver,
+            platform.get().getValue(),
+            args);
       }
     }
 

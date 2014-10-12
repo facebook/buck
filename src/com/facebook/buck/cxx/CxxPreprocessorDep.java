@@ -16,28 +16,11 @@
 
 package com.facebook.buck.cxx;
 
-import com.google.common.base.Function;
-
 /**
  * An interface that represents a {@link com.facebook.buck.rules.BuildRule} which can contribute
  * components (e.g. header files, preprocessor macros) to the preprocessing of some top-level
  * file (e.g. a C++ source from a C++ library rule).
  */
 public interface CxxPreprocessorDep {
-
-  /**
-   * A helper function object that grabs the {@link CxxPreprocessorInput} object from a
-   * {@link CxxPreprocessorDep}.
-   */
-  final Function<CxxPreprocessorDep, CxxPreprocessorInput>
-      GET_CXX_PREPROCESSOR_INPUT =
-          new Function<CxxPreprocessorDep, CxxPreprocessorInput>() {
-            @Override
-            public CxxPreprocessorInput apply(CxxPreprocessorDep input) {
-              return input.getCxxPreprocessorInput();
-            }
-          };
-
-  CxxPreprocessorInput getCxxPreprocessorInput();
-
+  CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform);
 }

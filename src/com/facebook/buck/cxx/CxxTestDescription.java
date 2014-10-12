@@ -17,6 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -25,6 +27,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -39,11 +42,16 @@ public class CxxTestDescription implements
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform cxxPlatform;
+  private final CxxPlatform defaultCxxPlatform;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
-  public CxxTestDescription(CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
+  public CxxTestDescription(
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
-    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
+    this.defaultCxxPlatform = Preconditions.checkNotNull(defaultCxxPlatform);
+    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
 
   @Override
@@ -61,7 +69,16 @@ public class CxxTestDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    // Extract the platform from the flavor, falling back to the default platform if none are
+    // found.
+    CxxPlatform cxxPlatform;
+    try {
+      cxxPlatform = cxxPlatforms.getValue(
+          params.getBuildTarget().getFlavors()).or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
+    }
 
     // Generate the link rule that builds the test binary.
     CxxLink cxxLink = CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
@@ -83,6 +100,7 @@ public class CxxTestDescription implements
     CxxTest test;
 
     CxxTestType type = args.framework.or(getDefaultTestType());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     switch (type) {
       case GTEST: {
         test = new CxxGtestTest(
@@ -117,6 +135,17 @@ public class CxxTestDescription implements
   public Iterable<String> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       Arg constructorArg) {
+
+    // Extract the platform from the flavor, falling back to the default platform if none are
+    // found.
+    CxxPlatform cxxPlatform;
+    try {
+      cxxPlatform = cxxPlatforms.getValue(
+          buildTarget.getFlavors()).or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException("%s: %s", buildTarget, e.getMessage());
+    }
+
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
     if (!constructorArg.lexSrcs.get().isEmpty()) {

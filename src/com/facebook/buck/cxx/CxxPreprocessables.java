@@ -67,6 +67,7 @@ public class CxxPreprocessables {
    */
   @VisibleForTesting
   public static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
+      final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs) {
 
     // We don't really care about the order we get back here, since headers shouldn't
@@ -81,7 +82,7 @@ public class CxxPreprocessables {
         if (rule instanceof CxxPreprocessorDep) {
           CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
           Preconditions.checkState(!deps.containsKey(rule.getBuildTarget()));
-          deps.put(rule.getBuildTarget(), dep.getCxxPreprocessorInput());
+          deps.put(rule.getBuildTarget(), dep.getCxxPreprocessorInput(cxxPlatform));
           return rule.getDeps();
         } else {
           return ImmutableSet.of();

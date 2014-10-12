@@ -90,7 +90,7 @@ public class CxxLinkableEnhancer {
     // Collect and topologically sort our deps that contribute to the link.
     NativeLinkableInput linkableInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
-            linker,
+            cxxPlatform,
             nativeLinkableDeps,
             depType,
             /* reverse */ true);

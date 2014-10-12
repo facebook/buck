@@ -89,4 +89,9 @@ public class OCamlBuckConfig {
   public Optional<Path> getOCamlDebug() {
     return delegate.getPath("ocaml", "debug");
   }
+
+  public CxxPlatform getCxxPlatform() {
+    return cxxPlatform;
+  }
+
 }

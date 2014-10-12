@@ -16,7 +16,10 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -24,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -46,10 +50,18 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
 
   private final Path pathToPex;
   private final PythonEnvironment pythonEnvironment;
+  private final CxxPlatform defaultCxxPlatform;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
-  public PythonBinaryDescription(Path pathToPex, PythonEnvironment pythonEnv) {
+  public PythonBinaryDescription(
+      Path pathToPex,
+      PythonEnvironment pythonEnv,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.pathToPex = Preconditions.checkNotNull(pathToPex);
     this.pythonEnvironment = Preconditions.checkNotNull(pythonEnv);
+    this.defaultCxxPlatform = Preconditions.checkNotNull(defaultCxxPlatform);
+    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
 
   @Override
@@ -68,6 +80,16 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       BuildRuleResolver resolver,
       A args) {
 
+    // Extract the platform from the flavor, falling back to the default platform if none are
+    // found.
+    CxxPlatform cxxPlatform;
+    try {
+      cxxPlatform = cxxPlatforms.getValue(
+          params.getBuildTarget().getFlavors()).or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
+    }
+
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
     String mainName = pathResolver.getSourcePathName(params.getBuildTarget(), args.main);
@@ -80,7 +102,8 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of());
     PythonPackageComponents allPackageComponents = PythonUtil.getAllComponents(
         params,
-        binaryPackageComponents);
+        binaryPackageComponents,
+        cxxPlatform);
 
     // Return a build rule which builds the PEX, depending on everything that builds any of
     // the components.

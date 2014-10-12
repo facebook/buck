@@ -16,8 +16,8 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxPlatform;
+
 public interface PythonPackagable {
-
-  public PythonPackageComponents getPythonPackageComponents();
-
+  PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform);
 }

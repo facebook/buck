@@ -20,10 +20,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
@@ -53,15 +55,19 @@ public class ThriftCxxEnhancerTest {
   private static final CxxBuckConfig CXX_BUCK_CONFIG = new CxxBuckConfig(BUCK_CONFIG);
   private static final DefaultCxxPlatform CXX_PLATFORM =
       new DefaultCxxPlatform(BUCK_CONFIG);
+  private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
+      new FlavorDomain<>(
+          "C/C++ Platform",
+          ImmutableMap.<Flavor, CxxPlatform>of(CXX_PLATFORM.asFlavor(), CXX_PLATFORM));
   private static final ThriftCxxEnhancer ENHANCER_CPP = new ThriftCxxEnhancer(
       THRIFT_BUCK_CONFIG,
       CXX_BUCK_CONFIG,
-      CXX_PLATFORM,
+      CXX_PLATFORMS,
       /* cpp2 */ false);
   private static final ThriftCxxEnhancer ENHANCER_CPP2 = new ThriftCxxEnhancer(
       THRIFT_BUCK_CONFIG,
       CXX_BUCK_CONFIG,
-      CXX_PLATFORM,
+      CXX_PLATFORMS,
       /* cpp2 */ true);
 
   private static FakeBuildRule createFakeBuildRule(
@@ -190,12 +196,12 @@ public class ThriftCxxEnhancerTest {
     ThriftCxxEnhancer cppEnhancerWithSettings = new ThriftCxxEnhancer(
         thriftBuckConfig,
         CXX_BUCK_CONFIG,
-        CXX_PLATFORM,
+        CXX_PLATFORMS,
         /* cpp2 */ false);
     ThriftCxxEnhancer cpp2EnhancerWithSettings = new ThriftCxxEnhancer(
         thriftBuckConfig,
         CXX_BUCK_CONFIG,
-        CXX_PLATFORM,
+        CXX_PLATFORMS,
         /* cpp2 */ true);
 
     // With no options we just need to find the C/C++ thrift library.

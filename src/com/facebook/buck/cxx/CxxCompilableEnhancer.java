@@ -100,10 +100,12 @@ public class CxxCompilableEnhancer {
    */
   public static BuildTarget createCompileBuildTarget(
       BuildTarget target,
+      Flavor platform,
       String name,
       boolean pic) {
     return BuildTargets.extendFlavoredBuildTarget(
         target,
+        platform,
         new Flavor(String.format(
             "compile-%s%s",
             pic ? "pic-" : "",
@@ -134,6 +136,7 @@ public class CxxCompilableEnhancer {
 
     BuildTarget target = createCompileBuildTarget(
         params.getBuildTarget(),
+        platform.asFlavor(),
         name,
         pic);
 

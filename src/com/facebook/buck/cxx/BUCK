@@ -1,7 +1,26 @@
+PLATFORM_SRCS = [
+  'CxxPlatform.java',
+  'Linker.java',
+]
+java_library(
+  name = 'platform',
+  srcs = PLATFORM_SRCS,
+  deps = [
+    '//third-party/java/guava:guava',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:exceptions',
+  ],
+  visibility = [
+    'PUBLIC'
+  ]
+)
+
 java_library(
   name = 'rules',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes=PLATFORM_SRCS),
   deps = [
+    ':platform',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/model:model',

@@ -173,7 +173,7 @@ public class OCamlRuleBuilder {
         srcSourcePaths.transform(pathResolver.getPathFunction());
 
     NativeLinkableInput linkableInput = NativeLinkables.getTransitiveNativeLinkableInput(
-        ocamlBuckConfig.getLinker(),
+        ocamlBuckConfig.getCxxPlatform(),
         params.getDeps(),
         NativeLinkable.Type.STATIC,
         /* reverse */ false);
@@ -200,6 +200,7 @@ public class OCamlRuleBuilder {
 
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            ocamlBuckConfig.getCxxPlatform(),
             FluentIterable.from(params.getDeps())
                 .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
 
@@ -274,7 +275,7 @@ public class OCamlRuleBuilder {
     final FluentIterable<Path> srcPaths = srcSourcePaths.transform(pathResolver.getPathFunction());
 
     NativeLinkableInput linkableInput = NativeLinkables.getTransitiveNativeLinkableInput(
-        ocamlBuckConfig.getLinker(),
+        ocamlBuckConfig.getCxxPlatform(),
         params.getDeps(),
         NativeLinkable.Type.STATIC,
         /* reverse */ false);
@@ -302,6 +303,7 @@ public class OCamlRuleBuilder {
 
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            ocamlBuckConfig.getCxxPlatform(),
             FluentIterable.from(params.getDeps())
                 .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
 

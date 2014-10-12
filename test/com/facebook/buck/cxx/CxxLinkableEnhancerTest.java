@@ -74,7 +74,7 @@ public class CxxLinkableEnhancerTest {
     }
 
     @Override
-    public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
+    public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
       return type == Type.STATIC ? staticInput : sharedInput;
     }
 
@@ -367,7 +367,7 @@ public class CxxLinkableEnhancerTest {
     // in the bottom input.
     NativeLinkableInput totalInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
-            cxxPlatform.getLd(),
+            cxxPlatform,
             ImmutableList.of(top),
             NativeLinkable.Type.STATIC,
             /* reverse */ true);

@@ -47,11 +47,12 @@ public class CxxPythonExtension extends NoopBuildRule implements PythonPackagabl
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents() {
+  public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
     BuildRule extension =
         CxxDescriptionEnhancer.requireBuildRule(
             params,
             ruleResolver,
+            cxxPlatform.asFlavor(),
             CxxDescriptionEnhancer.SHARED_FLAVOR);
     SourcePath output = new BuildTargetSourcePath(extension.getBuildTarget());
     return new PythonPackageComponents(

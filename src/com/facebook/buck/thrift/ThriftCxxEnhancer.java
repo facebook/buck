@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxCompilables;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -53,10 +54,10 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
   public ThriftCxxEnhancer(
       ThriftBuckConfig thriftBuckConfig,
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms,
       boolean cpp2) {
     this.thriftBuckConfig = Preconditions.checkNotNull(thriftBuckConfig);
-    this.cxxLibraryDescription = new CxxLibraryDescription(cxxBuckConfig, cxxPlatform);
+    this.cxxLibraryDescription = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
     this.cpp2 = cpp2;
   }
 

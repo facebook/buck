@@ -62,16 +62,21 @@ public class CxxDescriptionEnhancer {
    * @return the {@link BuildTarget} to use for the {@link BuildRule} generating the
    *    symlink tree of headers.
    */
-  public static BuildTarget createHeaderSymlinkTreeTarget(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, HEADER_SYMLINK_TREE_FLAVOR);
+  public static BuildTarget createHeaderSymlinkTreeTarget(
+      BuildTarget target,
+      Flavor platform) {
+    return BuildTargets.extendFlavoredBuildTarget(
+        target,
+        platform,
+        HEADER_SYMLINK_TREE_FLAVOR);
   }
 
   /**
    * @return the {@link Path} to use for the symlink tree of headers.
    */
-  public static Path getHeaderSymlinkTreePath(BuildTarget target) {
+  public static Path getHeaderSymlinkTreePath(BuildTarget target, Flavor platform) {
     return BuildTargets.getGenPath(
-        createHeaderSymlinkTreeTarget(target),
+        createHeaderSymlinkTreeTarget(target, platform),
         "%s");
   }
 
@@ -301,11 +306,14 @@ public class CxxDescriptionEnhancer {
   public static SymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      Flavor platform,
       ImmutableMap<Path, SourcePath> headers) {
 
     // Setup the header and symlink tree rules
-    BuildTarget headerSymlinkTreeTarget = createHeaderSymlinkTreeTarget(params.getBuildTarget());
-    Path headerSymlinkTreeRoot = getHeaderSymlinkTreePath(params.getBuildTarget());
+    BuildTarget headerSymlinkTreeTarget =
+        createHeaderSymlinkTreeTarget(params.getBuildTarget(), platform);
+    Path headerSymlinkTreeRoot =
+        getHeaderSymlinkTreePath(params.getBuildTarget(), platform);
     final SymlinkTree headerSymlinkTree = CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         new SourcePathResolver(resolver),
         headerSymlinkTreeTarget,
@@ -319,6 +327,7 @@ public class CxxDescriptionEnhancer {
 
   public static CxxPreprocessorInput combineCxxPreprocessorInput(
       BuildRuleParams params,
+      CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       SymlinkTree headerSymlinkTree,
       ImmutableMap<Path, SourcePath> headers) {
@@ -326,6 +335,7 @@ public class CxxDescriptionEnhancer {
     // Write the compile rules for all C/C++ sources in this rule.
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            cxxPlatform,
             FluentIterable.from(params.getDeps())
                 .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
 
@@ -372,17 +382,30 @@ public class CxxDescriptionEnhancer {
         .toList();
   }
 
-  public static BuildTarget createStaticLibraryBuildTarget(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, STATIC_FLAVOR);
+  public static BuildTarget createStaticLibraryBuildTarget(
+      BuildTarget target,
+      Flavor platform) {
+    return BuildTargets.extendFlavoredBuildTarget(
+        target,
+        platform,
+        STATIC_FLAVOR);
   }
 
-  public static BuildTarget createSharedLibraryBuildTarget(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, SHARED_FLAVOR);
+  public static BuildTarget createSharedLibraryBuildTarget(
+      BuildTarget target,
+      Flavor platform) {
+    return BuildTargets.extendFlavoredBuildTarget(
+        target,
+        platform,
+        SHARED_FLAVOR);
   }
 
-  public static Path getStaticLibraryPath(BuildTarget target) {
+  public static Path getStaticLibraryPath(
+      BuildTarget target,
+      Flavor platform) {
     String name = String.format("lib%s.a", target.getShortNameOnly());
-    return BuildTargets.getBinPath(target, "%s").resolve(name);
+    return BuildTargets.getBinPath(createStaticLibraryBuildTarget(target, platform), "%s")
+        .resolve(name);
   }
 
   public static String getSharedLibrarySoname(BuildTarget target) {
@@ -392,9 +415,13 @@ public class CxxDescriptionEnhancer {
         target.getShortNameOnly());
   }
 
-  public static Path getSharedLibraryPath(BuildTarget target) {
+  public static Path getSharedLibraryPath(
+      BuildTarget target,
+      Flavor platform) {
     String name = String.format("lib%s.so", target.getShortNameOnly());
-    return BuildTargets.getBinPath(target, "%s/" + name);
+    return BuildTargets.getBinPath(
+        createSharedLibraryBuildTarget(target, platform),
+        "%s/" + name);
   }
 
   @VisibleForTesting
@@ -434,9 +461,11 @@ public class CxxDescriptionEnhancer {
     SymlinkTree headerSymlinkTree = createHeaderSymlinkTreeBuildRule(
         params,
         resolver,
+        cxxPlatform.asFlavor(),
         headers);
     CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
+        cxxPlatform,
         CxxPreprocessorFlags.fromArgs(
             args.preprocessorFlags,
             args.langPreprocessorFlags),

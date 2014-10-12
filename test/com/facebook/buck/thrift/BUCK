@@ -9,6 +9,7 @@ java_test(
     '//third-party/java/junit:junit',
     '//third-party/java/hamcrest:hamcrest-core',
     '//third-party/java/hamcrest:hamcrest-library',
+    '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',

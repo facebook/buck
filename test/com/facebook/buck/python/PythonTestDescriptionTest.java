@@ -20,8 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -42,6 +47,9 @@ public class PythonTestDescriptionTest {
 
   private static final Path PEX_PATH = Paths.get("pex");
   private static final Path TEST_MAIN = Paths.get("main");
+  private static final CxxPlatform CXX_PLATFORM = new DefaultCxxPlatform(new FakeBuckConfig());
+  private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
+      new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of());
 
   @Test
   public void thatTestModulesAreInComponents() {
@@ -52,7 +60,9 @@ public class PythonTestDescriptionTest {
     PythonTestDescription desc = new PythonTestDescription(
         PEX_PATH,
         TEST_MAIN,
-        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
+        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")),
+        CXX_PLATFORM,
+        CXX_PLATFORMS);
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.srcs = Optional.of(
@@ -85,7 +95,9 @@ public class PythonTestDescriptionTest {
     PythonTestDescription desc = new PythonTestDescription(
         PEX_PATH,
         TEST_MAIN,
-        new PythonEnvironment(Paths.get("python"), new PythonVersion("2.5")));
+        new PythonEnvironment(Paths.get("python"), new PythonVersion("2.5")),
+        CXX_PLATFORM,
+        CXX_PLATFORMS);
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.absent();
     arg.resources = Optional.absent();

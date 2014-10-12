@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -74,6 +75,11 @@ public class FlavorDomain<T> {
         new AbstractMap.SimpleImmutableEntry<>(
             flavor.get(),
             translation.get(flavor.get())));
+  }
+
+  public Optional<T> getValue(ImmutableSet<Flavor> flavors) throws FlavorDomainException {
+    Optional<Flavor> flavor = getFlavor(flavors);
+    return flavor.transform(Functions.forMap(translation));
   }
 
   public T getValue(Flavor flavor) throws FlavorDomainException {

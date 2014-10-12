@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 
@@ -26,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 public interface CxxPlatform {
 
   String getName();
+  Flavor asFlavor();
 
   SourcePath getAs();
   ImmutableList<String> getAsflags();

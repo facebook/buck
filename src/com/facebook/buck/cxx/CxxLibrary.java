@@ -65,10 +65,11 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput() {
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
     BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
         params,
         ruleResolver,
+        cxxPlatform.asFlavor(),
         CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     Preconditions.checkState(rule instanceof SymlinkTree);
     SymlinkTree symlinkTree = (SymlinkTree) rule;
@@ -82,7 +83,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      Linker linker,
+      CxxPlatform cxxPlatform,
       Type type) {
 
     // Build up the arguments used to link this library.  If we're linking the
@@ -90,19 +91,26 @@ public class CxxLibrary extends AbstractCxxLibrary {
     final BuildRule libraryRule;
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     if (type == Type.SHARED) {
-      Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(getBuildTarget());
+      Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
+          getBuildTarget(),
+          cxxPlatform.asFlavor());
       libraryRule = CxxDescriptionEnhancer.requireBuildRule(
           params,
           ruleResolver,
+          cxxPlatform.asFlavor(),
           CxxDescriptionEnhancer.SHARED_FLAVOR);
       linkerArgsBuilder.add(sharedLibraryPath.toString());
     } else {
       libraryRule = CxxDescriptionEnhancer.requireBuildRule(
           params,
           ruleResolver,
+          cxxPlatform.asFlavor(),
           CxxDescriptionEnhancer.STATIC_FLAVOR);
-      Path staticLibraryPath = CxxDescriptionEnhancer.getStaticLibraryPath(getBuildTarget());
+      Path staticLibraryPath = CxxDescriptionEnhancer.getStaticLibraryPath(
+          getBuildTarget(),
+          cxxPlatform.asFlavor());
       if (linkWhole) {
+        Linker linker = cxxPlatform.getLd();
         linkerArgsBuilder.addAll(linker.linkWhole(staticLibraryPath.toString()));
       } else {
         linkerArgsBuilder.add(staticLibraryPath.toString());
@@ -116,12 +124,13 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents() {
+  public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
     String sharedLibrarySoname =
         soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget()));
     BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
         params,
         ruleResolver,
+        cxxPlatform.asFlavor(),
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     return new PythonPackageComponents(
         /* modules */ ImmutableMap.<Path, SourcePath>of(),

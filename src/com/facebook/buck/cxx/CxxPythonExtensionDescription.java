@@ -60,11 +60,13 @@ public class CxxPythonExtensionDescription implements
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_python_extension");
 
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform cxxPlatform;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
-  public CxxPythonExtensionDescription(CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
+  public CxxPythonExtensionDescription(
+      CxxBuckConfig cxxBuckConfig,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
-    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
+    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
 
   @Override
@@ -73,8 +75,8 @@ public class CxxPythonExtensionDescription implements
   }
 
   @VisibleForTesting
-  protected BuildTarget getExtensionTarget(BuildTarget target) {
-    return CxxDescriptionEnhancer.createSharedLibraryBuildTarget(target);
+  protected BuildTarget getExtensionTarget(BuildTarget target, Flavor platform) {
+    return CxxDescriptionEnhancer.createSharedLibraryBuildTarget(target, platform);
   }
 
   @VisibleForTesting
@@ -83,14 +85,15 @@ public class CxxPythonExtensionDescription implements
   }
 
   @VisibleForTesting
-  protected Path getExtensionPath(BuildTarget target) {
-    return BuildTargets.getBinPath(getExtensionTarget(target), "%s")
+  protected Path getExtensionPath(BuildTarget target, Flavor platform) {
+    return BuildTargets.getBinPath(getExtensionTarget(target, platform), "%s")
         .resolve(getExtensionName(target));
   }
 
   private <A extends Arg> BuildRule createExtensionBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
+      CxxPlatform cxxPlatform,
       A args) {
 
     // Extract all C/C++ sources from the constructor arg.
@@ -121,9 +124,11 @@ public class CxxPythonExtensionDescription implements
     SymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTreeBuildRule(
         params,
         ruleResolver,
+        cxxPlatform.asFlavor(),
         headers);
     CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
         params,
+        cxxPlatform,
         CxxPreprocessorFlags.fromArgs(
             args.preprocessorFlags,
             args.langPreprocessorFlags),
@@ -148,14 +153,14 @@ public class CxxPythonExtensionDescription implements
 
     // Setup the rules to link the shared library.
     String extensionName = getExtensionName(params.getBuildTarget());
-    Path extensionPath = getExtensionPath(params.getBuildTarget());
+    Path extensionPath = getExtensionPath(params.getBuildTarget(), cxxPlatform.asFlavor());
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
         new SourcePathResolver(ruleResolver),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
-        getExtensionTarget(params.getBuildTarget()),
+        getExtensionTarget(params.getBuildTarget(), cxxPlatform.asFlavor()),
         CxxLinkableEnhancer.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,
@@ -174,8 +179,10 @@ public class CxxPythonExtensionDescription implements
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
     Optional<Map.Entry<Flavor, Type>> type;
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform;
     try {
       type = LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget().getFlavors());
+      platform = cxxPlatforms.getFlavorAndValue(params.getBuildTarget().getFlavors());
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }
@@ -185,7 +192,8 @@ public class CxxPythonExtensionDescription implements
     // pre-existing static lib, which we do here.
     if (type.isPresent()) {
       Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
-      return createExtensionBuildRule(params, ruleResolver, args);
+      Preconditions.checkState(platform.isPresent());
+      return createExtensionBuildRule(params, ruleResolver, platform.get().getValue(), args);
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use

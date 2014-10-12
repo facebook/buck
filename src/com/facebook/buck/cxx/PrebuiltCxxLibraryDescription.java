@@ -57,10 +57,10 @@ public class PrebuiltCxxLibraryDescription
 
   public static final BuildRuleType TYPE = new BuildRuleType("prebuilt_cxx_library");
 
-  private final CxxPlatform cxxPlatform;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
-  public PrebuiltCxxLibraryDescription(CxxPlatform cxxPlatform) {
-    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
+  public PrebuiltCxxLibraryDescription(FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
 
   @Override
@@ -76,6 +76,7 @@ public class PrebuiltCxxLibraryDescription
   private <A extends Arg> BuildRule createSharedLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
+      CxxPlatform cxxPlatform,
       A args) {
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
@@ -121,8 +122,10 @@ public class PrebuiltCxxLibraryDescription
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
     Optional<Map.Entry<Flavor, Type>> type;
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform;
     try {
       type = LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget().getFlavors());
+      platform = cxxPlatforms.getFlavorAndValue(params.getBuildTarget().getFlavors());
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }
@@ -132,7 +135,8 @@ public class PrebuiltCxxLibraryDescription
     // pre-existing static lib, which we do here.
     if (type.isPresent()) {
       Preconditions.checkState(type.get().getValue() == Type.SHARED);
-      return createSharedLibraryBuildRule(params, resolver, args);
+      Preconditions.checkState(platform.isPresent());
+      return createSharedLibraryBuildRule(params, resolver, platform.get().getValue(), args);
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use

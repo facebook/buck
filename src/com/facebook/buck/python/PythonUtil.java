@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
@@ -93,7 +94,8 @@ public class PythonUtil {
 
   public static PythonPackageComponents getAllComponents(
       BuildRuleParams params,
-      PythonPackageComponents packageComponents) {
+      PythonPackageComponents packageComponents,
+      final CxxPlatform cxxPlatform) {
 
     final PythonPackageComponents.Builder components =
         new PythonPackageComponents.Builder(params.getBuildTarget());
@@ -113,7 +115,7 @@ public class PythonUtil {
           // Add all components from the python packable into our top-level
           // package.
           components.addComponent(
-              lib.getPythonPackageComponents(),
+              lib.getPythonPackageComponents(cxxPlatform),
               rule.getBuildTarget());
 
           // Return all our deps to recurse on them.

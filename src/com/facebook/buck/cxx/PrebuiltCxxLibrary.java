@@ -74,7 +74,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
    *
    * @return the {@link SourcePath} representing the actual shared library.
    */
-  private SourcePath requireSharedLibrary() {
+  private SourcePath requireSharedLibrary(CxxPlatform cxxPlatform) {
 
     // If the shared library is prebuilt, just return a reference to it.
     if (params.getProjectFilesystem().exists(sharedLibraryPath)) {
@@ -86,13 +86,14 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
         CxxDescriptionEnhancer.requireBuildRule(
             params,
             ruleResolver,
+            cxxPlatform.asFlavor(),
             CxxDescriptionEnhancer.SHARED_FLAVOR);
 
     return new BuildTargetSourcePath(sharedLibrary.getBuildTarget());
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput() {
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
     return CxxPreprocessorInput.builder()
         // Just pass the include dirs as system includes.
         .setSystemIncludeRoots(includeDirs)
@@ -100,8 +101,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkableInput(
-      Linker linker, Type type) {
+  public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
 
     // Build the library path and linker arguments that we pass through the
     // {@link NativeLinkable} interface for linking.
@@ -109,12 +109,13 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     if (!headerOnly) {
       if (provided || type == Type.SHARED) {
-        SourcePath sharedLibrary = requireSharedLibrary();
+        SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
         librariesBuilder.add(sharedLibrary);
         linkerArgsBuilder.add(pathResolver.getPath(sharedLibrary).toString());
       } else {
         librariesBuilder.add(new PathSourcePath(staticLibraryPath));
         if (linkWhole) {
+          Linker linker = cxxPlatform.getLd();
           linkerArgsBuilder.addAll(linker.linkWhole(staticLibraryPath.toString()));
         } else {
           linkerArgsBuilder.add(staticLibraryPath.toString());
@@ -128,12 +129,12 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents() {
+  public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
 
     // Build up the shared library list to contribute to a python executable package.
     ImmutableMap.Builder<Path, SourcePath> nativeLibrariesBuilder = ImmutableMap.builder();
     if (!headerOnly && !provided) {
-      SourcePath sharedLibrary = requireSharedLibrary();
+      SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
       nativeLibrariesBuilder.put(
           Paths.get(soname),
           sharedLibrary);

@@ -19,6 +19,7 @@ java_test(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/ocaml:rules',
+    '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/shell:rules',

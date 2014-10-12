@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -62,7 +63,7 @@ public class CxxPreprocessablesTest {
     }
 
     @Override
-    public CxxPreprocessorInput getCxxPreprocessorInput() {
+    public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
       return input;
     }
 
@@ -122,6 +123,7 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveCxxPreprocessorInput() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
 
     // Setup a simple CxxPreprocessorDep which contributes components to preprocessing.
     BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance("//:cpp1");
@@ -163,6 +165,7 @@ public class CxxPreprocessablesTest {
     CxxPreprocessorInput expected = CxxPreprocessorInput.concat(
         ImmutableList.of(input1, input2));
     CxxPreprocessorInput actual = CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+        cxxPlatform,
         ImmutableList.<BuildRule>of(dep3));
     assertEquals(expected, actual);
   }
@@ -212,6 +215,7 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinal = "bottom";
@@ -232,6 +236,7 @@ public class CxxPreprocessablesTest {
     // in the bottom input.
     CxxPreprocessorInput totalInput =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            cxxPlatform,
             ImmutableList.of(top));
     assertTrue(bottomInput.getPreprocessorFlags().get(CxxSource.Type.C).contains(sentinal));
     assertFalse(totalInput.getPreprocessorFlags().get(CxxSource.Type.C).contains(sentinal));

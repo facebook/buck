@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -68,7 +69,7 @@ public class PythonLibrary extends AbstractBuildRule implements PythonPackagable
    * Return the components to contribute to the top-level python package.
    */
   @Override
-  public PythonPackageComponents getPythonPackageComponents() {
+  public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
     return new PythonPackageComponents(
         srcs,
         resources,

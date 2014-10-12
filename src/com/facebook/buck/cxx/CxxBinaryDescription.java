@@ -17,6 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -24,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -36,11 +39,16 @@ public class CxxBinaryDescription implements
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_binary");
 
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform cxxPlatform;
+  private final CxxPlatform defaultCxxPlatform;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
-  public CxxBinaryDescription(CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
+  public CxxBinaryDescription(
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
-    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
+    this.defaultCxxPlatform = Preconditions.checkNotNull(defaultCxxPlatform);
+    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
 
   @Override
@@ -53,6 +61,16 @@ public class CxxBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+
+    // Extract the platform from the flavor, falling back to the default platform if none are
+    // found.
+    CxxPlatform cxxPlatform;
+    try {
+      cxxPlatform = cxxPlatforms.getValue(
+          params.getBuildTarget().getFlavors()).or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
+    }
 
     CxxLink cxxLink = CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
         params,
