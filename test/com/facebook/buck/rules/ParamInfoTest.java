@@ -112,18 +112,17 @@ public class ParamInfoTest {
     Example example = new Example();
 
     BuildTargetParser buildTargetParser = new BuildTargetParser();
-    BuildRuleResolver resolver = new BuildRuleResolver();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     ParamInfo info = new ParamInfo(typeCoercerFactory, Example.class.getField("field"));
 
-    info.set(buildTargetParser, resolver, filesystem, path, example, null);
+    info.set(buildTargetParser, filesystem, path, example, null);
     assertEquals(Optional.<String>absent(), example.field);
 
-    info.set(buildTargetParser, resolver, filesystem, path, example, "");
+    info.set(buildTargetParser, filesystem, path, example, "");
     assertEquals(Optional.of(""), example.field);
 
-    info.set(buildTargetParser, resolver, filesystem, path, example, "foo");
+    info.set(buildTargetParser, filesystem, path, example, "foo");
     assertEquals(Optional.of("foo"), example.field);
   }
 }

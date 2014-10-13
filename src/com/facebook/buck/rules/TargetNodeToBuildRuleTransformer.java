@@ -39,7 +39,6 @@ public class TargetNodeToBuildRuleTransformer {
     T arg = description.createUnpopulatedConstructorArg();
     try {
       inspector.populate(
-          ruleResolver,
           ruleFactoryParams.getProjectFilesystem(),
           ruleFactoryParams,
           arg);

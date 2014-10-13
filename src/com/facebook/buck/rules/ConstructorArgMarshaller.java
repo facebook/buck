@@ -72,18 +72,14 @@ public class ConstructorArgMarshaller {
    * Any property that is marked as being an {@link Optional} field will be set to a default value
    * if none is set. This is typically {@link Optional#absent()}, but in the case of collections is
    * an empty collection.
-   *
-   * @param ruleResolver The resolver to use when looking up {@link BuildRule}s.
    * @param params The parameters to be used to populate the {@code dto} instance.
    * @param dto The constructor dto to be populated.
    */
   public void populate(
-      BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       Object dto) throws ConstructorArgMarshalException {
     populate(
-        ruleResolver,
         filesystem,
         params,
         dto,
@@ -91,7 +87,6 @@ public class ConstructorArgMarshaller {
   }
 
   public void populate(
-      BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       Object dto,
@@ -103,7 +98,7 @@ public class ConstructorArgMarshaller {
         continue;
       }
       try {
-        info.setFromParams(ruleResolver, filesystem, dto, params);
+        info.setFromParams(filesystem, dto, params);
       } catch (ParamInfoException e) {
         throw new ConstructorArgMarshalException(e.getMessage(), e);
       }

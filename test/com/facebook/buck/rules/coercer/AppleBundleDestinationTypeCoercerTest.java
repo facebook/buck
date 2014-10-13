@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -35,7 +34,6 @@ public class AppleBundleDestinationTypeCoercerTest {
   public void coercingSingleString()
       throws NoSuchFieldException, CoerceFailedException {
     BuildTargetParser buildTargetParser = new BuildTargetParser();
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path basePath = Paths.get("base");
     TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
@@ -47,7 +45,6 @@ public class AppleBundleDestinationTypeCoercerTest {
         AppleBundleDestination.SubfolderSpec.EXECUTABLES;
     AppleBundleDestination destination = destinationTypeCoercer.coerce(
         buildTargetParser,
-        buildRuleResolver,
         filesystem,
         basePath,
         subfolderSpec.toString());
@@ -59,7 +56,6 @@ public class AppleBundleDestinationTypeCoercerTest {
   public void coercingTwoStrings()
       throws NoSuchFieldException, CoerceFailedException {
     BuildTargetParser buildTargetParser = new BuildTargetParser();
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path basePath = Paths.get("base");
     TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
@@ -72,7 +68,6 @@ public class AppleBundleDestinationTypeCoercerTest {
     String subpath = "Codecs";
     AppleBundleDestination destination = destinationTypeCoercer.coerce(
         buildTargetParser,
-        buildRuleResolver,
         filesystem,
         basePath,
         ImmutableList.of(subfolderSpec.toString(), subpath));

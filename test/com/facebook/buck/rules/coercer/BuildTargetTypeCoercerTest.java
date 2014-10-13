@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
 
@@ -35,7 +34,6 @@ import java.nio.file.Paths;
 public class BuildTargetTypeCoercerTest {
 
   private BuildTargetParser targetParser = new BuildTargetParser();
-  private BuildRuleResolver resolver = new BuildRuleResolver();
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Path basePath = Paths.get("java/com/facebook/buck/example");
 
@@ -43,7 +41,6 @@ public class BuildTargetTypeCoercerTest {
   public void canCoerceAnUnflavoredFullyQualifiedTarget() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
         targetParser,
-        resolver,
         filesystem,
         basePath,
         "//foo:bar");
@@ -55,7 +52,6 @@ public class BuildTargetTypeCoercerTest {
   public void shouldCoerceAShortTarget() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
         targetParser,
-        resolver,
         filesystem,
         basePath,
         ":bar");
@@ -67,7 +63,6 @@ public class BuildTargetTypeCoercerTest {
   public void shouldCoerceATargetWithASingleFlavor() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
         targetParser,
-        resolver,
         filesystem,
         basePath,
         "//foo:bar#baz");
@@ -79,7 +74,6 @@ public class BuildTargetTypeCoercerTest {
   public void shouldCoerceMultipleFlavors() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
         targetParser,
-        resolver,
         filesystem,
         basePath,
         "//foo:bar#baz,qux");
@@ -93,7 +87,6 @@ public class BuildTargetTypeCoercerTest {
   public void shouldCoerceAShortTargetWithASingleFlavor() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
         targetParser,
-        resolver,
         filesystem,
         basePath,
         ":bar#baz");
@@ -127,7 +120,6 @@ public class BuildTargetTypeCoercerTest {
 
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
         targetParser,
-        resolver,
         filesystem,
         stubPath,
         ":baz");

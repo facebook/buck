@@ -38,7 +38,6 @@ public class PathTypeCoercerTest {
   public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   private final BuildTargetParser buildTargetParser = new BuildTargetParser();
-  private final BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
   private ProjectFilesystem filesystem;
   private final Path pathRelativeToProjectRoot = Paths.get("");
   private final PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
@@ -54,7 +53,6 @@ public class PathTypeCoercerTest {
     try {
       pathTypeCoercer.coerce(
           buildTargetParser,
-          buildRuleResolver,
           filesystem,
           pathRelativeToProjectRoot,
           invalidPath);
@@ -70,7 +68,6 @@ public class PathTypeCoercerTest {
     try {
       pathTypeCoercer.coerce(
           buildTargetParser,
-          buildRuleResolver,
           filesystem,
           pathRelativeToProjectRoot,
           missingPath);

@@ -113,7 +113,6 @@ public abstract class AbstractBuilder<A> {
   }
 
   private void populateWithDefaultValues(A arg, BuildTarget target) {
-    BuildRuleResolver resolver = new BuildRuleResolver(Maps.<BuildTarget, BuildRule>newHashMap());
     ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
     BuildRuleFactoryParams factoryParams = NonCheckingBuildRuleFactoryParams
         .createNonCheckingBuildRuleFactoryParams(
@@ -122,7 +121,7 @@ public abstract class AbstractBuilder<A> {
             target);
     try {
       new ConstructorArgMarshaller()
-          .populate(resolver, filesystem, factoryParams, arg, true);
+          .populate(filesystem, factoryParams, arg, true);
     } catch (ConstructorArgMarshalException error) {
       throw Throwables.propagate(error);
     }

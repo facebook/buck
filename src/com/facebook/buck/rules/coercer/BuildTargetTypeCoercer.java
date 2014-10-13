@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 
@@ -36,7 +35,6 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
   @Override
   public BuildTarget coerce(
       BuildTargetParser buildTargetParser,
-      BuildRuleResolver unused,
       ProjectFilesystem alsoUnused,
       Path pathRelativeToProjectRoot,
       Object object)

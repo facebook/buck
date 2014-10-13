@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -53,7 +52,6 @@ public class TypeCoercerFactory {
         @Override
         public BuildTargetPattern coerce(
             BuildTargetParser buildTargetParser,
-            BuildRuleResolver buildRuleResolver,
             ProjectFilesystem filesystem,
             Path pathRelativeToProjectRoot,
             Object object)

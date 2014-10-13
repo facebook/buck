@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 
@@ -68,7 +67,6 @@ public class AppleBundleDestinationTypeCoercer implements TypeCoercer<AppleBundl
   @Override
   public AppleBundleDestination coerce(
       BuildTargetParser buildTargetParser,
-      BuildRuleResolver buildRuleResolver,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
@@ -79,7 +77,6 @@ public class AppleBundleDestinationTypeCoercer implements TypeCoercer<AppleBundl
     if (object instanceof String) {
       AppleBundleDestination.SubfolderSpec subfolderSpec = enumTypeCoercer.coerce(
           buildTargetParser,
-          buildRuleResolver,
           filesystem,
           pathRelativeToProjectRoot,
           object);
@@ -94,13 +91,11 @@ public class AppleBundleDestinationTypeCoercer implements TypeCoercer<AppleBundl
       if (first instanceof String && second instanceof String) {
         AppleBundleDestination.SubfolderSpec subfolderSpec = enumTypeCoercer.coerce(
             buildTargetParser,
-            buildRuleResolver,
             filesystem,
             pathRelativeToProjectRoot,
             first);
         String subpath = stringTypeCoercer.coerce(
             buildTargetParser,
-            buildRuleResolver,
             filesystem,
             pathRelativeToProjectRoot,
             second);

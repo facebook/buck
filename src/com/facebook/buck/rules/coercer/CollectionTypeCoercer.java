@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -56,7 +55,6 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
    */
   protected void fill(
       BuildTargetParser buildTargetParser,
-      BuildRuleResolver buildRuleResolver,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       C.Builder<T> builder,
@@ -66,7 +64,6 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
         // if any element failed, the entire collection fails
         T coercedElement = elementTypeCoercer.coerce(
             buildTargetParser,
-            buildRuleResolver,
             filesystem,
             pathRelativeToProjectRoot,
             element);

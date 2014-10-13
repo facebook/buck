@@ -87,13 +87,11 @@ class ParamInfo implements Comparable<ParamInfo> {
   }
 
   public void setFromParams(
-      BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
       Object arg,
       BuildRuleFactoryParams params) throws ParamInfoException {
     set(
         params.buildTargetParser,
-        ruleResolver,
         filesystem,
         params.target.getBasePath(),
         arg,
@@ -102,16 +100,14 @@ class ParamInfo implements Comparable<ParamInfo> {
 
   /**
    * Sets a single property of the {@code dto}, coercing types as necessary.
-   *
-   * @param ruleResolver {@link BuildRuleResolver} used for {@link BuildRule} instances.
-   * @param filesystem {@link ProjectFilesystem} used to ensure {@link Path}s exist.
+   * @param filesystem {@link com.facebook.buck.util.ProjectFilesystem} used to ensure
+   *        {@link java.nio.file.Path}s exist.
    * @param pathRelativeToProjectRoot The path relative to the project root that this DTO is for.
    * @param dto The constructor DTO on which the value should be set.
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
   public void set(
       BuildTargetParser buildTargetParser,
-      BuildRuleResolver ruleResolver,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object dto,
@@ -132,7 +128,6 @@ class ParamInfo implements Comparable<ParamInfo> {
       try {
         result = typeCoercer.coerce(
             buildTargetParser,
-            ruleResolver,
             filesystem,
             pathRelativeToProjectRoot,
             value);
