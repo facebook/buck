@@ -83,6 +83,31 @@ public class SourcePathResolver {
     return paths.build();
   }
 
+  /**
+   * @return An {@link Optional} containing the {@link BuildRule} whose output {@code sourcePath}
+   *         refers to, or {@code absent} if {@code sourcePath} doesn't refer to the output of a
+   *         {@link BuildRule}.
+   */
+  public Optional<BuildRule> getRule(SourcePath sourcePath) {
+    if (sourcePath instanceof PathSourcePath) {
+      return Optional.absent();
+    }
+    Preconditions.checkState(sourcePath instanceof BuildRuleSourcePath);
+    return Optional.of(((BuildRuleSourcePath) sourcePath).getRule());
+  }
+
+  /**
+   * @return An {@link Optional} containing the {@link Path} the {@code sourcePath} refers to if it
+   *         doesn't refer to the output of a {@link BuildRule}, or {@code absent} if it does.
+   */
+  public Optional<Path> getRelativePath(SourcePath sourcePath) {
+    if (sourcePath instanceof BuildRuleSourcePath) {
+      return Optional.absent();
+    }
+    Preconditions.checkState(sourcePath instanceof PathSourcePath);
+    return Optional.of(((PathSourcePath) sourcePath).getRelativePath());
+  }
+
   public boolean isSourcePathExtensionInSet(
       SourcePath sourcePath,
       Set<String> extensions) {

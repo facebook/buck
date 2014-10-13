@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -39,12 +40,14 @@ public class SourcePathResolverTest {
 
   @Test
   public void resolveBuildRuleSourcePath() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path expectedPath = Paths.get("foo");
     BuildRule rule = new OutputOnlyBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:foo")).build(),
         pathResolver,
         expectedPath);
+    resolver.addToIndex(rule);
     SourcePath sourcePath = new BuildRuleSourcePath(rule);
 
     assertEquals(expectedPath, pathResolver.getPath(sourcePath));
@@ -52,12 +55,14 @@ public class SourcePathResolverTest {
 
   @Test
   public void resolveBuildRuleSourcePathWithOverriddenOutputPath() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path expectedPath = Paths.get("foo");
     BuildRule rule = new OutputOnlyBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:foo")).build(),
         pathResolver,
         Paths.get("notfoo"));
+    resolver.addToIndex(rule);
     SourcePath sourcePath = new BuildRuleSourcePath(rule, expectedPath);
 
     assertEquals(expectedPath, pathResolver.getPath(sourcePath));
@@ -65,7 +70,8 @@ public class SourcePathResolverTest {
 
   @Test
   public void resolveMixedPaths() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path pathSourcePathExpectedPath = Paths.get("foo");
     Path buildRuleSourcePathExpectedPath = Paths.get("bar");
     Path buildRuleWithOverriddenOutputPathExpectedPath = Paths.get("baz");
@@ -74,11 +80,13 @@ public class SourcePathResolverTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bar")).build(),
         pathResolver,
         buildRuleSourcePathExpectedPath);
+    resolver.addToIndex(rule);
     SourcePath buildRuleSourcePath = new BuildRuleSourcePath(rule);
     BuildRule ruleWithOverriddenOutputPath = new OutputOnlyBuildRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:baz")).build(),
         pathResolver,
         Paths.get("notbaz"));
+    resolver.addToIndex(ruleWithOverriddenOutputPath);
     SourcePath buildRuleSourcePathWithOverriddenOutputPath = new BuildRuleSourcePath(
         ruleWithOverriddenOutputPath,
         buildRuleWithOverriddenOutputPathExpectedPath);
@@ -93,5 +101,50 @@ public class SourcePathResolverTest {
                 pathSourcePath,
                 buildRuleSourcePath,
                 buildRuleSourcePathWithOverriddenOutputPath)));
+  }
+
+  @Test
+  public void getRuleCanGetRuleOfBuildRuleSoucePath() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRule rule = new OutputOnlyBuildRule(
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:foo")).build(),
+        pathResolver,
+        Paths.get("foo"));
+    resolver.addToIndex(rule);
+    SourcePath sourcePath = new BuildRuleSourcePath(rule);
+
+    assertEquals(Optional.of(rule), pathResolver.getRule(sourcePath));
+  }
+
+  @Test
+  public void getRuleCannotGetRuleOfPathSoucePath() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    SourcePath sourcePath = new PathSourcePath(Paths.get("foo"));
+
+    assertEquals(Optional.<BuildRule>absent(), pathResolver.getRule(sourcePath));
+  }
+
+  @Test
+  public void getRelativePathCanGetRelativePathOfPathSourcePath() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    Path expectedPath = Paths.get("foo");
+    SourcePath sourcePath = new PathSourcePath(expectedPath);
+
+    assertEquals(Optional.of(expectedPath), pathResolver.getRelativePath(sourcePath));
+  }
+
+  @Test
+  public void getRelativePathCannotGetRelativePathOfBuildRuleSourcePath() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRule rule = new OutputOnlyBuildRule(
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:foo")).build(),
+        pathResolver,
+        Paths.get("foo"));
+    resolver.addToIndex(rule);
+    SourcePath sourcePath = new BuildRuleSourcePath(rule);
+
+    assertEquals(Optional.<Path>absent(), pathResolver.getRelativePath(sourcePath));
   }
 }
