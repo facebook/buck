@@ -143,9 +143,7 @@ public class CxxCompilableEnhancer {
     dependencies.addAll(pathResolver.filterBuildRuleInputs(ImmutableList.of(source.getPath())));
 
     // Add additional dependencies only for preprocessing.
-    if (source.getType() == CxxSource.Type.C ||
-        source.getType() == CxxSource.Type.CXX ||
-        source.getType() == CxxSource.Type.ASSEMBLER_WITH_CPP) {
+    if (CxxSourceTypes.isPreprocessableType(source.getType())) {
 
       // Depend on the rule that generates the sources and headers we're compiling.
       dependencies.addAll(
@@ -168,8 +166,7 @@ public class CxxCompilableEnhancer {
     // Pick the compiler to use.  Basically, if we're dealing with C++ sources, use the C++
     // compiler, and the C compiler for everything.
     SourcePath compiler;
-    if (source.getType() == CxxSource.Type.CXX ||
-        source.getType() == CxxSource.Type.CXX_CPP_OUTPUT) {
+    if (CxxSourceTypes.needsCxxCompiler(source.getType())) {
       compiler = platform.getCxx();
     } else {
       compiler = platform.getCc();

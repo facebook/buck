@@ -369,4 +369,75 @@ public class CxxCompilableEnhancerTest {
     assertContains(assemblerWithCppCompile.getFlags(), asppflags);
     assertContains(assemblerWithCppCompile.getFlags(), asflags);
   }
+
+  @Test
+  public void languageFlagsArePassed() {
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+
+    String name = "foo/bar.cpp";
+    SourcePath input = new PathSourcePath(target.getBasePath().resolve(name));
+    CxxSource cxxSource = new CxxSource(CxxSource.Type.CXX, input);
+
+    CxxCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
+        params,
+        buildRuleResolver,
+        CXX_PLATFORM,
+        CxxPreprocessorInput.EMPTY,
+        ImmutableList.<String>of(),
+        /* pic */ false,
+        name,
+        cxxSource);
+
+    assertThat(cxxCompile.getFlags(), Matchers.contains("-x", "c++"));
+
+    name = "foo/bar.m";
+    input = new PathSourcePath(target.getBasePath().resolve(name));
+    cxxSource = new CxxSource(CxxSource.Type.OBJC, input);
+
+    cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
+        params,
+        buildRuleResolver,
+        CXX_PLATFORM,
+        CxxPreprocessorInput.EMPTY,
+        ImmutableList.<String>of(),
+        /* pic */ false,
+        name,
+        cxxSource);
+
+    assertThat(cxxCompile.getFlags(), Matchers.contains("-x", "objective-c"));
+
+    name = "foo/bar.mm";
+    input = new PathSourcePath(target.getBasePath().resolve(name));
+    cxxSource = new CxxSource(CxxSource.Type.OBJCXX, input);
+
+    cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
+        params,
+        buildRuleResolver,
+        CXX_PLATFORM,
+        CxxPreprocessorInput.EMPTY,
+        ImmutableList.<String>of(),
+        /* pic */ false,
+        name,
+        cxxSource);
+
+    assertThat(cxxCompile.getFlags(), Matchers.contains("-x", "objective-c++"));
+
+    name = "foo/bar.c";
+    input = new PathSourcePath(target.getBasePath().resolve(name));
+    cxxSource = new CxxSource(CxxSource.Type.C, input);
+
+    cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
+        params,
+        buildRuleResolver,
+        CXX_PLATFORM,
+        CxxPreprocessorInput.EMPTY,
+        ImmutableList.<String>of(),
+        /* pic */ false,
+        name,
+        cxxSource);
+
+    assertThat(cxxCompile.getFlags(), Matchers.contains("-x", "c"));
+  }
 }
