@@ -21,15 +21,18 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class CxxCompileStepTest {
+public class CxxPreprocessStepTest {
 
   @Test
   public void cxxLinkStepUsesCorrectCommand() {
@@ -38,29 +41,45 @@ public class CxxCompileStepTest {
         .setProjectFilesystem(projectFilesystem)
         .build();
 
-    // Setup some dummy values for inputs to the CxxCompileStep
+    // Setup some dummy values for inputs to the CxxPreprocessStep
     Path compiler = Paths.get("compiler");
     ImmutableList<String> flags =
-        ImmutableList.of("-fsanitize=address");
-    Path output = Paths.get("test.o");
+        ImmutableList.of("-Dtest=blah");
+    Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
+    ImmutableList<Path> includes = ImmutableList.of(
+        Paths.get("foo/bar"),
+        Paths.get("test"));
+    ImmutableList<Path> systemIncludes = ImmutableList.of(
+        Paths.get("/usr/include"),
+        Paths.get("/include"));
 
-    // Create our CxxCompileStep to test.
-    CxxCompileStep cxxCompileStep = new CxxCompileStep(
+    // Create our CxxPreprocessStep to test.
+    CxxPreprocessStep cxxPreprocessStep = new CxxPreprocessStep(
         compiler,
         flags,
         output,
-        input);
+        input,
+        includes,
+        systemIncludes);
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
         .add(compiler.toString())
-        .add("-c")
+        .add("-E")
         .addAll(flags)
         .add("-o", output.toString())
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-I"),
+                Iterables.transform(includes, Functions.toStringFunction())))
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-isystem"),
+                Iterables.transform(systemIncludes, Functions.toStringFunction())))
         .add(input.toString())
         .build();
-    ImmutableList<String> actual = cxxCompileStep.getShellCommand(context);
+    ImmutableList<String> actual = cxxPreprocessStep.getShellCommand(context);
     assertEquals(expected, actual);
   }
 

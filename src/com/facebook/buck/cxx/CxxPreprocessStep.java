@@ -18,44 +18,61 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.MoreIterables;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
 /**
- * A step that compiles and assembles C/C++ sources.
+ * A step that preprocesses C/C++ sources.
  */
-public class CxxCompileStep extends ShellStep {
+public class CxxPreprocessStep extends ShellStep {
 
-  private final Path compiler;
+  private final Path preprocessor;
   private final ImmutableList<String> flags;
   private final Path output;
   private final Path input;
+  private final ImmutableList<Path> includes;
+  private final ImmutableList<Path> systemIncludes;
 
-  public CxxCompileStep(
-      Path compiler,
+  public CxxPreprocessStep(
+      Path preprocessor,
       ImmutableList<String> flags,
       Path output,
-      Path input) {
-    this.compiler = Preconditions.checkNotNull(compiler);
+      Path input,
+      ImmutableList<Path> includes,
+      ImmutableList<Path> systemIncludes) {
+    this.preprocessor = Preconditions.checkNotNull(preprocessor);
     this.flags = Preconditions.checkNotNull(flags);
     this.output = Preconditions.checkNotNull(output);
     this.input = Preconditions.checkNotNull(input);
+    this.includes = Preconditions.checkNotNull(includes);
+    this.systemIncludes = Preconditions.checkNotNull(systemIncludes);
   }
 
   @Override
   public String getShortName() {
-    return "c++ compile";
+    return "c++ preprocess";
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(compiler.toString())
-        .add("-c")
+        .add(preprocessor.toString())
+        .add("-E")
         .addAll(flags)
         .add("-o", output.toString())
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-I"),
+                Iterables.transform(includes, Functions.toStringFunction())))
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-isystem"),
+                Iterables.transform(systemIncludes, Functions.toStringFunction())))
         .add(input.toString())
         .build();
   }

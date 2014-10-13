@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.model.BuildTarget;
@@ -31,7 +32,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,25 +41,28 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class CxxCompileTest {
+public class CxxPreprocessTest {
 
   private static final SourcePath DEFAULT_COMPILER = new TestSourcePath("compiler");
   private static final ImmutableList<String> DEFAULT_FLAGS =
       ImmutableList.of("-fsanitize=address");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("test.cpp");
-  private static final Optional<CxxCompile.Plugin> DEFAULT_PLUGIN =
-      Optional.of(new CxxCompile.Plugin(
-              "name",
-              Paths.get("path/to/a/plugin.so"),
-              ImmutableList.of("-abcde")));
+  private static final ImmutableMap<Path, SourcePath> DEFAULT_INCLUDES =
+      ImmutableMap.<Path, SourcePath>of(Paths.get("test.h"), new TestSourcePath("foo/test.h"));
+  private static final ImmutableList<Path> DEFAULT_INCLUDE_ROOTS = ImmutableList.of(
+      Paths.get("foo/bar"),
+      Paths.get("test"));
+  private static final ImmutableList<Path> DEFAULT_SYSTEM_INCLUDE_ROOTS = ImmutableList.of(
+      Paths.get("/usr/include"),
+      Paths.get("/include"));
 
   private RuleKey.Builder.RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
-      SourcePathResolver resolver,
+      SourcePathResolver pathResolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule, resolver);
+    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
     rule.appendToRuleKey(builder);
     return builder.build();
   }
@@ -86,121 +89,98 @@ public class CxxCompileTest {
     RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxCompile(
+        new CxxPreprocess(
             params,
             pathResolver,
             DEFAULT_COMPILER,
-            DEFAULT_PLUGIN,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
+            DEFAULT_INPUT,
+            DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_INCLUDES));
 
     // Verify that changing the compiler causes a rulekey change.
     RuleKey.Builder.RuleKeyPair compilerChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxCompile(
+        new CxxPreprocess(
             params,
             pathResolver,
             new TestSourcePath("different"),
-            DEFAULT_PLUGIN,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
+            DEFAULT_INPUT,
+            DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_INCLUDES));
     assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the flags causes a rulekey change.
     RuleKey.Builder.RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxCompile(
+        new CxxPreprocess(
             params,
             pathResolver,
             DEFAULT_COMPILER,
-            DEFAULT_PLUGIN,
             ImmutableList.of("-different"),
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
+            DEFAULT_INPUT,
+            DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_INCLUDES));
     assertNotEquals(defaultRuleKey, flagsChange);
 
     // Verify that changing the input causes a rulekey change.
     RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxCompile(
+        new CxxPreprocess(
             params,
             pathResolver,
             DEFAULT_COMPILER,
-            DEFAULT_PLUGIN,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            new TestSourcePath("different")));
+            new TestSourcePath("different"),
+            DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_INCLUDES));
     assertNotEquals(defaultRuleKey, inputChange);
 
-    // Verify that not using a plugin changes the key
-    RuleKey.Builder.RuleKeyPair pluginAbsentChange = generateRuleKey(
+    // Verify that changing the includes does *not* cause a rulekey change, since we use a
+    // different mechanism to track header changes.
+    RuleKey.Builder.RuleKeyPair includesChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxCompile(
+        new CxxPreprocess(
             params,
             pathResolver,
             DEFAULT_COMPILER,
-            Optional.<CxxCompile.Plugin>absent(),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
-    assertNotEquals(defaultRuleKey, pluginAbsentChange);
+            DEFAULT_INPUT,
+            ImmutableList.of(Paths.get("different")),
+            DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_INCLUDES));
+    assertEquals(defaultRuleKey, includesChange);
 
-    // Verify that changing the plugin path changes the key
-    RuleKey.Builder.RuleKeyPair pluginPathChange = generateRuleKey(
+    // Verify that changing the system includes does *not* cause a rulekey change, since we use a
+    // different mechanism to track header changes.
+    RuleKey.Builder.RuleKeyPair systemIncludesChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxCompile(
+        new CxxPreprocess(
             params,
             pathResolver,
             DEFAULT_COMPILER,
-            Optional.of(new CxxCompile.Plugin(
-                    DEFAULT_PLUGIN.get().getName(),
-                    Paths.get("path/to/a/different/plugin.so"),
-                    DEFAULT_PLUGIN.get().getFlags())),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
-    assertNotEquals(defaultRuleKey, pluginPathChange);
-
-    // Verify that changing the plugin flags change the key
-    RuleKey.Builder.RuleKeyPair pluginFlagsChange = generateRuleKey(
-        ruleKeyBuilderFactory,
-        pathResolver,
-        new CxxCompile(
-            params,
-            pathResolver,
-            DEFAULT_COMPILER,
-            Optional.of(new CxxCompile.Plugin(
-                    DEFAULT_PLUGIN.get().getName(),
-                    DEFAULT_PLUGIN.get().getPath(),
-                    ImmutableList.of("-abcde", "-aeiou"))),
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
-    assertNotEquals(defaultRuleKey, pluginFlagsChange);
-
-    // Verify that changing the plugin name changes the key
-    RuleKey.Builder.RuleKeyPair pluginNameChange = generateRuleKey(
-        ruleKeyBuilderFactory,
-        pathResolver,
-        new CxxCompile(
-            params,
-            pathResolver,
-            DEFAULT_COMPILER,
-            Optional.of(new CxxCompile.Plugin(
-                    "different_name",
-                    DEFAULT_PLUGIN.get().getPath(),
-                    DEFAULT_PLUGIN.get().getFlags())),
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
-    assertNotEquals(defaultRuleKey, pluginNameChange);
+            DEFAULT_INPUT,
+            DEFAULT_INCLUDE_ROOTS,
+            ImmutableList.of(Paths.get("different")),
+            DEFAULT_INCLUDES));
+    assertEquals(defaultRuleKey, systemIncludesChange);
   }
 
 }

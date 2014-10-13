@@ -183,6 +183,25 @@ public class CxxBinaryDescriptionTest {
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
 
+    // Verify that the preproces rule for our user-provided source has correct deps setup
+    // for the various header rules.
+    BuildRule preprocessRule1 = resolver.getRule(
+        CxxPreprocessables.createPreprocessBuildTarget(
+            target,
+            cxxPlatform.asFlavor(),
+            CxxSource.Type.CXX,
+            /* pic */ false,
+            "test/bar.cpp"));
+    assertEquals(
+        ImmutableSet.of(
+            genHeaderTarget,
+            headerSymlinkTree.getBuildTarget(),
+            header.getBuildTarget(),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor())),
+        FluentIterable.from(preprocessRule1.getDeps())
+            .transform(HasBuildTarget.TO_TARGET)
+            .toSet());
+
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule compileRule1 = resolver.getRule(
@@ -194,11 +213,28 @@ public class CxxBinaryDescriptionTest {
     assertNotNull(compileRule1);
     assertEquals(
         ImmutableSet.of(
+            preprocessRule1.getBuildTarget()),
+        FluentIterable.from(compileRule1.getDeps())
+            .transform(HasBuildTarget.TO_TARGET)
+            .toSet());
+
+    // Verify that the preproces rule for our user-provided source has correct deps setup
+    // for the various header rules.
+    BuildRule preprocessRule2 = resolver.getRule(
+        CxxPreprocessables.createPreprocessBuildTarget(
+            target,
+            cxxPlatform.asFlavor(),
+            CxxSource.Type.CXX,
+            /* pic */ false,
+            genSourceName));
+    assertEquals(
+        ImmutableSet.of(
             genHeaderTarget,
+            genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor())),
-        FluentIterable.from(compileRule1.getDeps())
+        FluentIterable.from(preprocessRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
 
@@ -213,11 +249,7 @@ public class CxxBinaryDescriptionTest {
     assertNotNull(compileRule2);
     assertEquals(
         ImmutableSet.of(
-            genHeaderTarget,
-            genSourceTarget,
-            headerSymlinkTree.getBuildTarget(),
-            header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor())),
+            preprocessRule2.getBuildTarget()),
         FluentIterable.from(compileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());

@@ -358,11 +358,10 @@ public class CxxDescriptionEnhancer {
    * @return a list of {@link SourcePath} objects representing the object files from the result of
    *    compiling the given C/C++ source.
    */
-  public static ImmutableList<SourcePath> createPreprocessAndCompileBuildRules(
+  public static ImmutableList<SourcePath> createCompileBuildRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform config,
-      CxxPreprocessorInput cxxPreprocessorInput,
       ImmutableList<String> compilerFlags,
       boolean pic,
       ImmutableMap<String, CxxSource> sources) {
@@ -371,7 +370,6 @@ public class CxxDescriptionEnhancer {
         params,
         resolver,
         config,
-        cxxPreprocessorInput,
         compilerFlags,
         pic,
         sources);
@@ -475,20 +473,33 @@ public class CxxDescriptionEnhancer {
             .putAll(lexYaccSources.getCxxHeaders())
             .build());
 
-    // Generate the rules for setting up and headers, preprocessing, and compiling the input
-    // sources and return the source paths for the object files.
-    ImmutableList<SourcePath> objects =
-        createPreprocessAndCompileBuildRules(
+    // The complete list of input sources.
+    ImmutableMap<String, CxxSource> sources =
+        ImmutableMap.<String, CxxSource>builder()
+            .putAll(srcs)
+            .putAll(lexYaccSources.getCxxSources())
+            .build();
+
+    // Generate whatever rules are needed to preprocess all the input sources.
+    ImmutableMap<String, CxxSource> preprocessed =
+        CxxPreprocessables.createPreprocessBuildRules(
             params,
             resolver,
             cxxPlatform,
             cxxPreprocessorInput,
+            /* pic */ false,
+            sources);
+
+    // Generate the rules for setting up and headers, preprocessing, and compiling the input
+    // sources and return the source paths for the object files.
+    ImmutableList<SourcePath> objects =
+        createCompileBuildRules(
+            params,
+            resolver,
+            cxxPlatform,
             args.compilerFlags.or(ImmutableList.<String>of()),
             /* pic */ false,
-            ImmutableMap.<String, CxxSource>builder()
-                .putAll(srcs)
-                .putAll(lexYaccSources.getCxxSources())
-                .build());
+            preprocessed);
 
     // Generate the final link rule.  We use the top-level target as the link rule's
     // target, so that it corresponds to the actual binary we build.

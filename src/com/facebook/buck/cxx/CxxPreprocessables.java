@@ -17,21 +17,28 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
+import java.util.AbstractMap;
 import java.util.Map;
 
 public class CxxPreprocessables {
@@ -40,6 +47,8 @@ public class CxxPreprocessables {
 
   private static final BuildRuleType HEADER_SYMLINK_TREE_TYPE =
       new BuildRuleType("header_symlink_tree");
+
+  private static final BuildRuleType PREPROCESS_TYPE = new BuildRuleType("preprocess");
 
   /**
    * Resolve the map of name to {@link SourcePath} to a map of full header name to
@@ -117,6 +126,211 @@ public class CxxPreprocessables {
         resolver,
         root,
         links);
+  }
+
+  /**
+   * @return the preprocessed file name for the given source name.
+   */
+  private static String getOutputName(CxxSource.Type type, String name) {
+
+    String extension;
+    switch (type) {
+      case ASSEMBLER_WITH_CPP:
+        extension = "s";
+        break;
+      case C:
+        extension = "i";
+        break;
+      case CXX:
+        extension = "ii";
+        break;
+      case OBJC:
+        extension = "mi";
+        break;
+      case OBJCXX:
+        extension = "mii";
+        break;
+      // $CASES-OMITTED$
+      default:
+        throw new IllegalStateException(String.format("unexpected type: %s", type));
+    }
+
+    return name + "." + extension;
+  }
+
+  /**
+   * @return a {@link BuildTarget} used for the rule that preprocesses the source by the given
+   *     name and type.
+   */
+  public static BuildTarget createPreprocessBuildTarget(
+      BuildTarget target,
+      Flavor platform,
+      CxxSource.Type type,
+      boolean pic,
+      String name) {
+    return BuildTargets.extendFlavoredBuildTarget(
+        target,
+        platform,
+        new Flavor(
+            String.format(
+                "preprocess-%s%s",
+                pic ? "pic-" : "",
+                getOutputName(type, name).replace('/', '-').replace('.', '-'))));
+  }
+
+  /**
+   * @return the output path for an object file compiled from the source with the given name.
+   */
+  public static Path getPreprocessOutputPath(BuildTarget target, CxxSource.Type type, String name) {
+    return BuildTargets.getBinPath(target, "%s").resolve(getOutputName(type, name));
+  }
+
+  /**
+   * Generate a build rule that preprocesses the given source.
+   *
+   * @return a pair of the output name and source.
+   */
+  public static Map.Entry<String, CxxSource> createPreprocessBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      CxxPreprocessorInput preprocessorInput,
+      boolean pic,
+      String name,
+      CxxSource source) {
+
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    ImmutableSortedSet.Builder<BuildRule> dependencies = ImmutableSortedSet.naturalOrder();
+
+    // If a build rule generates our input source, add that as a dependency.
+    dependencies.addAll(pathResolver.filterBuildRuleInputs(ImmutableList.of(source.getPath())));
+
+    // Depend on the rule that generates the sources and headers we're compiling.
+    dependencies.addAll(
+        pathResolver.filterBuildRuleInputs(
+            ImmutableList.<SourcePath>builder()
+                .add(source.getPath())
+                .addAll(preprocessorInput.getIncludes().values())
+                .build()));
+
+    // Also add in extra deps from the preprocessor input, such as the symlink tree
+    // rules.
+    dependencies.addAll(
+        BuildRules.toBuildRulesFor(
+            params.getBuildTarget(),
+            resolver,
+            preprocessorInput.getRules(),
+            false));
+
+    SourcePath preprocessor;
+    ImmutableList.Builder<String> args = ImmutableList.builder();
+    CxxSource.Type outputType;
+
+    // We explicitly identify our source rather then let the compiler guess based on the
+    // extension.
+    args.add("-x", source.getType().getLanguage());
+
+    // Pick the compiler to use.  Basically, if we're dealing with C++ sources, use the C++
+    // compiler, and the C compiler for everything.
+    switch (source.getType()) {
+      case ASSEMBLER_WITH_CPP:
+        preprocessor = cxxPlatform.getAspp();
+        args.addAll(cxxPlatform.getAsppflags());
+        args.addAll(
+            preprocessorInput.getPreprocessorFlags().get(CxxSource.Type.ASSEMBLER_WITH_CPP));
+        outputType = CxxSource.Type.ASSEMBLER;
+        break;
+      case C:
+        preprocessor = cxxPlatform.getCpp();
+        args.addAll(cxxPlatform.getCppflags());
+        args.addAll(preprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C));
+        outputType = CxxSource.Type.C_CPP_OUTPUT;
+        break;
+      case CXX:
+        preprocessor = cxxPlatform.getCxxpp();
+        args.addAll(cxxPlatform.getCxxppflags());
+        args.addAll(preprocessorInput.getPreprocessorFlags().get(CxxSource.Type.CXX));
+        outputType = CxxSource.Type.CXX_CPP_OUTPUT;
+        break;
+      case OBJC:
+        preprocessor = cxxPlatform.getCpp();
+        args.addAll(preprocessorInput.getPreprocessorFlags().get(CxxSource.Type.OBJC));
+        outputType = CxxSource.Type.OBJC_CPP_OUTPUT;
+        break;
+      case OBJCXX:
+        preprocessor = cxxPlatform.getCxxpp();
+        args.addAll(preprocessorInput.getPreprocessorFlags().get(CxxSource.Type.OBJCXX));
+        outputType = CxxSource.Type.OBJCXX_CPP_OUTPUT;
+        break;
+      // $CASES-OMITTED$
+      default:
+        throw new IllegalStateException(String.format("unexpected type: %s", source.getType()));
+    }
+
+    // If we're using pic, add in the appropriate flag.
+    if (pic) {
+      args.add("-fPIC");
+    }
+
+    // Build the CxxCompile rule and add it to our sorted set of build rules.
+    BuildTarget target =
+        createPreprocessBuildTarget(
+            params.getBuildTarget(),
+            cxxPlatform.asFlavor(),
+            source.getType(),
+            pic,
+            name);
+    CxxPreprocess cxxPreprocess = new CxxPreprocess(
+        params.copyWithChanges(
+            PREPROCESS_TYPE,
+            target,
+            dependencies.build(),
+            ImmutableSortedSet.<BuildRule>of()),
+        pathResolver,
+        preprocessor,
+        args.build(),
+        getPreprocessOutputPath(target, source.getType(), name),
+        source.getPath(),
+        preprocessorInput.getIncludeRoots(),
+        preprocessorInput.getSystemIncludeRoots(),
+        preprocessorInput.getIncludes());
+    resolver.addToIndex(cxxPreprocess);
+
+    // Return the output name and source pair.
+    return new AbstractMap.SimpleEntry<>(
+        name,
+        new CxxSource(outputType, new BuildTargetSourcePath(cxxPreprocess.getBuildTarget())));
+  }
+
+  /**
+   * Generate build rules which preprocess the given input sources.
+   */
+  public static ImmutableMap<String, CxxSource> createPreprocessBuildRules(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform config,
+      CxxPreprocessorInput cxxPreprocessorInput,
+      boolean pic,
+      ImmutableMap<String, CxxSource> sources) {
+
+    ImmutableMap.Builder<String, CxxSource> preprocessedSources = ImmutableMap.builder();
+
+    for (Map.Entry<String, CxxSource> entry : sources.entrySet()) {
+      if (CxxSourceTypes.isPreprocessableType(entry.getValue().getType())) {
+        entry = CxxPreprocessables.createPreprocessBuildRule(
+            params,
+            resolver,
+            config,
+            cxxPreprocessorInput,
+            pic,
+            entry.getKey(),
+            entry.getValue());
+      }
+      preprocessedSources.put(entry);
+    }
+
+    return preprocessedSources.build();
   }
 
 }

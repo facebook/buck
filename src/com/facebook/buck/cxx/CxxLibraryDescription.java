@@ -239,18 +239,29 @@ public class CxxLibraryDescription implements
                 .putAll(lexYaccSources.getCxxHeaders())
                 .build());
 
-    // Create rules for compiling the non-PIC object files.
-    return CxxDescriptionEnhancer.createPreprocessAndCompileBuildRules(
-        params,
-        ruleResolver,
-        cxxPlatform,
-        cxxPreprocessorInputFromDependencies,
-        compilerFlags,
-        pic,
+    ImmutableMap<String, CxxSource> allSources =
         ImmutableMap.<String, CxxSource>builder()
             .putAll(sources)
             .putAll(lexYaccSources.getCxxSources())
-            .build());
+            .build();
+
+    ImmutableMap<String, CxxSource> preprocessed =
+        CxxPreprocessables.createPreprocessBuildRules(
+            params,
+            ruleResolver,
+            cxxPlatform,
+            cxxPreprocessorInputFromDependencies,
+            pic,
+            allSources);
+
+    // Create rules for compiling the non-PIC object files.
+    return CxxDescriptionEnhancer.createCompileBuildRules(
+        params,
+        ruleResolver,
+        cxxPlatform,
+        compilerFlags,
+        pic,
+        preprocessed);
   }
 
   /**

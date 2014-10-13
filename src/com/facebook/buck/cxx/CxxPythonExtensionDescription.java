@@ -138,18 +138,29 @@ public class CxxPythonExtensionDescription implements
             .putAll(lexYaccSources.getCxxHeaders())
             .build());
 
-    ImmutableList<SourcePath> picObjects =
-        CxxDescriptionEnhancer.createPreprocessAndCompileBuildRules(
+    ImmutableMap<String, CxxSource> allSources =
+        ImmutableMap.<String, CxxSource>builder()
+            .putAll(srcs)
+            .putAll(lexYaccSources.getCxxSources())
+            .build();
+
+    ImmutableMap<String, CxxSource> preprocessed =
+        CxxPreprocessables.createPreprocessBuildRules(
             params,
             ruleResolver,
             cxxPlatform,
             cxxPreprocessorInput,
+            /* pic */ true,
+            allSources);
+
+    ImmutableList<SourcePath> picObjects =
+        CxxDescriptionEnhancer.createCompileBuildRules(
+            params,
+            ruleResolver,
+            cxxPlatform,
             args.compilerFlags.or(ImmutableList.<String>of()),
             /* pic */ true,
-            ImmutableMap.<String, CxxSource>builder()
-                .putAll(srcs)
-                .putAll(lexYaccSources.getCxxSources())
-                .build());
+            preprocessed);
 
     // Setup the rules to link the shared library.
     String extensionName = getExtensionName(params.getBuildTarget());

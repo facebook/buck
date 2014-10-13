@@ -68,11 +68,23 @@ public class CxxLexYaccIntegrationTest {
     String yaccSourceName = "mainy.yy";
     String yaccSourceFull = "foo/" + yaccSourceName;
     BuildTarget yaccTarget = CxxDescriptionEnhancer.createYaccBuildTarget(target, yaccSourceName);
+    BuildTarget yaccPreprocessTarget = CxxPreprocessables.createPreprocessBuildTarget(
+        target,
+        cxxPlatform.asFlavor(),
+        CxxSource.Type.CXX,
+        /* pic */ false,
+        yaccSourceName + ".cc");
     BuildTarget yaccCompileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
         target,
         cxxPlatform.asFlavor(),
         yaccSourceName + ".cc",
         /* pic */ false);
+    BuildTarget preprocessTarget = CxxPreprocessables.createPreprocessBuildTarget(
+        target,
+        cxxPlatform.asFlavor(),
+        CxxSource.Type.CXX,
+        /* pic */ false,
+        sourceName);
     BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
         target,
         cxxPlatform.asFlavor(),
@@ -89,7 +101,9 @@ public class CxxLexYaccIntegrationTest {
         ImmutableSet.of(
             yaccTarget,
             headerSymlinkTreeTarget,
+            yaccPreprocessTarget,
             yaccCompileTarget,
+            preprocessTarget,
             compileTarget,
             binaryTarget,
             target),
@@ -112,7 +126,9 @@ public class CxxLexYaccIntegrationTest {
         ImmutableSet.of(
             yaccTarget,
             headerSymlinkTreeTarget,
+            yaccPreprocessTarget,
             yaccCompileTarget,
+            preprocessTarget,
             compileTarget,
             binaryTarget,
             target),
@@ -138,7 +154,9 @@ public class CxxLexYaccIntegrationTest {
         ImmutableSet.of(
             yaccTarget,
             headerSymlinkTreeTarget,
+            yaccPreprocessTarget,
             yaccCompileTarget,
+            preprocessTarget,
             compileTarget,
             binaryTarget,
             target),
