@@ -44,6 +44,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -173,8 +174,8 @@ public class CxxDescriptionEnhancerTest {
         params,
         new BuildRuleResolver(),
         cxxBuckConfig,
-        /* preprocessorFlags */ ImmutableList.<String>of(),
-        /* propagatedPpFlags */ ImmutableList.<String>of(),
+        /* preprocessorFlags */ ImmutableMultimap.<CxxSource.Type, String>of(),
+        /* propagatedPpFlags */ ImmutableMultimap.<CxxSource.Type, String>of(),
         /* headers */ ImmutableMap.<Path, SourcePath>of(),
         /* compilerFlags */ ImmutableList.<String>of(),
         /* sources */ ImmutableMap.of(sourceName, source),
@@ -192,8 +193,8 @@ public class CxxDescriptionEnhancerTest {
         params,
         new BuildRuleResolver(),
         cxxBuckConfig,
-        /* preprocessorFlags */ ImmutableList.<String>of(),
-        /* propagatedPpFlags */ ImmutableList.<String>of(),
+        /* preprocessorFlags */ ImmutableMultimap.<CxxSource.Type, String>of(),
+        /* propagatedPpFlags */ ImmutableMultimap.<CxxSource.Type, String>of(),
         /* headers */ ImmutableMap.<Path, SourcePath>of(),
         /* compilerFlags */ ImmutableList.<String>of(),
         /* sources */ ImmutableMap.of(sourceName, source),
@@ -298,8 +299,8 @@ public class CxxDescriptionEnhancerTest {
         params,
         resolver,
         cxxBuckConfig,
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
+        /* preprocessorFlags */ ImmutableMultimap.<CxxSource.Type, String>of(),
+        /* propagatedPpFlags */ ImmutableMultimap.<CxxSource.Type, String>of(),
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(genHeaderName),
             new BuildTargetSourcePath(genHeader.getBuildTarget())),

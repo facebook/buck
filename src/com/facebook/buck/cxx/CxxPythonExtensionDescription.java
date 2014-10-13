@@ -126,7 +126,9 @@ public class CxxPythonExtensionDescription implements
         headers);
     CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
         params,
-        args.preprocessorFlags.or(ImmutableList.<String>of()),
+        CxxPreprocessorFlags.fromArgs(
+            args.preprocessorFlags.get(),
+            args.langPreprocessorFlags.get()),
         headerSymlinkTree,
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(headers)

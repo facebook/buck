@@ -22,7 +22,9 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -35,11 +37,7 @@ public class CxxPreprocessorInput {
   // The build rules which produce headers found in the includes below.
   private final ImmutableSet<BuildTarget> rules;
 
-  // The build rules which produce headers found in the includes below.
-  private final ImmutableList<String> cppflags;
-
-  // The build rules which produce headers found in the includes below.
-  private final ImmutableList<String> cxxppflags;
+  private final ImmutableMultimap<CxxSource.Type, String> preprocessorFlags;
 
   private final ImmutableMap<Path, SourcePath> includes;
 
@@ -51,14 +49,12 @@ public class CxxPreprocessorInput {
 
   private CxxPreprocessorInput(
       ImmutableSet<BuildTarget> rules,
-      ImmutableList<String> cppflags,
-      ImmutableList<String> cxxppflags,
+      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableMap<Path, SourcePath> includes,
       ImmutableList<Path> includeRoots,
       ImmutableList<Path> systemIncludeRoots) {
     this.rules = Preconditions.checkNotNull(rules);
-    this.cppflags = Preconditions.checkNotNull(cppflags);
-    this.cxxppflags = Preconditions.checkNotNull(cxxppflags);
+    this.preprocessorFlags = Preconditions.checkNotNull(preprocessorFlags);
     this.includes = Preconditions.checkNotNull(includes);
     this.includeRoots = Preconditions.checkNotNull(includeRoots);
     this.systemIncludeRoots = Preconditions.checkNotNull(systemIncludeRoots);
@@ -69,8 +65,7 @@ public class CxxPreprocessorInput {
    */
   public static class Builder {
     private ImmutableSet<BuildTarget> rules = ImmutableSet.of();
-    private ImmutableList<String> cppflags = ImmutableList.of();
-    private ImmutableList<String> cxxppflags = ImmutableList.of();
+    private ImmutableMultimap<CxxSource.Type, String> preprocessorFlags = ImmutableMultimap.of();
     private ImmutableMap<Path, SourcePath> includes = ImmutableMap.of();
     private ImmutableList<Path> includeRoots = ImmutableList.of();
     private ImmutableList<Path> systemIncludeRoots = ImmutableList.of();
@@ -78,8 +73,7 @@ public class CxxPreprocessorInput {
     public CxxPreprocessorInput build() {
       return new CxxPreprocessorInput(
           rules,
-          cppflags,
-          cxxppflags,
+          preprocessorFlags,
           includes,
           includeRoots,
           systemIncludeRoots);
@@ -90,13 +84,8 @@ public class CxxPreprocessorInput {
       return this;
     }
 
-    public Builder setCppflags(Iterable<String> cppflags) {
-      this.cppflags = ImmutableList.copyOf(cppflags);
-      return this;
-    }
-
-    public Builder setCxxppflags(Iterable<String> cxxppflags) {
-      this.cxxppflags = ImmutableList.copyOf(cxxppflags);
+    public Builder setPreprocessorFlags(Multimap<CxxSource.Type, String> preprocessorFlags) {
+      this.preprocessorFlags = ImmutableMultimap.copyOf(preprocessorFlags);
       return this;
     }
 
@@ -124,16 +113,15 @@ public class CxxPreprocessorInput {
 
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
-    ImmutableList.Builder<String> cflags = ImmutableList.builder();
-    ImmutableList.Builder<String> cxxflags = ImmutableList.builder();
+    ImmutableMultimap.Builder<CxxSource.Type, String> preprocessorFlags =
+      ImmutableMultimap.builder();
     ImmutableMap.Builder<Path, SourcePath> includes = ImmutableMap.builder();
     ImmutableList.Builder<Path> includeRoots = ImmutableList.builder();
     ImmutableList.Builder<Path> systemIncludeRoots = ImmutableList.builder();
 
     for (CxxPreprocessorInput input : inputs) {
       rules.addAll(input.getRules());
-      cflags.addAll(input.getCppflags());
-      cxxflags.addAll(input.getCxxppflags());
+      preprocessorFlags.putAll(input.getPreprocessorFlags());
       includes.putAll(input.getIncludes());
       includeRoots.addAll(input.getIncludeRoots());
       systemIncludeRoots.addAll(input.getSystemIncludeRoots());
@@ -141,8 +129,7 @@ public class CxxPreprocessorInput {
 
     return new CxxPreprocessorInput(
         rules.build(),
-        cflags.build(),
-        cxxflags.build(),
+        preprocessorFlags.build(),
         includes.build(),
         includeRoots.build(),
         systemIncludeRoots.build());
@@ -152,12 +139,8 @@ public class CxxPreprocessorInput {
     return rules;
   }
 
-  public ImmutableList<String> getCppflags() {
-    return cppflags;
-  }
-
-  public ImmutableList<String> getCxxppflags() {
-    return cxxppflags;
+  public ImmutableMultimap<CxxSource.Type, String> getPreprocessorFlags() {
+    return preprocessorFlags;
   }
 
   public ImmutableMap<Path, SourcePath> getIncludes() {
@@ -189,11 +172,7 @@ public class CxxPreprocessorInput {
       return false;
     }
 
-    if (!cppflags.equals(that.cppflags)) {
-      return false;
-    }
-
-    if (!cxxppflags.equals(that.cxxppflags)) {
+    if (!preprocessorFlags.equals(that.preprocessorFlags)) {
       return false;
     }
 
@@ -216,8 +195,7 @@ public class CxxPreprocessorInput {
   public int hashCode() {
     return Objects.hashCode(
         rules,
-        cppflags,
-        cxxppflags,
+        preprocessorFlags,
         includes,
         includeRoots,
         systemIncludeRoots);
@@ -227,8 +205,7 @@ public class CxxPreprocessorInput {
   public String toString() {
     return Objects.toStringHelper(this)
         .add("rules", rules)
-        .add("cppflags", cppflags)
-        .add("cxxppflags", cxxppflags)
+        .add("preprocessorFlags", preprocessorFlags)
         .add("includes", includes)
         .add("includeRoots", includeRoots)
         .add("systemIncludeRoots", systemIncludeRoots)

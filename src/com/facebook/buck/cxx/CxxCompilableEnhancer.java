@@ -178,17 +178,17 @@ public class CxxCompilableEnhancer {
     // extension.
     args.add("-x", source.getType().getLanguage());
 
+    args.addAll(preprocessorInput.getPreprocessorFlags().get(source.getType()));
+
     // If we're dealing with a C++ source that can be preprocessed, add in the various C++
     // preprocessor flags.
     if (source.getType() == CxxSource.Type.CXX) {
-      args.addAll(preprocessorInput.getCxxppflags());
       args.addAll(platform.getCxxppflags());
     }
 
     // If we're dealing with a C source that can be preprocessed, add in the various C
     // preprocessor flags.
     if (source.getType() == CxxSource.Type.C) {
-      args.addAll(preprocessorInput.getCppflags());
       args.addAll(platform.getCppflags());
     }
 
