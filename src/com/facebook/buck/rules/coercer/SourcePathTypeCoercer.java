@@ -20,7 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -68,7 +68,7 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
       if (!rule.isPresent()) {
         throw CoerceFailedException.simple(object, BuildRule.class);
       }
-      return new BuildRuleSourcePath(rule.get());
+      return new BuildTargetSourcePath(rule.get().getBuildTarget());
     } else {
       Path path = pathTypeCoercer.coerce(
           buildTargetParser,

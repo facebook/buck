@@ -30,7 +30,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
@@ -95,7 +95,7 @@ public class CxxDescriptionEnhancerTest {
         .newGenruleBuilder(genruleTarget)
         .setOut(lexSourceName)
         .build(resolver);
-    SourcePath lexSource = new BuildRuleSourcePath(genrule);
+    SourcePath lexSource = new BuildTargetSourcePath(genrule.getBuildTarget());
 
     // Use a regular path for our yacc source.
     String yaccSourceName = "test.yy";
@@ -136,18 +136,18 @@ public class CxxDescriptionEnhancerTest {
     CxxHeaderSourceSpec expected = new CxxHeaderSourceSpec(
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(lexSourceName + ".h"),
-            new BuildRuleSourcePath(lex, lexOutputHeader),
+            new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputHeader),
             target.getBasePath().resolve(yaccSourceName + ".h"),
-            new BuildRuleSourcePath(yacc, yaccOutputHeader)),
+    new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputHeader)),
         ImmutableMap.of(
             lexSourceName + ".cc",
             new CxxSource(
                 CxxSource.Type.CXX,
-                new BuildRuleSourcePath(lex, lexOutputSource)),
+                new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputSource)),
             yaccSourceName + ".cc",
             new CxxSource(
                 CxxSource.Type.CXX,
-                new BuildRuleSourcePath(yacc, yaccOutputSource))));
+                new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputSource))));
     assertEquals(expected, actual);
   }
 
@@ -261,10 +261,12 @@ public class CxxDescriptionEnhancerTest {
       public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
         return type == Type.STATIC ?
             new NativeLinkableInput(
-                ImmutableList.<SourcePath>of(new BuildRuleSourcePath(staticLibraryDep)),
+                ImmutableList.<SourcePath>of(
+                    new BuildTargetSourcePath(staticLibraryDep.getBuildTarget())),
                 ImmutableList.of(staticLibraryOutput.toString())) :
             new NativeLinkableInput(
-                ImmutableList.<SourcePath>of(new BuildRuleSourcePath(sharedLibraryDep)),
+                ImmutableList.<SourcePath>of(
+                    new BuildTargetSourcePath(sharedLibraryDep.getBuildTarget())),
                 ImmutableList.of(sharedLibraryOutput.toString()));
       }
 
@@ -300,11 +302,16 @@ public class CxxDescriptionEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         ImmutableMap.<Path, SourcePath>of(
-            target.getBasePath().resolve(genHeaderName), new BuildRuleSourcePath(genHeader)),
+            target.getBasePath().resolve(genHeaderName),
+            new BuildTargetSourcePath(genHeader.getBuildTarget())),
         ImmutableList.<String>of(),
         ImmutableMap.of(
-            sourceName, new CxxSource(CxxSource.Type.CXX, new TestSourcePath(sourceName)),
-            genSourceName, new CxxSource(CxxSource.Type.CXX, new BuildRuleSourcePath(genSource))),
+            sourceName,
+            new CxxSource(CxxSource.Type.CXX, new TestSourcePath(sourceName)),
+            genSourceName,
+            new CxxSource(
+                CxxSource.Type.CXX,
+                new BuildTargetSourcePath(genSource.getBuildTarget()))),
         /* linkWhole */ false,
         /* soname */ Optional.<String>absent());
 
@@ -316,7 +323,7 @@ public class CxxDescriptionEnhancerTest {
             ImmutableList.<String>of(),
             ImmutableList.<String>of(),
             ImmutableMap.<Path, SourcePath>of(
-                Paths.get(genHeaderName), new BuildRuleSourcePath(genHeader)),
+                Paths.get(genHeaderName), new BuildTargetSourcePath(genHeader.getBuildTarget())),
             ImmutableList.of(
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target)),
             ImmutableList.<Path>of()),
@@ -439,7 +446,7 @@ public class CxxDescriptionEnhancerTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(CxxDescriptionEnhancer.getSharedLibrarySoname(target)),
-            new BuildRuleSourcePath(sharedRule)));
+            new BuildTargetSourcePath(sharedRule.getBuildTarget())));
     assertEquals(
         expectedPythonPackageComponents,
         rule.getPythonPackageComponents());

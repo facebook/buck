@@ -22,7 +22,7 @@ import com.facebook.buck.python.PythonUtil;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -176,7 +176,7 @@ public class CxxPythonExtensionDescription implements
         params,
         pathResolver,
         extensionModule,
-        new BuildRuleSourcePath(extensionRule),
+        new BuildTargetSourcePath(extensionRule.getBuildTarget()),
         extensionRule);
   }
 

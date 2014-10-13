@@ -24,7 +24,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
@@ -211,7 +211,9 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     PythonPackageComponents testComponents = new PythonPackageComponents(
         ImmutableMap
             .<Path, SourcePath>builder()
-            .put(getTestModulesListName(), new BuildRuleSourcePath(testModulesBuildRule))
+            .put(
+                getTestModulesListName(),
+                new BuildTargetSourcePath(testModulesBuildRule.getBuildTarget()))
             .put(getTestMainName(), new PathSourcePath(pathToPythonTestMain))
             .putAll(srcs)
             .build(),
@@ -243,7 +245,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                 .build(),
             params.getExtraDeps()),
         pathResolver,
-        new BuildRuleSourcePath(binary),
+        new BuildTargetSourcePath(binary.getBuildTarget()),
         resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
         args.labels.or(ImmutableSet.<Label>of()),
         args.contacts.or(ImmutableSet.<String>of()));

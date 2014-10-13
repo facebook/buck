@@ -154,8 +154,6 @@ public class RuleKey {
 
     private static final Logger logger = Logger.get(Builder.class);
 
-    // TODO(user): Remove once SourcePath embeds BuildTarget instead of BuildRule and we use this
-    @SuppressWarnings("unused")
     private final SourcePathResolver resolver;
     private final ImmutableSortedSet<BuildRule> deps;
     private final ImmutableSortedSet<BuildRule> exportedDeps;
@@ -309,17 +307,19 @@ public class RuleKey {
     }
 
     private Builder setInputVal(SourcePath path) {
-      if (path instanceof BuildRuleSourcePath) {
-        return setVal(((BuildRuleSourcePath) path).getRule().getRuleKey());
+      Optional<BuildRule> buildRule = resolver.getRule(path);
+      if (buildRule.isPresent()) {
+        return setVal(buildRule.get().getRuleKey());
       } else {
-        Preconditions.checkArgument(path instanceof PathSourcePath);
-        return setInputVal(((PathSourcePath) path).getRelativePath());
+        Optional<Path> relativePath = resolver.getRelativePath(path);
+        Preconditions.checkState(relativePath.isPresent());
+        return setInputVal(relativePath.get());
       }
     }
 
     /**
      * Hash the value of the given {@link SourcePath}, which is either the {@link RuleKey} in the
-     * case of a {@link BuildRuleSourcePath} or the hash of the contents in the case of a
+     * case of a {@link BuildTargetSourcePath} or the hash of the contents in the case of a
      * {@link PathSourcePath}.
      */
     public Builder setInput(String key, SourcePath input) {
@@ -331,10 +331,13 @@ public class RuleKey {
       if (val != null) {
         for (SourcePath path : val) {
           setVal(path.toString());
-          if (path instanceof BuildRuleSourcePath) {
-            setVal(((BuildRuleSourcePath) path).getRule().getRuleKey());
+          Optional<BuildRule> buildRule = resolver.getRule(path);
+          if (buildRule.isPresent()) {
+            setVal(buildRule.get().getRuleKey());
           } else {
-            setVal(((PathSourcePath) path).getRelativePath().toString());
+            Optional<Path> relativePath = resolver.getRelativePath(path);
+            Preconditions.checkState(relativePath.isPresent());
+            setVal(relativePath.get().toString());
           }
         }
       }

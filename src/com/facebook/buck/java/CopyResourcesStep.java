@@ -16,7 +16,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 public class CopyResourcesStep implements Step {
 
   /**
-   * This matches the Path for a BuildRuleSourcePath and returns the path without the
+   * This matches the Path for a BuildTargetSourcePath and returns the path without the
    * "buck-out/XXX/" component as the first capturing group.
    */
   private static final Pattern GENERATED_FILE_PATTERN = Pattern.compile(
@@ -125,8 +125,8 @@ public class CopyResourcesStep implements Step {
         int lastIndex = resource.lastIndexOf(javaPackageAsPath);
         if (lastIndex < 0) {
           Preconditions.checkState(
-              rawResource instanceof BuildRuleSourcePath,
-              "If resource path %s does not contain %s, then it must be a BuildRuleSourcePath.",
+              rawResource instanceof BuildTargetSourcePath,
+              "If resource path %s does not contain %s, then it must be a BuildTargetSourcePath.",
               pathToResource,
               javaPackageAsPath);
           // Handle the case where we depend on the output of another BuildRule. In that case, just

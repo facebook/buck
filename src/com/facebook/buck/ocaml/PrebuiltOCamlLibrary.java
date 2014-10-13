@@ -21,7 +21,7 @@ import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -93,8 +93,13 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
     librariesBuilder.add(
-        new BuildRuleSourcePath(this, getResolver().getPath(staticNativeLibraryPath)));
-    librariesBuilder.add(new BuildRuleSourcePath(this, getResolver().getPath(staticCLibraryPath)));
+        new BuildTargetSourcePath(
+            this.getBuildTarget(),
+            getResolver().getPath(staticNativeLibraryPath)));
+    librariesBuilder.add(
+        new BuildTargetSourcePath(
+            this.getBuildTarget(),
+            getResolver().getPath(staticCLibraryPath)));
     final ImmutableList<SourcePath> libraries = librariesBuilder.build();
 
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();

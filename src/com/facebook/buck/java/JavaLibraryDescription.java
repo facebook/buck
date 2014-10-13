@@ -246,7 +246,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         .addAll(arg.resources.get())
         .build();
 
-    // If any of the srcs or resources are BuildRuleSourcePaths, then their respective BuildRules
+    // If any of the srcs or resources are BuildTargetSourcePaths, then their respective BuildRules
     // must be included as deps.
     ImmutableSortedSet<BuildRule> deps =
         ImmutableSortedSet.copyOf(resolver.filterBuildRuleInputs(filesForGwtModule));

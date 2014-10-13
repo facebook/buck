@@ -37,11 +37,11 @@ public class SourcePaths {
           return new PathSourcePath(input);
         }
       };
-  public static final Function<BuildRule, SourcePath> TO_BUILD_RULE_SOURCE_PATH =
+  public static final Function<BuildRule, SourcePath> TO_BUILD_TARGET_SOURCE_PATH =
       new Function<BuildRule, SourcePath>() {
         @Override
         public SourcePath apply(BuildRule input) {
-          return new BuildRuleSourcePath(input);
+          return new BuildTargetSourcePath(input.getBuildTarget());
         }
       };
 

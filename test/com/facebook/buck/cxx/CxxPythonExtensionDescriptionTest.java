@@ -29,7 +29,7 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
@@ -180,7 +180,9 @@ public class CxxPythonExtensionDescriptionTest {
                 ImmutableList.<String>of()) :
             new NativeLinkableInput(
                 ImmutableList.<SourcePath>of(
-                    new BuildRuleSourcePath(sharedLibraryDep, sharedLibraryOutput)),
+                    new BuildTargetSourcePath(
+                        sharedLibraryDep.getBuildTarget(),
+                        sharedLibraryOutput)),
                 ImmutableList.of(sharedLibraryOutput.toString()));
       }
 
@@ -221,7 +223,7 @@ public class CxxPythonExtensionDescriptionTest {
     PythonPackageComponents expectedComponents = new PythonPackageComponents(
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(desc.getExtensionName(target)),
-            new BuildRuleSourcePath(extension.getRule())),
+            new BuildTargetSourcePath(extension.getRule().getBuildTarget())),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of());
     assertEquals(

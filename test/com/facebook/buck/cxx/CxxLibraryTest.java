@@ -28,7 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -84,10 +84,11 @@ public class CxxLibraryTest {
       public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
         return type == Type.STATIC ?
             new NativeLinkableInput(
-                ImmutableList.<SourcePath>of(new BuildRuleSourcePath(archive)),
+                ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
                 ImmutableList.of(archiveOutput.toString())) :
             new NativeLinkableInput(
-                ImmutableList.<SourcePath>of(new BuildRuleSourcePath(sharedLibrary)),
+                ImmutableList.<SourcePath>of(
+                    new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
                 ImmutableList.of(sharedLibraryOutput.toString()));
       }
 
@@ -117,7 +118,7 @@ public class CxxLibraryTest {
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedStaticNativeLinkableInput = new NativeLinkableInput(
-        ImmutableList.<SourcePath>of(new BuildRuleSourcePath(archive)),
+        ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
         ImmutableList.of(archiveOutput.toString()));
     assertEquals(
         expectedStaticNativeLinkableInput,
@@ -128,7 +129,7 @@ public class CxxLibraryTest {
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedSharedNativeLinkableInput = new NativeLinkableInput(
-        ImmutableList.<SourcePath>of(new BuildRuleSourcePath(sharedLibrary)),
+        ImmutableList.<SourcePath>of(new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
         ImmutableList.of(sharedLibraryOutput.toString()));
     assertEquals(
         expectedSharedNativeLinkableInput,

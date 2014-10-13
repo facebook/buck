@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -51,7 +51,7 @@ public class AndroidManifestDescriptionTest {
         return Paths.get("buck-out/gen/foo/bar/AndroidManifest.xml");
       }
     };
-    BuildRuleSourcePath skeleton = new BuildRuleSourcePath(ruleWithOutput);
+    BuildTargetSourcePath skeleton = new BuildTargetSourcePath(ruleWithOutput.getBuildTarget());
     buildRuleResolver.addToIndex(ruleWithOutput);
 
     AndroidManifestDescription.Arg arg = new AndroidManifestDescription.Arg();

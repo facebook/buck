@@ -23,8 +23,8 @@ import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -203,10 +203,10 @@ public class CxxDescriptionEnhancer {
           name + ".cc",
           new CxxSource(
               CxxSource.Type.CXX,
-              new BuildRuleSourcePath(lex, outputSource)));
+              new BuildTargetSourcePath(lex.getBuildTarget(), outputSource)));
       lexYaccHeadersBuilder.put(
           params.getBuildTarget().getBasePath().resolve(name + ".h"),
-          new BuildRuleSourcePath(lex, outputHeader));
+          new BuildTargetSourcePath(lex.getBuildTarget(), outputHeader));
     }
 
     // Loop over all yaccc sources, generating build rule for each one and adding the sources
@@ -241,11 +241,13 @@ public class CxxDescriptionEnhancer {
           name + ".cc",
           new CxxSource(
               CxxSource.Type.CXX,
-              new BuildRuleSourcePath(yacc, Yacc.getSourceOutputPath(outputPrefix))));
+              new BuildTargetSourcePath(
+                  yacc.getBuildTarget(),
+                  Yacc.getSourceOutputPath(outputPrefix))));
 
       lexYaccHeadersBuilder.put(
           params.getBuildTarget().getBasePath().resolve(name + ".h"),
-          new BuildRuleSourcePath(yacc, Yacc.getHeaderOutputPath(outputPrefix)));
+          new BuildTargetSourcePath(yacc.getBuildTarget(), Yacc.getHeaderOutputPath(outputPrefix)));
     }
 
     return new CxxHeaderSourceSpec(
@@ -324,7 +326,7 @@ public class CxxDescriptionEnhancer {
     resolver.addAllToIndex(objectRules);
 
     return FluentIterable.from(objectRules)
-        .transform(SourcePaths.TO_BUILD_RULE_SOURCE_PATH)
+        .transform(SourcePaths.TO_BUILD_TARGET_SOURCE_PATH)
         .toList();
   }
 
@@ -461,10 +463,10 @@ public class CxxDescriptionEnhancer {
 
         return new NativeLinkableInput(
             ImmutableList.<SourcePath>of(
-                new BuildRuleSourcePath(
+                new BuildTargetSourcePath(
                     type == Type.STATIC ?
-                        staticLibraryBuildRule :
-                        sharedLibraryBuildRule)),
+                        staticLibraryBuildRule.getBuildTarget() :
+                        sharedLibraryBuildRule.getBuildTarget())),
             linkerArgs);
       }
 
@@ -475,7 +477,7 @@ public class CxxDescriptionEnhancer {
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(sharedLibrarySoname),
-                new BuildRuleSourcePath(sharedLibraryBuildRule)));
+                new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget())));
       }
 
     };

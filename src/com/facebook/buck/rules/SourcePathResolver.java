@@ -38,22 +38,6 @@ import java.util.Set;
 
 public class SourcePathResolver {
 
-  public static final Function<PathSourcePath, Path> TO_PATH_SOURCEPATH_REFERENCES =
-      new Function<PathSourcePath, Path>() {
-        @Override
-        public Path apply(PathSourcePath input) {
-          return input.getRelativePath();
-        }
-      };
-  public static final Function<BuildRuleSourcePath, BuildRule> TO_BUILD_RULE_REFERENCES =
-      new Function<BuildRuleSourcePath, BuildRule>() {
-        @Override
-        public BuildRule apply(BuildRuleSourcePath input) {
-          return input.getRule();
-        }
-      };
-
-  @SuppressWarnings("unused") // Needed once SourcePath embed BuildTarget instead of BuildRule
   private final BuildRuleResolver ruleResolver;
 
   public SourcePathResolver(BuildRuleResolver ruleResolver) {
@@ -64,16 +48,18 @@ public class SourcePathResolver {
     if (sourcePath instanceof PathSourcePath) {
       return ((PathSourcePath) sourcePath).getRelativePath();
     }
-    Preconditions.checkArgument(sourcePath instanceof BuildRuleSourcePath);
-    BuildRuleSourcePath buildRuleSourcePath = (BuildRuleSourcePath) sourcePath;
-    Optional<Path> resolvedPath = buildRuleSourcePath.getResolvedPath();
+    Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
+    BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
+    Optional<Path> resolvedPath = buildTargetSourcePath.getResolvedPath();
     if (resolvedPath.isPresent()) {
       return resolvedPath.get();
     }
 
-    Path path = buildRuleSourcePath.getRule().getPathToOutputFile();
+    Path path = ruleResolver.getRule(buildTargetSourcePath.getTarget()).getPathToOutputFile();
     if (path == null) {
-      throw new HumanReadableException("No known output for: %s", buildRuleSourcePath.getRule());
+      throw new HumanReadableException(
+          "No known output for: %s",
+          buildTargetSourcePath.getTarget());
     }
 
     return path;
@@ -110,8 +96,8 @@ public class SourcePathResolver {
     if (sourcePath instanceof PathSourcePath) {
       return Optional.absent();
     }
-    Preconditions.checkState(sourcePath instanceof BuildRuleSourcePath);
-    return Optional.of(((BuildRuleSourcePath) sourcePath).getRule());
+    Preconditions.checkState(sourcePath instanceof BuildTargetSourcePath);
+    return Optional.of(ruleResolver.getRule(((BuildTargetSourcePath) sourcePath).getTarget()));
   }
 
   /**
@@ -119,7 +105,7 @@ public class SourcePathResolver {
    *         doesn't refer to the output of a {@link BuildRule}, or {@code absent} if it does.
    */
   public Optional<Path> getRelativePath(SourcePath sourcePath) {
-    if (sourcePath instanceof BuildRuleSourcePath) {
+    if (sourcePath instanceof BuildTargetSourcePath) {
       return Optional.absent();
     }
     Preconditions.checkState(sourcePath instanceof PathSourcePath);
@@ -159,8 +145,8 @@ public class SourcePathResolver {
   }
 
   public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-    if (sourcePath instanceof BuildRuleSourcePath) {
-      return getNameForRule(((BuildRuleSourcePath) sourcePath).getRule());
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      return getNameForRule(ruleResolver.getRule(((BuildTargetSourcePath) sourcePath).getTarget()));
     }
     Preconditions.checkArgument(sourcePath instanceof PathSourcePath);
     Path path = ((PathSourcePath) sourcePath).getRelativePath();
@@ -192,11 +178,17 @@ public class SourcePathResolver {
     // returned by getInputsToCompareToOutput() is FileSourcePath, so it is safe to filter by that
     // and then use .asReference() to get its path.
     //
-    // BuildRuleSourcePath should not be included in the output because it refers to a generated
+    // BuildTargetSourcePath should not be included in the output because it refers to a generated
     // file, and generated files are not hashed as part of a RuleKey.
     return FluentIterable.from(sources)
         .filter(PathSourcePath.class)
-        .transform(TO_PATH_SOURCEPATH_REFERENCES)
+        .transform(
+            new Function<PathSourcePath, Path>() {
+              @Override
+              public Path apply(PathSourcePath input) {
+                return input.getRelativePath();
+              }
+            })
         .toList();
   }
 
@@ -207,8 +199,14 @@ public class SourcePathResolver {
   public Collection<BuildRule> filterBuildRuleInputs(
       Iterable<? extends SourcePath> sources) {
     return FluentIterable.from(sources)
-        .filter(BuildRuleSourcePath.class)
-        .transform(TO_BUILD_RULE_REFERENCES)
+        .filter(BuildTargetSourcePath.class)
+        .transform(
+            new Function<BuildTargetSourcePath, BuildRule>() {
+              @Override
+              public BuildRule apply(BuildTargetSourcePath input) {
+                return ruleResolver.getRule(input.getTarget());
+              }
+            })
         .toList();
   }
 }

@@ -28,9 +28,8 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
@@ -67,9 +66,8 @@ public class JavaSourceJarTest {
   public void shouldOnlyIncludePathBasedSources() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     SourcePath fileBased = new TestSourcePath("some/path/File.java");
-    SourcePath ruleBased = new BuildRuleSourcePath(
-        new FakeBuildRule(JavaLibraryDescription.TYPE,
-        BuildTargetFactory.newInstance("//cheese:cake"), pathResolver));
+    SourcePath ruleBased = new BuildTargetSourcePath(
+        BuildTargetFactory.newInstance("//cheese:cake"));
 
     JavaPackageFinder finderStub = createNiceMock(JavaPackageFinder.class);
     expect(finderStub.findJavaPackageFolderForPath((String) anyObject())).andStubReturn("cheese");

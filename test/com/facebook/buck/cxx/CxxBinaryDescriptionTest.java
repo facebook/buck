@@ -28,7 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -109,7 +109,7 @@ public class CxxBinaryDescriptionTest {
       @Override
       public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
         return new NativeLinkableInput(
-            ImmutableList.<SourcePath>of(new BuildRuleSourcePath(archive)),
+            ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
       }
 
@@ -135,10 +135,10 @@ public class CxxBinaryDescriptionTest {
     arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
     arg.srcs = Optional.of(ImmutableList.<SourcePath>of(
         new TestSourcePath("test/bar.cpp"),
-        new BuildRuleSourcePath(genSource)));
+        new BuildTargetSourcePath(genSource.getBuildTarget())));
     arg.headers = Optional.of(ImmutableList.<SourcePath>of(
         new TestSourcePath("test/bar.h"),
-        new BuildRuleSourcePath(genHeader)));
+        new BuildTargetSourcePath(genHeader.getBuildTarget())));
     arg.compilerFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
     arg.lexSrcs = Optional.absent();

@@ -480,14 +480,19 @@ public class ThriftCxxEnhancerTest {
     arg.cpp2Deps = Optional.of(
         ImmutableSortedSet.of(argDep.getBuildTarget()));
 
+    ThriftCompiler thrift1 = createFakeThriftCompiler("//:thrift_source1", pathResolver);
+    resolver.addToIndex(thrift1);
+    ThriftCompiler thrift2 = createFakeThriftCompiler("//:thrift_source2", pathResolver);
+    resolver.addToIndex(thrift2);
+
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test1.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source1", pathResolver),
+            thrift1,
             ImmutableList.<String>of(),
             Paths.get("output1")),
         "test2.thrift", new ThriftSource(
-            createFakeThriftCompiler("//:thrift_source2", pathResolver),
+            thrift2,
             ImmutableList.<String>of(),
             Paths.get("output2")));
 

@@ -30,7 +30,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -157,7 +157,7 @@ public class ExportFileTest {
         BuildTargetFactory.newInstance("//example:one"),
         pathResolver);
     args.src = Optional.of(
-        new BuildRuleSourcePath(rule));
+        new BuildTargetSourcePath(rule.getBuildTarget()));
     exportFile = new ExportFile(new FakeBuildRuleParamsBuilder(target).build(), pathResolver, args);
     assertTrue(Iterables.isEmpty(exportFile.getInputsToCompareToOutput()));
 

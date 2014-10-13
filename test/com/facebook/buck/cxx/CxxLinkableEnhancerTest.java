@@ -28,7 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -96,7 +96,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void testThatBuildRuleSourcePathDepsAndPathsArePropagated() {
+  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
@@ -124,8 +124,8 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(
             new TestSourcePath("simple.o"),
-            new BuildRuleSourcePath(genrule1),
-            new BuildRuleSourcePath(genrule2)),
+            new BuildTargetSourcePath(genrule1.getBuildTarget()),
+            new BuildTargetSourcePath(genrule2.getBuildTarget())),
         NativeLinkable.Type.STATIC,
         EMPTY_DEPS);
 
@@ -195,7 +195,7 @@ public class CxxLinkableEnhancerTest {
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency.
     NativeLinkableInput nativeLinkableInput = new NativeLinkableInput(
-        ImmutableList.<SourcePath>of(new BuildRuleSourcePath(fakeBuildRule)),
+        ImmutableList.<SourcePath>of(new BuildTargetSourcePath(fakeBuildRule.getBuildTarget())),
         ImmutableList.<String>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(
         "//:dep",

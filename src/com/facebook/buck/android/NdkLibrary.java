@@ -173,7 +173,7 @@ public class NdkLibrary extends AbstractBuildRule
    * @param isScratchDir true if this should be the "working directory" where a build rule may write
    *     intermediate files when computing its output. false if this should be the gen/ directory
    *     where the "official" outputs of the build rule should be written. Files of the latter type
-   *     can be referenced via a {@link com.facebook.buck.rules.BuildRuleSourcePath} or somesuch.
+   *     can be referenced via a {@link com.facebook.buck.rules.BuildTargetSourcePath} or somesuch.
    */
   private Path getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
     Path base = isScratchDir ? BuckConstant.BIN_PATH : BuckConstant.GEN_PATH;

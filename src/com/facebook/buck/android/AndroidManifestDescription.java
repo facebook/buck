@@ -61,7 +61,7 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
     // responsible for generating the AndroidManifest.xml files in the manifestFiles set (and
     // possibly the skeleton).
     //
-    // If the skeleton is a BuildRuleSourcePath, then its build rule must also be in the deps.
+    // If the skeleton is a BuildTargetSourcePath, then its build rule must also be in the deps.
     // The skeleton does not appear to be in either params.getDeclaredDeps() or
     // params.getExtraDeps(), even though the type of Arg.skeleton is SourcePath.
     // TODO(simons): t4744625 This should happen automagically.

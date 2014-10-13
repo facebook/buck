@@ -16,11 +16,11 @@
 
 package com.facebook.buck.thrift;
 
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxCompilables;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaderSourceSpec;
 import com.facebook.buck.cxx.CxxLibrary;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -29,7 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -155,11 +155,15 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
               name,
               new CxxSource(
                   CxxSource.Type.fromExtension(extension).get(),
-                  new BuildRuleSourcePath(source.getCompileRule(), outputDir.resolve(name))));
+                      new BuildTargetSourcePath(
+                          source.getCompileRule().getBuildTarget(),
+                          outputDir.resolve(name))));
         } else if (CxxCompilables.HEADER_EXTENSIONS.contains(extension)) {
           headersBuilder.put(
               params.getBuildTarget().getBasePath().resolve(name),
-              new BuildRuleSourcePath(source.getCompileRule(), outputDir.resolve(name)));
+              new BuildTargetSourcePath(
+                  source.getCompileRule().getBuildTarget(),
+                  outputDir.resolve(name)));
         } else {
           throw new HumanReadableException(String.format(
               "%s: unexpected extension for \"%s\"",

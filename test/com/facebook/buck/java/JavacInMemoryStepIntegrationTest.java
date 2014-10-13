@@ -23,8 +23,9 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -153,16 +154,19 @@ public class JavacInMemoryStepIntegrationTest {
   }
 
   /**
-   * There was a bug where `BuildRuleSourcePath` sources were written to the classes file using
+   * There was a bug where `BuildTargetSourcePath` sources were written to the classes file using
    * their string representation, rather than their resolved path.
    */
   @Test
-  public void shouldWriteResolvedBuildRuleSourcePathsToClassesFile()
+  public void shouldWriteResolvedBuildTargetSourcePathsToClassesFile()
       throws IOException, InterruptedException {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRule rule = new FakeBuildRule("//:fake", pathResolver);
+    resolver.addToIndex(rule);
 
-    BuildRuleSourcePath sourcePath = new BuildRuleSourcePath(
-        new FakeBuildRule("//:fake", pathResolver),
+    BuildTargetSourcePath sourcePath = new BuildTargetSourcePath(
+        rule.getBuildTarget(),
         Paths.get("Example.java"));
 
     JavacInMemoryStep javac = createJavac(

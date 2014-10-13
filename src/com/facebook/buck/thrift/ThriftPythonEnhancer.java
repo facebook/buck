@@ -25,7 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -103,7 +103,9 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
         Path path = outputDir
             .resolve("gen-" + getLanguage())
             .resolve(module);
-        modulesBuilder.put(module, new BuildRuleSourcePath(source.getCompileRule(), path));
+        modulesBuilder.put(
+            module,
+            new BuildTargetSourcePath(source.getCompileRule().getBuildTarget(), path));
       }
 
     }

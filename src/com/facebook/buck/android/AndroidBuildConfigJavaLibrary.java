@@ -21,7 +21,7 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
@@ -51,7 +51,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary
     super(
         params,
         resolver,
-        /* srcs */ ImmutableSortedSet.of(new BuildRuleSourcePath(androidBuildConfig)),
+        /* srcs */ ImmutableSortedSet.of(
+            new BuildTargetSourcePath(androidBuildConfig.getBuildTarget())),
         /* resources */ ImmutableSortedSet.<SourcePath>of(),
         /* proguardConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),

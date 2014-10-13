@@ -20,7 +20,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
@@ -86,7 +86,7 @@ public class ThriftBuckConfig {
             ".buckconfig: thrift:compiler_target rule \"%s\" does not exists",
             compilerTarget.get());
       }
-      sourcePath = new BuildRuleSourcePath(rule.get());
+      sourcePath = new BuildTargetSourcePath(rule.get().getBuildTarget());
     } else if (compilerPath.isPresent()) {
       sourcePath = new PathSourcePath(compilerPath.get());
     } else {

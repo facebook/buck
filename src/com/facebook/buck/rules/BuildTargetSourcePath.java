@@ -16,30 +16,31 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
 /**
- * A {@link SourcePath} that utilizes the output from a {@link BuildRule} as the file it
- * represents.
+ * A {@link SourcePath} that utilizes the output from the {@link BuildRule} referenced by a
+ * {@link com.facebook.buck.model.BuildTarget} as the file it represents.
  */
-public class BuildRuleSourcePath extends AbstractSourcePath {
+public class BuildTargetSourcePath extends AbstractSourcePath {
 
-  private final BuildRule rule;
+  private final BuildTarget target;
   private final Optional<Path> resolvedPath;
 
-  public BuildRuleSourcePath(BuildRule rule) {
-    this(rule, Optional.<Path>absent());
+  public BuildTargetSourcePath(BuildTarget target) {
+    this(target, Optional.<Path>absent());
   }
 
-  public BuildRuleSourcePath(BuildRule rule, Path path) {
-    this(rule, Optional.of(path));
+  public BuildTargetSourcePath(BuildTarget target, Path path) {
+    this(target, Optional.of(path));
   }
 
-  private BuildRuleSourcePath(BuildRule rule, Optional<Path> path) {
-    this.rule = Preconditions.checkNotNull(rule);
+  private BuildTargetSourcePath(BuildTarget target, Optional<Path> path) {
+    this.target = Preconditions.checkNotNull(target);
     this.resolvedPath = Preconditions.checkNotNull(path);
   }
 
@@ -48,12 +49,12 @@ public class BuildRuleSourcePath extends AbstractSourcePath {
   }
 
   @Override
-  protected BuildRule asReference() {
-    return rule;
+  protected Object asReference() {
+    return target;
   }
 
-  public BuildRule getRule() {
-    return rule;
+  public BuildTarget getTarget() {
+    return target;
   }
 
 }

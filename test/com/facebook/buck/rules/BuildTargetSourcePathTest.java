@@ -27,20 +27,22 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class BuildRuleSourcePathTest {
+public class BuildTargetSourcePathTest {
 
   private BuildTarget target = BuildTargetFactory.newInstance("//example:target");
 
   @Test(expected = NullPointerException.class)
   public void requiresBuildTargetToNotBeNull() {
-    new BuildRuleSourcePath(null);
+    new BuildTargetSourcePath(null);
   }
 
   @Test
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target, pathResolver);
-    BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
+    resolver.addToIndex(rule);
+    BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
 
     try {
       pathResolver.getPath(path);
@@ -52,15 +54,17 @@ public class BuildRuleSourcePathTest {
 
   @Test
   public void mustUseProjectFilesystemToResolvePathToFile() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target, pathResolver) {
       @Override
       public Path getPathToOutputFile() {
         return Paths.get("cheese");
       }
     };
+    resolver.addToIndex(rule);
 
-    BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
+    BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
 
     Path resolved = pathResolver.getPath(path);
 
@@ -68,16 +72,11 @@ public class BuildRuleSourcePathTest {
   }
 
   @Test
-  public void shouldReturnTheBuildRuleAsTheReference() {
+  public void shouldReturnTheBuildTarget() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(
-        new BuildRuleType("example"),
-        target,
-        new SourcePathResolver(new BuildRuleResolver()));
+    BuildTargetSourcePath path = new BuildTargetSourcePath(target);
 
-    BuildRuleSourcePath path = new BuildRuleSourcePath(rule);
-
-    assertEquals(rule, path.getRule());
+    assertEquals(target, path.getTarget());
   }
 
   @Test
@@ -86,9 +85,11 @@ public class BuildRuleSourcePathTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target, pathResolver);
     Path path = Paths.get("blah");
-    BuildRuleSourcePath buildRuleSourcePath = new BuildRuleSourcePath(rule, path);
-    assertEquals(rule, buildRuleSourcePath.getRule());
-    assertEquals(path, pathResolver.getPath(buildRuleSourcePath));
+    BuildTargetSourcePath buildTargetSourcePath = new BuildTargetSourcePath(
+        rule.getBuildTarget(),
+        path);
+    assertEquals(target, buildTargetSourcePath.getTarget());
+    assertEquals(path, pathResolver.getPath(buildTargetSourcePath));
   }
 
 }

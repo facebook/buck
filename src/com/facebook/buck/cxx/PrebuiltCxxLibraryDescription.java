@@ -22,7 +22,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
@@ -118,7 +118,7 @@ public class PrebuiltCxxLibraryDescription
           NativeLinkable.Type.SHARED,
           params.getDeps());
       resolver.addToIndex(cxxLink);
-      sharedLibrary = new BuildRuleSourcePath(cxxLink);
+      sharedLibrary = new BuildTargetSourcePath(cxxLink.getBuildTarget());
     }
 
     Function<String, Path> fullPathFn = new Function<String, Path>() {

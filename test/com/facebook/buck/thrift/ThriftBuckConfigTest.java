@@ -16,6 +16,7 @@
 
 package com.facebook.buck.thrift;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -24,7 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
@@ -152,8 +153,10 @@ public class ThriftBuckConfigTest {
     SourcePath compiler = thriftBuckConfig.getCompiler(resolver);
 
     // Verify that the returned SourcePath wraps the compiler path correctly.
-    assertTrue(compiler instanceof BuildRuleSourcePath);
-    assertTrue(((BuildRuleSourcePath) compiler).getRule().equals(thriftRule));
+    assertTrue(compiler instanceof BuildTargetSourcePath);
+    assertEquals(
+        BuildTargetFactory.newInstance("//thrift:target"),
+        ((BuildTargetSourcePath) compiler).getTarget());
   }
 
 }

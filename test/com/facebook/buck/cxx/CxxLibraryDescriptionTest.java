@@ -30,7 +30,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -112,7 +112,7 @@ public class CxxLibraryDescriptionTest {
       @Override
       public NativeLinkableInput getNativeLinkableInput(Linker linker, Type type) {
         return new NativeLinkableInput(
-            ImmutableList.<SourcePath>of(new BuildRuleSourcePath(archive)),
+            ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
       }
 
@@ -138,11 +138,11 @@ public class CxxLibraryDescriptionTest {
     arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
     arg.srcs = Optional.of(ImmutableList.<SourcePath>of(
         new TestSourcePath("test/bar.cpp"),
-        new BuildRuleSourcePath(genSource)));
+        new BuildTargetSourcePath(genSource.getBuildTarget())));
     String headerName = "test/bar.h";
     arg.headers = Optional.of(ImmutableList.<SourcePath>of(
         new TestSourcePath(headerName),
-        new BuildRuleSourcePath(genHeader)));
+        new BuildTargetSourcePath(genHeader.getBuildTarget())));
     arg.compilerFlags = Optional.absent();
     arg.propagatedPpFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
@@ -165,7 +165,7 @@ public class CxxLibraryDescriptionTest {
             ImmutableList.<String>of(),
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(headerName), new TestSourcePath(headerName),
-                Paths.get(genHeaderName), new BuildRuleSourcePath(genHeader)),
+                Paths.get(genHeaderName), new BuildTargetSourcePath(genHeader.getBuildTarget())),
             ImmutableList.of(
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target)),
             ImmutableList.<Path>of()),
@@ -264,9 +264,8 @@ public class CxxLibraryDescriptionTest {
     ImmutableList<SourcePath> inputs = input.getInputs();
     assertEquals(inputs.size(), 1);
     SourcePath sourcePath = inputs.get(0);
-    assertTrue(sourcePath instanceof BuildRuleSourcePath);
-    BuildRuleSourcePath buildRuleSourcePath = (BuildRuleSourcePath) sourcePath;
-    BuildRule buildRule = buildRuleSourcePath.getRule();
+    assertTrue(sourcePath instanceof BuildTargetSourcePath);
+    BuildRule buildRule = new SourcePathResolver(resolver).getRule(sourcePath).get();
     assertTrue(buildRule instanceof CxxLink);
     CxxLink cxxLink = (CxxLink) buildRule;
     ImmutableList<String> args = cxxLink.getArgs();

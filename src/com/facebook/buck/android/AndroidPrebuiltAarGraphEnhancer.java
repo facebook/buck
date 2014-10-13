@@ -27,7 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OutputOnlyBuildRule;
@@ -118,7 +118,7 @@ class AndroidPrebuiltAarGraphEnhancer {
     PrebuiltJar prebuiltJar = new PrebuiltJar(
         /* params */ prebuiltJarParams,
         pathResolver,
-        new BuildRuleSourcePath(classesJar),
+        new BuildTargetSourcePath(classesJar.getBuildTarget()),
         /* sourceJar */ Optional.<SourcePath>absent(),
         /* gwtJar */ Optional.<SourcePath>absent(),
         /* javadocUrl */ Optional.<String>absent());
@@ -156,7 +156,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* rDotJavaPackage */ null,
         /* assets */ unzipAar.getAssetsDirectory(),
         assetsSrcs,
-        new BuildRuleSourcePath(manifest),
+        new BuildTargetSourcePath(manifest.getBuildTarget()),
         /* hasWhitelistedStrings */ false);
     ruleResolver.addToIndex(androidResource);
 

@@ -25,10 +25,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
@@ -316,8 +317,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
         CXX_PLATFORM.getLd(),
         NativeLinkable.Type.SHARED);
     SourcePath input = nativeLinkableInput.getInputs().get(0);
-    assertTrue(input instanceof BuildRuleSourcePath);
-    assertTrue(((BuildRuleSourcePath) input).getRule() instanceof CxxLink);
+    assertTrue(input instanceof BuildTargetSourcePath);
+    assertTrue(new SourcePathResolver(resolver).getRule(input).get() instanceof CxxLink);
   }
 
   @Test

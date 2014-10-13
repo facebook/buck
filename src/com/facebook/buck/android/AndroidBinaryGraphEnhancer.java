@@ -31,7 +31,6 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
@@ -171,7 +170,7 @@ public class AndroidBinaryGraphEnhancer {
     BuildRuleParams paramsForAaptPackageResources = buildRuleParams.copyWithChanges(
         BuildRuleType.AAPT_PACKAGE,
         buildTargetForAapt,
-        getAdditionalAaptDeps(resourceRules, packageableCollection),
+        getAdditionalAaptDeps(pathResolver, resourceRules, packageableCollection),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         paramsForAaptPackageResources,
@@ -511,6 +510,7 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   private ImmutableSortedSet<BuildRule> getAdditionalAaptDeps(
+      SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> resourceRules,
       AndroidPackageableCollection packageableCollection) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -521,8 +521,9 @@ public class AndroidBinaryGraphEnhancer {
                     packageableCollection.resourceDetails.resourcesWithEmptyResButNonEmptyAssetsDir)
                     .transform(HasBuildTarget.TO_TARGET)
                     .toList()));
-    if (manifest instanceof BuildRuleSourcePath) {
-      builder.add(((BuildRuleSourcePath) manifest).getRule());
+    Optional<BuildRule> manifestRule = resolver.getRule(manifest);
+    if (manifestRule.isPresent()) {
+      builder.add(manifestRule.get());
     }
     return builder.build();
   }

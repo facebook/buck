@@ -45,7 +45,7 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -192,7 +192,7 @@ public class DefaultJavaLibraryTest {
 
     DefaultJavaLibrary javaRule = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//library:code"))
-        .addResource(new BuildRuleSourcePath(genrule))
+        .addResource(new BuildTargetSourcePath(genrule.getBuildTarget()))
         .addResource(new TestSourcePath("library/data.txt"))
         .build(ruleResolver, filesystem);
 

@@ -29,7 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
@@ -114,7 +114,7 @@ public class CxxCompilableEnhancerTest {
   }
 
   @Test
-  public void createCompileBuildRulePropagatesBuildRuleSourcePathDeps() {
+  public void createCompileBuildRulePropagatesBuildTargetSourcePathDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     BuildRuleResolver resolver = new BuildRuleResolver();
@@ -129,7 +129,8 @@ public class CxxCompilableEnhancerTest {
 
     String name = "foo/bar.cpp";
     FakeBuildRule dep = createFakeBuildRule("//:test", new SourcePathResolver(resolver));
-    SourcePath input = new BuildRuleSourcePath(dep);
+    resolver.addToIndex(dep);
+    SourcePath input = new BuildTargetSourcePath(dep.getBuildTarget());
     CxxSource cxxSource = new CxxSource(CxxSource.Type.CXX, input);
 
     CxxCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(

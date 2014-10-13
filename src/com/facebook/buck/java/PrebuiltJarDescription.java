@@ -108,7 +108,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
   @VisibleForTesting
   static BuildRule createGwtModule(BuildRuleParams params, SourcePathResolver resolver, Arg arg) {
     // Because a PrebuiltJar rarely requires any building whatsoever (it could if the source_jar
-    // is a BuildRuleSourcePath), we make the PrebuiltJar a dependency of the GWT module. If this
+    // is a BuildTargetSourcePath), we make the PrebuiltJar a dependency of the GWT module. If this
     // becomes a performance issue in practice, then we will explore reducing the dependencies of
     // the GWT module.
     final SourcePath inputToCompareToOutput;

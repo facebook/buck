@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -85,7 +85,7 @@ class OCamlStaticLibrary extends AbstractBuildRule implements OCamlLibrary {
 
     return new NativeLinkableInput(
         ImmutableList.<SourcePath>of(
-            new BuildRuleSourcePath(ocamlLibraryBuild)),
+            new BuildTargetSourcePath(ocamlLibraryBuild.getBuildTarget())),
         linkerArgs);
   }
 
