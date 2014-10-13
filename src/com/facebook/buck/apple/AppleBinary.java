@@ -16,14 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.CompilerStep;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.Step;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class AppleBinary extends AbstractAppleNativeTargetBuildRule {
 
@@ -33,29 +27,5 @@ public class AppleBinary extends AbstractAppleNativeTargetBuildRule {
       AppleNativeTargetDescriptionArg arg,
       TargetSources targetSources) {
     super(params, resolver, arg, targetSources);
-  }
-
-  @Override
-  protected ImmutableList<Step> getFinalBuildSteps(
-      ImmutableSortedSet<Path> files,
-      Path outputFile) {
-    if (files.isEmpty()) {
-      return ImmutableList.of();
-    } else {
-      return ImmutableList.<Step>of(
-          new CompilerStep(
-              /* compiler */ getCompiler(),
-              /* shouldLink */ true,
-              /* srcs */ files,
-              /* outputFile */ outputFile,
-              /* shouldAddProjectRootToIncludePaths */ false,
-              /* includePaths */ ImmutableSortedSet.<Path>of(),
-              /* commandLineArgs */ ImmutableList.<String>of()));
-    }
-  }
-
-  @Override
-  protected String getOutputFileNameFormat() {
-    return "%s";
   }
 }

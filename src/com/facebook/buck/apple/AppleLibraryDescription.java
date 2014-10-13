@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -24,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -47,12 +45,6 @@ public class AppleLibraryDescription implements
       return SUPPORTED_FLAVORS.contains(flavor);
     }
   };
-
-  private final CxxPlatform cxxPlatform;
-
-  public AppleLibraryDescription(CxxPlatform cxxPlatform) {
-    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
-  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -80,7 +72,6 @@ public class AppleLibraryDescription implements
         pathResolver,
         args,
         TargetSources.ofAppleSources(pathResolver, args.srcs.get()),
-        cxxPlatform.getAr(),
         params.getBuildTarget().getFlavors().contains(DYNAMIC_LIBRARY));
   }
 }

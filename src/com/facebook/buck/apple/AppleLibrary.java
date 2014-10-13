@@ -16,62 +16,25 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.ArchiveStep;
-import com.facebook.buck.cxx.CompilerStep;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class AppleLibrary extends AbstractAppleNativeTargetBuildRule {
 
   private final boolean linkedDynamically;
-  private final SourcePath archiver;
 
   public AppleLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
       AppleNativeTargetDescriptionArg arg,
       TargetSources targetSources,
-      SourcePath archiver,
       boolean linkedDynamically) {
     super(params, resolver, arg, targetSources);
     this.linkedDynamically = linkedDynamically;
-    this.archiver = Preconditions.checkNotNull(archiver);
   }
 
   public boolean getLinkedDynamically() {
     return linkedDynamically;
-  }
-
-  @Override
-  protected ImmutableList<Step> getFinalBuildSteps(
-      ImmutableSortedSet<Path> files,
-      Path outputFile) {
-    if (files.isEmpty()) {
-      return ImmutableList.of();
-    } else if (linkedDynamically) {
-      // TODO(user): This needs to create a dylib, not a static library.
-      return ImmutableList.<Step>of(
-          new CompilerStep(
-              /* compiler */ getCompiler(),
-              /* shouldLink */ true,
-              /* srcs */ files,
-              /* outputFile */ outputFile,
-              /* shouldAddProjectRootToIncludePaths */ false,
-              /* includePaths */ ImmutableSortedSet.<Path>of(),
-              /* commandLineArgs */ ImmutableList.<String>of()));
-    } else {
-      return ImmutableList.<Step>of(new ArchiveStep(
-          getResolver().getPath(archiver),
-          outputFile,
-          ImmutableList.copyOf(files)));
-    }
   }
 
   @Override

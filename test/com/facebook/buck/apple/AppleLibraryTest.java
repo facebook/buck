@@ -20,8 +20,6 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -41,8 +39,7 @@ import java.nio.file.Paths;
 
 public class AppleLibraryTest {
 
-  private AppleLibraryDescription description =
-      new AppleLibraryDescription(new DefaultCxxPlatform(new FakeBuckConfig()));
+  private AppleLibraryDescription description = new AppleLibraryDescription();
 
   @Test
   public void getInputsToCompareToOutput() {

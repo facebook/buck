@@ -18,8 +18,6 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -37,8 +35,7 @@ import org.junit.Test;
 public class AppleBundleTest {
 
   private AppleBundleDescription description = new AppleBundleDescription();
-  private AppleLibraryDescription appleLibraryDescription =
-      new AppleLibraryDescription(new DefaultCxxPlatform(new FakeBuckConfig()));
+  private AppleLibraryDescription appleLibraryDescription = new AppleLibraryDescription();
 
   @Test
   public void getKnownBundleExtension() {

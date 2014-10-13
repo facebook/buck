@@ -40,8 +40,6 @@ import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -73,8 +71,7 @@ import java.nio.file.Paths;
 public class SeparatedProjectsGeneratorTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private final ExecutionContext executionContext = TestExecutionContext.newInstance();
-  private final AppleLibraryDescription appleLibraryDescription =
-      new AppleLibraryDescription(new DefaultCxxPlatform(new FakeBuckConfig()));
+  private final AppleLibraryDescription appleLibraryDescription = new AppleLibraryDescription();
   private final AppleBinaryDescription appleBinaryDescription = new AppleBinaryDescription();
   private final AppleBundleDescription appleBundleDescription = new AppleBundleDescription();
   private final XcodeProjectConfigDescription xcodeProjectConfigDescription =

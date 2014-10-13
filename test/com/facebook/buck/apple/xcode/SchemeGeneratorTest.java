@@ -35,8 +35,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -89,8 +87,7 @@ public class SchemeGeneratorTest {
   public void setUp() throws IOException {
     clock = new SettableFakeClock(0, 0);
     projectFilesystem = new FakeProjectFilesystem(clock);
-    appleLibraryDescription = new AppleLibraryDescription(
-        new DefaultCxxPlatform(new FakeBuckConfig()));
+    appleLibraryDescription = new AppleLibraryDescription();
     appleBundleDescription = new AppleBundleDescription();
     appleTestDescription = new AppleTestDescription();
     xcodeNativeDescription = new XcodeNativeDescription();

@@ -16,23 +16,32 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.AbstractNativeBuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * A build rule that has configuration ready for Xcode-like build systems.
  */
-public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeBuildRule {
+public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRule {
 
   public static enum HeaderMapType {
     PUBLIC_HEADER_MAP("-public-headers.hmap"),
@@ -61,12 +70,7 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
       SourcePathResolver resolver,
       AppleNativeTargetDescriptionArg arg,
       TargetSources targetSources) {
-    super(
-        params,
-        resolver,
-        targetSources.srcPaths,
-        targetSources.headerPaths,
-        targetSources.perFileFlags);
+    super(params, resolver);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs.get());
     frameworks = Preconditions.checkNotNull(arg.frameworks.get());
     srcs = Preconditions.checkNotNull(targetSources.srcs);
@@ -130,7 +134,49 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractNativeB
   }
 
   @Override
-  protected String getCompiler() {
-    return "clang";
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    return builder
+        .set("frameworks", getFrameworks())
+        .set("gid", gid)
+        .set("headerPathPrefix", headerPathPrefix)
+        .set("useBuckHeaderMaps", useBuckHeaderMaps);
+  }
+
+  @Override
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
+    return getResolver().filterInputsToCompareToOutput(
+        GroupedSources.sourcePaths(srcs));
+  }
+
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    // TODO(user) This is just a placeholder. We'll be replacing this as we move
+    // to support CxxLibrary and friends.
+    return ImmutableList.of();
+  }
+
+  /**
+   * Format string used for the filename of the Path returned by getPathToOutputFile().
+   */
+  protected String getOutputFileNameFormat() {
+    return "%s";
+  }
+
+  @Override
+  public Path getPathToOutputFile() {
+    BuildTarget target = getBuildTarget();
+
+    if (!target.getFlavors().contains(Flavor.DEFAULT)) {
+      // TODO(grp): Consider putting this path format logic in BuildTargets.getBinPath() directly.
+      return Paths.get(String.format("%s/%s/%s/" + getOutputFileNameFormat(),
+              BuckConstant.BIN_DIR,
+              target.getBasePathWithSlash(),
+              target.getFlavorPostfix(),
+              target.getShortNameOnly()));
+    } else {
+      return BuildTargets.getBinPath(target, getOutputFileNameFormat());
+    }
   }
 }
