@@ -23,7 +23,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Describes a C/C++ source and the various paths it uses from input to output.
+ * Describes a source file written in the C programming language or a
+ * derivative (C++, Objective-C, Objective-C++, etc.) and the various
+ * paths it uses from input to output.
  */
 public class CxxSource {
 
@@ -31,8 +33,12 @@ public class CxxSource {
 
     C("c", "c"),
     CXX("c++", "cc", "cp", "cxx", "cpp", "CPP", "c++", "C"),
+    OBJC("objective-c", "m"),
+    OBJCXX("objective-c++", "mm"),
     C_CPP_OUTPUT("c-cpp-output", "i"),
     CXX_CPP_OUTPUT("c++-cpp-output", "ii"),
+    OBJC_CPP_OUTPUT("objective-c-cpp-output", "mi"),
+    OBJCXX_CPP_OUTPUT("objective-c++-cpp-output", "mii"),
     ASSEMBLER("assembler", "s"),
     ASSEMBLER_WITH_CPP("assembler-with-cpp", "S"),
     ;

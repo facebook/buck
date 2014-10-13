@@ -38,11 +38,25 @@ public class CxxSourceTest {
     assertEquals(Optional.of(CxxSource.Type.CXX), CxxSource.Type.fromExtension("CPP"));
     assertEquals(Optional.of(CxxSource.Type.CXX), CxxSource.Type.fromExtension("C"));
 
+    // Objective-C
+    assertEquals(Optional.of(CxxSource.Type.OBJC), CxxSource.Type.fromExtension("m"));
+
+    // Objective-C++
+    assertEquals(Optional.of(CxxSource.Type.OBJCXX), CxxSource.Type.fromExtension("mm"));
+
     // Preprocessed C
     assertEquals(Optional.of(CxxSource.Type.C_CPP_OUTPUT), CxxSource.Type.fromExtension("i"));
 
     // Preprocessed C++
     assertEquals(Optional.of(CxxSource.Type.CXX_CPP_OUTPUT), CxxSource.Type.fromExtension("ii"));
+
+    // Preprocessed Objective-C
+    assertEquals(Optional.of(CxxSource.Type.OBJC_CPP_OUTPUT), CxxSource.Type.fromExtension("mi"));
+
+    // Preprocessed Objective-C++
+    assertEquals(
+        Optional.of(CxxSource.Type.OBJCXX_CPP_OUTPUT),
+        CxxSource.Type.fromExtension("mii"));
 
     // Assembly
     assertEquals(Optional.of(CxxSource.Type.ASSEMBLER), CxxSource.Type.fromExtension("s"));
