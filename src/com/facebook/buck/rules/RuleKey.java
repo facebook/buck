@@ -112,14 +112,23 @@ public class RuleKey {
   /**
    * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s inputs.
    */
-  public static Builder builder(BuildRule rule, FileHashCache hashCache) {
+  public static Builder builder(
+      BuildRule rule,
+      SourcePathResolver resolver,
+      FileHashCache hashCache) {
     ImmutableSortedSet<BuildRule> exportedDeps;
     if (rule instanceof ExportDependencies) {
       exportedDeps = ((ExportDependencies) rule).getExportedDeps();
     } else {
       exportedDeps = ImmutableSortedSet.of();
     }
-    return builder(rule.getBuildTarget(), rule.getType(), rule.getDeps(), exportedDeps, hashCache);
+    return builder(
+        rule.getBuildTarget(),
+        rule.getType(),
+        resolver,
+        rule.getDeps(),
+        exportedDeps,
+        hashCache);
   }
 
   /**
@@ -128,10 +137,11 @@ public class RuleKey {
   public static Builder builder(
       BuildTarget name,
       BuildRuleType type,
+      SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
       FileHashCache hashCache) {
-    return new Builder(deps, exportedDeps, hashCache)
+    return new Builder(resolver, deps, exportedDeps, hashCache)
         .set("name", name.getFullyQualifiedName())
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
         .set("buck.type", type.getName());
@@ -144,6 +154,9 @@ public class RuleKey {
 
     private static final Logger logger = Logger.get(Builder.class);
 
+    // TODO(user): Remove once SourcePath embeds BuildTarget instead of BuildRule and we use this
+    @SuppressWarnings("unused")
+    private final SourcePathResolver resolver;
     private final ImmutableSortedSet<BuildRule> deps;
     private final ImmutableSortedSet<BuildRule> exportedDeps;
     private final Hasher hasher;
@@ -152,9 +165,11 @@ public class RuleKey {
     @Nullable private List<String> logElms;
 
     private Builder(
+        SourcePathResolver resolver,
         ImmutableSortedSet<BuildRule> deps,
         ImmutableSortedSet<BuildRule> exportedDeps,
         FileHashCache hashCache) {
+      this.resolver = Preconditions.checkNotNull(resolver);
       this.deps = Preconditions.checkNotNull(deps);
       this.exportedDeps = Preconditions.checkNotNull(exportedDeps);
       this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);

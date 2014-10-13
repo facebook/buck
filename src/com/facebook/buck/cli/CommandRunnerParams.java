@@ -27,6 +27,7 @@ import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.AndroidDirectoryResolver;
@@ -93,8 +94,8 @@ class CommandRunnerParams {
             /* tempFilePatterns */ ImmutableSet.<Pattern>of(),
             new RuleKeyBuilderFactory() {
               @Override
-              public Builder newInstance(BuildRule buildRule) {
-                return RuleKey.builder(buildRule, new NullFileHashCache());
+              public Builder newInstance(BuildRule buildRule, SourcePathResolver resolver) {
+                return RuleKey.builder(buildRule, resolver, new NullFileHashCache());
               }
             }),
         platform,

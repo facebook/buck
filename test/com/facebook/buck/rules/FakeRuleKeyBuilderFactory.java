@@ -42,8 +42,8 @@ public class FakeRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
   }
 
   @Override
-  public Builder newInstance(BuildRule buildRule) {
-    return RuleKey.builder(buildRule, fileHashCache);
+  public Builder newInstance(BuildRule buildRule, SourcePathResolver resolver) {
+    return RuleKey.builder(buildRule, resolver, fileHashCache);
   }
 
 }

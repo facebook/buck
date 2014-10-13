@@ -29,6 +29,7 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -119,13 +120,20 @@ public class SymlinkTreeTest {
         outputPath,
         ImmutableMap.<Path, SourcePath>of(
             Paths.get("different/link"), new PathSourcePath(aFile)));
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
+        symlinkTreeBuildRule,
+        modifiedSymlinkTreeBuildRule)));
 
     // Calculate their rule keys and verify they're different.
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new FakeRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>of()));
-    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
-    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(modifiedSymlinkTreeBuildRule);
+    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(
+        symlinkTreeBuildRule,
+        resolver);
+    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(
+        modifiedSymlinkTreeBuildRule,
+        resolver);
     symlinkTreeBuildRule.appendToRuleKey(builder1);
     modifiedSymlinkTreeBuildRule.appendToRuleKey(builder2);
     RuleKey.Builder.RuleKeyPair pair1 = builder1.build();
@@ -142,8 +150,13 @@ public class SymlinkTreeTest {
         new FakeRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>of()));
 
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
+        symlinkTreeBuildRule)));
+
     // Calculate the rule key
-    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
+    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(
+        symlinkTreeBuildRule,
+        resolver);
     symlinkTreeBuildRule.appendToRuleKey(builder1);
     RuleKey.Builder.RuleKeyPair pair1 = builder1.build();
 
@@ -153,7 +166,9 @@ public class SymlinkTreeTest {
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key
-    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
+    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(
+        symlinkTreeBuildRule,
+        resolver);
     symlinkTreeBuildRule.appendToRuleKey(builder2);
     RuleKey.Builder.RuleKeyPair pair2 = builder2.build();
 

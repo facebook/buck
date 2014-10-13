@@ -52,9 +52,10 @@ public class ArchiveTest {
 
   private RuleKey.Builder.RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
+      SourcePathResolver resolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule);
+    RuleKey.Builder builder = factory.newInstance(rule, resolver);
     rule.appendToRuleKey(builder);
     return builder.build();
   }
@@ -77,6 +78,7 @@ public class ArchiveTest {
     // Generate a rule key for the defaults.
     RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new Archive(
             params,
             pathResolver,
@@ -87,6 +89,7 @@ public class ArchiveTest {
     // Verify that changing the archiver causes a rulekey change.
     RuleKey.Builder.RuleKeyPair archiverChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new Archive(
             params,
             pathResolver,
@@ -98,6 +101,7 @@ public class ArchiveTest {
     // Verify that changing the output path causes a rulekey change.
     RuleKey.Builder.RuleKeyPair outputChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new Archive(
             params,
             pathResolver,
@@ -109,6 +113,7 @@ public class ArchiveTest {
     // Verify that changing the inputs causes a rulekey change.
     RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new Archive(
             params,
             pathResolver,

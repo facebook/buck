@@ -50,9 +50,10 @@ public class LexTest {
 
   private RuleKey.Builder.RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
+      SourcePathResolver resolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule);
+    RuleKey.Builder builder = factory.newInstance(rule, resolver);
     rule.appendToRuleKey(builder);
     return builder.build();
   }
@@ -73,6 +74,7 @@ public class LexTest {
     // Generate a rule key for the defaults.
     RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new Lex(
             params,
             pathResolver,
@@ -85,6 +87,7 @@ public class LexTest {
     // Verify that changing the archiver causes a rulekey change.
     RuleKey.Builder.RuleKeyPair lexChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new Lex(
             params,
             pathResolver,
@@ -98,6 +101,7 @@ public class LexTest {
     // Verify that changing the flags causes a rulekey change.
     RuleKey.Builder.RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new Lex(
             params,
             pathResolver,
@@ -111,6 +115,7 @@ public class LexTest {
     // Verify that changing the output source causes a rulekey change.
     RuleKey.Builder.RuleKeyPair outputSourceChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new Lex(
             params,
             pathResolver,
@@ -124,6 +129,7 @@ public class LexTest {
     // Verify that changing the output header causes a rulekey change.
     RuleKey.Builder.RuleKeyPair outputHeaderChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new Lex(
             params,
             pathResolver,
@@ -137,6 +143,7 @@ public class LexTest {
     // Verify that changing the inputs causes a rulekey change.
     RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new Lex(
             params,
             pathResolver,

@@ -1077,6 +1077,8 @@ public class DefaultJavaLibraryTest {
         return false;
       }
     };
+    BuildRuleResolver resolver1 = new BuildRuleResolver();
+    SourcePathResolver pathResolver1 = new SourcePathResolver(resolver1);
     DefaultJavaLibrary rule1 = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("agifhbkjdec.java"))
@@ -1087,8 +1089,10 @@ public class DefaultJavaLibraryTest {
         .addResource(new TestSourcePath("bkhajdifcge.txt"))
         .addResource(new TestSourcePath("cabfghjekid.txt"))
         .addResource(new TestSourcePath("chkdbafijge.txt"))
-        .build(new BuildRuleResolver(), filesystem);
+        .build(resolver1, filesystem);
 
+    BuildRuleResolver resolver2 = new BuildRuleResolver();
+    SourcePathResolver pathResolver2 = new SourcePathResolver(resolver2);
     DefaultJavaLibrary rule2 = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("cfiabkjehgd.java"))
@@ -1099,7 +1103,7 @@ public class DefaultJavaLibraryTest {
         .addResource(new TestSourcePath("cabfghjekid.txt"))
         .addResource(new TestSourcePath("bkhajdifcge.txt"))
         .addResource(new TestSourcePath("becgkaifhjd.txt"))
-        .build(new BuildRuleResolver(), filesystem);
+        .build(resolver2, filesystem);
 
     Iterable<Path> inputs1 = rule1.getInputsToCompareToOutput();
     Iterable<Path> inputs2 = rule2.getInputsToCompareToOutput();
@@ -1114,8 +1118,8 @@ public class DefaultJavaLibraryTest {
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new FakeRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(fileHashes.build()));
 
-    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(rule1);
-    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(rule2);
+    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(rule1, pathResolver1);
+    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(rule2, pathResolver2);
     rule1.appendToRuleKey(builder1);
     rule2.appendToRuleKey(builder2);
     RuleKey.Builder.RuleKeyPair pair1 = builder1.build();

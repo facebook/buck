@@ -65,9 +65,10 @@ public class CxxCompileTest {
 
   private RuleKey.Builder.RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
+      SourcePathResolver resolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule);
+    RuleKey.Builder builder = factory.newInstance(rule, resolver);
     rule.appendToRuleKey(builder);
     return builder.build();
   }
@@ -93,6 +94,7 @@ public class CxxCompileTest {
     // Generate a rule key for the defaults.
     RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxCompile(
             params,
             pathResolver,
@@ -108,6 +110,7 @@ public class CxxCompileTest {
     // Verify that changing the compiler causes a rulekey change.
     RuleKey.Builder.RuleKeyPair compilerChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxCompile(
             params,
             pathResolver,
@@ -124,6 +127,7 @@ public class CxxCompileTest {
     // Verify that changing the flags causes a rulekey change.
     RuleKey.Builder.RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxCompile(
             params,
             pathResolver,
@@ -140,6 +144,7 @@ public class CxxCompileTest {
     // Verify that changing the input causes a rulekey change.
     RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxCompile(
             params,
             pathResolver,
@@ -157,6 +162,7 @@ public class CxxCompileTest {
     // different mechanism to track header changes.
     RuleKey.Builder.RuleKeyPair includesChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxCompile(
             params,
             pathResolver,
@@ -174,6 +180,7 @@ public class CxxCompileTest {
     // different mechanism to track header changes.
     RuleKey.Builder.RuleKeyPair systemIncludesChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxCompile(
             params,
             pathResolver,
@@ -190,6 +197,7 @@ public class CxxCompileTest {
     // Verify that not using a plugin changes the key
     RuleKey.Builder.RuleKeyPair pluginAbsentChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxCompile(
             params,
             pathResolver,
@@ -206,6 +214,7 @@ public class CxxCompileTest {
     // Verify that changing the plugin path changes the key
     RuleKey.Builder.RuleKeyPair pluginPathChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxCompile(
             params,
             pathResolver,
@@ -225,6 +234,7 @@ public class CxxCompileTest {
     // Verify that changing the plugin flags change the key
     RuleKey.Builder.RuleKeyPair pluginFlagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxCompile(
             params,
             pathResolver,
@@ -244,6 +254,7 @@ public class CxxCompileTest {
     // Verify that changing the plugin name changes the key
     RuleKey.Builder.RuleKeyPair pluginNameChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxCompile(
             params,
             pathResolver,
@@ -260,6 +271,5 @@ public class CxxCompileTest {
             DEFAULT_INCLUDES));
     assertNotEquals(defaultRuleKey, pluginNameChange);
   }
-
 
 }

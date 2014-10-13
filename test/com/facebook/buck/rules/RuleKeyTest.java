@@ -282,9 +282,9 @@ public class RuleKeyTest {
     return RuleKey.builder(
         BuildTargetFactory.newInstance("//some:example"),
         new BuildRuleType("example"),
+        new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSortedSet.<BuildRule>of(),
-        new FileHashCache() {
+        ImmutableSortedSet.<BuildRule>of(), new FileHashCache() {
           @Override
           public boolean contains(Path path) {
             return true;

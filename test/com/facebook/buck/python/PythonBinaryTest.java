@@ -52,12 +52,13 @@ public class PythonBinaryTest {
       String main, Path mainSrc,
       String mod1, Path src1,
       String mod2, Path src2) throws IOException {
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
 
     // The top-level python binary that lists the above libraries as deps.
     PythonBinary binary = new PythonBinary(
         BuildRuleParamsFactory.createTrivialBuildRuleParams(
             BuildTargetFactory.newInstance("//:bin")),
-        new SourcePathResolver(new BuildRuleResolver()),
+        resolver,
         Paths.get("dummy_path_to_pex"),
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")),
         Paths.get("main.py"),
@@ -70,7 +71,7 @@ public class PythonBinaryTest {
             ImmutableMap.<Path, SourcePath>of()));
 
     // Calculate and return the rule key.
-    RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(binary);
+    RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(binary, resolver);
     binary.appendToRuleKey(builder);
     return builder.build();
   }

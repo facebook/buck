@@ -55,9 +55,10 @@ public class CxxLinkTest {
 
   private RuleKey.Builder.RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
+      SourcePathResolver resolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule);
+    RuleKey.Builder builder = factory.newInstance(rule, resolver);
     rule.appendToRuleKey(builder);
     return builder.build();
   }
@@ -80,6 +81,7 @@ public class CxxLinkTest {
     // Generate a rule key for the defaults.
     RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxLink(
             params,
             pathResolver,
@@ -91,6 +93,7 @@ public class CxxLinkTest {
     // Verify that changing the archiver causes a rulekey change.
     RuleKey.Builder.RuleKeyPair linkerChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxLink(
             params,
             pathResolver,
@@ -103,6 +106,7 @@ public class CxxLinkTest {
     // Verify that changing the output path causes a rulekey change.
     RuleKey.Builder.RuleKeyPair outputChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxLink(
             params,
             pathResolver,
@@ -115,6 +119,7 @@ public class CxxLinkTest {
     // Verify that changing the inputs causes a rulekey change.
     RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxLink(
             params,
             pathResolver,
@@ -127,6 +132,7 @@ public class CxxLinkTest {
     // Verify that changing the flags causes a rulekey change.
     RuleKey.Builder.RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        pathResolver,
         new CxxLink(
             params,
             pathResolver,

@@ -39,6 +39,7 @@ import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.NanosAdjustedClock;
@@ -855,8 +856,8 @@ public final class Main {
   private static RuleKeyBuilderFactory createRuleKeyBuilderFactory(final FileHashCache hashCache) {
     return new RuleKeyBuilderFactory() {
       @Override
-      public Builder newInstance(BuildRule buildRule) {
-        RuleKey.Builder builder = RuleKey.builder(buildRule, hashCache);
+      public Builder newInstance(BuildRule buildRule, SourcePathResolver resolver) {
+        RuleKey.Builder builder = RuleKey.builder(buildRule, resolver, hashCache);
         builder.set("buckVersionUid", BUCK_VERSION_UID);
         return builder;
       }

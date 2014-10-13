@@ -63,9 +63,10 @@ public class ThriftCompilerTest {
 
   private RuleKey.Builder.RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
+      SourcePathResolver resolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule);
+    RuleKey.Builder builder = factory.newInstance(rule, resolver);
     rule.appendToRuleKey(builder);
     return builder.build();
   }
@@ -88,6 +89,7 @@ public class ThriftCompilerTest {
     // Generate a rule key for the defaults.
     RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
+        resolver,
         new ThriftCompiler(
             params,
             resolver,
@@ -103,6 +105,7 @@ public class ThriftCompilerTest {
     // Verify that changing the compiler causes a rulekey change.
     RuleKey.Builder.RuleKeyPair compilerChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        resolver,
         new ThriftCompiler(
             params,
             resolver,
@@ -119,6 +122,7 @@ public class ThriftCompilerTest {
     // Verify that changing the flags causes a rulekey change.
     RuleKey.Builder.RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        resolver,
         new ThriftCompiler(
             params,
             resolver,
@@ -135,6 +139,7 @@ public class ThriftCompilerTest {
     // Verify that changing the flags causes a rulekey change.
     RuleKey.Builder.RuleKeyPair outputDirChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        resolver,
         new ThriftCompiler(
             params,
             resolver,
@@ -151,6 +156,7 @@ public class ThriftCompilerTest {
     // Verify that changing the input causes a rulekey change.
     RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        resolver,
         new ThriftCompiler(
             params,
             resolver,
@@ -167,6 +173,7 @@ public class ThriftCompilerTest {
     // Verify that changing the input causes a rulekey change.
     RuleKey.Builder.RuleKeyPair languageChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        resolver,
         new ThriftCompiler(
             params,
             resolver,
@@ -183,6 +190,7 @@ public class ThriftCompilerTest {
     // Verify that changing the input causes a rulekey change.
     RuleKey.Builder.RuleKeyPair optionsChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        resolver,
         new ThriftCompiler(
             params,
             resolver,
@@ -200,6 +208,7 @@ public class ThriftCompilerTest {
     // different mechanism to track header changes.
     RuleKey.Builder.RuleKeyPair includeRootsChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        resolver,
         new ThriftCompiler(
             params,
             resolver,
@@ -216,6 +225,7 @@ public class ThriftCompilerTest {
     // Verify that changing the name of the include causes a rulekey change.
     RuleKey.Builder.RuleKeyPair includesKeyChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        resolver,
         new ThriftCompiler(
             params,
             resolver,
@@ -234,6 +244,7 @@ public class ThriftCompilerTest {
     // Verify that changing the contents of an include causes a rulekey change.
     RuleKey.Builder.RuleKeyPair includesValueChange = generateRuleKey(
         ruleKeyBuilderFactory,
+        resolver,
         new ThriftCompiler(
             params,
             resolver,
