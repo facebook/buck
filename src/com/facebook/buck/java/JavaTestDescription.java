@@ -59,6 +59,8 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
 
     AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
@@ -69,11 +71,11 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
 
     return new JavaTest(
         params,
-        new SourcePathResolver(resolver),
+        pathResolver,
         args.srcs.get(),
         JavaLibraryDescription.validateResources(
-            args,
-            params.getProjectFilesystem()),
+            pathResolver,
+            args, params.getProjectFilesystem()),
         args.labels.get(),
         args.contacts.get(),
         args.proguardConfig,

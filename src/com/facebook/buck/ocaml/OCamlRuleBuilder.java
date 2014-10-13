@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -124,7 +123,7 @@ public class OCamlRuleBuilder {
     final BuildRuleParams compileParams = params.copyWithChanges(
         NativeLinkable.NATIVE_LINKABLE_TYPE,
         buildTarget,
-        /* declaredDeps */ ImmutableSortedSet.copyOf(SourcePaths.filterBuildRuleInputs(allInputs)),
+        /* declaredDeps */ ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(allInputs)),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
 
     ImmutableList<String> flags = ImmutableList.<String>builder()

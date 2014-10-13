@@ -34,7 +34,6 @@ import com.facebook.buck.rules.OutputOnlyBuildRule;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -283,7 +282,7 @@ class AndroidPrebuiltAarGraphEnhancer {
 
     @Override
     protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-      return SourcePaths.filterInputsToCompareToOutput(Collections.singleton(aarFile));
+      return getResolver().filterInputsToCompareToOutput(Collections.singleton(aarFile));
     }
 
     @Override

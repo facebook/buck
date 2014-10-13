@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -65,7 +64,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return SourcePaths.filterInputsToCompareToOutput(
+    return getResolver().filterInputsToCompareToOutput(
         ImmutableList.of(staticCLibraryPath, staticNativeLibraryPath, bytecodeLibraryPath));
   }
 

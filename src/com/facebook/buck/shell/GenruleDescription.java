@@ -28,7 +28,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
@@ -75,10 +74,12 @@ public class GenruleDescription
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
     ImmutableList<SourcePath> srcs = args.srcs.get();
     ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(params.getExtraDeps())
-        .addAll(SourcePaths.filterBuildRuleInputs(srcs))
+        .addAll(pathResolver.filterBuildRuleInputs(srcs))
         .build();
 
     Function<String, String> expandMacros =
@@ -99,7 +100,7 @@ public class GenruleDescription
 
     return new Genrule(
         params.copyWithExtraDeps(extraDeps),
-        new SourcePathResolver(resolver),
+        pathResolver,
         srcs,
         args.cmd.transform(expandMacros),
         args.bash.transform(expandMacros),

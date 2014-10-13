@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
@@ -83,11 +82,12 @@ public class PythonUtil {
   }
 
   public static ImmutableSortedSet<BuildRule> getDepsFromComponents(
+      SourcePathResolver resolver,
       PythonPackageComponents components) {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(SourcePaths.filterBuildRuleInputs(components.getModules().values()))
-        .addAll(SourcePaths.filterBuildRuleInputs(components.getResources().values()))
-        .addAll(SourcePaths.filterBuildRuleInputs(components.getNativeLibraries().values()))
+        .addAll(resolver.filterBuildRuleInputs(components.getModules().values()))
+        .addAll(resolver.filterBuildRuleInputs(components.getResources().values()))
+        .addAll(resolver.filterBuildRuleInputs(components.getNativeLibraries().values()))
         .build();
   }
 

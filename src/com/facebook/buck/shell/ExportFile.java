@@ -26,7 +26,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -101,7 +100,7 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return SourcePaths.filterInputsToCompareToOutput(Collections.singleton(src));
+    return getResolver().filterInputsToCompareToOutput(Collections.singleton(src));
   }
 
   @Override

@@ -223,7 +223,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     BuildRuleParams binaryParams = params.copyWithChanges(
         PythonBinaryDescription.TYPE,
         getBinaryBuildTarget(params.getBuildTarget()),
-        PythonUtil.getDepsFromComponents(allComponents),
+        PythonUtil.getDepsFromComponents(pathResolver, allComponents),
         ImmutableSortedSet.<BuildRule>of());
     PythonBinary binary = new PythonBinary(
         binaryParams,

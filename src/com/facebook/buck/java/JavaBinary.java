@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -105,7 +104,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule,
 
     if (manifestFile != null) {
       builder.addAll(
-          SourcePaths.filterInputsToCompareToOutput(Collections.singleton(manifestFile)));
+          getResolver().filterInputsToCompareToOutput(Collections.singleton(manifestFile)));
     }
 
     BuildRules.addInputsToSortedSet(metaInfDirectory, builder, directoryTraverser);

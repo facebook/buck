@@ -32,7 +32,6 @@ import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -121,7 +120,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       inputToCompareToOutput = arg.binaryJar;
     }
     final ImmutableCollection<Path> inputsToCompareToOutput =
-        SourcePaths.filterInputsToCompareToOutput(Collections.singleton(inputToCompareToOutput));
+        resolver.filterInputsToCompareToOutput(Collections.singleton(inputToCompareToOutput));
     final Path pathToExistingJarFile = resolver.getPath(inputToCompareToOutput);
 
     BuildRule buildRule = new AbstractBuildRule(params, resolver) {

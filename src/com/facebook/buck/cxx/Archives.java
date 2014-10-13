@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -71,7 +70,7 @@ public class Archives {
         target,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSortedSet.copyOf(
-            SourcePaths.filterBuildRuleInputs(
+            resolver.filterBuildRuleInputs(
                 Preconditions.checkNotNull(inputs))));
 
     return new Archive(

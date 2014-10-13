@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -84,7 +83,9 @@ public class XcodeNative extends AbstractBuildRule {
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     // TODO(user): Somehow enumerate all files referenced by the xcode project.
-    return SourcePaths.filterInputsToCompareToOutput(Collections.singleton(projectContainerPath));
+    return getResolver().filterInputsToCompareToOutput(
+        Collections.singleton(
+            projectContainerPath));
   }
 
   @Override

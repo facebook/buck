@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
@@ -83,7 +82,7 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return SourcePaths.filterInputsToCompareToOutput(Iterables.concat(srcs, headers));
+    return getResolver().filterInputsToCompareToOutput(Iterables.concat(srcs, headers));
   }
 
   private static void addMkdirStepIfNeeded(

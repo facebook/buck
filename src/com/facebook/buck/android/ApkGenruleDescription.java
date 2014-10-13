@@ -25,7 +25,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -59,16 +58,18 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
           args.apk.getFullyQualifiedName());
     }
 
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
     ImmutableList<SourcePath> srcs = args.srcs.get();
     ImmutableSortedSet<BuildRule> extraDeps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(SourcePaths.filterBuildRuleInputs(srcs))
+        .addAll(pathResolver.filterBuildRuleInputs(srcs))
         .add(installableApk)
         .build();
 
     return new ApkGenrule(
         params.copyWithExtraDeps(extraDeps),
-        new SourcePathResolver(resolver),
+        pathResolver,
         srcs,
         args.cmd,
         args.bash,

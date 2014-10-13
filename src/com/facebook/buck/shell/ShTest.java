@@ -26,7 +26,6 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -72,7 +71,7 @@ public class ShTest extends AbstractBuildRule implements TestRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return SourcePaths.filterInputsToCompareToOutput(ImmutableList.of(test));
+    return getResolver().filterInputsToCompareToOutput(ImmutableList.of(test));
   }
 
   @Override

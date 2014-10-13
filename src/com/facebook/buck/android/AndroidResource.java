@@ -38,7 +38,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -211,7 +210,7 @@ public class AndroidResource extends AbstractBuildRule
     // manifest file is optional.
     if (manifestFile != null) {
       inputs.addAll(
-          SourcePaths.filterInputsToCompareToOutput(Collections.singleton(manifestFile)));
+          getResolver().filterInputsToCompareToOutput(Collections.singleton(manifestFile)));
     }
 
     return inputs.build();

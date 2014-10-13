@@ -85,11 +85,11 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     // Return a build rule which builds the PEX, depending on everything that builds any of
     // the components.
     BuildRuleParams binaryParams = params.copyWithDeps(
-        PythonUtil.getDepsFromComponents(allPackageComponents),
+        PythonUtil.getDepsFromComponents(pathResolver, allPackageComponents),
         ImmutableSortedSet.<BuildRule>of());
     return new PythonBinary(
         binaryParams,
-        new SourcePathResolver(resolver),
+        pathResolver,
         pathToPex,
         pythonEnvironment,
         mainModule,

@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
@@ -131,6 +130,7 @@ public class CxxCompilableEnhancer {
       boolean pic,
       String name,
       CxxSource source) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     BuildTarget target = createCompileBuildTarget(
         params.getBuildTarget(),
@@ -140,7 +140,7 @@ public class CxxCompilableEnhancer {
     ImmutableSortedSet.Builder<BuildRule> dependencies = ImmutableSortedSet.naturalOrder();
 
     // If a build rule generates our input source, add that as a dependency.
-    dependencies.addAll(SourcePaths.filterBuildRuleInputs(ImmutableList.of(source.getPath())));
+    dependencies.addAll(pathResolver.filterBuildRuleInputs(ImmutableList.of(source.getPath())));
 
     // Add additional dependencies only for preprocessing.
     if (source.getType() == CxxSource.Type.C ||
@@ -149,7 +149,7 @@ public class CxxCompilableEnhancer {
 
       // Depend on the rule that generates the sources and headers we're compiling.
       dependencies.addAll(
-          SourcePaths.filterBuildRuleInputs(
+          pathResolver.filterBuildRuleInputs(
               ImmutableList.<SourcePath>builder()
                   .add(source.getPath())
                   .addAll(preprocessorInput.getIncludes().values())
@@ -237,7 +237,7 @@ public class CxxCompilableEnhancer {
             target,
             dependencies.build(),
             ImmutableSortedSet.<BuildRule>of()),
-        new SourcePathResolver(resolver),
+        pathResolver,
         compiler,
         Optional.<CxxCompile.Plugin>absent(),
         args.build(),

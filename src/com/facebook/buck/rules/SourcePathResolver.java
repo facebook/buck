@@ -24,16 +24,34 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 public class SourcePathResolver {
+
+  public static final Function<PathSourcePath, Path> TO_PATH_SOURCEPATH_REFERENCES =
+      new Function<PathSourcePath, Path>() {
+        @Override
+        public Path apply(PathSourcePath input) {
+          return input.getRelativePath();
+        }
+      };
+  public static final Function<BuildRuleSourcePath, BuildRule> TO_BUILD_RULE_REFERENCES =
+      new Function<BuildRuleSourcePath, BuildRule>() {
+        @Override
+        public BuildRule apply(BuildRuleSourcePath input) {
+          return input.getRule();
+        }
+      };
 
   @SuppressWarnings("unused") // Needed once SourcePath embed BuildTarget instead of BuildRule
   private final BuildRuleResolver ruleResolver;
@@ -164,4 +182,33 @@ public class SourcePathResolver {
     return rule.getBuildTarget().getShortNameOnly();
   }
 
+  /**
+   * Takes an {@link Iterable} of {@link SourcePath} objects and filters those that are suitable to
+   * be returned by {@link com.facebook.buck.rules.AbstractBuildRule#getInputsToCompareToOutput()}.
+   */
+  public ImmutableCollection<Path> filterInputsToCompareToOutput(
+      Iterable<? extends SourcePath> sources) {
+    // Currently, the only implementation of SourcePath that should be included in the Iterable
+    // returned by getInputsToCompareToOutput() is FileSourcePath, so it is safe to filter by that
+    // and then use .asReference() to get its path.
+    //
+    // BuildRuleSourcePath should not be included in the output because it refers to a generated
+    // file, and generated files are not hashed as part of a RuleKey.
+    return FluentIterable.from(sources)
+        .filter(PathSourcePath.class)
+        .transform(TO_PATH_SOURCEPATH_REFERENCES)
+        .toList();
+  }
+
+  public ImmutableCollection<Path> filterInputsToCompareToOutput(SourcePath... sources) {
+    return filterInputsToCompareToOutput(Arrays.asList(sources));
+  }
+
+  public Collection<BuildRule> filterBuildRuleInputs(
+      Iterable<? extends SourcePath> sources) {
+    return FluentIterable.from(sources)
+        .filter(BuildRuleSourcePath.class)
+        .transform(TO_BUILD_RULE_REFERENCES)
+        .toList();
+  }
 }

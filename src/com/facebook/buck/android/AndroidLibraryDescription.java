@@ -102,6 +102,7 @@ public class AndroidLibraryDescription
         pathResolver,
         args.srcs.get(),
         JavaLibraryDescription.validateResources(
+            pathResolver,
             args,
             params.getProjectFilesystem()),
         args.proguardConfig,

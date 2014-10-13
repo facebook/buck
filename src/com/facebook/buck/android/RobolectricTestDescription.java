@@ -59,6 +59,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
 
     AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
@@ -88,11 +90,11 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     return new RobolectricTest(
         params,
-        new SourcePathResolver(resolver),
+        pathResolver,
         args.srcs.get(),
         JavaLibraryDescription.validateResources(
-            args,
-            params.getProjectFilesystem()),
+            pathResolver,
+            args, params.getProjectFilesystem()),
         args.labels.get(),
         args.contacts.get(),
         args.proguardConfig,

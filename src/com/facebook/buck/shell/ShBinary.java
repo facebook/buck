@@ -29,7 +29,6 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -76,7 +75,7 @@ public class ShBinary extends AbstractBuildRule
         .addAll(resources)
         .build();
 
-    return SourcePaths.filterInputsToCompareToOutput(allPaths);
+    return getResolver().filterInputsToCompareToOutput(allPaths);
   }
 
   @Override

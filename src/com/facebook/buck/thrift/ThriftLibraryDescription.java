@@ -34,7 +34,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -192,7 +191,7 @@ public class ThriftLibraryDescription
                   target,
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .addAll(
-                        SourcePaths.filterBuildRuleInputs(
+                        new SourcePathResolver(resolver).filterBuildRuleInputs(
                             ImmutableList.<SourcePath>builder()
                                 .add(compiler)
                                 .add(source)

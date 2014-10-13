@@ -185,7 +185,7 @@ public class CxxDescriptionEnhancer {
               LEX_TYPE,
               target,
               ImmutableSortedSet.copyOf(
-                  SourcePaths.filterBuildRuleInputs(ImmutableList.of(source))),
+                  pathResolver.filterBuildRuleInputs(ImmutableList.of(source))),
               ImmutableSortedSet.<BuildRule>of()),
           pathResolver,
           config.getLex(),
@@ -224,7 +224,7 @@ public class CxxDescriptionEnhancer {
               YACC_TYPE,
               target,
               ImmutableSortedSet.copyOf(
-                  SourcePaths.filterBuildRuleInputs(ImmutableList.of(source))),
+                  pathResolver.filterBuildRuleInputs(ImmutableList.of(source))),
               ImmutableSortedSet.<BuildRule>of()),
           pathResolver,
           config.getYacc(),

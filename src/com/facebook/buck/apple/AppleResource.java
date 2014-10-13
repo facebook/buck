@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.util.DirectoryTraverser;
@@ -132,10 +131,10 @@ public class AppleResource extends AbstractBuildRule {
     for (String virtualPathName : variants.keySet()) {
       Map<String, SourcePath> variant = variants.get(virtualPathName);
       inputsToConsiderForCachingPurposes.addAll(
-          SourcePaths.filterInputsToCompareToOutput(variant.values()));
+          getResolver().filterInputsToCompareToOutput(variant.values()));
     }
 
-    inputsToConsiderForCachingPurposes.addAll(SourcePaths.filterInputsToCompareToOutput(files));
+    inputsToConsiderForCachingPurposes.addAll(getResolver().filterInputsToCompareToOutput(files));
     return inputsToConsiderForCachingPurposes.build();
   }
 

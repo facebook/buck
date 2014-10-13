@@ -26,7 +26,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -120,7 +119,7 @@ public class AndroidBuildConfigDescription
         params.getDeclaredDeps(),
         /* extraDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(params.getExtraDeps())
-            .addAll(SourcePaths.filterBuildRuleInputs(valuesFile.asSet()))
+            .addAll(pathResolver.filterBuildRuleInputs(valuesFile.asSet()))
             .build());
     AndroidBuildConfig androidBuildConfig = new AndroidBuildConfig(
         buildConfigParams,

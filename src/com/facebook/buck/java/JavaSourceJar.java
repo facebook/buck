@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -66,12 +65,12 @@ public class JavaSourceJar extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return SourcePaths.filterInputsToCompareToOutput(sources);
+    return getResolver().filterInputsToCompareToOutput(sources);
   }
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.setReflectively("srcs", SourcePaths.filterInputsToCompareToOutput(sources));
+    return builder.setReflectively("srcs", getResolver().filterInputsToCompareToOutput(sources));
   }
 
   @Override
@@ -90,7 +89,7 @@ public class JavaSourceJar extends AbstractBuildRule {
     // We only want to consider raw source files, since the java package finder doesn't have the
     // smarts to read the "package" line from a source file.
 
-    for (Path source : SourcePaths.filterInputsToCompareToOutput(sources)) {
+    for (Path source : getResolver().filterInputsToCompareToOutput(sources)) {
       String packageFolder = packageFinder.findJavaPackageFolderForPath(source.toString());
       Path packageDir = temp.resolve(packageFolder);
       if (seenPackages.add(packageDir)) {

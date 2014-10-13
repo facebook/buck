@@ -41,7 +41,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
@@ -440,7 +439,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     Optionals.addIfPresent(proguardConfig, sourcePaths);
     sourcePaths.addAll(dexSplitMode.getSourcePaths());
 
-    return SourcePaths.filterInputsToCompareToOutput(sourcePaths.build());
+    return getResolver().filterInputsToCompareToOutput(sourcePaths.build());
   }
 
   @Override

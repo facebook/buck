@@ -38,7 +38,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Optionals;
@@ -141,7 +140,7 @@ public class PrebuiltJar extends AbstractBuildRule
     inputsToCompareToOutput.add(binaryJar);
     Optionals.addIfPresent(sourceJar, inputsToCompareToOutput);
     Optionals.addIfPresent(gwtJar, inputsToCompareToOutput);
-    return SourcePaths.filterInputsToCompareToOutput(inputsToCompareToOutput.build());
+    return getResolver().filterInputsToCompareToOutput(inputsToCompareToOutput.build());
   }
 
   @Override

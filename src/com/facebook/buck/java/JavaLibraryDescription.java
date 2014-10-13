@@ -30,7 +30,6 @@ import com.facebook.buck.rules.FlavorableDescription;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -100,7 +99,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         params,
         pathResolver,
         args.srcs.get(),
-        validateResources(args, params.getProjectFilesystem()),
+        validateResources(pathResolver, args, params.getProjectFilesystem()),
         args.proguardConfig,
         args.postprocessClassesCommands.get(),
         resolver.getAllRules(args.exportedDeps.get()),
@@ -113,9 +112,10 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   // TODO(natthu): Consider adding a validateArg() method on Description which gets called before
   // createBuildable().
   public static ImmutableSortedSet<SourcePath> validateResources(
+      SourcePathResolver resolver,
       Arg arg,
       ProjectFilesystem filesystem) {
-    for (Path path : SourcePaths.filterInputsToCompareToOutput(arg.resources.get())) {
+    for (Path path : resolver.filterInputsToCompareToOutput(arg.resources.get())) {
       if (!filesystem.exists(path)) {
         throw new HumanReadableException("Error: `resources` argument '%s' does not exist.", path);
       } else if (filesystem.isDirectory(path)) {
@@ -249,7 +249,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     // If any of the srcs or resources are BuildRuleSourcePaths, then their respective BuildRules
     // must be included as deps.
     ImmutableSortedSet<BuildRule> deps =
-        ImmutableSortedSet.copyOf(SourcePaths.filterBuildRuleInputs(filesForGwtModule));
+        ImmutableSortedSet.copyOf(resolver.filterBuildRuleInputs(filesForGwtModule));
     GwtModule gwtModule = new GwtModule(
         new BuildRuleParams(
             gwtModuleBuildTarget,

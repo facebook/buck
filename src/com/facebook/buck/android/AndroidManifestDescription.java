@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -52,6 +51,8 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
     AndroidTransitiveDependencyGraph transitiveDependencyGraph =
         new AndroidTransitiveDependencyGraph(resolver.getAllRules(args.deps.get()));
     ImmutableSet<SourcePath> manifestFiles = transitiveDependencyGraph.findManifestFiles();
@@ -65,13 +66,14 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
     // params.getExtraDeps(), even though the type of Arg.skeleton is SourcePath.
     // TODO(simons): t4744625 This should happen automagically.
     ImmutableSortedSet<BuildRule> newDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(SourcePaths.filterBuildRuleInputs(
-            Sets.union(manifestFiles, Collections.singleton(args.skeleton))))
+        .addAll(
+            pathResolver.filterBuildRuleInputs(
+                Sets.union(manifestFiles, Collections.singleton(args.skeleton))))
         .build();
 
     return new AndroidManifest(
         params.copyWithDeps(newDeps, params.getExtraDeps()),
-        new SourcePathResolver(resolver),
+        pathResolver,
         args.skeleton,
         manifestFiles);
   }

@@ -18,12 +18,10 @@ package com.facebook.buck.rules;
 
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
-import java.util.Collection;
 
 import javax.annotation.Nullable;
 
@@ -46,49 +44,9 @@ public class SourcePaths {
           return new BuildRuleSourcePath(input);
         }
       };
-  public static final Function<PathSourcePath, Path> TO_PATH_SOURCEPATH_REFERENCES =
-      new Function<PathSourcePath, Path>() {
-        @Override
-        public Path apply(PathSourcePath input) {
-          return input.getRelativePath();
-        }
-      };
-  public static final Function<BuildRuleSourcePath, BuildRule> TO_BUILD_RULE_REFERENCES =
-      new Function<BuildRuleSourcePath, BuildRule>() {
-        @Override
-        public BuildRule apply(BuildRuleSourcePath input) {
-          return input.getRule();
-        }
-      };
 
   /** Utility class: do not instantiate. */
   private SourcePaths() {}
-
-  /**
-   * Takes an {@link Iterable} of {@link SourcePath} objects and filters those that are suitable to
-   * be returned by {@link AbstractBuildRule#getInputsToCompareToOutput()}.
-   */
-  public static ImmutableCollection<Path> filterInputsToCompareToOutput(
-      Iterable<? extends SourcePath> sources) {
-    // Currently, the only implementation of SourcePath that should be included in the Iterable
-    // returned by getInputsToCompareToOutput() is FileSourcePath, so it is safe to filter by that
-    // and then use .asReference() to get its path.
-    //
-    // BuildRuleSourcePath should not be included in the output because it refers to a generated
-    // file, and generated files are not hashed as part of a RuleKey.
-    return FluentIterable.from(sources)
-        .filter(PathSourcePath.class)
-        .transform(TO_PATH_SOURCEPATH_REFERENCES)
-        .toList();
-  }
-
-  public static Collection<BuildRule> filterBuildRuleInputs(
-      Iterable<? extends SourcePath> sources) {
-    return FluentIterable.from(sources)
-        .filter(BuildRuleSourcePath.class)
-        .transform(TO_BUILD_RULE_REFERENCES)
-        .toList();
-  }
 
   public static ImmutableSortedSet<SourcePath> toSourcePathsSortedByNaturalOrder(
       @Nullable Iterable<Path> paths) {

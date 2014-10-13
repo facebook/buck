@@ -45,7 +45,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -397,7 +396,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     // compile-time deps and not in the "deps" field. If any of these change, we should recompile
     // the library, since we will (at least) need to repack it.
     rulesWithAbiToConsider.addAll(
-        SourcePaths.filterBuildRuleInputs(Iterables.concat(srcs, resources)));
+        getResolver().filterBuildRuleInputs(Iterables.concat(srcs, resources)));
 
     return rulesWithAbiToConsider;
   }
@@ -483,8 +482,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     ImmutableList.Builder<Path> builder = ImmutableList.builder();
-    builder.addAll(SourcePaths.filterInputsToCompareToOutput(this.srcs));
-    builder.addAll(SourcePaths.filterInputsToCompareToOutput(this.resources));
+    builder.addAll(getResolver().filterInputsToCompareToOutput(this.srcs));
+    builder.addAll(getResolver().filterInputsToCompareToOutput(this.resources));
     Optionals.addIfPresent(this.proguardConfig, builder);
     return builder.build();
   }
