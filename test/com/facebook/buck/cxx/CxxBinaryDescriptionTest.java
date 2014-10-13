@@ -95,15 +95,13 @@ public class CxxBinaryDescriptionTest {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
-        return new CxxPreprocessorInput(
-            ImmutableSet.of(
-                header.getBuildTarget(),
-                headerSymlinkTree.getBuildTarget()),
-            ImmutableList.<String>of(),
-            ImmutableList.<String>of(),
-            ImmutableMap.<Path, SourcePath>of(),
-            ImmutableList.of(headerSymlinkTreeRoot),
-            ImmutableList.<Path>of());
+        return CxxPreprocessorInput.builder()
+            .setRules(
+                ImmutableSet.of(
+                    header.getBuildTarget(),
+                    headerSymlinkTree.getBuildTarget()))
+            .setIncludeRoots(headerSymlinkTreeRoot)
+            .build();
       }
 
       @Override

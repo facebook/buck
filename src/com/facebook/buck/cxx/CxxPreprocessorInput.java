@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * The components that get contributed to a top-level run of the C++ preprocessor.
@@ -48,7 +49,7 @@ public class CxxPreprocessorInput {
   // Include directories where system headers.
   private final ImmutableList<Path> systemIncludeRoots;
 
-  public CxxPreprocessorInput(
+  private CxxPreprocessorInput(
       ImmutableSet<BuildTarget> rules,
       ImmutableList<String> cppflags,
       ImmutableList<String> cxxppflags,
@@ -62,6 +63,64 @@ public class CxxPreprocessorInput {
     this.includeRoots = Preconditions.checkNotNull(includeRoots);
     this.systemIncludeRoots = Preconditions.checkNotNull(systemIncludeRoots);
   }
+
+  /**
+   * Builder used to construct {@link CxxPreprocessorInput} instances.
+   */
+  public static class Builder {
+    private ImmutableSet<BuildTarget> rules = ImmutableSet.of();
+    private ImmutableList<String> cppflags = ImmutableList.of();
+    private ImmutableList<String> cxxppflags = ImmutableList.of();
+    private ImmutableMap<Path, SourcePath> includes = ImmutableMap.of();
+    private ImmutableList<Path> includeRoots = ImmutableList.of();
+    private ImmutableList<Path> systemIncludeRoots = ImmutableList.of();
+
+    public CxxPreprocessorInput build() {
+      return new CxxPreprocessorInput(
+          rules,
+          cppflags,
+          cxxppflags,
+          includes,
+          includeRoots,
+          systemIncludeRoots);
+    }
+
+    public Builder setRules(Iterable<BuildTarget> rules) {
+      this.rules = ImmutableSet.copyOf(rules);
+      return this;
+    }
+
+    public Builder setCppflags(Iterable<String> cppflags) {
+      this.cppflags = ImmutableList.copyOf(cppflags);
+      return this;
+    }
+
+    public Builder setCxxppflags(Iterable<String> cxxppflags) {
+      this.cxxppflags = ImmutableList.copyOf(cxxppflags);
+      return this;
+    }
+
+    public Builder setIncludes(Map<Path, SourcePath> includes) {
+      this.includes = ImmutableMap.copyOf(includes);
+      return this;
+    }
+
+    public Builder setIncludeRoots(Iterable<Path> includeRoots) {
+      this.includeRoots = ImmutableList.copyOf(includeRoots);
+      return this;
+    }
+
+    public Builder setSystemIncludeRoots(Iterable<Path> systemIncludeRoots) {
+      this.systemIncludeRoots = ImmutableList.copyOf(systemIncludeRoots);
+      return this;
+    }
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static final CxxPreprocessorInput EMPTY = builder().build();
 
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();

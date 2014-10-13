@@ -288,13 +288,13 @@ public class CxxDescriptionEnhancer {
 
     return CxxPreprocessorInput.concat(
         ImmutableList.of(
-            new CxxPreprocessorInput(
-                ImmutableSet.of(headerSymlinkTree.getBuildTarget()),
-                /* cppflags */ preprocessorFlags,
-                /* cxxppflags */ preprocessorFlags,
-                /* includes */ headers,
-                /* includeRoots */ ImmutableList.of(headerSymlinkTree.getRoot()),
-                /* systemIncludeRoots */ ImmutableList.<Path>of()),
+            CxxPreprocessorInput.builder()
+                .setRules(ImmutableSet.of(headerSymlinkTree.getBuildTarget()))
+                .setCppflags(preprocessorFlags)
+                .setCxxppflags(preprocessorFlags)
+                .setIncludes(headers)
+                .setIncludeRoots(ImmutableList.of(headerSymlinkTree.getRoot()))
+                .build(),
             cxxPreprocessorInputFromDeps));
 
   }
@@ -436,14 +436,14 @@ public class CxxDescriptionEnhancer {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
-        return new CxxPreprocessorInput(
-            ImmutableSet.of(headerSymlinkTree.getBuildTarget()),
-            propagatedPpFlags,
-            propagatedPpFlags,
-            headers,
-            ImmutableList.of(
-                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(params.getBuildTarget())),
-            ImmutableList.<Path>of());
+        return CxxPreprocessorInput.builder()
+            .setRules(ImmutableSet.of(headerSymlinkTree.getBuildTarget()))
+            .setCppflags(propagatedPpFlags)
+            .setCxxppflags(propagatedPpFlags)
+            .setIncludes(headers)
+            .setIncludeRoots(ImmutableList.of(
+                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(params.getBuildTarget())))
+            .build();
       }
 
       @Override

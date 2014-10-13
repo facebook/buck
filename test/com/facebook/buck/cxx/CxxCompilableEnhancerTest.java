@@ -47,7 +47,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 
@@ -88,13 +87,9 @@ public class CxxCompilableEnhancerTest {
             "//:dep1",
             new SourcePathResolver(new BuildRuleResolver())));
 
-    CxxPreprocessorInput cxxPreprocessorInput = new CxxPreprocessorInput(
-        ImmutableSet.of(dep.getBuildTarget()),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of());
+    CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.builder()
+        .setRules(ImmutableSet.of(dep.getBuildTarget()))
+        .build();
 
     String name = "foo/bar.cpp";
     SourcePath input = new PathSourcePath(target.getBasePath().resolve(name));
@@ -119,14 +114,6 @@ public class CxxCompilableEnhancerTest {
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     BuildRuleResolver resolver = new BuildRuleResolver();
 
-    CxxPreprocessorInput cxxPreprocessorInput = new CxxPreprocessorInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of());
-
     String name = "foo/bar.cpp";
     FakeBuildRule dep = createFakeBuildRule("//:test", new SourcePathResolver(resolver));
     resolver.addToIndex(dep);
@@ -137,7 +124,7 @@ public class CxxCompilableEnhancerTest {
         params,
         resolver,
         CXX_PLATFORM,
-        cxxPreprocessorInput,
+        CxxPreprocessorInput.EMPTY,
         ImmutableList.<String>of(),
         /* pic */ false,
         name,
@@ -153,14 +140,6 @@ public class CxxCompilableEnhancerTest {
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     BuildRuleResolver resolver = new BuildRuleResolver();
 
-    CxxPreprocessorInput cxxPreprocessorInput = new CxxPreprocessorInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of());
-
     String name = "foo/bar.cpp";
     CxxSource cxxSource = new CxxSource(CxxSource.Type.CXX, new TestSourcePath(name));
 
@@ -170,7 +149,7 @@ public class CxxCompilableEnhancerTest {
         params,
         resolver,
         CXX_PLATFORM,
-        cxxPreprocessorInput,
+        CxxPreprocessorInput.EMPTY,
         ImmutableList.<String>of(),
         /* pic */ false,
         name,
@@ -189,7 +168,7 @@ public class CxxCompilableEnhancerTest {
         params,
         resolver,
         CXX_PLATFORM,
-        cxxPreprocessorInput,
+        CxxPreprocessorInput.EMPTY,
         ImmutableList.<String>of(),
         /* pic */ true,
         name,
@@ -209,14 +188,6 @@ public class CxxCompilableEnhancerTest {
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     BuildRuleResolver resolver = new BuildRuleResolver();
 
-    CxxPreprocessorInput cxxPreprocessorInput = new CxxPreprocessorInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of());
-
     String name = "source.cpp";
     CxxSource cxxSource = new CxxSource(CxxSource.Type.CXX, new TestSourcePath(name));
 
@@ -231,7 +202,7 @@ public class CxxCompilableEnhancerTest {
         params,
         resolver,
         platform,
-        cxxPreprocessorInput,
+        CxxPreprocessorInput.EMPTY,
         ImmutableList.<String>of(),
         /* pic */ false,
         name,
@@ -254,14 +225,10 @@ public class CxxCompilableEnhancerTest {
 
     ImmutableList<String> explicitCppflags = ImmutableList.of("-explicit-cppflag");
     ImmutableList<String> explicitCxxppflags = ImmutableList.of("-explicit-cxxppflag");
-    CxxPreprocessorInput cxxPreprocessorInput =
-        new CxxPreprocessorInput(
-            ImmutableSet.<BuildTarget>of(),
-            explicitCppflags,
-            explicitCxxppflags,
-            ImmutableMap.<Path, SourcePath>of(),
-            ImmutableList.<Path>of(),
-            ImmutableList.<Path>of());
+    CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.builder()
+        .setCppflags(explicitCppflags)
+        .setCxxppflags(explicitCxxppflags)
+        .build();
 
     SourcePath as = new TestSourcePath("as");
     ImmutableList<String> asflags = ImmutableList.of("-asflag", "-asflag");
@@ -402,5 +369,4 @@ public class CxxCompilableEnhancerTest {
     assertContains(assemblerWithCppCompile.getFlags(), asppflags);
     assertContains(assemblerWithCppCompile.getFlags(), asflags);
   }
-
 }

@@ -98,15 +98,13 @@ public class CxxLibraryDescriptionTest {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
-        return new CxxPreprocessorInput(
-            ImmutableSet.of(
-                header.getBuildTarget(),
-                headerSymlinkTree.getBuildTarget()),
-            ImmutableList.<String>of(),
-            ImmutableList.<String>of(),
-            ImmutableMap.<Path, SourcePath>of(),
-            ImmutableList.of(headerSymlinkTreeRoot),
-            ImmutableList.<Path>of());
+        return CxxPreprocessorInput.builder()
+            .setRules(
+                ImmutableSet.of(
+                    header.getBuildTarget(),
+                    headerSymlinkTree.getBuildTarget()))
+            .setIncludeRoots(headerSymlinkTreeRoot)
+            .build();
       }
 
       @Override
@@ -158,17 +156,20 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary rule = description.createBuildRule(params, resolver, arg);
 
     assertEquals(
-        new CxxPreprocessorInput(
-            ImmutableSet.of(
-                CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)),
-            ImmutableList.<String>of(),
-            ImmutableList.<String>of(),
-            ImmutableMap.<Path, SourcePath>of(
-                Paths.get(headerName), new TestSourcePath(headerName),
-                Paths.get(genHeaderName), new BuildTargetSourcePath(genHeader.getBuildTarget())),
-            ImmutableList.of(
-                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target)),
-            ImmutableList.<Path>of()),
+        CxxPreprocessorInput.builder()
+            .setRules(
+                ImmutableSet.of(
+                    CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target)))
+            .setIncludes(
+                ImmutableMap.<Path, SourcePath>of(
+                    Paths.get(headerName),
+                    new TestSourcePath(headerName),
+                    Paths.get(genHeaderName),
+                    new BuildTargetSourcePath(genHeader.getBuildTarget())))
+            .setIncludeRoots(
+                ImmutableList.of(
+                    CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target)))
+            .build(),
         rule.getCxxPreprocessorInput());
 
     // Verify that the archive rule has the correct deps: the object files from our sources.

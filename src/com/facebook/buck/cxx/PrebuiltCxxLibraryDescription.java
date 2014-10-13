@@ -35,7 +35,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -138,14 +137,10 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
-        return new CxxPreprocessorInput(
-            /* rules */ ImmutableSet.<BuildTarget>of(),
-            /* cppflags */ ImmutableList.<String>of(),
-            /* cxxppflags */ ImmutableList.<String>of(),
-            /* includes */ ImmutableMap.<Path, SourcePath>of(),
-            /* includeRoots */ ImmutableList.<Path>of(),
+        return CxxPreprocessorInput.builder()
             // Just pass the include dirs as system includes.
-            /* systemIncludeRoots */ includeDirs);
+          .setSystemIncludeRoots(includeDirs)
+          .build();
       }
 
       @Override

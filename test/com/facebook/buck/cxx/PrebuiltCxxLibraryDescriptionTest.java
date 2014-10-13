@@ -37,7 +37,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -110,13 +109,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
     CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = new CxxPreprocessorInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableList.<Path>of(),
-        getIncludeDirs(arg));
+    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
+        .setSystemIncludeRoots(getIncludeDirs(arg))
+        .build();
     assertEquals(
         expectedCxxPreprocessorInput,
         lib.getCxxPreprocessorInput());
@@ -163,13 +158,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
     CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = new CxxPreprocessorInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableList.<Path>of(),
-        getIncludeDirs(arg));
+    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
+        .setSystemIncludeRoots(getIncludeDirs(arg))
+        .build();
     assertEquals(
         expectedCxxPreprocessorInput,
         lib.getCxxPreprocessorInput());
@@ -214,13 +205,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
     CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = new CxxPreprocessorInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableList.<Path>of(),
-        getIncludeDirs(arg));
+    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
+        .setSystemIncludeRoots(getIncludeDirs(arg))
+        .build();
     assertEquals(
         expectedCxxPreprocessorInput,
         lib.getCxxPreprocessorInput());
@@ -265,13 +252,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
     CxxLibrary lib = DESC.createBuildRule(params, resolver, arg);
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = new CxxPreprocessorInput(
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableList.<Path>of(),
-        getIncludeDirs(arg));
+    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
+        .setSystemIncludeRoots(getIncludeDirs(arg))
+        .build();
     assertEquals(
         expectedCxxPreprocessorInput,
         lib.getCxxPreprocessorInput());

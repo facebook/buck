@@ -71,13 +71,10 @@ public class CxxLibraryTest {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput() {
-        return new CxxPreprocessorInput(
-            ImmutableSet.of(headerTarget, headerSymlinkTreeTarget),
-            ImmutableList.<String>of(),
-            ImmutableList.<String>of(),
-            ImmutableMap.<Path, SourcePath>of(),
-            ImmutableList.of(headerSymlinkTreeRoot),
-            ImmutableList.<Path>of());
+        return CxxPreprocessorInput.builder()
+            .setRules(ImmutableSet.of(headerTarget, headerSymlinkTreeTarget))
+            .setIncludeRoots(headerSymlinkTreeRoot)
+            .build();
       }
 
       @Override
@@ -106,13 +103,10 @@ public class CxxLibraryTest {
 
     // Verify that we get the header/symlink targets and root via the CxxPreprocessorDep
     // interface.
-    CxxPreprocessorInput expectedCxxPreprocessorInput = new CxxPreprocessorInput(
-        ImmutableSet.of(headerTarget, headerSymlinkTreeTarget),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableList.of(headerSymlinkTreeRoot),
-        ImmutableList.<Path>of());
+    CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
+        .setRules(ImmutableSet.of(headerTarget, headerSymlinkTreeTarget))
+        .setIncludeRoots(headerSymlinkTreeRoot)
+        .build();
     assertEquals(expectedCxxPreprocessorInput, cxxLibrary.getCxxPreprocessorInput());
 
     // Verify that we get the static archive and it's build target via the NativeLinkable
