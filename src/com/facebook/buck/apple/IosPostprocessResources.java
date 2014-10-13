@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.Genrule;
@@ -47,7 +46,7 @@ public class IosPostprocessResources extends Genrule {
 
   IosPostprocessResources(
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      SourcePathResolver resolver,
       List<SourcePath> srcs,
       Optional<String> cmd,
       Optional<String> bash,
@@ -56,7 +55,7 @@ public class IosPostprocessResources extends Genrule {
       final Function<Path, Path> relativeToAbsolutePathFunction) {
     super(
         params,
-        new SourcePathResolver(resolver),
+        resolver,
         srcs,
         cmd,
         bash,
