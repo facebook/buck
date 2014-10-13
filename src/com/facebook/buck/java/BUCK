@@ -1,4 +1,24 @@
 java_library(
+  name = 'coverage',
+  srcs = ['ReportGenerator.java',],
+  deps = [
+    '//third-party/java/jacoco:jacoco',
+  ],
+)
+
+java_binary(
+  name = 'report-generator',
+  main_class = 'com.facebook.buck.java.ReportGenerator',
+  blacklist = [
+    '.*SF',
+    '.*RSA',
+  ],
+  deps = [
+    ':coverage',
+  ],
+)
+
+java_library(
   name = 'config',
   srcs = [
     'JavaBuckConfig.java',
@@ -137,6 +157,7 @@ java_library(
   ],
   deps = [
     ':packagefinder',
+    ':report-generator',
     ':support',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

@@ -10,8 +10,9 @@
  *
  * Contributors:
  *    Brock Janiczak - initial API and implementation
- *
  *******************************************************************************/
+package com.facebook.buck.java;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -53,7 +54,6 @@ public class ReportGenerator {
         public ReportGenerator() {
                 String jacocoOutputDir = System.getProperty("jacoco.output.dir");
                 this.title = "Code-Coverage Analysis";
-                System.out.println(jacocoOutputDir);
                 this.executionDataFile = new File(
                     jacocoOutputDir, System.getProperty("jacoco.exec.data.file"));
                 this.classesPath = System.getProperty("classes.dir");

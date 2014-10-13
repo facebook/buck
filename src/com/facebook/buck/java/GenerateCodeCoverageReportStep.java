@@ -59,10 +59,6 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("java");
 
-    args.add("-classpath",
-        String.format("%s:%s/*:%s/../report-generator-build/",
-            PATH_TO_ASM_JAR, JUnitStep.PATH_TO_JACOCO_JARS, JUnitStep.PATH_TO_JACOCO_JARS));
-
     args.add(String.format("-Djacoco.output.dir=%s", outputDirectory));
 
     args.add(String.format("-Djacoco.exec.data.file=%s", JUnitStep.JACOCO_EXEC_COVERAGE_FILE));
@@ -75,9 +71,9 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
 
     args.add(String.format("-Dsrc.dir=%s", "src"));
 
-    // Generate report from JaCoCo exec file using
-    // 'third-party/java/jacoco-0.6.4/report-generator-src/ReportGenerator.java'
-    args.add("ReportGenerator");
+    // Generate report from JaCoCo exec file using 'ReportGenerator.java'
+
+    args.add("-jar", "buck-out/gen/src/com/facebook/buck/java/report-generator.jar");
 
     return args.build();
   }

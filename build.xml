@@ -49,7 +49,7 @@
   </fileset>
 
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
-    <include name="asm/asm-debug-all-4.1.jar" />
+    <include name="asm/asm-debug-all-5.0.3.jar" />
     <include name="astyanax/astyanax-cassandra-1.56.38.jar" />
     <include name="astyanax/astyanax-cassandra-1.56.38-javadoc.jar" />
     <include name="astyanax/astyanax-cassandra-1.56.38-sources.jar" />
@@ -64,6 +64,11 @@
     <include name="astyanax/joda-time-2.2.jar" />
     <include name="astyanax/libthrift-0.7.0.jar" />
     <include name="astyanax/log4j-1.2.16.jar" />
+    <include name="astyanax/slf4j-api-1.7.2.jar" />
+    <include name="astyanax/slf4j-log4j12-1.7.2.jar" />
+    <include name="closure-templates/soy-2012-12-21-no-guava.jar" />
+    <include name="commons-compress/commons-compress-1.8.1.jar" />
+    <include name="dd-plist/dd-plist.jar" />
     <include name="eclipse/org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar" />
     <include name="eclipse/org.eclipse.core.jobs_3.5.300.v20130429-1813.jar" />
     <include name="eclipse/org.eclipse.core.resources_3.8.101.v20130717-0806.jar" />
@@ -72,16 +77,13 @@
     <include name="eclipse/org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar" />
     <include name="eclipse/org.eclipse.jdt.core_3.9.2.v20140114-1555.jar" />
     <include name="eclipse/org.eclipse.osgi_3.9.1.v20140110-1610.jar" />
-    <include name="astyanax/slf4j-api-1.7.2.jar" />
-    <include name="astyanax/slf4j-log4j12-1.7.2.jar" />
-    <include name="closure-templates/soy-2012-12-21-no-guava.jar" />
-    <include name="dd-plist/dd-plist.jar" />
     <include name="gson/gson-2.2.4.jar" />
     <include name="infer-annotations/infer-annotations-1.1.jar" />
+    <include name="jacoco/org.jacoco.core-0.7.2.201409121644.jar" />
+    <include name="jacoco/org.jacoco.report-0.7.2.201409121644.jar" />
     <include name="jetty/jetty-all-9.0.4.v20130625.jar" />
     <include name="jetty/servlet-api.jar" />
     <include name="xz-java-1.3/xz-1.3.jar" />
-    <include name="commons-compress/commons-compress-1.8.1.jar" />
   </fileset>
 
   <path id="classpath-no-src">
@@ -104,7 +106,6 @@
   </path>
 
   <target name="clean" description="remove all generated files">
-    <ant inheritAll="false" antfile="third-party/java/jacoco-0.6.4/build.xml" target="clean" />
     <delete dir="${build.dir}" />
   </target>
 
@@ -212,7 +213,6 @@
   <target name="compile"
           depends="compile-testrunner, compile-abi-processor, javacc, dx"
           description="compile Java source code">
-    <ant inheritAll="false" antfile="third-party/java/jacoco-0.6.4/build.xml" target="build" />
     <mkdir dir="${classes.dir}" />
 
     <!--

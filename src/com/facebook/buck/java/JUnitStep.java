@@ -65,7 +65,7 @@ public class JUnitStep extends ShellStep {
    *  JaCoco is enabled for the code-coverage analysis.
    */
   public static final String PATH_TO_JACOCO_JARS = System.getProperty("buck.path_to_jacoco_jars",
-      "third-party/java/jacoco-0.6.4/out");
+      "third-party/java/jacoco");
 
   public static final String PATH_TO_JACOCO_AGENT_JAR = String.format(
       "%s/%s",

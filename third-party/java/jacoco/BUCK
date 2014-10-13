@@ -1,0 +1,25 @@
+java_library(
+  name = 'jacoco',
+  exported_deps = [
+    ':core',
+    ':report',
+  ],
+  deps = [
+    '//third-party/java/asm:asm',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/java:coverage',
+  ],
+)
+
+prebuilt_jar(
+  name = 'core',
+  binary_jar = 'org.jacoco.core-0.7.2.201409121644.jar',
+  source_jar = 'org.jacoco.core-0.7.2.201409121644-sources.jar',
+)
+
+prebuilt_jar(
+  name = 'report',
+  binary_jar = 'org.jacoco.report-0.7.2.201409121644.jar',
+  source_jar = 'org.jacoco.report-0.7.2.201409121644-sources.jar',
+)

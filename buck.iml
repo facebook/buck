@@ -50,6 +50,7 @@
     <orderEntry type="library" name="eclipse" level="project" />
     <orderEntry type="library" name="commons-compress-1.8.1" level="project" />
     <orderEntry type="library" name="infer-annotations" level="project" />
+    <orderEntry type="library" name="jacoco" level="project" />
   </component>
 </module>
 

@@ -19,15 +19,22 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class LicenseCheckTest {
+
+  // Files where we're okay with the license not being the normal Facebook apache one.
+  private static final Set<String> NON_APACHE_LICENSE_WHITELIST = ImmutableSet.of(
+      // Because it's not originally our code.
+      "com/facebook/buck/java/ReportGenerator.java");
 
   @Test
   public void ensureAllSrcFilesHaveTheApacheLicense() throws IOException {
@@ -54,6 +61,7 @@ public class LicenseCheckTest {
       if (!"java".equals(Files.getFileExtension(relativePath)) ||
           // Ignore dangling symlinks.
           !file.exists() ||
+          NON_APACHE_LICENSE_WHITELIST.contains(relativePath) ||
           relativePath.startsWith("com/facebook/buck/cli/quickstart/android/")) {
         return;
       }
