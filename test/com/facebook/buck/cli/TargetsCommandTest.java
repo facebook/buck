@@ -33,7 +33,6 @@ import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -107,8 +106,8 @@ public class TargetsCommandTest {
         JavaLibraryDescription.TYPE,
         buildTarget,
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
     buildRule.setOutputFile(outputFile);
 
     buildRules.put(buildTarget.getFullyQualifiedName(), buildRule);

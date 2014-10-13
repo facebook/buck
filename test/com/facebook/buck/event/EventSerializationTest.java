@@ -22,7 +22,6 @@ import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.TargetGraph;
 import com.facebook.buck.rules.BuildEvent;
@@ -201,8 +200,8 @@ public class EventSerializationTest {
         JavaLibraryDescription.TYPE,
         buildTarget,
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
     result.setRuleKey(new RuleKey("aaaa"));
     return result;
   }

@@ -16,7 +16,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
@@ -38,12 +37,10 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
       ImmutableSet<Label> labels,
       BuildTarget target,
       SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns) {
+      ImmutableSortedSet<BuildRule> deps) {
     this(
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(deps)
-            .setVisibility(visibilityPatterns)
             .setType(type)
             .build(),
         resolver,

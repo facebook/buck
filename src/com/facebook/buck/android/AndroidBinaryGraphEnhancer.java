@@ -25,7 +25,6 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -320,7 +319,6 @@ public class AndroidBinaryGraphEnhancer {
           createBuildTargetWithFlavor(flavor),
           /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* extraDeps */ ImmutableSortedSet.<BuildRule>of(),
-          BuildTargetPattern.PUBLIC,
           buildRuleParams.getProjectFilesystem(),
           buildRuleParams.getRuleKeyBuilderFactory(),
           AndroidBuildConfigDescription.TYPE);

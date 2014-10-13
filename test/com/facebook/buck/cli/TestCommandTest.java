@@ -36,7 +36,6 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -357,24 +356,24 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     FakeTestRule rule2 = new FakeTestRule(
         JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("android")),
         BuildTargetFactory.newInstance("//:teh"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(rule1),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of(rule1)
+    );
 
     FakeTestRule rule3 = new FakeTestRule(
         JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(rule2),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of(rule2)
+    );
 
     Iterable<FakeTestRule> rules = Lists.newArrayList(rule1, rule2, rule3);
     ActionGraph graph = createDependencyGraphFromBuildRules(rules);
@@ -395,24 +394,24 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     TestRule rule2 = new FakeTestRule(
         JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("android")),
         BuildTargetFactory.newInstance("//:teh"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     TestRule rule3 = new FakeTestRule(
         JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2, rule3);
 
@@ -430,16 +429,16 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     TestRule rule2 = new FakeTestRule(
         JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
@@ -457,16 +456,16 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     TestRule rule2 = new FakeTestRule(
         JavaTestDescription.TYPE,
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
@@ -483,8 +482,8 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("a"), new Label("b"), new Label("c")),
         BuildTargetFactory.newInstance("//:for"),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     List<TestRule> testRules = ImmutableList.of(rule);
 
@@ -501,8 +500,8 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("a"), new Label("b"), new Label("c")),
         BuildTargetFactory.newInstance("//:for"),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     List<TestRule> testRules = ImmutableList.of(rule);
 
@@ -543,8 +542,8 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
@@ -576,8 +575,8 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
@@ -608,8 +607,8 @@ public class TestCommandTest {
         ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of()) {
+        ImmutableSortedSet.<BuildRule>of()
+    ) {
 
       @Override
       public boolean hasTestResultFiles(ExecutionContext context) {
@@ -685,8 +684,8 @@ public class TestCommandTest {
         /* labels */ ImmutableSet.of(new Label(excludedLabel)),
         BuildTargetFactory.newInstance("//example:test"),
         new SourcePathResolver(new BuildRuleResolver()),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibility */ ImmutableSet.<BuildTargetPattern>of());
+        /* deps */ ImmutableSortedSet.<BuildRule>of()
+        /* visibility */);
     Iterable<TestRule> filtered =
         TestCommand.filterTestRules(options, ImmutableSet.<TestRule>of(rule));
 

@@ -17,12 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -37,7 +35,6 @@ public class BuildRuleParams implements BuildableParams {
   private final ImmutableSortedSet<BuildRule> declaredDeps;
   private final ImmutableSortedSet<BuildRule> extraDeps;
   private final ImmutableSortedSet<BuildRule> totalDeps;
-  private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
   private final ProjectFilesystem projectFilesystem;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final BuildRuleType buildRuleType;
@@ -46,14 +43,12 @@ public class BuildRuleParams implements BuildableParams {
       BuildTarget buildTarget,
       ImmutableSortedSet<BuildRule> declaredDeps,
       ImmutableSortedSet<BuildRule> extraDeps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleType buildRuleType) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.declaredDeps = Preconditions.checkNotNull(declaredDeps);
     this.extraDeps = Preconditions.checkNotNull(extraDeps);
-    this.visibilityPatterns = Preconditions.checkNotNull(visibilityPatterns);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
     this.buildRuleType = Preconditions.checkNotNull(buildRuleType);
@@ -83,7 +78,6 @@ public class BuildRuleParams implements BuildableParams {
         buildTarget,
         declaredDeps,
         extraDeps,
-        visibilityPatterns,
         projectFilesystem,
         ruleKeyBuilderFactory,
         buildRuleType);
@@ -105,10 +99,6 @@ public class BuildRuleParams implements BuildableParams {
 
   public ImmutableSortedSet<BuildRule> getExtraDeps() {
     return extraDeps;
-  }
-
-  public ImmutableSet<BuildTargetPattern> getVisibilityPatterns() {
-    return visibilityPatterns;
   }
 
   public Function<Path, Path> getPathAbsolutifier() {

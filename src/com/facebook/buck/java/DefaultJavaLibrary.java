@@ -25,7 +25,6 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
@@ -128,7 +127,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       declaredClasspathEntriesSupplier;
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final Optional<Path> resourcesRoot;
-  private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
 
   // TODO(jacko): This really should be final, but we need to refactor how we get the
   // AndroidPlatformTarget first before it can be.
@@ -204,7 +202,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.additionalClasspathEntries = Preconditions.checkNotNull(additionalClasspathEntries);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.resourcesRoot = Preconditions.checkNotNull(resourcesRoot);
-    this.visibilityPatterns = Preconditions.checkNotNull(params.getVisibilityPatterns());
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
@@ -713,9 +710,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         Set<String> remainingImports = Sets.newHashSet(failedImports);
 
         for (JavaLibrary transitiveNotDeclaredDep : sortedTransitiveNotDeclaredDeps) {
-          boolean ruleCanSeeDep = transitiveNotDeclaredDep.isVisibleTo(DefaultJavaLibrary.this);
-          if (ruleCanSeeDep &&
-              isMissingBuildRule(filesystem,
+          if (isMissingBuildRule(filesystem,
                   transitiveNotDeclaredDep,
                   remainingImports,
                   jarResolver)) {
@@ -813,14 +808,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     if (proguardConfig.isPresent()) {
       collector.addProguardConfig(getBuildTarget(), proguardConfig.get());
     }
-  }
-
-  @Override
-  public boolean isVisibleTo(JavaLibrary other) {
-    return BuildTargets.isVisibleTo(
-        getBuildTarget(),
-        visibilityPatterns,
-        other.getBuildTarget());
   }
 
 }

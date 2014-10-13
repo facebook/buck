@@ -32,7 +32,6 @@ import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
@@ -142,8 +141,8 @@ public class ChromeTraceBuildListenerTest {
         new BuildRuleType("fakeRule"),
         target,
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
     RuleKey ruleKey = new RuleKey("abc123");
     rule.setRuleKey(ruleKey);
     FakeStep step = new FakeStep("fakeStep", "I'm a Fake Step!", 0);

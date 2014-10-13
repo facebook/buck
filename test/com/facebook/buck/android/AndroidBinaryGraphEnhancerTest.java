@@ -34,7 +34,6 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -97,7 +96,6 @@ public class AndroidBinaryGraphEnhancerTest {
         apkTarget,
         originalDeps,
         originalDeps,
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
         new FakeProjectFilesystem(),
         ruleKeyBuilderFactory,
         AndroidBinaryDescription.TYPE);

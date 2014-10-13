@@ -20,8 +20,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AnnotationProcessingData;
@@ -47,7 +45,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -66,7 +63,6 @@ public class PrebuiltJar extends AbstractBuildRule
   private final Optional<SourcePath> sourceJar;
   private final Optional<SourcePath> gwtJar;
   private final Optional<String> javadocUrl;
-  private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       transitiveClasspathEntriesSupplier;
 
@@ -87,7 +83,6 @@ public class PrebuiltJar extends AbstractBuildRule
     this.sourceJar = Preconditions.checkNotNull(sourceJar);
     this.gwtJar = Preconditions.checkNotNull(gwtJar);
     this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
-    this.visibilityPatterns = Preconditions.checkNotNull(params.getVisibilityPatterns());
 
     transitiveClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
@@ -274,14 +269,6 @@ public class PrebuiltJar extends AbstractBuildRule
         .setReflectively("sourceJar", sourceJar)
         .setReflectively("gwtJar", gwtJar)
         .set("javadocUrl", javadocUrl);
-  }
-
-  @Override
-  public boolean isVisibleTo(JavaLibrary other) {
-    return BuildTargets.isVisibleTo(
-        getBuildTarget(),
-        visibilityPatterns,
-        other.getBuildTarget());
   }
 
 }

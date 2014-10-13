@@ -16,11 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}.
@@ -53,7 +50,6 @@ public class TargetNodeToBuildRuleTransformer {
         targetNode.getBuildTarget(),
         ruleResolver.getAllRules(targetNode.getDeclaredDeps()),
         ruleResolver.getAllRules(targetNode.getExtraDeps()),
-        getVisibilityPatterns(targetNode),
         ruleFactoryParams.getProjectFilesystem(),
         ruleFactoryParams.getRuleKeyBuilderFactory(),
         description.getBuildRuleType());
@@ -71,17 +67,5 @@ public class TargetNodeToBuildRuleTransformer {
     }
 
     return buildRule;
-  }
-
-  private static ImmutableSet<BuildTargetPattern> getVisibilityPatterns(TargetNode<?> targetNode)
-      throws NoSuchBuildTargetException {
-    ImmutableSet.Builder<BuildTargetPattern> builder = ImmutableSet.builder();
-    BuildRuleFactoryParams params = targetNode.getRuleFactoryParams();
-    for (String visibility : params.getOptionalListAttribute("visibility")) {
-      builder.add(params.buildTargetPatternParser.parse(
-              visibility,
-              ParseContext.forVisibilityArgument()));
-    }
-    return builder.build();
   }
 }

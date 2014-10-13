@@ -18,13 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Paths;
@@ -34,7 +32,6 @@ public class FakeBuildRuleParamsBuilder {
   private final BuildTarget buildTarget;
   private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
   private ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.of();
-  private ImmutableSet<BuildTargetPattern> visibilityPatterns = BuildTargetPattern.PUBLIC;
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private FileHashCache fileHashCache =
       new DefaultFileHashCache(new ProjectFilesystem(Paths.get(".")));
@@ -59,11 +56,6 @@ public class FakeBuildRuleParamsBuilder {
     return this;
   }
 
-  public FakeBuildRuleParamsBuilder setVisibility(ImmutableSet<BuildTargetPattern> patterns) {
-    this.visibilityPatterns = patterns;
-    return this;
-  }
-
   public FakeBuildRuleParamsBuilder setProjectFilesystem(ProjectFilesystem filesystem) {
     this.filesystem = filesystem;
     return this;
@@ -84,7 +76,6 @@ public class FakeBuildRuleParamsBuilder {
         buildTarget,
         deps,
         extraDeps,
-        visibilityPatterns,
         filesystem,
         new FakeRuleKeyBuilderFactory(fileHashCache),
         buildRuleType);

@@ -25,7 +25,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.TargetGraph;
 import com.facebook.buck.rules.BuildEvent;
@@ -93,14 +92,14 @@ public class SuperConsoleEventBusListenerTest {
         GenruleDescription.TYPE,
         fakeTarget,
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
     FakeBuildRule cachedRule = new FakeBuildRule(
         GenruleDescription.TYPE,
         cachedTarget,
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSortedSet.<BuildRule>of()
+    );
 
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(

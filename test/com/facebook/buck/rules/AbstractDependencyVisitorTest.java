@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -137,13 +136,12 @@ public class AbstractDependencyVisitorTest {
   }
 
   private FakeJavaLibrary createRule(String name, SourcePathResolver resolver, BuildRule... deps) {
-    ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     FakeJavaLibrary rule = new FakeJavaLibrary(
         JavaLibraryDescription.TYPE,
         BuildTarget.builder(BUILD_RULE_BASE_NAME, name).build(),
         resolver,
-        ImmutableSortedSet.copyOf(deps),
-        visibilityPatterns);
+        ImmutableSortedSet.copyOf(deps)
+    );
     return rule;
   }
 }

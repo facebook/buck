@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -97,7 +96,6 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         flavoredBuildTarget,
         /* declaredDeps */ ImmutableSortedSet.of(buildRule),
         /* inferredDeps */ ImmutableSortedSet.<BuildRule>of(),
-        BuildTargetPattern.PUBLIC,
         projectFilesystem,
         ruleKeyBuilderFactory,
         BuildRuleType.GWT_MODULE);

@@ -18,11 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -43,13 +41,11 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
       BuildRuleType type,
       BuildTarget target,
       SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns) {
+      ImmutableSortedSet<BuildRule> deps) {
     this(
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(deps)
             .setType(type)
-            .setVisibility(visibilityPatterns)
             .build(), resolver);
   }
 

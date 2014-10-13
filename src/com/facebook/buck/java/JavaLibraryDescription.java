@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -255,7 +254,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             gwtModuleBuildTarget,
             deps,
             /* inferredDeps */ ImmutableSortedSet.<BuildRule>of(),
-            BuildTargetPattern.PUBLIC,
             projectFilesystem,
             ruleKeyBuilderFactory,
             BuildRuleType.GWT_MODULE),
