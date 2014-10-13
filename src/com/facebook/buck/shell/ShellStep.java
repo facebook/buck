@@ -159,7 +159,7 @@ public abstract class ShellStep implements Step {
   protected void addOptions(
       ExecutionContext context,
       ImmutableSet.Builder<Option> options) {
-    if (shouldFlushStdOutErrAsProgressIsMade()) {
+    if (shouldFlushStdOutErrAsProgressIsMade(context.getVerbosity())) {
       options.add(Option.PRINT_STD_OUT);
       options.add(Option.PRINT_STD_ERR);
     }
@@ -284,7 +284,8 @@ public abstract class ShellStep implements Step {
    * To disable this behavior and print to stdout and stderr directly, this method should be
    * overridden to return {@code true}.
    */
-  protected boolean shouldFlushStdOutErrAsProgressIsMade() {
+  @SuppressWarnings("unused")
+  protected boolean shouldFlushStdOutErrAsProgressIsMade(Verbosity verbosity) {
     return false;
   }
 }

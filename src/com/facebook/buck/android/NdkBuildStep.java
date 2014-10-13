@@ -105,8 +105,8 @@ public class NdkBuildStep extends ShellStep {
   // The ndk-build command delegates to `make` to run a lot of subcommands, so print them as they
   // happen.
   @Override
-  protected boolean shouldFlushStdOutErrAsProgressIsMade() {
-    return true;
+  protected boolean shouldFlushStdOutErrAsProgressIsMade(Verbosity verbosity) {
+    return verbosity.shouldPrintCommand();
   }
 
 }

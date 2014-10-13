@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -98,7 +99,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
       // printing it as two individual strings. This preserves the expected behavior where output
       // written to stdout and stderr may be interleaved when displayed in a terminal.
       @Override
-      protected boolean shouldFlushStdOutErrAsProgressIsMade() {
+      protected boolean shouldFlushStdOutErrAsProgressIsMade(Verbosity verbosity) {
         return true;
       }
     };
