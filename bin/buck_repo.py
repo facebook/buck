@@ -141,7 +141,7 @@ class BuckRepo:
     def launch_buck(self, build_id):
         with Tracing('BuckRepo.launch_buck'):
             self.kill_autobuild()
-            if 'clean' in sys.argv or os.environ.get('NO_BUCKD'):
+            if 'clean' in sys.argv:
                 self.kill_buckd()
 
             use_buckd = not os.environ.get('NO_BUCKD')
@@ -167,7 +167,7 @@ class BuckRepo:
             env = os.environ.copy()
             env['BUCK_BUILD_ID'] = build_id
 
-            if self._is_buckd_running() and os.path.exists(self._buck_client_file):
+            if use_buckd and self._is_buckd_running() and os.path.exists(self._buck_client_file):
                 print("Using buckd.", file=sys.stderr)
                 buckd_port = self._buck_project.get_buckd_port()
                 if not buckd_port or not buckd_port.isdigit():
