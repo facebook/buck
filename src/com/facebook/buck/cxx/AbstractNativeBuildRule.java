@@ -34,6 +34,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -55,17 +56,17 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
 
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> headers;
-  private final ImmutableMap<SourcePath, String> perSrcFileFlags;
+  private final ImmutableSortedMap<SourcePath, String> perSrcFileFlags;
 
   public AbstractNativeBuildRule(
       BuildRuleParams params,
       SourcePathResolver resolver,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> headers,
-      ImmutableMap<SourcePath, String> perSrcFileFlags) {
+      ImmutableSortedMap<SourcePath, String> perSrcFileFlags) {
     super(params, resolver);
-    this.headers = Preconditions.checkNotNull(headers);
     this.srcs = Preconditions.checkNotNull(srcs);
+    this.headers = Preconditions.checkNotNull(headers);
     this.perSrcFileFlags = Preconditions.checkNotNull(perSrcFileFlags);
   }
 
@@ -156,9 +157,12 @@ public abstract class AbstractNativeBuildRule extends AbstractBuildRule {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
+    return super.appendToRuleKey(builder)
         .set("compiler", getCompiler())
-        .setSourcePaths("headers", headers);
+        .setSourcePaths("srcs", srcs)
+        .setSourcePaths("headers", headers)
+        .setSourcePaths("perSrcFileFlagsKeys", perSrcFileFlags.keySet())
+        .set("perSrcFileFlagsValues", ImmutableList.copyOf(perSrcFileFlags.values()));
   }
 
   @Override
