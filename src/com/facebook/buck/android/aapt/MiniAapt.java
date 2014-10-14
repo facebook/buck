@@ -391,11 +391,16 @@ public class MiniAapt implements Step {
         Preconditions.checkState(slashPosition != -1);
 
         String rawRType = resourceName.substring(1, slashPosition);
+        String name = resourceName.substring(slashPosition + 1);
+
+        if (name.startsWith("android:")) {
+          continue;
+        }
         if (!RESOURCE_TYPES.containsKey(rawRType)) {
           throw new ResourceParseException("Invalid reference '%s' in '%s'", resourceName, xmlFile);
         }
         RType rType = RESOURCE_TYPES.get(rawRType);
-        String name = resourceName.substring(slashPosition + 1);
+
 
         references.add(new FakeRDotTxtEntry(IdType.INT, rType, sanitizeName(name)));
       }
