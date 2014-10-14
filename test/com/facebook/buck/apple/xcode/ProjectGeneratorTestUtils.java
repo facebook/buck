@@ -93,6 +93,15 @@ public final class ProjectGeneratorTestUtils {
       ImmutableSortedSet<BuildRule> deps,
       Description<T> description,
       Function<T, T> overrides) {
+    T arg = createDescriptionArgWithDefaults(description);
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(target)
+        .setDeps(deps)
+        .setType(description.getBuildRuleType())
+        .build();
+    return description.createBuildRule(buildRuleParams, resolver, overrides.apply(arg));
+  }
+
+  public static <T> T createDescriptionArgWithDefaults(Description<T> description) {
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
       Object value;
@@ -126,15 +135,7 @@ public final class ProjectGeneratorTestUtils {
         throw new RuntimeException(e);
       }
     }
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(target)
-        .setDeps(deps)
-        .setType(description.getBuildRuleType())
-        .build();
-
-    return description.createBuildRule(
-        buildRuleParams,
-        resolver,
-        overrides.apply(arg));
+    return arg;
   }
 
   public static PartialGraph createPartialGraphFromBuildRuleResolver(BuildRuleResolver resolver) {

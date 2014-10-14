@@ -20,6 +20,7 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasS
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createAppleBundleBuildRule;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRuleResolver;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -190,7 +191,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
         ImmutableMap.of(
             "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
@@ -211,10 +212,6 @@ public class ProjectGeneratorTest {
                         AppleSource.ofSourcePathWithFlags(
                             new Pair<SourcePath, String>(
                                 new TestSourcePath("blech.m"), "-fobjc-arc")))))));
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -254,7 +251,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
         ImmutableMap.of(
             "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
@@ -276,10 +273,6 @@ public class ProjectGeneratorTest {
                         AppleSource.ofSourcePathWithFlags(
                             new Pair<SourcePath, String>(
                                 new TestSourcePath("blech.h"), "private")))))));
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -357,8 +350,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
         ImmutableMap.of(
             "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
@@ -371,10 +363,6 @@ public class ProjectGeneratorTest {
                         AppleSource.ofSourcePathWithFlags(
                             new Pair<SourcePath, String>(
                                 new TestSourcePath("blech.h"), "private")))))));
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.of(true);
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -391,7 +379,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
         ImmutableMap.of(
             "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
@@ -409,10 +397,6 @@ public class ProjectGeneratorTest {
                     "HeaderGroup2",
                     ImmutableList.of(
                         AppleSource.ofSourcePath(new TestSourcePath("baz.h")))))));
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.of(true);
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -501,7 +485,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
         ImmutableMap.of(
             "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
@@ -511,10 +495,6 @@ public class ProjectGeneratorTest {
                 new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
             AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
             AppleSource.ofSourcePath(new TestSourcePath("bar.m"))));
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -569,16 +549,12 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
     Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.<String, String>of());
     arg.configs = Optional.of(
         ImmutableMap.of("Debug", ImmutableList.of(argConfig, argSettings, argConfig, argSettings)));
-    arg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.of("MyHeaderPathPrefix");
     arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
@@ -621,18 +597,13 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(buildTarget)
             .setType(AppleLibraryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
     Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.<String, String>of());
     arg.configs = Optional.of(
         ImmutableMap.of("Debug", ImmutableList.of(argConfig, argSettings, argConfig, argSettings)));
-    arg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.of("MyHeaderPathPrefix");
-    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -670,7 +641,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
     Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.of(
@@ -679,12 +650,6 @@ public class ProjectGeneratorTest {
             ));
     arg.configs = Optional.of(
         ImmutableMap.of("Debug", ImmutableList.of(argConfig, argSettings, argConfig, argSettings)));
-    arg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -740,15 +705,11 @@ public class ProjectGeneratorTest {
               .setType(AppleLibraryDescription.TYPE)
               .build();
       AppleNativeTargetDescriptionArg arg =
-          appleLibraryDescription.createUnpopulatedConstructorArg();
+          createDescriptionArgWithDefaults(appleLibraryDescription);
       arg.configs = Optional.of(configs);
       arg.srcs =
           Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m"))));
       arg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework"));
-      arg.deps = Optional.absent();
-      arg.gid = Optional.absent();
-      arg.headerPathPrefix = Optional.absent();
-      arg.useBuckHeaderMaps = Optional.absent();
       libraryRule = appleLibraryDescription.createBuildRule(params, resolver, arg);
       resolver.addToIndex(libraryRule);
     }
@@ -763,15 +724,11 @@ public class ProjectGeneratorTest {
               .setType(AppleLibraryDescription.TYPE)
               .build();
       AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          appleLibraryDescription.createUnpopulatedConstructorArg();
+          createDescriptionArgWithDefaults(appleLibraryDescription);
       dynamicLibraryArg.configs = Optional.of(configs);
       dynamicLibraryArg.srcs =
           Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m"))));
       dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework"));
-      dynamicLibraryArg.deps = Optional.absent();
-      dynamicLibraryArg.gid = Optional.absent();
-      dynamicLibraryArg.headerPathPrefix = Optional.absent();
-      dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
           resolver,
@@ -875,15 +832,11 @@ public class ProjectGeneratorTest {
               .setType(AppleLibraryDescription.TYPE)
               .build();
       AppleNativeTargetDescriptionArg arg =
-          appleLibraryDescription.createUnpopulatedConstructorArg();
+          createDescriptionArgWithDefaults(appleLibraryDescription);
       arg.configs = Optional.of(configs);
       arg.srcs =
           Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m"))));
       arg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework"));
-      arg.deps = Optional.absent();
-      arg.gid = Optional.absent();
-      arg.headerPathPrefix = Optional.absent();
-      arg.useBuckHeaderMaps = Optional.absent();
       libraryRule = appleLibraryDescription.createBuildRule(params, resolver, arg);
       resolver.addToIndex(libraryRule);
     }
@@ -898,15 +851,11 @@ public class ProjectGeneratorTest {
               .setType(AppleLibraryDescription.TYPE)
               .build();
       AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          appleLibraryDescription.createUnpopulatedConstructorArg();
+          createDescriptionArgWithDefaults(appleLibraryDescription);
       dynamicLibraryArg.configs = Optional.of(configs);
       dynamicLibraryArg.srcs =
           Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m"))));
       dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework"));
-      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(libraryRule.getBuildTarget()));
-      dynamicLibraryArg.gid = Optional.absent();
-      dynamicLibraryArg.headerPathPrefix = Optional.absent();
-      dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
           resolver,
@@ -1002,15 +951,11 @@ public class ProjectGeneratorTest {
               .setType(AppleLibraryDescription.TYPE)
               .build();
       AppleNativeTargetDescriptionArg arg =
-          appleLibraryDescription.createUnpopulatedConstructorArg();
+          createDescriptionArgWithDefaults(appleLibraryDescription);
       arg.configs = Optional.of(configs);
       arg.srcs =
           Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m"))));
       arg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework"));
-      arg.deps = Optional.absent();
-      arg.gid = Optional.absent();
-      arg.headerPathPrefix = Optional.absent();
-      arg.useBuckHeaderMaps = Optional.absent();
       libraryDepRule =
           appleLibraryDescription.createBuildRule(params, resolver, arg);
       resolver.addToIndex(libraryDepRule);
@@ -1023,15 +968,11 @@ public class ProjectGeneratorTest {
               .setType(AppleLibraryDescription.TYPE)
               .build();
       AppleNativeTargetDescriptionArg arg =
-          appleLibraryDescription.createUnpopulatedConstructorArg();
+          createDescriptionArgWithDefaults(appleLibraryDescription);
       arg.configs = Optional.of(configs);
       arg.srcs =
           Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m"))));
       arg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework"));
-      arg.deps = Optional.absent();
-      arg.gid = Optional.absent();
-      arg.headerPathPrefix = Optional.absent();
-      arg.useBuckHeaderMaps = Optional.absent();
       libraryRule = appleLibraryDescription.createBuildRule(params, resolver, arg);
       resolver.addToIndex(libraryRule);
     }
@@ -1046,15 +987,11 @@ public class ProjectGeneratorTest {
               .setType(AppleLibraryDescription.TYPE)
               .build();
       AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          appleLibraryDescription.createUnpopulatedConstructorArg();
+          createDescriptionArgWithDefaults(appleLibraryDescription);
       dynamicLibraryArg.configs = Optional.of(configs);
       dynamicLibraryArg.srcs =
           Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m"))));
       dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework"));
-      dynamicLibraryArg.deps = Optional.absent();
-      dynamicLibraryArg.gid = Optional.absent();
-      dynamicLibraryArg.headerPathPrefix = Optional.absent();
-      dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
           resolver,
@@ -1357,7 +1294,7 @@ public class ProjectGeneratorTest {
         .setDeps(ImmutableSortedSet.of(genrule))
         .setType(AppleLibraryDescription.TYPE)
         .build();
-    AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
         ImmutableMap.of(
             "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
@@ -1366,11 +1303,6 @@ public class ProjectGeneratorTest {
             AppleSource.ofSourcePathWithFlags(
                 new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
             AppleSource.ofSourcePath(new TestSourcePath("foo.h"))));
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = appleLibraryDescription.createBuildRule(libParams, buildRuleResolver, arg);
 
     buildRuleResolver.addToIndex(rule);
@@ -1499,18 +1431,12 @@ public class ProjectGeneratorTest {
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg dynamicLibraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
+      createDescriptionArgWithDefaults(appleLibraryDescription);
     Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
     Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
         ImmutableMap.<String, String>of());
     dynamicLibraryArg.configs = Optional.of(
         ImmutableMap.of("Debug", ImmutableList.of(argConfig, argSettings, argConfig, argSettings)));
-    dynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    dynamicLibraryArg.deps = Optional.absent();
-    dynamicLibraryArg.gid = Optional.absent();
-    dynamicLibraryArg.headerPathPrefix = Optional.absent();
-    dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
     BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
         dynamicLibraryParams, resolver, dynamicLibraryArg);
     resolver.addToIndex(dynamicLibraryDep);
@@ -1598,7 +1524,7 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
         ImmutableMap.of(
             "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
@@ -1608,11 +1534,6 @@ public class ProjectGeneratorTest {
                 new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
             AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
             AppleSource.ofSourcePath(new TestSourcePath("bar.m"))));
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
     BuildRule rule = appleLibraryDescription.createBuildRule(params, resolver, arg);
     resolver.addToIndex(rule);
 
@@ -1695,15 +1616,7 @@ public class ProjectGeneratorTest {
               .setType(AppleLibraryDescription.TYPE)
               .build();
       AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          appleLibraryDescription.createUnpopulatedConstructorArg();
-      dynamicLibraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-      dynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-      dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
-      dynamicLibraryArg.gid = Optional.absent();
-      dynamicLibraryArg.headerPathPrefix = Optional.absent();
-      dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
+          createDescriptionArgWithDefaults(appleLibraryDescription);
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
           resolver,
@@ -1751,15 +1664,7 @@ public class ProjectGeneratorTest {
               .setType(AppleLibraryDescription.TYPE)
               .build();
       AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          appleLibraryDescription.createUnpopulatedConstructorArg();
-      dynamicLibraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-      dynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-      dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
-      dynamicLibraryArg.gid = Optional.absent();
-      dynamicLibraryArg.headerPathPrefix = Optional.absent();
-      dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
+          createDescriptionArgWithDefaults(appleLibraryDescription);
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
           resolver,
@@ -1806,15 +1711,7 @@ public class ProjectGeneratorTest {
               .setType(AppleLibraryDescription.TYPE)
               .build();
       AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          appleLibraryDescription.createUnpopulatedConstructorArg();
-      dynamicLibraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-      dynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-      dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-      dynamicLibraryArg.deps = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
-      dynamicLibraryArg.gid = Optional.absent();
-      dynamicLibraryArg.headerPathPrefix = Optional.absent();
-      dynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
+          createDescriptionArgWithDefaults(appleLibraryDescription);
       BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
           dynamicLibraryParams,
           resolver,
@@ -1922,17 +1819,7 @@ public class ProjectGeneratorTest {
             .build();
 
     AppleNativeTargetDescriptionArg dependentDynamicLibraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    dependentDynamicLibraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    dependentDynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    dependentDynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    dependentDynamicLibraryArg.deps =
-        Optional.of(ImmutableSortedSet.of(dependentStaticLibrary.getBuildTarget()));
-    dependentDynamicLibraryArg.gid = Optional.absent();
-    dependentDynamicLibraryArg.headerPathPrefix = Optional.absent();
-    dependentDynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
-
+      createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule dependentDynamicLibrary = appleLibraryDescription.createBuildRule(
         dependentDynamicLibraryParams,
         resolver,
@@ -1950,16 +1837,7 @@ public class ProjectGeneratorTest {
             .build();
 
     AppleNativeTargetDescriptionArg libraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentDynamicLibrary.getBuildTarget()));
-    libraryArg.gid = Optional.absent();
-    libraryArg.headerPathPrefix = Optional.absent();
-    libraryArg.useBuckHeaderMaps = Optional.absent();
-
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule library = appleLibraryDescription.createBuildRule(
         libraryParams,
         resolver,
@@ -2010,17 +1888,7 @@ public class ProjectGeneratorTest {
             .build();
 
     AppleNativeTargetDescriptionArg dependentDynamicLibraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    dependentDynamicLibraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    dependentDynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    dependentDynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    dependentDynamicLibraryArg.deps =
-        Optional.of(ImmutableSortedSet.of(dependentStaticLibrary.getBuildTarget()));
-    dependentDynamicLibraryArg.gid = Optional.absent();
-    dependentDynamicLibraryArg.headerPathPrefix = Optional.absent();
-    dependentDynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
-
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule dependentDynamicLibrary = appleLibraryDescription.createBuildRule(
         dependentDynamicLibraryParams,
         resolver,
@@ -2046,16 +1914,7 @@ public class ProjectGeneratorTest {
             .build();
 
     AppleNativeTargetDescriptionArg libraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentFramework.getBuildTarget()));
-    libraryArg.gid = Optional.absent();
-    libraryArg.headerPathPrefix = Optional.absent();
-    libraryArg.useBuckHeaderMaps = Optional.absent();
-
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule library = appleLibraryDescription.createBuildRule(
         libraryParams,
         resolver,
@@ -2112,19 +1971,8 @@ public class ProjectGeneratorTest {
             .setDeps(ImmutableSortedSet.of(dependentStaticFramework))
             .setType(AppleLibraryDescription.TYPE)
             .build();
-
     AppleNativeTargetDescriptionArg dependentDynamicLibraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    dependentDynamicLibraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    dependentDynamicLibraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    dependentDynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    dependentDynamicLibraryArg.deps =
-        Optional.of(ImmutableSortedSet.of(dependentStaticFramework.getBuildTarget()));
-    dependentDynamicLibraryArg.gid = Optional.absent();
-    dependentDynamicLibraryArg.headerPathPrefix = Optional.absent();
-    dependentDynamicLibraryArg.useBuckHeaderMaps = Optional.absent();
-
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule dependentDynamicLibrary = appleLibraryDescription.createBuildRule(
         dependentDynamicLibraryParams,
         resolver,
@@ -2150,16 +1998,7 @@ public class ProjectGeneratorTest {
             .build();
 
     AppleNativeTargetDescriptionArg libraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.of(ImmutableSortedSet.of(dependentFramework.getBuildTarget()));
-    libraryArg.gid = Optional.absent();
-    libraryArg.headerPathPrefix = Optional.absent();
-    libraryArg.useBuckHeaderMaps = Optional.absent();
-
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule library = appleLibraryDescription.createBuildRule(
         libraryParams,
         resolver,
@@ -2203,16 +2042,7 @@ public class ProjectGeneratorTest {
             .build();
 
     AppleNativeTargetDescriptionArg libraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    libraryArg.gid = Optional.absent();
-    libraryArg.headerPathPrefix = Optional.absent();
-    libraryArg.useBuckHeaderMaps = Optional.absent();
-
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule library = appleLibraryDescription.createBuildRule(
         libraryParams,
         resolver,
@@ -2577,16 +2407,8 @@ public class ProjectGeneratorTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
             .build();
-    AppleNativeTargetDescriptionArg arg = appleLibraryDescription.createUnpopulatedConstructorArg();
-    arg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    arg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    arg.deps = Optional.absent();
+    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.gid = Optional.of("D00D64738");
-    arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
-
     BuildRule rule = appleLibraryDescription.createBuildRule(params, resolver, arg);
     resolver.addToIndex(rule);
 
@@ -2612,16 +2434,8 @@ public class ProjectGeneratorTest {
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg fooArg =
-      appleLibraryDescription.createUnpopulatedConstructorArg();
-    fooArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    fooArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    fooArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    fooArg.deps = Optional.absent();
+      createDescriptionArgWithDefaults(appleLibraryDescription);
     fooArg.gid = Optional.of("E66DC04E36F2D8BE00000000");
-    fooArg.headerPathPrefix = Optional.absent();
-    fooArg.useBuckHeaderMaps = Optional.absent();
-
     BuildRule fooRule =
       appleLibraryDescription.createBuildRule(fooParams, resolver, fooArg);
     resolver.addToIndex(fooRule);
@@ -2631,16 +2445,7 @@ public class ProjectGeneratorTest {
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg barArg =
-      appleLibraryDescription.createUnpopulatedConstructorArg();
-    barArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    barArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    barArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    barArg.deps = Optional.absent();
-    barArg.gid = Optional.absent();
-    barArg.headerPathPrefix = Optional.absent();
-    barArg.useBuckHeaderMaps = Optional.absent();
-
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule barRule =
       appleLibraryDescription.createBuildRule(barParams, resolver, barArg);
     resolver.addToIndex(barRule);

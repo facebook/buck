@@ -16,18 +16,15 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -42,15 +39,7 @@ public class AppleBundleTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     AppleNativeTargetDescriptionArg libraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    libraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.gid = Optional.absent();
-    libraryArg.headerPathPrefix = Optional.absent();
-    libraryArg.useBuckHeaderMaps = Optional.absent();
-
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build()).build();
     AppleLibrary library = resolver.addToIndex(
@@ -77,16 +66,7 @@ public class AppleBundleTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     AppleNativeTargetDescriptionArg libraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    libraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.absent();
-    libraryArg.gid = Optional.absent();
-    libraryArg.headerPathPrefix = Optional.absent();
-    libraryArg.useBuckHeaderMaps = Optional.absent();
-
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build()).build();
     AppleLibrary library = resolver.addToIndex(

@@ -18,6 +18,7 @@ package com.facebook.buck.apple.xcode;
 
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createAppleBundleBuildRule;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -41,9 +42,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.HumanReadableException;
@@ -313,15 +311,7 @@ public class SchemeGeneratorTest {
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg testDepArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    testDepArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    testDepArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    testDepArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    testDepArg.deps = Optional.absent();
-    testDepArg.gid = Optional.absent();
-    testDepArg.headerPathPrefix = Optional.absent();
-    testDepArg.useBuckHeaderMaps = Optional.absent();
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule testDepRule =
         appleLibraryDescription.createBuildRule(testDepParams, resolver, testDepArg);
     resolver.addToIndex(testDepRule);
@@ -329,17 +319,10 @@ public class SchemeGeneratorTest {
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
+            .setDeps(ImmutableSortedSet.of(testDepRule))
             .build();
     AppleNativeTargetDescriptionArg libraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.of(ImmutableSortedSet.of(testDepRule.getBuildTarget()));
-    libraryArg.gid = Optional.absent();
-    libraryArg.headerPathPrefix = Optional.absent();
-    libraryArg.useBuckHeaderMaps = Optional.absent();
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule libraryRule =
         appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg);
     resolver.addToIndex(libraryRule);
@@ -479,15 +462,7 @@ public class SchemeGeneratorTest {
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg libraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.absent();
-    libraryArg.gid = Optional.absent();
-    libraryArg.headerPathPrefix = Optional.absent();
-    libraryArg.useBuckHeaderMaps = Optional.absent();
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule libraryRule =
         appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg);
     resolver.addToIndex(libraryRule);
@@ -918,15 +893,7 @@ public class SchemeGeneratorTest {
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg libraryArg =
-        appleLibraryDescription.createUnpopulatedConstructorArg();
-    libraryArg.configs = Optional.of(
-        ImmutableMap.<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>of());
-    libraryArg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    libraryArg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
-    libraryArg.deps = Optional.absent();
-    libraryArg.gid = Optional.absent();
-    libraryArg.headerPathPrefix = Optional.absent();
-    libraryArg.useBuckHeaderMaps = Optional.absent();
+        createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRule libraryRule =
         appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg);
     resolver.addToIndex(libraryRule);
