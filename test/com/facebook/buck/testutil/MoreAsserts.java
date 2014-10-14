@@ -138,7 +138,11 @@ public final class MoreAsserts {
     }
     if (observedIter.hasNext()) {
       fail(
-          prefixWithUserMessage(userMessage, "Extraneous item " + index + " in the observed list"));
+          prefixWithUserMessage(
+              userMessage,
+              "Extraneous item %s in the observed list: %s.",
+              index,
+              observedIter.next()));
     }
   }
 
@@ -275,8 +279,11 @@ public final class MoreAsserts {
     assertEquals(userMessage, expectedValue, optionalValue.get());
   }
 
-  private static String prefixWithUserMessage(@Nullable String userMessage, String message) {
-    return (userMessage == null ? "" : userMessage + " ") + message;
+  private static String prefixWithUserMessage(
+      @Nullable String userMessage,
+      String message,
+      Object... formatArgs) {
+    return (userMessage == null ? "" : userMessage + " ") + String.format(message, formatArgs);
   }
 
   private static void failWith(@Nullable String userMessage, String message) {

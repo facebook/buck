@@ -22,6 +22,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 
 import java.util.Objects;
 
@@ -68,11 +69,12 @@ public class XcodeRuleConfiguration {
    *    configuration. Each layer can be specified as a path to a .xcconfig file, or a dictionary of
    *    xcode build settings.
    */
-  public static ImmutableMap<String, XcodeRuleConfiguration> fromRawJsonStructure(
+  public static ImmutableSortedMap<String, XcodeRuleConfiguration> fromRawJsonStructure(
       ImmutableMap<
           String,
           ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> configurations) {
-    ImmutableMap.Builder<String, XcodeRuleConfiguration> builder = ImmutableMap.builder();
+    ImmutableSortedMap.Builder<String, XcodeRuleConfiguration> builder = ImmutableSortedMap
+        .naturalOrder();
     for (ImmutableMap.Entry<
         String,
         ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> entry

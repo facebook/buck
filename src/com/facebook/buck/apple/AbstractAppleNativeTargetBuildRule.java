@@ -19,20 +19,21 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -56,10 +57,9 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
     }
   }
 
-
-  private final ImmutableMap<String, XcodeRuleConfiguration> configurations;
+  private final ImmutableSortedMap<String, XcodeRuleConfiguration> configurations;
   private final ImmutableList<GroupedSource> srcs;
-  private final ImmutableMap<SourcePath, String> perFileFlags;
+  private final ImmutableSortedMap<SourcePath, String> perFileFlags;
   private final ImmutableSortedSet<String> frameworks;
   private final Optional<String> gid;
   private final Optional<String> headerPathPrefix;
@@ -72,12 +72,69 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
       TargetSources targetSources) {
     super(params, resolver);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs.get());
-    frameworks = Preconditions.checkNotNull(arg.frameworks.get());
     srcs = Preconditions.checkNotNull(targetSources.srcs);
     perFileFlags = Preconditions.checkNotNull(targetSources.perFileFlags);
+    frameworks = Preconditions.checkNotNull(arg.frameworks.get());
     gid = Preconditions.checkNotNull(arg.gid);
     headerPathPrefix = Preconditions.checkNotNull(arg.headerPathPrefix);
     useBuckHeaderMaps = Preconditions.checkNotNull(arg.useBuckHeaderMaps).or(false);
+  }
+
+  @Override
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
+    SrcsAndGroupNames srcsAndGroupNames = collectSrcsAndGroupNames();
+    return getResolver().filterInputsToCompareToOutput(srcsAndGroupNames.srcs);
+  }
+
+  @Override
+  public RuleKey.Builder appendDetailsToRuleKey(final RuleKey.Builder builder) {
+    SrcsAndGroupNames srcsAndGroupNames = collectSrcsAndGroupNames();
+    return builder
+        .set("configurationsKeys", configurations.keySet())
+        // TODO(mbolin): Include configurationsValues. Requires finding a way to encode an
+        // XcodeRuleConfiguration in a RuleKey.Builder.
+        // .set("configurationsValues", configurations.values())
+        .setSourcePaths("srcsSourcePaths", srcsAndGroupNames.srcs)
+        .set("srcsGroupNames", srcsAndGroupNames.groupNames)
+        .setSourcePaths("perFileFlagsKeys", perFileFlags.keySet())
+        .set("perFileFlagsValues", ImmutableList.copyOf(perFileFlags.values()))
+        .set("frameworks", getFrameworks())
+        .set("gid", gid)
+        .set("headerPathPrefix", headerPathPrefix)
+        .set("useBuckHeaderMaps", useBuckHeaderMaps);
+  }
+
+  private SrcsAndGroupNames collectSrcsAndGroupNames() {
+    final ImmutableSortedSet.Builder<SourcePath> groupSrcs = ImmutableSortedSet.naturalOrder();
+    final ImmutableList.Builder<String> groupNames = ImmutableList.builder();
+
+    // Create a synthetic parent GroupedSource named "" and use it as the starting point of the
+    // visitor to add all of the srcs information to the RuleKey.Builder.
+    GroupedSource.ofSourceGroup(/* sourceGroupName */ "", srcs).visit(new GroupedSource.Visitor() {
+
+      @Override
+      public void visitSourcePath(SourcePath sourcePath) {
+        groupSrcs.add(sourcePath);
+      }
+
+      @Override
+      public void visitSourceGroup(String sourceGroupName) {
+        groupNames.add(sourceGroupName);
+      }
+    });
+
+    return new SrcsAndGroupNames(groupSrcs.build(), groupNames.build());
+  }
+
+  private static class SrcsAndGroupNames {
+    private final ImmutableSortedSet<SourcePath> srcs;
+    private final ImmutableList<String> groupNames;
+    public SrcsAndGroupNames(
+        ImmutableSortedSet<SourcePath> srcs,
+        ImmutableList<String> groupNames) {
+      this.srcs = srcs;
+      this.groupNames = groupNames;
+    }
   }
 
   /**
@@ -95,7 +152,9 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
   }
 
   /**
-   * Returns a list of per-file build flags, e.g. -fobjc-arc.
+   * @return A map where each entry is a mapping from a source file to a space-delimited string that
+   *     serves as a list of per-file build flags for that file, e.g., {@code "-fobjc-arc"} or
+   *     {@code "-fobjc-arc -DOS_OBJECT_USE_OBJC=0"}.
    */
   public ImmutableMap<SourcePath, String> getPerFileFlags() {
     return perFileFlags;
@@ -131,21 +190,6 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
     }
 
     return Optional.of(BuildTargets.getGenPath(getBuildTarget(), "%s" + headerMapType.suffix));
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .set("frameworks", getFrameworks())
-        .set("gid", gid)
-        .set("headerPathPrefix", headerPathPrefix)
-        .set("useBuckHeaderMaps", useBuckHeaderMaps);
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(
-        GroupedSources.sourcePaths(srcs));
   }
 
   @Override

@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -123,5 +122,24 @@ public class GroupedSource {
   @Override
   public int hashCode() {
     return Objects.hash(type, sourcePath, sourceGroupName, sourceGroup);
+  }
+
+  public static interface Visitor {
+    public void visitSourcePath(SourcePath sourcePath);
+    public void visitSourceGroup(String sourceGroupName);
+  }
+
+  public void visit(Visitor visitor) {
+    switch (this.getType()) {
+    case SOURCE_PATH:
+      visitor.visitSourcePath(Preconditions.checkNotNull(sourcePath));
+      break;
+    case SOURCE_GROUP:
+      visitor.visitSourceGroup(Preconditions.checkNotNull(sourceGroupName));
+      for (GroupedSource group : Preconditions.checkNotNull(sourceGroup)) {
+        group.visit(visitor);
+      }
+      break;
+    }
   }
 }

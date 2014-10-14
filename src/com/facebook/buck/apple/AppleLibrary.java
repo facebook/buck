@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 
 public class AppleLibrary extends AbstractAppleNativeTargetBuildRule {
@@ -31,6 +32,12 @@ public class AppleLibrary extends AbstractAppleNativeTargetBuildRule {
       boolean linkedDynamically) {
     super(params, resolver, arg, targetSources);
     this.linkedDynamically = linkedDynamically;
+  }
+
+  @Override
+  public RuleKey.Builder appendDetailsToRuleKey(final RuleKey.Builder builder) {
+    return super.appendDetailsToRuleKey(builder)
+        .set("linkedDynamically", linkedDynamically);
   }
 
   public boolean getLinkedDynamically() {
