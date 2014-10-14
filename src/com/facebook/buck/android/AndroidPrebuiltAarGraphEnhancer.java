@@ -205,6 +205,7 @@ class AndroidPrebuiltAarGraphEnhancer {
       steps.add(new MakeCleanDirectoryStep(unpackDirectory));
       steps.add(new UnzipStep(getResolver().getPath(aarFile), unpackDirectory));
       steps.add(new TouchStep(getProguardConfig()));
+      steps.add(new MkdirStep(getResDirectory()));
       steps.add(new MkdirStep(getAssetsDirectory()));
 
       // We take the classes.jar file that is required to exist in an .aar and merge it with any
