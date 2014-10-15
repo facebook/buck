@@ -41,12 +41,11 @@ public class ReportGenerator {
         private final String title;
 
         private final File executionDataFile;
+        private final ExecFileLoader execFileLoader;
         private final String classesPath;
         private final File sourceDirectory;
         private final File reportDirectory;
         private final String reportFormat;
-
-        private ExecFileLoader execFileLoader;
 
         /**
          * Create a new generator based for the given project.
@@ -56,6 +55,7 @@ public class ReportGenerator {
                 this.title = "Code-Coverage Analysis";
                 this.executionDataFile = new File(
                     jacocoOutputDir, System.getProperty("jacoco.exec.data.file"));
+                this.execFileLoader = new ExecFileLoader();
                 this.classesPath = System.getProperty("classes.dir");
                 this.sourceDirectory = new File(System.getProperty("src.dir"));
                 this.reportDirectory = new File(jacocoOutputDir, "code-coverage");
@@ -134,7 +134,6 @@ public class ReportGenerator {
         }
 
         private void loadExecutionData() throws IOException {
-                execFileLoader = new ExecFileLoader();
                 executionDataFile.createNewFile();
                 execFileLoader.load(executionDataFile);
         }
