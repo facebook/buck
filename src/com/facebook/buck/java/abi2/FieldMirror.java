@@ -1,0 +1,36 @@
+/*
+ * Copyright 2014-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.java.abi2;
+
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.FieldNode;
+
+/**
+ * Represents a field within a class being stubbed. This is essentially a {@link FieldNode} with the
+ * difference being that it implements {@link java.lang.Comparable}.
+ */
+class FieldMirror extends FieldNode implements Comparable<FieldMirror> {
+
+  public FieldMirror(int access, String name, String desc, String signature, Object value) {
+    super(Opcodes.ASM5, access, name, desc, signature, value);
+  }
+
+  @Override
+  public int compareTo(FieldMirror o) {
+    return desc.compareTo(o.desc);
+  }
+}
