@@ -44,6 +44,10 @@ public class FlavorDomain<T> {
     return name;
   }
 
+  public ImmutableSet<Flavor> getFlavors() {
+    return translation.keySet();
+  }
+
   public boolean containsAnyOf(ImmutableSet<Flavor> flavors) {
     return !Sets.intersection(translation.keySet(), flavors).isEmpty();
   }

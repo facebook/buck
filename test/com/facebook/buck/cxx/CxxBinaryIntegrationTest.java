@@ -457,4 +457,15 @@ public class CxxBinaryIntegrationTest {
     assertThat(error, Matchers.containsString("lib2.h:1:2: error: invalid preprocessing"));
   }
 
+  @Test
+  public void ndkCxxPlatforms() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//foo:simple#android-arm").assertSuccess();
+    workspace.runBuckCommand("build", "//foo:simple#android-armv7").assertSuccess();
+    workspace.runBuckCommand("build", "//foo:simple#android-x86").assertSuccess();
+  }
+
 }

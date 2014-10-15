@@ -1,6 +1,7 @@
 PLATFORM_SRCS = [
   'CxxPlatform.java',
   'Linker.java',
+  'GnuLinker.java',
 ]
 java_library(
   name = 'platform',

@@ -8,9 +8,11 @@ java_library(
   deps = [
     ':build_rule',
     ':rules',
+    '//third-party/java/aosp:aosp',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',

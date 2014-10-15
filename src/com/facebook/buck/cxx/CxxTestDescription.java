@@ -17,8 +17,10 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -36,6 +38,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class CxxTestDescription implements
     Description<CxxTestDescription.Arg>,
+    Flavored,
     ImplicitDepsInferringDescription<CxxTestDescription.Arg> {
 
   private static final BuildRuleType TYPE = new BuildRuleType("cxx_test");
@@ -172,6 +175,22 @@ public class CxxTestDescription implements
 
   public CxxTestType getDefaultTestType() {
     return DEFAULT_TEST_TYPE;
+  }
+
+  @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+
+    if (flavors.equals(ImmutableSet.of(Flavor.DEFAULT))) {
+      return true;
+    }
+
+    for (Flavor flavor : cxxPlatforms.getFlavors()) {
+      if (flavors.equals(ImmutableSet.of(Flavor.DEFAULT, flavor))) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @SuppressFieldNotInitialized

@@ -25,6 +25,7 @@ import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
+import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.ProGuardConfig;
@@ -142,6 +143,78 @@ public class KnownBuildRuleTypes {
     return createBuilder(config, androidDirectoryResolver, javacEnv, pythonEnv).build();
   }
 
+  /**
+   * @return the map holding the available {@link NdkCxxPlatform}s.
+   */
+  private static ImmutableMap<Flavor, NdkCxxPlatform> getNdkCxxPlatforms(
+      Path ndkRoot,
+      Platform platform) {
+
+    ImmutableMap.Builder<Flavor, NdkCxxPlatform> ndkCxxPlatformBuilder = ImmutableMap.builder();
+
+    NdkCxxPlatform armeabi =
+        new NdkCxxPlatform(
+            "Android NDK arm",
+            new Flavor("android-arm"),
+            platform,
+            ndkRoot,
+            new NdkCxxPlatform.TargetConfiguration(
+                NdkCxxPlatform.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
+                NdkCxxPlatform.ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
+                NdkCxxPlatform.TargetArch.ARM,
+                NdkCxxPlatform.TargetArchAbi.ARMEABI,
+                /* androidPlatform */ "android-9",
+                /* compilerVersion */ "4.8",
+                /* compilerFlags */ ImmutableList.of(
+                    "-march=armv5te",
+                    "-mtune=xscale",
+                    "-msoft-float",
+                    "-mthumb",
+                    "-Os")));
+    ndkCxxPlatformBuilder.put(armeabi.asFlavor(), armeabi);
+    NdkCxxPlatform armeabiv7 =
+        new NdkCxxPlatform(
+            "Android NDK arm-v7",
+            new Flavor("android-armv7"),
+            platform,
+            ndkRoot,
+            new NdkCxxPlatform.TargetConfiguration(
+                NdkCxxPlatform.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
+                NdkCxxPlatform.ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
+                NdkCxxPlatform.TargetArch.ARM,
+                NdkCxxPlatform.TargetArchAbi.ARMEABI_V7A,
+                /* androidPlatform */ "android-9",
+                /* compilerVersion */ "4.8",
+                /* compilerFlags */ ImmutableList.of(
+                    "-finline-limit=64",
+                    "-march=armv7-a",
+                    "-mfpu=vfpv3-d16",
+                    "-mfloat-abi=softfp",
+                    "-mthumb",
+                    "-Os")));
+    ndkCxxPlatformBuilder.put(armeabiv7.asFlavor(), armeabiv7);
+    NdkCxxPlatform x86 =
+        new NdkCxxPlatform(
+            "Android NDK x86",
+            new Flavor("android-x86"),
+            platform,
+            ndkRoot,
+            new NdkCxxPlatform.TargetConfiguration(
+                NdkCxxPlatform.Toolchain.X86_4_8,
+                NdkCxxPlatform.ToolchainPrefix.I686_LINUX_ANDROID,
+                NdkCxxPlatform.TargetArch.X86,
+                NdkCxxPlatform.TargetArchAbi.X86,
+                /* androidPlatform */ "android-9",
+                /* compilerVersion */ "4.8",
+                /* compilerFlags */ ImmutableList.of(
+                    "-funswitch-loops",
+                    "-finline-limit=300",
+                    "-O2")));
+    ndkCxxPlatformBuilder.put(x86.asFlavor(), x86);
+
+    return ndkCxxPlatformBuilder.build();
+  }
+
   @VisibleForTesting
   static Builder createBuilder(
       BuckConfig config,
@@ -168,11 +241,23 @@ public class KnownBuildRuleTypes {
 
     // Construct the C/C++ config wrapping the buck config.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
+    ImmutableMap.Builder<Flavor, CxxPlatform> cxxPlatformsBuilder = ImmutableMap.builder();
+
+    // Add the default, config-defined C/C++ platform.
     DefaultCxxPlatform defaultCxxPlatform = new DefaultCxxPlatform(platform, config);
+    cxxPlatformsBuilder.put(defaultCxxPlatform.asFlavor(), defaultCxxPlatform);
+
+    // If an Android NDK is present, add platforms for that.  This is mostly useful for
+    // testing our Android NDK support for right now.
+    Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
+    if (ndkRoot.isPresent()) {
+      cxxPlatformsBuilder.putAll(getNdkCxxPlatforms(ndkRoot.get(), platform));
+    }
+
+    // Build up the final list of C/C++ platforms.
     FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
         "C/C++ platform",
-        ImmutableMap.<Flavor, CxxPlatform>of(
-            defaultCxxPlatform.asFlavor(), defaultCxxPlatform));
+        cxxPlatformsBuilder.build());
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
