@@ -105,10 +105,9 @@ public class AppleBundle extends AbstractBuildRule {
   }
 
   @Override
-  @Nullable
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    return null;
+    return ImmutableList.of();
   }
 }
