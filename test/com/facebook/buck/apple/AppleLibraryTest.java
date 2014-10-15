@@ -54,6 +54,7 @@ public class AppleLibraryTest {
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.absent();
+    arg.prefixHeader = Optional.absent();
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "foo").build()).build();
@@ -77,6 +78,7 @@ public class AppleLibraryTest {
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.absent();
+    arg.prefixHeader = Optional.absent();
 
     BuildTarget target = BuildTarget.builder("//foo", "foo")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)

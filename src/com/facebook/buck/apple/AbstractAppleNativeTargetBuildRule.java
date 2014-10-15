@@ -64,6 +64,7 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
   private final Optional<String> gid;
   private final Optional<String> headerPathPrefix;
   private final boolean useBuckHeaderMaps;
+  private final Optional<SourcePath> prefixHeader;
 
   public AbstractAppleNativeTargetBuildRule(
       BuildRuleParams params,
@@ -78,6 +79,7 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
     gid = Preconditions.checkNotNull(arg.gid);
     headerPathPrefix = Preconditions.checkNotNull(arg.headerPathPrefix);
     useBuckHeaderMaps = Preconditions.checkNotNull(arg.useBuckHeaderMaps).or(false);
+    prefixHeader = Preconditions.checkNotNull(arg.prefixHeader);
   }
 
   @Override
@@ -101,7 +103,8 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
         .set("frameworks", getFrameworks())
         .set("gid", gid)
         .set("headerPathPrefix", headerPathPrefix)
-        .set("useBuckHeaderMaps", useBuckHeaderMaps);
+        .set("useBuckHeaderMaps", useBuckHeaderMaps)
+        .setReflectively("prefixHeader", prefixHeader);
   }
 
   private SrcsAndGroupNames collectSrcsAndGroupNames() {
@@ -183,6 +186,11 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
    * @return A boolean whether Buck should generate header maps for this project.
    */
   public boolean getUseBuckHeaderMaps() { return useBuckHeaderMaps; }
+
+  /** @return A {@code .pch} to pass to {@code -include}. */
+  public Optional<SourcePath> getPrefixHeader() {
+    return prefixHeader;
+  }
 
   public Optional<Path> getPathToHeaderMap(HeaderMapType headerMapType) {
     if (!getUseBuckHeaderMaps()) {

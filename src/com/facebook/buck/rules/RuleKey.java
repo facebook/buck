@@ -385,6 +385,8 @@ public class RuleKey {
         return set(key, (long) val);
       } else if (val instanceof Path) {
         return setInput(key, (Path) val);
+      } else if (val instanceof SourcePath) {
+        return setInput(key, (SourcePath) val);
       } else if (val instanceof RuleKey) {
         return set(key, (RuleKey) val);
       }

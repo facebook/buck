@@ -44,4 +44,5 @@ public class AppleNativeTargetDescriptionArg {
   public Optional<String> gid;
   public Optional<String> headerPathPrefix;
   public Optional<Boolean> useBuckHeaderMaps;
+  public Optional<SourcePath> prefixHeader;
 }

@@ -1146,6 +1146,7 @@ public class ProjectGeneratorTest {
     arg.gid = Optional.absent();
     arg.headerPathPrefix = Optional.absent();
     arg.useBuckHeaderMaps = Optional.absent();
+    arg.prefixHeader = Optional.absent();
 
     BuildRule rule = appleBinaryDescription.createBuildRule(params, resolver, arg);
     resolver.addToIndex(rule);
