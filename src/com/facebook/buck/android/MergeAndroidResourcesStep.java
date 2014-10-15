@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.google.common.collect.Ordering.natural;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
@@ -250,9 +251,8 @@ public class MergeAndroidResourcesStep implements Step {
         if (uberRDotTxtIds.isPresent()) {
           Preconditions.checkNotNull(finalIds);
           if (!finalIds.containsKey(resource)) {
-            context.logError(
-                new RuntimeException(),
-                "Cannot find resource '%s' in the uber R.txt.", resource);
+            context.postEvent(ConsoleEvent.warning(
+                    "Cannot find resource '%s' in the uber R.txt.", resource));
             continue;
           }
           resource = resource.copyWithNewIdValue(finalIds.get(resource));
