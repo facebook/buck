@@ -25,7 +25,6 @@ import com.facebook.buck.cli.TestCommand;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreFiles;
@@ -115,7 +114,6 @@ public class ProjectWorkspace {
    * in the process. Files whose names end in {@code .expected} will not be copied.
    */
   public void setUp() throws IOException {
-    DefaultKnownBuildRuleTypes.resetInstance();
 
     MoreFiles.copyRecursively(templatePath, destPath, BUILD_FILE_RENAME);
 

@@ -352,4 +352,28 @@ public class KnownBuildRuleTypesTest {
       }
     }
   }
+
+  @Test
+  public void createInstanceShouldReturnDifferentInstancesIfCalledWithDifferentParameters()
+      throws IOException {
+    KnownBuildRuleTypes knownBuildRuleTypes1 = KnownBuildRuleTypes.createInstance(
+        new FakeBuckConfig(),
+        new FakeAndroidDirectoryResolver(),
+        JavaCompilerEnvironment.DEFAULT,
+        DUMMY_PYTHON_ENVIRONMENT);
+
+    final File javac = temporaryFolder.newFile();
+    javac.setExecutable(true);
+    Map<String, Map<String, String>> sections = ImmutableMap.of(
+        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    KnownBuildRuleTypes knownBuildRuleTypes2 = KnownBuildRuleTypes.createInstance(
+        buckConfig,
+        new FakeAndroidDirectoryResolver(),
+        JavaCompilerEnvironment.DEFAULT,
+        DUMMY_PYTHON_ENVIRONMENT);
+
+    assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
+  }
+
 }

@@ -90,8 +90,6 @@ import java.net.Proxy;
 import java.nio.file.Path;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 /**
  * A registry of all the build rules types understood by Buck.
  */
@@ -99,8 +97,6 @@ public class KnownBuildRuleTypes {
 
   private final ImmutableMap<BuildRuleType, Description<?>> descriptions;
   private final ImmutableMap<String, BuildRuleType> types;
-  @Nullable
-  private static volatile KnownBuildRuleTypes defaultRules = null;
 
   private KnownBuildRuleTypes(
       Map<BuildRuleType, Description<?>> descriptions,
@@ -134,38 +130,12 @@ public class KnownBuildRuleTypes {
     return new Builder();
   }
 
-  @VisibleForTesting
-  static void resetDefaultInstance() {
-    defaultRules = null;
-  }
-
-  @VisibleForTesting
-  static KnownBuildRuleTypes replaceDefaultInstance(
-      BuckConfig config,
-      AndroidDirectoryResolver androidDirectoryResolver,
-      JavaCompilerEnvironment javacEnv,
-      PythonEnvironment pythonEnv) {
-    resetDefaultInstance();
-    return createInstance(config, androidDirectoryResolver, javacEnv, pythonEnv);
-  }
-
   public static KnownBuildRuleTypes createInstance(
       BuckConfig config,
       AndroidDirectoryResolver androidDirectoryResolver,
       JavaCompilerEnvironment javacEnv,
       PythonEnvironment pythonEnv) {
-    // Fast path
-    if (defaultRules == null) {
-      // Slow path
-      synchronized (KnownBuildRuleTypes.class) {
-        if (defaultRules == null) {
-          defaultRules =
-              createBuilder(config, androidDirectoryResolver, javacEnv, pythonEnv).build();
-        }
-      }
-    }
-
-    return defaultRules;
+    return createBuilder(config, androidDirectoryResolver, javacEnv, pythonEnv).build();
   }
 
   @VisibleForTesting

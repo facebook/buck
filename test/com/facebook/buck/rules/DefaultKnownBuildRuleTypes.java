@@ -35,14 +35,11 @@ public class DefaultKnownBuildRuleTypes {
   public static KnownBuildRuleTypes getDefaultKnownBuildRuleTypes(ProjectFilesystem filesystem) {
     BuckConfig config = new FakeBuckConfig(filesystem);
 
-    return KnownBuildRuleTypes.replaceDefaultInstance(
+    return KnownBuildRuleTypes.createInstance(
         config,
         new FakeAndroidDirectoryResolver(),
         JavaCompilerEnvironment.DEFAULT,
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
   }
 
-  public static void resetInstance() {
-    KnownBuildRuleTypes.resetDefaultInstance();
-  }
 }
