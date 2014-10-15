@@ -38,7 +38,6 @@ import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleTest;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModel;
-import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
@@ -440,7 +439,7 @@ public class ProjectGenerator {
 
     PBXNativeTarget target = generateBinaryTarget(
         project,
-        bundle,
+        Optional.of(bundle),
         (AbstractAppleNativeTargetBuildRule) bundle.getBinary(),
         bundleToTargetProductType(bundle),
         "%s." + bundle.getExtensionString(),
@@ -469,7 +468,7 @@ public class ProjectGenerator {
       throws IOException {
     PBXNativeTarget target = generateBinaryTarget(
         project,
-        appleBinary,
+        Optional.<AppleBundle>absent(),
         appleBinary,
         PBXTarget.ProductType.TOOL,
         "%s",
@@ -490,7 +489,7 @@ public class ProjectGenerator {
         PBXTarget.ProductType.DYNAMIC_LIBRARY : PBXTarget.ProductType.STATIC_LIBRARY;
     PBXNativeTarget target = generateBinaryTarget(
         project,
-        appleLibrary,
+        Optional.<AppleBundle>absent(),
         appleLibrary,
         productType,
         AppleLibrary.getOutputFileNameFormat(appleLibrary.getLinkedDynamically()),
@@ -537,7 +536,7 @@ public class ProjectGenerator {
 
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
-      BuildRule rule,
+      Optional<AppleBundle> bundle,
       AbstractAppleNativeTargetBuildRule appleBuildRule,
       PBXTarget.ProductType productType,
       String productOutputFormat,
@@ -546,7 +545,10 @@ public class ProjectGenerator {
       Iterable<AppleResource> resources,
       Iterable<AppleAssetCatalog> assetCatalogs)
       throws IOException {
-    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule), productType);
+    BuildTarget buildTarget = bundle.isPresent()
+        ? bundle.get().getBuildTarget()
+        : appleBuildRule.getBuildTarget();
+    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(buildTarget), productType);
     setNativeTargetGid(target, appleBuildRule);
 
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
@@ -561,18 +563,19 @@ public class ProjectGenerator {
       extraSettingsBuilder.put("USE_HEADERMAP", "NO");
     }
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
-    if (rule.getType().equals(AppleBundleDescription.TYPE)) {
-      AppleBundle bundle = (AppleBundle) rule;
-      defaultSettingsBuilder.put("WRAPPER_EXTENSION", bundle.getExtensionString());
+    if (bundle.isPresent()) {
+      defaultSettingsBuilder.put("WRAPPER_EXTENSION", bundle.get().getExtensionString());
     }
     defaultSettingsBuilder.put("PUBLIC_HEADERS_FOLDER_PATH",
         getHeaderOutputPathForRule(appleBuildRule.getHeaderPathPrefix()));
-    if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
-      defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", getObjectOutputPathForRule(rule));
+    if (!bundle.isPresent() && appleBuildRule.getType().equals(AppleLibraryDescription.TYPE)) {
+      defaultSettingsBuilder.put(
+          "CONFIGURATION_BUILD_DIR", getObjectOutputPathForRule(appleBuildRule));
     }
 
     setTargetBuildConfigurations(
-        rule,
+        buildTarget,
+        appleBuildRule,
         target,
         targetGroup,
         appleBuildRule.getConfigurations(),
@@ -583,10 +586,10 @@ public class ProjectGenerator {
     // -- phases
     // TODO(Task #3772930): Go through all dependencies of the rule
     // and add any shell script rules here
-    addRunScriptBuildPhasesForDependencies(rule, target);
-    if (rule != appleBuildRule) {
-      addRunScriptBuildPhasesForDependencies(appleBuildRule, target);
+    if (bundle.isPresent()) {
+      addRunScriptBuildPhasesForDependencies(bundle.get(), target);
     }
+    addRunScriptBuildPhasesForDependencies(appleBuildRule, target);
     addBuildPhasesGroupsAndHeaderMapsForSourcesAndHeaders(
         appleBuildRule,
         target,
@@ -598,13 +601,13 @@ public class ProjectGenerator {
     if (includeFrameworks) {
       ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
       frameworksBuilder.addAll(appleBuildRule.getFrameworks());
-      collectRecursiveFrameworkDependencies(rule, frameworksBuilder);
+      collectRecursiveFrameworkDependencies(appleBuildRule, frameworksBuilder);
       addFrameworksBuildPhase(
-          rule.getBuildTarget(),
+          buildTarget,
           target,
           project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
           frameworksBuilder.build(),
-          collectRecursiveLibraryDependencies(rule));
+          collectRecursiveLibraryDependencies(appleBuildRule));
     }
 
     if (!Iterables.isEmpty(resources)) {
@@ -614,13 +617,14 @@ public class ProjectGenerator {
       addAssetCatalogBuildPhase(target, targetGroup, assetCatalogs);
     }
 
+    // Use Core Data models from immediate dependencies only.
     addCoreDataModelBuildPhase(
         targetGroup,
-        collectCoreDataModels(rule.getDeps()));
+        Iterables.filter(appleBuildRule.getDeps(), CoreDataModel.class));
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
-    String productName = getProductName(rule.getBuildTarget());
+    String productName = getProductName(buildTarget);
     String outputName = String.format(productOutputFormat, productName);
     PBXFileReference productReference = productsGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Paths.get(outputName)));
@@ -638,6 +642,7 @@ public class ProjectGenerator {
    * effectively laid out in layers.
    */
   private void setTargetBuildConfigurations(
+      BuildTarget buildTarget,
       BuildRule buildRule,
       PBXTarget target,
       PBXGroup targetGroup,
@@ -646,8 +651,6 @@ public class ProjectGenerator {
       ImmutableMap<String, String> defaultBuildSettings,
       ImmutableMap<String, String> appendBuildSettings)
       throws IOException {
-    BuildTarget buildTarget = buildRule.getBuildTarget();
-
     ImmutableMap.Builder<String, String> overrideConfigsBuilder = ImmutableMap.builder();
 
     overrideConfigsBuilder
@@ -1257,7 +1260,7 @@ public class ProjectGenerator {
       final Iterable<CoreDataModel> dataModels) throws IOException {
     // TODO(user): actually add a build phase
 
-    for (final CoreDataModel dataModel: dataModels) {
+    for (final CoreDataModel dataModel : dataModels) {
       // Core data models go in the resources group also.
       PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
 
@@ -1892,17 +1895,12 @@ public class ProjectGenerator {
         initialTargets.contains(rule.getBuildTarget());
   }
 
-  private String getXcodeTargetName(BuildRule rule) {
+  private String getXcodeTargetName(BuildTarget target) {
     return options.contains(Option.USE_SHORT_NAMES_FOR_TARGETS)
-        ? rule.getBuildTarget().getShortNameOnly()
-        : rule.getBuildTarget().getFullyQualifiedName();
+        ? target.getShortNameOnly()
+        : target.getFullyQualifiedName();
   }
 
-  private Iterable<CoreDataModel> collectCoreDataModels(Iterable<BuildRule> rules) {
-    return Iterables.filter(
-        getRuleDependenciesOfType(rules, CoreDataModelDescription.TYPE),
-        CoreDataModel.class);
-  }
   /**
    * Collect resources from recursive dependencies.
    *
@@ -1938,19 +1936,6 @@ public class ProjectGenerator {
       assetCatalogs.add(assetCatalog);
     }
     return assetCatalogs.build();
-  }
-
-  private static Iterable<BuildRule> getRuleDependenciesOfType(
-      final Iterable<BuildRule> rules, BuildRuleType... types) {
-    final ImmutableSet<BuildRuleType> requestedTypes = ImmutableSet.copyOf(types);
-    return Iterables.filter(
-        rules,
-        new Predicate<BuildRule>() {
-          @Override
-          public boolean apply(BuildRule input) {
-            return requestedTypes.contains(input.getType());
-          }
-        });
   }
 
   @SuppressWarnings("incomplete-switch")
