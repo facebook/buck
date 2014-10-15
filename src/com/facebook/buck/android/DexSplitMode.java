@@ -43,7 +43,9 @@ class DexSplitMode {
       /* primaryDexPatterns */ ImmutableSet.<String>of(),
       /* primaryDexClassesFile */ Optional.<SourcePath>absent(),
       /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
-      /* isPrimaryDexScenarioOverflowAllowed */ false);
+      /* isPrimaryDexScenarioOverflowAllowed */ false,
+      /* isCheckLinearAllocLimit */ true,
+      /* isPrimaryDexPatternsExcluded */ false);
 
   private final boolean shouldSplitDex;
   private final DexStore dexStore;
@@ -87,6 +89,17 @@ class DexSplitMode {
   private final boolean isPrimaryDexScenarioOverflowAllowed;
 
   /**
+   * Boolean identifying whether check linearAllocLimit forcibly or not.
+   */
+  private final boolean isCheckLinearAllocLimit;
+
+  /**
+   * Boolean identifying whether we should allow the primaryDexPatterns 
+   * excluded in primary dex.
+   */
+  private final boolean isPrimaryDexPatternsExcluded;
+
+  /**
    *
    * @param primaryDexPatterns Set of substrings that, when matched, will cause individual input
    *     class or resource files to be placed into the primary jar (and thus the primary dex
@@ -102,6 +115,10 @@ class DexSplitMode {
    *     to proceed on a best-effort basis (true).
    * @param useLinearAllocSplitDex If true, {@link com.facebook.buck.dalvik.DalvikAwareZipSplitter}
    *     will be used. Also, {@code linearAllocHardLimit} must have a positive value in this case.
+   * @param isCheckLinarAllocLimit A boolean indicating whether check linearAllocLimit forcibly or not.
+   * @param isPrimaryDexPatternsExcluded A boolean indicating whether exclude the primaryDexPatterns in
+   *     primary dex file. If true, the class match patterns in primaryDexPatterns will be built in 
+   *     secondary dexs in split-dex case.
    */
   public DexSplitMode(
       boolean shouldSplitDex,
@@ -112,7 +129,9 @@ class DexSplitMode {
       Collection<String> primaryDexPatterns,
       Optional<SourcePath> primaryDexClassesFile,
       Optional<SourcePath> primaryDexScenarioFile,
-      boolean isPrimaryDexScenarioOverflowAllowed) {
+      boolean isPrimaryDexScenarioOverflowAllowed,
+      boolean isCheckLinarAllocLimit,
+      boolean isPrimaryDexPatternsExcluded) {
     this.shouldSplitDex = shouldSplitDex;
     this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
     this.dexStore = Preconditions.checkNotNull(dexStore);
@@ -122,6 +141,8 @@ class DexSplitMode {
     this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
     this.primaryDexScenarioFile = Preconditions.checkNotNull(primaryDexScenarioFile);
     this.isPrimaryDexScenarioOverflowAllowed = isPrimaryDexScenarioOverflowAllowed;
+    this.isCheckLinearAllocLimit = isCheckLinarAllocLimit;
+    this.isPrimaryDexPatternsExcluded = isPrimaryDexPatternsExcluded;
   }
 
   public DexStore getDexStore() {
@@ -143,6 +164,14 @@ class DexSplitMode {
 
   public long getLinearAllocHardLimit() {
     return linearAllocHardLimit;
+  }
+
+  public boolean getCheckLinearAllocLimit() {
+    return isCheckLinearAllocLimit;
+  }
+
+  public boolean getPrimaryDexPatternsExcluded() {
+    return isPrimaryDexPatternsExcluded;
   }
 
   public ImmutableSet<String> getPrimaryDexPatterns() {
@@ -182,6 +211,8 @@ class DexSplitMode {
     builder.set(
         prefix + ".isPrimaryDexScenarioOverflowAllowed",
         isPrimaryDexScenarioOverflowAllowed);
+    builder.set(prefix + ".isCheckLinearAllocLimit", isCheckLinearAllocLimit);
+    builder.set(prefix + ".isPrimaryDexPatternsExcluded", isPrimaryDexPatternsExcluded);
     return builder;
   }
 }

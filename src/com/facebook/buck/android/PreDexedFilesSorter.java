@@ -62,6 +62,10 @@ public class PreDexedFilesSorter {
   private final long linearAllocHardLimit;
   private final DexStore dexStore;
   private final Path secondaryDexJarFilesDir;
+  /** whether check linearAllocLimit or not */
+  private final boolean checkLinearAllocLimit;
+
+  private final boolean primaryDexPatternsExcluded;
 
   /**
    * Directory under the project filesystem where this step may write temporary data. This directory
@@ -76,7 +80,9 @@ public class PreDexedFilesSorter {
       Path scratchDirectory,
       long linearAllocHardLimit,
       DexStore dexStore,
-      Path secondaryDexJarFilesDir) {
+      Path secondaryDexJarFilesDir,
+      boolean checkLinearAllocLimit,
+      boolean primaryDexPatternsExcluded) {
     this.rDotJavaDex = Preconditions.checkNotNull(rDotJavaDex);
     this.dexFilesToMerge = Preconditions.checkNotNull(dexFilesToMerge);
     this.primaryDexFilter = ClassNameFilter.fromConfiguration(
@@ -86,6 +92,8 @@ public class PreDexedFilesSorter {
     this.linearAllocHardLimit = linearAllocHardLimit;
     this.dexStore = Preconditions.checkNotNull(dexStore);
     this.secondaryDexJarFilesDir = Preconditions.checkNotNull(secondaryDexJarFilesDir);
+    this.checkLinearAllocLimit = checkLinearAllocLimit;
+    this.primaryDexPatternsExcluded = primaryDexPatternsExcluded;
   }
 
   public Result sortIntoPrimaryAndSecondaryDexes(
@@ -110,7 +118,13 @@ public class PreDexedFilesSorter {
     List<DexWithClasses> currentSecondaryDexContents = null;
     int currentSecondaryDexSize = 0;
     for (DexWithClasses dexWithClasses : sortedDexFilesToMerge) {
-      if (mustBeInPrimaryDex(dexWithClasses)) {
+      boolean isInPrimaryDex = mustBeInPrimaryDex(dexWithClasses);
+      // if use primaryDexPatternsExcluded
+      // exclude primaryDexPatterns in primary dex.
+      if(primaryDexPatternsExcluded) {
+        isInPrimaryDex = !isInPrimaryDex;
+      }
+      if (isInPrimaryDex) {
         // Case 1: Entry must be in the primary dex.
         primaryDexSize += dexWithClasses.getSizeEstimate();
         if (primaryDexSize > linearAllocHardLimit) {
@@ -121,7 +135,10 @@ public class PreDexedFilesSorter {
               dexWithClasses.getSizeEstimate(),
               primaryDexSize,
               linearAllocHardLimit);
-          throw new HumanReadableException("Primary dex exceeds linear alloc limit.");
+
+           if(checkLinearAllocLimit) {
+             throw new HumanReadableException("Primary dex exceeds linear alloc limit.");
+           }
         }
         primaryDexContents.add(dexWithClasses);
       } else {
@@ -135,14 +152,17 @@ public class PreDexedFilesSorter {
               dexWithClasses.getPathToDexFile(),
               dexWithClasses.getSizeEstimate(),
               linearAllocHardLimit);
-          throw new HumanReadableException("Secondary dex exceeds linear alloc limit.");
+          if(checkLinearAllocLimit) {
+            throw new HumanReadableException("Secondary dex exceeds linear alloc limit.");
+          }
         }
 
         // If there is no current secondary dex, or dexWithClasses would put the current secondary
         // dex over the cost threshold, then create a new secondary dex and initialize it with a
         // canary.
         if (currentSecondaryDexContents == null ||
-            dexWithClasses.getSizeEstimate() + currentSecondaryDexSize > linearAllocHardLimit) {
+            ((dexWithClasses.getSizeEstimate() + currentSecondaryDexSize > linearAllocHardLimit) &&
+                checkLinearAllocLimit)) {
           DexWithClasses canary = createCanary(secondaryDexesContents.size() + 1, steps);
 
           currentSecondaryDexContents = Lists.newArrayList(canary);

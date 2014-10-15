@@ -116,7 +116,9 @@ public class SplitZipStepTest {
             /* primaryDexPatterns */ ImmutableSet.of("List"),
             Optional.<SourcePath>of(new TestSourcePath("the/manifest.txt")),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
-            /* isPrimaryDexScenarioOverflowAllowed */ false),
+            /* isPrimaryDexScenarioOverflowAllowed */ false,
+            /* isCheckLinearAllocLimit */ true,
+            /* isPrimaryDexPatternsExcluded */ false),
         Optional.<Path>absent(),
         Optional.of(Paths.get("the/manifest.txt")),
         /* pathToReportDir */ Paths.get(""));
@@ -187,7 +189,9 @@ public class SplitZipStepTest {
             /* primaryDexPatterns */ ImmutableSet.of("/primary/", "x/"),
             Optional.<SourcePath>of(new TestSourcePath("the/manifest.txt")),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
-            /* isPrimaryDexScenarioOverflowAllowed */ false),
+            /* isPrimaryDexScenarioOverflowAllowed */ false,
+            /* isCheckLinearAllocLimit */ true,
+            /* isPrimaryDexPatternsExcluded */ false),
         Optional.<Path>absent(),
         Optional.of(Paths.get("the/manifest.txt")),
         /* pathToReportDir */ Paths.get(""));
@@ -272,7 +276,9 @@ public class SplitZipStepTest {
             /* primaryDexPatterns */ ImmutableSet.of("primary"),
             /* primaryDexClassesFile */ Optional.<SourcePath>absent(),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
-            /* isPrimaryDexScenarioOverflowAllowed */ false),
+            /* isPrimaryDexScenarioOverflowAllowed */ false,
+            /* isCheckLinearAllocLimit */ true,
+            /* isPrimaryDexPatternsExcluded */ false),
         Optional.<Path>absent(),
         Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));
