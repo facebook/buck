@@ -93,9 +93,9 @@ public class MiniAapt implements Step {
       Path resDirectory,
       Path pathToTextSymbolsFile,
       ImmutableSet<Path> pathsToSymblolsOfDeps) {
-    this.resDirectory = Preconditions.checkNotNull(resDirectory);
-    this.pathToTextSymbolsFile = Preconditions.checkNotNull(pathToTextSymbolsFile);
-    this.pathsToSymblolsOfDeps = Preconditions.checkNotNull(pathsToSymblolsOfDeps);
+    this.resDirectory = resDirectory;
+    this.pathToTextSymbolsFile = pathToTextSymbolsFile;
+    this.pathsToSymblolsOfDeps = pathsToSymblolsOfDeps;
     this.resourceCollector = new AaptResourceCollector();
   }
 
@@ -194,8 +194,7 @@ public class MiniAapt implements Step {
    */
   private void collectResources(ProjectFilesystem filesystem, BuckEventBus eventBus)
       throws IOException, ResourceParseException {
-    Collection<Path> contents =
-        Preconditions.checkNotNull(filesystem.getDirectoryContents(resDirectory));
+    Collection<Path> contents = filesystem.getDirectoryContents(resDirectory);
     for (Path dir : contents) {
       if (!filesystem.isDirectory(dir) && !filesystem.isIgnored(dir)) {
         eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring file '%s'.", dir));
@@ -227,7 +226,7 @@ public class MiniAapt implements Step {
       throw new ResourceParseException("'%s' is not a valid resource sub-directory.", dir);
     }
 
-    for (Path resourceFile : Preconditions.checkNotNull(filesystem.getDirectoryContents(dir))) {
+    for (Path resourceFile : filesystem.getDirectoryContents(dir)) {
       if (filesystem.isHidden(resourceFile)) {
         continue;
       }

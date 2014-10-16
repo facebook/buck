@@ -122,10 +122,10 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
       RType type,
       String name,
       String idValue) {
-    this.idType = Preconditions.checkNotNull(idType);
-    this.type = Preconditions.checkNotNull(type);
-    this.name = Preconditions.checkNotNull(name);
-    this.idValue = Preconditions.checkNotNull(idValue);
+    this.idType = idType;
+    this.type = type;
+    this.name = name;
+    this.idValue = idValue;
   }
 
   public RDotTxtEntry copyWithNewIdValue(String newIdValue) {
