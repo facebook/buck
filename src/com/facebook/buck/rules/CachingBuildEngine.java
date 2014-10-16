@@ -371,7 +371,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     // The only remaining option is to build locally.
     try {
-      executeCommandsNowThatDepsAreBuilt(rule, context, onDiskBuildInfo, buildInfoRecorder);
+      executeCommandsNowThatDepsAreBuilt(rule, context, buildInfoRecorder);
     } catch (Exception e) {
       // If the build fails, delete all of the on disk metadata.
       return new BuildResult(e);
@@ -474,13 +474,12 @@ public class CachingBuildEngine implements BuildEngine {
   private void executeCommandsNowThatDepsAreBuilt(
       BuildRule rule,
       BuildContext context,
-      OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder)
       throws Exception {
     LOG.debug("Building locally: %s", rule);
 
     // Get and run all of the commands.
-    BuildableContext buildableContext = new DefaultBuildableContext(onDiskBuildInfo,
+    BuildableContext buildableContext = new DefaultBuildableContext(
         buildInfoRecorder);
     List<Step> steps = rule.getBuildSteps(context, buildableContext);
 

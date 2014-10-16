@@ -20,12 +20,9 @@ import java.nio.file.Path;
 
 public class DefaultBuildableContext implements BuildableContext {
 
-  @SuppressWarnings("unused") // This will be used soon, I swear!
-  private final OnDiskBuildInfo onDiskBuildInfo;
   private final BuildInfoRecorder recorder;
 
-  public DefaultBuildableContext(OnDiskBuildInfo onDiskBuildInfo, BuildInfoRecorder recorder) {
-    this.onDiskBuildInfo = onDiskBuildInfo;
+  public DefaultBuildableContext(BuildInfoRecorder recorder) {
     this.recorder = recorder;
   }
 
