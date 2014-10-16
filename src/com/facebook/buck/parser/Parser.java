@@ -45,11 +45,13 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -652,7 +654,7 @@ public class Parser {
   public synchronized ImmutableSet<BuildTarget> filterAllTargetsInProject(
       ProjectFilesystem filesystem,
       final Iterable<String> includes,
-      final RuleJsonPredicate filter,
+      final Predicate<TargetNode<?>> filter,
       Console console,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
@@ -665,25 +667,24 @@ public class Parser {
       throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
           projectFilesystem.getRootPath(), filesystem.getRootPath()));
     }
-    buildTargetGraph(
-        ImmutableList.of(
-            new TargetNodePredicateSpec(
-                new Predicate<TargetNode<?>>() {
-                  @Override
-                  public boolean apply(TargetNode<?> input) {
-                    return filter.isMatch(
-                        input.getRuleFactoryParams().getInstance(),
-                        input.getDescription().getBuildRuleType(),
-                        input.getBuildTarget());
-                  }
-                },
-                filesystem.getIgnorePaths())),
-        includes,
-        buckEventBus,
-        console,
-        environment,
-        enableProfiling);
-    return filterTargets(filter);
+    return FluentIterable
+        .from(
+            buildTargetGraph(
+                ImmutableList.of(new TargetNodePredicateSpec(filter, filesystem.getIgnorePaths())),
+                includes,
+                buckEventBus,
+                console,
+                environment,
+                enableProfiling).getNodes())
+        .filter(filter)
+        .transform(
+            new Function<TargetNode<?>, BuildTarget>() {
+              @Override
+              public BuildTarget apply(TargetNode<?> input) {
+                return input.getBuildTarget();
+              }
+            })
+        .toSet();
   }
 
 

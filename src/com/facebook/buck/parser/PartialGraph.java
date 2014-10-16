@@ -22,10 +22,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -63,7 +66,7 @@ public class PartialGraph {
       boolean enableProfiling)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     return createPartialGraph(
-        RuleJsonPredicates.alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         projectFilesystem,
         includes,
         parser,
@@ -74,7 +77,7 @@ public class PartialGraph {
   }
 
   public static PartialGraph createPartialGraph(
-      RuleJsonPredicate predicate,
+      Predicate<TargetNode<?>> predicate,
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       Parser parser,

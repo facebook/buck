@@ -22,14 +22,14 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.parser.RuleJsonPredicate;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -38,7 +38,6 @@ import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.SortedSet;
 
 import javax.annotation.Nullable;
@@ -67,18 +66,16 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
       return 1;
     }
 
-    RuleJsonPredicate predicate = new RuleJsonPredicate() {
-      @Override
-      public boolean isMatch(
-          Map<String, Object> rawParseData,
-          BuildRuleType buildRuleType,
-          BuildTarget buildTarget) {
-        return fullyQualifiedBuildTargets.contains(buildTarget.getFullyQualifiedName());
-      }
-    };
     PartialGraph partialGraph;
     try {
-      partialGraph = PartialGraph.createPartialGraph(predicate,
+      partialGraph = PartialGraph.createPartialGraph(
+          new Predicate<TargetNode<?>>() {
+            @Override
+            public boolean apply(TargetNode<?> input) {
+              return fullyQualifiedBuildTargets.contains(
+                  input.getBuildTarget().getFullyQualifiedName());
+            }
+          },
           getProjectFilesystem(),
           options.getDefaultIncludes(),
           getParser(),

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.parser.RuleJsonPredicates.alwaysTrue;
 import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -49,6 +48,7 @@ import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
@@ -59,6 +59,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -337,7 +338,7 @@ public class ParserTest extends EasyMockSupport {
     ImmutableSet<BuildTarget> targets = testParser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance(),
@@ -358,7 +359,7 @@ public class ParserTest extends EasyMockSupport {
 
     parser.filterAllTargetsInProject(
         filesystem, Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance(),
@@ -366,7 +367,7 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance(),
@@ -386,7 +387,7 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance(),
@@ -400,7 +401,7 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance(),
@@ -421,7 +422,7 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.of("Some Key", "Some Value"),
         BuckEventBusFactory.newInstance(),
@@ -431,7 +432,7 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.of("Some Key", "Some Other Value"),
         BuckEventBusFactory.newInstance(),
@@ -453,7 +454,7 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.of("Some Key", "Some Value"),
         BuckEventBusFactory.newInstance(),
@@ -462,7 +463,8 @@ public class ParserTest extends EasyMockSupport {
     // Call filterAllTargetsInProject to request cached rules with identical environment.
     parser.filterAllTargetsInProject(
         filesystem,
-        Lists.<String>newArrayList(), alwaysTrue(),
+        Lists.<String>newArrayList(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.of("Some Key", "Some Value"),
         BuckEventBusFactory.newInstance(),
@@ -1000,7 +1002,7 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance(),
@@ -1008,7 +1010,7 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(
         filesystem,
         ImmutableList.of("//bar.py"),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance(),
@@ -1027,7 +1029,7 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance(),
@@ -1060,7 +1062,7 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
-        alwaysTrue(),
+        Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance(),
