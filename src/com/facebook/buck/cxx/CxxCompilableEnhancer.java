@@ -157,9 +157,12 @@ public class CxxCompilableEnhancer {
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
-    // We explicitly identify our source rather then let the compiler guess based on the
-    // extension.
-    args.add("-x", source.getType().getLanguage());
+    // TODO(#5393669): We need to handle compiler drivers that don't support certain language
+    // options (e.g. the android NDK compilers don't support "c-cpp-output", although they can
+    // auto-detect via the extension).  For the time being, we just fall back to the default
+    // of letting the compiler driver auto-detecting the language type via the extensions which
+    // should work, since we require proper extensions in the descriptions.
+    //args.add("-x", source.getType().getLanguage());
 
     // If we're dealing with a C source that can be compiled, add the platform C compiler flags.
     if (source.getType() == CxxSource.Type.C_CPP_OUTPUT) {
