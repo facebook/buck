@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -67,7 +68,7 @@ public class CxxDescriptionEnhancerTest {
   }
 
   @Test
-  public void createLexYaccBuildRules() {
+  public void createLexYaccBuildRules() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     // Setup our C++ buck config with the paths to the lex/yacc binaries.

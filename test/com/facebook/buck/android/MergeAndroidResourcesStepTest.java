@@ -175,7 +175,7 @@ public class MergeAndroidResourcesStepTest {
     public RDotTxtEntryBuilder() {
     }
 
-    public void add(RDotTxtFile entry) {
+    public void add(RDotTxtFile entry) throws IOException {
       filesystem.writeLinesToPath(entry.contents, entry.filePath);
       filePathToPackageName.put(entry.filePath, entry.packageName);
     }

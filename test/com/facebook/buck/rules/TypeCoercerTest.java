@@ -46,6 +46,7 @@ import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -444,7 +445,8 @@ public class TypeCoercerTest {
 
 
   @Test
-  public void invalidSourcePathShouldGiveSpecificErrorMsg() throws NoSuchFieldException {
+  public void invalidSourcePathShouldGiveSpecificErrorMsg()
+      throws NoSuchFieldException, IOException {
     Type type = TestFields.class.getField("setOfSourcePaths").getGenericType();
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
 

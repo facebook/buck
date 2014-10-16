@@ -111,7 +111,7 @@ public class ThriftBuckConfigTest {
   }
 
   @Test
-  public void getCompilerSucceedsIfJustCompilerPathIsSet() {
+  public void getCompilerSucceedsIfJustCompilerPathIsSet() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
     Path thriftPath = Paths.get("thrift_path");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();

@@ -28,13 +28,14 @@ import com.google.common.collect.ImmutableList;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CxxBinaryTest {
 
   @Test
-  public void getExecutableCommandUsesAbsolutePath() {
+  public void getExecutableCommandUsesAbsolutePath() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path bin = Paths.get("path/to/exectuable");
     filesystem.touch(bin);

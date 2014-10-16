@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -157,7 +158,7 @@ public class ThriftLibraryDescriptionTest {
   }
 
   @Test
-  public void createThriftCompilerBuildRulesHasCorrectDeps() {
+  public void createThriftCompilerBuildRulesHasCorrectDeps() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -359,7 +360,7 @@ public class ThriftLibraryDescriptionTest {
   }
 
   @Test
-  public void createBuildRuleWithFlavoredTargetCallsEnhancerCorrectly() {
+  public void createBuildRuleWithFlavoredTargetCallsEnhancerCorrectly() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
