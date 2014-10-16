@@ -122,6 +122,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "/usr/bin/dx " + xmx + "--dex --output classes.dex.tmp.jar foo.dex.jar bar.dex.jar",
             "repack classes.dex.tmp.jar in classes.dex.jar",
             "rm -f classes.dex.tmp.jar",
+            "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -4 --check=crc32 classes.dex.jar"),
         steps,
         createMockedExecutionContext());
@@ -154,7 +155,9 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
-        "/usr/bin/dx " + xmx + "--dex --output classes.dex.jar foo.dex.jar bar.dex.jar",
+        "/usr/bin/dx " + xmx + "--dex --output classes.dex.jar " +
+        "foo.dex.jar bar.dex.jar && dex_meta dexPath:classes.dex.jar " +
+        "dexMetaPath:classes.dex.jar.meta",
         dxStep.getDescription(createMockedExecutionContext()));
     verifyAll();
   }

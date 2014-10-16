@@ -173,7 +173,8 @@ public class SmartDexingStep implements Step {
     for (Path secondaryOutput :
         Preconditions.checkNotNull(projectFilesystem.getDirectoryContents(secondaryOutputDir))) {
       Path relativePath = normalizedRoot.relativize(secondaryOutput.normalize());
-      if (!producedArtifacts.contains(relativePath)) {
+      if (!producedArtifacts.contains(relativePath) &&
+          !secondaryOutput.getFileName().toString().endsWith(".meta")) {
         projectFilesystem.rmdir(secondaryOutput);
       }
     }
@@ -323,16 +324,18 @@ public class SmartDexingStep implements Step {
   /**
    * The step to produce the .dex file will be determined by the file extension of outputPath, much
    * as {@code dx} itself chooses whether to embed the dex inside a jar/zip based on the destination
-   * file passed to it.
+   * file passed to it.  We also create a ".meta" file that contains information about the
+   * compressed and uncompressed size of the dex; this information is useful later, in applications,
+   * when unpacking.
    */
   static Step createDxStepForDxPseudoRule(Collection<Path> filesToDex,
       Path outputPath,
       EnumSet<Option> dxOptions) {
 
     String output = outputPath.toString();
+    List<Step> steps = Lists.newArrayList();
 
     if (DexStore.XZ.matchesPath(outputPath)) {
-      List<Step> steps = Lists.newArrayList();
       Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xz$", ".tmp.jar"));
       steps.add(new DxStep(tempDexJarOutput, filesToDex, dxOptions));
       // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
@@ -344,15 +347,28 @@ public class SmartDexingStep implements Step {
           ImmutableSet.of("classes.dex"),
           ZipStep.MIN_COMPRESSION_LEVEL));
       steps.add(new RmStep(tempDexJarOutput, true));
+      steps.add(
+          new DexJarAnalysisStep(
+              repackedJar,
+              repackedJar.resolveSibling(
+                  repackedJar.getFileName() + ".meta")));
       steps.add(new XzStep(repackedJar));
-      return new CompositeStep(steps);
     } else if (DexStore.JAR.matchesPath(outputPath) || DexStore.RAW.matchesPath(outputPath) ||
         output.endsWith("classes.dex")) {
-      return new DxStep(outputPath, filesToDex, dxOptions);
+      steps.add(new DxStep(outputPath, filesToDex, dxOptions));
+      if (DexStore.JAR.matchesPath(outputPath)) {
+        steps.add(
+            new DexJarAnalysisStep(
+                outputPath,
+                outputPath.resolveSibling(
+                  outputPath.getFileName() + ".meta")));
+      }
     } else {
       throw new IllegalArgumentException(String.format(
           "Suffix of %s does not have a corresponding DexStore type.",
           outputPath));
     }
+
+    return new CompositeStep(steps);
   }
 }

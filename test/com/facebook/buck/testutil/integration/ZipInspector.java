@@ -69,4 +69,15 @@ public class ZipInspector {
       return crc;
     }
   }
+
+  public long getSize(String pathRelativeToRoot) throws IOException {
+    try (ZipFile zipFile = new ZipFile(this.zipFile)) {
+      ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
+      long size = entry.getSize();
+      Preconditions.checkState(size != -1,
+          "Error accessing size for entry: %s",
+          pathRelativeToRoot);
+      return size;
+    }
+  }
 }

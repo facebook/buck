@@ -25,8 +25,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.Lists;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -38,6 +37,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Collections;
+import java.nio.file.Files;
 
 public class AndroidBinaryIntegrationTest {
 
@@ -127,11 +128,21 @@ public class AndroidBinaryIntegrationTest {
             "buck-out/bin/apps/multidex/_app-exo#dex_merge_output" +
                 "/jarfiles/assets/secondary-program-dex-jars"));
 
-    try (DirectoryStream<Path> stream = java.nio.file.Files.newDirectoryStream(secondaryDir)) {
-      List<Path> files = ImmutableList.copyOf(stream);
-      assertEquals(1, files.size());
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(secondaryDir)) {
+      List<Path> files = Lists.newArrayList(stream);
+      assertEquals(2, files.size());
+      Collections.sort(files);
+
       Path secondaryJar = files.get(0);
-      new ZipInspector(secondaryJar.toFile()).assertFileExists("classes.dex");
+      ZipInspector zi = new ZipInspector(secondaryJar.toFile());
+      zi.assertFileExists("classes.dex");
+      long jarSize = Files.size(secondaryJar);
+      long classesDexSize = zi.getSize("classes.dex");
+
+      Path dexMeta = files.get(1);
+      assertEquals(
+          String.format("jar:%s dex:%s", jarSize, classesDexSize),
+          new String(Files.readAllBytes(dexMeta), "US-ASCII"));
     }
   }
 
