@@ -19,21 +19,23 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Matches all {@link TargetNode} objects in a repository whose raw rule map matches the given
- * {@link RuleJsonPredicate}.
+ * Matches all {@link TargetNode} objects in a repository that match the given {@link Predicate}.
  */
-public class RuleJsonPredicateSpec implements TargetNodeSpec {
+public class TargetNodePredicateSpec implements TargetNodeSpec {
 
-  private final RuleJsonPredicate predicate;
+  private final Predicate<TargetNode<?>> predicate;
   private final BuildFileSpec buildFileSpec;
 
-  public RuleJsonPredicateSpec(RuleJsonPredicate predicate, ImmutableSet<Path> ignoreDirs) {
+  public TargetNodePredicateSpec(
+      Predicate<TargetNode<?>> predicate,
+      ImmutableSet<Path> ignoreDirs) {
     this.predicate = Preconditions.checkNotNull(predicate);
     this.buildFileSpec = BuildFileSpec.fromRecursivePath(Paths.get(""), ignoreDirs);
   }
@@ -43,10 +45,7 @@ public class RuleJsonPredicateSpec implements TargetNodeSpec {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
 
     for (TargetNode<?> node : nodes) {
-      if (predicate.isMatch(
-            node.getRuleFactoryParams().getInstance(),
-            node.getDescription().getBuildRuleType(),
-            node.getBuildTarget())) {
+      if (predicate.apply(node)) {
         targets.add(node.getBuildTarget());
       }
     }

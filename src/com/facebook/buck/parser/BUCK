@@ -1,15 +1,15 @@
 java_library(
   name = 'parser',
   srcs = [
+    'BuildFileSpec.java',
+    'BuildTargetSpec.java',
+    'MissingBuildFileException.java',
+    'ParseEvent.java',
     'Parser.java',
     'PartialGraph.java',
-    'ParseEvent.java',
     'TargetGraph.java',
-    'BuildFileSpec.java',
+    'TargetNodePredicateSpec.java',
     'TargetNodeSpec.java',
-    'BuildTargetSpec.java',
-    'RuleJsonPredicateSpec.java',
-    'MissingBuildFileException.java',
   ],
   deps = [
     ':project',

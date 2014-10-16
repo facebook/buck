@@ -651,8 +651,8 @@ public class Parser {
    */
   public synchronized ImmutableSet<BuildTarget> filterAllTargetsInProject(
       ProjectFilesystem filesystem,
-      Iterable<String> includes,
-      RuleJsonPredicate filter,
+      final Iterable<String> includes,
+      final RuleJsonPredicate filter,
       Console console,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
@@ -666,7 +666,18 @@ public class Parser {
           projectFilesystem.getRootPath(), filesystem.getRootPath()));
     }
     buildTargetGraph(
-        ImmutableList.of(new RuleJsonPredicateSpec(filter, filesystem.getIgnorePaths())),
+        ImmutableList.of(
+            new TargetNodePredicateSpec(
+                new Predicate<TargetNode<?>>() {
+                  @Override
+                  public boolean apply(TargetNode<?> input) {
+                    return filter.isMatch(
+                        input.getRuleFactoryParams().getInstance(),
+                        input.getDescription().getBuildRuleType(),
+                        input.getBuildTarget());
+                  }
+                },
+                filesystem.getIgnorePaths())),
         includes,
         buckEventBus,
         console,
