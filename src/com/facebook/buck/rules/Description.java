@@ -43,7 +43,7 @@ public interface Description<T> {
   T createUnpopulatedConstructorArg();
 
   /**
-   * Create a {@link BuildRule} for the given {@link BuildableParams}. Note that the
+   * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the
    * {@link com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the
    * {@link Flavor} to create.
    *

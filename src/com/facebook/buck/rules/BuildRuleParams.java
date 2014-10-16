@@ -29,7 +29,7 @@ import java.nio.file.Path;
  * Standard set of parameters that is passed to all build rules.
  */
 @Beta
-public class BuildRuleParams implements BuildableParams {
+public class BuildRuleParams {
 
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> declaredDeps;
@@ -83,12 +83,10 @@ public class BuildRuleParams implements BuildableParams {
         buildRuleType);
   }
 
-  @Override
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }
 
-  @Override
   public ImmutableSortedSet<BuildRule> getDeps() {
     return totalDeps;
   }
