@@ -281,4 +281,24 @@ public class FakeProjectFilesystemTest {
     assertTrue(filesystem.exists(Paths.get("test/one")));
     assertTrue(filesystem.exists(Paths.get("test")));
   }
+
+  @Test
+  public void testIsSymLinkReturnsTrueForSymLink() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.createSymLink(Paths.get("foo"), Paths.get("bar"), false);
+    assertTrue(filesystem.isSymLink(Paths.get("foo")));
+  }
+
+  @Test
+  public void testIsSymLinkReturnsFalseForFile() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.touch(Paths.get("foo"));
+    assertFalse(filesystem.isSymLink(Paths.get("foo")));
+  }
+
+  @Test
+  public void testIsSymLinkReturnsFalseForNotExistent() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    assertFalse(filesystem.isSymLink(Paths.get("foo")));
+  }
 }

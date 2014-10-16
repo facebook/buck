@@ -48,6 +48,7 @@ import java.io.StringReader;
 import java.nio.file.CopyOption;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -115,6 +116,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   private final Map<Path, byte[]> fileContents;
   private final Map<Path, ImmutableSet<FileAttribute<?>>> fileAttributes;
   private final Map<Path, FileTime> fileLastModifiedTimes;
+  private final Map<Path, Path> symLinks;
   private final Set<Path> directories;
   private final Clock clock;
 
@@ -127,6 +129,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     fileContents = Maps.newHashMap();
     fileAttributes = Maps.newHashMap();
     fileLastModifiedTimes = Maps.newHashMap();
+    symLinks = Maps.newHashMap();
     directories = Sets.newHashSet();
     this.clock = Preconditions.checkNotNull(clock);
 
@@ -204,6 +207,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return directories.contains(path.normalize());
   }
 
+  /**
+   * Does not support symlinks.
+   */
   @Override
   public ImmutableCollection<Path> getDirectoryContents(final Path pathRelativeToProjectRoot)
       throws IOException {
@@ -322,6 +328,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     };
   }
 
+  /**
+   * Does not support symlinks.
+   */
   @Override
   public InputStream newFileInputStream(Path pathRelativeToProjectRoot)
     throws IOException {
@@ -337,6 +346,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     writeBytesToPath(ByteStreams.toByteArray(inputStream), path);
   }
 
+  /**
+   * Does not support symlinks.
+   */
   @Override
   public Optional<String> readFileIfItExists(Path path) {
     if (!exists(path)) {
@@ -345,6 +357,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return Optional.of(new String(getFileBytes(path), Charsets.UTF_8));
   }
 
+  /**
+   * Does not support symlinks.
+   */
   @Override
   public Optional<Reader> getReaderIfFileExists(Path path) {
     Optional<String> content = readFileIfItExists(path);
@@ -354,6 +369,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return Optional.of((Reader) new StringReader(content.get()));
   }
 
+  /**
+   * Does not support symlinks.
+   */
   @Override
   public Optional<String> readFirstLine(Path path) {
     List<String> lines;
@@ -366,6 +384,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return Optional.fromNullable(Iterables.get(lines, 0, null));
   }
 
+  /**
+   * Does not support symlinks.
+   */
   @Override
   public List<String> readLines(Path path) throws IOException {
     Optional<String> contents = readFileIfItExists(path);
@@ -377,6 +398,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return Splitter.on('\n').splitToList(content);
   }
 
+  /**
+   * Does not support symlinks.
+   */
   @Override
   public String computeSha1(Path path) throws IOException {
     if (!exists(path)) {
@@ -424,12 +448,20 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public void createSymLink(Path source, Path target, boolean force) throws IOException {
-    throw new UnsupportedOperationException();
+    if (!force) {
+      if (fileContents.containsKey(source) || directories.contains(source)) {
+        throw new FileAlreadyExistsException(source.toString());
+      }
+    } else {
+      rmFile(source);
+      rmdir(source);
+    }
+    symLinks.put(source, target);
   }
 
   @Override
   public boolean isSymLink(Path path) throws IOException {
-    throw new UnsupportedOperationException();
+    return symLinks.containsKey(path);
   }
 
   @Override
