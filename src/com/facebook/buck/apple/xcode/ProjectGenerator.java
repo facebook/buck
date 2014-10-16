@@ -571,15 +571,6 @@ public class ProjectGenerator {
       defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", getObjectOutputPathForRule(rule));
     }
 
-    if (appleBuildRule.getPrefixHeader().isPresent()) {
-      SourcePath prefixHeader = appleBuildRule.getPrefixHeader().get();
-      Path pathToPrefixHeader = resolver.getPath(prefixHeader);
-      Path relativePathToPrefixHeader = relativizeBuckRelativePathToGeneratedProject(
-          appleBuildRule.getBuildTarget(),
-          pathToPrefixHeader.toString());
-      defaultSettingsBuilder.put("GCC_PREFIX_HEADER", relativePathToPrefixHeader.toString());
-    }
-
     setTargetBuildConfigurations(
         rule,
         target,
@@ -689,6 +680,20 @@ public class ProjectGenerator {
         .put(
             "FRAMEWORK_SEARCH_PATHS",
             Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(buildRule)));
+
+    // HACK: GCC_PREFIX_HEADER needs to be modified because the path is referenced relative to
+    // project root, so if the project is generated in a different place from the BUCK file, it
+    // would break. This forces it to be based off of SRCROOT, which is overriden to point to the
+    // BUCK file location.
+    // However, when using REFERENCE_EXISTING_XCCONFIGS, this setting is not put into another layer,
+    // and therefore may override an existing setting in the target-inline-config level.
+    // Fortunately, this option is only set when we are generating separated projects, which are
+    // placed next to the BUCK files, so avoiding this is OK.
+    // In the long run, setting should be written relative to SRCROOT everywhere, and this entire
+    // hack can be deleted.
+    if (!options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
+      overrideConfigsBuilder.put("GCC_PREFIX_HEADER", "$(SRCROOT)/$(inherited)");
+    }
 
     ImmutableMap<String, String> overrideConfigs = overrideConfigsBuilder.build();
     ImmutableMap<String, String> defaultConfigs = defaultConfigsBuilder.build();
