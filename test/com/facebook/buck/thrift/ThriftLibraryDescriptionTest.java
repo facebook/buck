@@ -26,16 +26,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
@@ -51,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
@@ -145,12 +141,7 @@ public class ThriftLibraryDescriptionTest {
     }
 
     @Override
-    public ImmutableSet<BuildTarget> getImplicitDepsFromParams(BuildRuleFactoryParams params) {
-      return implicitDeps;
-    }
-
-    @Override
-    public ImmutableSet<BuildTarget> getImplicitDepsFromArg(
+    public ImmutableSet<BuildTarget> getImplicitDepsForTargetFromConstructorArg(
         BuildTarget target,
         ThriftConstructorArg arg) {
       return implicitDeps;
@@ -505,14 +496,6 @@ public class ThriftLibraryDescriptionTest {
   @Test
   public void findDepsFromParamsDoesNothingForUnflavoredTarget() {
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildTargetParser parser = new BuildTargetParser();
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        Maps.<String, Object>newHashMap(),
-        filesystem,
-        parser,
-        unflavoredTarget,
-        new FakeRuleKeyBuilderFactory());
 
     // Setup an empty thrift buck config and description.
     FakeBuckConfig buckConfig = new FakeBuckConfig();
@@ -521,8 +504,12 @@ public class ThriftLibraryDescriptionTest {
         thriftBuckConfig,
         ImmutableList.<ThriftLanguageSpecificEnhancer>of());
 
+    ThriftConstructorArg constructorArg = desc.createUnpopulatedConstructorArg();
+
     // Now call the find deps methods and verify it returns nothing.
-    Iterable<String> results = desc.findDepsFromParams(params);
+    Iterable<String> results = desc.findDepsForTargetFromConstructorArgs(
+        unflavoredTarget,
+        constructorArg);
     assertEquals(
         ImmutableList.<String>of(),
         ImmutableList.copyOf(results));
@@ -530,12 +517,11 @@ public class ThriftLibraryDescriptionTest {
 
   @Test
   public void findDepsFromParamsSetsUpDepsForFlavoredTarget() {
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-
     // Create the thrift target and implicit dep.
     BuildTarget thriftTarget = BuildTargetFactory.newInstance("//bar:thrift_compiler");
-    FakeBuildRule implicitDep = createFakeBuildRule("//foo:implicit_dep", resolver);
+    FakeBuildRule implicitDep = createFakeBuildRule(
+        "//foo:implicit_dep",
+        new SourcePathResolver(new BuildRuleResolver()));
 
     // Setup the default values returned by the language specific enhancer.
     String language = "fake";
@@ -543,17 +529,7 @@ public class ThriftLibraryDescriptionTest {
     ImmutableSet<String> options = ImmutableSet.of();
     ImmutableSet<BuildTarget> implicitDeps = ImmutableSet.of(implicitDep.getBuildTarget());
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
-    BuildTarget flavoredTarget =
-        BuildTargets.createFlavoredBuildTarget(unflavoredTarget, flavor);
-
-    // Create the build targets and params.
-    BuildTargetParser parser = new BuildTargetParser();
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        Maps.<String, Object>newHashMap(),
-        filesystem,
-        parser,
-        flavoredTarget,
-        new FakeRuleKeyBuilderFactory());
+    BuildTarget flavoredTarget = BuildTargets.createFlavoredBuildTarget(unflavoredTarget, flavor);
 
     // Setup an empty thrift buck config and description.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
@@ -570,8 +546,13 @@ public class ThriftLibraryDescriptionTest {
         thriftBuckConfig,
         ImmutableList.of(enhancer));
 
+    ThriftConstructorArg constructorArg = desc.createUnpopulatedConstructorArg();
+    constructorArg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+
     // Now call the find deps methods and verify it returns nothing.
-    Iterable<String> results = desc.findDepsFromParams(params);
+    Iterable<String> results = desc.findDepsForTargetFromConstructorArgs(
+        flavoredTarget,
+        constructorArg);
     assertEquals(
         FluentIterable.from(
             ImmutableSet.<BuildTarget>builder()

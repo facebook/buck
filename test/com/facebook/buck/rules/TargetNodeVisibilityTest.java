@@ -26,12 +26,10 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 
 import org.junit.Test;
-
-import java.nio.file.Path;
 
 public class TargetNodeVisibilityTest {
 
@@ -47,7 +45,7 @@ public class TargetNodeVisibilityTest {
   private static final ImmutableSet<BuildTargetPattern> noVisibilityPatterns = ImmutableSet.of();
 
   @Test
-  public void testVisibilityPublic() {
+  public void testVisibilityPublic() throws NoSuchBuildTargetException {
     TargetNode<?> publicTargetNode = createTargetNode(
         publicTarget,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
@@ -59,7 +57,7 @@ public class TargetNodeVisibilityTest {
   }
 
   @Test
-  public void testVisibilityNonPublic() {
+  public void testVisibilityNonPublic() throws NoSuchBuildTargetException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
@@ -86,7 +84,7 @@ public class TargetNodeVisibilityTest {
   }
 
   @Test
-  public void testVisibilityNonPublicFailure() {
+  public void testVisibilityNonPublicFailure() throws NoSuchBuildTargetException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
@@ -104,7 +102,7 @@ public class TargetNodeVisibilityTest {
   }
 
   @Test
-  public void testVisibilityMix() {
+  public void testVisibilityMix() throws NoSuchBuildTargetException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
@@ -131,7 +129,7 @@ public class TargetNodeVisibilityTest {
   }
 
   @Test
-  public void testVisibilityMixFailure() {
+  public void testVisibilityMixFailure() throws NoSuchBuildTargetException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
@@ -161,7 +159,7 @@ public class TargetNodeVisibilityTest {
   }
 
   @Test
-  public void testVisibilityForDirectory() {
+  public void testVisibilityForDirectory() throws NoSuchBuildTargetException {
     BuildTarget libTarget = BuildTarget.builder("//lib", "lib").build();
     BuildTarget targetInSpecifiedDirectory =
         BuildTarget.builder("//src/com/facebook", "test").build();
@@ -224,17 +222,17 @@ public class TargetNodeVisibilityTest {
 
   private static TargetNode<?> createTargetNode(
       BuildTarget buildTarget,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns) {
+      ImmutableSet<BuildTargetPattern> visibilityPatterns) throws NoSuchBuildTargetException {
     Description<FakeDescription.FakeArg> description = new FakeDescription();
+    FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
     BuildRuleFactoryParams params =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            Maps.<String, Object>newHashMap(),
             new BuildTargetParser(),
             buildTarget);
     return new TargetNode<>(
         description,
+        arg,
         params,
-        ImmutableSet.<Path>of(),
         ImmutableSet.<BuildTarget>of(),
         visibilityPatterns);
   }

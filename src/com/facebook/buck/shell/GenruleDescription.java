@@ -20,7 +20,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -37,6 +36,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +44,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 public class GenruleDescription
-    implements Description<GenruleDescription.Arg>, ImplicitDepsInferringDescription {
+    implements
+    Description<GenruleDescription.Arg>,
+    ImplicitDepsInferringDescription<GenruleDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("genrule");
 
@@ -96,31 +98,36 @@ public class GenruleDescription
   }
 
   @Override
-  public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params) {
+  public Iterable<String> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      GenruleDescription.Arg constructorArg) {
     ImmutableSet.Builder<String> targets = ImmutableSet.builder();
-    addDepsFromParam(params, "bash", targets);
-    addDepsFromParam(params, "cmd", targets);
-    addDepsFromParam(params, "cmdExe", targets);
+    if (constructorArg.bash.isPresent()) {
+      addDepsFromParam(buildTarget, constructorArg.bash.get(), targets);
+    }
+    if (constructorArg.cmd.isPresent()) {
+      addDepsFromParam(buildTarget, constructorArg.cmd.get(), targets);
+    }
+    if (constructorArg.cmdExe.isPresent()) {
+      addDepsFromParam(buildTarget, constructorArg.cmdExe.get(), targets);
+    }
     return targets.build();
   }
 
   private void addDepsFromParam(
-      BuildRuleFactoryParams params,
-      String paramName,
+      BuildTarget target,
+      String paramValue,
       ImmutableSet.Builder<String> targets) {
-    Object rawCmd = params.getNullableRawAttribute(paramName);
-    if (rawCmd == null) {
-      return;
-    }
-    try {
-      targets.addAll(
-          Iterables.transform(
-              macroHandler.extractTargets(
-                  params.target,
-                  (String) rawCmd),
-              Functions.toStringFunction()));
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", params.target, e.getMessage());
+    Preconditions.checkNotNull(paramValue);
+        try {
+          targets.addAll(
+              Iterables.transform(
+                  macroHandler.extractTargets(
+                      target,
+                      paramValue),
+                  Functions.toStringFunction()));
+        } catch (MacroException e) {
+          throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
   }
 

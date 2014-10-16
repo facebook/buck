@@ -22,12 +22,18 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -42,12 +48,20 @@ public class TargetNodeTest {
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
       throws NoSuchBuildTargetException {
     Description<Arg> description = new TestDescription();
+    BuildRuleFactoryParams buildRuleFactoryParams = buildRuleFactoryParams();
     TargetNode<Arg> targetNode = new TargetNode<>(
         description,
-        buildRuleFactoryParams(
+        createPopulatedConstructorArg(
+            description,
+            buildRuleFactoryParams,
             ImmutableMap.<String, Object>of(
+                "deps", ImmutableList.of(),
                 "string", "//example/path:one",
-                "target", "//example/path:two")));
+                "target", "//example/path:two",
+                "sourcePaths", ImmutableSortedSet.of())),
+        buildRuleFactoryParams,
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<BuildTargetPattern>of());
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
     assertTrue(targetNode.getDeclaredDeps().isEmpty());
@@ -56,14 +70,33 @@ public class TargetNodeTest {
   @Test
   public void testDepsAndPathsAreCollected() throws NoSuchBuildTargetException {
     Description<Arg> description = new TestDescription();
+    BuildRuleFactoryParams buildRuleFactoryParams = buildRuleFactoryParams();
+    ImmutableList<String> depsStrings = ImmutableList.of(
+        "//example/path:one",
+        "//example/path:two");
+    ImmutableSet<BuildTarget> depsTargets = FluentIterable
+        .from(depsStrings)
+        .transform(
+            new Function<String, BuildTarget>() {
+               @Override
+               public BuildTarget apply(String input) {
+                 return BuildTargetFactory.newInstance(input);
+               }
+            })
+        .toSet();
     TargetNode<Arg> targetNode = new TargetNode<>(
         description,
-        buildRuleFactoryParams(
+        createPopulatedConstructorArg(
+            description,
+            buildRuleFactoryParams,
             ImmutableMap.<String, Object>of(
-                "deps", ImmutableList.of("//example/path:one", "//example/path:two"),
+                "deps", depsStrings,
                 "sourcePaths", ImmutableList.of("//example/path:four", "MyClass.java"),
                 "appleSource", "//example/path:five",
-                "source", "AnotherClass.java")));
+                "source", "AnotherClass.java")),
+        buildRuleFactoryParams,
+        depsTargets,
+        ImmutableSet.<BuildTargetPattern>of());
 
     assertThat(
         targetNode.getInputs(),
@@ -115,10 +148,32 @@ public class TargetNodeTest {
     }
   }
 
-  public BuildRuleFactoryParams buildRuleFactoryParams(Map<String, Object> args) {
+  public BuildRuleFactoryParams buildRuleFactoryParams() {
     BuildTargetParser parser = new BuildTargetParser();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:three");
     return NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-        args, parser, target);
+        parser,
+        target);
+  }
+
+  public Arg createPopulatedConstructorArg(
+      Description<Arg> description,
+      BuildRuleFactoryParams buildRuleFactoryParams,
+      Map<String, Object> instance) throws NoSuchBuildTargetException {
+    ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    Arg constructorArg = description.createUnpopulatedConstructorArg();
+    try {
+      marshaller.populate(
+          projectFilesystem,
+          buildRuleFactoryParams,
+          constructorArg,
+          ImmutableSet.<BuildTarget>builder(),
+          ImmutableSet.<BuildTargetPattern>builder(),
+          instance);
+    } catch (ConstructorArgMarshalException e) {
+      throw new RuntimeException(e);
+    }
+    return constructorArg;
   }
 }

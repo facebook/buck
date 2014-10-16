@@ -17,11 +17,16 @@
 package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
+import com.facebook.buck.rules.ConstructorArgMarshalException;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetNode;
@@ -48,12 +53,31 @@ public class GenruleDescriptionTest {
         "cmd", "$(exe //bin:executable) $(location :arg)");
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        instance,
         projectFilesystem,
         new BuildTargetParser(),
         BuildTargetFactory.newInstance("//foo:bar"),
         new FakeRuleKeyBuilderFactory());
-    TargetNode<GenruleDescription.Arg> targetNode = new TargetNode<>(genruleDescription, params);
+    ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller();
+    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns = ImmutableSet.builder();
+    GenruleDescription.Arg constructorArg = genruleDescription.createUnpopulatedConstructorArg();
+    try {
+      marshaller.populate(
+          projectFilesystem,
+          params,
+          constructorArg,
+          declaredDeps,
+          visibilityPatterns,
+          instance);
+    }  catch (ConstructorArgMarshalException e) {
+      fail("Expected constructorArg to be correctly populated.");
+    }
+    TargetNode<GenruleDescription.Arg> targetNode = new TargetNode(
+        genruleDescription,
+        constructorArg,
+        params,
+        declaredDeps.build(),
+        visibilityPatterns.build());
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",
         ImmutableSet.of(

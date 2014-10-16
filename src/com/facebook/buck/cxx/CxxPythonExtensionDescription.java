@@ -19,11 +19,10 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.python.PythonUtil;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -42,7 +41,7 @@ import java.nio.file.Path;
 
 public class CxxPythonExtensionDescription implements
     Description<CxxPythonExtensionDescription.Arg>,
-    ImplicitDepsInferringDescription {
+    ImplicitDepsInferringDescription<CxxPythonExtensionDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_python_extension");
 
@@ -186,12 +185,14 @@ public class CxxPythonExtensionDescription implements
   }
 
   @Override
-  public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params) {
+  public Iterable<String> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Arg constructorArg) {
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
     deps.add(cxxPlatform.getPythonDep().toString());
 
-    if (!params.getOptionalListAttribute("lexSrcs").isEmpty()) {
+    if (!constructorArg.lexSrcs.get().isEmpty()) {
       deps.add(cxxPlatform.getLexDep().toString());
     }
 

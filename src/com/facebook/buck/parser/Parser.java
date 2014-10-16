@@ -30,11 +30,14 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.ConstructorArgMarshalException;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
@@ -118,6 +121,8 @@ public class Parser {
   private Optional<BuckEvent> parseStartEvent = Optional.absent();
 
   private static final Logger LOG = Logger.get(Parser.class);
+
+  private static final ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller();
 
   /**
    * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.
@@ -1061,19 +1066,34 @@ public class Parser {
         this.pathsToBuildTargets.put(buildFilePath, buildTarget);
 
         BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
-            map,
             targetRepo.getFilesystem(),
             targetRepo.getBuildTargetParser(),
             // Although we store the rule by its unflavoured name, when we construct it, we need the
             // flavour.
             buildTarget,
             ruleKeyBuilderFactory);
+        Object constructorArg = description.createUnpopulatedConstructorArg();
         TargetNode<?> targetNode;
         try {
-          targetNode = new TargetNode<>(description, factoryParams);
+          ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+          ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns = ImmutableSet.builder();
+          marshaller.populate(
+              targetRepo.getFilesystem(),
+              factoryParams,
+              constructorArg,
+              declaredDeps,
+              visibilityPatterns,
+              map);
+          targetNode = new TargetNode(
+              description,
+              constructorArg,
+              factoryParams,
+              declaredDeps.build(),
+              visibilityPatterns.build());
         } catch (NoSuchBuildTargetException e) {
-          //
           throw new HumanReadableException(e);
+        } catch (ConstructorArgMarshalException e) {
+          throw new HumanReadableException("%s: %s", buildTarget, e.getMessage());
         }
 
         TargetNode<?> existingTargetNode = memoizedTargetNodes.put(buildTarget, targetNode);

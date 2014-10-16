@@ -60,16 +60,11 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
   }
 
   @Override
-  public boolean traverse(Object object, Traversal traversal) {
-    // This does introspection and pick the side that contains child elements to try first.
-    // This is not terribly robust, but is sufficient for most use cases.
-    if (leftTypeCoercer instanceof CollectionTypeCoercer ||
-        leftTypeCoercer instanceof MapTypeCoercer) {
-      return leftTypeCoercer.traverse(object, traversal) ||
-          rightTypeCoercer.traverse(object, traversal);
+  public boolean traverse(Either<Left, Right> object, Traversal traversal) {
+    if (object.isLeft()) {
+      return leftTypeCoercer.traverse(object.getLeft(), traversal);
     } else {
-      return rightTypeCoercer.traverse(object, traversal) ||
-          leftTypeCoercer.traverse(object, traversal);
+      return rightTypeCoercer.traverse(object.getRight(), traversal);
     }
   }
 

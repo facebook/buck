@@ -22,7 +22,6 @@ import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonUtil;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -141,12 +140,7 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
   }
 
   @Override
-  public ImmutableSet<BuildTarget> getImplicitDepsFromParams(BuildRuleFactoryParams params) {
-    return getImplicitDeps();
-  }
-
-  @Override
-  public ImmutableSet<BuildTarget> getImplicitDepsFromArg(
+  public ImmutableSet<BuildTarget> getImplicitDepsForTargetFromConstructorArg(
       BuildTarget target,
       ThriftConstructorArg arg) {
     return getImplicitDeps();

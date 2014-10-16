@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class CxxBinaryDescription implements
     Description<CxxBinaryDescription.Arg>,
-    ImplicitDepsInferringDescription {
+    ImplicitDepsInferringDescription<CxxBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_binary");
 
@@ -86,10 +86,12 @@ public class CxxBinaryDescription implements
   }
 
   @Override
-  public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params) {
+  public Iterable<String> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Arg constructorArg) {
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
-    if (!params.getOptionalListAttribute("lexSrcs").isEmpty()) {
+    if (!constructorArg.lexSrcs.get().isEmpty()) {
       deps.add(cxxPlatform.getLexDep().toString());
     }
 

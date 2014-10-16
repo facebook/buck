@@ -17,14 +17,11 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.util.HumanReadableException;
 
 /**
  * Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}.
  */
 public class TargetNodeToBuildRuleTransformer {
-
-  ConstructorArgMarshaller inspector = new ConstructorArgMarshaller();
 
   public <T> BuildRule transform(
       BuildRuleResolver ruleResolver,
@@ -33,15 +30,7 @@ public class TargetNodeToBuildRuleTransformer {
     BuildRuleFactoryParams ruleFactoryParams = targetNode.getRuleFactoryParams();
     Description<T> description = targetNode.getDescription();
 
-    T arg = description.createUnpopulatedConstructorArg();
-    try {
-      inspector.populate(
-          ruleFactoryParams.getProjectFilesystem(),
-          ruleFactoryParams,
-          arg);
-    } catch (ConstructorArgMarshalException e) {
-      throw new HumanReadableException("%s: %s", targetNode.getBuildTarget(), e.getMessage());
-    }
+    T arg = targetNode.getConstructorArg();
 
     // The params used for the Buildable only contain the declared parameters. However, the deps of
     // the rule include not only those, but also any that were picked up through the deps declared

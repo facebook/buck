@@ -514,7 +514,7 @@ public class CxxDescriptionEnhancer {
             pathResolver,
             args.headerNamespace.transform(MorePaths.TO_PATH)
                 .or(params.getBuildTarget().getBasePath()),
-            args.headers.or((ImmutableList.<SourcePath>of())));
+            args.headers.or(ImmutableList.<SourcePath>of()));
 
     // Extract the lex sources.
     ImmutableMap<String, SourcePath> lexSrcs =

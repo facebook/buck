@@ -81,12 +81,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       new Predicate<TargetNode<?>>() {
         @Override
         public boolean apply(TargetNode<?> input) {
-          Object rawValue = input
-              .getRuleFactoryParams()
-              .getInstance()
-              .get(JavaLibraryDescription.ANNOTATION_PROCESSORS);
-          return ((rawValue instanceof Iterable) && !Iterables.isEmpty((Iterable<?>) rawValue));
-
+          Object constructorArg = input.getConstructorArg();
+          if (!(constructorArg instanceof JavaLibraryDescription.Arg)) {
+            return false;
+          }
+          JavaLibraryDescription.Arg arg = ((JavaLibraryDescription.Arg) constructorArg);
+          return !arg.annotationProcessors.get().isEmpty();
         }
       };
 

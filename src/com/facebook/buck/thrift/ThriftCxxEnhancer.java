@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -42,7 +41,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
-import java.util.List;
 
 public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
@@ -258,13 +256,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
   }
 
   @Override
-  public ImmutableSet<BuildTarget> getImplicitDepsFromParams(BuildRuleFactoryParams params) {
-    List<String> options = params.getOptionalListAttribute(cpp2 ? "cpp2Options" : "cppOptions");
-    return getImplicitDepsFromOptions(params.target, ImmutableSet.copyOf(options));
-  }
-
-  @Override
-  public ImmutableSet<BuildTarget> getImplicitDepsFromArg(
+  public ImmutableSet<BuildTarget> getImplicitDepsForTargetFromConstructorArg(
       BuildTarget target,
       ThriftConstructorArg arg) {
     Optional<ImmutableSet<String>> options = cpp2 ? arg.cpp2Options : arg.cppOptions;

@@ -19,7 +19,6 @@ package com.facebook.buck.thrift;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableMap;
@@ -57,12 +56,10 @@ public interface ThriftLanguageSpecificEnhancer {
 
   /**
    * @return the names of extra dependencies implicitly required for this language.
-   *     Note that we require two definitions of this method since we need to lookup the
-   *     the implicit deps a) when constructing the target graph and b) when building the
-   *     actions for the action graph.
    */
-  ImmutableSet<BuildTarget> getImplicitDepsFromParams(BuildRuleFactoryParams params);
-  ImmutableSet<BuildTarget> getImplicitDepsFromArg(BuildTarget target, ThriftConstructorArg args);
+  ImmutableSet<BuildTarget> getImplicitDepsForTargetFromConstructorArg(
+      BuildTarget target,
+      ThriftConstructorArg constructorArg);
 
   /**
    * @return the language specific options to pass to the thrift compiler.

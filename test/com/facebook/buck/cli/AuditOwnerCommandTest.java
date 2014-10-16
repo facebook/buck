@@ -25,6 +25,7 @@ import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
@@ -53,7 +54,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -92,7 +92,7 @@ public class AuditOwnerCommandTest {
     }
 
     public static class FakeArg {
-
+      public ImmutableSet<Path> inputs;
     }
   }
 
@@ -100,17 +100,22 @@ public class AuditOwnerCommandTest {
       BuildTarget buildTarget,
       ImmutableSet<Path> inputs) {
     Description<FakeDescription.FakeArg> description = new FakeDescription();
+    FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
+    arg.inputs = inputs;
     BuildRuleFactoryParams params =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            Maps.<String, Object>newHashMap(),
             new BuildTargetParser(),
             buildTarget);
-    return new TargetNode<>(
-        description,
-        params,
-        inputs,
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+    try {
+      return new TargetNode<>(
+          description,
+          arg,
+          params,
+          ImmutableSet.<BuildTarget>of(),
+          ImmutableSet.<BuildTargetPattern>of());
+    } catch (NoSuchBuildTargetException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @SuppressWarnings("serial")

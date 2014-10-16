@@ -22,9 +22,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -34,7 +35,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
@@ -120,7 +121,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
     ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
-    args.src = Optional.of(new TestSourcePath("chips"));
+    args.src = Optional.of((SourcePath) new TestSourcePath("chips"));
     args.out = Optional.of("fish");
     ExportFile exportFile = new ExportFile(
         new FakeBuildRuleParamsBuilder(target).build(),
@@ -143,7 +144,7 @@ public class ExportFileTest {
   public void shouldSetInputsFromSourcePaths() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
-    args.src = Optional.of(new TestSourcePath("chips"));
+    args.src = Optional.of((SourcePath) new TestSourcePath("chips"));
     args.out = Optional.of("cake");
     ExportFile exportFile = new ExportFile(
         new FakeBuildRuleParamsBuilder(target).build(),
@@ -157,7 +158,7 @@ public class ExportFileTest {
         BuildTargetFactory.newInstance("//example:one"),
         pathResolver);
     args.src = Optional.of(
-        new BuildTargetSourcePath(rule.getBuildTarget()));
+        (SourcePath) new BuildTargetSourcePath(rule.getBuildTarget()));
     exportFile = new ExportFile(new FakeBuildRuleParamsBuilder(target).build(), pathResolver, args);
     assertTrue(Iterables.isEmpty(exportFile.getInputsToCompareToOutput()));
 

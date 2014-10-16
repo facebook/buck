@@ -28,10 +28,11 @@ import com.google.common.base.Preconditions;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
-class ParamInfo implements Comparable<ParamInfo> {
+class ParamInfo<T> implements Comparable<ParamInfo<T>> {
 
   private final TypeCoercer<?> typeCoercer;
 
@@ -76,7 +77,23 @@ class ParamInfo implements Comparable<ParamInfo> {
     return typeCoercer.getOutputClass();
   }
 
-  public void traverse(Traversal traversal, @Nullable Object object) {
+  public void traverse(Traversal traversal, T dto) {
+    traverseHelper(typeCoercer, traversal, dto);
+  }
+
+  private <U> void traverseHelper(TypeCoercer<U> typeCoercer, Traversal traversal, T dto) {
+    U object;
+    try {
+      if (isOptional) {
+        Optional<U> optional = (Optional<U>) field.get(dto);
+        object = optional.orNull();
+      } else {
+        object = (U) field.get(dto);
+      }
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
+
     if (object != null) {
       typeCoercer.traverse(object, traversal);
     }
@@ -88,14 +105,16 @@ class ParamInfo implements Comparable<ParamInfo> {
 
   public void setFromParams(
       ProjectFilesystem filesystem,
+      BuildRuleFactoryParams params,
       Object arg,
-      BuildRuleFactoryParams params) throws ParamInfoException {
+      Map<String, ?> instance
+      ) throws ParamInfoException {
     set(
         params.buildTargetParser,
         filesystem,
         params.target.getBasePath(),
         arg,
-        params.getNullableRawAttribute(name));
+        instance.get(name));
   }
 
   /**
@@ -150,7 +169,7 @@ class ParamInfo implements Comparable<ParamInfo> {
    * Only valid when comparing {@link ParamInfo} instances from the same description.
    */
   @Override
-  public int compareTo(ParamInfo that) {
+  public int compareTo(ParamInfo<T> that) {
     return this.name.compareTo(that.name);
   }
 

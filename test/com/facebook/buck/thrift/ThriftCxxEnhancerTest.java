@@ -23,20 +23,15 @@ import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -160,36 +155,20 @@ public class ThriftCxxEnhancerTest {
 
   private void expectImplicitDeps(
       ThriftCxxEnhancer enhancer,
-      ProjectFilesystem filesystem,
-      BuildTargetParser parser,
       ImmutableSet<String> options,
       ImmutableSet<BuildTarget> expected) {
 
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        ImmutableMap.<String, Object>of(
-            "cppOptions", ImmutableList.copyOf(options),
-            "cpp2Options", ImmutableList.copyOf(options.toArray())),
-        filesystem,
-        parser,
-        TARGET,
-        new FakeRuleKeyBuilderFactory());
     ThriftConstructorArg arg = new ThriftConstructorArg();
     arg.cppOptions = Optional.of(options);
     arg.cpp2Options = Optional.of(options);
 
     assertEquals(
         expected,
-        enhancer.getImplicitDepsFromParams(params));
-    assertEquals(
-        expected,
-        enhancer.getImplicitDepsFromArg(TARGET, arg));
+        enhancer.getImplicitDepsForTargetFromConstructorArg(TARGET, arg));
   }
 
   @Test
   public void getImplicitDeps() {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildTargetParser parser = new BuildTargetParser();
-
     // Setup an enhancer which sets all appropriate values in the config.
     ImmutableMap<String, BuildTarget> config = ImmutableMap.of(
         "cpp_library", BuildTargetFactory.newInstance("//:cpp_library"),
@@ -216,16 +195,12 @@ public class ThriftCxxEnhancerTest {
     // With no options we just need to find the C/C++ thrift library.
     expectImplicitDeps(
         cppEnhancerWithSettings,
-        filesystem,
-        parser,
         ImmutableSet.<String>of(),
         ImmutableSet.of(
             config.get("cpp_library"),
             config.get("cpp_reflection_library")));
     expectImplicitDeps(
         cpp2EnhancerWithSettings,
-        filesystem,
-        parser,
         ImmutableSet.<String>of(),
         ImmutableSet.of(
             config.get("cpp2_library"),
@@ -234,22 +209,16 @@ public class ThriftCxxEnhancerTest {
     // Now check for correct reaction to the "bootstrap" option.
     expectImplicitDeps(
         cppEnhancerWithSettings,
-        filesystem,
-        parser,
         ImmutableSet.of("bootstrap"),
         ImmutableSet.<BuildTarget>of());
     expectImplicitDeps(
         cpp2EnhancerWithSettings,
-        filesystem,
-        parser,
         ImmutableSet.of("bootstrap"),
         ImmutableSet.<BuildTarget>of());
 
     // Check the "frozen2" option
     expectImplicitDeps(
         cppEnhancerWithSettings,
-        filesystem,
-        parser,
         ImmutableSet.of("frozen2"),
         ImmutableSet.of(
             config.get("cpp_library"),
@@ -257,8 +226,6 @@ public class ThriftCxxEnhancerTest {
             config.get("cpp_frozen_library")));
     expectImplicitDeps(
         cpp2EnhancerWithSettings,
-        filesystem,
-        parser,
         ImmutableSet.of("frozen2"),
         ImmutableSet.of(
             config.get("cpp2_library"),
@@ -268,8 +235,6 @@ public class ThriftCxxEnhancerTest {
     // Check the "json" option
     expectImplicitDeps(
         cppEnhancerWithSettings,
-        filesystem,
-        parser,
         ImmutableSet.of("json"),
         ImmutableSet.of(
             config.get("cpp_library"),
@@ -277,8 +242,6 @@ public class ThriftCxxEnhancerTest {
             config.get("cpp_json_library")));
     expectImplicitDeps(
         cpp2EnhancerWithSettings,
-        filesystem,
-        parser,
         ImmutableSet.of("json"),
         ImmutableSet.of(
             config.get("cpp2_library"),
@@ -288,16 +251,12 @@ public class ThriftCxxEnhancerTest {
     // Check the "compatibility" option
     expectImplicitDeps(
         cppEnhancerWithSettings,
-        filesystem,
-        parser,
         ImmutableSet.of("compatibility"),
         ImmutableSet.of(
             config.get("cpp_library"),
             config.get("cpp_reflection_library")));
     expectImplicitDeps(
         cpp2EnhancerWithSettings,
-        filesystem,
-        parser,
         ImmutableSet.of("compatibility"),
         ImmutableSet.of(
             TARGET,

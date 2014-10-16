@@ -22,27 +22,22 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -226,15 +221,11 @@ public class CxxPythonExtensionDescriptionTest {
 
   @Test
   public void findDepsFromParamsAddsPythonDep() {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildTargetParser parser = new BuildTargetParser();
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        Maps.<String, Object>newHashMap(),
-        filesystem,
-        parser,
-        target,
-        new FakeRuleKeyBuilderFactory());
-    Iterable<String> res = desc.findDepsFromParams(params);
+    CxxPythonExtensionDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
+    constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
+    Iterable<String> res = desc.findDepsForTargetFromConstructorArgs(
+        BuildTargetFactory.newInstance("//foo:bar"),
+        constructorArg);
     assertTrue(Iterables.contains(res, pythonDep.getBuildTarget().toString()));
   }
 

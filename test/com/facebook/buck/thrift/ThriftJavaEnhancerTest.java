@@ -26,25 +26,20 @@ import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
@@ -134,24 +129,13 @@ public class ThriftJavaEnhancerTest {
 
   @Test
   public void getImplicitDeps() {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildTargetParser parser = new BuildTargetParser();
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        Maps.<String, Object>newHashMap(),
-        filesystem,
-        parser,
-        TARGET,
-        new FakeRuleKeyBuilderFactory());
     ThriftConstructorArg arg = new ThriftConstructorArg();
 
     // Verify that setting "thrift:java_library" in the buck config propagates that
     // dep via the getImplicitDeps method.
     assertEquals(
         ImmutableSet.of(JAVA_LIB_TARGET),
-        ENHANCER.getImplicitDepsFromParams(params));
-    assertEquals(
-        ImmutableSet.of(JAVA_LIB_TARGET),
-        ENHANCER.getImplicitDepsFromArg(TARGET, arg));
+        ENHANCER.getImplicitDepsForTargetFromConstructorArg(TARGET, arg));
   }
 
   @Test

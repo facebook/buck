@@ -45,10 +45,10 @@ public class BuckPyFunction {
 
     StringBuilder builder = new StringBuilder();
 
-    SortedSet<ParamInfo> mandatory = Sets.newTreeSet();
-    SortedSet<ParamInfo> optional = Sets.newTreeSet();
+    SortedSet<ParamInfo<?>> mandatory = Sets.newTreeSet();
+    SortedSet<ParamInfo<?>> optional = Sets.newTreeSet();
 
-    for (ParamInfo param : argMarshaller.getAllParamInfo(dto)) {
+    for (ParamInfo<?> param : argMarshaller.getAllParamInfo(dto)) {
       if (isSkippable(param)) {
         continue;
       }
@@ -70,7 +70,7 @@ public class BuckPyFunction {
     }
 
     // Construct the args.
-    for (ParamInfo param : Iterables.concat(mandatory, optional)) {
+    for (ParamInfo<?> param : Iterables.concat(mandatory, optional)) {
       appendPythonParameter(builder, param);
     }
     builder.append("visibility=[], build_env=None):\n")
@@ -87,7 +87,7 @@ public class BuckPyFunction {
     }
 
     // Iterate over args.
-    for (ParamInfo param : Iterables.concat(mandatory, optional)) {
+    for (ParamInfo<?> param : Iterables.concat(mandatory, optional)) {
       builder.append("    '")
           .append(param.getName())
           .append("' : ")
@@ -101,7 +101,7 @@ public class BuckPyFunction {
     return builder.toString();
   }
 
-  private void appendPythonParameter(StringBuilder builder, ParamInfo param) {
+  private void appendPythonParameter(StringBuilder builder, ParamInfo<?> param) {
     builder.append(param.getPythonName());
     if (param.isOptional()) {
       builder.append("=").append(getPythonDefault(param));
@@ -109,7 +109,7 @@ public class BuckPyFunction {
     builder.append(", ");
   }
 
-  private String getPythonDefault(ParamInfo param) {
+  private String getPythonDefault(ParamInfo<?> param) {
     Class<?> resultClass = param.getResultClass();
     if (Map.class.isAssignableFrom(resultClass)) {
       return "{}";
@@ -124,7 +124,7 @@ public class BuckPyFunction {
     }
   }
 
-  private boolean isSkippable(ParamInfo param) {
+  private boolean isSkippable(ParamInfo<?> param) {
     if ("name".equals(param.getName())) {
       if (!String.class.equals(param.getResultClass())) {
         throw new HumanReadableException("'name' parameter must be a java.lang.String");

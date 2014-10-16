@@ -53,7 +53,7 @@ public interface TypeCoercer<T> {
    *
    * @return Whether the traversal succeeded.
    */
-  public boolean traverse(Object object, Traversal traversal);
+  public boolean traverse(T object, Traversal traversal);
 
   /**
    * @throws CoerceFailedException Input object cannot be coerced into the given type.

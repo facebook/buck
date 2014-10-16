@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
+@SuppressWarnings("checkstyle:linelength")
 public interface MacroExpander {
 
   /**
@@ -35,8 +36,8 @@ public interface MacroExpander {
 
   /**
    * @return any build targets references by this macro.  To be used in
-   *     {@link com.facebook.buck.rules.ImplicitDepsInferringDescription#findDepsFromParams} to
-   *     extract implicit deps hidden behind macros.
+   *     {@link com.facebook.buck.rules.ImplicitDepsInferringDescription#findDepsForTargetFromConstructorArgs}
+   *     to extract implicit deps hidden behind macros.
    */
   ImmutableList<BuildTarget> extractTargets(BuildTarget target, String input)
       throws MacroException;

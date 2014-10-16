@@ -21,10 +21,9 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -36,10 +35,6 @@ public class CxxTestDescriptionTest {
 
   @Test
   public void findDepsFromParams() {
-    BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildTargetParser parser = new BuildTargetParser();
-
     BuildTarget gtest = BuildTargetFactory.newInstance("//:gtest");
 
     FakeBuckConfig buckConfig = new FakeBuckConfig(
@@ -49,24 +44,12 @@ public class CxxTestDescriptionTest {
     DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(buckConfig);
     CxxTestDescription desc = new CxxTestDescription(cxxBuckConfig);
 
-    // Test the default test type is gtest.
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        ImmutableMap.<String, Object>of(),
-        filesystem,
-        parser,
-        target,
-        new FakeRuleKeyBuilderFactory());
-    Iterable<String> implicit = desc.findDepsFromParams(params);
-    assertTrue(Iterables.contains(implicit, gtest.toString()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    CxxTestDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
+    constructorArg.framework = Optional.of(CxxTestType.GTEST);
+    constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
+    Iterable<String> implicit = desc.findDepsForTargetFromConstructorArgs(target, constructorArg);
 
-    // Test explicitly setting gtest works as well.
-    params = new BuildRuleFactoryParams(
-        ImmutableMap.<String, Object>of("framework", CxxTestType.GTEST.toString()),
-        filesystem,
-        parser,
-        target,
-        new FakeRuleKeyBuilderFactory());
-    implicit = desc.findDepsFromParams(params);
     assertTrue(Iterables.contains(implicit, gtest.toString()));
   }
 

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRuleFactoryParams;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -36,7 +36,7 @@ import java.nio.file.Path;
 
 public class CxxLibraryDescription implements
     Description<CxxLibraryDescription.Arg>,
-    ImplicitDepsInferringDescription {
+    ImplicitDepsInferringDescription<CxxLibraryDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("cxx_library");
 
@@ -126,10 +126,12 @@ public class CxxLibraryDescription implements
   }
 
   @Override
-  public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params) {
+  public Iterable<String> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Arg constructorArg) {
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
-    if (!params.getOptionalListAttribute("lexSrcs").isEmpty()) {
+    if (!constructorArg.lexSrcs.get().isEmpty()) {
       deps.add(cxxPlatform.getLexDep().toString());
     }
 

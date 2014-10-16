@@ -20,10 +20,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -31,7 +29,6 @@ import com.google.common.collect.Sets;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.util.Set;
 
 /**
  * A {@link TargetNode} represents a node in the target graph which is created by the
@@ -44,55 +41,44 @@ public class TargetNode<T> implements Comparable<TargetNode<?>> {
   private final BuildRuleFactoryParams ruleFactoryParams;
   private final Description<T> description;
 
-  private final Set<Path> pathsReferenced;
-  private final ImmutableSortedSet<BuildTarget> declaredDeps;
+  private final T constructorArg;
+
+  private final ImmutableSet<Path> pathsReferenced;
+  private final ImmutableSet<BuildTarget> declaredDeps;
   private final ImmutableSortedSet<BuildTarget> extraDeps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
 
-  @VisibleForTesting
+  @SuppressWarnings("unchecked")
   public TargetNode(
       Description<T> description,
+      T constructorArg,
       BuildRuleFactoryParams params,
-      ImmutableSet<Path> inputs,
-      Set<BuildTarget> declaredDeps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns) {
-    this.description = Preconditions.checkNotNull(description);
-    this.ruleFactoryParams = Preconditions.checkNotNull(params);
-    this.pathsReferenced = Preconditions.checkNotNull(inputs);
-    this.declaredDeps = ImmutableSortedSet.copyOf(declaredDeps);
-    this.extraDeps = ImmutableSortedSet.of();
-    this.visibilityPatterns = Preconditions.checkNotNull(visibilityPatterns);
-  }
-
-  public TargetNode(Description<T> description, BuildRuleFactoryParams params)
+      ImmutableSet<BuildTarget> declaredDeps,
+      ImmutableSet<BuildTargetPattern> visibilityPatterns)
       throws NoSuchBuildTargetException {
     this.description = Preconditions.checkNotNull(description);
+    this.constructorArg = Preconditions.checkNotNull(constructorArg);
     this.ruleFactoryParams = Preconditions.checkNotNull(params);
 
     final ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
     final ImmutableSortedSet.Builder<BuildTarget> extraDeps = ImmutableSortedSet.naturalOrder();
-    final ImmutableSortedSet.Builder<BuildTarget> declaredDeps = ImmutableSortedSet.naturalOrder();
-
-    for (String rawDep : params.getOptionalListAttribute("deps")) {
-      BuildTarget target = params.resolveBuildTarget(rawDep);
-      declaredDeps.add(Preconditions.checkNotNull(target));
-    }
-    this.declaredDeps = declaredDeps.build();
 
     // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
     TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
-      ParamInfo info = new ParamInfo(typeCoercerFactory, field);
+      ParamInfo<T> info = new ParamInfo<>(typeCoercerFactory, field);
       if (info.isDep() &&
           info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
-        detectBuildTargetsAndPathsForParameter(extraDeps, paths, info, params);
+        detectBuildTargetsAndPathsForConstructorArg(extraDeps, paths, info, constructorArg);
       }
     }
 
     if (description instanceof ImplicitDepsInferringDescription) {
       Iterable<String> rawTargets =
-          ((ImplicitDepsInferringDescription) description).findDepsFromParams(params);
+          ((ImplicitDepsInferringDescription<T>) description).findDepsForTargetFromConstructorArgs(
+              params.target,
+              constructorArg);
       for (String rawTarget : rawTargets) {
         if (isPossiblyATarget(rawTarget)) {
           extraDeps.add(params.resolveBuildTarget(rawTarget));
@@ -100,42 +86,42 @@ public class TargetNode<T> implements Comparable<TargetNode<?>> {
       }
     }
 
-    this.extraDeps = ImmutableSortedSet.copyOf(
-        Sets.difference(extraDeps.build(), this.declaredDeps));
+    this.extraDeps = ImmutableSortedSet.copyOf(Sets.difference(extraDeps.build(), declaredDeps));
     this.pathsReferenced = paths.build();
 
-    ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns = ImmutableSet.builder();
-    for (String visibility : params.getOptionalListAttribute("visibility")) {
-      visibilityPatterns.add(
-          params.buildTargetPatternParser.parse(
-              visibility,
-              ParseContext.forVisibilityArgument()));
-    }
-    this.visibilityPatterns = visibilityPatterns.build();
+    this.declaredDeps = Preconditions.checkNotNull(declaredDeps);
+    this.visibilityPatterns = Preconditions.checkNotNull(visibilityPatterns);
   }
 
   public Description<T> getDescription() {
     return description;
   }
 
+  public T getConstructorArg() {
+    return constructorArg;
+  }
+
   public BuildTarget getBuildTarget() {
     return ruleFactoryParams.target;
   }
 
-  public Set<Path> getInputs() {
+  public ImmutableSet<Path> getInputs() {
     return pathsReferenced;
   }
 
-  public ImmutableSortedSet<BuildTarget> getDeclaredDeps() {
+  public ImmutableSet<BuildTarget> getDeclaredDeps() {
     return declaredDeps;
   }
 
-  public ImmutableSortedSet<BuildTarget> getExtraDeps() {
+  public ImmutableSet<BuildTarget> getExtraDeps() {
     return extraDeps;
   }
 
-  public Set<BuildTarget> getDeps() {
-    return Sets.union(declaredDeps, extraDeps);
+  public ImmutableSet<BuildTarget> getDeps() {
+    ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
+    builder.addAll(getDeclaredDeps());
+    builder.addAll(getExtraDeps());
+    return builder.build();
   }
 
   public BuildRuleFactoryParams getRuleFactoryParams() {
@@ -165,11 +151,11 @@ public class TargetNode<T> implements Comparable<TargetNode<?>> {
     }
   }
 
-  private void detectBuildTargetsAndPathsForParameter(
+  private void detectBuildTargetsAndPathsForConstructorArg(
       final ImmutableSet.Builder<BuildTarget> depsBuilder,
       final ImmutableSet.Builder<Path> pathsBuilder,
-      ParamInfo info,
-      final BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
+      ParamInfo<T> info,
+      T constructorArg) throws NoSuchBuildTargetException {
     // We'll make no test for optionality here. Let's assume it's done elsewhere.
 
     try {
@@ -177,32 +163,22 @@ public class TargetNode<T> implements Comparable<TargetNode<?>> {
           new ParamInfo.Traversal() {
             @Override
             public void traverse(Object object) {
-              if (object instanceof String) {
-                try {
-                  addTargetOrPathIfPresent(depsBuilder, pathsBuilder, params, (String) object);
-                } catch (NoSuchBuildTargetException e) {
-                  throw new RuntimeException(e);
-                }
+              if (object instanceof PathSourcePath) {
+                pathsBuilder.add(((PathSourcePath) object).getRelativePath());
+              } else if (object instanceof BuildTargetSourcePath) {
+                depsBuilder.add(((BuildTargetSourcePath) object).getTarget());
+              } else if (object instanceof Path) {
+                pathsBuilder.add((Path) object);
+              } else if (object instanceof BuildTarget) {
+                depsBuilder.add((BuildTarget) object);
               }
             }
           },
-          params.getNullableRawAttribute(info.getName()));
+          constructorArg);
     } catch (RuntimeException e) {
       if (e.getCause() instanceof NoSuchBuildTargetException) {
         throw (NoSuchBuildTargetException) e.getCause();
       }
-    }
-  }
-
-  private void addTargetOrPathIfPresent(
-      ImmutableSet.Builder<BuildTarget> targets,
-      ImmutableSet.Builder<Path> paths,
-      BuildRuleFactoryParams params,
-      String param) throws NoSuchBuildTargetException {
-    if (isPossiblyATarget(param)) {
-      targets.add(params.resolveBuildTarget(param));
-    } else {
-      paths.add(params.resolveFilePathRelativeToBuildFileDirectory(param));
     }
   }
 

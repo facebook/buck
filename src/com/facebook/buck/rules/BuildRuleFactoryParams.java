@@ -21,20 +21,13 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Nullable;
 
 public final class BuildRuleFactoryParams {
 
-  private final Map<String, Object> instance;
   private final ProjectFilesystem filesystem;
   public final BuildTargetParser buildTargetParser;
   public final BuildTargetPatternParser buildTargetPatternParser;
@@ -43,12 +36,10 @@ public final class BuildRuleFactoryParams {
   private final BuildRuleBuilderParams abstractBuildRuleFactoryParams;
 
   public BuildRuleFactoryParams(
-      Map<String, Object> instance,
       ProjectFilesystem filesystem,
       BuildTargetParser buildTargetParser,
       BuildTarget target,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-    this.instance = instance;
     this.filesystem = filesystem;
     this.buildTargetParser = buildTargetParser;
     this.buildTargetPatternParser = new BuildTargetPatternParser();
@@ -80,57 +71,12 @@ public final class BuildRuleFactoryParams {
     return buildTargetParser.parse(target, buildFileParseContext);
   }
 
-  public Optional<Integer> getOptionalIntegerAttribute(String attributeName) {
-    Object value = instance.get(attributeName);
-    if (value != null) {
-      if (value instanceof Number) {
-        Number number = (Number) value;
-        if (number.intValue() == number.floatValue()) {
-          return Optional.of(number.intValue());
-        }
-      }
-      throw new RuntimeException(String.format("Expected a integer for %s in %s but was %s",
-          attributeName,
-          target.getBuildFilePath(),
-          value));
-    } else {
-      return Optional.absent();
-    }
-  }
-
-  /** @return non-null list that may be empty */
-  @SuppressWarnings("unchecked")
-  public List<String> getOptionalListAttribute(String attributeName) {
-    Object value = instance.get(attributeName);
-    if (value != null) {
-      if (value instanceof List) {
-        return (List<String>) value;
-      } else {
-        throw new RuntimeException(String.format("Expected an array for %s in %s but was %s",
-            attributeName,
-            target.getBuildFilePath(),
-            value));
-      }
-    } else {
-      return ImmutableList.of();
-    }
-  }
-
-  @Nullable
-  public Object getNullableRawAttribute(String attributeName) {
-    return instance.get(attributeName);
-  }
-
   public ProjectFilesystem getProjectFilesystem() {
     return filesystem;
   }
 
   public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
     return abstractBuildRuleFactoryParams.getRuleKeyBuilderFactory();
-  }
-
-  public Map<String, Object> getInstance() {
-    return instance;
   }
 
 }

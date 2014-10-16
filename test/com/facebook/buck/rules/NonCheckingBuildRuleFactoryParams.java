@@ -20,8 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
-import java.util.Map;
-
 /**
  * Factory for creating a {@link BuildRuleFactoryParams} that does not check whether the file
  * paths it creates actually exist. Designed to be used exclusively for testing.
@@ -31,11 +29,9 @@ public final class NonCheckingBuildRuleFactoryParams {
   private NonCheckingBuildRuleFactoryParams() {}
 
   public static BuildRuleFactoryParams createNonCheckingBuildRuleFactoryParams(
-      Map<String, Object> instance,
       BuildTargetParser buildTargetParser,
       BuildTarget target) {
     return new BuildRuleFactoryParams(
-        instance,
         new FakeProjectFilesystem(),
         buildTargetParser,
         target,

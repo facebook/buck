@@ -46,8 +46,8 @@ public class OCamlSourceTypeCoercer implements TypeCoercer<OCamlSource> {
   }
 
   @Override
-  public boolean traverse(Object object, Traversal traversal) {
-    return sourcePathTypeCoercer.traverse(object, traversal);
+  public boolean traverse(OCamlSource object, Traversal traversal) {
+    return sourcePathTypeCoercer.traverse(object.getSource(), traversal);
   }
 
   @Override

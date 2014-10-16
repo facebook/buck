@@ -170,7 +170,9 @@ public class TypeCoercerTest {
   @Test
   public void traverseShouldVisitEveryObject() throws NoSuchFieldException {
     Type type = TestFields.class.getField("stringMapOfLists").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<ImmutableMap<String, ImmutableList<String>>> coercer =
+        (TypeCoercer<ImmutableMap<String, ImmutableList<String>>>)
+            typeCoercerFactory.typeCoercerForType(type);
 
     final ImmutableMap<String, ImmutableList<String>> input =
         ImmutableMap.of(
@@ -234,19 +236,20 @@ public class TypeCoercerTest {
   @Test
   public void traverseWithEitherAndContainer() throws NoSuchFieldException {
     Type type = TestFields.class.getField("eitherStringOrStringList").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Either<String, List<String>>> coercer =
+        (TypeCoercer<Either<String, List<String>>>) typeCoercerFactory.typeCoercerForType(type);
 
     TestTraversal traversal = new TestTraversal();
-    ImmutableList<String> input = ImmutableList.of("foo");
+    Either<String, List<String>> input = Either.ofRight((List<String>) ImmutableList.of("foo"));
     coercer.traverse(input, traversal);
     assertThat(
         traversal.getObjects(),
         Matchers.contains(ImmutableList.<Matcher<? super Object>>of(
-            sameInstance((Object) input),
-            sameInstance((Object) input.get(0)))));
+            sameInstance((Object) input.getRight()),
+            sameInstance((Object) input.getRight().get(0)))));
 
     traversal = new TestTraversal();
-    String input2 = "foo";
+    Either<String, List<String>> input2 = Either.ofLeft("foo");
     coercer.traverse(input2, traversal);
     assertThat(traversal.getObjects(), hasSize(1));
     assertThat(traversal.getObjects().get(0), sameInstance((Object) "foo"));
@@ -290,17 +293,18 @@ public class TypeCoercerTest {
   @Test
   public void traverseWithPair() throws NoSuchFieldException {
     Type type = TestFields.class.getField("pairOfPathsAndStrings").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Pair<Path, String>> coercer =
+        (TypeCoercer<Pair<Path, String>>) typeCoercerFactory.typeCoercerForType(type);
 
     TestTraversal traversal = new TestTraversal();
-    ImmutableList<?> input = ImmutableList.of("foo", "bar");
+    Pair<Path, String> input = new Pair<>(Paths.get("foo"), "bar");
     coercer.traverse(input, traversal);
     assertThat(
         traversal.getObjects(),
         Matchers.contains(
             ImmutableList.<Matcher<? super Object>>of(
-                sameInstance((Object) input.get(0)),
-                sameInstance((Object) input.get(1)))));
+                sameInstance((Object) input.getFirst()),
+                sameInstance((Object) input.getSecond()))));
   }
 
   @Test

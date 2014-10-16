@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
+
 /**
  * While building up the target graph, we infer the implicit dependencies of a rule by parsing
  * all parameters with types {@link com.facebook.buck.rules.SourcePath} or
@@ -25,7 +27,9 @@ package com.facebook.buck.rules;
  * specific format. Any {@link Description} that implements this interface can modify its implicit
  * deps by poking at the raw build rule params.
  */
-public interface ImplicitDepsInferringDescription {
+public interface ImplicitDepsInferringDescription<T> {
 
-  public Iterable<String> findDepsFromParams(BuildRuleFactoryParams params);
+  public Iterable<String> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      T constructorArg);
 }

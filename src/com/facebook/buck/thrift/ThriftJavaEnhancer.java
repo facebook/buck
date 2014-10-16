@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -73,9 +72,10 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
   protected BuildTarget getSourceZipBuildTarget(BuildTarget target, String name) {
     return BuildTargets.createFlavoredBuildTarget(
         target.getUnflavoredTarget(),
-        new Flavor(String.format(
-            "thrift-java-source-zip-%s",
-            name.replace('/', '-').replace('.', '-'))));
+        new Flavor(
+            String.format(
+                "thrift-java-source-zip-%s",
+                name.replace('/', '-').replace('.', '-'))));
   }
 
   private Path getSourceZipOutputPath(BuildTarget target, String name) {
@@ -154,12 +154,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
   }
 
   @Override
-  public ImmutableSet<BuildTarget> getImplicitDepsFromParams(BuildRuleFactoryParams params) {
-    return getImplicitDeps();
-  }
-
-  @Override
-  public ImmutableSet<BuildTarget> getImplicitDepsFromArg(
+  public ImmutableSet<BuildTarget> getImplicitDepsForTargetFromConstructorArg(
       BuildTarget target,
       ThriftConstructorArg args) {
     return getImplicitDeps();
