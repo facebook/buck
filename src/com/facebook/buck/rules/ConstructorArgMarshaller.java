@@ -126,6 +126,7 @@ public class ConstructorArgMarshaller {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private <T> void populateDeclaredDeps(
       ParamInfo<T> paramInfo,
       final ImmutableSet.Builder<BuildTarget> declaredDeps,
@@ -143,6 +144,7 @@ public class ConstructorArgMarshaller {
         (T) dto);
   }
 
+  @SuppressWarnings("unchecked")
   private void populateVisibilityPatterns(
       ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns,
       Map<String, ?> instance) throws NoSuchBuildTargetException {

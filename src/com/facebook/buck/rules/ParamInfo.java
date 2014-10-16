@@ -81,6 +81,7 @@ class ParamInfo<T> implements Comparable<ParamInfo<T>> {
     traverseHelper(typeCoercer, traversal, dto);
   }
 
+  @SuppressWarnings("unchecked")
   private <U> void traverseHelper(TypeCoercer<U> typeCoercer, Traversal traversal, T dto) {
     U object;
     try {
@@ -184,7 +185,7 @@ class ParamInfo<T> implements Comparable<ParamInfo<T>> {
       return false;
     }
 
-    ParamInfo that = (ParamInfo) obj;
+    ParamInfo<?> that = (ParamInfo<?>) obj;
     return name.equals(that.getName());
   }
 

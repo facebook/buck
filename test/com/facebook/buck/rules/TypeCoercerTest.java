@@ -171,6 +171,7 @@ public class TypeCoercerTest {
   @Test
   public void traverseShouldVisitEveryObject() throws NoSuchFieldException {
     Type type = TestFields.class.getField("stringMapOfLists").getGenericType();
+    @SuppressWarnings("unchecked")
     TypeCoercer<ImmutableMap<String, ImmutableList<String>>> coercer =
         (TypeCoercer<ImmutableMap<String, ImmutableList<String>>>)
             typeCoercerFactory.typeCoercerForType(type);
@@ -237,6 +238,7 @@ public class TypeCoercerTest {
   @Test
   public void traverseWithEitherAndContainer() throws NoSuchFieldException {
     Type type = TestFields.class.getField("eitherStringOrStringList").getGenericType();
+    @SuppressWarnings("unchecked")
     TypeCoercer<Either<String, List<String>>> coercer =
         (TypeCoercer<Either<String, List<String>>>) typeCoercerFactory.typeCoercerForType(type);
 
@@ -294,6 +296,7 @@ public class TypeCoercerTest {
   @Test
   public void traverseWithPair() throws NoSuchFieldException {
     Type type = TestFields.class.getField("pairOfPathsAndStrings").getGenericType();
+    @SuppressWarnings("unchecked")
     TypeCoercer<Pair<Path, String>> coercer =
         (TypeCoercer<Pair<Path, String>>) typeCoercerFactory.typeCoercerForType(type);
 

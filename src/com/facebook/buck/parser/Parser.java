@@ -1018,6 +1018,7 @@ public class Parser {
     }
 
     @Nullable
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public TargetNode<?> get(BuildTarget buildTarget) throws IOException, InterruptedException {
       // Fast path.
       TargetNode<?> toReturn = memoizedTargetNodes.get(buildTarget);

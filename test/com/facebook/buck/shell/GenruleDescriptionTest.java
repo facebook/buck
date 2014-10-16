@@ -72,7 +72,7 @@ public class GenruleDescriptionTest {
     }  catch (ConstructorArgMarshalException e) {
       fail("Expected constructorArg to be correctly populated.");
     }
-    TargetNode<GenruleDescription.Arg> targetNode = new TargetNode(
+    TargetNode<GenruleDescription.Arg> targetNode = new TargetNode<>(
         genruleDescription,
         constructorArg,
         params,

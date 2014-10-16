@@ -283,6 +283,7 @@ public class DalvikStatsTool {
       }
 
       @Override
+      @SuppressWarnings("deprecation")
       public void visitMethodInsn(int opcode, String owner, String name, String desc) {
         super.visitMethodInsn(opcode, owner, name, desc);
         methodReferenceBuilder.add(new MethodReference(owner, name, desc));
