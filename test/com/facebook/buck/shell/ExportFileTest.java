@@ -183,7 +183,7 @@ public class ExportFileTest {
 
   private BuildContext getBuildContext(File root) {
     return BuildContext.builder()
-        .setProjectFilesystem(new ProjectFilesystem(root))
+        .setProjectFilesystem(new ProjectFilesystem(root.toPath()))
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setEventBus(BuckEventBusFactory.newInstance())
         .setClock(new DefaultClock())

@@ -53,7 +53,7 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
 
     File outputFolder = tmp.newFolder("output");
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     ExecutionContext executionContext = TestExecutionContext
         .newBuilder()
         .setProjectFilesystem(projectFilesystem)

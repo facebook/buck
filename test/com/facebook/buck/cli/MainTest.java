@@ -30,9 +30,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 
 public class MainTest {
 
@@ -67,7 +67,7 @@ public class MainTest {
     Main main = new Main(stdOut, stdErr);
     int exitCode = main.runMainWithExitCode(
         new BuildId(),
-        new File("."),
+        Paths.get("."),
         Optional.<NGContext>absent());
     assertEquals(1, exitCode);
     assertEquals(
@@ -83,7 +83,7 @@ public class MainTest {
     Main main = new Main(stdOut, stdErr);
     int exitCode = main.runMainWithExitCode(
         new BuildId(),
-        new File("."),
+        Paths.get("."),
         Optional.<NGContext>absent(),
         "--help");
     assertEquals(1, exitCode);

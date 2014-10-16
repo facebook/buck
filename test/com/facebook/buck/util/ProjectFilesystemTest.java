@@ -71,7 +71,7 @@ public class ProjectFilesystemTest {
 
   @Before
   public void setUp() {
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
   }
 
   @Test

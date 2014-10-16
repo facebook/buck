@@ -221,7 +221,7 @@ public class JavacInMemoryStepIntegrationTest {
 
   private ExecutionContext createExecutionContext() {
     return TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
+        .setProjectFilesystem(new ProjectFilesystem(tmp.getRootPath()))
         .build();
   }
 }

@@ -54,7 +54,7 @@ public class JavaSymbolFinderIntegrationTest {
         this, "symbol_finder", temporaryFolder);
     workspace.setUp();
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
 
     BuckConfig config = BuckConfig.createFromFiles(
         projectFilesystem,

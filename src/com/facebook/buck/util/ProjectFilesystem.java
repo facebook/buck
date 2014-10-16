@@ -53,6 +53,7 @@ import java.io.Writer;
 import java.nio.channels.Channels;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -113,6 +114,10 @@ public class ProjectFilesystem {
   @VisibleForTesting
   protected boolean ignoreValidityOfPaths;
 
+  public ProjectFilesystem(Path projectRoot) {
+    this(projectRoot, ImmutableSet.<Path>of());
+  }
+
   /**
    * There should only be one {@link ProjectFilesystem} created per process.
    * <p>
@@ -122,7 +127,12 @@ public class ProjectFilesystem {
    * where specifying {@code new File(".")} as the project root might be the appropriate thing.
    */
   public ProjectFilesystem(Path projectRoot, ImmutableSet<Path> ignorePaths) {
+    this(projectRoot.getFileSystem(), projectRoot, ignorePaths);
+  }
+
+  protected ProjectFilesystem(FileSystem vfs, Path projectRoot, ImmutableSet<Path> ignorePaths) {
     Preconditions.checkArgument(Files.isDirectory(projectRoot));
+    Preconditions.checkState(vfs.equals(projectRoot.getFileSystem()));
     this.projectRoot = projectRoot;
     this.pathAbsolutifier = new Function<Path, Path>() {
       @Override
@@ -132,18 +142,6 @@ public class ProjectFilesystem {
     };
     this.ignorePaths = MorePaths.filterForSubpaths(ignorePaths, this.projectRoot);
     this.ignoreValidityOfPaths = false;
-  }
-
-  public ProjectFilesystem(Path projectRoot) {
-    this(projectRoot, ImmutableSet.<Path>of());
-  }
-
-  /**
-   * // @deprecated Prefer passing around {@code Path}s instead of {@code File}s or {@code String}s,
-   *  replaced by {@link #ProjectFilesystem(java.nio.file.Path)}.
-   */
-  public ProjectFilesystem(File projectRoot) {
-    this(projectRoot.toPath());
   }
 
   public Path getRootPath() {

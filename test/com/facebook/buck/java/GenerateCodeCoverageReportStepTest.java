@@ -55,7 +55,9 @@ public class GenerateCodeCoverageReportStepTest {
 
     ExecutionContext context = createMock(ExecutionContext.class);
     expect(
-        context.getProjectFilesystem()).andReturn(new ProjectFilesystem(new File("."))).anyTimes();
+        context.getProjectFilesystem())
+        .andReturn(new ProjectFilesystem(Paths.get(".")))
+        .anyTimes();
     replay(context);
 
     ImmutableList.Builder<String> shellCommandBuilder = ImmutableList.builder();

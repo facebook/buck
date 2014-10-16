@@ -76,7 +76,6 @@ import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -439,7 +438,7 @@ public final class Main {
    */
   public int runMainWithExitCode(
       BuildId buildId,
-      File projectRoot,
+      Path projectRoot,
       Optional<NGContext> context,
       String... args)
       throws IOException, InterruptedException {
@@ -474,7 +473,7 @@ public final class Main {
   @SuppressWarnings({"PMD.EmptyCatchBlock", "PMD.PrematureDeclaration"})
   public int executeCommand(
       BuildId buildId,
-      File projectRoot,
+      Path projectRoot,
       Command.ParseResult commandParseResult,
       Optional<NGContext> context,
       String... args) throws IOException, InterruptedException {
@@ -505,7 +504,7 @@ public final class Main {
         stdErr,
         bootstrapConfig.createAnsi(color));
 
-    Path canonicalRootPath = projectRoot.toPath().toRealPath();
+    Path canonicalRootPath = projectRoot.toRealPath();
     RepositoryFactory repositoryFactory =
         new RepositoryFactory(clientEnvironment, platform, console, canonicalRootPath);
 
@@ -867,7 +866,7 @@ public final class Main {
   @VisibleForTesting
   int tryRunMainWithExitCode(
       BuildId buildId,
-      File projectRoot,
+      Path projectRoot,
       Optional<NGContext> context,
       String... args)
       throws IOException, InterruptedException {
@@ -912,7 +911,7 @@ public final class Main {
   }
 
   private void runMainThenExit(String[] args, Optional<NGContext> context) {
-    File projectRoot = new File(".");
+    Path projectRoot = Paths.get(".");
     int exitCode = FAIL_EXIT_CODE;
     BuildId buildId = getBuildId(context);
 

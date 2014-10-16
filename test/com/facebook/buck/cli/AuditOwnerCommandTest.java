@@ -41,6 +41,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
@@ -110,13 +111,6 @@ public class AuditOwnerCommandTest {
         inputs,
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<BuildTargetPattern>of());
-  }
-
-  // TODO(natthu): Use the testutil FakeProjectFilesystem instead.
-  private static class FakeProjectFilesystem extends ProjectFilesystem {
-    public FakeProjectFilesystem() {
-      super(new File("."));
-    }
   }
 
   @SuppressWarnings("serial")

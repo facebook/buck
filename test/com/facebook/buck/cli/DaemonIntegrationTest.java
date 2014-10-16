@@ -215,7 +215,7 @@ public class DaemonIntegrationTest {
           Main main = new Main(new CapturingPrintStream(), new CapturingPrintStream());
           int exitCode = main.tryRunMainWithExitCode(
               new BuildId(),
-              tmp.getRoot(),
+              tmp.getRootPath(),
               Optional.<NGContext>of(new TestContext()),
               args);
           assertEquals("Unexpected exit code.", expectedExitCode, exitCode);

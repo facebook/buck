@@ -92,7 +92,6 @@ public class ProjectWorkspace {
 
   private boolean isSetUp = false;
   private final Path templatePath;
-  private final File destDir;
   private final Path destPath;
 
   /**
@@ -105,8 +104,7 @@ public class ProjectWorkspace {
     Preconditions.checkNotNull(templateDir);
     Preconditions.checkNotNull(temporaryFolder);
     this.templatePath = templateDir.toPath();
-    this.destDir = temporaryFolder.getRoot();
-    this.destPath = destDir.toPath();
+    this.destPath = temporaryFolder.getRoot().toPath();
   }
 
   /**
@@ -249,7 +247,7 @@ public class ProjectWorkspace {
     Main main = new Main(stdout, stderr, Optional.of(capturingEventListener));
     int exitCode = 0;
     try {
-      exitCode = main.runMainWithExitCode(new BuildId(), destDir, context, args);
+      exitCode = main.runMainWithExitCode(new BuildId(), destPath, context, args);
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
       exitCode = Main.FAIL_EXIT_CODE;
@@ -266,7 +264,7 @@ public class ProjectWorkspace {
    * @return the {@link File} that corresponds to the {@code pathRelativeToProjectRoot}.
    */
   public File getFile(String pathRelativeToProjectRoot) {
-    return new File(destDir, pathRelativeToProjectRoot);
+    return destPath.resolve(pathRelativeToProjectRoot).toFile();
   }
 
   public String getFileContents(String pathRelativeToProjectRoot) throws IOException {

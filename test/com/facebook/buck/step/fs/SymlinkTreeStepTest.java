@@ -41,7 +41,7 @@ public class SymlinkTreeStepTest {
   @Test
   public void testSymlinkFiles() throws IOException {
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(projectFilesystem)

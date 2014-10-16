@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
@@ -45,7 +46,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void whenPathIsPutCacheContainsPath() {
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(new ProjectFilesystem(new File(".")));
+        new DefaultFileHashCache(new FakeProjectFilesystem());
     Path path = new File("SomeClass.java").toPath();
     cache.loadingCache.put(path, HashCode.fromInt(42));
     assertTrue("Cache should contain path", cache.contains(path));
@@ -54,7 +55,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void whenPathIsPutPathGetReturnsHash() {
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(new ProjectFilesystem(new File(".")));
+        new DefaultFileHashCache(new FakeProjectFilesystem());
     Path path = new File("SomeClass.java").toPath();
     HashCode hash = HashCode.fromInt(42);
     cache.loadingCache.put(path, hash);
@@ -64,7 +65,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void whenNotifiedOfOverflowEventCacheIsCleared() throws IOException {
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(new ProjectFilesystem(new File(".")));
+        new DefaultFileHashCache(new FakeProjectFilesystem());
     Path path = new File("SomeClass.java").toPath();
     HashCode hash = HashCode.fromInt(42);
     cache.loadingCache.put(path, hash);
@@ -75,7 +76,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void whenNotifiedOfCreateEventCacheEntryIsRemoved() throws IOException {
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(new ProjectFilesystem(new File(".")));
+        new DefaultFileHashCache(new FakeProjectFilesystem());
     Path path = Paths.get("SomeClass.java");
     HashCode hash = HashCode.fromInt(42);
     cache.loadingCache.put(path, hash);
@@ -86,7 +87,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void whenNotifiedOfChangeEventCacheEntryIsRemoved() throws IOException {
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(new ProjectFilesystem(new File(".")));
+        new DefaultFileHashCache(new FakeProjectFilesystem());
     Path path = Paths.get("SomeClass.java");
     HashCode hash = HashCode.fromInt(42);
     cache.loadingCache.put(path, hash);
@@ -97,7 +98,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void whenNotifiedOfDeleteEventCacheEntryIsRemoved() throws IOException {
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(new ProjectFilesystem(new File(".")));
+        new DefaultFileHashCache(new FakeProjectFilesystem());
     Path path = Paths.get("SomeClass.java");
     HashCode hash = HashCode.fromInt(42);
     cache.loadingCache.put(path, hash);

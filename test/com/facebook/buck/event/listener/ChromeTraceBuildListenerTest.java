@@ -84,7 +84,7 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testDeleteFiles() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     String tracePath = String.format("%s/build.trace", BuckConstant.BUCK_TRACE_DIR);
     File traceFile = new File(tmpDir.getRoot(), tracePath);
@@ -126,7 +126,7 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testBuildJson() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
@@ -290,7 +290,7 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testOutputFailed() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
@@ -314,7 +314,7 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void outputFileUsesCurrentTime() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,

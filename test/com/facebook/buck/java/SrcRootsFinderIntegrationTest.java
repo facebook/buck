@@ -36,7 +36,7 @@ public class SrcRootsFinderIntegrationTest {
 
   @Test
   public void shouldFindPathsRelativeToRoot() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     SrcRootsFinder finder = new SrcRootsFinder(projectFilesystem);
     ImmutableSet<String> pathPatterns = ImmutableSet.of("/a/", "/b");
     assertThat(
@@ -47,7 +47,7 @@ public class SrcRootsFinderIntegrationTest {
 
   @Test
   public void shouldFindPathsMatchingPathElements() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     projectFilesystem.mkdirs(Paths.get("java"));
     projectFilesystem.mkdirs(Paths.get("third-party/foo/src"));
     projectFilesystem.mkdirs(Paths.get("not/a/root"));

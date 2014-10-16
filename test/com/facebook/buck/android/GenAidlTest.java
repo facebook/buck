@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -84,7 +83,7 @@ public class GenAidlTest {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.getAndroidPlatformTarget()).andReturn(androidPlatformTarget);
     expect(executionContext.getProjectFilesystem()).andReturn(
-        new ProjectFilesystem(new File(".")) {
+        new ProjectFilesystem(Paths.get(".")) {
           @Override
           public Path resolve(Path path) {
             return path;

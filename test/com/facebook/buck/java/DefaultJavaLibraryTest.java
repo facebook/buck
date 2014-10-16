@@ -146,7 +146,7 @@ public class DefaultJavaLibraryTest {
 
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         ImmutableMap.<BuildTarget, BuildRule>of());
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     BuildRule libraryRule = AndroidLibraryBuilder
         .createBuilder(buildTarget)
         .addSrc(src)
@@ -1006,7 +1006,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testSuggsetDepsReverseTopoSortRespected() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     BuildRule libraryOne = JavaLibraryBuilder
@@ -1361,7 +1361,7 @@ public class DefaultJavaLibraryTest {
     }
 
     public ImmutableList<String> buildAndGetCompileParameters() throws IOException {
-      ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+      ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
       BuildRule javaLibrary = createJavaLibraryRule(projectFilesystem);
       buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null, projectFilesystem);
       List<Step> steps = javaLibrary.getBuildSteps(

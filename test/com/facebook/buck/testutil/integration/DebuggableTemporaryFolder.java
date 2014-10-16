@@ -20,6 +20,8 @@ import com.google.common.base.Preconditions;
 
 import org.junit.rules.TemporaryFolder;
 
+import java.nio.file.Path;
+
 /**
  * Subclass of {@link TemporaryFolder} that optionally keeps the contents of the tmp around after
  * the test has finished. This is often useful when debugging a failed integration test.
@@ -65,5 +67,9 @@ public class DebuggableTemporaryFolder extends TemporaryFolder {
     } else {
       super.after();
     }
+  }
+
+  public Path getRootPath() {
+    return getRoot().toPath();
   }
 }

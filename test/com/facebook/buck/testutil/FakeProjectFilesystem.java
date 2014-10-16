@@ -51,7 +51,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
@@ -133,6 +132,11 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
     // Generally, tests don't care whether files exist.
     ignoreValidityOfPaths = true;
+  }
+
+  public FakeProjectFilesystem setIgnoreValidityOfPaths(boolean shouldIgnore) {
+    this.ignoreValidityOfPaths = shouldIgnore;
+    return this;
   }
 
   private byte[] getFileBytes(Path path) {
@@ -386,7 +390,8 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
    */
   @Override
   public void walkRelativeFileTree(Path path, FileVisitor<Path> fileVisitor) throws IOException {
-    Preconditions.checkArgument(!fileContents.containsKey(path),
+    Preconditions.checkArgument(
+        !fileContents.containsKey(path),
         "FakeProjectFilesystem only supports walkRelativeFileTree over directories.");
     for (Path file : getFilesUnderDir(path)) {
       fileVisitor.visitFile(file, DEFAULT_FILE_ATTRIBUTES);
@@ -404,11 +409,6 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
             return input.startsWith(dirPath);
           }
         });
-  }
-
-  @Override
-  public boolean isPathChangeEvent(WatchEvent<?> event) {
-    throw new UnsupportedOperationException();
   }
 
   @Override

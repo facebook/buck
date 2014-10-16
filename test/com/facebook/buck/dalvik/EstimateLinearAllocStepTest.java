@@ -64,7 +64,7 @@ public class EstimateLinearAllocStepTest {
 
     ExecutionContext context = TestExecutionContext
         .newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
+        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
         .build();
 
     Path pathToJarOrClassesDirectory = Paths.get(name);

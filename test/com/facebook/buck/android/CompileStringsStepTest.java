@@ -41,9 +41,9 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.attribute.FileAttribute;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -329,7 +329,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
 
     public FakeProjectFileSystem() {
-      super(new File("."));
+      super(Paths.get("."));
     }
 
     @Override

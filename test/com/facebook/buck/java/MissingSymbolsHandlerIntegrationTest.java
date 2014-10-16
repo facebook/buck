@@ -55,7 +55,7 @@ public class MissingSymbolsHandlerIntegrationTest {
         this, "symbol_finder", temporaryFolder);
     workspace.setUp();
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
 
     BuckConfig config = BuckConfig.createFromFiles(

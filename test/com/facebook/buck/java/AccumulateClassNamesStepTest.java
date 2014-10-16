@@ -68,7 +68,7 @@ public class AccumulateClassNamesStepTest {
         Optional.of(Paths.get(name)), Paths.get("output.txt"));
     ExecutionContext context = TestExecutionContext
         .newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
+        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
         .build();
     accumulateClassNamesStep.execute(context);
 
@@ -103,7 +103,7 @@ public class AccumulateClassNamesStepTest {
         Optional.of(Paths.get(name)), Paths.get("output.txt"));
     ExecutionContext context = TestExecutionContext
         .newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
+        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
         .build();
     accumulateClassNamesStep.execute(context);
 

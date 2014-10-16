@@ -51,7 +51,7 @@ public class BuildRuleFactoryParamsTest {
   @BeforeClass
   public static void layOutExampleProject() throws IOException {
     File root = folder.getRoot();
-    filesystem = new ProjectFilesystem(root);
+    filesystem = new ProjectFilesystem(root.toPath());
 
     File deepest = new File(root, "src/com/facebook/demo");
     assertTrue("Unable to create test project layout", deepest.mkdirs());

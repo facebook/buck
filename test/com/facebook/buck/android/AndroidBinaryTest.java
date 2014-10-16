@@ -59,7 +59,6 @@ import com.google.common.hash.HashCode;
 
 import org.junit.Test;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -399,7 +398,7 @@ public class AndroidBinaryTest {
     class FakeProjectFilesystem extends ProjectFilesystem {
 
       public FakeProjectFilesystem() {
-        super(new File("."));
+        super(Paths.get("."));
       }
 
       @Override

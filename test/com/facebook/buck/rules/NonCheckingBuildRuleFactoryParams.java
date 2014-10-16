@@ -18,9 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 
-import java.io.File;
 import java.util.Map;
 
 /**
@@ -37,7 +36,7 @@ public final class NonCheckingBuildRuleFactoryParams {
       BuildTarget target) {
     return new BuildRuleFactoryParams(
         instance,
-        new ProjectFilesystem(new File(".")),
+        new FakeProjectFilesystem(),
         buildTargetParser,
         target,
         new FakeRuleKeyBuilderFactory());

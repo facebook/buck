@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -616,7 +617,7 @@ public class BuckConfigTest {
 
   private BuckConfig createWithDefaultFilesystem(Reader reader, @Nullable BuildTargetParser parser)
       throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     if (parser == null) {
       parser = new BuildTargetParser();
     }
@@ -629,7 +630,7 @@ public class BuckConfigTest {
   }
 
   private BuckConfig createFromText(String... lines) throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTargetParser parser = new BuildTargetParser();
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
     return BuckConfig.createFromReader(

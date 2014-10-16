@@ -26,8 +26,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class TestExecutionContext {
 
@@ -39,7 +39,7 @@ public class TestExecutionContext {
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
         .setProjectFilesystem(
-            new ProjectFilesystem(new File(".")) {
+            new ProjectFilesystem(Paths.get(".")) {
               @Override
               public Path resolve(Path path) {
                 return path;

@@ -44,7 +44,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
+            new ProjectFilesystem(tmpDir.getRoot().toPath()),
             Optional.<String>absent(),
             propertyFinder);
 
@@ -64,7 +64,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
+            new ProjectFilesystem(tmpDir.getRoot().toPath()),
             Optional.of("r9d"),
             propertyFinder);
 
@@ -86,7 +86,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
+            new ProjectFilesystem(tmpDir.getRoot().toPath()),
             Optional.<String>absent(),
             propertyFinder);
 
@@ -105,7 +105,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
+            new ProjectFilesystem(tmpDir.getRoot().toPath()),
             Optional.<String>absent(),
             propertyFinder);
 
@@ -131,7 +131,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
+            new ProjectFilesystem(tmpDir.getRoot().toPath()),
             Optional.of("r9e"),
             propertyFinder);
 
@@ -160,7 +160,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
+            new ProjectFilesystem(tmpDir.getRoot().toPath()),
             Optional.of("r9e"),
             propertyFinder);
 
@@ -192,7 +192,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
+            new ProjectFilesystem(tmpDir.getRoot().toPath()),
             Optional.<String>absent(),
             propertyFinder);
 
@@ -220,7 +220,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
+            new ProjectFilesystem(tmpDir.getRoot().toPath()),
             Optional.of("r9b"),
             propertyFinder);
 

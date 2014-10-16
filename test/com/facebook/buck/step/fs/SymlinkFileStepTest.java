@@ -53,7 +53,7 @@ public class SymlinkFileStepTest {
 
   public void internalTestSymlinkFiles(boolean useAbsolutePaths) throws IOException {
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmpDir.getRoot()))
+        .setProjectFilesystem(new ProjectFilesystem(tmpDir.getRoot().toPath()))
         .build();
 
     File source = tmpDir.newFile();
@@ -98,7 +98,7 @@ public class SymlinkFileStepTest {
         java.nio.file.Files.isSymbolicLink(symlink));
 
     // Create an ExecutionContext to return the ProjectFilesystem.
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
         .setProjectFilesystem(projectFilesystem)
         .build();

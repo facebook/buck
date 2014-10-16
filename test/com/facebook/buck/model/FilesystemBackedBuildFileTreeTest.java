@@ -42,7 +42,7 @@ public class FilesystemBackedBuildFileTreeTest {
   @Test @Ignore("Remove when test passes on OS X (the case preserving file system hurts us)")
   public void testCanConstructBuildFileTreeFromFilesystemOnOsX() throws IOException {
     File tempDir = tmp.getRoot();
-    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir);
+    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir.toPath());
 
     File command = new File(tempDir, "src/com/facebook/buck/command");
     assertTrue(command.mkdirs());
@@ -71,7 +71,7 @@ public class FilesystemBackedBuildFileTreeTest {
   @Test
   public void testCanConstructBuildFileTreeFromFilesystem() throws IOException {
     File tempDir = tmp.getRoot();
-    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir);
+    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir.toPath());
 
     File command = new File(tempDir, "src/com/example/build/command");
     assertTrue(command.mkdirs());

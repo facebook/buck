@@ -70,7 +70,7 @@ public class JarDirectoryStepTest {
         "com.example.Main",
         /* manifest file */ null);
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(zipup))
+        .setProjectFilesystem(new ProjectFilesystem(zipup.toPath()))
         .build();
 
     int returnCode = step.execute(context);
@@ -98,7 +98,7 @@ public class JarDirectoryStepTest {
         /* manifest file */ null);
 
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(zipup))
+        .setProjectFilesystem(new ProjectFilesystem(zipup.toPath()))
         .build();
 
     int returnCode = step.execute(context);
@@ -147,7 +147,7 @@ public class JarDirectoryStepTest {
         /* merge manifest */ true,
         /* blacklist */ ImmutableSet.<String>of());
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp))
+        .setProjectFilesystem(new ProjectFilesystem(tmp.toPath()))
         .build();
     assertEquals(0, step.execute(context));
 
@@ -230,7 +230,7 @@ public class JarDirectoryStepTest {
         /* blacklist */ ImmutableSet.of(".*2.*"));
 
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(zipup))
+        .setProjectFilesystem(new ProjectFilesystem(zipup.toPath()))
         .build();
 
     int returnCode = step.execute(context);
@@ -282,7 +282,7 @@ public class JarDirectoryStepTest {
         mergeEntries,
         /* blacklist */ ImmutableSet.<String>of());
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp))
+        .setProjectFilesystem(new ProjectFilesystem(tmp.toPath()))
         .build();
     step.execute(context);
 
