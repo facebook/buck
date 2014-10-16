@@ -428,6 +428,11 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
+  public boolean isSymLink(Path path) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public void createZip(Collection<Path> pathsToIncludeInZip, File out) throws IOException {
     throw new UnsupportedOperationException();
   }

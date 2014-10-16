@@ -505,4 +505,22 @@ public class ProjectFilesystemTest {
         ImmutableSet.of("foo/bar.txt", "foo/baz.txt", "log/info.txt"),
         zipInspector.getZipFileEntries());
   }
+
+  @Test
+  public void testIsSymLinkReturnsTrueForSymLink() throws IOException {
+    Path rootPath = tmp.getRoot().toPath();
+    java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo"), rootPath.resolve("bar"));
+    assertTrue(filesystem.isSymLink(Paths.get("foo")));
+  }
+
+  @Test
+  public void testIsSymLinkReturnsFalseForFile() throws IOException {
+    tmp.newFile("foo");
+    assertFalse(filesystem.isSymLink(Paths.get("foo")));
+  }
+
+  @Test
+  public void testIsSymLinkReturnsFalseForNotExistent() throws IOException {
+    assertFalse(filesystem.isSymLink(Paths.get("foo")));
+  }
 }

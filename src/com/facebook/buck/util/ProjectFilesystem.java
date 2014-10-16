@@ -659,6 +659,14 @@ public class ProjectFilesystem {
   }
 
   /**
+   * Returns true if the file under {@code path} exists and is a symbolic
+   * link, false otherwise.
+   */
+  public boolean isSymLink(Path path) throws IOException {
+    return Files.isSymbolicLink(getPathForRelativePath(path));
+  }
+
+  /**
    * Takes a sequence of paths relative to the project root and writes a zip file to {@code out}
    * with the contents and structure that matches that of the specified paths.
    */
