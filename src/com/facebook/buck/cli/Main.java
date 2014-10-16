@@ -652,6 +652,8 @@ public final class Main {
               clock,
               processManager));
 
+      parser.cleanCache();
+
       // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
       if (webServer.isPresent()) {
         Optional<Integer> port = webServer.get().getPort();

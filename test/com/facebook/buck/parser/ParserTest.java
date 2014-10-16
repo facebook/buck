@@ -1203,6 +1203,161 @@ public class ParserTest extends EasyMockSupport {
         ImmutableMap.<String, String>of());
   }
 
+  @Test
+  public void whenBuildFileContainsSourcesUnderSymLinkNewSourcesNotAddedUntilCacheCleaned()
+      throws Exception {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("bar");
+    tempDir.newFile("bar/Bar.java");
+    Path rootPath = tempDir.getRoot().toPath();
+    java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo"), rootPath.resolve("bar"));
+
+    File testBuckFile = tempDir.newFile(BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'lib', srcs=glob(['foo/*.java']))\n",
+        testBuckFile,
+        Charsets.UTF_8);
+
+    // Fetch //:lib to put it in cache.
+    BuildTarget libTarget = BuildTarget.builder("//", "lib").build();
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
+    Iterable<String> defaultIncludes = ImmutableList.of();
+
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+
+    {
+      ActionGraph graph = parser.buildTargetGraph(
+          buildTargets,
+          defaultIncludes,
+          eventBus,
+          new TestConsole(),
+          ImmutableMap.<String, String>of())
+              .buildActionGraph(new BuildRuleResolver(), eventBus);
+
+      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
+      assertEquals(ImmutableList.of(Paths.get("foo/Bar.java")), libRule.getInputs());
+    }
+
+    tempDir.newFile("bar/Baz.java");
+    WatchEvent<Path> createEvent = createPathEvent(
+        Paths.get("bar/Baz.java"),
+        StandardWatchEventKinds.ENTRY_CREATE);
+    parser.onFileSystemChange(createEvent);
+
+    {
+      // Even though we've created this new file, the parser can't know it
+      // has anything to do with our lib (which looks in foo/*.java)
+      // until we clean the parser cache.
+      ActionGraph graph = parser.buildTargetGraph(
+          buildTargets,
+          defaultIncludes,
+          eventBus,
+          new TestConsole(),
+          ImmutableMap.<String, String>of())
+             .buildActionGraph(new BuildRuleResolver(), eventBus);
+      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
+      assertEquals(ImmutableList.of(Paths.get("foo/Bar.java")), libRule.getInputs());
+    }
+
+    // Now tell the parser to forget about build files with inputs under symlinks.
+    parser.cleanCache();
+
+    {
+      ActionGraph graph = parser.buildTargetGraph(
+          buildTargets,
+          defaultIncludes,
+          eventBus,
+          new TestConsole(),
+          ImmutableMap.<String, String>of())
+            .buildActionGraph(new BuildRuleResolver(), eventBus);
+      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
+      assertEquals(
+          ImmutableList.of(Paths.get("foo/Bar.java"), Paths.get("foo/Baz.java")),
+          libRule.getInputs());
+    }
+  }
+
+  @Test
+  public void whenBuildFileContainsSourcesUnderSymLinkDeletedSourcesNotRemovedUntilCacheCleaned()
+      throws Exception {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("bar");
+    tempDir.newFile("bar/Bar.java");
+    File bazSourceFile = tempDir.newFile("bar/Baz.java");
+    Path rootPath = tempDir.getRoot().toPath();
+    java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo"), rootPath.resolve("bar"));
+
+    File testBuckFile = tempDir.newFile(BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'lib', srcs=glob(['foo/*.java']))\n",
+        testBuckFile,
+        Charsets.UTF_8);
+
+    // Fetch //:lib to put it in cache.
+    BuildTarget libTarget = BuildTarget.builder("//", "lib").build();
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
+    Iterable<String> defaultIncludes = ImmutableList.of();
+
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+
+    {
+      ActionGraph graph = parser.buildTargetGraph(
+          buildTargets,
+          defaultIncludes,
+          eventBus,
+          new TestConsole(),
+          ImmutableMap.<String, String>of())
+             .buildActionGraph(new BuildRuleResolver(), eventBus);
+
+      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
+      assertEquals(
+          ImmutableList.of(Paths.get("foo/Bar.java"), Paths.get("foo/Baz.java")),
+          libRule.getInputs());
+    }
+
+    bazSourceFile.delete();
+    WatchEvent<Path> deleteEvent = createPathEvent(
+        Paths.get("bar/Baz.java"),
+        StandardWatchEventKinds.ENTRY_DELETE);
+    parser.onFileSystemChange(deleteEvent);
+
+    {
+      // Even though we've deleted a source file, the parser can't know it
+      // has anything to do with our lib (which looks in foo/*.java)
+      // until we clean the parser cache.
+      ActionGraph graph = parser.buildTargetGraph(
+          buildTargets,
+          defaultIncludes,
+          eventBus,
+          new TestConsole(),
+          ImmutableMap.<String, String>of())
+              .buildActionGraph(new BuildRuleResolver(), eventBus);
+      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
+      assertEquals(
+          ImmutableList.of(Paths.get("foo/Bar.java"), Paths.get("foo/Baz.java")),
+          libRule.getInputs());
+    }
+
+    // Now tell the parser to forget about build files with inputs under symlinks.
+    parser.cleanCache();
+
+    {
+      ActionGraph graph = parser.buildTargetGraph(
+          buildTargets,
+          defaultIncludes,
+          eventBus,
+          new TestConsole(),
+          ImmutableMap.<String, String>of())
+              .buildActionGraph(new BuildRuleResolver(), eventBus);
+      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
+      assertEquals(
+          ImmutableList.of(Paths.get("foo/Bar.java")),
+          libRule.getInputs());
+    }
+  }
+
   private Iterable<Map<String, Object>> emptyBuildTargets() {
     return Sets.newHashSet();
   }
