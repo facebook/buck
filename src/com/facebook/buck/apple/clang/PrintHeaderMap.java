@@ -43,7 +43,8 @@ public final class PrintHeaderMap {
 
   public static void main(String[] args) {
     if (args.length < 1) {
-      System.out.println("Usage: java -jar hmaptool.jar HEADER-MAP-FILE(S)");
+      System.err.println("Usage: java -jar hmaptool.jar HEADER-MAP-FILE(S)");
+      System.exit(1);
     }
     try {
       for (int i = 0; i < args.length; i++) {
@@ -51,7 +52,7 @@ public final class PrintHeaderMap {
       }
     } catch (IOException e) {
       System.err.println(e.toString());
-      System.exit(-1);
+      System.exit(1);
     }
   }
 }
