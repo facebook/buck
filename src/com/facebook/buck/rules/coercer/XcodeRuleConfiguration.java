@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,13 +31,13 @@ import java.util.Objects;
  * when resolving variables.
  */
 public class XcodeRuleConfiguration {
-  private final ImmutableList<Layer> layers;
+  private final ImmutableList<XcodeRuleConfigurationLayer> layers;
 
-  public XcodeRuleConfiguration(ImmutableList<Layer> layers) {
+  public XcodeRuleConfiguration(ImmutableList<XcodeRuleConfigurationLayer> layers) {
     this.layers = Preconditions.checkNotNull(layers);
   }
 
-  public ImmutableList<Layer> getLayers() {
+  public ImmutableList<XcodeRuleConfigurationLayer> getLayers() {
     return layers;
   }
 
@@ -78,71 +77,16 @@ public class XcodeRuleConfiguration {
         String,
         ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> entry
         : configurations.entrySet()) {
-      ImmutableList.Builder<Layer> layers = ImmutableList.builder();
+      ImmutableList.Builder<XcodeRuleConfigurationLayer> layers = ImmutableList.builder();
       for (Either<SourcePath, ImmutableMap<String, String>> value : entry.getValue()) {
         if (value.isLeft()) {
-          layers.add(new Layer(value.getLeft()));
+          layers.add(new XcodeRuleConfigurationLayer(value.getLeft()));
         } else if (value.isRight()) {
-          layers.add(new Layer(value.getRight()));
+          layers.add(new XcodeRuleConfigurationLayer(value.getRight()));
         }
       }
       builder.put(entry.getKey(), new XcodeRuleConfiguration(layers.build()));
     }
     return builder.build();
-  }
-
-  public static enum LayerType {
-    FILE,
-    INLINE_SETTINGS,
-  }
-
-  public static class Layer {
-    private final LayerType layerType;
-    private final Optional<SourcePath> sourcePath;
-    private final Optional<ImmutableMap<String, String>> inlineSettings;
-
-    public Layer(SourcePath path) {
-      this.layerType = LayerType.FILE;
-      this.sourcePath = Optional.of(Preconditions.checkNotNull(path));
-      this.inlineSettings = Optional.absent();
-    }
-
-    public Layer(ImmutableMap<String, String> inlineSettings) {
-      this.layerType = LayerType.INLINE_SETTINGS;
-      this.sourcePath = Optional.absent();
-      this.inlineSettings = Optional.of(Preconditions.checkNotNull(inlineSettings));
-    }
-
-    public LayerType getLayerType() {
-      return layerType;
-    }
-
-    public Optional<SourcePath> getSourcePath() {
-      return sourcePath;
-    }
-
-    public Optional<ImmutableMap<String, String>> getInlineSettings() {
-      return inlineSettings;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (!(o instanceof Layer)) {
-        return false;
-      }
-
-      Layer that = (Layer) o;
-      return Objects.equals(this.layerType, that.layerType) &&
-          Objects.equals(this.sourcePath, that.sourcePath) &&
-          Objects.equals(this.inlineSettings, that.inlineSettings);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(layerType, sourcePath, inlineSettings);
-    }
   }
 }

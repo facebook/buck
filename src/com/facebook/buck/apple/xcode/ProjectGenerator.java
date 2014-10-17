@@ -44,7 +44,6 @@ import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
-import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
@@ -71,6 +70,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
+import com.facebook.buck.rules.coercer.XcodeRuleConfigurationLayer;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShellStep;
@@ -1579,7 +1580,7 @@ public class ProjectGenerator {
       ImmutableMap<String, String> extra) {
 
     XcconfigStack.Builder builder = XcconfigStack.builder();
-    for (XcodeRuleConfiguration.Layer layer : configuration.getLayers()) {
+    for (XcodeRuleConfigurationLayer layer : configuration.getLayers()) {
       switch (layer.getLayerType()) {
         case FILE:
           builder.addSettingsFromFile(
@@ -2059,11 +2060,11 @@ public class ProjectGenerator {
       BuildTarget buildTarget,
       XcodeRuleConfiguration configuration) {
     ConfigInXcodeLayout extractedLayers = null;
-    ImmutableList<XcodeRuleConfiguration.Layer> layers = configuration.getLayers();
+    ImmutableList<XcodeRuleConfigurationLayer> layers = configuration.getLayers();
     switch (layers.size()) {
       case 2:
-        if (layers.get(0).getLayerType() == XcodeRuleConfiguration.LayerType.FILE &&
-            layers.get(1).getLayerType() == XcodeRuleConfiguration.LayerType.FILE) {
+        if (layers.get(0).getLayerType() == XcodeRuleConfigurationLayer.TYPE.FILE &&
+            layers.get(1).getLayerType() == XcodeRuleConfigurationLayer.TYPE.FILE) {
           extractedLayers = new ConfigInXcodeLayout(
               buildTarget,
               layers.get(0).getSourcePath(),
@@ -2073,10 +2074,10 @@ public class ProjectGenerator {
         }
         break;
       case 4:
-        if (layers.get(0).getLayerType() == XcodeRuleConfiguration.LayerType.FILE &&
-            layers.get(1).getLayerType() == XcodeRuleConfiguration.LayerType.INLINE_SETTINGS &&
-            layers.get(2).getLayerType() == XcodeRuleConfiguration.LayerType.FILE &&
-            layers.get(3).getLayerType() == XcodeRuleConfiguration.LayerType.INLINE_SETTINGS) {
+        if (layers.get(0).getLayerType() == XcodeRuleConfigurationLayer.TYPE.FILE &&
+            layers.get(1).getLayerType() == XcodeRuleConfigurationLayer.TYPE.INLINE_SETTINGS &&
+            layers.get(2).getLayerType() == XcodeRuleConfigurationLayer.TYPE.FILE &&
+            layers.get(3).getLayerType() == XcodeRuleConfigurationLayer.TYPE.INLINE_SETTINGS) {
           extractedLayers = new ConfigInXcodeLayout(
               buildTarget,
               layers.get(0).getSourcePath(),
