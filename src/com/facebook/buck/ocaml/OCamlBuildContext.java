@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
@@ -356,7 +357,7 @@ public class OCamlBuildContext {
       compileFlags.add("-ccopt", "-isystem" + includes.toString());
     }
 
-    for (String cFlag : cxxPreprocessorInput.getCppflags()) {
+    for (String cFlag : cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C)) {
       compileFlags.add("-ccopt", cFlag);
     }
 

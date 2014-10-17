@@ -116,6 +116,7 @@ public class CxxPythonExtensionDescriptionTest {
     arg.deps = Optional.absent();
     arg.compilerFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
+    arg.langPreprocessorFlags = Optional.absent();
     arg.lexSrcs = Optional.absent();
     arg.yaccSrcs = Optional.absent();
     arg.baseModule = Optional.absent();

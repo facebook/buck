@@ -139,6 +139,7 @@ public class CxxBinaryDescriptionTest {
         new BuildTargetSourcePath(genHeader.getBuildTarget())));
     arg.compilerFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
+    arg.langPreprocessorFlags = Optional.absent();
     arg.lexSrcs = Optional.absent();
     arg.yaccSrcs = Optional.absent();
     arg.headerNamespace = Optional.absent();

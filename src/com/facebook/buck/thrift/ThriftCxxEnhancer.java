@@ -36,6 +36,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
@@ -208,8 +209,8 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         langParams,
         resolver,
         cxxPlatform,
-        /* preprocessorFlags */ ImmutableList.<String>of(),
-        /* propagatedPpFlags */ ImmutableList.<String>of(),
+        /* preprocessorFlags */ ImmutableMultimap.<CxxSource.Type, String>of(),
+        /* propagatedPpFlags */ ImmutableMultimap.<CxxSource.Type, String>of(),
         spec.getCxxHeaders(),
         /* compilerFlags */ ImmutableList.<String>of(),
         spec.getCxxSources(),

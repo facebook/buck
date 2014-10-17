@@ -143,7 +143,9 @@ public class CxxLibraryDescriptionTest {
         new BuildTargetSourcePath(genHeader.getBuildTarget())));
     arg.compilerFlags = Optional.absent();
     arg.propagatedPpFlags = Optional.absent();
+    arg.propagatedLangPpFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
+    arg.langPreprocessorFlags = Optional.absent();
     arg.linkWhole = Optional.absent();
     arg.lexSrcs = Optional.absent();
     arg.yaccSrcs = Optional.absent();
@@ -240,7 +242,9 @@ public class CxxLibraryDescriptionTest {
     arg.headers = Optional.absent();
     arg.compilerFlags = Optional.absent();
     arg.propagatedPpFlags = Optional.absent();
+    arg.propagatedLangPpFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
+    arg.langPreprocessorFlags = Optional.absent();
     arg.linkWhole = Optional.absent();
     arg.lexSrcs = Optional.absent();
     arg.yaccSrcs = Optional.absent();
