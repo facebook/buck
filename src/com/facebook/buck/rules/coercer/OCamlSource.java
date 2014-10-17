@@ -33,10 +33,16 @@ public class OCamlSource {
     }
   };
 
+  private final String name;
   private final SourcePath source;
 
-  private OCamlSource(SourcePath source) {
+  private OCamlSource(String name, SourcePath source) {
+    this.name = Preconditions.checkNotNull(name);
     this.source = Preconditions.checkNotNull(source);
+  }
+
+  public String getName() {
+    return name;
   }
 
   public SourcePath getSource() {
@@ -55,15 +61,15 @@ public class OCamlSource {
 
     OCamlSource ocamlSource = (OCamlSource) o;
 
-    return source.equals(ocamlSource.source);
+    return name.equals(ocamlSource.name) && source.equals(ocamlSource.source);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(source);
+    return Objects.hashCode(name, source);
   }
 
-  public static OCamlSource ofSourcePath(SourcePath sourcePath) {
-    return new OCamlSource(sourcePath);
+  public static OCamlSource ofNameAndSourcePath(String name, SourcePath sourcePath) {
+    return new OCamlSource(name, sourcePath);
   }
 }

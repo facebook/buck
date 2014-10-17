@@ -20,13 +20,18 @@ import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -62,6 +67,51 @@ public class OCamlDependencyGraphGenerator {
                 OCamlCompilables.OCAML_CMI_REGEX, OCamlCompilables.OCAML_MLI);
           }
         }).toList();
+  }
+
+  private String replaceObjExtWithSourceExt(String name) {
+    return name.replaceAll(
+          OCamlCompilables.OCAML_CMX_REGEX,
+          OCamlCompilables.OCAML_ML)
+        .replaceAll(
+            OCamlCompilables.OCAML_CMI_REGEX,
+            OCamlCompilables.OCAML_MLI);
+  }
+  public ImmutableMap<SourcePath, ImmutableList<SourcePath>> generateDependencyMap(
+      String depString) {
+    ImmutableMap.Builder<SourcePath, ImmutableList<SourcePath>> mapBuilder = ImmutableMap.builder();
+    Iterable<String> lines = Splitter.on(LINE_SEPARATOR).split(depString);
+    for (String line : lines) {
+      List<String> sourceAndDeps = Splitter.on(OCAML_SOURCE_AND_DEPS_SEPARATOR)
+          .trimResults().splitToList(line);
+      if (sourceAndDeps.size() >= 1) {
+        String source = replaceObjExtWithSourceExt(sourceAndDeps.get(0));
+        if (source.endsWith(OCamlCompilables.OCAML_ML) ||
+            source.endsWith(OCamlCompilables.OCAML_MLI)) {
+          FluentIterable<SourcePath> dependencies = FluentIterable
+              .from(
+                Splitter.on(OCAML_DEPS_SEPARATOR)
+                  .trimResults().splitToList(sourceAndDeps.get(1)))
+              .filter(new Predicate<String>() {
+                        @Override
+                        public boolean apply(String input) {
+                          return !input.isEmpty();
+                        }
+                      })
+              .transform(
+                  new Function<String, SourcePath>() {
+                    @Override
+                    public SourcePath apply(String input) {
+                      return new PathSourcePath(Paths.get(replaceObjExtWithSourceExt(input)));
+                    }
+                  });
+          mapBuilder.put(
+              new PathSourcePath(Paths.get(source)),
+              ImmutableList.copyOf(dependencies));
+        }
+      }
+    }
+    return mapBuilder.build();
   }
 
   private void parseDependencies(String stdout) {

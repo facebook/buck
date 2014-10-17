@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
@@ -28,17 +29,31 @@ import java.nio.file.Path;
  */
 public class OCamlLexStep extends ShellStep {
 
-  private final Path lexCompiler;
-  private final Path output;
-  private final Path input;
+  public static class Args {
+    public final Path lexCompiler;
+    public final Path output;
+    public final Path input;
 
-  public OCamlLexStep(
+    public Args(
       Path lexCompiler,
       Path output,
       Path input) {
-    this.lexCompiler = Preconditions.checkNotNull(lexCompiler);
-    this.output = Preconditions.checkNotNull(output);
-    this.input = Preconditions.checkNotNull(input);
+      this.lexCompiler = Preconditions.checkNotNull(lexCompiler);
+      this.output = Preconditions.checkNotNull(output);
+      this.input = Preconditions.checkNotNull(input);
+    }
+
+    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+      return builder.set("lexCompiler", lexCompiler.toString())
+          .set("output", output.toString())
+          .set("input", input.toString());
+    }
+  }
+
+  private final Args args;
+
+  public OCamlLexStep(Args args) {
+    this.args = args;
   }
 
   @Override
@@ -49,9 +64,9 @@ public class OCamlLexStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(lexCompiler.toString())
-        .add("-o", output.toString())
-        .add(input.toString())
+        .add(args.lexCompiler.toString())
+        .add("-o", args.output.toString())
+        .add(args.input.toString())
         .build();
   }
 

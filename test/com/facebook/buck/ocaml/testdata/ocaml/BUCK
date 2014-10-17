@@ -6,6 +6,7 @@ ocaml_binary(
     deps=[
         ':plus_lib'
     ],
+    warnings_flags='-27',
 )
 
 ocaml_library(
@@ -13,6 +14,7 @@ ocaml_library(
     srcs = [
         'plus/plus.ml',
     ],
+    warnings_flags='-27',
     visibility = [
         'PUBLIC',
     ]

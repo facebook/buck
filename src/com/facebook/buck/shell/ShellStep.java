@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
@@ -42,6 +43,8 @@ import java.util.Map.Entry;
 import javax.annotation.Nullable;
 
 public abstract class ShellStep implements Step {
+
+  private static final Logger LOG = Logger.get(ShellStep.class);
 
   /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
   @Nullable
@@ -181,6 +184,7 @@ public abstract class ShellStep implements Step {
   public final ImmutableList<String> getShellCommand(ExecutionContext context) {
     if (shellCommandArgs == null) {
       shellCommandArgs = getShellCommandInternal(context);
+      LOG.debug("Command: %s", Joiner.on(" ").join(shellCommandArgs));
     }
     return shellCommandArgs;
   }

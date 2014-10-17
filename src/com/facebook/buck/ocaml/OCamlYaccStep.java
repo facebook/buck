@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
@@ -28,25 +29,31 @@ import java.nio.file.Path;
  */
 public class OCamlYaccStep extends ShellStep {
 
-  private final Path yaccCompiler;
-  private final Path output;
-  private final Path input;
+  public static class Args {
+    public final Path yaccCompiler;
+    public final Path output;
+    public final Path input;
+    public Args(
+        Path yaccCompiler,
+        Path output,
+        Path input
+    ) {
+      this.yaccCompiler = Preconditions.checkNotNull(yaccCompiler);
+      this.output = Preconditions.checkNotNull(output);
+      this.input = Preconditions.checkNotNull(input);
+    }
 
-  public OCamlYaccStep(
-      Path yaccCompiler,
-      Path output,
-      Path input) {
-    this.yaccCompiler = Preconditions.checkNotNull(yaccCompiler);
-    this.output = Preconditions.checkNotNull(output);
-    this.input = Preconditions.checkNotNull(input);
+    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+      return builder.set("yaccCompiler", yaccCompiler.toString())
+          .set("output", output.toString())
+          .set("input", input.toString());
+    }
   }
 
-  private static String stripExtension(String fileName) {
-    int index = fileName.lastIndexOf('.');
+  private final Args args;
 
-    // if dot is in the first position,
-    // we are dealing with a hidden file rather than an extension
-    return (index > 0) ? fileName.substring(0, index) : fileName;
+  public OCamlYaccStep(Args args) {
+    this.args = args;
   }
 
   @Override
@@ -57,9 +64,9 @@ public class OCamlYaccStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(yaccCompiler.toString())
-        .add("-b", stripExtension(output.toString()))
-        .add(input.toString())
+        .add(args.yaccCompiler.toString())
+        .add("-b", OCamlUtil.stripExtension(args.output.toString()))
+        .add(args.input.toString())
         .build();
   }
 

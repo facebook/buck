@@ -38,8 +38,8 @@ import javax.annotation.Nullable;
 
 
 public class OCamlBuildContext {
-  private static final String OCAML_COMPILED_BYTECODE_DIR = "bc";
-  private static final String OCAML_COMPILED_DIR = "opt";
+  static final String OCAML_COMPILED_BYTECODE_DIR = "bc";
+  static final String OCAML_COMPILED_DIR = "opt";
   private static final String OCAML_GENERATED_SOURCE_DIR = "gen";
 
   static final Path DEFAULT_OCAML_BYTECODE_COMPILER =
@@ -48,13 +48,19 @@ public class OCamlBuildContext {
   static final Path DEFAULT_OCAML_LEX_COMPILER = Paths.get("/usr/bin/ocamllex.opt");
   static final Path DEFAULT_OCAML_COMPILER = Paths.get("/usr/bin/ocamlopt.opt");
   static final Path DEFAULT_OCAML_DEP_TOOL = Paths.get("/usr/bin/ocamldep.opt");
+  static final Path DEFAULT_OCAML_DEBUG = Paths.get("/usr/bin/ocamldebug");
+  static final Path DEFAULT_OCAML_INTEROP_INCLUDE_DIR = Paths.get("/usr/local/lib/ocaml");
 
+  @Nullable
+  private OCamlBuckConfig config;
   @Nullable
   private Path ocamlDepTool;
   @Nullable
   private Path ocamlCompiler;
   @Nullable
   private Path ocamlBytecodeCompiler;
+  @Nullable
+  private Path ocamlDebug;
   private boolean isLibrary;
   @Nullable
   private ImmutableList<String> flags;
@@ -63,7 +69,7 @@ public class OCamlBuildContext {
   @Nullable
   private Path bytecodeOutput;
   @Nullable
-  private ImmutableList<SourcePath> input;
+  private ImmutableList<Path> input;
   @Nullable
   private ImmutableList<String> includes;
   @Nullable
@@ -90,32 +96,36 @@ public class OCamlBuildContext {
   private ImmutableSet<Path> yaccInputs;
   @Nullable
   private ImmutableSet<Path> mlInput;
+  @Nullable
+  private ImmutableList<String> bytecodeIncludes;
 
-  public static Path getArchiveOutputPath(BuildTarget target) {
+  private static Path getArchiveOutputPath(BuildTarget target) {
     return BuildTargets.getGenPath(
         target,
         "%s/lib" + target.getShortNameOnly() + OCamlCompilables.OCAML_CMXA);
   }
 
-  public static Path getArchiveBytecodeOutputPath(BuildTarget target) {
+  private static Path getArchiveBytecodeOutputPath(BuildTarget target) {
     return BuildTargets.getGenPath(
         target,
         "%s/lib" + target.getShortNameOnly() + OCamlCompilables.OCAML_CMA);
   }
 
-  private static Path getOutputPath(BuildTarget target, boolean isLibrary) {
+  public static Path getOutputPath(BuildTarget target, boolean isLibrary) {
+    BuildTarget plainTarget = target.getUnflavoredTarget();
     if (isLibrary) {
-      return getArchiveOutputPath(target);
+      return getArchiveOutputPath(plainTarget);
     } else {
-      return BuildTargets.getBinPath(target, "%s/" + target.getShortName() + ".opt");
+      return BuildTargets.getBinPath(plainTarget, "%s/" + plainTarget.getShortName() + ".opt");
     }
   }
 
-  private static Path getBytecodeOutputPath(BuildTarget target, boolean isLibrary) {
+  public static Path getBytecodeOutputPath(BuildTarget target, boolean isLibrary) {
+    BuildTarget plainTarget = target.getUnflavoredTarget();
     if (isLibrary) {
-      return getArchiveBytecodeOutputPath(target);
+      return getArchiveBytecodeOutputPath(plainTarget);
     } else {
-      return BuildTargets.getBinPath(target, "%s/" + target.getShortName());
+      return BuildTargets.getBinPath(plainTarget, "%s/" + plainTarget.getShortName());
     }
   }
 
@@ -164,6 +174,10 @@ public class OCamlBuildContext {
     return Preconditions.checkNotNull(ocamlCompiler);
   }
 
+  public Path getOcamlDebug() {
+    return Preconditions.checkNotNull(ocamlDebug);
+  }
+
   public boolean isLibrary() {
     return isLibrary;
   }
@@ -180,7 +194,7 @@ public class OCamlBuildContext {
     return Preconditions.checkNotNull(bytecodeOutput);
   }
 
-  public ImmutableList<SourcePath> getInput() {
+  public ImmutableList<Path> getInput() {
     return Preconditions.checkNotNull(input);
   }
 
@@ -224,9 +238,8 @@ public class OCamlBuildContext {
     return Preconditions.checkNotNull(ocamlBytecodeCompiler);
   }
 
-  public ImmutableList<String> getIncludeFlags(boolean excludeDeps) {
+  public ImmutableList<String> getIncludeDirectories(boolean isBytecode, boolean excludeDeps) {
     Preconditions.checkNotNull(mlInput);
-    ImmutableList.Builder<String> includeFlagsBuilder = ImmutableList.builder();
 
     ImmutableSet.Builder<String> includeDirs = ImmutableSet.builder();
     for (Path mlFile : mlInput) {
@@ -235,30 +248,34 @@ public class OCamlBuildContext {
         includeDirs.add(parent.toString());
       }
     }
-    for (String includeDir : includeDirs.build()) {
-      includeFlagsBuilder.add(OCamlCompilables.OCAML_INCLUDE_FLAG, includeDir);
-    }
 
     if (!excludeDeps) {
-      includeFlagsBuilder.addAll(
-          MoreIterables.zipAndConcat(
-              Iterables.cycle(OCamlCompilables.OCAML_INCLUDE_FLAG),
-              this.getIncludes()
-          )
-      );
+      includeDirs.addAll(isBytecode ? this.getBytecodeIncludes() : this.getIncludes());
     }
 
-    return includeFlagsBuilder.build();
+    return ImmutableList.copyOf(includeDirs.build());
+  }
+
+  public ImmutableList<String> getIncludeFlags(boolean isBytecode, boolean excludeDeps) {
+    Preconditions.checkNotNull(mlInput);
+    return ImmutableList.copyOf(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle(OCamlCompilables.OCAML_INCLUDE_FLAG),
+            getIncludeDirectories(isBytecode, excludeDeps)));
   }
 
   public ImmutableList<String> getBytecodeIncludeFlags() {
-    ImmutableList.Builder<String> flagBuilder = ImmutableList.builder();
-    flagBuilder.addAll(getIncludeFlags(/* excludeDeps */ true));
-    flagBuilder.add(
-      OCamlCompilables.OCAML_INCLUDE_FLAG,
-      getCompileBytecodeOutputDir().toString()
-    );
-    return flagBuilder.build();
+    return ImmutableList.copyOf(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle(OCamlCompilables.OCAML_INCLUDE_FLAG),
+            getBytecodeIncludeDirectories()));
+  }
+
+  public ImmutableList<String> getBytecodeIncludeDirectories() {
+    ImmutableList.Builder<String> includesBuilder = ImmutableList.builder();
+    includesBuilder.addAll(getIncludeDirectories(true, /* excludeDeps */ true));
+    includesBuilder.add(getCompileBytecodeOutputDir().toString());
+    return includesBuilder.build();
   }
 
   protected FluentIterable<Path> getLexOutput(ImmutableSet<Path> lexInputs) {
@@ -316,10 +333,61 @@ public class OCamlBuildContext {
         .setInput("ocamlDepTool", getOcamlDepTool())
         .setInput("ocamlCompiler", getOcamlCompiler())
         .setInput("ocamlBytecodeCompiler", getOcamlBytecodeCompiler())
+        .setInput("ocamlDebug", getOcamlDebug())
         .setInput("yaccCompiler", getYaccCompiler())
         .setInput("lexCompiler", getLexCompiler())
         .set("flags", getFlags());
   }
+
+  public ImmutableList<String> getBytecodeIncludes() {
+    return Preconditions.checkNotNull(bytecodeIncludes);
+  }
+
+  public ImmutableList<String> getCCompileFlags() {
+    ImmutableList.Builder<String> compileFlags = ImmutableList.builder();
+
+    CxxPreprocessorInput cxxPreprocessorInput = getCxxPreprocessorInput();
+
+    for (Path includes : cxxPreprocessorInput.getIncludeRoots()) {
+      compileFlags.add("-ccopt", "-I" + includes.toString());
+    }
+
+    for (Path includes : cxxPreprocessorInput.getSystemIncludeRoots()) {
+      compileFlags.add("-ccopt", "-isystem" + includes.toString());
+    }
+
+    for (String cFlag : cxxPreprocessorInput.getCppflags()) {
+      compileFlags.add("-ccopt", cFlag);
+    }
+
+    return compileFlags.build();
+  }
+
+  private static ImmutableList<String> addPrefix(String prefix, Iterable<String> flags) {
+    return ImmutableList.copyOf(
+      MoreIterables.zipAndConcat(
+        Iterables.cycle(prefix),
+        flags));
+  }
+
+  public ImmutableList<String> getCommonCFlags() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    builder.addAll(addPrefix("-ccopt", Preconditions.checkNotNull(config).getCFlags()));
+    builder.add("-ccopt",
+        "-isystem" +
+            config.getOCamlInteropIncludesDir()
+                .or(DEFAULT_OCAML_INTEROP_INCLUDE_DIR.toString()));
+    return builder.build();
+  }
+
+  public ImmutableList<String> getCommonCLinkerFlags() {
+    Preconditions.checkNotNull(config);
+    return addPrefix("-ccopt",
+        Iterables.concat(
+          config.getCLinkerFlags(),
+          addPrefix("-Xlinker", config.getLdFlags())));
+  }
+
 
   public static class Builder {
     private final OCamlBuildContext context;
@@ -331,10 +399,12 @@ public class OCamlBuildContext {
         SourcePathResolver resolver) {
       this.context = Preconditions.checkNotNull(context);
       this.resolver = Preconditions.checkNotNull(resolver);
+      context.config = Preconditions.checkNotNull(config);
       context.ocamlDepTool = config.getOCamlDepTool().or(DEFAULT_OCAML_DEP_TOOL);
       context.ocamlCompiler = config.getOCamlCompiler().or(DEFAULT_OCAML_COMPILER);
       context.ocamlBytecodeCompiler = config.getOCamlBytecodeCompiler()
           .or(DEFAULT_OCAML_BYTECODE_COMPILER);
+      context.ocamlDebug = config.getOCamlDebug().or(DEFAULT_OCAML_DEBUG);
       context.yaccCompiler = config.getYaccCompiler()
           .or(DEFAULT_OCAML_YACC_COMPILER);
       context.lexCompiler = config.getLexCompiler().or(DEFAULT_OCAML_LEX_COMPILER);
@@ -350,21 +420,22 @@ public class OCamlBuildContext {
           context.getGeneratedSourceDir(),
           "You should initialize directories before the call to setInput");
 
-      context.input = Preconditions.checkNotNull(input);
-      FluentIterable<Path> inputPaths = FluentIterable.from(context.input)
+      Preconditions.checkNotNull(input);
+      FluentIterable<Path> inputPaths = FluentIterable.from(input)
           .transform(resolver.getPathFunction());
 
+      context.input = inputPaths.toList();
       context.cInput = inputPaths.filter(OCamlUtil.ext(OCamlCompilables.OCAML_C)).toSet();
       context.lexInput = inputPaths.filter(OCamlUtil.ext(OCamlCompilables.OCAML_MLL)).toSet();
       context.yaccInputs = inputPaths.filter(OCamlUtil.ext(OCamlCompilables.OCAML_MLY)).toSet();
       context.mlInput = ImmutableSet.copyOf(
           Iterables.concat(
-              inputPaths.filter(
-                  OCamlUtil.ext(
-                      OCamlCompilables.OCAML_ML,
-                      OCamlCompilables.OCAML_MLI)),
-              context.getLexOutput(Preconditions.checkNotNull(context.lexInput)),
-              context.getYaccOutput(Preconditions.checkNotNull(context.yaccInputs))));
+            inputPaths.filter(
+                    OCamlUtil.ext(
+                        OCamlCompilables.OCAML_ML,
+                        OCamlCompilables.OCAML_MLI)),
+            context.getLexOutput(Preconditions.checkNotNull(context.lexInput)),
+            context.getYaccOutput(Preconditions.checkNotNull(context.yaccInputs))));
       return this;
     }
 
@@ -408,6 +479,7 @@ public class OCamlBuildContext {
       Preconditions.checkNotNull(context.getFlags());
       Preconditions.checkNotNull(context.getInput());
       Preconditions.checkNotNull(context.getIncludes());
+      Preconditions.checkNotNull(context.getBytecodeIncludes());
       Preconditions.checkNotNull(context.getLinkableInput());
       Preconditions.checkNotNull(context.getOCamlInput());
       Preconditions.checkNotNull(context.getOutput());
@@ -418,6 +490,10 @@ public class OCamlBuildContext {
       return context;
     }
 
+    public Builder setBytecodeIncludes(ImmutableList<String> bytecodeIncludes) {
+      context.bytecodeIncludes = bytecodeIncludes;
+      return this;
+    }
   }
 
 }

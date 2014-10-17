@@ -35,4 +35,17 @@ public class BuildTargetFactoryTest {
         BuildTarget.builder("//example/base", "one").addFlavor("two").build(),
         buildTarget);
   }
+
+  @Test
+  public void testTargetWithMultipleFlavors() {
+    BuildTarget buildTarget = BuildTargetFactory
+        .newInstance("//example/base:shortName#one,two,three");
+    assertEquals(
+        BuildTarget.builder("//example/base", "shortName")
+            .addFlavor("one")
+            .addFlavor("two")
+            .addFlavor("three")
+            .build(),
+        buildTarget);
+  }
 }

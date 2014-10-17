@@ -17,17 +17,10 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.shell.Shell;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MakeExecutableStep;
-import com.facebook.buck.step.fs.WriteFileStep;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -38,8 +31,6 @@ import java.nio.file.Paths;
  * A step that preprocesses, compiles, and assembles OCaml sources.
  */
 public class OCamlBuildStep implements Step {
-
-  private static final Path OCAML_DEBUG = Paths.get("/usr/local/bin/ocamldebug");
 
   private final OCamlBuildContext ocamlContext;
   private final Path cCompiler;
@@ -62,7 +53,8 @@ public class OCamlBuildStep implements Step {
     this.depToolStep = new OCamlDepToolStep(
         this.ocamlContext.getOcamlDepTool(),
         ocamlContext.getMLInput(),
-        this.ocamlContext.getIncludeFlags(/* excludeDeps */ true));
+        this.ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true)
+    );
   }
 
   @Override
@@ -133,7 +125,15 @@ public class OCamlBuildStep implements Step {
     }
 
     if (!ocamlContext.isLibrary()) {
-      return buildDebugLauncher(context);
+      Step debugLauncher = new OCamlDebugLauncherStep(
+          new OCamlDebugLauncherStep.Args(
+              ocamlContext.getOcamlDebug(),
+              ocamlContext.getBytecodeOutput(),
+              ocamlContext.getOCamlInput(),
+              ocamlContext.getBytecodeIncludeFlags()
+          )
+      );
+      return debugLauncher.execute(context);
     } else {
       return 0;
     }
@@ -143,24 +143,23 @@ public class OCamlBuildStep implements Step {
       ExecutionContext context,
       ImmutableList.Builder<String> linkerInputs) throws InterruptedException {
 
-    ImmutableList.Builder<String> compileFlags = ImmutableList.builder();
+    ImmutableList.Builder<String> cCompileFlags = ImmutableList.builder();
+    cCompileFlags.addAll(ocamlContext.getCCompileFlags());
+    cCompileFlags.addAll(ocamlContext.getCommonCFlags());
 
     CxxPreprocessorInput cxxPreprocessorInput = ocamlContext.getCxxPreprocessorInput();
 
-    for (Path includes : cxxPreprocessorInput.getIncludeRoots()) {
-      compileFlags.add("-ccopt", "-I" + includes.toString());
-    }
-
-    // TODO(user): Refactor to use BuildRules
     for (Path cSrc : ocamlContext.getCInput()) {
       Path outputPath = ocamlContext.getCOutput(cSrc);
       linkerInputs.add(outputPath.toString());
       Step compileStep = new OCamlCCompileStep(
-          cCompiler,
-          ocamlContext.getOcamlCompiler(),
-          outputPath,
-          cSrc,
-          compileFlags.build());
+          new OCamlCCompileStep.Args(
+            cCompiler,
+            ocamlContext.getOcamlCompiler(),
+            outputPath,
+            cSrc,
+            cCompileFlags.build(),
+            cxxPreprocessorInput.getIncludes()));
       int compileExitCode = compileStep.execute(context);
       if (compileExitCode != 0) {
         return compileExitCode;
@@ -172,86 +171,54 @@ public class OCamlBuildStep implements Step {
   private int executeLinking(
       ExecutionContext context,
       ImmutableList<String> linkerInputs) throws InterruptedException {
+
+    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    flags.addAll(ocamlContext.getFlags());
+    flags.addAll(ocamlContext.getCommonCLinkerFlags());
+
     OCamlLinkStep linkStep = new OCamlLinkStep(
-        cxxCompiler,
-        ocamlContext.getOcamlCompiler(),
-        ocamlContext.getOutput(),
-        ocamlContext.getLinkableInput().getArgs(),
-        linkerInputs,
-        ocamlContext.getFlags(),
-        ocamlContext.isLibrary(),
-        /* isBytecode */ false);
+        new OCamlLinkStep.Args(
+          cxxCompiler,
+          ocamlContext.getOcamlCompiler(),
+          ocamlContext.getOutput(),
+          ocamlContext.getLinkableInput().getArgs(),
+          linkerInputs,
+          flags.build(),
+          ocamlContext.isLibrary(),
+          /* isBytecode */ false));
     return linkStep.execute(context);
   }
 
   private int executeBytecodeLinking(
       ExecutionContext context,
       ImmutableList<String> linkerInputs) throws InterruptedException {
+
+    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    flags.addAll(ocamlContext.getFlags());
+    flags.addAll(ocamlContext.getCommonCLinkerFlags());
+
     OCamlLinkStep linkStep = new OCamlLinkStep(
-        cxxCompiler,
-        ocamlContext.getOcamlBytecodeCompiler(),
-        ocamlContext.getBytecodeOutput(),
-        ocamlContext.getLinkableInput().getArgs(),
-        linkerInputs,
-        ocamlContext.getFlags(),
-        ocamlContext.isLibrary(),
-        /* isBytecode */ true);
+        new OCamlLinkStep.Args(
+          cxxCompiler,
+          ocamlContext.getOcamlBytecodeCompiler(),
+          ocamlContext.getBytecodeOutput(),
+          ocamlContext.getLinkableInput().getArgs(),
+          linkerInputs,
+          flags.build(),
+          ocamlContext.isLibrary(),
+          /* isBytecode */ true));
     return linkStep.execute(context);
   }
 
-  // Debug launcher script is a script for launching OCaml debugger with target binary loaded.
-  // Works with bytecode and provides limited debugging functionality like stepping, breakpoints,
-  // etc.
-  private int buildDebugLauncher(ExecutionContext context) throws InterruptedException {
-    String debugCmdStr = getDebugCmd();
-    String debugLuancherScript = getDebugLauncherScript(debugCmdStr);
-    final String debugFilePathStr = ocamlContext.getBytecodeOutput().toString() + ".debug";
-
-    WriteFileStep writeFile = new WriteFileStep(debugLuancherScript, debugFilePathStr);
-    int writeExitCode = writeFile.execute(context);
-    if (writeExitCode != 0) {
-      return writeExitCode;
-    }
-
-    ShellStep chmod = new MakeExecutableStep(debugFilePathStr);
-    return chmod.execute(context);
-  }
-
-  private String getDebugLauncherScript(String debugCmdStr) {
-    ImmutableList.Builder<String> debugFile = ImmutableList.builder();
-    debugFile.add("#!/bin/sh");
-    debugFile.add(debugCmdStr);
-
-    return Joiner.on("\n").join(debugFile.build());
-  }
-
-  private String getDebugCmd() {
-    ImmutableList.Builder<String> debugCmd = ImmutableList.builder();
-    debugCmd.add("rlwrap");
-    debugCmd.add(OCAML_DEBUG.toString());
-
-    Iterable<String> includesBytecodeFlags = FluentIterable.from(ocamlContext.getOCamlInput())
-        .transformAndConcat(new Function<OCamlLibrary, Iterable<String>>() {
-                              @Override
-                              public Iterable<String> apply(OCamlLibrary input) {
-                                return input.getBytecodeIncludeDirs();
-                              }
-                            });
-
-    debugCmd.addAll(includesBytecodeFlags);
-    debugCmd.addAll(ocamlContext.getBytecodeIncludeFlags());
-
-    debugCmd.add(ocamlContext.getBytecodeOutput().toString());
-    return Shell.shellQuoteJoin(debugCmd.build(), " ") + " $@";
-  }
-
-  private ImmutableList<String> getCompileFlags(boolean excludeDeps) {
+  private ImmutableList<String> getCompileFlags(boolean isBytecode, boolean excludeDeps) {
+    String output = isBytecode ? ocamlContext.getCompileBytecodeOutputDir().toString() :
+        ocamlContext.getCompileOutputDir().toString();
     ImmutableList.Builder<String> flagBuilder = ImmutableList.builder();
-    flagBuilder.addAll(ocamlContext.getIncludeFlags(/* excludeDeps */ excludeDeps));
+    flagBuilder.addAll(ocamlContext.getIncludeFlags(isBytecode, /* excludeDeps */ excludeDeps));
     flagBuilder.addAll(ocamlContext.getFlags());
     flagBuilder.add(
         OCamlCompilables.OCAML_INCLUDE_FLAG,
-        ocamlContext.getCompileOutputDir().toString());
+        output);
     return flagBuilder.build();
   }
 
@@ -274,13 +241,16 @@ public class OCamlBuildStep implements Step {
       if (!outputFileName.endsWith(OCamlCompilables.OCAML_CMI)) {
         linkerInputs.add(outputPath.toString());
       }
-      final ImmutableList<String> compileFlags = getCompileFlags(false);
+      final ImmutableList<String> compileFlags = getCompileFlags(
+          /* isBytecode */ false,
+          /* excludeDeps */ false);
       Step compileStep = new OCamlMLCompileStep(
-          cCompiler,
-          ocamlContext.getOcamlCompiler(),
-          outputPath,
-          Paths.get(inputOutput),
-          compileFlags);
+          new OCamlMLCompileStep.Args(
+            cCompiler,
+            ocamlContext.getOcamlCompiler(),
+            outputPath,
+            Paths.get(inputOutput),
+            compileFlags));
       int compileExitCode = compileStep.execute(context);
       if (compileExitCode != 0) {
         return compileExitCode;
@@ -308,13 +278,16 @@ public class OCamlBuildStep implements Step {
       if (!outputFileName.endsWith(OCamlCompilables.OCAML_CMI)) {
         linkerInputs.add(outputPath.toString());
       }
-      final ImmutableList<String> compileFlags = getCompileFlags(/* excludeDeps */ false);
+      final ImmutableList<String> compileFlags = getCompileFlags(
+          /* isBytecode */ true,
+          /* excludeDeps */ false);
       Step compileBytecodeStep = new OCamlMLCompileStep(
-          cCompiler,
-          ocamlContext.getOcamlBytecodeCompiler(),
-          outputPath,
-          Paths.get(inputOutput),
-          compileFlags);
+          new OCamlMLCompileStep.Args(
+            cCompiler,
+            ocamlContext.getOcamlBytecodeCompiler(),
+            outputPath,
+            Paths.get(inputOutput),
+            compileFlags));
       int compileExitCode = compileBytecodeStep.execute(context);
       if (compileExitCode != 0) {
         return compileExitCode;
@@ -332,9 +305,10 @@ public class OCamlBuildStep implements Step {
     for (Path yaccSource : ocamlContext.getYaccInput()) {
       Path output = ocamlContext.getYaccOutput(ImmutableSet.of(yaccSource)).get(0);
       OCamlYaccStep yaccStep = new OCamlYaccStep(
-          ocamlContext.getYaccCompiler(),
-          output,
-          yaccSource);
+          new OCamlYaccStep.Args(
+            ocamlContext.getYaccCompiler(),
+            output,
+            yaccSource));
       int yaccExitCode = yaccStep.execute(context);
       if (yaccExitCode != 0) {
         return yaccExitCode;
@@ -342,7 +316,11 @@ public class OCamlBuildStep implements Step {
     }
     for (Path lexSource : ocamlContext.getLexInput()) {
       Path output = ocamlContext.getLexOutput(ImmutableSet.of(lexSource)).get(0);
-      OCamlLexStep lexStep = new OCamlLexStep(ocamlContext.getLexCompiler(), output, lexSource);
+      OCamlLexStep lexStep = new OCamlLexStep(
+          new OCamlLexStep.Args(
+            ocamlContext.getLexCompiler(),
+            output,
+            lexSource));
       int lexExitCode = lexStep.execute(context);
       if (lexExitCode != 0) {
         return lexExitCode;

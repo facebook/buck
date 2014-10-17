@@ -27,9 +27,12 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -40,9 +43,10 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
   private final String nativeLib;
   private final String bytecodeLib;
   private final SourcePath staticNativeLibraryPath;
-  private final SourcePath staticCLibraryPath;
+  private final ImmutableList<SourcePath> staticCLibraryPaths;
   private final SourcePath bytecodeLibraryPath;
   private final Path libPath;
+  private final Path includeDir;
 
   public PrebuiltOCamlLibrary(
       BuildRuleParams params,
@@ -50,22 +54,26 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
       String nativeLib,
       String bytecodeLib,
       SourcePath staticNativeLibraryPath,
-      SourcePath staticCLibraryPath,
+      ImmutableList<SourcePath> staticCLibraryPaths,
       SourcePath bytecodeLibraryPath,
-      Path libPath) {
+      Path libPath,
+      Path includeDir) {
     super(params, resolver);
     this.nativeLib = nativeLib;
     this.bytecodeLib = bytecodeLib;
     this.staticNativeLibraryPath = staticNativeLibraryPath;
-    this.staticCLibraryPath = staticCLibraryPath;
+    this.staticCLibraryPaths = staticCLibraryPaths;
     this.bytecodeLibraryPath = bytecodeLibraryPath;
     this.libPath = libPath;
+    this.includeDir = includeDir;
   }
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return getResolver().filterInputsToCompareToOutput(
-        ImmutableList.of(staticCLibraryPath, staticNativeLibraryPath, bytecodeLibraryPath));
+        Iterables.concat(
+            staticCLibraryPaths,
+            ImmutableList.of(staticNativeLibraryPath, bytecodeLibraryPath)));
   }
 
   @Override
@@ -96,15 +104,19 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
         new BuildTargetSourcePath(
             this.getBuildTarget(),
             getResolver().getPath(staticNativeLibraryPath)));
-    librariesBuilder.add(
-        new BuildTargetSourcePath(
-            this.getBuildTarget(),
-            getResolver().getPath(staticCLibraryPath)));
+    for (SourcePath staticCLibraryPath : staticCLibraryPaths) {
+      librariesBuilder.add(
+          new BuildTargetSourcePath(
+              this.getBuildTarget(),
+              getResolver().getPath(staticCLibraryPath)));
+    }
     final ImmutableList<SourcePath> libraries = librariesBuilder.build();
 
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.add(staticNativeLibraryPath.toString());
-    linkerArgsBuilder.add(staticCLibraryPath.toString());
+    linkerArgsBuilder.addAll(
+        FluentIterable.from(staticCLibraryPaths)
+            .transform(Functions.toStringFunction()));
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
     return new NativeLinkableInput(
@@ -114,15 +126,12 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   @Override
   public Path getIncludeLibDir() {
-    return libPath;
+    return includeDir;
   }
 
   @Override
   public Iterable<String> getBytecodeIncludeDirs() {
-    return ImmutableList.of(
-        OCamlCompilables.OCAML_INCLUDE_FLAG,
-        libPath.toString()
-    );
+    return ImmutableList.of(includeDir.toString());
   }
 
   @Override

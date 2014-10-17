@@ -17,7 +17,9 @@
 package com.facebook.buck.ocaml;
 
 import static com.facebook.buck.ocaml.OCamlRuleBuilder.createStaticLibraryBuildTarget;
+import static com.facebook.buck.ocaml.OCamlRuleBuilder.createOCamlLinkTarget;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxCompilableEnhancer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -58,16 +60,16 @@ public class OCamlIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//hello_ocaml:hello_ocaml");
+    BuildTarget binary = createOCamlLinkTarget(target);
     BuildTarget lib = BuildTargetFactory.newInstance("//hello_ocaml:ocamllib");
     BuildTarget staticLib = createStaticLibraryBuildTarget(lib);
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, lib, staticLib);
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    assertEquals(
-        ImmutableSet.of(target, staticLib),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
 
     buildLog.assertTargetBuiltLocally(target.toString());
     buildLog.assertTargetBuiltLocally(staticLib.toString());
@@ -78,9 +80,7 @@ public class OCamlIntegrationTest {
     // date.
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target, staticLib),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetHadMatchingRuleKey(target.toString());
     buildLog.assertTargetHadMatchingRuleKey(staticLib.toString());
 
@@ -91,9 +91,7 @@ public class OCamlIntegrationTest {
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target, staticLib),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
 
     buildLog.assertTargetBuiltLocally(target.toString());
     buildLog.assertTargetHadMatchingRuleKey(staticLib.toString());
@@ -105,9 +103,7 @@ public class OCamlIntegrationTest {
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target, staticLib),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
 
     buildLog.assertTargetBuiltLocally(target.toString());
     buildLog.assertTargetBuiltLocally(staticLib.toString());
@@ -119,9 +115,7 @@ public class OCamlIntegrationTest {
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target, staticLib),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
 
     buildLog.assertTargetBuiltLocally(target.toString());
     buildLog.assertTargetBuiltLocally(staticLib.toString());
@@ -130,6 +124,7 @@ public class OCamlIntegrationTest {
 
     BuildTarget lib1 = BuildTargetFactory.newInstance("//hello_ocaml:ocamllib1");
     BuildTarget staticLib1 = createStaticLibraryBuildTarget(lib1);
+    ImmutableSet<BuildTarget> targets1 = ImmutableSet.of(target, binary, lib1, staticLib1);
     // We rebuild if lib name changes
     workspace.replaceFileContents("hello_ocaml/BUCK", "name = 'ocamllib'", "name = 'ocamllib1'");
     workspace.replaceFileContents(
@@ -139,9 +134,7 @@ public class OCamlIntegrationTest {
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target, staticLib1),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets1));
 
     buildLog.assertTargetBuiltLocally(target.toString());
     buildLog.assertTargetBuiltLocally(staticLib1.toString());
@@ -156,22 +149,27 @@ public class OCamlIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//calc:calc");
+    BuildTarget binary = createOCamlLinkTarget(target);
+
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary);
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertEquals(
-        ImmutableSet.of(target),
+        targets,
         buildLog.getAllTargets());
     buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
 
     workspace.resetBuildLogFile();
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(
-        ImmutableSet.of(target),
+        targets,
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    buildLog.assertTargetHadMatchingRuleKey(binary.toString());
 
     workspace.resetBuildLogFile();
 
@@ -179,9 +177,10 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(
-        ImmutableSet.of(target),
+        targets,
         buildLog.getAllTargets());
     buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
 
     workspace.resetBuildLogFile();
 
@@ -189,9 +188,10 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(
-        ImmutableSet.of(target),
+        targets,
         buildLog.getAllTargets());
     buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
   }
 
   @Test
@@ -203,40 +203,39 @@ public class OCamlIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//ctest:ctest");
+    BuildTarget binary = createOCamlLinkTarget(target);
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary);
+
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    assertEquals(
-        ImmutableSet.of(target),
-        buildLog.getAllTargets());
-        buildLog.assertTargetBuiltLocally(target.toString());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
+
+    buildLog.assertTargetBuiltLocally(target.toString());
 
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    buildLog.assertTargetHadMatchingRuleKey(binary.toString());
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("ctest/ctest.c", "NATIVE PLUS", "Native Plus");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("ctest/BUCK", "#INSERTION_POINT", "compiler_flags=['-noassert']");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents(
@@ -245,19 +244,17 @@ public class OCamlIntegrationTest {
         "compiler_flags=[]");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("ctest/BUCK", "compiler_flags=[]", "compiler_flags=[]");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    buildLog.assertTargetHadMatchingRuleKey(binary.toString());
   }
 
   @Test
@@ -294,22 +291,22 @@ public class OCamlIntegrationTest {
       workspace.setUp();
 
       BuildTarget target = BuildTargetFactory.newInstance("//ocaml_ext_mac:ocaml_ext");
+      BuildTarget binary = createOCamlLinkTarget(target);
       BuildTarget libplus = BuildTargetFactory.newInstance("//ocaml_ext_mac:plus");
+      ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, libplus);
 
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
       BuckBuildLog buildLog = workspace.getBuildLog();
-      assertEquals(
-          ImmutableSet.of(target, libplus),
-          buildLog.getAllTargets());
+      assertTrue(buildLog.getAllTargets().containsAll(targets));
       buildLog.assertTargetBuiltLocally(target.toString());
+      buildLog.assertTargetBuiltLocally(binary.toString());
 
       workspace.resetBuildLogFile();
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
       buildLog = workspace.getBuildLog();
-      assertEquals(
-          ImmutableSet.of(target, libplus),
-          buildLog.getAllTargets());
+      assertTrue(buildLog.getAllTargets().containsAll(targets));
       buildLog.assertTargetHadMatchingRuleKey(target.toString());
+      buildLog.assertTargetHadMatchingRuleKey(binary.toString());
 
       workspace.resetBuildLogFile();
       workspace.replaceFileContents(
@@ -318,10 +315,9 @@ public class OCamlIntegrationTest {
           "libplus_lib1");
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
       buildLog = workspace.getBuildLog();
-      assertEquals(
-          ImmutableSet.of(target, libplus),
-          buildLog.getAllTargets());
+      assertTrue(buildLog.getAllTargets().containsAll(targets));
       buildLog.assertTargetBuiltLocally(target.toString());
+      buildLog.assertTargetBuiltLocally(binary.toString());
     }
   }
 
@@ -334,8 +330,9 @@ public class OCamlIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//clib:clib");
-    BuildTarget libplus = createStaticLibraryBuildTarget(
-        BuildTargetFactory.newInstance("//clib:plus"));
+    BuildTarget binary = createOCamlLinkTarget(target);
+    BuildTarget libplus = BuildTargetFactory.newInstance("//clib:plus");
+    BuildTarget libplusStatic = createStaticLibraryBuildTarget(libplus);
     BuildTarget cclib = BuildTargetFactory.newInstance("//clib:cc");
 
     BuildTarget cclibbin = CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib);
@@ -347,13 +344,23 @@ public class OCamlIntegrationTest {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(cclib);
 
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(
+        target,
+        binary,
+        libplus,
+        libplusStatic,
+        cclib,
+        cclibbin,
+        ccObj,
+        headerSymlinkTreeTarget);
+
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target, libplus, cclibbin, ccObj, headerSymlinkTreeTarget),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
     buildLog.assertTargetBuiltLocally(libplus.toString());
+    buildLog.assertTargetBuiltLocally(libplusStatic.toString());
     buildLog.assertTargetBuiltLocally(cclibbin.toString());
     buildLog.assertTargetBuiltLocally(ccObj.toString());
     buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
@@ -361,11 +368,12 @@ public class OCamlIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target, libplus, cclibbin, ccObj, headerSymlinkTreeTarget),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
+
     buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    buildLog.assertTargetHadMatchingRuleKey(binary.toString());
     buildLog.assertTargetHadMatchingRuleKey(libplus.toString());
+    buildLog.assertTargetHadMatchingRuleKey(libplusStatic.toString());
     buildLog.assertTargetHadMatchingRuleKey(cclibbin.toString());
     buildLog.assertTargetHadMatchingRuleKey(ccObj.toString());
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
@@ -374,11 +382,11 @@ public class OCamlIntegrationTest {
     workspace.replaceFileContents("clib/cc/cc.cpp", "Hi there", "hi there");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(target, libplus, cclibbin, ccObj, headerSymlinkTreeTarget),
-        buildLog.getAllTargets());
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
     buildLog.assertTargetBuiltLocally(libplus.toString());
+    buildLog.assertTargetBuiltLocally(libplusStatic.toString());
     buildLog.assertTargetBuiltLocally(cclibbin.toString());
     buildLog.assertTargetBuiltLocally(ccObj.toString());
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());

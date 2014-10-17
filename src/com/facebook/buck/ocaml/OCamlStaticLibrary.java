@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
@@ -43,7 +44,7 @@ class OCamlStaticLibrary extends AbstractBuildRule implements OCamlLibrary {
   private final ImmutableList<String> linkerFlags;
   private final FluentIterable<Path> srcPaths;
   private final OCamlBuildContext ocamlContext;
-  private final OCamlBuild ocamlLibraryBuild;
+  private final BuildRule ocamlLibraryBuild;
 
   public OCamlStaticLibrary(
       BuildRuleParams params,
@@ -51,7 +52,8 @@ class OCamlStaticLibrary extends AbstractBuildRule implements OCamlLibrary {
       BuildRuleParams compileParams,
       ImmutableList<String> linkerFlags,
       FluentIterable<Path> srcPaths,
-      OCamlBuildContext ocamlContext, OCamlBuild ocamlLibraryBuild) {
+      OCamlBuildContext ocamlContext,
+      BuildRule ocamlLibraryBuild) {
     super(params, resolver);
     this.linkerFlags = linkerFlags;
     this.srcPaths = srcPaths;
@@ -67,8 +69,9 @@ class OCamlStaticLibrary extends AbstractBuildRule implements OCamlLibrary {
         type == Type.STATIC,
         "Only supporting static linking in OCaml");
 
-    final Path staticLibraryPath = OCamlBuildContext.getArchiveOutputPath
-        (staticLibraryTarget);
+    final Path staticLibraryPath = OCamlBuildContext.getOutputPath(
+        staticLibraryTarget,
+        /* isLibrary */ true);
 
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(linkerFlags);
@@ -96,7 +99,7 @@ class OCamlStaticLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   @Override
   public Iterable<String> getBytecodeIncludeDirs() {
-    return ocamlContext.getBytecodeIncludeFlags();
+    return ocamlContext.getBytecodeIncludeDirectories();
   }
 
   @Override

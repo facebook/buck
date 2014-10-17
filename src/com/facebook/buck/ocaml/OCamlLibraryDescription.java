@@ -51,10 +51,15 @@ public class OCamlLibraryDescription implements Description<OCamlLibraryDescript
       A args) {
 
     ImmutableList<OCamlSource> srcs = args.srcs.get();
-    ImmutableList<String> flags = args.compilerFlags.get();
+    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    flags.addAll(args.compilerFlags.get());
+    if (args.warningsFlags.isPresent()) {
+      flags.add("-w");
+      flags.add(args.warningsFlags.get());
+    }
     ImmutableList<String> linkerflags = args.linkerFlags.get();
     return OCamlRuleBuilder.createBuildRule(
-        ocamlBuckConfig, params, resolver, srcs, /*isLibrary*/ true, flags, linkerflags);
+        ocamlBuckConfig, params, resolver, srcs, /*isLibrary*/ true, flags.build(), linkerflags);
   }
 
   @Override
@@ -68,6 +73,7 @@ public class OCamlLibraryDescription implements Description<OCamlLibraryDescript
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableList<String>> linkerFlags;
+    public Optional<String> warningsFlags;
   }
 
 }

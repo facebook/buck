@@ -21,70 +21,47 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
-/**
- * A build rule which preprocesses, compiles, and assembles an OCaml source.
- */
-public class OCamlBuild extends AbstractBuildRule {
+public class OCamlCCompile extends AbstractBuildRule {
+  private final OCamlCCompileStep.Args args;
 
-  private final OCamlBuildContext ocamlContext;
-  private final SourcePath cCompiler;
-  private final SourcePath cxxCompiler;
-
-  public OCamlBuild(
+  public OCamlCCompile(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      OCamlBuildContext ocamlContext,
-      SourcePath cCompiler,
-      SourcePath cxxCompiler) {
+      OCamlCCompileStep.Args args) {
     super(params, resolver);
-    this.ocamlContext = Preconditions.checkNotNull(ocamlContext);
-    this.cCompiler = Preconditions.checkNotNull(cCompiler);
-    this.cxxCompiler = Preconditions.checkNotNull(cxxCompiler);
+    this.args = args;
   }
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ocamlContext.getInput();
+    return ImmutableList.of(args.input);
   }
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return ocamlContext.appendDetailsToRuleKey(builder)
-        .setInput("cCompiler", cCompiler)
-        .setInput("cxxCompiler", cxxCompiler);
+    return args.appendDetailsToRuleKey(getResolver(), builder);
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    Path baseArtifactDir = ocamlContext.getOutput().getParent();
-    buildableContext.recordArtifactsInDirectory(baseArtifactDir);
-    buildableContext.recordArtifactsInDirectory(
-        baseArtifactDir.resolve(OCamlBuildContext.OCAML_COMPILED_DIR));
-    buildableContext.recordArtifactsInDirectory(
-        baseArtifactDir.resolve(OCamlBuildContext.OCAML_COMPILED_BYTECODE_DIR));
+    buildableContext.recordArtifact(args.output);
     return ImmutableList.of(
-        new MakeCleanDirectoryStep(ocamlContext.getOutput().getParent()),
-        new OCamlBuildStep(
-            ocamlContext,
-            getResolver().getPath(cCompiler),
-            getResolver().getPath(cxxCompiler)));
+      new MkdirStep(args.output.getParent()),
+      new OCamlCCompileStep(args));
   }
 
   @Override
   public Path getPathToOutputFile() {
-    return ocamlContext.getOutput();
+    return args.output;
   }
-
 }

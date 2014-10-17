@@ -66,7 +66,8 @@ public class OCamlSourceTypeCoercer implements TypeCoercer<OCamlSource> {
     }
 
     if (object instanceof String) {
-      return OCamlSource.ofSourcePath(sourcePathTypeCoercer.coerce(
+      String name = (String) object;
+      return OCamlSource.ofNameAndSourcePath(name, sourcePathTypeCoercer.coerce(
               buildTargetParser,
               filesystem,
               pathRelativeToProjectRoot,

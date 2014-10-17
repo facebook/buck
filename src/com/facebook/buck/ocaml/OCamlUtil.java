@@ -20,12 +20,16 @@ import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.rules.AbstractDependencyVisitors;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Utility functions
@@ -45,9 +49,26 @@ public class OCamlUtil {
     return new Predicate<Path>() {
       @Override
       public boolean apply(Path input) {
-        String strPath = input.toString();
+        String strInput = input.toString();
         for (String ext : extensions) {
-          if (strPath.endsWith(ext)) {
+          if (strInput.endsWith(ext)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    };
+  }
+
+  public static Predicate<? super SourcePath> sourcePathExt(
+      final SourcePathResolver resolver,
+      final String... extensions) {
+    return new Predicate<SourcePath>() {
+      @Override
+      public boolean apply(SourcePath input) {
+        String strInput = resolver.getPath(input).toString();
+        for (String ext : extensions) {
+          if (strInput.endsWith(ext)) {
             return true;
           }
         }
@@ -75,4 +96,22 @@ public class OCamlUtil {
   }
 
 
+  static ImmutableSet<Path> getExtensionVariants(
+      Path output,
+      String...extensions) {
+    String withoutExtension = stripExtension(output.toString());
+    ImmutableSet.Builder<Path> builder =  ImmutableSet.builder();
+    for (String ext : extensions) {
+      builder.add(Paths.get(withoutExtension + ext));
+    }
+    return builder.build();
+  }
+
+  static String stripExtension(String fileName) {
+    int index = fileName.lastIndexOf('.');
+
+    // if dot is in the first position,
+    // we are dealing with a hidden file rather than an extension
+    return (index > 0) ? fileName.substring(0, index) : fileName;
+  }
 }

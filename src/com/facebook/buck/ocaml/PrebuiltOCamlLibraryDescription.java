@@ -25,7 +25,10 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -62,12 +65,21 @@ public class PrebuiltOCamlLibraryDescription
 
     final String nativeLib = args.nativeLib.or(String.format("%s.cmxa", libName));
     final String bytecodeLib = args.bytecodeLib.or(String.format("%s.cma", libName));
-    final String cLib = args.cLib.or(String.format("lib%s.a", libName));
+    final ImmutableList<String> cLibs = args.cLibs.get();
 
     final Path libPath = target.getBasePath().resolve(libDir);
+    final Path includeDir = libPath.resolve(args.includeDir.or(""));
 
     final SourcePath staticNativeLibraryPath = new PathSourcePath(libPath.resolve(nativeLib));
-    final SourcePath staticCLibraryPath = new PathSourcePath(libPath.resolve(cLib));
+    final ImmutableList<SourcePath> staticCLibraryPaths =
+        FluentIterable.from(cLibs)
+          .transform(new Function<String, SourcePath>() {
+                       @Override
+                       public SourcePath apply(String input) {
+                         return new PathSourcePath(libPath.resolve(input));
+                       }
+                     }).toList();
+
     final SourcePath bytecodeLibraryPath = new PathSourcePath(libPath.resolve(bytecodeLib));
 
     return new PrebuiltOCamlLibrary(
@@ -76,18 +88,20 @@ public class PrebuiltOCamlLibraryDescription
         nativeLib,
         bytecodeLib,
         staticNativeLibraryPath,
-        staticCLibraryPath,
+        staticCLibraryPaths,
         bytecodeLibraryPath,
-        libPath);
+        libPath,
+        includeDir);
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
     public Optional<String> libDir;
+    public Optional<String> includeDir;
     public Optional<String> libName;
     public Optional<String> nativeLib;
     public Optional<String> bytecodeLib;
-    public Optional<String> cLib;
+    public Optional<ImmutableList<String>> cLibs;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 

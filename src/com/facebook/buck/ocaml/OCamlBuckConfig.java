@@ -19,11 +19,12 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatform;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
@@ -57,6 +58,10 @@ public class OCamlBuckConfig {
     return delegate.getPath("ocaml", "lex.compiler");
   }
 
+  public Optional<String> getOCamlInteropIncludesDir() {
+    return delegate.getValue("ocaml", "interop.includes");
+  }
+
   public Optional<Path> getOCamlBytecodeCompiler() {
     return delegate.getPath("ocaml", "ocaml.bytecode.compiler");
   }
@@ -65,8 +70,23 @@ public class OCamlBuckConfig {
     return cxxPlatform.getCxx();
   }
 
+  public ImmutableList<String> getCFlags() {
+    return cxxPlatform.getCppflags();
+  }
+
+  public ImmutableList<String> getCLinkerFlags() {
+    return cxxPlatform.getCxxldflags();
+  }
+
+  public ImmutableList<String> getLdFlags() {
+    return cxxPlatform.getLdflags();
+  }
+
   public Linker getLinker() {
     return cxxPlatform.getLd();
   }
 
+  public Optional<Path> getOCamlDebug() {
+    return delegate.getPath("ocaml", "debug");
+  }
 }

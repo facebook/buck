@@ -16,11 +16,13 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
@@ -29,45 +31,80 @@ import java.nio.file.Path;
  */
 public class OCamlLinkStep extends ShellStep {
 
-  private final Path ocamlCompiler;
-  private final Path cxxCompiler;
-  private final ImmutableList<String> flags;
-  private final Path output;
-  private final ImmutableList<String> depInput;
-  private final ImmutableList<String> input;
+  public static class Args {
+    public final Path ocamlCompiler;
+    public final Path cxxCompiler;
+    public final ImmutableList<String> flags;
+    public final Path output;
+    public final ImmutableList<String> depInput;
+    public final ImmutableList<String> input;
+    public final boolean isLibrary;
+    public final boolean isBytecode;
+
+    public Args(
+        Path cxxCompiler,
+        Path ocamlCompiler,
+        Path output,
+        ImmutableList<String> depInput,
+        ImmutableList<String> input,
+        ImmutableList<String> flags,
+        boolean isLibrary,
+        boolean isBytecode) {
+      this.isLibrary = isLibrary;
+      this.isBytecode = isBytecode;
+      this.ocamlCompiler = Preconditions.checkNotNull(ocamlCompiler);
+      this.cxxCompiler = Preconditions.checkNotNull(cxxCompiler);
+      this.flags = Preconditions.checkNotNull(flags);
+      this.output = Preconditions.checkNotNull(output);
+      this.depInput = Preconditions.checkNotNull(depInput);
+      this.input = Preconditions.checkNotNull(input);
+    }
+
+    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+      return builder.set("cxxCompiler", cxxCompiler.toString())
+          .set("ocamlCompiler", ocamlCompiler.toString())
+          .set("output", output.toString())
+          .set("depInput", depInput)
+          .set("input", input)
+          .set("flags", flags)
+          .set("isLibrary", isLibrary)
+          .set("isBytecode", isBytecode);
+    }
+
+    public ImmutableSet<Path> getAllOutputs() {
+      if (isLibrary) {
+        if (!isBytecode) {
+          return OCamlUtil.getExtensionVariants(
+              output,
+              OCamlCompilables.OCAML_A,
+              OCamlCompilables.OCAML_CMXA);
+        } else {
+          return ImmutableSet.of(output);
+        }
+      } else {
+        return ImmutableSet.of(output);
+      }
+    }
+  }
+
+  private final Args args;
+
   private final ImmutableList<String> aAndOInput;
   private final ImmutableList<String> ocamlInput;
-  private final boolean isLibrary;
-  private final boolean isBytecode;
 
-  public OCamlLinkStep(
-      Path cxxCompiler,
-      Path ocamlCompiler,
-      Path output,
-      ImmutableList<String> depInput,
-      ImmutableList<String> input,
-      ImmutableList<String> flags,
-      boolean isLibrary,
-      boolean isBytecode) {
-    this.isLibrary = isLibrary;
-    this.isBytecode = isBytecode;
-    this.ocamlCompiler = Preconditions.checkNotNull(ocamlCompiler);
-    this.cxxCompiler = Preconditions.checkNotNull(cxxCompiler);
-    this.flags = Preconditions.checkNotNull(flags);
-    this.output = Preconditions.checkNotNull(output);
-    this.depInput = Preconditions.checkNotNull(depInput);
-    this.input = Preconditions.checkNotNull(input);
+  public OCamlLinkStep(Args args) {
+    this.args = args;
 
     ImmutableList.Builder<String> aAndOInputBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
-    for (String linkInput : this.depInput) {
+    for (String linkInput : this.args.depInput) {
       if (linkInput.endsWith(OCamlCompilables.OCAML_O) ||
           linkInput.endsWith(OCamlCompilables.OCAML_A)) {
         aAndOInputBuilder.add(linkInput);
       } else {
-        if (!(isLibrary && linkInput.endsWith(OCamlCompilables.OCAML_CMXA))) {
-          if (!isBytecode) {
+        if (!(this.args.isLibrary && linkInput.endsWith(OCamlCompilables.OCAML_CMXA))) {
+          if (!this.args.isBytecode) {
             ocamlInputBuilder.add(linkInput);
           } else {
             String bytecodeLinkInput = linkInput.replaceAll(
@@ -91,19 +128,19 @@ public class OCamlLinkStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(ocamlCompiler.toString())
+        .add(args.ocamlCompiler.toString())
         .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS)
         .add("-cc")
-        .add(cxxCompiler.toString())
-        .addAll((isLibrary ? Optional.of("-a") : Optional.<String>absent()).asSet())
-        .addAll((!isLibrary && isBytecode ?
+        .add(args.cxxCompiler.toString())
+        .addAll((args.isLibrary ? Optional.of("-a") : Optional.<String>absent()).asSet())
+        .addAll((!args.isLibrary && args.isBytecode ?
                 Optional.of("-custom") :
                 Optional.<String>absent()).asSet())
-        .add("-o", output.toString())
-        .addAll(flags)
-        .addAll(this.ocamlInput)
-        .addAll(this.input)
-        .addAll(this.aAndOInput)
+        .add("-o", args.output.toString())
+        .addAll(args.flags)
+        .addAll(ocamlInput)
+        .addAll(args.input)
+        .addAll(aAndOInput)
         .build();
   }
 }

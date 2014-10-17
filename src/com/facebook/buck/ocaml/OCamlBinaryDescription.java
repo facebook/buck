@@ -52,10 +52,15 @@ public class OCamlBinaryDescription implements
       A args) {
 
     ImmutableList<OCamlSource> srcs = args.srcs.get();
-    ImmutableList<String> flags = args.compilerFlags.get();
+    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    flags.addAll(args.compilerFlags.get());
+    if (args.warningsFlags.isPresent()) {
+      flags.add("-w");
+      flags.add(args.warningsFlags.get());
+    }
     ImmutableList<String> linkerFlags = args.linkerFlags.get();
     return OCamlRuleBuilder.createBuildRule(
-        ocamlBuckConfig, params, resolver, srcs, /*isLibrary*/ false, flags, linkerFlags);
+        ocamlBuckConfig, params, resolver, srcs, /*isLibrary*/ false, flags.build(), linkerFlags);
   }
 
   @Override
@@ -69,6 +74,7 @@ public class OCamlBinaryDescription implements
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableList<String>> linkerFlags;
+    public Optional<String> warningsFlags;
   }
 
 }
