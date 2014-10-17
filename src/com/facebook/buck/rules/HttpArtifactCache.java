@@ -249,7 +249,7 @@ public class HttpArtifactCache implements ArtifactCache {
             StandardCharsets.UTF_8));
       os.write(key.getBytes(StandardCharsets.UTF_8));
       os.write(("\r\n--" + BOUNDARY + "\r\n").getBytes(StandardCharsets.UTF_8));
-      os.write("Content-Disposition: form-data; name=\"data0\"; filename=\"artifact\"\r\n"
+      os.write("Content-Disposition: form-data; name=\"data0\"\r\n"
           .getBytes(StandardCharsets.UTF_8));
       os.write("Content-Type: application/octet-stream\r\n\r\n".getBytes(StandardCharsets.UTF_8));
 
