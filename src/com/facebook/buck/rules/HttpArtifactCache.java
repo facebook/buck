@@ -17,18 +17,18 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 import com.google.common.io.ByteStreams;
-import com.google.common.base.Preconditions;
 
-import java.io.File;
 import java.io.BufferedOutputStream;
-import java.io.InputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -229,10 +229,10 @@ public class HttpArtifactCache implements ArtifactCache {
 
   private void reportConnectionFailure(String context, Exception exception) {
     if (numConnectionExceptionReports.getAndIncrement() < MAX_CONNECTION_FAILURE_REPORTS) {
-      buckEventBus.post(ThrowableConsoleEvent.create(exception,
-          "%s: Connection failed: %s",
-          context,
-          exception.getMessage()));
+      buckEventBus.post(ConsoleEvent.warning(
+              "%s: Connection failed: %s",
+              context,
+              exception.getMessage()));
     }
   }
 
