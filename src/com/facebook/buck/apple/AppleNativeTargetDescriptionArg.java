@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableSortedSet;
 @SuppressFieldNotInitialized
 public class AppleNativeTargetDescriptionArg {
   /**
-   * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
+   * @see com.facebook.buck.rules.coercer.XcodeRuleConfiguration#fromRawJsonStructure
    */
   public Optional<
       ImmutableMap<

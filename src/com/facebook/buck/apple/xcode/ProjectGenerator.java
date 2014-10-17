@@ -44,7 +44,7 @@ import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
-import com.facebook.buck.apple.XcodeRuleConfiguration;
+import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
