@@ -22,7 +22,7 @@ ANDROID_FACET = """
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="%(module_gen_path)s" />
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="%(android_manifest)s" />
         <option name="RES_FOLDER_RELATIVE_PATH" value="%(res)s" />
-        <option name="ASSETS_FOLDER_RELATIVE_PATH" value="/assets" />
+        <option name="ASSETS_FOLDER_RELATIVE_PATH" value="%(asset_folder)s" />
         <option name="LIBS_FOLDER_RELATIVE_PATH" value="%(libs_path)s" />
         <option name="USE_CUSTOM_APK_RESOURCE_FOLDER" value="false" />
         <option name="CUSTOM_APK_RESOURCE_FOLDER" value="" />
@@ -175,6 +175,10 @@ def create_additional_excludes(modules):
 
     return additional_excludes
 
+def get_value_in_map(map, key, fallback):
+  if key in map:
+    return map[key]
+  return fallback
 
 def write_modules(modules, generate_minimum_project, android_auto_generation_disabled):
     """Writes one XML file for each module."""
@@ -199,15 +203,15 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
             else:
                 keystore = ''
 
-            if 'androidManifest' in module:
-                android_manifest = module['androidManifest']
-            else:
-                android_manifest = '/AndroidManifest.xml'
+            android_manifest = get_value_in_map(module, 'androidManifest', '/AndroidManifest.xml')
+            res_folder = get_value_in_map(module, 'resFolder', '/res')
+            asset_folder = get_value_in_map(module, 'assetFolder', '/assets')
 
             is_library_project = module['isAndroidLibraryProject']
             android_params = {
                 'android_manifest': android_manifest,
-                'res': '/res',
+                'res': res_folder,
+                'asset_folder': asset_folder,
                 'is_android_library_project': str(is_library_project).lower(),
                 'run_proguard': 'false',
                 'module_gen_path': module['moduleGenPath'],

@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import org.kohsuke.args4j.Option;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -138,6 +139,21 @@ public class ProjectCommandOptions extends BuildCommandOptions {
 
   public Optional<String> getPathToDefaultAndroidManifest() {
     return getBuckConfig().getValue("project", "default_android_manifest");
+  }
+
+  public AndroidBuckConfig getDefaultAndroidConfig() {
+    HashMap<String, Optional<String>> configValues = getBuckSectionValues(
+        "project",
+        AndroidBuckConfig.getConfigTokens());
+    return new AndroidBuckConfig(configValues);
+  }
+
+  private HashMap<String, Optional<String>> getBuckSectionValues(String sectionName, String...propertyNames) {
+    HashMap<String, Optional<String>> values = new HashMap<String, Optional<String>>();
+    for (String propertyName : propertyNames) {
+      values.put(propertyName, getBuckConfig().getValue(sectionName, propertyName));
+    }
+    return values;
   }
 
   public Optional<String> getPathToPostProcessScript() {

@@ -30,6 +30,7 @@ import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.AnnotationProcessingParams;
+import com.facebook.buck.cli.AndroidBuckConfig;
 import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaPackageFinder;
@@ -133,6 +134,7 @@ public class Project {
   private final String pythonInterpreter;
   private final ObjectMapper objectMapper;
   private final boolean turnOffAutoSourceGeneration;
+  private final AndroidBuckConfig defaultAndroidConfig;
 
   public Project(
       SourcePathResolver resolver,
@@ -144,6 +146,7 @@ public class Project {
       BuildFileTree buildFileTree,
       ProjectFilesystem projectFilesystem,
       Optional<String> pathToDefaultAndroidManifest,
+      AndroidBuckConfig defaultAndroidConfig,
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
       ObjectMapper objectMapper,
@@ -161,6 +164,7 @@ public class Project {
     this.libraryJars = Sets.newHashSet();
     this.pythonInterpreter = pythonInterpreter;
     this.objectMapper = objectMapper;
+    this.defaultAndroidConfig = defaultAndroidConfig;
     this.turnOffAutoSourceGeneration = turnOffAutoSourceGeneration;
   }
 
@@ -384,6 +388,11 @@ public class Project {
         module.keystorePath = null;
         module.nativeLibs =
             Paths.get(relativePath).relativize(ndkLibrary.getLibraryPath()).toString();
+      } else if (projectRule instanceof AndroidLibrary) {
+        module.isAndroidLibraryProject = true;
+        module.keystorePath = null;
+        module.resFolder = defaultAndroidConfig.getResourceDefaultRelativePath();
+        module.assetFolder = defaultAndroidConfig.getAssetsDefaultRelativePath();
       } else if (projectRule instanceof AndroidResource) {
         AndroidResource androidResource = (AndroidResource) projectRule;
         module.resFolder = createRelativePath(androidResource.getRes(), target);
@@ -391,7 +400,8 @@ public class Project {
         module.keystorePath = null;
       } else if (projectRule instanceof AndroidBinary) {
         AndroidBinary androidBinary = (AndroidBinary) projectRule;
-        module.resFolder = null;
+        module.resFolder = defaultAndroidConfig.getResourceDefaultRelativePath();
+        module.assetFolder = defaultAndroidConfig.getAssetsDefaultRelativePath();
         module.isAndroidLibraryProject = false;
         KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
             androidBinary.getKeystore().getPathToStore(),
@@ -409,26 +419,7 @@ public class Project {
 
       module.hasAndroidFacet = true;
       module.proguardConfigPath = null;
-
-      // If there is a default AndroidManifest.xml specified in .buckconfig, use it if
-      // AndroidManifest.xml is not present in the root of the [Android] IntelliJ module.
-      if (pathToDefaultAndroidManifest.isPresent()) {
-        Path androidManifest = Paths.get(basePathWithSlash, "AndroidManifest.xml");
-        if (!projectFilesystem.exists(androidManifest)) {
-          String manifestPath = this.pathToDefaultAndroidManifest.get();
-          String rootPrefix = "//";
-          Preconditions.checkState(manifestPath.startsWith(rootPrefix),
-              "Currently, we expect this option to start with '%s', " +
-              "indicating that it is relative to the root of the repository.",
-              rootPrefix);
-          manifestPath = manifestPath.substring(rootPrefix.length());
-          String relativePathToManifest =
-              Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
-          // IntelliJ requires that the path start with a slash to indicate that it is relative to
-          // the module.
-          module.androidManifest = "/" + relativePathToManifest;
-        }
-      }
+      module.androidManifest = resolveAndroidManifestRelativePath(basePathWithSlash);
 
       // List this last so that classes from modules can shadow classes in the JDK.
       jdkDependency = DependentModule.newInheritedJdk();
@@ -464,6 +455,41 @@ public class Project {
     }
 
     return module;
+  }
+
+  private String resolveAndroidManifestRelativePath(String basePathWithSlash) {
+    String fallbackManifestPath = resolveAndroidManifestFileRelativePath(basePathWithSlash);
+    String manifestPath = defaultAndroidConfig.resolveManifestRelativePath();
+
+    if (manifestPath != null) {
+      Path path = Paths.get(basePathWithSlash, manifestPath);
+      return projectFilesystem.exists(path) ? manifestPath : fallbackManifestPath;
+    }
+    return fallbackManifestPath;
+  }
+
+  private String resolveAndroidManifestFileRelativePath(String basePathWithSlash) {
+    // If there is a default AndroidManifest.xml specified in .buckconfig, use it if
+    // AndroidManifest.xml is not present in the root of the [Android] IntelliJ module.
+    if (pathToDefaultAndroidManifest.isPresent()) {
+      Path androidManifest = Paths.get(basePathWithSlash, "AndroidManifest.xml");
+      if (!projectFilesystem.exists(androidManifest)) {
+        String manifestPath = this.pathToDefaultAndroidManifest.get();
+        String rootPrefix = "//";
+        Preconditions.checkState(
+            manifestPath.startsWith(rootPrefix),
+            "Currently, we expect this option to start with '%s', " +
+                "indicating that it is relative to the root of the repository.",
+            rootPrefix);
+        manifestPath = manifestPath.substring(rootPrefix.length());
+        String relativePathToManifest =
+            Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
+        // IntelliJ requires that the path start with a slash to indicate that it is relative to
+        // the module.
+        return "/" + relativePathToManifest;
+      }
+    }
+    return null;
   }
 
   @SuppressWarnings("PMD.LooseCoupling")

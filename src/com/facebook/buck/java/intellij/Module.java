@@ -92,6 +92,8 @@ final class Module {
   @Nullable
   @JsonProperty String resFolder;
   @Nullable
+  @JsonProperty String assetFolder;
+  @Nullable
   @JsonProperty String keystorePath;
   @Nullable
   @JsonProperty String androidManifest;
