@@ -144,9 +144,9 @@ public class AndroidBuildConfig extends AbstractBuildRule {
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions) {
     super(buildRuleParams, resolver);
-    this.javaPackage = Preconditions.checkNotNull(javaPackage);
-    this.defaultValues = Preconditions.checkNotNull(defaultValues);
-    this.valuesFile = Preconditions.checkNotNull(valuesFile);
+    this.javaPackage = javaPackage;
+    this.defaultValues = defaultValues;
+    this.valuesFile = valuesFile;
     this.useConstantExpressions = useConstantExpressions;
     this.pathToOutputFile = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s__")
         .resolve("BuildConfig.java");
@@ -227,7 +227,7 @@ public class AndroidBuildConfig extends AbstractBuildRule {
 
     public ReadValuesStep(Path valuesFile) {
       super("read values from " + valuesFile.toString());
-      this.valuesFile = Preconditions.checkNotNull(valuesFile);
+      this.valuesFile = valuesFile;
     }
 
     @Override

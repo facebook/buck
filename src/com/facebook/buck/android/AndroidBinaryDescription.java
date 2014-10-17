@@ -78,8 +78,8 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
   public AndroidBinaryDescription(
       JavacOptions javacOptions,
       Optional<Path> proguardJarOverride) {
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
-    this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
+    this.javacOptions = javacOptions;
+    this.proguardJarOverride = proguardJarOverride;
   }
 
   @Override

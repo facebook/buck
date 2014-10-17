@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -81,9 +80,9 @@ public class AndroidPackageableCollector {
       BuildTarget collectionRoot,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       ImmutableSet<BuildTarget> resourcesToExclude) {
-    this.collectionRoot = Preconditions.checkNotNull(collectionRoot);
-    this.buildTargetsToExcludeFromDex = Preconditions.checkNotNull(buildTargetsToExcludeFromDex);
-    this.resourcesToExclude = Preconditions.checkNotNull(resourcesToExclude);
+    this.collectionRoot = collectionRoot;
+    this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
+    this.resourcesToExclude = resourcesToExclude;
   }
 
   public void addPackageables(Iterable<AndroidPackageable> packageables) {
@@ -210,8 +209,6 @@ public class AndroidPackageableCollector {
   }
 
   public void addBuildConfig(String javaPackage, BuildConfigFields constants) {
-    Preconditions.checkNotNull(javaPackage);
-    Preconditions.checkNotNull(constants);
     if (buildConfigs.containsKey(javaPackage)) {
       throw new HumanReadableException(
           "Multiple android_build_config() rules with the same package %s in the " +

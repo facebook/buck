@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -79,7 +78,7 @@ public class AndroidManifest extends AbstractBuildRule {
       SourcePath skeletonFile,
       Set<SourcePath> manifestFiles) {
     super(params, resolver);
-    this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
+    this.skeletonFile = skeletonFile;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "AndroidManifest__%s__.xml");

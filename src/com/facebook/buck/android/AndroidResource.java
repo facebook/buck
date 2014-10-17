@@ -158,9 +158,9 @@ public class AndroidResource extends AbstractBuildRule
     }
 
     this.res = res;
-    this.resSrcs = Preconditions.checkNotNull(resSrcs);
+    this.resSrcs = resSrcs;
     this.assets = assets;
-    this.assetsSrcs = Preconditions.checkNotNull(assetsSrcs);
+    this.assetsSrcs = assetsSrcs;
     this.manifestFile = manifestFile;
     this.hasWhitelistedStrings = hasWhitelistedStrings;
 
@@ -173,7 +173,7 @@ public class AndroidResource extends AbstractBuildRule
       pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
     }
 
-    this.deps = Preconditions.checkNotNull(deps);
+    this.deps = deps;
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
 
@@ -278,10 +278,6 @@ public class AndroidResource extends AbstractBuildRule
           }
 
           String rDotJavaPackageFromAndroidManifest = androidManifestReader.getPackage();
-          if (rDotJavaPackageFromAndroidManifest == null) {
-            context.logError(new Throwable(), "Failed to read package from %s.", manifestFile);
-            return 1;
-          }
 
           AndroidResource.this.rDotJavaPackage.set(rDotJavaPackageFromAndroidManifest);
           buildableContext.addMetadata(
@@ -404,7 +400,7 @@ public class AndroidResource extends AbstractBuildRule
     private final Sha1HashCode textSymbolsAbiKey;
 
     public BuildOutput(Sha1HashCode textSymbolsAbiKey) {
-      this.textSymbolsAbiKey = Preconditions.checkNotNull(textSymbolsAbiKey);
+      this.textSymbolsAbiKey = textSymbolsAbiKey;
     }
   }
 }

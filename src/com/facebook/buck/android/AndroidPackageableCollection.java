@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -77,13 +76,12 @@ public class AndroidPackageableCollection {
         boolean hasRDotJavaPackages,
         ImmutableList<BuildTarget> resourcesWithNonEmptyResDir,
         ImmutableList<BuildTarget> resourcesWithEmptyResButNonEmptyAssetsDir) {
-      this.resourceDirectories = Preconditions.checkNotNull(resourceDirectories);
-      this.whitelistedStringDirectories = Preconditions.checkNotNull(whitelistedStringDirectories);
-      this.rDotJavaPackagesSupplier = Preconditions.checkNotNull(rDotJavaPackagesSupplier);
+      this.resourceDirectories = resourceDirectories;
+      this.whitelistedStringDirectories = whitelistedStringDirectories;
+      this.rDotJavaPackagesSupplier = rDotJavaPackagesSupplier;
       this.hasRDotJavaPackages = hasRDotJavaPackages;
-      this.resourcesWithNonEmptyResDir = Preconditions.checkNotNull(resourcesWithNonEmptyResDir);
-      this.resourcesWithEmptyResButNonEmptyAssetsDir =
-          Preconditions.checkNotNull(resourcesWithEmptyResButNonEmptyAssetsDir);
+      this.resourcesWithNonEmptyResDir = resourcesWithNonEmptyResDir;
+      this.resourcesWithEmptyResButNonEmptyAssetsDir = resourcesWithEmptyResButNonEmptyAssetsDir;
     }
   }
 
@@ -159,17 +157,17 @@ public class AndroidPackageableCollection {
       ImmutableSet<Path> pathsToThirdPartyJars,
       ImmutableSet<BuildTarget> javaLibrariesToDex,
       Supplier<Map<String, HashCode>> classNamesToHashesSupplier) {
-    this.resourceDetails = Preconditions.checkNotNull(resourceDetails);
-    this.nativeLibsDirectories = Preconditions.checkNotNull(nativeLibsDirectories);
-    this.nativeLibAssetsDirectories = Preconditions.checkNotNull(nativeLibAssetsDirectories);
-    this.assetsDirectories = Preconditions.checkNotNull(assetsDirectories);
-    this.manifestFiles = Preconditions.checkNotNull(manifestFiles);
-    this.proguardConfigs = Preconditions.checkNotNull(proguardConfigs);
-    this.classpathEntriesToDex = Preconditions.checkNotNull(classpathEntriesToDex);
-    this.noDxClasspathEntries = Preconditions.checkNotNull(noDxClasspathEntries);
-    this.buildConfigs = Preconditions.checkNotNull(buildConfigs);
-    this.pathsToThirdPartyJars = Preconditions.checkNotNull(pathsToThirdPartyJars);
-    this.javaLibrariesToDex = Preconditions.checkNotNull(javaLibrariesToDex);
-    this.classNamesToHashesSupplier = Preconditions.checkNotNull(classNamesToHashesSupplier);
+    this.resourceDetails = resourceDetails;
+    this.nativeLibsDirectories = nativeLibsDirectories;
+    this.nativeLibAssetsDirectories = nativeLibAssetsDirectories;
+    this.assetsDirectories = assetsDirectories;
+    this.manifestFiles = manifestFiles;
+    this.proguardConfigs = proguardConfigs;
+    this.classpathEntriesToDex = classpathEntriesToDex;
+    this.noDxClasspathEntries = noDxClasspathEntries;
+    this.buildConfigs = buildConfigs;
+    this.pathsToThirdPartyJars = pathsToThirdPartyJars;
+    this.javaLibrariesToDex = javaLibrariesToDex;
+    this.classNamesToHashesSupplier = classNamesToHashesSupplier;
   }
 }

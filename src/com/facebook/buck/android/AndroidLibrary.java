@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -76,7 +75,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         additionalClasspathEntries,
         javacOptions,
         resourcesRoot);
-    this.manifestFile = Preconditions.checkNotNull(manifestFile);
+    this.manifestFile = manifestFile;
     this.isPrebuiltAar = isPrebuiltAar;
   }
 

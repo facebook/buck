@@ -108,13 +108,13 @@ public class AaptPackageResources extends AbstractBuildRule
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap) {
     super(params, resolver);
-    this.manifest = Preconditions.checkNotNull(manifest);
-    this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
-    this.resourceDeps = Preconditions.checkNotNull(resourceDeps);
-    this.assetsDirectories = Preconditions.checkNotNull(assetsDirectories);
-    this.packageType = Preconditions.checkNotNull(packageType);
-    this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.manifest = manifest;
+    this.filteredResourcesProvider = filteredResourcesProvider;
+    this.resourceDeps = resourceDeps;
+    this.assetsDirectories = assetsDirectories;
+    this.packageType = packageType;
+    this.cpuFilters = cpuFilters;
+    this.javacOptions = javacOptions;
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
@@ -444,10 +444,9 @@ public class AaptPackageResources extends AbstractBuildRule
         Sha1HashCode resourcePackageHash,
         Optional<Integer> rDotJavaDexLinearAllocEstimate,
         ImmutableSortedMap<String, HashCode> rDotJavaClassesHash) {
-      this.resourcePackageHash = Preconditions.checkNotNull(resourcePackageHash);
-      this.rDotJavaDexLinearAllocEstimate =
-          Preconditions.checkNotNull(rDotJavaDexLinearAllocEstimate);
-      this.rDotJavaClassesHash = Preconditions.checkNotNull(rDotJavaClassesHash);
+      this.resourcePackageHash = resourcePackageHash;
+      this.rDotJavaDexLinearAllocEstimate = rDotJavaDexLinearAllocEstimate;
+      this.rDotJavaClassesHash = rDotJavaClassesHash;
     }
   }
 

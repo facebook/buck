@@ -189,26 +189,25 @@ public class AndroidBinary extends AbstractBuildRule implements
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult) {
     super(params, resolver);
-    this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
-    this.manifest = Preconditions.checkNotNull(manifest);
-    this.target = Preconditions.checkNotNull(target);
-    this.keystore = Preconditions.checkNotNull(keystore);
-    this.packageType = Preconditions.checkNotNull(packageType);
-    this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
-    this.buildTargetsToExcludeFromDex = ImmutableSet.copyOf(
-        Preconditions.checkNotNull(buildTargetsToExcludeFromDex));
+    this.proguardJarOverride = proguardJarOverride;
+    this.manifest = manifest;
+    this.target = target;
+    this.keystore = keystore;
+    this.packageType = packageType;
+    this.dexSplitMode = dexSplitMode;
+    this.buildTargetsToExcludeFromDex = ImmutableSet.copyOf(buildTargetsToExcludeFromDex);
     this.sdkProguardConfig = sdkProguardConfig;
-    this.optimizationPasses = Preconditions.checkNotNull(proguardOptimizationPasses);
-    this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
-    this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
+    this.optimizationPasses = proguardOptimizationPasses;
+    this.proguardConfig = proguardConfig;
+    this.resourceCompressionMode = resourceCompressionMode;
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
-    this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
+    this.resourceFilter = resourceFilter;
     this.exopackage = exopackage;
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
-    this.macroExpander = Preconditions.checkNotNull(macroExpander);
-    this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
-    this.rulesToExcludeFromDex = Preconditions.checkNotNull(rulesToExcludeFromDex);
-    this.enhancementResult = Preconditions.checkNotNull(enhancementResult);
+    this.macroExpander = macroExpander;
+    this.preprocessJavaClassesBash = preprocessJavaClassesBash;
+    this.rulesToExcludeFromDex = rulesToExcludeFromDex;
+    this.enhancementResult = enhancementResult;
     this.primaryDexPath = getPrimaryDexPath(params.getBuildTarget());
 
     if (exopackage) {
@@ -1045,8 +1044,8 @@ public class AndroidBinary extends AbstractBuildRule implements
     final ImmutableSet<Path> secondaryDexDirs;
 
     DexFilesInfo(Path primaryDexPath, ImmutableSet<Path> secondaryDexDirs) {
-      this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
-      this.secondaryDexDirs = Preconditions.checkNotNull(secondaryDexDirs);
+      this.primaryDexPath = primaryDexPath;
+      this.secondaryDexDirs = secondaryDexDirs;
     }
   }
 }

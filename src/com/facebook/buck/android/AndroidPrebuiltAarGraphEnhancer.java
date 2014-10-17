@@ -44,7 +44,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -188,7 +187,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         SourcePathResolver resolver,
         SourcePath aarFile) {
       super(buildRuleParams, resolver);
-      this.aarFile = Preconditions.checkNotNull(aarFile);
+      this.aarFile = aarFile;
       this.unpackDirectory = BuildTargets.getBinPath(
           buildRuleParams.getBuildTarget(),
           "__unpack_%s__");

@@ -61,7 +61,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         JavacOptions.DEFAULTS,
         /* resourcesRoot */ Optional.<Path>absent());
-    this.androidBuildConfig = Preconditions.checkNotNull(androidBuildConfig);
+    this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
         params.getDeps().contains(androidBuildConfig),
         "%s must depend on the AndroidBuildConfig whose output is in this rule's srcs.",

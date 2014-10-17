@@ -98,27 +98,27 @@ public class AndroidBinaryGraphEnhancer {
       Keystore keystore,
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile) {
-    this.buildRuleParams = Preconditions.checkNotNull(originalParams);
+    this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
-    this.ruleResolver = Preconditions.checkNotNull(ruleResolver);
+    this.ruleResolver = ruleResolver;
     this.pathResolver = new SourcePathResolver(ruleResolver);
-    this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
-    this.resourceFilter = Preconditions.checkNotNull(resourcesFilter);
-    this.manifest = Preconditions.checkNotNull(manifest);
-    this.packageType = Preconditions.checkNotNull(packageType);
-    this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
+    this.resourceCompressionMode = resourceCompressionMode;
+    this.resourceFilter = resourcesFilter;
+    this.manifest = manifest;
+    this.packageType = packageType;
+    this.cpuFilters = cpuFilters;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.shouldPreDex = shouldPreDex;
-    this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
-    this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
-    this.buildTargetsToExcludeFromDex = Preconditions.checkNotNull(buildTargetsToExcludeFromDex);
-    this.resourcesToExclude = Preconditions.checkNotNull(resourcesToExclude);
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.primaryDexPath = primaryDexPath;
+    this.dexSplitMode = dexSplitMode;
+    this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
+    this.resourcesToExclude = resourcesToExclude;
+    this.javacOptions = javacOptions;
     this.exopackage = exopackage;
-    this.keystore = Preconditions.checkNotNull(keystore);
-    this.buildConfigValues = Preconditions.checkNotNull(buildConfigValues);
-    this.buildConfigValuesFile = Preconditions.checkNotNull(buildConfigValuesFile);
+    this.keystore = keystore;
+    this.buildConfigValues = buildConfigValues;
+    this.buildConfigValuesFile = buildConfigValuesFile;
   }
 
   EnhancementResult createAdditionalBuildables() {
@@ -458,14 +458,14 @@ public class AndroidBinaryGraphEnhancer {
         Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
         ImmutableSet<Path> classpathEntriesToDex,
         ImmutableSortedSet<BuildRule> finalDeps) {
-      this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
-      this.packageableCollection = Preconditions.checkNotNull(packageableCollection);
-      this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageBuildable);
-      this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);
-      this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
-      this.computeExopackageDepsAbi = Preconditions.checkNotNull(computeExopackageDepsAbi);
-      this.classpathEntriesToDex = Preconditions.checkNotNull(classpathEntriesToDex);
-      this.finalDeps = Preconditions.checkNotNull(finalDeps);
+      this.filteredResourcesProvider = filteredResourcesProvider;
+      this.packageableCollection = packageableCollection;
+      this.aaptPackageResources = aaptPackageBuildable;
+      this.packageStringAssets = packageStringAssets;
+      this.preDexMerge = preDexMerge;
+      this.computeExopackageDepsAbi = computeExopackageDepsAbi;
+      this.classpathEntriesToDex = classpathEntriesToDex;
+      this.finalDeps = finalDeps;
     }
 
     public FilteredResourcesProvider getFilteredResourcesProvider() {
