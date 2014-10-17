@@ -37,7 +37,6 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -127,10 +126,8 @@ public class CxxPreprocessablesTest {
     BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance("//:cpp1");
     CxxPreprocessorInput input1 = CxxPreprocessorInput.builder()
         .setRules(ImmutableSet.of(cppDepTarget1))
-        .setPreprocessorFlags(
-            ImmutableMultimap.of(
-                CxxSource.Type.C, "-Dtest=yes",
-                CxxSource.Type.CXX, "-Dtest=yes"))
+        .setCppflags(ImmutableList.of("-Dtest=yes"))
+        .setCxxppflags(ImmutableList.of("-Dtest=yes"))
         .setIncludeRoots(ImmutableList.of(Paths.get("foo/bar"), Paths.get("hello")))
         .setSystemIncludeRoots(ImmutableList.of(Paths.get("/usr/include")))
         .build();
@@ -141,10 +138,8 @@ public class CxxPreprocessablesTest {
     BuildTarget cppDepTarget2 = BuildTargetFactory.newInstance("//:cpp2");
     CxxPreprocessorInput input2 = CxxPreprocessorInput.builder()
         .setRules(ImmutableSet.of(cppDepTarget2))
-        .setPreprocessorFlags(
-            ImmutableMultimap.of(
-                CxxSource.Type.C, "-DBLAH",
-                CxxSource.Type.CXX, "-DBLAH"))
+        .setCppflags(ImmutableList.of("-DBLAH"))
+        .setCxxppflags(ImmutableList.of("-DBLAH"))
         .setIncludeRoots(ImmutableList.of(Paths.get("goodbye")))
         .setSystemIncludeRoots(ImmutableList.of(Paths.get("test")))
         .build();
@@ -216,7 +211,7 @@ public class CxxPreprocessablesTest {
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinal = "bottom";
     CxxPreprocessorInput bottomInput = CxxPreprocessorInput.builder()
-        .setPreprocessorFlags(ImmutableMultimap.of(CxxSource.Type.C, sentinal))
+        .setCppflags(ImmutableList.of(sentinal))
         .build();
     BuildRule bottom = createFakeCxxPreprocessorDep("//:bottom", pathResolver, bottomInput);
 
@@ -233,8 +228,8 @@ public class CxxPreprocessablesTest {
     CxxPreprocessorInput totalInput =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             ImmutableList.of(top));
-    assertTrue(bottomInput.getPreprocessorFlags().get(CxxSource.Type.C).contains(sentinal));
-    assertFalse(totalInput.getPreprocessorFlags().get(CxxSource.Type.C).contains(sentinal));
+    assertTrue(bottomInput.getCppflags().contains(sentinal));
+    assertFalse(totalInput.getCppflags().contains(sentinal));
   }
 
 }

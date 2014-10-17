@@ -41,7 +41,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -224,11 +223,11 @@ public class CxxCompilableEnhancerTest {
 
     ImmutableList<String> explicitCompilerFlags = ImmutableList.of("-explicit-compilerflag");
 
+    ImmutableList<String> explicitCppflags = ImmutableList.of("-explicit-cppflag");
+    ImmutableList<String> explicitCxxppflags = ImmutableList.of("-explicit-cxxppflag");
     CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .setPreprocessorFlags(
-            ImmutableMultimap.of(
-                CxxSource.Type.C, "-explicit-cppflag",
-                CxxSource.Type.CXX, "-explicit-cxxppflag"))
+        .setCppflags(explicitCppflags)
+        .setCxxppflags(explicitCxxppflags)
         .build();
 
     SourcePath as = new TestSourcePath("as");
@@ -277,7 +276,6 @@ public class CxxCompilableEnhancerTest {
         /* pic */ false,
         cSourceName,
         cSource);
-    ImmutableList<String> explicitCppflags = ImmutableList.of("-explicit-cppflag");
     assertContains(cCompile.getFlags(), explicitCppflags);
     assertContains(cCompile.getFlags(), cppflags);
     assertContains(cCompile.getFlags(), explicitCompilerFlags);
@@ -295,7 +293,6 @@ public class CxxCompilableEnhancerTest {
         /* pic */ false,
         cxxSourceName,
         cxxSource);
-    ImmutableList<String> explicitCxxppflags = ImmutableList.of("-explicit-cxxppflag");
     assertContains(cxxCompile.getFlags(), explicitCxxppflags);
     assertContains(cxxCompile.getFlags(), cxxppflags);
     assertContains(cxxCompile.getFlags(), explicitCompilerFlags);

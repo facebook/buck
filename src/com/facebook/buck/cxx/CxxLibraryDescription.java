@@ -105,12 +105,8 @@ public class CxxLibraryDescription implements
         params,
         resolver,
         cxxPlatform,
-        CxxPreprocessorFlags.fromArgs(
-            args.preprocessorFlags.get(),
-            args.langPreprocessorFlags.get()),
-        CxxPreprocessorFlags.fromArgs(
-            args.propagatedPpFlags.get(),
-            args.propagatedLangPpFlags.get()),
+        args.preprocessorFlags.or(ImmutableList.<String>of()),
+        args.propagatedPpFlags.or(ImmutableList.<String>of()),
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(headers)
             .putAll(lexYaccSources.getCxxHeaders())
@@ -145,7 +141,6 @@ public class CxxLibraryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
     public Optional<ImmutableList<String>> propagatedPpFlags;
-    public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> propagatedLangPpFlags;
     public Optional<String> soname;
     public Optional<Boolean> linkWhole;
   }

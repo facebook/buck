@@ -36,7 +36,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
@@ -277,7 +276,7 @@ public class CxxDescriptionEnhancer {
 
   public static CxxPreprocessorInput combineCxxPreprocessorInput(
       BuildRuleParams params,
-      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
+      ImmutableList<String> preprocessorFlags,
       SymlinkTree headerSymlinkTree,
       ImmutableMap<Path, SourcePath> headers) {
 
@@ -291,7 +290,8 @@ public class CxxDescriptionEnhancer {
         ImmutableList.of(
             CxxPreprocessorInput.builder()
                 .setRules(ImmutableSet.of(headerSymlinkTree.getBuildTarget()))
-                .setPreprocessorFlags(preprocessorFlags)
+                .setCppflags(preprocessorFlags)
+                .setCxxppflags(preprocessorFlags)
                 .setIncludes(headers)
                 .setIncludeRoots(ImmutableList.of(headerSymlinkTree.getRoot()))
                 .build(),
@@ -357,8 +357,8 @@ public class CxxDescriptionEnhancer {
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      final ImmutableMultimap<CxxSource.Type, String> propagatedPpFlags,
+      ImmutableList<String> preprocessorFlags,
+      final ImmutableList<String> propagatedPpFlags,
       final ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
@@ -438,7 +438,8 @@ public class CxxDescriptionEnhancer {
       public CxxPreprocessorInput getCxxPreprocessorInput() {
         return CxxPreprocessorInput.builder()
             .setRules(ImmutableSet.of(headerSymlinkTree.getBuildTarget()))
-            .setPreprocessorFlags(propagatedPpFlags)
+            .setCppflags(propagatedPpFlags)
+            .setCxxppflags(propagatedPpFlags)
             .setIncludes(headers)
             .setIncludeRoots(ImmutableList.of(
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(params.getBuildTarget())))
@@ -548,9 +549,7 @@ public class CxxDescriptionEnhancer {
         headers);
     CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
-        CxxPreprocessorFlags.fromArgs(
-            args.preprocessorFlags.get(),
-            args.langPreprocessorFlags.get()),
+        args.preprocessorFlags.or(ImmutableList.<String>of()),
         headerSymlinkTree,
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(headers)
