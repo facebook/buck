@@ -1544,11 +1544,11 @@ public class ProjectGeneratorTest {
 
     projectGenerator.createXcodeProjects();
 
-    assertEquals(rule, Iterables.getOnlyElement(
-            projectGenerator.getBuildRuleToGeneratedTargetMap().keySet()));
+    assertEquals(rule.getBuildTarget(), Iterables.getOnlyElement(
+            projectGenerator.getBuildTargetToGeneratedTargetMap().keySet()));
 
     PBXTarget target = Iterables.getOnlyElement(
-        projectGenerator.getBuildRuleToGeneratedTargetMap().values());
+        projectGenerator.getBuildTargetToGeneratedTargetMap().values());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
             "foo.m", Optional.of("-foo"),

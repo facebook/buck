@@ -19,13 +19,13 @@ package com.facebook.buck.apple.xcode;
 import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -58,7 +58,7 @@ import javax.xml.transform.stream.StreamResult;
  *
  * To register entries in the scheme, clients must add:
  * <ul>
- * <li>associations between buck rules and Xcode targets</li>
+ * <li>associations between buck targets and Xcode targets</li>
  * <li>associations between Xcode targets and the projects that contain them</li>
  * </ul>
  * <p>
@@ -68,71 +68,71 @@ class SchemeGenerator {
   private static final Logger LOG = Logger.get(SchemeGenerator.class);
 
   private final ProjectFilesystem projectFilesystem;
-  private final Optional<BuildRule> primaryRule;
-  private final ImmutableSet<BuildRule> orderedBuildRules;
-  private final ImmutableSet<BuildRule> orderedTestBuildRules;
-  private final ImmutableSet<BuildRule> orderedTestBundleRules;
+  private final Optional<BuildTarget> primaryTarget;
+  private final ImmutableSet<BuildTarget> orderedBuildTargets;
+  private final ImmutableSet<BuildTarget> orderedTestBuildTargets;
+  private final ImmutableSet<BuildTarget> orderedTestBundleTargets;
   private final String schemeName;
   private final Path outputDirectory;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
-  private final ImmutableMap<BuildRule, PBXTarget> buildRuleToTargetMap;
+  private final ImmutableMap<BuildTarget, PBXTarget> buildTargetToPbxTargetMap;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
-      Optional<BuildRule> primaryRule,
-      Iterable<BuildRule> orderedBuildRules,
-      Iterable<BuildRule> orderedTestBuildRules,
-      Iterable<BuildRule> orderedTestBundleRules,
+      Optional<BuildTarget> primaryTarget,
+      Iterable<BuildTarget> orderedBuildTargets,
+      Iterable<BuildTarget> orderedTestBuildTargets,
+      Iterable<BuildTarget> orderedTestBundleTargets,
       String schemeName,
       Path outputDirectory,
       Map<SchemeActionType, String> actionConfigNames,
-      Map<BuildRule, PBXTarget> buildRuleToTargetMap,
+      Map<BuildTarget, PBXTarget> buildTargetToPbxTargetMap,
       Map<PBXTarget, Path> targetToProjectPathMap) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.primaryRule = Preconditions.checkNotNull(primaryRule);
-    this.orderedBuildRules = ImmutableSet.copyOf(orderedBuildRules);
-    this.orderedTestBuildRules = ImmutableSet.copyOf(orderedTestBuildRules);
-    this.orderedTestBundleRules = ImmutableSet.copyOf(orderedTestBundleRules);
+    this.primaryTarget = Preconditions.checkNotNull(primaryTarget);
+    this.orderedBuildTargets = ImmutableSet.copyOf(orderedBuildTargets);
+    this.orderedTestBuildTargets = ImmutableSet.copyOf(orderedTestBuildTargets);
+    this.orderedTestBundleTargets = ImmutableSet.copyOf(orderedTestBundleTargets);
     this.schemeName = Preconditions.checkNotNull(schemeName);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
-    this.buildRuleToTargetMap = ImmutableMap.copyOf(buildRuleToTargetMap);
+    this.buildTargetToPbxTargetMap = ImmutableMap.copyOf(buildTargetToPbxTargetMap);
     this.targetToProjectPathMap = ImmutableMap.copyOf(targetToProjectPathMap);
 
     LOG.debug(
-        "Generating scheme with build rules %s, test build rules %s, test bundle rules %s",
-        orderedBuildRules,
-        orderedTestBuildRules,
-        orderedTestBundleRules);
+        "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
+        orderedBuildTargets,
+        orderedTestBuildTargets,
+        orderedTestBundleTargets);
 
-    for (BuildRule rule : orderedBuildRules) {
-      expectTargetMapContainsRule(rule);
+    for (BuildTarget buildTarget : orderedBuildTargets) {
+      expectTargetMapContainsBuildTarget(buildTarget);
     }
 
-    for (BuildRule rule : orderedTestBuildRules) {
-      expectTargetMapContainsRule(rule);
+    for (BuildTarget buildTarget : orderedTestBuildTargets) {
+      expectTargetMapContainsBuildTarget(buildTarget);
     }
 
-    for (BuildRule rule : orderedTestBundleRules) {
-      expectTargetMapContainsRule(rule);
+    for (BuildTarget buildTarget : orderedTestBundleTargets) {
+      expectTargetMapContainsBuildTarget(buildTarget);
     }
   }
 
-  private void expectTargetMapContainsRule(BuildRule rule) {
-    if (!buildRuleToTargetMap.containsKey(rule)) {
+  private void expectTargetMapContainsBuildTarget(BuildTarget buildTarget) {
+    if (!buildTargetToPbxTargetMap.containsKey(buildTarget)) {
       throw new HumanReadableException(
           "Scheme generation failed: No project containing required target %s was found.",
-          rule.getFullyQualifiedName());
+          buildTarget.getFullyQualifiedName());
     }
   }
 
   public Path writeScheme() throws IOException {
-    Map<BuildRule, XCScheme.BuildableReference>
-        buildRuleToBuildableReferenceMap = Maps.newHashMap();
+    Map<BuildTarget, XCScheme.BuildableReference>
+        buildTargetToBuildableReferenceMap = Maps.newHashMap();
 
-    for (BuildRule rule : Iterables.concat(orderedBuildRules, orderedTestBuildRules)) {
-      PBXTarget target = buildRuleToTargetMap.get(rule);
+    for (BuildTarget buildTarget : Iterables.concat(orderedBuildTargets, orderedTestBuildTargets)) {
+      PBXTarget target = buildTargetToPbxTargetMap.get(buildTarget);
 
       String blueprintName = target.getProductName();
       if (blueprintName == null) {
@@ -145,30 +145,31 @@ class SchemeGenerator {
           target.getGlobalID(),
           Preconditions.checkNotNull(target.getProductReference()).getName(),
           blueprintName);
-      buildRuleToBuildableReferenceMap.put(rule, buildableReference);
+      buildTargetToBuildableReferenceMap.put(buildTarget, buildableReference);
     }
 
     XCScheme.BuildAction buildAction = new XCScheme.BuildAction();
 
     // For aesthetic reasons put all non-test build actions before all test build actions.
-    for (BuildRule rule : orderedBuildRules) {
-      addBuildActionForRule(
-          buildRuleToBuildableReferenceMap.get(rule),
+    for (BuildTarget buildTarget : orderedBuildTargets) {
+      addBuildActionForBuildTarget(
+          buildTargetToBuildableReferenceMap.get(buildTarget),
           XCScheme.BuildActionEntry.BuildFor.DEFAULT,
           buildAction);
     }
 
-    for (BuildRule rule : orderedTestBuildRules) {
-      addBuildActionForRule(
-          buildRuleToBuildableReferenceMap.get(rule),
+    for (BuildTarget buildTarget : orderedTestBuildTargets) {
+      addBuildActionForBuildTarget(
+          buildTargetToBuildableReferenceMap.get(buildTarget),
           XCScheme.BuildActionEntry.BuildFor.TEST_ONLY,
           buildAction);
     }
 
     XCScheme.TestAction testAction = new XCScheme.TestAction(
         actionConfigNames.get(SchemeActionType.TEST));
-    for (BuildRule rule : orderedTestBundleRules) {
-      XCScheme.BuildableReference buildableReference = buildRuleToBuildableReferenceMap.get(rule);
+    for (BuildTarget buildTarget : orderedTestBundleTargets) {
+      XCScheme.BuildableReference buildableReference =
+          buildTargetToBuildableReferenceMap.get(buildTarget);
       XCScheme.TestableReference testableReference =
           new XCScheme.TestableReference(buildableReference);
       testAction.addTestableReference(testableReference);
@@ -177,9 +178,9 @@ class SchemeGenerator {
     Optional<XCScheme.LaunchAction> launchAction = Optional.absent();
     Optional<XCScheme.ProfileAction> profileAction = Optional.absent();
 
-    if (primaryRule.isPresent()) {
+    if (primaryTarget.isPresent()) {
       XCScheme.BuildableReference primaryBuildableReference =
-        buildRuleToBuildableReferenceMap.get(primaryRule.get());
+        buildTargetToBuildableReferenceMap.get(primaryTarget.get());
       if (primaryBuildableReference != null) {
         launchAction = Optional.of(new XCScheme.LaunchAction(
             primaryBuildableReference,
@@ -219,7 +220,7 @@ class SchemeGenerator {
     return schemePath;
   }
 
-  private static void addBuildActionForRule(
+  private static void addBuildActionForBuildTarget(
       XCScheme.BuildableReference buildableReference,
       EnumSet<XCScheme.BuildActionEntry.BuildFor> buildFor,
       XCScheme.BuildAction buildAction) {

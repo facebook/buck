@@ -28,6 +28,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -127,7 +128,7 @@ public class WorkspaceAndProjectGenerator {
 
     Sets.SetView<BuildRule> rulesInRequiredProjects =
         Sets.union(orderedBuildRules, orderedTestBuildRules);
-    ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToTargetMapBuilder =
+    ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder =
         ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
         ImmutableMap.builder();
@@ -165,8 +166,8 @@ public class WorkspaceAndProjectGenerator {
 
       workspaceGenerator.addFilePath(generator.getProjectPath());
 
-      buildRuleToTargetMapBuilder.putAll(generator.getBuildRuleToGeneratedTargetMap());
-      for (PBXTarget target : generator.getBuildRuleToGeneratedTargetMap().values()) {
+      buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
+      for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
         targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
       }
     }
@@ -216,7 +217,7 @@ public class WorkspaceAndProjectGenerator {
             targetFileName,
             PBXFileReference.SourceTree.BUILT_PRODUCTS_DIR);
         fakeTarget.setProductReference(fakeProductReference);
-        buildRuleToTargetMapBuilder.put(buildable, fakeTarget);
+        buildTargetToPbxTargetMapBuilder.put(buildable.getBuildTarget(), fakeTarget);
         targetToProjectPathMapBuilder.put(fakeTarget, projectPath);
       }
     }
@@ -225,21 +226,27 @@ public class WorkspaceAndProjectGenerator {
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        workspaceBuildable.getSrcTarget(),
-        orderedBuildRules,
-        orderedTestBuildRules,
-        orderedTestBundleRules,
+        workspaceBuildable.getSrcTarget().transform(HasBuildTarget.TO_TARGET),
+        Iterables.transform(
+            orderedBuildRules,
+            HasBuildTarget.TO_TARGET),
+        Iterables.transform(
+            orderedTestBuildRules,
+            HasBuildTarget.TO_TARGET),
+        Iterables.transform(
+            orderedTestBundleRules,
+            HasBuildTarget.TO_TARGET),
         workspaceName,
         outputDirectory.resolve(workspaceName + ".xcworkspace"),
         workspaceBuildable.getActionConfigNames(),
-        buildRuleToTargetMapBuilder.build(),
+        buildTargetToPbxTargetMapBuilder.build(),
         targetToProjectPathMapBuilder.build());
     schemeGenerator.writeScheme();
 
     return workspacePath;
   }
 
-  private static final void getOrderedTestRules(
+  private static void getOrderedTestRules(
       ActionGraph actionGraph,
       ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules,
       ImmutableSet<BuildRule> orderedBuildRules,
@@ -290,7 +297,7 @@ public class WorkspaceAndProjectGenerator {
         }));
   }
 
-  private static final void addTestRuleAndDependencies(
+  private static void addTestRuleAndDependencies(
       BuildRule testBundleRule,
       ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder,
       ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder) {

@@ -309,9 +309,14 @@ public class ProjectGenerator {
     return projectPath;
   }
 
-  public Map<BuildRule, PBXTarget> getBuildRuleToGeneratedTargetMap() {
+  public ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
     Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
-    return buildRuleToGeneratedTargetBuilder.build();
+    ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMap = ImmutableMap.builder();
+    for (Map.Entry<BuildRule, PBXTarget> entry :
+        buildRuleToGeneratedTargetBuilder.build().entrySet()) {
+      buildTargetToPbxTargetMap.put(entry.getKey().getBuildTarget(), entry.getValue());
+    }
+    return buildTargetToPbxTargetMap.build();
   }
 
   public void createXcodeProjects() throws IOException {
