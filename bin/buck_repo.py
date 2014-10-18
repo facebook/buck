@@ -521,14 +521,13 @@ class BuckRepo:
     def _build(self):
         with Tracing('BuckRepo._build'):
             if not os.path.exists(self._build_success_file):
-                # TODO(natthu): kill buckd if running, and
-                # restart buckd only if it was running before.
                 print(
                     "Buck does not appear to have been built -- building Buck!",
                     file=sys.stderr)
                 self._check_for_ant()
                 self._run_ant_clean()
                 self._run_ant()
+                open(self._build_success_file, 'w').close()
 
     def _get_buck_version_uid(self):
         with Tracing('BuckRepo._get_buck_version_uid'):
