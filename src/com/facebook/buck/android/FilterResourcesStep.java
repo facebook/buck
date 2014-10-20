@@ -351,7 +351,7 @@ public class FilterResourcesStep implements Step {
           Escaper.escapeAsBashString(source),
           Escaper.escapeAsBashString(destination));
 
-      if (0 != convertStep.execute(getContextWithSilentConsole(context))) {
+      if (0 != convertStep.execute(context)) {
         throw new HumanReadableException("Cannot scale " + source + " to " + destination);
       }
     }
