@@ -107,7 +107,7 @@ public final class AppleBuildRules {
      * Will also not traverse the dependencies of dynamic libraries, as those are linked already.
      */
     LINKING,
-  };
+  }
 
   public static Iterable<BuildRule> getRecursiveRuleDependenciesOfType(
       final RecursiveRuleDependenciesMode mode, final BuildRule rule, BuildRuleType... types) {

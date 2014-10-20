@@ -284,7 +284,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         new Predicate<TargetNode<?>>() {
           @Override
           public boolean apply(TargetNode<?> input) {
-            return input.getDescription().getBuildRuleType().isTestRule();
+            return input.getType().isTestRule();
           }
         },
         getProjectFilesystem(),

@@ -97,6 +97,10 @@ public class TargetNode<T> implements Comparable<TargetNode<?>> {
     return description;
   }
 
+  public BuildRuleType getType() {
+    return description.getBuildRuleType();
+  }
+
   public T getConstructorArg() {
     return constructorArg;
   }

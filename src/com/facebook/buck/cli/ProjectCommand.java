@@ -430,7 +430,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         projectRootsPredicate = new Predicate<TargetNode<?>>() {
           @Override
           public boolean apply(TargetNode<?> input) {
-            return input.getDescription().getBuildRuleType() == ProjectConfigDescription.TYPE;
+            return input.getType() == ProjectConfigDescription.TYPE;
           }
         };
         projectPredicate = projectRootsPredicate;
@@ -461,7 +461,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             BuildRuleType filterType = options.getWorkspaceAndProjects() ?
                 XcodeWorkspaceConfigDescription.TYPE :
                 XcodeProjectConfigDescription.TYPE;
-            if (filterType != input.getDescription().getBuildRuleType()) {
+            if (filterType != input.getType()) {
               return false;
             }
 
@@ -482,7 +482,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         projectPredicate = new Predicate<TargetNode<?>>() {
           @Override
           public boolean apply(TargetNode<?> input) {
-            return input.getDescription().getBuildRuleType() == XcodeProjectConfigDescription.TYPE;
+            return input.getType() == XcodeProjectConfigDescription.TYPE;
           }
         };
         associatedProjectPredicate = new AssociatedRulePredicate() {
@@ -517,7 +517,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       Predicate<TargetNode<?>> testPredicate = new Predicate<TargetNode<?>>() {
         @Override
         public boolean apply(TargetNode<?> input) {
-          return input.getDescription().getBuildRuleType().isTestRule();
+          return input.getType().isTestRule();
         }
       };
       ImmutableList<PartialGraph> partialGraphs = createPartialGraphs(
