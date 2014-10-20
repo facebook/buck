@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.KeystoreBuilder;
@@ -120,7 +121,8 @@ public class AndroidInstrumentationApkTest {
         .setExtraDeps(ImmutableSortedSet.<BuildRule>of(androidBinary))
         .build();
     AndroidInstrumentationApk androidInstrumentationApk = (AndroidInstrumentationApk)
-        new AndroidInstrumentationApkDescription().createBuildRule(params, ruleResolver, arg);
+        new AndroidInstrumentationApkDescription(new ProGuardConfig(new FakeBuckConfig()))
+            .createBuildRule(params, ruleResolver, arg);
 
     assertEquals(
         "//apps:app should have three JAR files to dex.",

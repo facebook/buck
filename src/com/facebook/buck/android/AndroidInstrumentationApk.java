@@ -45,6 +45,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
   AndroidInstrumentationApk(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      Optional<Path> proGuardJarOverride,
+      String proGuardMaxHeapSize,
       SourcePath manifest,
       AndroidBinary apkUnderTest,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
@@ -52,8 +54,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
     super(
         buildRuleParams,
         resolver,
-        /* proguardJarOverride */ Optional.<Path>absent(),
-        "1024M",
+        proGuardJarOverride,
+        proGuardMaxHeapSize,
         manifest,
         apkUnderTest.getTarget(),
         apkUnderTest.getKeystore(),

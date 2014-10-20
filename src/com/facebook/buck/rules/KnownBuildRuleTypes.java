@@ -185,7 +185,7 @@ public class KnownBuildRuleTypes {
         .build();
     builder.register(new AndroidBinaryDescription(androidBinaryOptions, proGuardConfig));
     builder.register(new AndroidBuildConfigDescription());
-    builder.register(new AndroidInstrumentationApkDescription());
+    builder.register(new AndroidInstrumentationApkDescription(proGuardConfig));
     builder.register(new AndroidLibraryDescription(javacEnv));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription());

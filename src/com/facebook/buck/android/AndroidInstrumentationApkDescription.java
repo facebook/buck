@@ -49,6 +49,12 @@ public class AndroidInstrumentationApkDescription
 
   public static final BuildRuleType TYPE = new BuildRuleType("android_instrumentation_apk");
 
+  private final ProGuardConfig proGuardConfig;
+
+  public AndroidInstrumentationApkDescription(ProGuardConfig proGuardConfig) {
+    this.proGuardConfig = proGuardConfig;
+  }
+
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
@@ -117,6 +123,8 @@ public class AndroidInstrumentationApkDescription
     return new AndroidInstrumentationApk(
         params.copyWithExtraDeps(enhancementResult.getFinalDeps()),
         new SourcePathResolver(resolver),
+        proGuardConfig.getProguardJarOverride(),
+        proGuardConfig.getProguardMaxHeapSize(),
         args.manifest,
         apkUnderTest,
         rulesToExcludeFromDex,
