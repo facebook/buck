@@ -223,7 +223,7 @@ public final class AppleBuildRules {
    * Builds the multimap of (source rule: [test rule 1, test rule 2, ...])
    * for the set of test rules covering each source rule.
    */
-  public static final ImmutableMultimap<BuildRule, AppleTest> getSourceRuleToTestRulesMap(
+  public static ImmutableMultimap<BuildRule, AppleTest> getSourceRuleToTestRulesMap(
       Iterable<BuildRule> testRules) {
     ImmutableMultimap.Builder<BuildRule, AppleTest> sourceRuleToTestRulesBuilder =
       ImmutableMultimap.builder();

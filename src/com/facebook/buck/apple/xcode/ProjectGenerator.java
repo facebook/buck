@@ -324,7 +324,7 @@ public class ProjectGenerator {
 
     try {
       for (BuildRule rule : rulesToBuild) {
-        if (isBuiltByCurrentProject(rule)) {
+        if (isBuiltByCurrentProject(rule.getBuildTarget())) {
           LOG.debug("Including rule %s in project", rule);
           // Trigger the loading cache to call the generateTargetForBuildRule function.
           Optional<PBXTarget> target = buildRuleToXcodeTarget.getUnchecked(rule);
@@ -384,7 +384,7 @@ public class ProjectGenerator {
 
   private Optional<PBXTarget> generateTargetForBuildRule(BuildRule rule) throws IOException {
     Preconditions.checkState(
-        isBuiltByCurrentProject(rule),
+        isBuiltByCurrentProject(rule.getBuildTarget()),
         "should not generate rule if it shouldn't be built by current project");
     Optional<PBXTarget> result;
     Optional<AbstractAppleNativeTargetBuildRule> nativeTargetRule;
@@ -1871,7 +1871,7 @@ public class ProjectGenerator {
   private PBXFileReference getLibraryFileReferenceForRule(BuildRule rule) {
     if (rule.getType().equals(AppleLibraryDescription.TYPE) ||
         rule.getType().equals(AppleBundleDescription.TYPE)) {
-      if (isBuiltByCurrentProject(rule)) {
+      if (isBuiltByCurrentProject(rule.getBuildTarget())) {
         PBXNativeTarget target = (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(rule).get();
         return Preconditions.checkNotNull(target.getProductReference());
       } else {
@@ -1894,11 +1894,11 @@ public class ProjectGenerator {
   }
 
   /**
-   * Whether a given build rule is built by the project being generated, or being build elsewhere.
+   * Whether a given build target is built by the project being generated, or being build elsewhere.
    */
-  private boolean isBuiltByCurrentProject(BuildRule rule) {
+  private boolean isBuiltByCurrentProject(BuildTarget buildTarget) {
     return options.contains(Option.GENERATE_TARGETS_FOR_DEPENDENCIES) ||
-        initialTargets.contains(rule.getBuildTarget());
+        initialTargets.contains(buildTarget);
   }
 
   private String getXcodeTargetName(BuildTarget target) {
