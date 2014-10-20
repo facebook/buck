@@ -879,18 +879,6 @@ public class BuckConfig {
   }
 
   /**
-   * Returns the path to the proguard.jar file that is overridden by the current project.  If
-   * not specified, the Android platform proguard.jar will be used.
-   */
-  public Optional<Path> getProguardJarOverride() {
-    Optional<String> pathString = getValue("tools", "proguard");
-    if (pathString.isPresent()) {
-      return checkPathExists(pathString.get(), "Overridden proguard path not found: ");
-    }
-    return Optional.absent();
-  }
-
-  /**
    * Returns the path to the platform specific aapt executable that is overridden by the current
    * project. If not specified, the Android platform aapt will be used.
    */

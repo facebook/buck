@@ -53,6 +53,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         buildRuleParams,
         resolver,
         /* proguardJarOverride */ Optional.<Path>absent(),
+        "1024M",
         manifest,
         apkUnderTest.getTarget(),
         apkUnderTest.getKeystore(),

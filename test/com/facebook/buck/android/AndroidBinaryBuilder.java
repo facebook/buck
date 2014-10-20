@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuilder;
@@ -27,14 +28,17 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
 public class AndroidBinaryBuilder extends AbstractBuilder<AndroidBinaryDescription.Arg> {
 
   private AndroidBinaryBuilder(BuildTarget target) {
-    super(new AndroidBinaryDescription(JavacOptions.DEFAULTS, Optional.<Path>absent()), target);
+    super(
+        new AndroidBinaryDescription(
+            JavacOptions.DEFAULTS,
+            new ProGuardConfig(new FakeBuckConfig())),
+        target);
   }
 
   public static AndroidBinaryBuilder createBuilder(BuildTarget buildTarget) {

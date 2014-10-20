@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -73,13 +72,11 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
               "location", new LocationMacroExpander(BUILD_TARGET_PARSER)));
 
   private final JavacOptions javacOptions;
-  private final Optional<Path> proguardJarOverride;
+  private final ProGuardConfig proGuardConfig;
 
-  public AndroidBinaryDescription(
-      JavacOptions javacOptions,
-      Optional<Path> proguardJarOverride) {
+  public AndroidBinaryDescription(JavacOptions javacOptions, ProGuardConfig proGuardConfig) {
     this.javacOptions = javacOptions;
-    this.proguardJarOverride = proguardJarOverride;
+    this.proGuardConfig = proGuardConfig;
   }
 
   @Override
@@ -169,7 +166,8 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     return new AndroidBinary(
         params.copyWithExtraDeps(result.getFinalDeps()),
         new SourcePathResolver(resolver),
-        proguardJarOverride,
+        proGuardConfig.getProguardJarOverride(),
+        proGuardConfig.getProguardMaxHeapSize(),
         args.manifest,
         args.target,
         (Keystore) keystore,

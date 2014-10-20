@@ -142,6 +142,7 @@ public class AndroidBinaryTest {
 
     ProGuardObfuscateStep.create(
         Optional.<Path>absent(),
+        "1024M",
         Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"),
         ImmutableSet.<Path>of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,

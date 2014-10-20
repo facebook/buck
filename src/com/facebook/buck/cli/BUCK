@@ -43,6 +43,7 @@ java_library(
     '//third-party/java/astyanax:astyanax-core',
   ],
   visibility = [
+    '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/java:autodeps',
     '//src/com/facebook/buck/java:config',
     '//src/com/facebook/buck/ocaml:rules',

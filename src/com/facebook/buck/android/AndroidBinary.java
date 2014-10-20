@@ -108,6 +108,7 @@ public class AndroidBinary extends AbstractBuildRule implements
   static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
 
   private final Optional<Path> proguardJarOverride;
+  private final String proguardMaxHeapSize;
 
   /**
    * This list of package types is taken from the set of targets that the default build.xml provides
@@ -125,7 +126,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     /**
      * @return true if ProGuard should be used to obfuscate the output
      */
-    private final boolean isBuildWithObfuscation() {
+    private boolean isBuildWithObfuscation() {
       return this == RELEASE;
     }
 
@@ -170,6 +171,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       BuildRuleParams params,
       SourcePathResolver resolver,
       Optional<Path> proguardJarOverride,
+      String proguardMaxHeapSize,
       SourcePath manifest,
       String target,
       Keystore keystore,
@@ -190,6 +192,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult) {
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
+    this.proguardMaxHeapSize = proguardMaxHeapSize;
     this.manifest = manifest;
     this.target = target;
     this.keystore = keystore;
@@ -796,8 +799,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     String obfuscatedName =
         Files.getNameWithoutExtension(classpathEntry.toString()) + "-obfuscated.jar";
     Path dirName = classpathEntry.getParent();
-    Path outputJar = getPathForProGuardDirectory().resolve(dirName).resolve(obfuscatedName);
-    return outputJar;
+    return getPathForProGuardDirectory().resolve(dirName).resolve(obfuscatedName);
   }
 
   /**
@@ -852,6 +854,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     // Run ProGuard on the classpath entries.
     ProGuardObfuscateStep.create(
         proguardJarOverride,
+        proguardMaxHeapSize,
         generatedProGuardConfig,
         proguardConfigsBuilder.build(),
         sdkProguardConfig,
@@ -874,7 +877,6 @@ public class AndroidBinary extends AbstractBuildRule implements
    *  @param classpathEntriesToDex Full set of classpath entries that must make
    *     their way into the final APK structure (but not necessarily into the
    *     primary dex).
-   * @param classNamesToHashesSupplier
    * @param secondaryDexDirectories The contract for updating this builder must match that
    *     of {@link PreDexMerge#getSecondaryDexDirectories()}.
    * @param steps List of steps to add to.

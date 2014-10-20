@@ -98,6 +98,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
         /* proguardJarOverride */ Optional.<Path>absent(),
+        "1024M",
         Paths.get("generated/proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.<Path>of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
@@ -124,6 +125,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
         /* proguardJarOverride */ Optional.<Path>absent(),
+        "1024M",
         Paths.get("generated/proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.<Path>of(),
         sdkProguardConfig,

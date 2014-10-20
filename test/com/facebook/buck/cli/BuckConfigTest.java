@@ -36,7 +36,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -549,30 +548,6 @@ public class BuckConfigTest {
         ImmutableMap.<String, String>of());
     config.getPythonInterpreter();
     fail("Should throw an exception when Python isn't found.");
-  }
-
-  @Test
-  public void whenRelativeProguardJarOverrideUsed() throws IOException {
-    String proguardJarName = "proguard.jar";
-    temporaryFolder.newFile(proguardJarName);
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[tools]",
-        "    proguard = " + proguardJarName));
-    BuckConfig config = createWithDefaultFilesystem(reader, null);
-    assertEquals(
-        "Should resolve to the fully qualified path",
-        temporaryFolder.getRoot().toPath().resolve(proguardJarName).toString(),
-        config.getProguardJarOverride().transform(Functions.toStringFunction()).orNull());
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void whenProguardJarNotFound() throws IOException {
-    String proguardJarName = "proguard.jar";
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[tools]",
-        "    proguard = " + proguardJarName));
-    BuckConfig config = createWithDefaultFilesystem(reader, null);
-    config.getProguardJarOverride();
   }
 
   @Test

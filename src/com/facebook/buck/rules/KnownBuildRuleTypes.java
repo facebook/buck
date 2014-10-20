@@ -27,6 +27,7 @@ import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
+import com.facebook.buck.android.ProGuardConfig;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
@@ -163,6 +164,8 @@ public class KnownBuildRuleTypes {
     // Construct the C/C++ config wrapping the buck config.
     DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(platform, config);
 
+    ProGuardConfig proGuardConfig = new ProGuardConfig(config);
+
     // Look up the path to the PEX builder script.
     Optional<Path> pythonPathToPex = config.getPath("python", "path_to_pex");
 
@@ -180,10 +183,7 @@ public class KnownBuildRuleTypes {
     JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
         .setJavaCompilerEnvironment(javacEnv)
         .build();
-    builder.register(
-        new AndroidBinaryDescription(
-            androidBinaryOptions,
-            config.getProguardJarOverride()));
+    builder.register(new AndroidBinaryDescription(androidBinaryOptions, proGuardConfig));
     builder.register(new AndroidBuildConfigDescription());
     builder.register(new AndroidInstrumentationApkDescription());
     builder.register(new AndroidLibraryDescription(javacEnv));
