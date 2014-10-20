@@ -213,12 +213,8 @@ public final class AppleBuildRules {
             new Predicate<BuildRule>() {
               @Override
               public boolean apply(BuildRule input) {
-                if (!isXcodeTargetBuildRuleType(input.getType()) &&
-                    XcodeNativeDescription.TYPE != input.getType()) {
-                  return false;
-                }
-
-                return true;
+                return isXcodeTargetBuildRuleType(input.getType()) ||
+                    XcodeNativeDescription.TYPE == input.getType();
               }
             }));
   }
