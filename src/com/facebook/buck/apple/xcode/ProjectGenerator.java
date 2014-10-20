@@ -100,6 +100,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -561,6 +562,22 @@ public class ProjectGenerator {
 
     // -- configurations
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
+    extraSettingsBuilder
+        .put("TARGET_NAME", getProductName(buildTarget))
+        .put("SRCROOT", relativizeBuckRelativePathToGeneratedProject(buildTarget, "").toString());
+    if (!options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
+      // HACK: GCC_PREFIX_HEADER needs to be modified because the path is referenced relative to
+      // project root, so if the project is generated in a different place from the BUCK file, it
+      // would break. This forces it to be based off of SRCROOT, which is overriden to point to the
+      // BUCK file location.
+      // However, when using REFERENCE_EXISTING_XCCONFIGS, this setting is not put into another
+      // layer, and therefore may override an existing setting in the target-inline-config level.
+      // Fortunately, this option is only set when we are generating separated projects, which are
+      // placed next to the BUCK files, so avoiding this is OK.
+      // In the long run, setting should be written relative to SRCROOT everywhere, and this entire
+      // hack can be deleted.
+      extraSettingsBuilder.put("GCC_PREFIX_HEADER", "$(SRCROOT)/$(inherited)");
+    }
     if (infoPlistOptional.isPresent()) {
       Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(infoPlistOptional.get());
       extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
@@ -568,7 +585,9 @@ public class ProjectGenerator {
     if (appleBuildRule.getUseBuckHeaderMaps()) {
       extraSettingsBuilder.put("USE_HEADERMAP", "NO");
     }
+
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
+    defaultSettingsBuilder.put("PRODUCT_NAME", getProductName(buildTarget));
     if (bundle.isPresent()) {
       defaultSettingsBuilder.put("WRAPPER_EXTENSION", bundle.get().getExtensionString());
     }
@@ -579,15 +598,32 @@ public class ProjectGenerator {
           "CONFIGURATION_BUILD_DIR", getObjectOutputPathForRule(appleBuildRule));
     }
 
+    ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
+    appendConfigsBuilder
+        .put(
+            "HEADER_SEARCH_PATHS",
+            Joiner.on(' ').join(
+                Iterators.concat(
+                    collectRecursiveHeaderSearchPaths(appleBuildRule).iterator(),
+                    collectRecursiveHeaderMaps(appleBuildRule).iterator())))
+        .put(
+            "USER_HEADER_SEARCH_PATHS",
+            Joiner.on(' ').join(collectUserHeaderMaps(appleBuildRule)))
+        .put(
+            "LIBRARY_SEARCH_PATHS",
+            Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(appleBuildRule)))
+        .put(
+            "FRAMEWORK_SEARCH_PATHS",
+            Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(appleBuildRule)));
+
     setTargetBuildConfigurations(
         buildTarget,
-        appleBuildRule,
         target,
         targetGroup,
         appleBuildRule.getConfigurations(),
         extraSettingsBuilder.build(),
         defaultSettingsBuilder.build(),
-        ImmutableMap.<String, String>of());
+        appendConfigsBuilder.build());
 
     // -- phases
     // TODO(Task #3772930): Go through all dependencies of the rule
@@ -646,10 +682,19 @@ public class ProjectGenerator {
    * Each configuration should have an empty entry at the project level. The target level entries
    * combine the configuration values of every layer into a single configuration file that is
    * effectively laid out in layers.
+   *
+   * @param buildTarget current build target being processed, used for error reporting.
+   * @param target      Xcode target for which the configurations will be set.
+   * @param targetGroup Xcode group in which the configuration file references will be placed.
+   * @param configurations  Configurations as extracted from the BUCK file.
+   * @param overrideBuildSettings Build settings that will override ones defined elsewhere.
+   * @param defaultBuildSettings  Target-inline level build settings that will be set if not already
+   *                              defined.
+   * @param appendBuildSettings   Target-inline level build settings that will incorporate the
+   *                              existing value or values at a higher level.
    */
   private void setTargetBuildConfigurations(
       BuildTarget buildTarget,
-      BuildRule buildRule,
       PBXTarget target,
       PBXGroup targetGroup,
       ImmutableMap<String, XcodeRuleConfiguration> configurations,
@@ -657,56 +702,6 @@ public class ProjectGenerator {
       ImmutableMap<String, String> defaultBuildSettings,
       ImmutableMap<String, String> appendBuildSettings)
       throws IOException {
-    ImmutableMap.Builder<String, String> overrideConfigsBuilder = ImmutableMap.builder();
-
-    overrideConfigsBuilder
-        .putAll(overrideBuildSettings)
-        .put("TARGET_NAME", getProductName(buildTarget))
-        .put("SRCROOT", relativizeBuckRelativePathToGeneratedProject(buildTarget, "").toString());
-
-    ImmutableMap.Builder<String, String> defaultConfigsBuilder = ImmutableMap.builder();
-
-    defaultConfigsBuilder
-        .putAll(defaultBuildSettings)
-        .put("PRODUCT_NAME", getProductName(buildTarget));
-
-    ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
-
-    appendConfigsBuilder
-        .putAll(
-            appendBuildSettings)
-        .put(
-            "HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(Iterators.concat(
-                collectRecursiveHeaderSearchPaths(buildRule).iterator(),
-                collectRecursiveHeaderMaps(buildRule).iterator())))
-        .put(
-            "USER_HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(collectUserHeaderMaps(buildRule)))
-        .put(
-            "LIBRARY_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(buildRule)))
-        .put(
-            "FRAMEWORK_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(buildRule)));
-
-    // HACK: GCC_PREFIX_HEADER needs to be modified because the path is referenced relative to
-    // project root, so if the project is generated in a different place from the BUCK file, it
-    // would break. This forces it to be based off of SRCROOT, which is overriden to point to the
-    // BUCK file location.
-    // However, when using REFERENCE_EXISTING_XCCONFIGS, this setting is not put into another layer,
-    // and therefore may override an existing setting in the target-inline-config level.
-    // Fortunately, this option is only set when we are generating separated projects, which are
-    // placed next to the BUCK files, so avoiding this is OK.
-    // In the long run, setting should be written relative to SRCROOT everywhere, and this entire
-    // hack can be deleted.
-    if (!options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
-      overrideConfigsBuilder.put("GCC_PREFIX_HEADER", "$(SRCROOT)/$(inherited)");
-    }
-
-    ImmutableMap<String, String> overrideConfigs = overrideConfigsBuilder.build();
-    ImmutableMap<String, String> defaultConfigs = defaultConfigsBuilder.build();
-    ImmutableMap<String, String> appendConfigs = appendConfigsBuilder.build();
 
     PBXGroup configurationsGroup = targetGroup.getOrCreateChildGroupByName("Configurations");
 
@@ -721,26 +716,18 @@ public class ProjectGenerator {
             .getBuildConfigurationsByName()
             .getUnchecked(configurationEntry.getKey());
         if (layers.targetLevelConfigFile.isPresent()) {
-          {
-            Map<String, String> mutableOverrideConfigs = new HashMap<>(overrideConfigs);
-            for (Map.Entry<String, String> entry: defaultConfigs.entrySet()) {
-              String existingSetting = layers.targetLevelInlineSettings.get(entry.getKey());
-              if (existingSetting == null) {
-                mutableOverrideConfigs.put(entry.getKey(), entry.getValue());
-              }
+          HashMap<String, String> combinedOverrideConfigs = Maps.newHashMap(overrideBuildSettings);
+          for (Map.Entry<String, String> entry: defaultBuildSettings.entrySet()) {
+            String existingSetting = layers.targetLevelInlineSettings.get(entry.getKey());
+            if (existingSetting == null) {
+              combinedOverrideConfigs.put(entry.getKey(), entry.getValue());
             }
+          }
 
-            for (Map.Entry<String, String> entry : appendConfigs.entrySet()) {
-              String existingSetting = layers.targetLevelInlineSettings.get(entry.getKey());
-              String settingPrefix;
-              if (existingSetting != null) {
-                settingPrefix = existingSetting + ' ';
-              } else {
-                settingPrefix = "$(inherited) ";
-              }
-              mutableOverrideConfigs.put(entry.getKey(), settingPrefix + entry.getValue());
-            }
-            overrideConfigs = ImmutableMap.copyOf(mutableOverrideConfigs);
+          for (Map.Entry<String, String> entry : appendBuildSettings.entrySet()) {
+            String existingSetting = layers.targetLevelInlineSettings.get(entry.getKey());
+            String settingPrefix = existingSetting != null ? existingSetting : "$(inherited)";
+            combinedOverrideConfigs.put(entry.getKey(), settingPrefix + " " + entry.getValue());
           }
 
           PBXFileReference fileReference =
@@ -754,7 +741,7 @@ public class ProjectGenerator {
           NSDictionary inlineSettings = new NSDictionary();
           Iterable<Map.Entry<String, String>> entries = Iterables.concat(
               layers.targetLevelInlineSettings.entrySet(),
-              overrideConfigs.entrySet());
+              combinedOverrideConfigs.entrySet());
           for (Map.Entry<String, String> entry : entries) {
             inlineSettings.put(entry.getKey(), entry.getValue());
           }
@@ -762,12 +749,12 @@ public class ProjectGenerator {
         }
       } else {
         // Add search paths for dependencies
-        Map<String, String> mutableExtraConfigs = new HashMap<>(overrideConfigs);
+        Map<String, String> mutableExtraConfigs = new HashMap<>(overrideBuildSettings);
         for (Map.Entry<String, String> entry : appendBuildSettings.entrySet()) {
           String setting = "$(inherited) " + entry.getValue();
           mutableExtraConfigs.put(entry.getKey(), setting);
         }
-        overrideConfigs = ImmutableMap.copyOf(mutableExtraConfigs);
+        overrideBuildSettings = ImmutableMap.copyOf(mutableExtraConfigs);
 
         Path outputConfigurationDirectory = outputDirectory.resolve("Configurations");
         projectFilesystem.mkdirs(outputConfigurationDirectory);
@@ -789,7 +776,7 @@ public class ProjectGenerator {
         String serializedConfiguration = serializeBuildConfiguration(
             configurationEntry.getValue(),
             searchPaths,
-            overrideConfigs);
+            overrideBuildSettings);
         if (MorePaths.fileContentsDiffer(
             new ByteArrayInputStream(serializedConfiguration.getBytes(Charsets.UTF_8)),
             configurationFilePath,
