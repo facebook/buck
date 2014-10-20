@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.primitives.Primitives;
 
@@ -66,6 +67,8 @@ public class TypeCoercerFactory {
 
   private final TypeCoercer<OCamlSource> ocamlSourceTypeCoercer;
 
+  private final TypeCoercer<XcodeRuleConfigurationLayer> xcodeRuleConfigurationLayerTypeCoercer;
+
   private final TypeCoercer<?>[] nonContainerTypeCoercers;
 
   public TypeCoercerFactory() {
@@ -76,6 +79,9 @@ public class TypeCoercerFactory {
             new PairTypeCoercer<>(sourcePathTypeCoercer, stringTypeCoercer),
             stringTypeCoercer);
     ocamlSourceTypeCoercer = new OCamlSourceTypeCoercer(sourcePathTypeCoercer);
+    xcodeRuleConfigurationLayerTypeCoercer = new XcodeRuleConfigurationLayerTypeCoercer(
+        sourcePathTypeCoercer,
+        new MapTypeCoercer<>(stringTypeCoercer, stringTypeCoercer));
     nonContainerTypeCoercers = new TypeCoercer<?>[] {
         // special classes
         labelTypeCoercer,
@@ -99,6 +105,8 @@ public class TypeCoercerFactory {
         // other simple
         appleSourceTypeCoercer,
         ocamlSourceTypeCoercer,
+        xcodeRuleConfigurationLayerTypeCoercer,
+        new XcodeRuleConfigurationTypeCoercer(xcodeRuleConfigurationLayerTypeCoercer),
         new AppleBundleDestinationTypeCoercer(stringTypeCoercer),
         new BuildConfigFieldsTypeCoercer(),
         new UriTypeCoercer(),
@@ -184,6 +192,14 @@ public class TypeCoercerFactory {
         return new MapTypeCoercer<>(
             typeCoercerForType(parameterizedType.getActualTypeArguments()[0]),
             typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
+      } else if (rawClass.isAssignableFrom(ImmutableSortedMap.class)) {
+        Preconditions.checkState(parameterizedType.getActualTypeArguments().length == 2,
+            "expected type '%s' to have two parameters", parameterizedType);
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        SortedMapTypeCoercer<?, ?> sortedMapTypeCoercer = new SortedMapTypeCoercer(
+            typeCoercerForComparableType(parameterizedType.getActualTypeArguments()[0]),
+            typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
+        return sortedMapTypeCoercer;
       } else {
         throw new IllegalArgumentException("Unhandled type: " + type);
       }

@@ -60,9 +60,6 @@ public class CoreDataModelDescription implements Description<CoreDataModelDescri
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    /**
-     * @see com.facebook.buck.rules.coercer.XcodeRuleConfiguration#fromRawJsonStructure
-     */
     public Path path;
   }
 }

@@ -74,8 +74,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
+import com.facebook.buck.rules.coercer.XcodeRuleConfigurationLayer;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -89,6 +90,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -193,8 +195,8 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
-        ImmutableMap.of(
-            "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
+        ImmutableSortedMap.of(
+            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
     arg.srcs = Optional.of(
         ImmutableList.of(
             AppleSource.ofSourceGroup(
@@ -253,8 +255,8 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
-        ImmutableMap.of(
-            "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
+        ImmutableSortedMap.of(
+            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
     arg.srcs = Optional.of(
         ImmutableList.of(
             AppleSource.ofSourceGroup(
@@ -352,8 +354,8 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
-        ImmutableMap.of(
-            "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
+        ImmutableSortedMap.of(
+            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
     arg.srcs = Optional.of(
         ImmutableList.of(
             AppleSource.ofSourceGroup(
@@ -381,8 +383,8 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
-        ImmutableMap.of(
-            "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
+        ImmutableSortedMap.of(
+            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
     arg.srcs = Optional.of(
         ImmutableList.of(
             AppleSource.ofSourceGroup(
@@ -487,8 +489,8 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
-        ImmutableMap.of(
-            "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
+        ImmutableSortedMap.of(
+            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
     arg.srcs = Optional.of(
         ImmutableList.of(
             AppleSource.ofSourcePathWithFlags(
@@ -550,11 +552,13 @@ public class ProjectGeneratorTest {
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
-        ImmutableMap.<String, String>of());
     arg.configs = Optional.of(
-        ImmutableMap.of("Debug", ImmutableList.of(argConfig, argSettings, argConfig, argSettings)));
+        ImmutableSortedMap.of(
+            "Debug",
+            new XcodeRuleConfiguration(
+                ImmutableList.of(
+                    new XcodeRuleConfigurationLayer(xcconfigFile),
+                    new XcodeRuleConfigurationLayer(xcconfigFile)))));
     arg.headerPathPrefix = Optional.of("MyHeaderPathPrefix");
     arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
@@ -598,11 +602,13 @@ public class ProjectGeneratorTest {
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
-        ImmutableMap.<String, String>of());
     arg.configs = Optional.of(
-        ImmutableMap.of("Debug", ImmutableList.of(argConfig, argSettings, argConfig, argSettings)));
+        ImmutableSortedMap.of(
+            "Debug",
+            new XcodeRuleConfiguration(
+                ImmutableList.of(
+                    new XcodeRuleConfigurationLayer(xcconfigFile),
+                    new XcodeRuleConfigurationLayer(xcconfigFile)))));
     arg.headerPathPrefix = Optional.of("MyHeaderPathPrefix");
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -642,14 +648,17 @@ public class ProjectGeneratorTest {
             .setType(AppleLibraryDescription.TYPE)
             .build();
     AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
-        ImmutableMap.of(
-            "PUBLIC_HEADERS_FOLDER_PATH",
-            "FooHeaders"
-            ));
     arg.configs = Optional.of(
-        ImmutableMap.of("Debug", ImmutableList.of(argConfig, argSettings, argConfig, argSettings)));
+        ImmutableSortedMap.of(
+            "Debug",
+            new XcodeRuleConfiguration(
+                ImmutableList.of(
+                    new XcodeRuleConfigurationLayer(xcconfigFile),
+                    new XcodeRuleConfigurationLayer(
+                        ImmutableMap.of("PUBLIC_HEADERS_FOLDER_PATH", "FooHeaders")),
+                    new XcodeRuleConfigurationLayer(xcconfigFile),
+                    new XcodeRuleConfigurationLayer(
+                        ImmutableMap.of("PUBLIC_HEADERS_FOLDER_PATH", "FooHeaders"))))));
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -688,16 +697,13 @@ public class ProjectGeneratorTest {
     BuildRule libraryRule;
     BuildRule testRule;
 
-    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
-        ImmutableMap.<String, String>of());
-    ImmutableMap<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> configs =
-        ImmutableMap.of(
-            "Debug", ImmutableList.of(
-                argConfig,
-                argSettings,
-                argConfig,
-                argSettings));
+    ImmutableSortedMap<String, XcodeRuleConfiguration> configs =
+        ImmutableSortedMap.of(
+            "Debug",
+            new XcodeRuleConfiguration(
+                ImmutableList.of(
+                    new XcodeRuleConfigurationLayer(xcconfigFile),
+                    new XcodeRuleConfigurationLayer(xcconfigFile))));
 
     {
       BuildRuleParams params =
@@ -807,24 +813,24 @@ public class ProjectGeneratorTest {
     BuildRule libraryRule;
     BuildRule testRule;
 
-    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
-        ImmutableMap.of(
-            "HEADER_SEARCH_PATHS",
-            "headers",
-            "USER_HEADER_SEARCH_PATHS",
-            "user_headers",
-            "LIBRARY_SEARCH_PATHS",
-            "libraries",
-            "FRAMEWORK_SEARCH_PATHS",
-            "frameworks"));
-    ImmutableMap<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> configs =
-        ImmutableMap.of(
-            "Debug", ImmutableList.of(
-                argConfig,
-                argSettings,
-                argConfig,
-                argSettings));
+    ImmutableSortedMap<String, XcodeRuleConfiguration> configs = ImmutableSortedMap.of(
+        "Debug",
+        new XcodeRuleConfiguration(
+            ImmutableList.of(
+                new XcodeRuleConfigurationLayer(xcconfigFile),
+                new XcodeRuleConfigurationLayer(
+                    ImmutableMap.of(
+                        "HEADER_SEARCH_PATHS", "headers",
+                        "USER_HEADER_SEARCH_PATHS", "user_headers",
+                        "LIBRARY_SEARCH_PATHS", "libraries",
+                        "FRAMEWORK_SEARCH_PATHS", "frameworks")),
+                new XcodeRuleConfigurationLayer(xcconfigFile),
+                new XcodeRuleConfigurationLayer(
+                    ImmutableMap.of(
+                        "HEADER_SEARCH_PATHS", "headers",
+                        "USER_HEADER_SEARCH_PATHS", "user_headers",
+                        "LIBRARY_SEARCH_PATHS", "libraries",
+                        "FRAMEWORK_SEARCH_PATHS", "frameworks")))));
 
     {
       BuildRuleParams params =
@@ -935,15 +941,13 @@ public class ProjectGeneratorTest {
     BuildRule libraryRule;
     BuildRule testRule;
 
-    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
-        ImmutableMap.<String, String>of());
-    ImmutableMap<String, ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>> configs =
-        ImmutableMap.of("Debug", ImmutableList.of(
-                argConfig,
-                argSettings,
-                argConfig,
-                argSettings));
+    ImmutableSortedMap<String, XcodeRuleConfiguration> configs =
+        ImmutableSortedMap.of(
+            "Debug",
+            new XcodeRuleConfiguration(
+                ImmutableList.of(
+                    new XcodeRuleConfigurationLayer(xcconfigFile),
+                    new XcodeRuleConfigurationLayer(xcconfigFile))));
 
     {
       BuildRuleParams params =
@@ -1133,9 +1137,8 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = appleBinaryDescription.createUnpopulatedConstructorArg();
     arg.configs = Optional.of(
-        ImmutableMap.of(
-            "Debug",
-            ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
+        ImmutableSortedMap.of(
+            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
     arg.srcs = Optional.of(
         ImmutableList.of(
             AppleSource.ofSourcePathWithFlags(
@@ -1297,8 +1300,8 @@ public class ProjectGeneratorTest {
         .build();
     AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
-        ImmutableMap.of(
-            "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
+        ImmutableSortedMap.of(
+            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
     arg.srcs = Optional.of(
         ImmutableList.of(
             AppleSource.ofSourcePathWithFlags(
@@ -1433,11 +1436,13 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg dynamicLibraryArg =
       createDescriptionArgWithDefaults(appleLibraryDescription);
-    Either<SourcePath, ImmutableMap<String, String>> argConfig = Either.ofLeft(xcconfigFile);
-    Either<SourcePath, ImmutableMap<String, String>> argSettings = Either.ofRight(
-        ImmutableMap.<String, String>of());
     dynamicLibraryArg.configs = Optional.of(
-        ImmutableMap.of("Debug", ImmutableList.of(argConfig, argSettings, argConfig, argSettings)));
+        ImmutableSortedMap.of(
+            "Debug",
+            new XcodeRuleConfiguration(
+                ImmutableList.of(
+                    new XcodeRuleConfigurationLayer(xcconfigFile),
+                    new XcodeRuleConfigurationLayer(xcconfigFile)))));
     BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
         dynamicLibraryParams, resolver, dynamicLibraryArg);
     resolver.addToIndex(dynamicLibraryDep);
@@ -1527,8 +1532,8 @@ public class ProjectGeneratorTest {
             .build();
     AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
     arg.configs = Optional.of(
-        ImmutableMap.of(
-            "Debug", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
+        ImmutableSortedMap.of(
+            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
     arg.srcs = Optional.of(
         ImmutableList.of(
             AppleSource.ofSourcePathWithFlags(
@@ -2262,9 +2267,11 @@ public class ProjectGeneratorTest {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = Optional.of(
-                ImmutableMap.of(
-                    "Conf1", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of(),
-                    "Conf2", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
+                ImmutableSortedMap.of(
+                    "Conf1",
+                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()),
+                    "Conf2",
+                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
             return input;
           }
         });
@@ -2278,9 +2285,11 @@ public class ProjectGeneratorTest {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = Optional.of(
-                ImmutableMap.of(
-                    "Conf2", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of(),
-                    "Conf3", ImmutableList.<Either<SourcePath, ImmutableMap<String, String>>>of()));
+                ImmutableSortedMap.of(
+                    "Conf2",
+                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()),
+                    "Conf3",
+                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
             return input;
           }
         });

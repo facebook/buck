@@ -19,11 +19,11 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
@@ -31,13 +31,7 @@ import com.google.common.collect.ImmutableSortedSet;
  */
 @SuppressFieldNotInitialized
 public class AppleNativeTargetDescriptionArg {
-  /**
-   * @see com.facebook.buck.rules.coercer.XcodeRuleConfiguration#fromRawJsonStructure
-   */
-  public Optional<
-      ImmutableMap<
-          String,
-          ImmutableList<Either<SourcePath, ImmutableMap<String, String>>>>> configs;
+  public Optional<ImmutableSortedMap<String, XcodeRuleConfiguration>> configs;
   public Optional<ImmutableList<AppleSource>> srcs;
   public Optional<ImmutableSortedSet<String>> frameworks;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;

@@ -45,9 +45,9 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
+import com.facebook.buck.rules.coercer.XcodeRuleConfigurationLayer;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -58,6 +58,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Rule;
@@ -278,11 +279,14 @@ public class SeparatedProjectsGeneratorTest {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = Optional.of(
-                ImmutableMap.of("Debug", ImmutableList.of(
-                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                        new PathSourcePath(Paths.get("project.xcconfig"))),
-                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                        new PathSourcePath(Paths.get("target.xcconfig"))))));
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(
+                        ImmutableList.of(
+                            new XcodeRuleConfigurationLayer(
+                                new PathSourcePath(Paths.get("project.xcconfig"))),
+                            new XcodeRuleConfigurationLayer(
+                                new PathSourcePath(Paths.get("target.xcconfig")))))));
             return input;
           }
         });
@@ -344,19 +348,21 @@ public class SeparatedProjectsGeneratorTest {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = Optional.of(
-                ImmutableMap.of("Debug", ImmutableList.of(
-                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                        new PathSourcePath(Paths.get("project.xcconfig"))),
-                    Either.<SourcePath, ImmutableMap<String, String>>ofRight(
-                        ImmutableMap.of(
-                            "PROJECT_FLAG1", "p1",
-                            "PROJECT_FLAG2", "p2")),
-                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                        new PathSourcePath(Paths.get("target.xcconfig"))),
-                    Either.<SourcePath, ImmutableMap<String, String>>ofRight(
-                        ImmutableMap.of(
-                            "TARGET_FLAG1", "t1",
-                            "TARGET_FLAG2", "t2")))));
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(
+                        ImmutableList.of(
+                            new XcodeRuleConfigurationLayer(
+                                new PathSourcePath(Paths.get("project.xcconfig"))),
+                            new XcodeRuleConfigurationLayer(ImmutableMap.of(
+                                "PROJECT_FLAG1", "p1",
+                                "PROJECT_FLAG2", "p2")),
+                            new XcodeRuleConfigurationLayer(
+                                new PathSourcePath(Paths.get("target.xcconfig"))),
+                            new XcodeRuleConfigurationLayer(
+                                ImmutableMap.of(
+                                    "TARGET_FLAG1", "t1",
+                                    "TARGET_FLAG2", "t2"))))));
             return input;
           }
         });
@@ -371,19 +377,21 @@ public class SeparatedProjectsGeneratorTest {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
             input.configs = Optional.of(
-                ImmutableMap.of("Debug", ImmutableList.of(
-                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                        new PathSourcePath(Paths.get("project.xcconfig"))),
-                    Either.<SourcePath, ImmutableMap<String, String>>ofRight(
-                        ImmutableMap.of(
-                            "PROJECT_FLAG1", "p1",
-                            "PROJECT_FLAG2", "p2")),
-                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                        new PathSourcePath(Paths.get("target.xcconfig"))),
-                    Either.<SourcePath, ImmutableMap<String, String>>ofRight(
-                        ImmutableMap.of(
-                            "TARGET_FLAG3", "t3",
-                            "TARGET_FLAG4", "t4")))));
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(
+                        ImmutableList.of(
+                            new XcodeRuleConfigurationLayer(
+                                new PathSourcePath(Paths.get("project.xcconfig"))),
+                            new XcodeRuleConfigurationLayer(ImmutableMap.of(
+                                "PROJECT_FLAG1", "p1",
+                                "PROJECT_FLAG2", "p2")),
+                            new XcodeRuleConfigurationLayer(
+                                new PathSourcePath(Paths.get("target.xcconfig"))),
+                            new XcodeRuleConfigurationLayer(
+                                ImmutableMap.of(
+                                    "TARGET_FLAG3", "t3",
+                                    "TARGET_FLAG4", "t4"))))));
             return input;
           }
         });
@@ -457,11 +465,14 @@ public class SeparatedProjectsGeneratorTest {
         new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
           @Override
           public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
+            // this only has one layer, accepted layers is 2 or 4
             input.configs = Optional.of(
-                ImmutableMap.of("Debug", ImmutableList.of(
-                    // this only has one layer, accepted layers is 2 or 4
-                    Either.<SourcePath, ImmutableMap<String, String>>ofLeft(
-                        new PathSourcePath(Paths.get("target.xcconfig"))))));
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(
+                        ImmutableList.of(
+                            new XcodeRuleConfigurationLayer(
+                                new PathSourcePath(Paths.get("target.xcconfig")))))));
             return input;
           }
         });
