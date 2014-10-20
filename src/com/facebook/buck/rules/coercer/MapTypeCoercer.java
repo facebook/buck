@@ -51,13 +51,12 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   }
 
   @Override
-  public boolean traverse(ImmutableMap<K, V> object, Traversal traversal) {
+  public void traverse(ImmutableMap<K, V> object, Traversal traversal) {
     traversal.traverse(object);
     for (Map.Entry<K, V> element : object.entrySet()) {
       keyTypeCoercer.traverse(element.getKey(), traversal);
       valueTypeCoercer.traverse(element.getValue(), traversal);
     }
-    return true;
   }
 
   @Override

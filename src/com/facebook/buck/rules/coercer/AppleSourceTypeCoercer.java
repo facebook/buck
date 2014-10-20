@@ -60,16 +60,18 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
   }
 
   @Override
-  public boolean traverse(AppleSource object, Traversal traversal) {
+  public void traverse(AppleSource object, Traversal traversal) {
     switch (object.getType()) {
       case SOURCE_PATH:
-        return sourcePathTypeCoercer.traverse(object.getSourcePath(), traversal);
+        sourcePathTypeCoercer.traverse(object.getSourcePath(), traversal);
+        break;
       case SOURCE_PATH_WITH_FLAGS:
-        return sourcePathWithFlagsTypeCoercer.traverse(object.getSourcePathWithFlags(), traversal);
+        sourcePathWithFlagsTypeCoercer.traverse(object.getSourcePathWithFlags(), traversal);
+        break;
       case SOURCE_GROUP:
-        return sourceGroupTypeCoercer.traverse(object.getSourceGroup(), traversal);
+        sourceGroupTypeCoercer.traverse(object.getSourceGroup(), traversal);
+        break;
     }
-    return false;
   }
 
   @Override

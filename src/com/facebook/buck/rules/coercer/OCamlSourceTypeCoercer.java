@@ -46,8 +46,8 @@ public class OCamlSourceTypeCoercer implements TypeCoercer<OCamlSource> {
   }
 
   @Override
-  public boolean traverse(OCamlSource object, Traversal traversal) {
-    return sourcePathTypeCoercer.traverse(object.getSource(), traversal);
+  public void traverse(OCamlSource object, Traversal traversal) {
+    sourcePathTypeCoercer.traverse(object.getSource(), traversal);
   }
 
   @Override
@@ -67,7 +67,8 @@ public class OCamlSourceTypeCoercer implements TypeCoercer<OCamlSource> {
 
     if (object instanceof String) {
       String name = (String) object;
-      return OCamlSource.ofNameAndSourcePath(name, sourcePathTypeCoercer.coerce(
+      return OCamlSource.ofNameAndSourcePath(
+          name, sourcePathTypeCoercer.coerce(
               buildTargetParser,
               filesystem,
               pathRelativeToProjectRoot,

@@ -54,15 +54,11 @@ public class AppleBundleDestinationTypeCoercer implements TypeCoercer<AppleBundl
   }
 
   @Override
-  public boolean traverse(AppleBundleDestination object, Traversal traversal) {
-    boolean success = enumTypeCoercer.traverse(object.getSubfolderSpec(), traversal);
-    if (!success) {
-      return false;
-    }
+  public void traverse(AppleBundleDestination object, Traversal traversal) {
+    enumTypeCoercer.traverse(object.getSubfolderSpec(), traversal);
     if (object.getSubpath().isPresent()) {
-      return stringTypeCoercer.traverse(object.getSubpath().get(), traversal);
+      stringTypeCoercer.traverse(object.getSubpath().get(), traversal);
     }
-    return true;
   }
 
   @Override

@@ -55,9 +55,9 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
   }
 
   @Override
-  public boolean traverse(Pair<FIRST, SECOND> object, Traversal traversal) {
-    return firstTypeCoercer.traverse(object.getFirst(), traversal) &&
-        secondTypeCoercer.traverse(object.getSecond(), traversal);
+  public void traverse(Pair<FIRST, SECOND> object, Traversal traversal) {
+    firstTypeCoercer.traverse(object.getFirst(), traversal);
+    secondTypeCoercer.traverse(object.getSecond(), traversal);
   }
 
   @Override

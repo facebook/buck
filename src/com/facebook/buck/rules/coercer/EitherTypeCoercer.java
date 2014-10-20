@@ -60,11 +60,11 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
   }
 
   @Override
-  public boolean traverse(Either<Left, Right> object, Traversal traversal) {
+  public void traverse(Either<Left, Right> object, Traversal traversal) {
     if (object.isLeft()) {
-      return leftTypeCoercer.traverse(object.getLeft(), traversal);
+      leftTypeCoercer.traverse(object.getLeft(), traversal);
     } else {
-      return rightTypeCoercer.traverse(object.getRight(), traversal);
+      rightTypeCoercer.traverse(object.getRight(), traversal);
     }
   }
 

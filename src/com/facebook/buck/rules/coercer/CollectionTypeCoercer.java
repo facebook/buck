@@ -38,12 +38,11 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   }
 
   @Override
-  public boolean traverse(C object, Traversal traversal) {
+  public void traverse(C object, Traversal traversal) {
     traversal.traverse(object);
     for (T element : object) {
       elementTypeCoercer.traverse(element, traversal);
     }
-    return true;
   }
 
   /**

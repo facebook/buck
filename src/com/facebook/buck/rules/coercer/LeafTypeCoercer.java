@@ -34,9 +34,8 @@ public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
   }
 
   @Override
-  public boolean traverse(Object object, Traversal traversal) {
+  public void traverse(Object object, Traversal traversal) {
     traversal.traverse(object);
-    return true;
   }
 
   @Override
