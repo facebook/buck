@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="immutables-annotations">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/immutables/value-0.31-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

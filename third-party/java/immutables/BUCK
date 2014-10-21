@@ -1,0 +1,33 @@
+# Work around prebuilt_jar lacking exported_deps by creating an
+# empty java_library which pulls in the prebuilt_jar and adds
+# the exported_deps used by the generated source files.
+java_library(
+  name = 'annotations',
+  deps = [
+    ':annotations-jar'
+  ],
+  # Generated files will require these on the classpath.
+  exported_deps = [
+    ':annotations-jar',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+prebuilt_jar(
+  name = 'annotations-jar',
+  binary_jar = 'value-0.31-SNAPSHOT.jar',
+)
+
+prebuilt_jar(
+  name = 'processor',
+  binary_jar = 'value-standalone-0.31-SNAPSHOT.jar',
+  visibility = ['PUBLIC'],
+  deps = [
+    '//third-party/java/auto-service:auto-service',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/parboiled:parboiled',
+  ],
+)

@@ -13,6 +13,8 @@
       <sourceFolder url="file://$MODULE_DIR$/build/javacc" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/build/testjavacc" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/dx-from-kitkat/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/build/immutables" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/build/immutables-tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/cli/quickstart" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/junit" />
@@ -51,6 +53,7 @@
     <orderEntry type="library" name="commons-compress-1.8.1" level="project" />
     <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jacoco" level="project" />
+    <orderEntry type="library" name="immutables-annotations" level="project" />
   </component>
 </module>
 

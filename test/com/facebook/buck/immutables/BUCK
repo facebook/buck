@@ -1,0 +1,27 @@
+STANDARD_TEST_SRCS = [
+  '**/*Test.java',
+]
+
+java_immutables_library(
+  name = 'testutil',
+  srcs = glob(['*.java'], excludes = STANDARD_TEST_SRCS),
+  visibility = [
+    '//test/...',
+  ],
+  deps = [
+    '//third-party/java/guava:guava',
+  ]
+)
+
+java_test(
+  name = 'test',
+  srcs = glob(STANDARD_TEST_SRCS),
+  source_under_test = [
+    ':testutil',
+  ],
+  deps = [
+    ':testutil',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
+  ]
+)
