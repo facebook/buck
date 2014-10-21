@@ -13,7 +13,7 @@ java_library(
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/model:BuildTargetFactory',
-    '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/util:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest-core',
     '//third-party/java/hamcrest:hamcrest-library',
