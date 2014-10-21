@@ -81,6 +81,13 @@ public class TestCommandOptions extends BuildCommandOptions {
           "WARNING: this is experimental, and only works for Java tests!")
   private boolean isUsingOneTimeOutput;
 
+  @Option(
+      name = "--shuffle",
+      usage =
+          "Randomize the order in which test classes are executed." +
+          "WARNING: only works for Java tests!")
+  private boolean isShufflingTests;
+
   @AdditionalOptions
   private TargetDeviceOptions targetDeviceOptions;
 
@@ -160,6 +167,10 @@ public class TestCommandOptions extends BuildCommandOptions {
 
   public boolean isMatchedByLabelOptions(Set<Label> labels) {
     return testLabelOptions.isMatchedByLabelOptions(getBuckConfig(), labels);
+  }
+
+  public boolean isShufflingTests() {
+    return isShufflingTests;
   }
 
   public boolean shouldExcludeWin() {

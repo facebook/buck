@@ -101,6 +101,7 @@ public class CxxTestTest {
         buildContext,
         executionContext,
         /* isDryRun */ false,
+        /* isShufflingTests */ false,
         TestSelectorList.empty());
 
     CxxTestStep cxxTestStep = new CxxTestStep(

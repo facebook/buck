@@ -119,6 +119,7 @@ public class AppleTest extends AbstractBuildRule implements TestRule {
       BuildContext buildContext,
       ExecutionContext executionContext,
       boolean isDryRun,
+      boolean isShufflingTests,
       TestSelectorList testSelectorList) {
     // TODO(user): Make iOS tests runnable by Buck.
     return ImmutableList.of();

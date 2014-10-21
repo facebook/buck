@@ -519,6 +519,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
             buildContext,
             executionContext,
             options.isDryRun(),
+            options.isShufflingTests(),
             options.getTestSelectorList());
         if (!testSteps.isEmpty()) {
           stepsBuilder.addAll(testSteps);

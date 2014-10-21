@@ -96,6 +96,7 @@ public class PythonTest extends AbstractBuildRule implements TestRule {
       BuildContext buildContext,
       ExecutionContext executionContext,
       boolean isDryRun,
+      boolean isShufflingTests,
       TestSelectorList testSelectorList) {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getPathToTestOutputDirectory()),

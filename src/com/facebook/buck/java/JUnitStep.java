@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import java.io.File;
@@ -49,7 +50,7 @@ public class JUnitStep extends ShellStep {
   public static final String BUILD_ID_PROPERTY = "com.facebook.buck.buildId";
 
   private final ImmutableSet<Path> classpathEntries;
-  private final Set<String> testClassNames;
+  private final Iterable<String> testClassNames;
   private final List<String> vmArgs;
   private final Path directoryForTestResults;
   private final Path tmpDirectory;
@@ -87,7 +88,7 @@ public class JUnitStep extends ShellStep {
    */
   public JUnitStep(
       Set<Path> classpathEntries,
-      Set<String> testClassNames,
+      Iterable<String> testClassNames,
       List<String> vmArgs,
       Path directoryForTestResults,
       Path tmpDirectory,
@@ -116,7 +117,7 @@ public class JUnitStep extends ShellStep {
   @VisibleForTesting
   JUnitStep(
       Set<Path> classpathEntries,
-      Set<String> testClassNames,
+      Iterable<String> testClassNames,
       List<String> vmArgs,
       Path directoryForTestResults,
       Path tmpDirectory,
@@ -128,7 +129,7 @@ public class JUnitStep extends ShellStep {
       TestType type,
       Path testRunnerClassesDirectory) {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
-    this.testClassNames = ImmutableSet.copyOf(testClassNames);
+    this.testClassNames = Iterables.unmodifiableIterable(testClassNames);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.directoryForTestResults = Preconditions.checkNotNull(directoryForTestResults);
     this.tmpDirectory = Preconditions.checkNotNull(tmpDirectory);

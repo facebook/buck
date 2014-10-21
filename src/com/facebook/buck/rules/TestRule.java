@@ -53,6 +53,7 @@ public interface TestRule extends HasBuildTarget {
    *     {@link BuildEngine#build(BuildContext, BuildRule)} having been run, this is supplied in
    *     case any non-cacheable build work needs to be done.
    * @param isDryRun
+   * @param isShufflingTests Whether the test runner should randomly reorder tests at runtime.
    * @param executionContext Provides context for creating {@link Step}s.
    * @param testSelectorList Provides a way of selecting which tests to include or exclude
    *     from a run.
@@ -62,6 +63,7 @@ public interface TestRule extends HasBuildTarget {
       BuildContext buildContext,
       ExecutionContext executionContext,
       boolean isDryRun,
+      boolean isShufflingTests,
       TestSelectorList testSelectorList);
 
   public Callable<TestResults> interpretTestResults(

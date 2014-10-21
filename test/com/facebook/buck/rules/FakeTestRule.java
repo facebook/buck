@@ -92,6 +92,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
       BuildContext buildContext,
       ExecutionContext executionContext,
       boolean isDryRun,
+      boolean isShufflingTests,
       TestSelectorList testSelectorList) {
     throw new UnsupportedOperationException("runTests() not supported in fake");
   }

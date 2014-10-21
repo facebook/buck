@@ -115,6 +115,7 @@ public class ShTest extends AbstractBuildRule implements TestRule {
       BuildContext buildContext,
       ExecutionContext executionContext,
       boolean isDryRun,
+      boolean isShufflingTests,
       TestSelectorList testSelectorList) {
     if (isDryRun) {
       // Stop now if we are a dry-run: sh-tests have no concept of dry-run inside the test itself.
