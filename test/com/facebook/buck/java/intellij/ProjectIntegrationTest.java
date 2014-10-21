@@ -66,6 +66,7 @@ public class ProjectIntegrationTest {
           ".idea/libraries/libs_guava_jar.xml",
           ".idea/libraries/libs_jsr305_jar.xml",
           ".idea/libraries/libs_junit_jar.xml",
+          ".idea/misc.xml",
           ".idea/modules.xml",
           ".idea/runConfigurations/Debug_Buck_test.xml",
           "modules/dep1/module_modules_dep1.iml",
@@ -153,6 +154,7 @@ public class ProjectIntegrationTest {
             ".idea/libraries/libs_guava_jar.xml",
             ".idea/libraries/libs_jsr305_jar.xml",
             ".idea/libraries/libs_junit_jar.xml",
+            ".idea/misc.xml",
             ".idea/modules.xml",
             ".idea/runConfigurations/Debug_Buck_test.xml",
             "module_.iml",
@@ -220,6 +222,7 @@ public class ProjectIntegrationTest {
         Joiner.on('\n').join(
             "MODIFIED FILES:",
             ".idea/compiler.xml",
+            ".idea/misc.xml",
             ".idea/modules.xml",
             ".idea/runConfigurations/Debug_Buck_test.xml",
             "module_.iml",
@@ -261,6 +264,7 @@ public class ProjectIntegrationTest {
             ".idea/libraries/libs_guava_jar.xml",
             ".idea/libraries/libs_jsr305_jar.xml",
             ".idea/libraries/libs_junit_jar.xml",
+            ".idea/misc.xml",
             ".idea/modules.xml",
             ".idea/runConfigurations/Debug_Buck_test.xml",
             "modules/dep1/module_modules_dep1.iml",
@@ -327,6 +331,7 @@ public class ProjectIntegrationTest {
         Joiner.on('\n').join(
             "MODIFIED FILES:",
             ".idea/compiler.xml",
+            ".idea/misc.xml",
             ".idea/modules.xml",
             ".idea/runConfigurations/Debug_Buck_test.xml",
             "modules/dep1/module_modules_dep1.iml",
@@ -364,6 +369,7 @@ public class ProjectIntegrationTest {
         Joiner.on('\n').join(
             "MODIFIED FILES:",
             ".idea/compiler.xml",
+            ".idea/misc.xml",
             ".idea/modules.xml",
             ".idea/runConfigurations/Debug_Buck_test.xml",
             "modules/dep1/module_modules_dep1.iml",
