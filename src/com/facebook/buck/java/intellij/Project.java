@@ -25,7 +25,6 @@ import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidPackageableCollection;
-import com.facebook.buck.android.AndroidPrebuiltAar;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.android.NdkLibrary;
@@ -748,9 +747,6 @@ public class Project {
             dep == rule) {
           depsToVisit = dep.getDeps();
         } else if (dep.getProperties().is(LIBRARY) && dep instanceof ExportDependencies) {
-            depsToVisit = ((ExportDependencies) dep).getExportedDeps();
-        } else if (dep.getProperties().is(LIBRARY) &&
-            dep instanceof ExportDependencies) {
             depsToVisit = ((ExportDependencies) dep).getExportedDeps();
         } else {
           depsToVisit = ImmutableSet.of();
