@@ -237,8 +237,7 @@ public class CompilationDatabase extends AbstractBuildRule {
         commandArgs.add("-fobjc-arc");
 
         // Result of `xcode-select --print-path`.
-        // TODO(mbolin): Compute this on the fly or expose via the ExecutionContext.
-        Path resultOfXcodeSelect = Paths.get("/Applications/Xcode.app/Contents/Developer");
+        Path resultOfXcodeSelect = context.getAppleDeveloperDirectory();
 
         // TODO(mbolin): Make the sysroot configurable.
         commandArgs.add("-isysroot");
