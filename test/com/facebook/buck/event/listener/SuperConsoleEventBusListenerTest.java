@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.TargetGraph;
+import com.facebook.buck.rules.ActionGraphEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -140,7 +141,13 @@ public class SuperConsoleEventBusListenerTest {
     rawEventBus.post(
         configureTestEventAtTime(ParseEvent.finished(buildTargets,
                                                      Optional.<TargetGraph>absent()),
-        400L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+        300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(buildTargets),
+            400L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
 
     final String parsingLine = formatConsoleTimes("[-] PROCESSING BUCK FILES...FINISHED %s", 0.2);
 

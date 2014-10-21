@@ -51,6 +51,7 @@ java_library(
   name = 'build_rule',
   srcs = [
     'ActionGraph.java',
+    'ActionGraphEvent.java',
     'BuildRuleBuilderParams.java',
     'AbstractDependencyVisitor.java',
     'AbstractDependencyVisitors.java',

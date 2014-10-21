@@ -123,7 +123,7 @@ public class PartialGraph {
         includes,
         eventBus,
         console,
-        environment).buildActionGraph(ruleResolver);
+        environment).buildActionGraph(ruleResolver, eventBus);
 
     return new PartialGraph(graph, targets);
   }

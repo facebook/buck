@@ -22,6 +22,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.ActionGraphEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Ansi;
@@ -62,6 +63,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected volatile ParseEvent.Finished parseFinished;
 
   @Nullable
+  protected volatile ActionGraphEvent.Started actionGraphStarted;
+  @Nullable
+  protected volatile ActionGraphEvent.Finished actionGraphFinished;
+
+  @Nullable
   protected volatile BuildEvent.Started buildStarted;
   @Nullable
   protected volatile BuildEvent.Finished buildFinished;
@@ -83,6 +89,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.parseStarted = null;
     this.parseFinished = null;
+
+    this.actionGraphStarted = null;
+    this.actionGraphFinished = null;
 
     this.buildStarted = null;
     this.buildFinished = null;
@@ -180,6 +189,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void parseFinished(ParseEvent.Finished finished) {
     parseFinished = finished;
+  }
+
+  @Subscribe
+  public void actionGraphStarted(ActionGraphEvent.Started started) {
+    actionGraphStarted = started;
+  }
+
+  @Subscribe
+  public void actionGraphFinished(ActionGraphEvent.Finished finished) {
+    actionGraphFinished = finished;
   }
 
   @Subscribe

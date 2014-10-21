@@ -152,7 +152,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         currentTimeMillis,
         0L,
         parseStarted,
-        parseFinished,
+        actionGraphFinished,
         lines);
 
     // If parsing has not finished, then there is no build rule information to print yet.

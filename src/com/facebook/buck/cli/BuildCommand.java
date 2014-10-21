@@ -114,7 +114,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
           options.getDefaultIncludes(),
           getBuckEventBus(),
           console,
-          environment).buildActionGraph(new BuildRuleResolver());
+          environment).buildActionGraph(new BuildRuleResolver(), getBuckEventBus());
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

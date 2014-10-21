@@ -24,7 +24,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
-import org.junit.rules.ExpectedException;
 
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -75,6 +74,7 @@ import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -235,7 +235,7 @@ public class ParserTest extends EasyMockSupport {
         eventBus,
         new TestConsole(),
         ImmutableMap.<String, String>of());
-    ActionGraph actionGraph = targetGraph.buildActionGraph(new BuildRuleResolver());
+    ActionGraph actionGraph = targetGraph.buildActionGraph(new BuildRuleResolver(), eventBus);
     BuildRule fooRule = actionGraph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
     BuildRule barRule = actionGraph.findBuildRuleByTarget(barTarget);
@@ -977,12 +977,13 @@ public class ParserTest extends EasyMockSupport {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     ActionGraph graph = testParser.buildTargetGraph(
         buildTargets,
         defaultIncludes,
-        BuckEventBusFactory.newInstance(),
+        eventBus,
         new TestConsole(),
-        ImmutableMap.<String, String>of()).buildActionGraph(new BuildRuleResolver());
+        ImmutableMap.<String, String>of()).buildActionGraph(new BuildRuleResolver(), eventBus);
 
     BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);

@@ -17,6 +17,7 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -78,12 +79,14 @@ public class CrossRepoTargetsIntegrationTest {
     BuildTarget externalTarget =
         BuildTarget.builder("//", "external").setRepository("external").build();
 
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     ActionGraph graph = parser.buildTargetGraph(
         ImmutableList.of(mainTarget),
         ImmutableList.<String>of(),
-        BuckEventBusFactory.newInstance(),
+        eventBus,
         new TestConsole(),
-        ImmutableMap.<String, String>of()).buildActionGraph(new BuildRuleResolver());
+        ImmutableMap.<String, String>of())
+        .buildActionGraph(new BuildRuleResolver(), eventBus);
 
     BuildRule mainRule = graph.findBuildRuleByTarget(mainTarget);
     assertEquals(mainTarget, mainRule.getBuildTarget());

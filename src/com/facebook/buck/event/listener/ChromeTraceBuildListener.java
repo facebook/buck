@@ -27,13 +27,14 @@ import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.ActionGraphEvent;
 import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
@@ -287,6 +288,26 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ChromeTraceEvent.Phase.END,
         ImmutableMap.<String, String>of("targets",
             Joiner.on(",").join(finished.getBuildTargets())),
+        finished);
+  }
+
+  @Subscribe
+  public void actionGraphStarted(ActionGraphEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
+        "action_graph",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.<String, String>of(),
+        started);
+  }
+
+  @Subscribe
+  public void actionGraphFinished(ActionGraphEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck",
+        "action_graph",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>of(),
         finished);
   }
 
