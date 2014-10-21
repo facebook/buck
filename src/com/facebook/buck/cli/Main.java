@@ -49,7 +49,9 @@ import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
+import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.Verbosity;
@@ -626,6 +628,12 @@ public final class Main {
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootRepository.getFilesystem());
 
       CachingBuildEngine buildEngine = new CachingBuildEngine();
+      Optional<ProcessManager> processManager;
+      if (platform == Platform.WINDOWS) {
+        processManager = Optional.absent();
+      } else {
+        processManager = Optional.<ProcessManager>of(new PkillProcessManager(processExecutor));
+      }
       exitCode = executingCommand.execute(remainingArgs,
           rootRepository.getBuckConfig(),
           new CommandRunnerParams(
@@ -641,7 +649,8 @@ public final class Main {
               rootRepository.getBuckConfig().createDefaultJavaPackageFinder(),
               objectMapper,
               fileHashCache,
-              clock));
+              clock,
+              processManager));
 
       // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
       if (webServer.isPresent()) {

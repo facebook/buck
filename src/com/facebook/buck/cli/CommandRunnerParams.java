@@ -35,10 +35,12 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
+import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -65,6 +67,7 @@ class CommandRunnerParams {
   private final ObjectMapper objectMapper;
   private final FileHashCache fileHashCache;
   private final Clock clock;
+  private final Optional<ProcessManager> processManager;
 
   @VisibleForTesting
   CommandRunnerParams(
@@ -103,7 +106,8 @@ class CommandRunnerParams {
         javaPackageFinder,
         objectMapper,
         fileHashCache,
-        new DefaultClock());
+        new DefaultClock(),
+        Optional.<ProcessManager>absent());
   }
 
   public CommandRunnerParams(
@@ -119,7 +123,8 @@ class CommandRunnerParams {
       JavaPackageFinder javaPackageFinder,
       ObjectMapper objectMapper,
       FileHashCache fileHashCache,
-      Clock clock) {
+      Clock clock,
+      Optional<ProcessManager> processManager) {
     this.console = Preconditions.checkNotNull(console);
     this.repository = Preconditions.checkNotNull(repository);
     this.buildEngine = Preconditions.checkNotNull(buildEngine);
@@ -133,6 +138,7 @@ class CommandRunnerParams {
     this.objectMapper = Preconditions.checkNotNull(objectMapper);
     this.fileHashCache = Preconditions.checkNotNull(fileHashCache);
     this.clock = Preconditions.checkNotNull(clock);
+    this.processManager = Preconditions.checkNotNull(processManager);
   }
 
   public Ansi getAnsi() {
@@ -193,5 +199,9 @@ class CommandRunnerParams {
 
   public Clock getClock() {
     return clock;
+  }
+
+  public Optional<ProcessManager> getProcessManager() {
+    return processManager;
   }
 }

@@ -50,7 +50,9 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -63,12 +65,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions> {
@@ -92,6 +97,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           return !arg.annotationProcessors.get().isEmpty();
         }
       };
+
+  private static final String XCODE_PROCESS_NAME = "Xcode";
 
   private static class ActionGraphs {
     private final ActionGraph mainGraph;
@@ -289,6 +296,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    */
   int runXcodeProjectGenerator(ProjectCommandOptions options)
       throws IOException, InterruptedException {
+    checkForAndKillXcodeIfRunning();
+
     ActionGraphs actionGraphs;
     SourcePathResolver resolver;
     try {
@@ -395,6 +404,46 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     }
 
     return 0;
+  }
+
+  private void checkForAndKillXcodeIfRunning() throws InterruptedException, IOException {
+    Optional<ProcessManager> processManager = getProcessManager();
+    if (processManager.isPresent() &&
+        processManager.get().isProcessRunning(XCODE_PROCESS_NAME)) {
+      if (canPrompt() &&
+          prompt(
+              "Xcode is currently running. Buck might need to modify files Xcode currently has " +
+              "open, which can cause it to become unstable.\n\nKill Xcode and continue?")) {
+        processManager.get().killProcess(XCODE_PROCESS_NAME);
+      } else {
+        console.getStdOut().println(
+            console.getAnsi().asWarningText(
+                "Xcode is still running. Generated projects might be lost or corrupted if Xcode " +
+                "currently has them open."));
+      }
+    } else {
+      LOG.warn("Could not check if Xcode is running (no process manager)");
+    }
+  }
+
+  private boolean canPrompt() {
+    return System.console() != null;
+  }
+
+  private boolean prompt(String prompt) throws IOException {
+    Preconditions.checkState(canPrompt());
+
+    LOG.debug("Displaying prompt %s..", prompt);
+    console.getStdOut().print(console.getAnsi().asWarningText(prompt + " [Y/n] "));
+
+    Optional<String> result;
+    try (InputStreamReader stdinReader = new InputStreamReader(System.in, Charsets.UTF_8);
+         BufferedReader bufferedStdinReader = new BufferedReader(stdinReader)) {
+      result = Optional.fromNullable(bufferedStdinReader.readLine());
+    }
+    LOG.debug("Result of prompt: [%s]", result);
+    return result.isPresent() &&
+      (result.get().isEmpty() || result.get().toLowerCase(Locale.US).startsWith("y"));
   }
 
   private static ImmutableSet<BuildTarget> getAllTargetsOfType(

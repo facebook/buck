@@ -32,9 +32,11 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
+import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.easymock.Capture;
@@ -122,7 +124,8 @@ public class CleanCommandTest extends EasyMockSupport {
         new FakeJavaPackageFinder(),
         new ObjectMapper(),
         FakeFileHashCache.EMPTY_CACHE,
-        new DefaultClock());
+        new DefaultClock(),
+        Optional.<ProcessManager>absent());
     return new CleanCommand(params);
   }
 
