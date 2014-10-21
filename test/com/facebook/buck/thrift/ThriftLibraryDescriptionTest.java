@@ -188,7 +188,7 @@ public class ThriftLibraryDescriptionTest {
     // Setup an thrift buck config, with the path to the thrift compiler set.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
         ImmutableMap.<String, Map<String, String>>of(
-            "thrift", ImmutableMap.of("compiler_path", thriftPath.toString())),
+            "thrift", ImmutableMap.of("compiler", thriftPath.toString())),
         filesystem);
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
@@ -282,7 +282,7 @@ public class ThriftLibraryDescriptionTest {
     // Setup an empty thrift buck config, and set compiler target.
     buckConfig = new FakeBuckConfig(
         ImmutableMap.<String, Map<String, String>>of(
-            "thrift", ImmutableMap.of("compiler_target", thriftRule.getBuildTarget().toString())),
+            "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString())),
         filesystem);
     thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     desc = new ThriftLibraryDescription(
@@ -411,7 +411,7 @@ public class ThriftLibraryDescriptionTest {
     // Setup a simple description with an empty config.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
         ImmutableMap.<String, Map<String, String>>of(
-            "thrift", ImmutableMap.of("compiler_target", thriftRule.getBuildTarget().toString())));
+            "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString())));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
         thriftBuckConfig,
@@ -535,7 +535,7 @@ public class ThriftLibraryDescriptionTest {
     // Setup an empty thrift buck config and description.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
         ImmutableMap.<String, Map<String, String>>of(
-            "thrift", ImmutableMap.of("compiler_target", thriftTarget.toString())));
+            "thrift", ImmutableMap.of("compiler", thriftTarget.toString())));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLanguageSpecificEnhancer enhancer =
         new FakeThriftLanguageSpecificEnhancer(

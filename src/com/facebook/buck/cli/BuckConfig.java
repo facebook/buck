@@ -20,15 +20,19 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.DirArtifactCache;
 import com.facebook.buck.rules.HttpArtifactCache;
 import com.facebook.buck.rules.MultiArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.FileHashCache;
@@ -477,6 +481,35 @@ public class BuckConfig {
   public <T extends Enum<T>> T getRequiredEnum(String section, String field, Class<T> clazz) {
     Optional<T> value = getEnum(section, field, clazz);
     return required(section, field, value);
+  }
+
+  /**
+   * @return a {@link SourcePath} identified by a @{link BuildTarget} or {@link Path} reference
+   *     by the given section:field, if set.
+   */
+  public Optional<SourcePath> getSourcePath(String section, String field) {
+    Optional<String> value = getValue(section, field);
+    if (!value.isPresent()) {
+      return Optional.absent();
+    }
+    try {
+      BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get());
+      return Optional.<SourcePath>of(new BuildTargetSourcePath(target));
+    } catch (BuildTargetParseException e) {
+      checkPathExists(
+          value.get(),
+          String.format("Overridden %s:%s path not found: ", section, field));
+      return Optional.<SourcePath>of(new PathSourcePath(Paths.get(value.get())));
+    }
+  }
+
+  /**
+   * @return a {@link SourcePath} identified by a @{link BuildTarget} or {@link Path} reference
+   *     by the given section:field.
+   */
+  public SourcePath getRequiredSourcePath(String section, String field) {
+    Optional<SourcePath> path = getSourcePath(section, field);
+    return required(section, field, path);
   }
 
   /**

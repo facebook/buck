@@ -18,16 +18,10 @@ package com.facebook.buck.thrift;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-
-import java.nio.file.Path;
 
 public class ThriftBuckConfig {
 
@@ -55,46 +49,12 @@ public class ThriftBuckConfig {
     return target.get();
   }
 
-  public Optional<Path> getCompilerPath() {
-    return delegate.getPath("thrift", "compiler_path");
-  }
-
-  public Optional<BuildTarget> getCompilerTarget() {
-    return getBuildTarget("thrift", "compiler_target");
-  }
-
   /**
    * Return the {@link SourcePath} object representing the thrift compiler.  This either wraps
-   * a hard-coded path or a {@link BuildRule} which builds the compiler.
+   * a hard-coded path or a {@link BuildTarget} which builds the compiler.
    */
-  public SourcePath getCompiler(BuildRuleResolver resolver) {
-    Optional<Path> compilerPath = getCompilerPath();
-    Optional<BuildTarget> compilerTarget = getCompilerTarget();
-
-    // The user must set either a compiler target of path.
-    if (compilerTarget.isPresent() && compilerPath.isPresent()) {
-      throw new HumanReadableException(
-          "Cannot set both thrift:compiler_target and thrift:compiler_path");
-    }
-
-    SourcePath sourcePath;
-
-    if (compilerTarget.isPresent()) {
-      Optional<BuildRule> rule = resolver.getRuleOptional(compilerTarget.get());
-      if (!rule.isPresent()) {
-        throw new HumanReadableException(
-            ".buckconfig: thrift:compiler_target rule \"%s\" does not exists",
-            compilerTarget.get());
-      }
-      sourcePath = new BuildTargetSourcePath(rule.get().getBuildTarget());
-    } else if (compilerPath.isPresent()) {
-      sourcePath = new PathSourcePath(compilerPath.get());
-    } else {
-      throw new HumanReadableException(
-          ".buckconfig: must set either thrift:compiler_target or thrift:compiler_path");
-    }
-
-    return sourcePath;
+  public SourcePath getCompiler() {
+    return delegate.getRequiredSourcePath("thrift", "compiler");
   }
 
   public BuildTarget getJavaDep() {

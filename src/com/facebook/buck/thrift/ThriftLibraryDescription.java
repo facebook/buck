@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -158,7 +159,7 @@ public class ThriftLibraryDescription
       ImmutableMap<String, SourcePath> srcs,
       ImmutableSortedSet<ThriftLibrary> deps) {
 
-    SourcePath compiler = thriftBuckConfig.getCompiler(resolver);
+    SourcePath compiler = thriftBuckConfig.getCompiler();
 
     // Build up the include roots to find thrift file deps and also the build rules that
     // generate them.
@@ -418,9 +419,9 @@ public class ThriftLibraryDescription
             arg.deps.get()));
 
     // Add the compiler target, if there is one.
-    Optional<BuildTarget> thriftTarget = thriftBuckConfig.getCompilerTarget();
-    if (thriftTarget.isPresent()) {
-      deps.add(thriftTarget.get());
+    SourcePath compiler = thriftBuckConfig.getCompiler();
+    if (compiler instanceof BuildTargetSourcePath) {
+      deps.add(((BuildTargetSourcePath) compiler).getTarget());
     }
 
     // Grab the language specific implicit dependencies and add their raw target representations

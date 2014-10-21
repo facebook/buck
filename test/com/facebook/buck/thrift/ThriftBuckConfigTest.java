@@ -58,55 +58,18 @@ public class ThriftBuckConfigTest {
 
   @Test
   public void getCompilerFailsIfNothingSet() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
     // Setup an empty thrift buck config, missing the compiler.
     FakeBuckConfig buckConfig = new FakeBuckConfig();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should fail since nothing was set.
     try {
-      thriftBuckConfig.getCompiler(resolver);
+      thriftBuckConfig.getCompiler();
       fail("expected to throw");
     } catch (HumanReadableException e) {
       assertTrue(
           e.getMessage(),
-          e.getMessage().contains(
-              ".buckconfig: must set either thrift:compiler_target or thrift:compiler_path"));
-    }
-  }
-
-  @Test
-  public void getCompilerFailsIfBothSet() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    BuildTarget thriftTarget = BuildTargetFactory.newInstance("//:thrift_target");
-    Path thriftPath = Paths.get("thrift_path");
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.touch(thriftPath);
-
-    // Setup an empty thrift buck config, missing the compiler.
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
-            "thrift", ImmutableMap.of(
-                "compiler_target", thriftTarget.toString(),
-                "compiler_path", thriftPath.toString())),
-        filesystem);
-    ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
-
-    // Create a build rule that represents the thrift rule.
-    FakeBuildRule thriftRule = createFakeBuildRule(
-        "//:thrift_target",
-        new SourcePathResolver(resolver));
-    resolver.addToIndex(thriftRule);
-
-    // Now try to lookup the compiler, which should fail since nothing was set.
-    try {
-      thriftBuckConfig.getCompiler(resolver);
-      fail("expected to throw");
-    } catch (HumanReadableException e) {
-      assertTrue(
-          e.getMessage().contains(
-              "Cannot set both thrift:compiler_target and thrift:compiler_path"));
+          e.getMessage().contains(".buckconfig: thrift:compiler must be set"));
     }
   }
 
@@ -120,17 +83,18 @@ public class ThriftBuckConfigTest {
     // Setup an empty thrift buck config, missing the compiler.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
         ImmutableMap.<String, Map<String, String>>of(
-            "thrift", ImmutableMap.of("compiler_path", thriftPath.toString())),
+            "thrift", ImmutableMap.of("compiler", thriftPath.toString())),
         filesystem);
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should succeed.
-    SourcePath compiler = thriftBuckConfig.getCompiler(resolver);
+    SourcePath compiler = thriftBuckConfig.getCompiler();
 
     // Verify that the returned SourcePath wraps the compiler path correctly.
     assertTrue(compiler instanceof PathSourcePath);
-    assertTrue(
-        new SourcePathResolver(resolver).getPath(compiler).equals(filesystem.resolve(thriftPath)));
+    assertEquals(
+        thriftPath,
+        new SourcePathResolver(resolver).getPath(compiler));
   }
 
   @Test
@@ -146,11 +110,11 @@ public class ThriftBuckConfigTest {
     // Setup an empty thrift buck config, missing the compiler.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
         ImmutableMap.<String, Map<String, String>>of(
-            "thrift", ImmutableMap.of("compiler_target", thriftTarget.toString())));
+            "thrift", ImmutableMap.of("compiler", thriftTarget.toString())));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should succeed.
-    SourcePath compiler = thriftBuckConfig.getCompiler(resolver);
+    SourcePath compiler = thriftBuckConfig.getCompiler();
 
     // Verify that the returned SourcePath wraps the compiler path correctly.
     assertTrue(compiler instanceof BuildTargetSourcePath);
