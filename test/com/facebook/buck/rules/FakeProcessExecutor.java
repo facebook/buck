@@ -18,36 +18,54 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class FakeProcessExecutor extends ProcessExecutor {
 
-  private int exitStatus;
-  private final String expectedOut;
-  private final String expectedErr;
+  private final ImmutableMap<ProcessExecutorParams, FakeProcess> processMap;
+  private final Set<ProcessExecutorParams> launchedProcesses;
 
   public FakeProcessExecutor() {
-    this(0, "", "");
+    this(ImmutableMap.<ProcessExecutorParams, FakeProcess>of());
   }
 
-  public FakeProcessExecutor(int exitStatus, String expectedOut, String expectedErr) {
+  public FakeProcessExecutor(Map<ProcessExecutorParams, FakeProcess> processMap) {
     super(new Console(Verbosity.ALL,
         System.out,
         System.err,
         Ansi.withoutTty()));
+    this.processMap = ImmutableMap.copyOf(processMap);
+    this.launchedProcesses = new HashSet<>();
+  }
 
-    this.exitStatus = exitStatus;
-    this.expectedOut = expectedOut;
-    this.expectedErr = expectedErr;
+  @Override
+  public Result launchAndExecute(
+      ProcessExecutorParams params,
+      Set<Option> options,
+      Optional<String> stdin) {
+    FakeProcess fakeProcess = processMap.get(params);
+    if (fakeProcess == null) {
+      throw new RuntimeException(String.format("Unexpected params: %s", params));
+    }
+    launchedProcesses.add(params);
+    return new Result(fakeProcess.waitFor(), "", "");
   }
 
   @Override
   public Result execute(Process process, Set<Option> options, Optional<String> stdin) {
-    return new Result(exitStatus, expectedOut, expectedErr);
+    return new Result(0, "", "");
   }
 
+  public boolean isProcessLaunched(ProcessExecutorParams params) {
+    return launchedProcesses.contains(params);
+  }
 }

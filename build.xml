@@ -251,6 +251,7 @@
         <include name="com/facebook/buck/util/MorePaths.java" />
         <include name="com/facebook/buck/util/MorePosixFilePermissions.java" />
         <include name="com/facebook/buck/util/ProcessExecutor.java" />
+        <include name="com/facebook/buck/util/ProcessExecutorParams.java" />
         <include name="com/facebook/buck/util/ProjectFilesystem.java" />
         <include name="com/facebook/buck/util/Threads.java" />
         <include name="com/facebook/buck/util/Verbosity.java" />

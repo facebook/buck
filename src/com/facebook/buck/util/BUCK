@@ -41,6 +41,7 @@ IO_SRCS = [
   'MorePaths.java',
   'MorePosixFilePermissions.java',
   'ProcessExecutor.java',
+  'ProcessExecutorParams.java',
   'ProjectFilesystem.java',
   'Threads.java',
   'Verbosity.java',
