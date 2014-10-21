@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.cli.JavaProjectBuckConfig.getJavaConfigTokens;
+
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Ascii;
@@ -146,6 +148,13 @@ public class ProjectCommandOptions extends BuildCommandOptions {
         "project",
         AndroidBuckConfig.getConfigTokens());
     return new AndroidBuckConfig(configValues);
+  }
+
+  public JavaProjectBuckConfig getJDKConfig() {
+    HashMap<String, Optional<String>> configValues = new HashMap<String, Optional<String>>();
+    configValues.putAll(getBuckSectionValues("java", getJavaConfigTokens()));
+
+    return new JavaProjectBuckConfig(configValues);
   }
 
   private HashMap<String, Optional<String>> getBuckSectionValues(String sectionName, String...propertyNames) {

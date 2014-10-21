@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java.intellij;
 
+import static com.facebook.buck.cli.AndroidBuckConfig.emptyAndroidConfig;
+import static com.facebook.buck.cli.JavaProjectBuckConfig.emptyJavaConfig;
 import static com.facebook.buck.testutil.MoreAsserts.assertListEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -26,7 +28,6 @@ import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.cli.AndroidBuckConfig;
 import com.facebook.buck.command.Project.SourceFolder;
 import com.facebook.buck.java.FakeJavaPackageFinder;
@@ -739,7 +740,8 @@ public class ProjectTest {
                 BuildTarget.TO_TARGET)),
         projectFilesystem,
         /* pathToDefaultAndroidManifest */ Optional.<String>absent(),
-        new AndroidBuckConfig(),
+        emptyAndroidConfig(),
+        emptyJavaConfig(),
         /* pathToPostProcessScript */ Optional.<String>absent(),
         BuckTestConstant.PYTHON_INTERPRETER,
         new ObjectMapper(),

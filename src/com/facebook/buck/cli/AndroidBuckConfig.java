@@ -33,11 +33,12 @@ public class AndroidBuckConfig {
     this.values = values;
   }
 
-  public AndroidBuckConfig() {
-    values = new HashMap<String, Optional<String>>();
+  public static AndroidBuckConfig emptyAndroidConfig() {
+    HashMap<String, Optional<String>> values = new HashMap<String, Optional<String>>();
     for (String token : getConfigTokens()) {
       values.put(token, Optional.<String>absent());
     }
+    return new AndroidBuckConfig(values);
   }
 
   public static String[] getConfigTokens() {

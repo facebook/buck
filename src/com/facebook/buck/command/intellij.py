@@ -6,6 +6,12 @@ import sys
 
 from collections import defaultdict
 
+
+MISC_XML = """<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectRootManager" version="2" languageLevel="%(java_language_level)s" assert-keyword="true" jdk-15="true" project-jdk-name="%(project_jdk_name)s" project-jdk-type="%(project_jdk_type)s" />
+</project>"""
+
 MODULE_XML_START = """<?xml version="1.0" encoding="UTF-8"?>
 <module type="%(type)s" version="4">"""
 
@@ -175,10 +181,14 @@ def create_additional_excludes(modules):
 
     return additional_excludes
 
-def get_value_in_map(map, key, fallback):
+def get_value_in_map(map, key, fallback=None):
   if key in map:
     return map[key]
-  return fallback
+
+  if None != fallback:
+    return fallback
+
+  return ''
 
 def write_modules(modules, generate_minimum_project, android_auto_generation_disabled):
     """Writes one XML file for each module."""
@@ -420,6 +430,14 @@ def write_all_modules(modules):
     # Write the modules to a file.
     write_file_if_changed('.idea/modules.xml', xml)
 
+def write_misc_file(java_settings):
+  """Writes a misc.xml file to define some settings specific to the project."""
+  xml = MISC_XML % {
+    'java_language_level' : get_value_in_map(java_settings, 'languageLevel'),
+    'project_jdk_name' : get_value_in_map(java_settings, 'jdkName'),
+    'project_jdk_type' : get_value_in_map(java_settings, 'jdkType'),
+  }
+  write_file_if_changed('.idea/misc.xml', xml)
 
 def write_libraries(libraries):
     """Writes an XML file to define each library."""
@@ -526,6 +544,9 @@ if __name__ == '__main__':
     write_modules(modules, generate_minimum_project, android_auto_generation_disabled)
     write_all_modules(modules)
     write_run_configs()
+
+    java_settings = parsed_json['java']
+    write_misc_file(java_settings)
 
     # Write the list of modified files to stdout
     for path in MODIFIED_FILES:

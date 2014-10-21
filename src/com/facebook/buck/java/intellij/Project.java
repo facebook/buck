@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java.intellij;
 
+import static com.facebook.buck.cli.json.SerializableProjectJavaSettings.newSerializableJavaProjectSettings;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
@@ -24,6 +25,7 @@ import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidPackageableCollection;
+import com.facebook.buck.android.AndroidPrebuiltAar;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.android.NdkLibrary;
@@ -31,6 +33,7 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.cli.AndroidBuckConfig;
+import com.facebook.buck.cli.JavaProjectBuckConfig;
 import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaPackageFinder;
@@ -135,6 +138,7 @@ public class Project {
   private final ObjectMapper objectMapper;
   private final boolean turnOffAutoSourceGeneration;
   private final AndroidBuckConfig defaultAndroidConfig;
+  private final JavaProjectBuckConfig javaConfig;
 
   public Project(
       SourcePathResolver resolver,
@@ -147,6 +151,7 @@ public class Project {
       ProjectFilesystem projectFilesystem,
       Optional<String> pathToDefaultAndroidManifest,
       AndroidBuckConfig defaultAndroidConfig,
+      JavaProjectBuckConfig javaConfig,
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
       ObjectMapper objectMapper,
@@ -165,6 +170,8 @@ public class Project {
     this.pythonInterpreter = pythonInterpreter;
     this.objectMapper = objectMapper;
     this.defaultAndroidConfig = defaultAndroidConfig;
+    this.defaultAndroidConfig = defaultAndroidConfig;
+    this.javaConfig = javaConfig;
     this.turnOffAutoSourceGeneration = turnOffAutoSourceGeneration;
   }
 
@@ -918,7 +925,8 @@ public class Project {
 
     Map<String, Object> config = ImmutableMap.<String, Object>of(
         "modules", modules,
-        "libraries", libraries);
+        "libraries", libraries,
+        "java", newSerializableJavaProjectSettings(javaConfig));
 
     // Write out the JSON config to be consumed by the Python.
     try (Writer writer = new FileWriter(jsonTempFile)) {
