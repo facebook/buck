@@ -52,12 +52,16 @@ public class PythonBuckConfig {
       throws InterruptedException {
     try {
       ProcessExecutor.Result versionResult = processExecutor.execute(
-          Runtime.getRuntime().exec(pythonPath + " --version"),
+          Runtime.getRuntime().exec(new String[] {pythonPath.toString(), "--version"}),
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_ERR),
           Optional.<String>absent());
       return extractPythonVersion(pythonPath, versionResult);
     } catch (IOException e) {
-      throw new HumanReadableException("Could not run " + pythonPath + " --version");
+      throw new HumanReadableException(
+          e,
+          "Could not run \"%s --version\": %s",
+          pythonPath,
+          e.getMessage());
     }
   }
 
