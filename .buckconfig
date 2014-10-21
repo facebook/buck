@@ -22,6 +22,7 @@
       test/com/facebook/buck/cli/testdata, \
       test/com/facebook/buck/java/testdata, \
       test/com/facebook/buck/junit/testdata, \
+      test/com/facebook/buck/ocaml/testdata, \
       test/com/facebook/buck/parser/testdata, \
       test/com/facebook/buck/shell/testdata, \
       test/com/facebook/buck/test/cache/testdata, \
