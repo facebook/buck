@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
@@ -36,7 +37,7 @@ import java.nio.file.Path;
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
-public class TargetNode<T> implements Comparable<TargetNode<?>> {
+public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget {
 
   private final BuildRuleFactoryParams ruleFactoryParams;
   private final Description<T> description;
@@ -105,6 +106,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>> {
     return constructorArg;
   }
 
+  @Override
   public BuildTarget getBuildTarget() {
     return ruleFactoryParams.target;
   }

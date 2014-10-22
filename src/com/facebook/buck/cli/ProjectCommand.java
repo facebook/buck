@@ -31,6 +31,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.AssociatedRulePredicate;
 import com.facebook.buck.parser.AssociatedRulePredicates;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -572,13 +573,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return FluentIterable
         .from(graph.getNodes())
         .filter(predicate)
-        .transform(
-            new Function<TargetNode<?>, BuildTarget>() {
-              @Override
-              public BuildTarget apply(TargetNode<?> input) {
-                return input.getBuildTarget();
-              }
-            })
+        .transform(HasBuildTarget.TO_TARGET)
         .toSet();
   }
 

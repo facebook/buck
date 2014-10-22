@@ -33,6 +33,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleType;
@@ -48,7 +49,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -682,13 +682,7 @@ public class Parser {
                 environment,
                 enableProfiling).getNodes())
         .filter(filter)
-        .transform(
-            new Function<TargetNode<?>, BuildTarget>() {
-              @Override
-              public BuildTarget apply(TargetNode<?> input) {
-                return input.getBuildTarget();
-              }
-            })
+        .transform(HasBuildTarget.TO_TARGET)
         .toSet();
   }
 

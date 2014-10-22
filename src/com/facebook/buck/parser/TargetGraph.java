@@ -21,6 +21,7 @@ import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphEvent;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
@@ -107,13 +107,7 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
         };
 
     Iterable<BuildTarget> buildTargets = FluentIterable.from(getNodesWithNoIncomingEdges())
-        .transform(
-            new Function<TargetNode<?>, BuildTarget>() {
-              @Override
-              public BuildTarget apply(TargetNode<?> input) {
-                return input.getBuildTarget();
-              }
-            });
+        .transform(HasBuildTarget.TO_TARGET);
 
     eventBus.post(ActionGraphEvent.started(buildTargets));
     bottomUpTraversal.traverse();
