@@ -21,16 +21,13 @@ import com.google.common.collect.Sets;
 
 import org.objectweb.asm.ClassReader;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.SortedSet;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 
 public class StubJar {
@@ -50,21 +47,22 @@ public class StubJar {
       Files.createDirectories(path.getParent());
     }
 
-    try (
-        FileInputStream fis = new FileInputStream(toMirror.toFile());
-        BufferedInputStream bis = new BufferedInputStream(fis);
-        JarInputStream jis = new JarInputStream(bis)) {
-      for (JarEntry entry = jis.getNextJarEntry(); entry != null; entry = jis.getNextJarEntry()) {
-        if (!entry.getName().endsWith(".class")) {
-          continue;
-        }
+    Walker walker = Walkers.getWalkerFor(toMirror);
+    walker.walk(
+        new FileAction() {
+          @Override
+          public void visit(Path relativizedPath, InputStream stream) throws IOException {
+            String fileName = relativizedPath.toString();
+            if (!fileName.endsWith(".class")) {
+              return;
+            }
 
-        ClassReader classReader = new ClassReader(jis);
-        ClassMirror visitor = new ClassMirror(entry.getName());
-        classes.add(visitor);
-        classReader.accept(visitor, ClassReader.SKIP_DEBUG);
-      }
-    }
+            ClassReader classReader = new ClassReader(stream);
+            ClassMirror visitor = new ClassMirror(fileName);
+            classes.add(visitor);
+            classReader.accept(visitor, ClassReader.SKIP_DEBUG);
+          }
+        });
 
     try (
         FileOutputStream fos = new FileOutputStream(path.toFile());

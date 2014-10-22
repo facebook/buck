@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -476,6 +477,31 @@ public class MirrorTest {
     }
 
     return jar.toPath().toAbsolutePath();
+  }
+
+  @Test
+  public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles() throws IOException {
+    Path jar = compileToJar(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  public String toString() { return null; }",
+                "  public void eatCake() {}",
+                "}")));
+
+    Path classDir = temp.newFolder().toPath();
+    Unzip.extractZipFile(jar, classDir, true);
+
+    new StubJar(classDir).writeTo(stubJar);
+
+    // Verify that both methods are present and given in alphabetical order.
+    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class");
+    List<MethodNode> methods = classNode.methods;
+    // Index 0 is the <init> method. Skip that.
+    assertEquals("eatCake", methods.get(1).name);
+    assertEquals("toString", methods.get(2).name);
   }
 
   private ClassNode readClass(Path pathToJar, String className) throws IOException {
