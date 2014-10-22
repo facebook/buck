@@ -343,7 +343,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       Map<BuildRule, ProjectGenerator> projectGenerators = new HashMap<>();
       for (BuildTarget workspaceConfig : targets) {
         BuildRule workspaceRule =
-          actionGraphs.getMainGraph().findBuildRuleByTarget(workspaceConfig);
+            Preconditions.checkNotNull(
+                actionGraphs.getMainGraph().findBuildRuleByTarget(workspaceConfig));
         if (!(workspaceRule instanceof XcodeWorkspaceConfig)) {
           throw new HumanReadableException(
               "%s must be a xcode_workspace_config",

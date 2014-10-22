@@ -43,6 +43,8 @@ import org.kohsuke.args4j.Option;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 public class BuildCommandOptions extends AbstractCommandOptions {
 
   @Option(name = "--num-threads", aliases = "-j", usage = "Default is 1.25 * num processors.")
@@ -51,6 +53,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   @Option(name = "--build-dependencies",
       aliases = "-b",
       usage = "How to handle including dependencies")
+  @Nullable
   private BuildDependencies buildDependencies = null;
 
 

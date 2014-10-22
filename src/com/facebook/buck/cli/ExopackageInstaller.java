@@ -174,6 +174,7 @@ public class ExopackageInstaller {
 
     if (shouldAppBeInstalled()) {
       try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "install_exo_apk")) {
+        Preconditions.checkNotNull(device);
         boolean success = adbHelper.installApkOnDevice(device, apk, installViaSd);
         if (!success) {
           return false;
@@ -201,6 +202,7 @@ public class ExopackageInstaller {
    * without -fPIC.  The java agent works fine on L as long as we don't use it for mkdir.
    */
   private void determineBestAgent() throws Exception {
+    Preconditions.checkNotNull(device);
     String value = AdbHelper.executeCommandWithErrorChecking(
         device, "getprop ro.build.version.sdk");
     try {
@@ -225,6 +227,8 @@ public class ExopackageInstaller {
         eventBus,
         "get_package_info",
         ImmutableMap.of("package", packageName))) {
+
+      Preconditions.checkNotNull(device);
 
       /* This produces output that looks like
 
@@ -335,6 +339,7 @@ public class ExopackageInstaller {
         throw new RuntimeException("Android agent apk path not specified in properties");
       }
       File apkPath = new File(apkFileName);
+      Preconditions.checkNotNull(device);
       boolean success = adbHelper.installApkOnDevice(device, apkPath, /* installViaSd */ false);
       if (!success) {
         return Optional.absent();
@@ -369,6 +374,7 @@ public class ExopackageInstaller {
     try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "get_app_signature")) {
       String command = getAgentCommand() + "get-signature " + packagePath;
       logFine("Executing %s", command);
+      Preconditions.checkNotNull(device);
       String output = AdbHelper.executeCommandWithErrorChecking(device, command);
 
       String result = output.trim();
@@ -402,6 +408,7 @@ public class ExopackageInstaller {
       // "mkdir -p" seems to work on all devices where we use use the java agent.
       String mkdirP = useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
 
+      Preconditions.checkNotNull(device);
       AdbHelper.executeCommandWithErrorChecking(
           device, "umask 022 && " + mkdirP + " " + dataRoot + "/secondary-dex");
       String output = AdbHelper.executeCommandWithErrorChecking(
@@ -461,6 +468,7 @@ public class ExopackageInstaller {
       Set<String> hashesToInstall,
       ImmutableMap<String, String> hashToBasename)
       throws Exception {
+    Preconditions.checkNotNull(device);
     try (TraceEventLogger ignored1 = TraceEventLogger.start(eventBus, "install_secondary_dexes")) {
       device.createForward(AGENT_PORT, AGENT_PORT);
       try {

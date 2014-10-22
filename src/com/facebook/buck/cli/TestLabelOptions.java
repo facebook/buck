@@ -17,6 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.rules.Label;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -56,6 +58,7 @@ class TestLabelOptions {
       name = "--exclude",
       usage = "Labels to ignore when running tests, --exclude L1 L2 ... LN.",
       handler = LabelsOptionHandler.class)
+  @SuppressFieldNotInitialized
   private Map<Integer, LabelSelector> excludedLabelSets;
 
   @Option(
@@ -66,6 +69,7 @@ class TestLabelOptions {
           "The first matching statement is used to decide whether to " +
           "include or exclude a test rule.",
       handler = LabelsOptionHandler.class)
+  @SuppressFieldNotInitialized
   private Map<Integer, LabelSelector> includedLabelSets;
 
   @Option(
@@ -86,7 +90,7 @@ class TestLabelOptions {
           // Invert the sense of anything given to --exclude.
           // This means we could --exclude !includeMe  ...lolololol
           for (Integer ordinal : excludedLabelSets.keySet()) {
-            LabelSelector original = excludedLabelSets.get(ordinal);
+            LabelSelector original = Preconditions.checkNotNull(excludedLabelSets.get(ordinal));
             all.put(ordinal, original.invert());
           }
 

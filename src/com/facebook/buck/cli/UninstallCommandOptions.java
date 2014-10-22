@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
@@ -41,12 +42,15 @@ public class UninstallCommandOptions extends AbstractCommandOptions {
   }
 
   @AdditionalOptions
+  @SuppressFieldNotInitialized
   private UninstallOptions uninstallOptions;
 
   @AdditionalOptions
+  @SuppressFieldNotInitialized
   private AdbOptions adbOptions;
 
   @AdditionalOptions
+  @SuppressFieldNotInitialized
   private TargetDeviceOptions deviceOptions;
 
   @Argument

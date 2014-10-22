@@ -21,6 +21,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.InstallableApk;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 
@@ -57,7 +58,9 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
     // Get the build rule that was built. Verify that it is an android_binary() rule.
     Build build = buildCommand.getBuild();
     ActionGraph graph = build.getActionGraph();
-    BuildRule buildRule = graph.findBuildRuleByTarget(buildCommand.getBuildTargets().get(0));
+    BuildRule buildRule =
+        Preconditions.checkNotNull(
+            graph.findBuildRuleByTarget(buildCommand.getBuildTargets().get(0)));
     if (buildRule == null || !(buildRule instanceof InstallableApk)) {
       console.printBuildFailure(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",

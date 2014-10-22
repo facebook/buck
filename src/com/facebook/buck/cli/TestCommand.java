@@ -145,7 +145,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       printMatchingTestRules(console, results);
     }
 
-    BuildContext buildContext = build.getBuildContext();
+    BuildContext buildContext = Preconditions.checkNotNull(build.getBuildContext());
     ExecutionContext buildExecutionContext = build.getExecutionContext();
     ExecutionContext testExecutionContext = ExecutionContext.builder().
         setExecutionContext(buildExecutionContext).
@@ -344,7 +344,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
       // Once all of the rules are built, then run the tests.
       return runTestsAndShutdownExecutor(testRules,
-          build.getBuildContext(),
+          Preconditions.checkNotNull(build.getBuildContext()),
           build.getExecutionContext(),
           options);
     }
@@ -568,9 +568,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         options.getArgumentsFormattedAsBuildTargets(), completedResults));
 
     // Write out the results as XML, if requested.
-    if (options.getPathToXmlTestOutput() != null) {
+    String path = options.getPathToXmlTestOutput();
+    if (path != null) {
       try (Writer writer = Files.newWriter(
-        new File(options.getPathToXmlTestOutput()),
+        new File(path),
         Charsets.UTF_8)) {
         writeXmlOutput(completedResults, writer);
       }

@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.UninstallCommandOptions.UninstallOptions;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 
 import org.kohsuke.args4j.Option;
@@ -42,12 +43,15 @@ public class InstallCommandOptions extends BuildCommandOptions {
   private boolean uninstallFirst = false;
 
   @AdditionalOptions
+  @SuppressFieldNotInitialized
   private UninstallOptions uninstallOptions;
 
   @AdditionalOptions
+  @SuppressFieldNotInitialized
   private AdbOptions adbOptions;
 
   @AdditionalOptions
+  @SuppressFieldNotInitialized
   private TargetDeviceOptions deviceOptions;
 
   @Option(
@@ -67,6 +71,7 @@ public class InstallCommandOptions extends BuildCommandOptions {
       aliases = { ACTIVITY_SHORT_ARG },
       metaVar = "<pkg/activity>",
       usage = "Activity to launch e.g. com.facebook.katana/.LoginActivity. Implies -r.")
+  @Nullable
   private String activity = null;
 
   public AdbOptions adbOptions() {

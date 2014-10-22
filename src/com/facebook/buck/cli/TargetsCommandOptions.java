@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.MorePaths;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 
@@ -35,11 +36,13 @@ public class TargetsCommandOptions extends BuildCommandOptions {
   @Option(name = "--referenced_file",
       usage = "The referenced file list, --referenced_file file1 file2  ... fileN --other_option",
       handler = StringSetOptionHandler.class)
+  @SuppressFieldNotInitialized
   private Supplier<ImmutableSet<String>> referencedFiles;
 
   @Option(name = "--type",
       usage = "The types of target to filter by, --type type1 type2 ... typeN --other_option",
       handler = StringSetOptionHandler.class)
+  @SuppressFieldNotInitialized
   private Supplier<ImmutableSet<String>> types;
 
   @Option(name = "--json", usage = "Print JSON representation of each target")

@@ -29,6 +29,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -124,7 +125,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = graph.findBuildRuleByTarget(target);
+      BuildRule rule = Preconditions.checkNotNull(graph.findBuildRuleByTarget(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
         classpathEntries.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
@@ -148,7 +149,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = graph.findBuildRuleByTarget(target);
+      BuildRule rule = Preconditions.checkNotNull(graph.findBuildRuleByTarget(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries == null) {
         continue;

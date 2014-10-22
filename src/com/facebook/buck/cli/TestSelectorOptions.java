@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.test.selectors.TestSelectorParseException;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 
@@ -53,6 +54,7 @@ public class TestSelectorOptions {
           "'#Important !TestA !TestC #' to only run the important tests in TestA and TestC " +
           "and run everything else.)",
       handler = TestSelectorsOptionHandler.class)
+  @SuppressFieldNotInitialized
   public Supplier<TestSelectorList> testSelectorListSupplier;
 
   @Option(

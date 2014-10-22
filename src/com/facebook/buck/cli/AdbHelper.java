@@ -377,6 +377,7 @@ public class AdbHelper {
    */
   private abstract static class ErrorParsingReceiver extends MultiLineReceiver {
 
+    @Nullable
     private String errorMessage = null;
 
     /**
@@ -384,6 +385,7 @@ public class AdbHelper {
      * @param line
      * @return an error message if {@code line} is indicative of an error, {@code null} otherwise.
      */
+    @Nullable
     protected abstract String matchForError(String line);
 
     /**
@@ -417,6 +419,7 @@ public class AdbHelper {
         return false;
     }
 
+    @Nullable
     public String getErrorMessage() {
        return errorMessage;
     }
@@ -653,6 +656,7 @@ public class AdbHelper {
   /**
    * Retrieves external storage location (SD card) from device.
    */
+  @Nullable
   private String deviceGetExternalStorage(IDevice device) throws TimeoutException,
       AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
     CollectingOutputReceiver receiver = new CollectingOutputReceiver();
@@ -670,7 +674,7 @@ public class AdbHelper {
 
   public int startActivity(
       InstallableApk installableApk,
-      String activity) throws IOException, InterruptedException {
+      @Nullable String activity) throws IOException, InterruptedException {
 
     // Might need the package name and activities from the AndroidManifest.
     Path pathToManifest = installableApk.getManifestPath();
@@ -731,10 +735,12 @@ public class AdbHelper {
   }
 
   @VisibleForTesting
+  @Nullable
   String deviceStartActivity(IDevice device, String activityToRun) {
     try {
       AdbHelper.ErrorParsingReceiver receiver = new AdbHelper.ErrorParsingReceiver() {
         @Override
+        @Nullable
         protected String matchForError(String line) {
           // Parses output from shell am to determine if activity was started correctly.
           return (Pattern.matches("^([\\w_$.])*(Exception|Error|error).*$", line) ||
@@ -833,12 +839,14 @@ public class AdbHelper {
    * @return error message or null if successful
    * @throws InstallException
    */
+  @Nullable
   private String deviceUninstallPackage(IDevice device,
       String packageName,
       boolean keepData) throws InstallException {
     try {
       AdbHelper.ErrorParsingReceiver receiver = new AdbHelper.ErrorParsingReceiver() {
         @Override
+        @Nullable
         protected String matchForError(String line) {
           return line.toLowerCase().contains("failure") ? line : null;
         }

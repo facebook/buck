@@ -66,6 +66,7 @@ java_library(
     '//third-party/java/args4j:args4j',
     '//third-party/java/ddmlib:ddmlib',
     '//third-party/java/guava:guava',
+    '//third-party/java/infer-annotations:infer-annotations',
     '//third-party/java/ini4j:ini4j',
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',

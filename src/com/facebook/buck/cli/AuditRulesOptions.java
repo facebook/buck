@@ -24,11 +24,14 @@ import org.kohsuke.args4j.Option;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 public class AuditRulesOptions extends AbstractCommandOptions {
 
   @Option(name = "--type",
       aliases = { "-t" },
       usage = "The types of rule to filter by")
+  @Nullable
   private List<String> types = null;
 
   @Argument
