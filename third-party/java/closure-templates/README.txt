@@ -1,12 +1,10 @@
-# This was created by running:
+VCS: git
+URL: https://github.com/google/closure-templates.git
+Revision: aac4fd30a73114cdf11cace696985c7d24d08ac7
 
-wget https://jarjar.googlecode.com/files/jarjar-1.4.jar
-# Verify this is d87f53c99e4cd88f5416edd5abb77f2a1ccfb050.
-shasum jarjar-1.4.jar
+To update:
 
-wget https://closure-templates.googlecode.com/files/closure-templates-for-java-2012-12-21.zip
-# Verify this is 6f670af115b89d1fb26b291efa502717f5c98e96.
-shasum closure-templates-for-java-2012-12-21.zip
+ant jar-excluding-deps
+cp build/soy-excluding-deps.jar ~/devtools/buck/third-party/java/closure-templates/
 
-unzip closure-templates-for-java-2012-12-21.zip
-java -jar jarjar-1.4.jar process jarjar-rules.txt soy-2012-12-21.jar soy-2012-12-21-no-guava.jar
+You can build the source jar by zipping the java/src directory.

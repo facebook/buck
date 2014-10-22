@@ -125,7 +125,7 @@ class TemplateHandler extends AbstractHandler {
 
   /** Creates the {@link SoyTofu} for {@link TemplateHandlerDelegate#getTemplates()}. */
   private SoyTofu createSoyTofu() {
-    SoyFileSet.Builder builder = new SoyFileSet.Builder();
+    SoyFileSet.Builder builder = SoyFileSet.builder();
     for (String soyFile : delegate.getTemplates()) {
       URL url = delegate.getClass().getResource(soyFile);
       builder.add(url);

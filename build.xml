@@ -50,6 +50,7 @@
 
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
     <include name="asm/asm-debug-all-5.0.3.jar" />
+    <include name="aopalliance/aopalliance.jar" />
     <include name="astyanax/astyanax-cassandra-1.56.38.jar" />
     <include name="astyanax/astyanax-cassandra-1.56.38-javadoc.jar" />
     <include name="astyanax/astyanax-cassandra-1.56.38-sources.jar" />
@@ -66,7 +67,7 @@
     <include name="astyanax/log4j-1.2.16.jar" />
     <include name="astyanax/slf4j-api-1.7.2.jar" />
     <include name="astyanax/slf4j-log4j12-1.7.2.jar" />
-    <include name="closure-templates/soy-2012-12-21-no-guava.jar" />
+    <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.8.1.jar" />
     <include name="dd-plist/dd-plist.jar" />
     <include name="eclipse/org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar" />
@@ -77,12 +78,17 @@
     <include name="eclipse/org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar" />
     <include name="eclipse/org.eclipse.jdt.core_3.9.2.v20140114-1555.jar" />
     <include name="eclipse/org.eclipse.osgi_3.9.1.v20140110-1610.jar" />
+    <include name="guice/guice-3.0.jar" />
+    <include name="guice/guice-assistedinject-3.0.jar" />
+    <include name="guice/guice-multibindings-3.0.jar" />
     <include name="gson/gson-2.2.4.jar" />
+    <include name="icu4j/icu4j-54.1.1.jar" />
     <include name="infer-annotations/infer-annotations-1.1.jar" />
     <include name="jacoco/org.jacoco.core-0.7.2.201409121644.jar" />
     <include name="jacoco/org.jacoco.report-0.7.2.201409121644.jar" />
     <include name="jetty/jetty-all-9.0.4.v20130625.jar" />
     <include name="jetty/servlet-api.jar" />
+    <include name="jsr/javax.inject-1.jar" />
     <include name="xz-java-1.3/xz-1.3.jar" />
   </fileset>
 

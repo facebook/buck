@@ -6,3 +6,10 @@ prebuilt_jar(
   ],
 )
 
+prebuilt_jar(
+  name= 'jsr330',
+  binary_jar = 'javax.inject-1.jar',
+  visibility = [
+    '//third-party/java/guice:guice',
+  ],
+)

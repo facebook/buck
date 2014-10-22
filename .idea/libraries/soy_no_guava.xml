@@ -1,11 +1,21 @@
 <component name="libraryTable">
   <library name="soy-no-guava">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/closure-templates/soy-2012-12-21-no-guava.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guice/guice-3.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jsr/javax.inject-1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guice/guice-multibindings-3.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aopalliance/aopalliance.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guice/guice-assistedinject-3.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/closure-templates/soy-excluding-deps.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/icu4j/icu4j-54.1.1.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/closure-templates/soy-2012-12-21-no-guava.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guice/guice-3.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guice/guice-multibindings-3.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guice/guice-assistedinject-3.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/closure-templates/soy-excluding-deps-sources.zip!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/icu4j/icu4j-54.1.1-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

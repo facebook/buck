@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'icu4j',
+  binary_jar = 'icu4j-54.1.1.jar',
+  source_jar = 'icu4j-54.1.1-sources.jar',
+  visibility = [
+    '//third-party/java/closure-templates:closure-templates',
+  ],
+)

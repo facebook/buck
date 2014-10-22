@@ -1,0 +1,7 @@
+prebuilt_jar(
+  name = 'aopalliance',
+  binary_jar = 'aopalliance.jar',
+  visibility = [
+    '//third-party/java/guice:assisted-inject',
+  ],
+)

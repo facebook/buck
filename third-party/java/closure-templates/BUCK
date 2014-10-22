@@ -1,6 +1,11 @@
 prebuilt_jar(
   name = 'closure-templates',
-  binary_jar = 'soy-2012-12-21-no-guava.jar',
+  binary_jar = 'soy-excluding-deps.jar',
+  deps = [
+    '//third-party/java/guava:guava',
+    '//third-party/java/guice:guice',
+    '//third-party/java/icu4j:icu4j',
+  ],
   visibility = [
     '//src/com/facebook/buck/httpserver:',
     '//test/com/facebook/buck/httpserver:',

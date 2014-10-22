@@ -1,0 +1,28 @@
+prebuilt_jar(
+  name = 'guice',
+  binary_jar = 'guice-3.0.jar',
+  source_jar = 'guice-3.0-sources.jar',
+  deps = [
+    ':assisted-inject',
+    ':multibindings',
+    '//third-party/java/jsr:jsr330',
+  ],
+  visibility = [
+    '//third-party/java/closure-templates:closure-templates',
+  ],
+)
+
+prebuilt_jar(
+  name = 'assisted-inject',
+  binary_jar = 'guice-assistedinject-3.0.jar',
+  source_jar = 'guice-assistedinject-3.0-sources.jar',
+  deps = [
+    '//third-party/java/aopalliance:aopalliance',
+  ],
+)
+
+prebuilt_jar(
+  name = 'multibindings',
+  binary_jar = 'guice-multibindings-3.0.jar',
+  source_jar = 'guice-multibindings-3.0-sources.jar',
+)
