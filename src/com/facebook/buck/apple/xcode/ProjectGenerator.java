@@ -96,6 +96,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -1358,41 +1359,31 @@ public class ProjectGenerator {
       PBXProject project,
       PBXNativeTarget target,
       Iterable<BuildRule> copiedRules) {
-    ImmutableMap.Builder<PBXCopyFilesBuildPhase.Destination, ImmutableSet.Builder<BuildRule>>
-        destinationRulesBuildersBuilder = ImmutableMap.builder();
-    for (PBXCopyFilesBuildPhase.Destination destination :
-        PBXCopyFilesBuildPhase.Destination.values()) {
-      destinationRulesBuildersBuilder.put(destination, ImmutableSet.<BuildRule>builder());
-    }
 
-    ImmutableMap<PBXCopyFilesBuildPhase.Destination, ImmutableSet.Builder<BuildRule>>
-        destinationRulesBuilders = destinationRulesBuildersBuilder.build();
-
+    // Bucket build rules into bins by their destinations
+    ImmutableSetMultimap.Builder<PBXCopyFilesBuildPhase.Destination, BuildRule>
+        ruleByDestinationBuilder = ImmutableSetMultimap.builder();
     for (BuildRule copiedRule : copiedRules) {
       Optional<PBXCopyFilesBuildPhase.Destination> optionalDestination =
           getDestinationForRule(copiedRule);
-
       if (optionalDestination.isPresent()) {
-        PBXCopyFilesBuildPhase.Destination destination = optionalDestination.get();
-        ImmutableSet.Builder<BuildRule> rulesBuilder = destinationRulesBuilders.get(destination);
-        rulesBuilder.add(copiedRule);
+        ruleByDestinationBuilder.put(optionalDestination.get(), copiedRule);
       }
     }
+    ImmutableSetMultimap<PBXCopyFilesBuildPhase.Destination, BuildRule> ruleByDestination =
+        ruleByDestinationBuilder.build();
 
-    for (PBXCopyFilesBuildPhase.Destination destination : destinationRulesBuilders.keySet()) {
-      ImmutableSet<BuildRule> rules = destinationRulesBuilders.get(destination).build();
-
-      ImmutableSet.Builder<SourceTreePath> copiedSourceTreePathsBuilder = ImmutableSet.builder();
-      for (BuildRule rule : rules) {
-        copiedSourceTreePathsBuilder.add(getProductsSourceTreePathForRule(rule));
+    // Emit a copy files phase for each destination.
+    for (PBXCopyFilesBuildPhase.Destination destination : ruleByDestination.keySet()) {
+      PBXCopyFilesBuildPhase copyFilesBuildPhase = new PBXCopyFilesBuildPhase(destination, "");
+      target.getBuildPhases().add(copyFilesBuildPhase);
+      for (BuildRule file : ruleByDestination.get(destination)) {
+        PBXFileReference fileReference = project
+            .getMainGroup()
+            .getOrCreateChildGroupByName("Dependencies")
+            .getOrCreateFileReferenceBySourceTreePath(getProductsSourceTreePathForRule(file));
+        copyFilesBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
       }
-
-      addCopyFilesBuildPhase(
-          target,
-          project.getMainGroup().getOrCreateChildGroupByName("Dependencies"),
-          destination,
-          "",
-          copiedSourceTreePathsBuilder.build());
     }
   }
 
@@ -1446,25 +1437,6 @@ public class ProjectGenerator {
 
     for (PBXFileReference archive : archives) {
       frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
-    }
-  }
-
-  private void addCopyFilesBuildPhase(
-      PBXNativeTarget target,
-      PBXGroup sharedGroup,
-      PBXCopyFilesBuildPhase.Destination destination,
-      String destinationSubpath,
-      Iterable<SourceTreePath> files) {
-    PBXCopyFilesBuildPhase copyFilesBuildPhase = null;
-    for (SourceTreePath file : files) {
-      if (copyFilesBuildPhase == null) {
-        copyFilesBuildPhase =
-            new PBXCopyFilesBuildPhase(destination, destinationSubpath);
-        target.getBuildPhases().add(copyFilesBuildPhase);
-      }
-      PBXFileReference fileReference = sharedGroup.getOrCreateFileReferenceBySourceTreePath(
-          file);
-      copyFilesBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
     }
   }
 
