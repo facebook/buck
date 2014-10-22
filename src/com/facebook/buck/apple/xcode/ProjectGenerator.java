@@ -216,8 +216,8 @@ public class ProjectGenerator {
   private final String projectName;
   private final ImmutableSet<BuildTarget> initialTargets;
   private final Path projectPath;
-  private final Path repoRootRelativeToOutputDirectory;
   private final Path placedAssetCatalogBuildPhaseScript;
+  private final PathRelativizer pathRelativizer;
 
   private final ImmutableSet<Option> options;
 
@@ -260,16 +260,16 @@ public class ProjectGenerator {
     this.options = ImmutableSet.copyOf(options);
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
-    this.repoRootRelativeToOutputDirectory =
-      MorePaths.relativize(
-          this.outputDirectory.toAbsolutePath(),
-          projectFilesystem.getRootPath().toAbsolutePath());
+    this.pathRelativizer = new PathRelativizer(
+        projectFilesystem.getRootPath(),
+        outputDirectory,
+        resolver);
 
     LOG.debug(
         "Output directory %s, profile fs root path %s, repo root relative to output dir %s",
         this.outputDirectory,
         projectFilesystem.getRootPath(),
-        this.repoRootRelativeToOutputDirectory);
+        this.pathRelativizer.outputDirToRootRelative(Paths.get(".")));
 
     this.placedAssetCatalogBuildPhaseScript =
         BuckConstant.BIN_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh");
@@ -346,7 +346,6 @@ public class ProjectGenerator {
         setProjectLevelConfigs(
             resolver,
             project,
-            repoRootRelativeToOutputDirectory,
             collectProjectLevelConfigsIfIdenticalOrFail(
                 xcodeConfigurationLayersMultimapBuilder.build()));
       }
@@ -564,7 +563,7 @@ public class ProjectGenerator {
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
     extraSettingsBuilder
         .put("TARGET_NAME", getProductName(buildTarget))
-        .put("SRCROOT", relativizeBuckRelativePathToGeneratedProject(buildTarget, "").toString());
+        .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
     if (!options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
       // HACK: GCC_PREFIX_HEADER needs to be modified because the path is referenced relative to
       // project root, so if the project is generated in a different place from the BUCK file, it
@@ -579,7 +578,7 @@ public class ProjectGenerator {
       extraSettingsBuilder.put("GCC_PREFIX_HEADER", "$(SRCROOT)/$(inherited)");
     }
     if (infoPlistOptional.isPresent()) {
-      Path infoPlistPath = repoRootRelativeToOutputDirectory.resolve(infoPlistOptional.get());
+      Path infoPlistPath = pathRelativizer.outputDirToRootRelative(infoPlistOptional.get());
       extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
     }
     if (appleBuildRule.getUseBuckHeaderMaps()) {
@@ -734,8 +733,8 @@ public class ProjectGenerator {
               configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
                   new SourceTreePath(
                       PBXReference.SourceTree.SOURCE_ROOT,
-                      repoRootRelativeToOutputDirectory.resolve(
-                          resolver.getPath(layers.targetLevelConfigFile.get())).normalize()));
+                      pathRelativizer.outputPathToSourcePath(
+                          layers.targetLevelConfigFile.get())));
           outputConfiguration.setBaseConfigurationReference(fileReference);
 
           NSDictionary inlineSettings = new NSDictionary();
@@ -797,7 +796,7 @@ public class ProjectGenerator {
             configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.SOURCE_ROOT,
-                    repoRootRelativeToOutputDirectory.resolve(configurationFilePath)));
+                    pathRelativizer.outputDirToRootRelative(configurationFilePath)));
         XCBuildConfiguration outputConfiguration = target
             .getBuildConfigurationList()
             .getBuildConfigurationsByName()
@@ -818,7 +817,7 @@ public class ProjectGenerator {
     target.getBuildPhases().add(shellScriptBuildPhase);
     for (Path path : srcs) {
       shellScriptBuildPhase.getInputPaths().add(
-          repoRootRelativeToOutputDirectory.resolve(path).toString());
+          pathRelativizer.outputDirToRootRelative(path).toString());
     }
 
     StringBuilder bashCommandBuilder = new StringBuilder();
@@ -1010,7 +1009,7 @@ public class ProjectGenerator {
     PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
-            repoRootRelativeToOutputDirectory.resolve(path)));
+            pathRelativizer.outputDirToRootRelative(path)));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     sourcesBuildPhase.getFiles().add(buildFile);
     String customFlags = sourceFlags.get(sourcePath);
@@ -1081,8 +1080,7 @@ public class ProjectGenerator {
       PBXGroup headersGroup,
       Optional<PBXHeadersBuildPhase> headersBuildPhase,
       ImmutableMap<SourcePath, String> sourceFlags) {
-    Path path = resolver.getPath(headerPath);
-    Path repoRootRelativePath = repoRootRelativeToOutputDirectory.resolve(path);
+    Path repoRootRelativePath = pathRelativizer.outputPathToSourcePath(headerPath);
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
@@ -1132,7 +1130,7 @@ public class ProjectGenerator {
         PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
-                repoRootRelativeToOutputDirectory.resolve(path)));
+                pathRelativizer.outputDirToRootRelative(path)));
         PBXBuildFile buildFile = new PBXBuildFile(fileReference);
         phase.getFiles().add(buildFile);
       }
@@ -1148,10 +1146,9 @@ public class ProjectGenerator {
         phase.getFiles().add(buildFile);
 
         for (String childVirtualName : contents.keySet()) {
-          Path childPath = resolver.getPath(contents.get(childVirtualName));
           SourceTreePath sourceTreePath = new SourceTreePath(
               PBXReference.SourceTree.SOURCE_ROOT,
-              repoRootRelativeToOutputDirectory.resolve(childPath));
+              pathRelativizer.outputPathToSourcePath(contents.get(childVirtualName)));
 
           variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
               childVirtualName,
@@ -1183,7 +1180,7 @@ public class ProjectGenerator {
         resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
-                repoRootRelativeToOutputDirectory.resolve(dir)));
+                pathRelativizer.outputDirToRootRelative(dir)));
 
         Path pathRelativeToProjectRoot = MorePaths.relativize(outputDirectory, dir);
         LOG.debug(
@@ -1213,8 +1210,8 @@ public class ProjectGenerator {
 
     if (PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT != null) {
       assetCatalogBuildPhaseScriptRelativeToProjectRoot =
-          this.repoRootRelativeToOutputDirectory.resolve(
-              PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT).normalize();
+          pathRelativizer.outputDirToRootRelative(
+              Paths.get(PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT));
     } else {
       // In order for the script to run, it must be accessible by Xcode and
       // deserves to be part of the generated output.
@@ -1269,8 +1266,7 @@ public class ProjectGenerator {
             resourcesGroup.getOrCreateChildVersionGroupsBySourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.SOURCE_ROOT,
-                    repoRootRelativeToOutputDirectory.resolve(dataModel.getPath())
-                    ));
+                    pathRelativizer.outputDirToRootRelative(dataModel.getPath())));
 
         projectFilesystem.walkRelativeFileTree(
             dataModel.getPath(),
@@ -1283,8 +1279,7 @@ public class ProjectGenerator {
                 versionGroup.getOrCreateFileReferenceBySourceTreePath(
                     new SourceTreePath(
                         PBXReference.SourceTree.SOURCE_ROOT,
-                        repoRootRelativeToOutputDirectory.resolve(dir)
-                    ));
+                        pathRelativizer.outputDirToRootRelative(dir)));
                 return FileVisitResult.SKIP_SUBTREE;
               }
             });
@@ -1310,9 +1305,8 @@ public class ProjectGenerator {
           PBXFileReference ref = versionGroup.getOrCreateFileReferenceBySourceTreePath(
               new SourceTreePath(
                   PBXReference.SourceTree.SOURCE_ROOT,
-                  repoRootRelativeToOutputDirectory.resolve(dataModel.getPath().resolve(
-                          currentVersionName.toString()))
-              ));
+                  pathRelativizer.outputDirToRootRelative(
+                      dataModel.getPath().resolve(currentVersionName.toString()))));
           versionGroup.setCurrentVersion(Optional.of(ref));
         } catch (NoSuchFileException e) {
           if (versionGroup.getChildren().size() == 1) {
@@ -1325,7 +1319,7 @@ public class ProjectGenerator {
         resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
-                repoRootRelativeToOutputDirectory.resolve(dataModel.getPath())));
+                pathRelativizer.outputDirToRootRelative(dataModel.getPath())));
       }
     }
   }
@@ -1445,7 +1439,7 @@ public class ProjectGenerator {
             sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.GROUP,
-                    relativizeBuckRelativePathToGeneratedProject(buildTarget, path.toString())));
+                    pathRelativizer.outputPathToBuildTargetPath(buildTarget, path)));
         frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
       }
     }
@@ -1621,19 +1615,6 @@ public class ProjectGenerator {
     return buildTarget.getShortNameOnly();
   }
 
-  /**
-   * Given a path relative to a BUCK file, return a path relative to the generated project.
-   *
-   * @param buildTarget
-   * @param path          path relative to build target
-   * @return  the given path relative to the generated project
-   */
-  private Path relativizeBuckRelativePathToGeneratedProject(BuildTarget buildTarget, String path) {
-    Path originalProjectPath = projectFilesystem.getPathForRelativePath(
-        Paths.get(buildTarget.getBasePathWithSlash()));
-    return repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path).normalize();
-  }
-
   private String getHeaderOutputPathForRule(Optional<String> headerPathPrefix) {
     // This is appended to $(CONFIGURATION_BUILD_DIR), so we need to get reference the parent
     // directory to get $(SYMROOT)
@@ -1651,7 +1632,7 @@ public class ProjectGenerator {
       HeaderMapType headerMapType) {
     Optional<Path> filePath = appleRule.getPathToHeaderMap(headerMapType);
     Preconditions.checkState(filePath.isPresent(), "%s does not have a header map.", appleRule);
-    return repoRootRelativeToOutputDirectory.resolve(filePath.get()).toString();
+    return pathRelativizer.outputDirToRootRelative(filePath.get()).toString();
   }
 
   private String getHeaderSearchPathForRule(BuildRule rule) {
@@ -2009,10 +1990,9 @@ public class ProjectGenerator {
     return builder.build();
   }
 
-  private static void setProjectLevelConfigs(
+  private void setProjectLevelConfigs(
       SourcePathResolver resolver,
       PBXProject project,
-      Path repoRootRelativeToOutputDirectory,
       ImmutableMap<String, ConfigInXcodeLayout> configs) {
     for (Map.Entry<String, ConfigInXcodeLayout> configEntry : configs.entrySet()) {
       XCBuildConfiguration outputConfig = project
@@ -2028,8 +2008,8 @@ public class ProjectGenerator {
           configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
               new SourceTreePath(
                   PBXReference.SourceTree.SOURCE_ROOT,
-                  repoRootRelativeToOutputDirectory.resolve(
-                      resolver.getPath(config.projectLevelConfigFile.get())).normalize()));
+                  pathRelativizer.outputDirToRootRelative(
+                      resolver.getPath(config.projectLevelConfigFile.get()).normalize())));
       outputConfig.setBaseConfigurationReference(fileReference);
 
       NSDictionary inlineSettings = new NSDictionary();

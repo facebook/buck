@@ -1,10 +1,11 @@
 java_library(
   name = 'project_generator',
   srcs = [
+    'PathRelativizer.java',
     'ProjectGenerator.java',
     'ProjectParser.java',
-    'SeparatedProjectsGenerator.java',
     'SchemeGenerator.java',
+    'SeparatedProjectsGenerator.java',
     'WorkspaceAndProjectGenerator.java',
     'WorkspaceGenerator.java',
   ],

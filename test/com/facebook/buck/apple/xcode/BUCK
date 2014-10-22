@@ -43,6 +43,7 @@ java_test(
   name = 'project_generator',
   srcs = [
     'Matchers.java',
+    'PathRelativizerTest.java',
     'ProjectGeneratorTest.java',
     'ProjectParserTest.java',
     'SchemeGeneratorTest.java',
