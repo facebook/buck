@@ -21,8 +21,6 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTarg
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createAppleBundleBuildRule;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRuleResolver;
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.hasKey;
@@ -65,7 +63,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -567,7 +564,7 @@ public class ProjectGeneratorTest {
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        createPartialGraphFromBuildRules(ImmutableSet.of(rule)),
+        ImmutableSet.of(rule),
         ImmutableSet.of(rule.getBuildTarget()),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
@@ -616,7 +613,7 @@ public class ProjectGeneratorTest {
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        createPartialGraphFromBuildRules(ImmutableSet.of(rule)),
+        ImmutableSet.of(rule),
         ImmutableSet.of(rule.getBuildTarget()),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
@@ -665,7 +662,7 @@ public class ProjectGeneratorTest {
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        createPartialGraphFromBuildRules(ImmutableSet.of(rule)),
+        ImmutableSet.of(rule),
         ImmutableSet.of(rule.getBuildTarget()),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
@@ -774,7 +771,7 @@ public class ProjectGeneratorTest {
     }
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        createPartialGraphFromBuildRules(ImmutableSet.of(libraryRule, testRule)),
+        ImmutableSet.of(libraryRule, testRule),
         ImmutableSet.of(testRule.getBuildTarget()),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
@@ -901,7 +898,7 @@ public class ProjectGeneratorTest {
     }
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        createPartialGraphFromBuildRules(ImmutableSet.of(libraryRule, testRule)),
+        ImmutableSet.of(libraryRule, testRule),
         ImmutableSet.of(testRule.getBuildTarget()),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
@@ -1035,7 +1032,7 @@ public class ProjectGeneratorTest {
     }
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        createPartialGraphFromBuildRules(ImmutableSet.of(libraryRule, testRule)),
+        ImmutableSet.of(libraryRule, testRule),
         ImmutableSet.of(testRule.getBuildTarget()),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
@@ -1244,10 +1241,10 @@ public class ProjectGeneratorTest {
         ImmutableSortedSet.<BuildRule>of(),
         xcodeNativeDescription,
         new Function<XcodeNativeDescription.Arg,
-                     XcodeNativeDescription.Arg>() {
+            XcodeNativeDescription.Arg>() {
           @Override
           public XcodeNativeDescription.Arg apply(
-            XcodeNativeDescription.Arg input) {
+              XcodeNativeDescription.Arg input) {
             input.buildableName = Optional.of("librickandmorty.a");
             return input;
           }
@@ -1459,7 +1456,7 @@ public class ProjectGeneratorTest {
     resolver.addToIndex(rule);
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        createPartialGraphFromBuildRules(ImmutableSortedSet.of(rule)),
+        ImmutableSortedSet.of(rule),
         ImmutableSet.of(rule.getBuildTarget()),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
     projectGenerator.createXcodeProjects();
@@ -2387,7 +2384,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testGeneratedProjectIsReadOnlyIfOptionSpecified() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        createPartialGraphFromBuildRules(ImmutableSet.<BuildRule>of()),
+        ImmutableSet.<BuildRule>of(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.of(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES));
 
@@ -2540,27 +2537,21 @@ public class ProjectGeneratorTest {
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       BuildRuleResolver resolver, ImmutableSet<BuildTarget> initialBuildTargets) {
     return createProjectGeneratorForCombinedProject(
-        createPartialGraphFromBuildRuleResolver(resolver),
+        resolver.getBuildRules(),
         initialBuildTargets);
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      ImmutableSet<BuildRule> rules, ImmutableSet<BuildTarget> initialBuildTargets) {
+      Iterable<BuildRule> rulesToBuild,
+      ImmutableSet<BuildTarget> initialBuildTargets) {
     return createProjectGeneratorForCombinedProject(
-        createPartialGraphFromBuildRules(rules),
-        initialBuildTargets);
-  }
-
-  private ProjectGenerator createProjectGeneratorForCombinedProject(
-      PartialGraph partialGraph, ImmutableSet<BuildTarget> initialBuildTargets) {
-    return createProjectGeneratorForCombinedProject(
-        partialGraph,
+        rulesToBuild,
         initialBuildTargets,
         ImmutableSet.<ProjectGenerator.Option>of());
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      PartialGraph partialGraph,
+      Iterable<BuildRule> rulesToBuild,
       ImmutableSet<BuildTarget> initialBuildTargets,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     ImmutableSet<ProjectGenerator.Option> options = ImmutableSet.<ProjectGenerator.Option>builder()
@@ -2570,7 +2561,7 @@ public class ProjectGeneratorTest {
 
     return new ProjectGenerator(
         new SourcePathResolver(new BuildRuleResolver()),
-        partialGraph.getActionGraph().getNodes(),
+        rulesToBuild,
         initialBuildTargets,
         projectFilesystem,
         executionContext,
