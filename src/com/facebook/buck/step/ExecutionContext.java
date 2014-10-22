@@ -32,16 +32,10 @@ import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.EnumSet;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -60,7 +54,6 @@ public class ExecutionContext {
   private final Platform platform;
   private final ImmutableMap<String, String> environment;
   private final JavaPackageFinder javaPackageFinder;
-  private final Supplier<Path> appleDeveloperDirectorySupplier;
   private final ObjectMapper objectMapper;
 
   private ExecutionContext(
@@ -75,7 +68,6 @@ public class ExecutionContext {
       @Nullable Platform platform,
       @Nullable ImmutableMap<String, String> environment,
       @Nullable JavaPackageFinder javaPackageFinder,
-      Supplier<Path> appleDeveloperDirectorySupplier,
       @Nullable ObjectMapper objectMapper) {
     this.verbosity = Preconditions.checkNotNull(console).getVerbosity();
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
@@ -90,7 +82,6 @@ public class ExecutionContext {
     this.platform = Preconditions.checkNotNull(platform);
     this.environment = Preconditions.checkNotNull(environment);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
-    this.appleDeveloperDirectorySupplier = appleDeveloperDirectorySupplier;
     this.objectMapper = Preconditions.checkNotNull(objectMapper);
   }
 
@@ -111,7 +102,6 @@ public class ExecutionContext {
         platform,
         this.environment,
         this.javaPackageFinder,
-        this.appleDeveloperDirectorySupplier,
         this.objectMapper);
   }
 
@@ -161,19 +151,6 @@ public class ExecutionContext {
 
   public JavaPackageFinder getJavaPackageFinder() {
     return javaPackageFinder;
-  }
-
-  public Path getAppleDeveloperDirectory() {
-    return appleDeveloperDirectorySupplier.get();
-  }
-
-  /**
-   * This is private so it can be used by
-   * {@link ExecutionContext.Builder#setExecutionContext(ExecutionContext)}. Public consumers of the
-   * API should use {@link #getAppleDeveloperDirectorySupplier()}.
-   */
-  private Supplier<Path> getAppleDeveloperDirectorySupplier() {
-    return appleDeveloperDirectorySupplier;
   }
 
   public ObjectMapper getObjectMapper() {
@@ -256,7 +233,6 @@ public class ExecutionContext {
     @Nullable private Platform platform = null;
     @Nullable private ImmutableMap<String, String> environment = null;
     @Nullable private JavaPackageFinder javaPackageFinder = null;
-    @Nullable private Supplier<Path> appleDeveloperDirectorySupplier = null;
     @Nullable private ObjectMapper objectMapper = null;
 
     private Builder() {}
@@ -274,8 +250,6 @@ public class ExecutionContext {
           platform,
           environment,
           javaPackageFinder,
-          appleDeveloperDirectorySupplier != null ? appleDeveloperDirectorySupplier :
-              createAppleDeveloperDirectorySupplier(console),
           objectMapper);
     }
 
@@ -291,7 +265,6 @@ public class ExecutionContext {
       setPlatform(executionContext.getPlatform());
       setEnvironment(executionContext.getEnvironment());
       setJavaPackageFinder(executionContext.getJavaPackageFinder());
-      setAppleDeveloperDirectorySupplier(executionContext.getAppleDeveloperDirectorySupplier());
       setObjectMapper(executionContext.getObjectMapper());
       return this;
     }
@@ -354,46 +327,9 @@ public class ExecutionContext {
       return this;
     }
 
-    public Builder setAppleDeveloperDirectorySupplier(
-        Supplier<Path> appleDeveloperDirectorySupplier) {
-      this.appleDeveloperDirectorySupplier = appleDeveloperDirectorySupplier;
-      return this;
-    }
-
     public Builder setObjectMapper(ObjectMapper objectMapper) {
       this.objectMapper = Preconditions.checkNotNull(objectMapper);
       return this;
     }
-  }
-
-  /**
-   * @return a memoizing {@link Supplier} that caches the output of
-   *     {@code xcode-select --print-path}.
-   */
-  private static Supplier<Path> createAppleDeveloperDirectorySupplier(final Console console) {
-    return Suppliers.memoize(new Supplier<Path>() {
-      @Override
-      public Path get() {
-        ProcessBuilder processBuilder = new ProcessBuilder("xcode-select", "--print-path");
-        // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
-        Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-        ProcessExecutor processExecutor = new ProcessExecutor(console);
-        ProcessExecutor.Result result;
-        try {
-          result = processExecutor.execute(
-              processBuilder.start(),
-              options,
-              /* stdin */ Optional.<String>absent());
-        } catch (InterruptedException | IOException e) {
-          throw new RuntimeException(e);
-        }
-
-        if (result.getExitCode() != 0) {
-          throw new RuntimeException("xcode-select --print-path failed: " + result.getStderr());
-        }
-
-        return Paths.get(result.getStdout().get().trim());
-      }
-    });
   }
 }

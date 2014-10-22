@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -37,7 +38,8 @@ import java.nio.file.Paths;
 
 public class AppleLibraryTest {
 
-  private AppleLibraryDescription description = new AppleLibraryDescription();
+  private AppleLibraryDescription description = new AppleLibraryDescription(
+      new AppleConfig(new FakeBuckConfig()));
 
   @Test
   public void getInputsToCompareToOutput() {

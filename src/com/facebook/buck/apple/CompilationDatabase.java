@@ -75,6 +75,7 @@ public class CompilationDatabase extends AbstractBuildRule {
     }
   }
 
+  private final AppleConfig appleConfig;
   private final PlatformFlavor platformFlavor;
   private final TargetSources targetSources;
   private final Path outputJsonFile;
@@ -95,12 +96,14 @@ public class CompilationDatabase extends AbstractBuildRule {
   CompilationDatabase(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      AppleConfig appleConfig,
       PlatformFlavor platformFlavor,
       TargetSources targetSources,
       ImmutableSortedSet<String> frameworks,
       ImmutableSet<Path> includePaths,
       Optional<SourcePath> pchFile) {
     super(buildRuleParams, resolver);
+    this.appleConfig = appleConfig;
     this.platformFlavor = platformFlavor;
     this.targetSources = targetSources;
     this.outputJsonFile = BuildTargets.getGenPath(
@@ -237,7 +240,8 @@ public class CompilationDatabase extends AbstractBuildRule {
         commandArgs.add("-fobjc-arc");
 
         // Result of `xcode-select --print-path`.
-        Path resultOfXcodeSelect = context.getAppleDeveloperDirectory();
+        Path resultOfXcodeSelect = appleConfig.getAppleDeveloperDirectorySupplier(
+            context.getConsole()).get();
 
         // TODO(mbolin): Make the sysroot configurable.
         commandArgs.add("-isysroot");

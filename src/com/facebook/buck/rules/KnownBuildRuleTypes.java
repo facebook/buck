@@ -32,6 +32,7 @@ import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleTestDescription;
@@ -155,6 +156,8 @@ public class KnownBuildRuleTypes {
       ndkVersion = androidDirectoryResolver.getNdkVersion();
     }
 
+    AppleConfig appleConfig = new AppleConfig(config);
+
     // Construct the thrift config wrapping the buck config.
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
 
@@ -192,9 +195,9 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
-    builder.register(new AppleBinaryDescription());
+    builder.register(new AppleBinaryDescription(appleConfig));
     builder.register(new AppleBundleDescription());
-    builder.register(new AppleLibraryDescription());
+    builder.register(new AppleLibraryDescription(appleConfig));
     builder.register(new AppleResourceDescription());
     builder.register(new AppleTestDescription());
     builder.register(new BuckExtensionDescription());

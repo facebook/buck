@@ -34,12 +34,14 @@ import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -72,8 +74,11 @@ import java.nio.file.Paths;
 public class SeparatedProjectsGeneratorTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private final ExecutionContext executionContext = TestExecutionContext.newInstance();
-  private final AppleLibraryDescription appleLibraryDescription = new AppleLibraryDescription();
-  private final AppleBinaryDescription appleBinaryDescription = new AppleBinaryDescription();
+  private final AppleConfig appleConfig = new AppleConfig(new FakeBuckConfig());
+  private final AppleLibraryDescription appleLibraryDescription = new AppleLibraryDescription(
+      appleConfig);
+  private final AppleBinaryDescription appleBinaryDescription = new AppleBinaryDescription(
+      appleConfig);
   private final AppleBundleDescription appleBundleDescription = new AppleBundleDescription();
   private final XcodeProjectConfigDescription xcodeProjectConfigDescription =
       new XcodeProjectConfigDescription();

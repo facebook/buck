@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.CompilationDatabase.GenerateCompilationCommandsJson;
 import com.facebook.buck.apple.CompilationDatabase.JsonSerializableDatabaseEntry;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
@@ -46,6 +47,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -55,6 +57,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class CompilationDatabaseTest {
 
@@ -63,6 +66,7 @@ public class CompilationDatabaseTest {
   private SourcePathResolver testSourcePathResolver;
   private TargetSources testTargetSources;
   private BuildTarget testBuildTarget;
+  private AppleConfig appleConfig;
 
   @Test
   public void testGetPathToOutputFile() {
@@ -72,6 +76,7 @@ public class CompilationDatabaseTest {
     CompilationDatabase compilationDatabase = new CompilationDatabase(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         testSourcePathResolver,
+        appleConfig,
         CompilationDatabase.PlatformFlavor.IOS_SIMULATOR_8,
         testTargetSources,
         /* frameworks */ ImmutableSortedSet.<String>of(),
@@ -102,6 +107,7 @@ public class CompilationDatabaseTest {
     CompilationDatabase compilationDatabase = new CompilationDatabase(
         new FakeBuildRuleParamsBuilder(testBuildTarget).build(),
         testSourcePathResolver,
+        appleConfig,
         CompilationDatabase.PlatformFlavor.IOS_SIMULATOR_8,
         targetSources,
         /* frameworks */ ImmutableSortedSet.<String>of(),
@@ -179,15 +185,15 @@ public class CompilationDatabaseTest {
                 "-MMD",
                 "-fobjc-arc",
                 "-isysroot",
-                "/Applications/Xcode.app/Contents/Developer" +
+                "/path/to/somewhere" +
                     "/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk",
-                "-F/Applications/Xcode.app/Contents/Developer/" +
+                "-F/path/to/somewhere/" +
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk/" +
                     "System/Library/Frameworks/CoreLocation.framework",
-                "-F/Applications/Xcode.app/Contents/Developer/" +
+                "-F/path/to/somewhere/" +
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk/" +
                     "System/Library/Frameworks/Foundation.framework",
-                "-F/Applications/Xcode.app/Contents/Developer/" +
+                "-F/path/to/somewhere/" +
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk/" +
                     "System/Library/Frameworks/UIKit.framework",
                 "-I/Users/user/src/buck-out/gen/library/lib.hmap",
@@ -220,15 +226,15 @@ public class CompilationDatabaseTest {
                 "-MMD",
                 "-fobjc-arc",
                 "-isysroot",
-                "/Applications/Xcode.app/Contents/Developer" +
+                "/path/to/somewhere" +
                     "/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk",
-                "-F/Applications/Xcode.app/Contents/Developer/" +
+                "-F/path/to/somewhere/" +
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk/" +
                     "System/Library/Frameworks/CoreLocation.framework",
-                "-F/Applications/Xcode.app/Contents/Developer/" +
+                "-F/path/to/somewhere/" +
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk/" +
                     "System/Library/Frameworks/Foundation.framework",
-                "-F/Applications/Xcode.app/Contents/Developer/" +
+                "-F/path/to/somewhere/" +
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk/" +
                     "System/Library/Frameworks/UIKit.framework",
                 "-I/Users/user/src/buck-out/gen/library/lib.hmap",
@@ -266,9 +272,13 @@ public class CompilationDatabaseTest {
         Paths.get("/Users/user/src/buck-out/gen/library/lib.hmap"));
     Optional<SourcePath> pchFile = Optional.<SourcePath>of(new PathSourcePath(Paths.get(
         "foo/bar.pch")));
+    appleConfig = new AppleConfig(new FakeBuckConfig(
+        ImmutableMap.<String, Map<String, String>>of("apple",
+            ImmutableMap.of("xcode_developer_dir", "/path/to/somewhere"))));
     return new CompilationDatabase(
         new FakeBuildRuleParamsBuilder(testBuildTarget).build(),
         testSourcePathResolver,
+        appleConfig,
         CompilationDatabase.PlatformFlavor.IOS_SIMULATOR_8,
         testTargetSources,
         frameworks,

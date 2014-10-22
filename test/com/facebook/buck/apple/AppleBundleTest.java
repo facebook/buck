@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -32,7 +33,8 @@ import org.junit.Test;
 public class AppleBundleTest {
 
   private AppleBundleDescription description = new AppleBundleDescription();
-  private AppleLibraryDescription appleLibraryDescription = new AppleLibraryDescription();
+  private AppleLibraryDescription appleLibraryDescription = new AppleLibraryDescription(
+      new AppleConfig(new FakeBuckConfig()));
 
   @Test
   public void getKnownBundleExtension() {

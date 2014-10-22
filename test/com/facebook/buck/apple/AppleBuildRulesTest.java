@@ -21,6 +21,7 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDesc
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -46,7 +47,8 @@ public class AppleBuildRulesTest {
 
   @Before
   public void setUp() throws IOException {
-    appleLibraryDescription = new AppleLibraryDescription();
+    AppleConfig appleConfig = new AppleConfig(new FakeBuckConfig());
+    appleLibraryDescription = new AppleLibraryDescription(appleConfig);
     appleBundleDescription = new AppleBundleDescription();
     appleTestDescription = new AppleTestDescription();
   }

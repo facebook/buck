@@ -25,6 +25,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 public class AppleBinaryDescription implements Description<AppleNativeTargetDescriptionArg> {
   public static final BuildRuleType TYPE = new BuildRuleType("apple_binary");
 
+  @SuppressWarnings("unused") // TODO(mbolin): Use with CompilationDatabase when introduced.
+  private final AppleConfig appleConfig;
+
+  public AppleBinaryDescription(AppleConfig appleConfig) {
+    this.appleConfig = appleConfig;
+  }
+
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;

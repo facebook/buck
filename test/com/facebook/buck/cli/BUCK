@@ -21,6 +21,10 @@ java_library(
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/util:io',
+  ],
+  exported_deps = [
+    # Clients of `new FakeBuckConfig(ImmutableMap)` also need to have
+    # com.facebook.buck.util.environment.Platform on their classpath in order to compile.
     '//src/com/facebook/buck/util/environment:platform',
   ],
   visibility = [

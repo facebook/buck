@@ -24,7 +24,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -54,8 +53,6 @@ public class TestExecutionContext {
         .setPlatform(Platform.detect())
         .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setAppleDeveloperDirectorySupplier(Suppliers.ofInstance(Paths.get(
-            "/Applications/Xcode.app/Contents/Developer")))
         .setObjectMapper(new ObjectMapper());
   }
 

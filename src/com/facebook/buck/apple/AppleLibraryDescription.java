@@ -46,6 +46,13 @@ public class AppleLibraryDescription implements
     }
   };
 
+  @SuppressWarnings("unused") // TODO(mbolin): Use with CompilationDatabase when introduced.
+  private final AppleConfig appleConfig;
+
+  public AppleLibraryDescription(AppleConfig appleConfig) {
+    this.appleConfig = appleConfig;
+  }
+
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
