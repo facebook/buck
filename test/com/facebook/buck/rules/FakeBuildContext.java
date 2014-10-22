@@ -59,7 +59,8 @@ public class FakeBuildContext {
         .build();
 
     return BuildContext.builder()
-        .setStepRunner(new DefaultStepRunner(executionContext, MoreExecutors.sameThreadExecutor()))
+        .setStepRunner(
+            new DefaultStepRunner(executionContext, MoreExecutors.newDirectExecutorService()))
         .setProjectFilesystem(projectFilesystem)
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())

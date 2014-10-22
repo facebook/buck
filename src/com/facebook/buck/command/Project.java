@@ -60,6 +60,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -1094,7 +1095,7 @@ public class Project {
 
     @Override
     public String toString() {
-      return Objects.toStringHelper(SourceFolder.class)
+      return MoreObjects.toStringHelper(SourceFolder.class)
           .add("url", url)
           .add("isTestSource", isTestSource)
           .add("packagePrefix", packagePrefix)
@@ -1125,7 +1126,7 @@ public class Project {
 
     @Override
     public String toString() {
-      return Objects.toStringHelper(SerializablePrebuiltJarRule.class)
+      return MoreObjects.toStringHelper(SerializablePrebuiltJarRule.class)
           .add("name", name)
           .add("binaryJar", binaryJar)
           .add("sourceJar", sourceJar)

@@ -19,6 +19,7 @@ package com.facebook.buck.android.aapt;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -182,7 +183,7 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(RDotTxtEntry.class)
+    return MoreObjects.toStringHelper(RDotTxtEntry.class)
         .add("idType", idType)
         .add("type", type)
         .add("name", name)

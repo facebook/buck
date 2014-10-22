@@ -14,9 +14,8 @@ WARNING_WHITELIST = sets.ImmutableSet(map(
     lambda url: '  [javadoc] javadoc: warning - Error fetching URL: ' + url,
     [
         'http://docs.oracle.com/javase/7/docs/api/package-list',
-        'http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/package-list',
         'https://junit-team.github.io/junit/javadoc/latest/package-list',
-    ]) + ['  [javadoc] 3 warnings'])
+    ]) + ['  [javadoc] 2 warnings'])
 
 
 def main(log_file):

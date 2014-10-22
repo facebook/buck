@@ -23,6 +23,7 @@ import com.facebook.buck.util.hash.AppendingHasher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -76,7 +77,7 @@ public class RuleKey {
     return hashCode;
   }
 
-  /** @return the {@link #toString} of the hash code that underlies this RuleKey. */
+  /** @return the {@code toString()} of the hash code that underlies this RuleKey. */
   @Override
   public String toString() {
     return getHashCode().toString();
@@ -491,7 +492,7 @@ public class RuleKey {
 
       @Override
       public String toString() {
-        return Objects.toStringHelper(this.getClass())
+        return MoreObjects.toStringHelper(this.getClass())
             .add("totalRuleKey", totalRuleKey)
             .add("ruleKeyWithoutDeps", ruleKeyWithoutDeps)
             .toString();

@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -170,7 +171,7 @@ class DependentModule {
   // This is helpful in the event of a unit test failure.
   @Override
   public String toString() {
-    return Objects.toStringHelper(DependentModule.class)
+    return MoreObjects.toStringHelper(DependentModule.class)
         .add("target", target)
         .add("type", type)
         .add("scope", scope)

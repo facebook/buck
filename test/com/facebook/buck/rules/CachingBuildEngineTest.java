@@ -431,7 +431,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expectLastCall().anyTimes();
     return new DefaultStepRunner(
         executionContext,
-        listeningDecorator(MoreExecutors.sameThreadExecutor()));
+        listeningDecorator(MoreExecutors.newDirectExecutorService()));
   }
 
   @Test

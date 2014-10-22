@@ -38,7 +38,7 @@
   <fileset dir="${third-party.dir}/java" id="buck.jars">
     <include name="args4j/args4j-2.0.30.jar" />
     <include name="ddmlib/ddmlib-22.5.3.jar" />
-    <include name="guava/guava-17.0.jar" />
+    <include name="guava/guava-18.0.jar" />
     <include name="ini4j/ini4j-0.5.2.jar" />
     <include name="jackson/jackson-annotations-2.0.5.jar" />
     <include name="jackson/jackson-core-2.0.5.jar" />
@@ -333,7 +333,7 @@
   </target>
 
   <fileset dir="${third-party.dir}/java" id="dx.jars">
-    <include name="guava/guava-17.0.jar" />
+    <include name="guava/guava-18.0.jar" />
   </fileset>
 
   <path id="dx.classpath">
@@ -353,7 +353,7 @@
     </javac>
 
     <jar destfile="${build.dir}/dx.jar">
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-17.0.jar"/>
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-18.0.jar"/>
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/junit/junit-4.11.jar" />
       <fileset dir="${dx.classes.dir}" />
       <manifest>
@@ -619,7 +619,9 @@
         </fileset>
         <fileset dir="${javacc.gensrc.dir}" />
         <link href="http://docs.oracle.com/javase/7/docs/api/" />
-        <link href="http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/" />
+        <link href="http://docs.guava-libraries.googlecode.com/git-history/v18.0/javadoc/"
+              offline="true"
+              packagelistloc="third-party/java/guava"/>
         <!-- The latest version of the javadocs is only for 4.10 -->
         <link href="https://junit-team.github.io/junit/javadoc/latest/" />
         <additional-links />

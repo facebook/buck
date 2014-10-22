@@ -35,6 +35,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -353,7 +354,7 @@ public class CompilationDatabase extends AbstractBuildRule {
     // Useful if CompilationDatabaseTest fails when comparing JsonSerializableDatabaseEntry objects.
     @Override
     public String toString() {
-      return Objects.toStringHelper(this)
+      return MoreObjects.toStringHelper(this)
           .add("directory", directory)
           .add("file", file)
           .add("command", command)

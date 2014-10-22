@@ -25,7 +25,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/aopalliance/aopalliance.jar",
     "third-party/java/args4j/args4j-2.0.30.jar",
     "third-party/java/ddmlib/ddmlib-22.5.3.jar",
-    "third-party/java/guava/guava-17.0.jar",
+    "third-party/java/guava/guava-18.0.jar",
     "third-party/java/guice/guice-3.0.jar",
     "third-party/java/guice/guice-assistedinject-3.0.jar",
     "third-party/java/guice/guice-multibindings-3.0.jar",
