@@ -18,8 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 
@@ -33,6 +33,8 @@ import javax.annotation.Nullable;
 
 public class TargetsCommandOptions extends BuildCommandOptions {
 
+  // TODO(mbolin): Use org.kohsuke.args4j.spi.PathOptionHandler. Currently, we resolve paths
+  // manually, which is likely the path to madness.
   @Option(name = "--referenced_file",
       usage = "The referenced file list, --referenced_file file1 file2  ... fileN --other_option",
       handler = StringSetOptionHandler.class)
@@ -68,6 +70,18 @@ public class TargetsCommandOptions extends BuildCommandOptions {
     return types.get();
   }
 
+  static class ReferencedFiles {
+    final ImmutableSet<Path> relativePathsUnderProjectRoot;
+    final ImmutableSet<Path> absolutePathsOutsideProjectRoot;
+
+    public ReferencedFiles(
+        ImmutableSet<Path> relativePathsUnderProjectRoot,
+        ImmutableSet<Path> absolutePathsOutsideProjectRoot) {
+      this.relativePathsUnderProjectRoot = relativePathsUnderProjectRoot;
+      this.absolutePathsOutsideProjectRoot = absolutePathsOutsideProjectRoot;
+    }
+  }
+
   /**
    * Filter files under the project root, and convert to canonical relative path style.
    * For example, the project root is /project,
@@ -75,26 +89,36 @@ public class TargetsCommandOptions extends BuildCommandOptions {
    *    src/com/facebook/Test.java
    * 2. file path /otherproject/src/com/facebook/Test.java will be ignored.
    */
-  public static ImmutableSet<String> getCanonicalFilesUnderProjectRoot(
+  @VisibleForTesting
+  static ReferencedFiles getCanonicalFilesUnderProjectRoot(
       Path projectRoot, ImmutableSet<String> nonCanonicalFilePaths)
       throws IOException {
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    Path normalizedRoot = projectRoot.normalize();
+    // toRealPath() is used throughout to resolve symlinks or else the Path.startsWith() check will
+    // not be reliable.
+    ImmutableSet.Builder<Path> projectFiles = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> nonProjectFiles = ImmutableSet.builder();
+    Path normalizedRoot = projectRoot.toRealPath();
     for (String filePath : nonCanonicalFilePaths) {
-      Path canonicalFullPath = Paths.get(filePath).toAbsolutePath().normalize();
+      Path canonicalFullPath = Paths.get(filePath);
+      if (!canonicalFullPath.isAbsolute()) {
+        canonicalFullPath = projectRoot.resolve(canonicalFullPath);
+      }
+      canonicalFullPath = canonicalFullPath.toRealPath();
 
       // Ignore files that aren't under project root.
       if (canonicalFullPath.startsWith(normalizedRoot)) {
         Path relativePath = canonicalFullPath.subpath(
             normalizedRoot.getNameCount(),
             canonicalFullPath.getNameCount());
-        builder.add(MorePaths.pathWithUnixSeparators(relativePath));
+        projectFiles.add(relativePath);
+      } else {
+        nonProjectFiles.add(canonicalFullPath);
       }
     }
-    return builder.build();
+    return new ReferencedFiles(projectFiles.build(), nonProjectFiles.build());
   }
 
-  public ImmutableSet<String> getReferencedFiles(Path projectRoot)
+  public ReferencedFiles getReferencedFiles(Path projectRoot)
       throws IOException {
     return getCanonicalFilesUnderProjectRoot(projectRoot, referencedFiles.get());
   }

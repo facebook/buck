@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.cli.TargetsCommandOptions.ReferencedFiles;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
@@ -30,7 +31,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MorePaths;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -38,6 +38,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -123,13 +124,22 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       return 1;
     }
 
-    SortedMap<String, BuildRule> matchingBuildRules = getMatchingBuildRules(
-        graph.getActionGraph(),
-        new TargetsCommandPredicate(
-            graph,
-            buildRuleTypesBuilder.build(),
-            options.getReferencedFiles(getProjectFilesystem().getRootPath()),
-            matchingBuildTargets));
+    ReferencedFiles referencedFiles = options.getReferencedFiles(
+        getProjectFilesystem().getRootPath());
+    SortedMap<String, BuildRule> matchingBuildRules;
+    // If all of the referenced files are paths outside the project root, then print nothing.
+    if (!referencedFiles.absolutePathsOutsideProjectRoot.isEmpty() &&
+        referencedFiles.relativePathsUnderProjectRoot.isEmpty()) {
+      matchingBuildRules = ImmutableSortedMap.of();
+    } else {
+      matchingBuildRules = getMatchingBuildRules(
+          graph.getActionGraph(),
+          new TargetsCommandPredicate(
+              graph,
+              buildRuleTypesBuilder.build(),
+              referencedFiles.relativePathsUnderProjectRoot,
+              matchingBuildTargets));
+    }
 
     // Print out matching targets in alphabetical order.
     if (options.getPrintJson()) {
@@ -353,29 +363,29 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
   static class TargetsCommandPredicate implements Predicate<BuildRule> {
 
-    private ActionGraph graph;
-    private ImmutableSet<BuildRuleType> buildRuleTypes;
+    private final ActionGraph graph;
+    private final ImmutableSet<BuildRuleType> buildRuleTypes;
     @Nullable
     private ImmutableSet<Path> referencedInputs;
-    private Set<Path> basePathOfTargets;
-    private Set<BuildRule> dependentTargets;
-    private Set<BuildTarget> matchingBuildRules;
+    private final Set<Path> basePathOfTargets;
+    private final Set<BuildRule> dependentTargets;
+    private final Set<BuildTarget> matchingBuildRules;
 
     /**
-     * @param referencedPaths All of these paths must be relative to the project root.
+     * @param referencedInputs All of these paths must be relative to the project root.
      */
     public TargetsCommandPredicate(
         PartialGraph partialGraph,
         ImmutableSet<BuildRuleType> buildRuleTypes,
-        ImmutableSet<String> referencedPaths,
+        ImmutableSet<Path> referencedInputs,
         ImmutableSet<BuildTarget> matchingBuildRules) {
       this.graph = partialGraph.getActionGraph();
       this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
       this.matchingBuildRules = Preconditions.checkNotNull(matchingBuildRules);
 
-      Preconditions.checkNotNull(referencedPaths);
-      if (!referencedPaths.isEmpty()) {
-        this.referencedInputs = MorePaths.asPaths(referencedPaths);
+      Preconditions.checkNotNull(referencedInputs);
+      if (!referencedInputs.isEmpty()) {
+        this.referencedInputs = referencedInputs;
         BuildFileTree tree = new InMemoryBuildFileTree(partialGraph.getTargets());
         basePathOfTargets = Sets.newHashSet();
         dependentTargets = Sets.newHashSet();

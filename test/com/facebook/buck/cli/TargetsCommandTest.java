@@ -82,6 +82,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.SortedMap;
@@ -315,11 +316,11 @@ public class TargetsCommandTest {
     PartialGraph graph = createGraphFromBuildRules(ruleResolver, targets);
     ImmutableSet<BuildRuleType> buildRuleTypes = ImmutableSet.of();
 
-    ImmutableSet<String> referencedFiles;
+    ImmutableSet<Path> referencedFiles;
     ImmutableSet<BuildTarget> targetBuildRules = ImmutableSet.of();
 
     // No target depends on the referenced file.
-    referencedFiles = ImmutableSet.of("excludesrc/CannotFind.java");
+    referencedFiles = ImmutableSet.of(Paths.get("excludesrc/CannotFind.java"));
     SortedMap<String, BuildRule> matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getActionGraph(),
@@ -327,7 +328,7 @@ public class TargetsCommandTest {
     assertTrue(matchingBuildRules.isEmpty());
 
     // Only test-android-library target depends on the referenced file.
-    referencedFiles = ImmutableSet.of("javatest/TestJavaLibrary.java");
+    referencedFiles = ImmutableSet.of(Paths.get("javatest/TestJavaLibrary.java"));
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getActionGraph(),
@@ -338,7 +339,7 @@ public class TargetsCommandTest {
 
     // The test-android-library target indirectly depends on the referenced file,
     // while test-java-library target directly depends on the referenced file.
-    referencedFiles = ImmutableSet.of("javasrc/JavaLibrary.java");
+    referencedFiles = ImmutableSet.of(Paths.get("javasrc/JavaLibrary.java"));
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getActionGraph(),
@@ -348,7 +349,7 @@ public class TargetsCommandTest {
         matchingBuildRules.keySet());
 
     // Verify that BUCK files show up as referenced_files.
-    referencedFiles = ImmutableSet.of("javasrc/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    referencedFiles = ImmutableSet.of(Paths.get("javasrc/" + BuckConstant.BUILD_RULES_FILE_NAME));
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getActionGraph(),
@@ -359,7 +360,8 @@ public class TargetsCommandTest {
 
     // Output target only need to depend on one referenced file.
     referencedFiles = ImmutableSet.of(
-        "javatest/TestJavaLibrary.java", "othersrc/CannotFind.java");
+        Paths.get("javatest/TestJavaLibrary.java"),
+        Paths.get("othersrc/CannotFind.java"));
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getActionGraph(),
@@ -374,7 +376,7 @@ public class TargetsCommandTest {
             graph.getActionGraph(),
             new TargetsCommandPredicate(graph,
                 buildRuleTypes,
-                ImmutableSet.<String>of(),
+                /* referencedInputs */ ImmutableSet.<Path>of(),
                 targetBuildRules));
     assertEquals(
         ImmutableSet.of(
@@ -390,7 +392,7 @@ public class TargetsCommandTest {
             new TargetsCommandPredicate(
                 graph,
                 ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE),
-                ImmutableSet.<String>of(),
+                /* referencedInputs */ ImmutableSet.<Path>of(),
                 targetBuildRules));
     assertEquals(
         ImmutableSet.of(
@@ -406,7 +408,7 @@ public class TargetsCommandTest {
             new TargetsCommandPredicate(
                 graph,
                 ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE),
-                ImmutableSet.<String>of(),
+                /* referencedInputs */ ImmutableSet.<Path>of(),
                 ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))));
     assertEquals(
         ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
@@ -418,7 +420,7 @@ public class TargetsCommandTest {
             new TargetsCommandPredicate(
                 graph,
                 ImmutableSet.<BuildRuleType>of(),
-                ImmutableSet.<String>of(),
+                /* referencedInputs */ ImmutableSet.<Path>of(),
                 ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))));
     assertEquals(
         ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
@@ -431,7 +433,7 @@ public class TargetsCommandTest {
             new TargetsCommandPredicate(
                 graph,
                 ImmutableSet.<BuildRuleType>of(),
-                ImmutableSet.of("javatest/TestJavaLibrary.java"),
+                /* referencedInputs */ ImmutableSet.of(Paths.get("javatest/TestJavaLibrary.java")),
                 ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))));
     assertEquals(
         ImmutableSet.<String>of(), matchingBuildRules.keySet());

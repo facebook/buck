@@ -18,8 +18,12 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.TargetsCommandOptions.ReferencedFiles;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableSet;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -28,22 +32,32 @@ import java.nio.file.Paths;
 
 public class TargetsCommandOptionsTest {
 
+  @Rule
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
   @Test
   public void testGetCanonicalFilesUnderProjectRoot() throws IOException {
-    Path projectRoot = Paths.get("").toAbsolutePath().resolve("ProjectRoot");
+    TestDataHelper.createProjectWorkspaceForScenario(this, "target_command_options", tmp).setUp();
 
+    Path projectRoot = tmp.getRootPath();
     ImmutableSet<String> nonCanonicalFilePaths = ImmutableSet.of(
-        "ProjectRoot/src/com/facebook/CanonicalRelativePath.java",
-        "./ProjectRoot/src/com/otherpackage/.././/facebook/NonCanonicalPath.java",
-        projectRoot.normalize() + "/src/com/facebook/AbsolutePath.java",
-        projectRoot.normalize() + "/../PathNotUnderProjectRoot.java");
+        "src/com/facebook/CanonicalRelativePath.txt",
+        "./src/com/otherpackage/.././/facebook/NonCanonicalPath.txt",
+        projectRoot + "/ProjectRoot/src/com/facebook/AbsolutePath.txt",
+        projectRoot + "/ProjectRoot/../PathNotUnderProjectRoot.txt");
 
+    ReferencedFiles referencedFiles = TargetsCommandOptions.getCanonicalFilesUnderProjectRoot(
+        projectRoot.resolve("ProjectRoot"),
+        nonCanonicalFilePaths);
     assertEquals(
         ImmutableSet.of(
-            "src/com/facebook/CanonicalRelativePath.java",
-            "src/com/facebook/NonCanonicalPath.java",
-            "src/com/facebook/AbsolutePath.java"),
-        TargetsCommandOptions.getCanonicalFilesUnderProjectRoot(
-            projectRoot, nonCanonicalFilePaths));
+            Paths.get("src/com/facebook/CanonicalRelativePath.txt"),
+            Paths.get("src/com/facebook/NonCanonicalPath.txt"),
+            Paths.get("src/com/facebook/AbsolutePath.txt")),
+        referencedFiles.relativePathsUnderProjectRoot);
+    assertEquals(
+        ImmutableSet.of(
+            projectRoot.resolve("PathNotUnderProjectRoot.txt").toRealPath()),
+        referencedFiles.absolutePathsOutsideProjectRoot);
   }
 }
