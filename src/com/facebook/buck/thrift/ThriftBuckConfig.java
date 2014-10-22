@@ -19,8 +19,6 @@ package com.facebook.buck.thrift;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class ThriftBuckConfig {
@@ -29,24 +27,6 @@ public class ThriftBuckConfig {
 
   public ThriftBuckConfig(BuckConfig delegate) {
     this.delegate = Preconditions.checkNotNull(delegate);
-  }
-
-  private Optional<BuildTarget> getBuildTarget(String section, String field) {
-    Optional<String> target = delegate.getValue(section, field);
-    return target.isPresent() ?
-        Optional.of(delegate.getBuildTargetForFullyQualifiedTarget(target.get())) :
-        Optional.<BuildTarget>absent();
-  }
-
-  private BuildTarget getRequiredBuildTarget(String section, String field) {
-    Optional<BuildTarget> target = getBuildTarget(section, field);
-    if (!target.isPresent()) {
-      throw new HumanReadableException(String.format(
-          ".buckconfig: %s:%s must be set",
-          section,
-          field));
-    }
-    return target.get();
   }
 
   /**
@@ -58,39 +38,39 @@ public class ThriftBuckConfig {
   }
 
   public BuildTarget getJavaDep() {
-    return getRequiredBuildTarget("thrift", "java_library");
+    return delegate.getRequiredBuildTarget("thrift", "java_library");
   }
 
   public BuildTarget getCppDep() {
-    return getRequiredBuildTarget("thrift", "cpp_library");
+    return delegate.getRequiredBuildTarget("thrift", "cpp_library");
   }
 
   public BuildTarget getCpp2Dep() {
-    return getRequiredBuildTarget("thrift", "cpp2_library");
+    return delegate.getRequiredBuildTarget("thrift", "cpp2_library");
   }
 
   public BuildTarget getCppAyncDep() {
-    return getRequiredBuildTarget("thrift", "cpp_async_library");
+    return delegate.getRequiredBuildTarget("thrift", "cpp_async_library");
   }
 
   public BuildTarget getCppReflectionDep() {
-    return getRequiredBuildTarget("thrift", "cpp_reflection_library");
+    return delegate.getRequiredBuildTarget("thrift", "cpp_reflection_library");
   }
 
   public BuildTarget getCppFrozenDep() {
-    return getRequiredBuildTarget("thrift", "cpp_frozen_library");
+    return delegate.getRequiredBuildTarget("thrift", "cpp_frozen_library");
   }
 
   public BuildTarget getCppJsonDep() {
-    return getRequiredBuildTarget("thrift", "cpp_json_library");
+    return delegate.getRequiredBuildTarget("thrift", "cpp_json_library");
   }
 
   public BuildTarget getPythonDep() {
-    return getRequiredBuildTarget("thrift", "python_library");
+    return delegate.getRequiredBuildTarget("thrift", "python_library");
   }
 
   public BuildTarget getPythonTwistedDep() {
-    return getRequiredBuildTarget("thrift", "python_twisted_library");
+    return delegate.getRequiredBuildTarget("thrift", "python_twisted_library");
   }
 
 }
