@@ -18,14 +18,14 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 
-public class AndroidLibraryBuilder extends AbstractBuilder<AndroidLibraryDescription.Arg> {
+public class AndroidLibraryBuilder extends AbstractBuildRuleBuilder<AndroidLibraryDescription.Arg> {
 
   private AndroidLibraryBuilder(BuildTarget target) {
     super(new AndroidLibraryDescription(JavaCompilerEnvironment.DEFAULT), target);

@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nullable;
 
-public class ProjectConfigBuilder extends AbstractBuilder<ProjectConfigDescription.Arg> {
+public class ProjectConfigBuilder extends AbstractBuildRuleBuilder<ProjectConfigDescription.Arg> {
 
   private ProjectConfigBuilder(BuildTarget target) {
     super(new ProjectConfigDescription(), target);
