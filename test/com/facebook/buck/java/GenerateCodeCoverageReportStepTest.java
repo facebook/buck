@@ -74,7 +74,8 @@ public class GenerateCodeCoverageReportStepTest {
                 new File(".").getAbsoluteFile().toPath().normalize(),
                 "root/parentDirectory/classes")),
         String.format("-Dsrc.dir=%s", "src"),
-        "-jar", "buck-out/gen/src/com/facebook/buck/java/report-generator.jar");
+        "-jar", GenerateCodeCoverageReportStep.BUCK_HOME +
+            "/buck-out/gen/src/com/facebook/buck/java/report-generator.jar");
 
     List<String> expectedShellCommand = shellCommandBuilder.build();
 

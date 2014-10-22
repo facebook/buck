@@ -32,9 +32,8 @@ import java.util.Set;
 public class GenerateCodeCoverageReportStep extends ShellStep {
 
   @VisibleForTesting
-  static final String PATH_TO_ASM_JAR = System.getProperty(
-      "buck.path_to_asm_jar",
-      "third-party/java/asm/asm-debug-all-4.1.jar");
+  static final String BUCK_HOME =
+      System.getProperty("buck.buck_dir", System.getProperty("user.dir"));
 
   private final Set<Path> classesDirectories;
   private final Path outputDirectory;
@@ -73,7 +72,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
 
     // Generate report from JaCoCo exec file using 'ReportGenerator.java'
 
-    args.add("-jar", "buck-out/gen/src/com/facebook/buck/java/report-generator.jar");
+    args.add("-jar", BUCK_HOME + "/buck-out/gen/src/com/facebook/buck/java/report-generator.jar");
 
     return args.build();
   }
