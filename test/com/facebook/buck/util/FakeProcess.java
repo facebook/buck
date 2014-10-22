@@ -93,14 +93,14 @@ public class FakeProcess extends Process {
   }
 
   /**
-   * Returns true if {@link destroy()} was called on this object, false otherwise.
+   * Returns true if {@link #destroy()} was called on this object, false otherwise.
    */
   public boolean isDestroyed() {
     return isDestroyed;
   }
 
   /**
-   * Returns true if {@link waitFor()} was called on this object, false otherwise.
+   * Returns true if {@link #waitFor()} was called on this object, false otherwise.
    */
   public boolean isWaitedFor() {
     return isWaitedFor;
