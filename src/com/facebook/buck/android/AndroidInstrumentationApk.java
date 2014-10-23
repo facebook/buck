@@ -17,11 +17,13 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -70,9 +72,11 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),
         /* exopackage */ false,
-        apkUnderTest.getPreprocessJavaClassesDeps(),
+        // preprocessJavaClassDeps is not supported in instrumentation
+        ImmutableSet.<BuildRule>of(),
         apkUnderTest.getMacroExpander(),
-        apkUnderTest.getPreprocessJavaClassesBash(),
+        // preprocessJavaClassBash is not supported in instrumentation
+        Optional.<String>absent(),
         rulesToExcludeFromDex,
         enhancementResult);
   }

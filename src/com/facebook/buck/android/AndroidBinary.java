@@ -298,16 +298,8 @@ public class AndroidBinary extends AbstractBuildRule implements
     return enhancementResult.getFilteredResourcesProvider();
   }
 
-  public ImmutableSortedSet<BuildRule> getPreprocessJavaClassesDeps() {
-    return preprocessJavaClassesDeps;
-  }
-
   public Function<String, String> getMacroExpander() {
     return macroExpander;
-  }
-
-  public Optional<String> getPreprocessJavaClassesBash() {
-    return preprocessJavaClassesBash;
   }
 
   ProGuardObfuscateStep.SdkProguardType getSdkProguardConfig() {
