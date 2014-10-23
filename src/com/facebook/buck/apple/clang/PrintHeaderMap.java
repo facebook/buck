@@ -17,29 +17,12 @@
 package com.facebook.buck.apple.clang;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.FileSystems;
 
 public final class PrintHeaderMap {
 
-  private PrintHeaderMap() {
-  }
-
-  private static void process(File file) throws IOException {
-    try (FileInputStream inputStream = new FileInputStream(file)) {
-      FileChannel fileChannel = inputStream.getChannel();
-      ByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, file.length());
-
-      HeaderMap map = HeaderMap.deserialize(buffer);
-      if (map == null) {
-        throw new IOException("Error while parsing header map " + file.toString());
-      }
-      map.print(System.out);
-    }
-  }
+  private PrintHeaderMap() {}
 
   public static void main(String[] args) {
     if (args.length < 1) {
@@ -48,7 +31,9 @@ public final class PrintHeaderMap {
     }
     try {
       for (int i = 0; i < args.length; i++) {
-        process(FileSystems.getDefault().getPath(args[i]).toFile());
+        File file = FileSystems.getDefault().getPath(args[i]).toFile();
+        HeaderMap map = HeaderMap.loadFromFile(file);
+        map.print(System.out);
       }
     } catch (IOException e) {
       System.err.println(e.toString());

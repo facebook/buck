@@ -22,9 +22,12 @@ import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -207,6 +210,20 @@ public class HeaderMap {
     } else {
       return null;
     }
+  }
+
+  public static HeaderMap loadFromFile(File hmapFile) throws IOException {
+    HeaderMap map;
+    try (FileInputStream inputStream = new FileInputStream(hmapFile)) {
+      FileChannel fileChannel = inputStream.getChannel();
+      ByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, hmapFile.length());
+
+      map = HeaderMap.deserialize(buffer);
+      if (map == null) {
+        throw new IOException("Error while parsing header map " + hmapFile.toString());
+      }
+    }
+    return map;
   }
 
   private boolean processBytes(byte[] bytes) {
