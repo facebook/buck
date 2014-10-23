@@ -17,11 +17,11 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class JavaBinaryRuleBuilder extends AbstractBuildRuleBuilder<JavaBinaryDescription.Args> {
+public class JavaBinaryRuleBuilder extends AbstractNodeBuilder<JavaBinaryDescription.Args> {
 
   public JavaBinaryRuleBuilder(BuildTarget target) {
     super(new JavaBinaryDescription(), target);

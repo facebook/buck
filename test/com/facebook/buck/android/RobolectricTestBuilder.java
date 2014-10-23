@@ -18,13 +18,13 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 
 import java.nio.file.Path;
 
 public class RobolectricTestBuilder
-    extends AbstractBuildRuleBuilder<RobolectricTestDescription.Arg> {
+    extends AbstractNodeBuilder<RobolectricTestDescription.Arg> {
 
   private RobolectricTestBuilder(BuildTarget target) {
     super(new RobolectricTestDescription(JavaCompilerEnvironment.DEFAULT), target);

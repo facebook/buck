@@ -1,7 +1,7 @@
 java_library(
   name = 'testutil',
   srcs = [
-    'AbstractBuildRuleBuilder.java',
+    'AbstractNodeBuilder.java',
     'BuildRuleParamsFactory.java',
     'DefaultKnownBuildRuleTypes.java',
     'FakeBuildableContext.java',

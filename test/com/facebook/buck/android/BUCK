@@ -18,10 +18,12 @@ java_library(
     '//src/com/facebook/buck/rules/macros:macros',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:io',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/testutil:testutil',
   ],
   visibility = [
     'PUBLIC',

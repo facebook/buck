@@ -17,11 +17,11 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 
 import java.nio.file.Path;
 
-public class KeystoreBuilder extends AbstractBuildRuleBuilder<KeystoreDescription.Arg> {
+public class KeystoreBuilder extends AbstractNodeBuilder<KeystoreDescription.Arg> {
 
   private KeystoreBuilder(BuildTarget target) {
     super(new KeystoreDescription(), target);

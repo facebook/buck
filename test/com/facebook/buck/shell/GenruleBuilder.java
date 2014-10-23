@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import javax.annotation.Nullable;
 
-public class GenruleBuilder extends AbstractBuildRuleBuilder<GenruleDescription.Arg> {
+public class GenruleBuilder extends AbstractNodeBuilder<GenruleDescription.Arg> {
   private GenruleBuilder(BuildTarget target) {
     super(new GenruleDescription(), target);
   }

@@ -22,7 +22,7 @@ import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.List;
 import java.util.Set;
 
-public class AndroidBinaryBuilder extends AbstractBuildRuleBuilder<AndroidBinaryDescription.Arg> {
+public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescription.Arg> {
 
   private AndroidBinaryBuilder(BuildTarget target) {
     super(

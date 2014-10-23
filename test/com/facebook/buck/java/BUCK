@@ -27,6 +27,7 @@ java_library(
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
     '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/testutil:testutil',
   ],
   visibility = [
     '//test/...',

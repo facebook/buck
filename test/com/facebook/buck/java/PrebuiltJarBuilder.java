@@ -17,12 +17,12 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 
 import java.nio.file.Path;
 
-public class PrebuiltJarBuilder extends AbstractBuildRuleBuilder<PrebuiltJarDescription.Arg> {
+public class PrebuiltJarBuilder extends AbstractNodeBuilder<PrebuiltJarDescription.Arg> {
 
   private PrebuiltJarBuilder(BuildTarget target) {
     super(new PrebuiltJarDescription(), target);

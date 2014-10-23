@@ -17,14 +17,14 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 
-public class JavaLibraryBuilder extends AbstractBuildRuleBuilder<JavaLibraryDescription.Arg> {
+public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescription.Arg> {
 
   protected JavaLibraryBuilder(BuildTarget target) {
     super(new JavaLibraryDescription(JavaCompilerEnvironment.DEFAULT), target);

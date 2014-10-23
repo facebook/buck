@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -26,7 +26,7 @@ import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 public class PrebuiltNativeLibraryBuilder
-    extends AbstractBuildRuleBuilder<PrebuiltNativeLibraryDescription.Arg> {
+    extends AbstractNodeBuilder<PrebuiltNativeLibraryDescription.Arg> {
 
   private PrebuiltNativeLibraryBuilder(BuildTarget target) {
     super(new PrebuiltNativeLibraryDescription(), target);

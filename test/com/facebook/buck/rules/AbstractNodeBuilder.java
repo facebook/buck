@@ -17,34 +17,40 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.lang.reflect.Field;
-import java.nio.file.Paths;
 
 /**
- * Support class for writing builders, which can create {@link BuildRule} instances at test time. It
- * does this by mirroring the behavior seen when running the actual parser as closely as possible.
+ * Support class for writing builders for nodes of a {@link com.facebook.buck.parser.TargetGraph}
+ * and {@link ActionGraph} ({@link TargetNode} and {@link BuildRule} respectively) mirroring the
+ * behavior seen when running the actual parser as closely as possible.
  */
-public abstract class AbstractBuildRuleBuilder<A> {
-
-  private final Description<A> description;
-  private final BuildTarget target;
+public abstract class AbstractNodeBuilder<A> {
+  protected final Description<A> description;
+  protected final BuildRuleFactoryParams factoryParams;
+  protected final BuildTarget target;
   protected final A arg;
 
-  protected AbstractBuildRuleBuilder(Description<A> description, BuildTarget target) {
-    this.description = Preconditions.checkNotNull(description);
-    this.target = Preconditions.checkNotNull(target);
+  protected AbstractNodeBuilder(
+      Description<A> description,
+      BuildTarget target) {
+    this.description = description;
+    this.factoryParams = NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
+        new BuildTargetParser(),
+        target);
+    this.target = target;
     this.arg = description.createUnpopulatedConstructorArg();
-    populateWithDefaultValues(this.arg, this.target);
+    populateWithDefaultValues(this.arg);
   }
 
   public final BuildRule build(BuildRuleResolver resolver) {
@@ -58,6 +64,19 @@ public abstract class AbstractBuildRuleBuilder<A> {
     BuildRule rule = description.createBuildRule(params, resolver, arg);
     resolver.addToIndex(rule);
     return rule;
+  }
+
+  public final TargetNode<A> build() {
+    try {
+      return new TargetNode<>(
+          description,
+          arg,
+          factoryParams,
+          /* declaredDeps */ ImmutableSet.<BuildTarget>of(),
+          ImmutableSet.<BuildTargetPattern>of());
+    } catch (NoSuchBuildTargetException e) {
+      throw Throwables.propagate(e);
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -109,15 +128,10 @@ public abstract class AbstractBuildRuleBuilder<A> {
     return Optional.of(toReturn.build());
   }
 
-  private void populateWithDefaultValues(A arg, BuildTarget target) {
-    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
-    BuildRuleFactoryParams factoryParams = NonCheckingBuildRuleFactoryParams
-        .createNonCheckingBuildRuleFactoryParams(
-            new BuildTargetParser(),
-            target);
+  private void populateWithDefaultValues(A arg) {
     try {
       new ConstructorArgMarshaller().populate(
-          filesystem,
+          new FakeProjectFilesystem(),
           factoryParams,
           arg,
           ImmutableSet.<BuildTarget>builder(),
@@ -127,4 +141,5 @@ public abstract class AbstractBuildRuleBuilder<A> {
       throw Throwables.propagate(error);
     }
   }
+
 }
