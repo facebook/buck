@@ -61,6 +61,20 @@ ALL_MODULES_XML_END = """
 </project>
 """
 
+AAR_XML_START = """<component name="libraryTable">
+  <library name="%(name)s">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/%(binary_jar)s!/" />"""
+
+AAR_XML_RESOURCE = """
+      <root url="file://$PROJECT_DIR$/%(resource_path)s/" />"""
+
+AAR_XML_END = """
+    </CLASSES>
+  </library>
+</component>
+"""
+
 LIBRARY_XML_START = """<component name="libraryTable">
   <library name="%(name)s">
     <CLASSES>
@@ -439,6 +453,27 @@ def write_misc_file(java_settings):
   }
   write_file_if_changed('.idea/misc.xml', xml)
 
+def write_aars(aars):
+  """Writes an XML file to define each prebuilt aar."""
+  mkdir_p('.idea/libraries')
+  for aar in aars:
+    # Build up the XML.
+    name = aar['name']
+    xml = AAR_XML_START % {
+      'name': name,
+      'binary_jar': aar['jar'],
+      }
+
+    if 'res' in aar:
+      xml += AAR_XML_RESOURCE % {'resource_path' : aar['res']}
+    if 'assets' in aar:
+      xml += AAR_XML_RESOURCE % {'resource_path' : aar['assets']}
+
+    xml += AAR_XML_END
+
+    # Write the library to a file
+    write_file_if_changed('.idea/libraries/%s.xml' % name, xml)
+
 def write_libraries(libraries):
     """Writes an XML file to define each library."""
     mkdir_p('.idea/libraries')
@@ -539,6 +574,9 @@ if __name__ == '__main__':
 
     libraries = parsed_json['libraries']
     write_libraries(libraries)
+
+    aars = parsed_json['aars']
+    write_aars(aars)
 
     modules = parsed_json['modules']
     write_modules(modules, generate_minimum_project, android_auto_generation_disabled)

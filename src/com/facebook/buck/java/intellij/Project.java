@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java.intellij;
 
+import static com.facebook.buck.cli.json.SerializableAndroidAAR.newSerializableAndroidAAR;
 import static com.facebook.buck.cli.json.SerializableProjectJavaSettings.newSerializableJavaProjectSettings;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
@@ -25,6 +26,8 @@ import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidPackageableCollection;
+import com.facebook.buck.android.AndroidPrebuiltAARCollection;
+import com.facebook.buck.android.AndroidPrebuiltAar;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.android.NdkLibrary;
@@ -33,6 +36,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.cli.AndroidBuckConfig;
 import com.facebook.buck.cli.JavaProjectBuckConfig;
+import com.facebook.buck.cli.json.SerializableAndroidAAR;
 import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaPackageFinder;
@@ -133,6 +137,7 @@ public class Project {
   private final Optional<String> pathToDefaultAndroidManifest;
   private final Optional<String> pathToPostProcessScript;
   private final Set<BuildRule> libraryJars;
+  private final AndroidPrebuiltAARCollection androidAars;
   private final String pythonInterpreter;
   private final ObjectMapper objectMapper;
   private final boolean turnOffAutoSourceGeneration;
@@ -166,6 +171,7 @@ public class Project {
     this.pathToDefaultAndroidManifest = pathToDefaultAndroidManifest;
     this.pathToPostProcessScript = pathToPostProcessScript;
     this.libraryJars = Sets.newHashSet();
+    this.androidAars = new AndroidPrebuiltAARCollection();
     this.pythonInterpreter = pythonInterpreter;
     this.objectMapper = objectMapper;
     this.defaultAndroidConfig = defaultAndroidConfig;
@@ -788,20 +794,34 @@ public class Project {
         }
 
         DependentModule dependentModule;
-        if (dep instanceof PrebuiltJar) {
+
+        if(androidAars.contains(dep)) {
+          AndroidPrebuiltAar aar = androidAars.getParentAAR(dep);
+          dependentModule = DependentModule.newLibrary(aar.getBuildTarget(), getIntellijNameForAAR(aar));
+          depsToVisit = ImmutableSet.of();
+        } else if (dep instanceof PrebuiltJar) {
           libraryJars.add(dep);
           String libraryName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
+        } else if (dep instanceof AndroidPrebuiltAar) {
+          androidAars.add((AndroidPrebuiltAar) dep);
+          String libraryName = getIntellijNameForAAR(dep);
+          dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
+          depsToVisit = ImmutableSet.of();
         } else if (dep instanceof NdkLibrary) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
           return depsToVisit;
         } else if ((dep instanceof JavaLibrary) ||
-                   dep instanceof AndroidResource) {
+            dep instanceof AndroidResource) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else {
+          return depsToVisit;
+        }
+
+        if(librariesToAdd.contains(dependentModule) || modulesToAdd.contains(dependentModule)) {
           return depsToVisit;
         }
 
@@ -919,9 +939,19 @@ public class Project {
       libraries.add(new SerializablePrebuiltJarRule(name, binaryJar, sourceJar, javadocUrl));
     }
 
+    List<SerializableAndroidAAR> aars = Lists.newArrayListWithCapacity(
+        androidAars.size());
+    for (BuildRule aar : androidAars) {
+      Preconditions.checkState(aar instanceof AndroidPrebuiltAar);
+      AndroidPrebuiltAar preBuiltAAR = (AndroidPrebuiltAar) aar;
+      String name = getIntellijNameForAAR(preBuiltAAR);
+      aars.add(newSerializableAndroidAAR(name, preBuiltAAR));
+    }
+
     Map<String, Object> config = ImmutableMap.<String, Object>of(
         "modules", modules,
         "libraries", libraries,
+        "aars", aars,
         "java", newSerializableJavaProjectSettings(javaConfig));
 
     // Write out the JSON config to be consumed by the Python.
@@ -933,6 +963,10 @@ public class Project {
         objectMapper.writeValue(writer, config);
       }
     }
+  }
+
+  private String getIntellijNameForAAR(BuildRule aar) {
+    return getIntellijNameForBinaryJar(aar.getFullyQualifiedName()).replaceAll(":", "_");
   }
 
   private ExitCodeAndOutput processJsonConfig(File jsonTempFile, boolean generateMinimalProject)
