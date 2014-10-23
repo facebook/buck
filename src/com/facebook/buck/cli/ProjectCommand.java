@@ -38,6 +38,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.TargetGraph;
+import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -598,21 +599,22 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       BuildRuleResolver resolver,
       boolean enableProfiling)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    ImmutableSet<BuildTarget> allTargets = parser.filterAllTargetsInProject(
-        filesystem,
-        includes,
-        Predicates.<TargetNode<?>>alwaysTrue(),
-        console,
-        environment,
-        eventBus,
-        enableProfiling);
 
     TargetGraph fullGraph = parser.buildTargetGraph(
-        allTargets,
+        ImmutableList.of(
+            new TargetNodePredicateSpec(
+                Predicates.<TargetNode<?>>alwaysTrue(),
+                filesystem.getIgnorePaths())),
         includes,
         eventBus,
         console,
-        environment);
+        environment,
+        enableProfiling);
+
+    ImmutableSet<BuildTarget> allTargets =
+        FluentIterable.from(fullGraph.getNodes())
+            .transform(HasBuildTarget.TO_TARGET)
+            .toSet();
 
     ImmutableSet<BuildTarget> roots;
     if (rootsOptional.isPresent()) {
