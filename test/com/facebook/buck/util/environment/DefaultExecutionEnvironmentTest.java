@@ -17,7 +17,7 @@ package com.facebook.buck.util.environment;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.FakeProcessExecutor;
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 

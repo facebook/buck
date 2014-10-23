@@ -9,7 +9,6 @@ java_library(
     'FakeBuildRule.java',
     'FakeBuildRuleParamsBuilder.java',
     'FakeOnDiskBuildInfo.java',
-    'FakeProcessExecutor.java',
     'FakeRepositoryFactory.java',
     'FakeRuleKeyBuilderFactory.java',
     'FakeTestRule.java',

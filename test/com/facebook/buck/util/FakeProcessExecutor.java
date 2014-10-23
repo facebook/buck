@@ -14,14 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.util;
 
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.FakeProcess;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
