@@ -18,11 +18,13 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -36,8 +38,10 @@ public class AppleLibraryDescription implements
   public static final Flavor DYNAMIC_LIBRARY = new Flavor("dynamic");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+      CompilationDatabase.COMPILATION_DATABASE,
       Flavor.DEFAULT,
-      DYNAMIC_LIBRARY);
+      DYNAMIC_LIBRARY,
+      AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS);
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
     @Override
@@ -46,7 +50,6 @@ public class AppleLibraryDescription implements
     }
   };
 
-  @SuppressWarnings("unused") // TODO(mbolin): Use with CompilationDatabase when introduced.
   private final AppleConfig appleConfig;
 
   public AppleLibraryDescription(AppleConfig appleConfig) {
@@ -69,16 +72,40 @@ public class AppleLibraryDescription implements
   }
 
   @Override
-  public <A extends AppleNativeTargetDescriptionArg> AppleLibrary createBuildRule(
+  public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    TargetSources targetSources = TargetSources.ofAppleSources(pathResolver, args.srcs.get());
+    Optional<BuildRule> flavoredRule = AbstractAppleNativeTargetBuildRuleDescriptions
+        .createFlavoredRule(
+            params,
+            resolver,
+            args,
+            appleConfig,
+            pathResolver,
+            targetSources);
+    if (flavoredRule.isPresent()) {
+      return flavoredRule.get();
+    }
+
+    // When creating an unflavored AppleLibrary, ensure that the #headers flavor is created, as
+    // well.
+    BuildRule headersRule = AbstractAppleNativeTargetBuildRuleDescriptions
+        .createHeadersFlavorIfNotAlreadyPresent(params, resolver, args);
+    if (params.getBuildTarget().getFlavors().contains(
+        AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS)) {
+      return headersRule;
+    } else if (!resolver.getRuleOptional(headersRule.getBuildTarget()).isPresent()) {
+      resolver.addToIndex(headersRule);
+    }
+
     return new AppleLibrary(
         params,
         pathResolver,
         args,
-        TargetSources.ofAppleSources(pathResolver, args.srcs.get()),
+        targetSources,
         params.getBuildTarget().getFlavors().contains(DYNAMIC_LIBRARY));
   }
 }

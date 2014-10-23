@@ -32,6 +32,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -48,7 +49,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -73,6 +74,10 @@ public class CompilationDatabase extends AbstractBuildRule {
 
     PlatformFlavor(String sdkPath) {
       this.sdkPath = Paths.get(Preconditions.checkNotNull(sdkPath));
+    }
+
+    Path getSdkPath() {
+      return sdkPath;
     }
   }
 
@@ -303,7 +308,9 @@ public class CompilationDatabase extends AbstractBuildRule {
         ExecutionContext context) {
       ObjectMapper mapper = new ObjectMapper();
       try {
-        mapper.writeValue(Files.newOutputStream(getPathToOutputFile()), entries);
+        OutputStream outputStream = context.getProjectFilesystem().newFileOutputStream(
+            getPathToOutputFile());
+        mapper.writeValue(outputStream, entries);
       } catch (IOException e) {
         logError(e, context);
         return 1;
@@ -322,11 +329,15 @@ public class CompilationDatabase extends AbstractBuildRule {
   }
 
   @VisibleForTesting
+  @SuppressFieldNotInitialized
   static class JsonSerializableDatabaseEntry {
 
-    public final String directory;
-    public final String file;
-    public final String command;
+    public String directory;
+    public String file;
+    public String command;
+
+    /** Empty constructor will be used by Jackson. */
+    public JsonSerializableDatabaseEntry() {}
 
     public JsonSerializableDatabaseEntry(String directory, String file, String command) {
       this.directory = directory;

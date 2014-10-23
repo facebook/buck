@@ -1,0 +1,29 @@
+apple_binary(
+  name = 'Weather',
+  srcs = [
+    'Weather/EXViewController.h',
+    'Weather/EXViewController.m',
+    'Weather/main.m',
+  ],
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+  ],
+  deps = [
+    '//Libraries/EXExample:EXExample',
+  ],
+)
+
+xcode_project_config(
+  name = 'project',
+  project_name = 'Weather',
+  rules = [
+    ':Weather',
+  ],
+)
+
+xcode_workspace_config(
+  name = 'workspace',
+  src_target = ':Weather',
+  action_config_names={'profile': 'Profile'}
+)

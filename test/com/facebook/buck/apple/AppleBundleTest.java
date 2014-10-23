@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -44,7 +45,7 @@ public class AppleBundleTest {
         createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build()).build();
-    AppleLibrary library = resolver.addToIndex(
+    BuildRule library = resolver.addToIndex(
         appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg));
 
     AppleBundleDescription.Arg arg = description.createUnpopulatedConstructorArg();
@@ -71,7 +72,7 @@ public class AppleBundleTest {
         createDescriptionArgWithDefaults(appleLibraryDescription);
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build()).build();
-    AppleLibrary library = resolver.addToIndex(
+    BuildRule library = resolver.addToIndex(
         appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg));
 
     AppleBundleDescription.Arg arg = description.createUnpopulatedConstructorArg();

@@ -115,7 +115,7 @@ public class AppleBuildRulesTest {
             .build();
     AppleNativeTargetDescriptionArg arg =
         createDescriptionArgWithDefaults(appleLibraryDescription);
-    AppleLibrary libraryRule =
+    BuildRule libraryRule =
         appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
     assertFalse(AppleBuildRules.isXcodeTargetTestBuildRule(libraryRule));

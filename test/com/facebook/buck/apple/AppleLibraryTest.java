@@ -17,9 +17,11 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -58,13 +60,15 @@ public class AppleLibraryTest {
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "foo").build()).build();
-    AppleLibrary buildable = description.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildRule buildRule = description.createBuildRule(params, new BuildRuleResolver(), arg);
 
+    assertTrue(buildRule instanceof AppleLibrary);
+    AppleLibrary appleLibrary = (AppleLibrary) buildRule;
     MoreAsserts.assertIterablesEquals(
         ImmutableList.of(
             Paths.get("some_header.h"),
             Paths.get("some_source.m")),
-        buildable.getInputsToCompareToOutput());
+        appleLibrary.getInputsToCompareToOutput());
   }
 
   @Test
@@ -83,8 +87,8 @@ public class AppleLibraryTest {
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
         .build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    AppleLibrary buildable = description.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildRule buildRule = description.createBuildRule(params, new BuildRuleResolver(), arg);
 
-    assertEquals(Paths.get("buck-out/bin/foo/#dynamic/foo.dylib"), buildable.getPathToOutputFile());
+    assertEquals(Paths.get("buck-out/bin/foo/#dynamic/foo.dylib"), buildRule.getPathToOutputFile());
   }
 }

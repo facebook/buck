@@ -1,0 +1,5 @@
+[project]
+  ide = xcode
+
+[apple]
+  xcode_developer_dir = /path/to/devloper/dir

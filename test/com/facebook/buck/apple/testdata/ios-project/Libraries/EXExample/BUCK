@@ -1,0 +1,23 @@
+apple_library(
+  name = 'EXExample',
+  srcs = [
+    ('EXExample/EXExampleModel.h', 'public'),
+    'EXExample/EXExampleModel.m',
+    'EXExample/Categories/NSString+Palindrome.h',
+    'EXExample/Categories/NSString+Palindrome.m',
+  ],
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+xcode_project_config(
+  name = 'project',
+  project_name = 'EXExample',
+  rules = [
+    ':EXExample',
+  ],
+)

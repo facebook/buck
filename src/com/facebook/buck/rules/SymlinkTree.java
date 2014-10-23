@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -65,6 +66,14 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(root),
         new SymlinkTreeStep(root, resolveLinks()));
+  }
+
+  /**
+   * @return The root of the symlinks directory or {@link Optional#absent()} if there were no
+   *     files to symlink.
+   */
+  public Optional<Path> getRootOfSymlinksDirectory() {
+    return links.isEmpty() ? Optional.<Path>absent() : Optional.of(root);
   }
 
   // Put the link map into the rule key, as if it changes at all, we need to

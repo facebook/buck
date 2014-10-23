@@ -1,0 +1,1 @@
+#import "NSString+Palindrome.h"

@@ -16,16 +16,37 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
 
-public class AppleBinaryDescription implements Description<AppleNativeTargetDescriptionArg> {
+import java.util.Set;
+
+public class AppleBinaryDescription
+    implements Description<AppleNativeTargetDescriptionArg>, Flavored {
   public static final BuildRuleType TYPE = new BuildRuleType("apple_binary");
 
-  @SuppressWarnings("unused") // TODO(mbolin): Use with CompilationDatabase when introduced.
+  private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+      CompilationDatabase.COMPILATION_DATABASE,
+      Flavor.DEFAULT,
+      AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS);
+
+  private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
+    @Override
+    public boolean apply(Flavor flavor) {
+      return SUPPORTED_FLAVORS.contains(flavor);
+    }
+  };
+
   private final AppleConfig appleConfig;
 
   public AppleBinaryDescription(AppleConfig appleConfig) {
@@ -43,15 +64,44 @@ public class AppleBinaryDescription implements Description<AppleNativeTargetDesc
   }
 
   @Override
-  public <A extends AppleNativeTargetDescriptionArg> AppleBinary createBuildRule(
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR);
+  }
+
+  @Override
+  public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    TargetSources targetSources = TargetSources.ofAppleSources(pathResolver, args.srcs.get());
+    Optional<BuildRule> flavoredRule = AbstractAppleNativeTargetBuildRuleDescriptions
+        .createFlavoredRule(
+            params,
+            resolver,
+            args,
+            appleConfig,
+            pathResolver,
+            targetSources);
+    if (flavoredRule.isPresent()) {
+      return flavoredRule.get();
+    }
+
+    // When creating an unflavored AppleBinary, ensure that the #headers flavor is created, as
+    // well.
+    BuildRule headersRule = AbstractAppleNativeTargetBuildRuleDescriptions
+        .createHeadersFlavorIfNotAlreadyPresent(params, resolver, args);
+    if (params.getBuildTarget().getFlavors().contains(
+        AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS)) {
+      return headersRule;
+    } else if (!resolver.getRuleOptional(headersRule.getBuildTarget()).isPresent()) {
+      resolver.addToIndex(headersRule);
+    }
+
     return new AppleBinary(
         params,
         pathResolver,
         args,
-        TargetSources.ofAppleSources(pathResolver, args.srcs.get()));
+        targetSources);
   }
 }

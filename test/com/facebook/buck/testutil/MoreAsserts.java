@@ -126,7 +126,7 @@ public final class MoreAsserts {
     while (expectedIter.hasNext()) {
       if (!observedIter.hasNext()) {
         fail(prefixWithUserMessage(userMessage, "Item " + index + " does not exist in the " +
-            "observed list"));
+            "observed list: " + expectedIter.next()));
       }
       Object expectedItem = expectedIter.next();
       Object observedItem = observedIter.next();
