@@ -532,15 +532,6 @@ public class ProjectGenerator {
     }
   }
 
-  private void setNativeTargetGid(
-      PBXNativeTarget target,
-      AbstractAppleNativeTargetBuildRule buildable) {
-    Optional<String> buildableGid = buildable.getGid();
-    if (buildableGid.isPresent()) {
-      target.setGlobalID(buildableGid.get());
-    }
-  }
-
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       Optional<AppleBundle> bundle,
@@ -555,10 +546,20 @@ public class ProjectGenerator {
     BuildTarget buildTarget = bundle.isPresent()
         ? bundle.get().getBuildTarget()
         : appleBuildRule.getBuildTarget();
-    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(buildTarget), productType);
-    setNativeTargetGid(target, appleBuildRule);
 
-    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
+    String productName = getProductName(buildTarget);
+    NewNativeTargetProjectMutator targetBuilder = new NewNativeTargetProjectMutator(buildTarget)
+        .setTargetName(getXcodeTargetName(buildTarget))
+        .setProduct(
+            productType,
+            productName,
+            Paths.get(String.format(productOutputFormat, productName)))
+        .setGid(appleBuildRule.getGid());
+
+    NewNativeTargetProjectMutator.Result targetBuilderResult =
+        targetBuilder.buildAndAddToProject(project);
+    PBXNativeTarget target = targetBuilderResult.target;
+    PBXGroup targetGroup = targetBuilderResult.targetGroup;
 
     // -- configurations
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
@@ -591,7 +592,8 @@ public class ProjectGenerator {
     if (bundle.isPresent()) {
       defaultSettingsBuilder.put("WRAPPER_EXTENSION", bundle.get().getExtensionString());
     }
-    defaultSettingsBuilder.put("PUBLIC_HEADERS_FOLDER_PATH",
+    defaultSettingsBuilder.put(
+        "PUBLIC_HEADERS_FOLDER_PATH",
         getHeaderOutputPathForRule(appleBuildRule.getHeaderPathPrefix()));
     if (!bundle.isPresent() && appleBuildRule.getType().equals(AppleLibraryDescription.TYPE)) {
       defaultSettingsBuilder.put(
@@ -663,15 +665,6 @@ public class ProjectGenerator {
     addCoreDataModelBuildPhase(
         targetGroup,
         Iterables.filter(appleBuildRule.getDeps(), CoreDataModel.class));
-
-    // -- products
-    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
-    String productName = getProductName(buildTarget);
-    String outputName = String.format(productOutputFormat, productName);
-    PBXFileReference productReference = productsGroup.getOrCreateFileReferenceBySourceTreePath(
-        new SourceTreePath(PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Paths.get(outputName)));
-    target.setProductName(productName);
-    target.setProductReference(productReference);
 
     return target;
   }

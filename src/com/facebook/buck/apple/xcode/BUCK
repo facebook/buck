@@ -1,6 +1,7 @@
 java_library(
   name = 'project_generator',
   srcs = [
+    'NewNativeTargetProjectMutator.java',
     'PathRelativizer.java',
     'ProjectGenerator.java',
     'ProjectParser.java',
