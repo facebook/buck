@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetNode;
@@ -29,6 +30,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -65,15 +68,23 @@ public class PartialGraph {
       ImmutableMap<String, String> environment,
       boolean enableProfiling)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    return createPartialGraph(
-        Predicates.<TargetNode<?>>alwaysTrue(),
-        projectFilesystem,
+
+    TargetGraph graph = parser.buildTargetGraph(
+        ImmutableList.of(
+            new TargetNodePredicateSpec(
+                Predicates.<TargetNode<?>>alwaysTrue(),
+                projectFilesystem.getIgnorePaths())),
         includes,
-        parser,
         eventBus,
         console,
         environment,
         enableProfiling);
+
+    return new PartialGraph(
+        graph.buildActionGraph(new BuildRuleResolver(), eventBus),
+        FluentIterable.from(graph.getNodes())
+            .transform(HasBuildTarget.TO_TARGET)
+            .toSet());
   }
 
   public static PartialGraph createPartialGraph(
