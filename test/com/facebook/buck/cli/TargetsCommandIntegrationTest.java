@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -76,5 +77,23 @@ public class TargetsCommandIntegrationTest {
             "//libs:guava",
             "//libs:junit"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
+  }
+
+  @Test
+  public void testBuckTargetsReferencedFileWithNonExistentFile() throws IOException {
+    // The contents of the project are not relevant for this test. We just want a non-empty project
+    // to prevent against a regression where all of the build rules are printed.
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_slice", tmp);
+    workspace.setUp();
+
+    String pathToNonExistentFile = "modules/dep1/dep2/hello.txt";
+    assertFalse(workspace.getFile(pathToNonExistentFile).exists());
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--referenced_file",
+        pathToNonExistentFile);
+    result.assertSuccess("Even though the file does not exist, buck targets` should succeed.");
+    assertEquals("Because no targets match, stdout should be empty.", "", result.getStdout());
   }
 }
