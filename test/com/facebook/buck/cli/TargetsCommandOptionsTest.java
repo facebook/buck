@@ -42,6 +42,7 @@ public class TargetsCommandOptionsTest {
     Path projectRoot = tmp.getRootPath();
     ImmutableSet<String> nonCanonicalFilePaths = ImmutableSet.of(
         "src/com/facebook/CanonicalRelativePath.txt",
+        projectRoot + "/NonExistingPath.txt",
         "./src/com/otherpackage/.././/facebook/NonCanonicalPath.txt",
         projectRoot + "/ProjectRoot/src/com/facebook/AbsolutePath.txt",
         projectRoot + "/ProjectRoot/../PathNotUnderProjectRoot.txt");
@@ -57,7 +58,8 @@ public class TargetsCommandOptionsTest {
         referencedFiles.relativePathsUnderProjectRoot);
     assertEquals(
         ImmutableSet.of(
-            projectRoot.resolve("PathNotUnderProjectRoot.txt").toRealPath()),
-        referencedFiles.absolutePathsOutsideProjectRoot);
+            projectRoot.resolve("PathNotUnderProjectRoot.txt").toRealPath(),
+            projectRoot.resolve("NonExistingPath.txt")),
+        referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths);
   }
 }

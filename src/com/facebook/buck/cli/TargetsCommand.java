@@ -128,7 +128,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         getProjectFilesystem().getRootPath());
     SortedMap<String, BuildRule> matchingBuildRules;
     // If all of the referenced files are paths outside the project root, then print nothing.
-    if (!referencedFiles.absolutePathsOutsideProjectRoot.isEmpty() &&
+    if (!referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths.isEmpty() &&
         referencedFiles.relativePathsUnderProjectRoot.isEmpty()) {
       matchingBuildRules = ImmutableSortedMap.of();
     } else {

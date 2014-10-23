@@ -72,13 +72,14 @@ public class TargetsCommandOptions extends BuildCommandOptions {
 
   static class ReferencedFiles {
     final ImmutableSet<Path> relativePathsUnderProjectRoot;
-    final ImmutableSet<Path> absolutePathsOutsideProjectRoot;
+    final ImmutableSet<Path> absolutePathsOutsideProjectRootOrNonExistingPaths;
 
     public ReferencedFiles(
         ImmutableSet<Path> relativePathsUnderProjectRoot,
-        ImmutableSet<Path> absolutePathsOutsideProjectRoot) {
+        ImmutableSet<Path> absolutePathsOutsideProjectRootOrNonExistingPaths) {
       this.relativePathsUnderProjectRoot = relativePathsUnderProjectRoot;
-      this.absolutePathsOutsideProjectRoot = absolutePathsOutsideProjectRoot;
+      this.absolutePathsOutsideProjectRootOrNonExistingPaths =
+          absolutePathsOutsideProjectRootOrNonExistingPaths;
     }
   }
 
@@ -102,6 +103,10 @@ public class TargetsCommandOptions extends BuildCommandOptions {
       Path canonicalFullPath = Paths.get(filePath);
       if (!canonicalFullPath.isAbsolute()) {
         canonicalFullPath = projectRoot.resolve(canonicalFullPath);
+      }
+      if (!canonicalFullPath.toFile().exists()) {
+        nonProjectFiles.add(canonicalFullPath);
+        continue;
       }
       canonicalFullPath = canonicalFullPath.toRealPath();
 
