@@ -279,6 +279,10 @@ public class ProjectWorkspace {
     Files.copy(getFile(source), getFile(dest));
   }
 
+  public void move(String source, String dest) throws IOException {
+    Files.move(getFile(source), getFile(dest));
+  }
+
   public void replaceFileContents(String pathRelativeToProjectRoot,
       String target,
       String replacement) throws IOException {

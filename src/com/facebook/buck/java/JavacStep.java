@@ -22,8 +22,10 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -114,6 +116,14 @@ public abstract class JavacStep implements Step {
           CLASS_SYMBOL_NOT_FOUND);
 
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
+  /**
+   * An escaper for arguments written to @argfiles.
+   */
+  protected static final Function<String, String> ARGFILES_ESCAPER =
+      Escaper.escaper(
+          Escaper.Quoter.DOUBLE,
+          CharMatcher.anyOf("#\"'").or(CharMatcher.WHITESPACE));
 
   public static interface SuggestBuildRules {
     public ImmutableSet<String> suggest(ProjectFilesystem filesystem,

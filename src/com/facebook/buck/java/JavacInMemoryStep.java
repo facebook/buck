@@ -148,7 +148,8 @@ public class JavacInMemoryStep extends JavacStep {
       try {
         context.getProjectFilesystem().writeLinesToPath(
             FluentIterable.from(javaSourceFilePaths)
-                .transform(Functions.toStringFunction()),
+                .transform(Functions.toStringFunction())
+                .transform(ARGFILES_ESCAPER),
             pathToSrcsList.get());
       } catch (IOException e) {
         close(fileManager, compilationUnits, null);

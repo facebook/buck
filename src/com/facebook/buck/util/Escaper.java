@@ -28,19 +28,85 @@ public final class Escaper {
   /** Utility class: do not instantiate. */
   private Escaper() {}
 
-  private static final CharMatcher BASH_SPECIAL_CHARS = CharMatcher.anyOf("<>|!?*[]$\\(){}\"'`&;=")
-      .or(CharMatcher.WHITESPACE);
+  /**
+   * The quoting style to use when escaping.
+   */
+  public static enum Quoter {
+
+    SINGLE('\'') {
+      @Override
+      public String quote(String str) {
+        return '\'' + str.replace("\'", "'\\''") + '\'';
+      }
+    },
+    DOUBLE('"') {
+      @Override
+      public String quote(String str) {
+        return '"' + str.replace("\"", "\\\"") + '"';
+      }
+    }
+    ;
+
+    private final char value;
+
+    private Quoter(char value) {
+      this.value = value;
+    }
+
+    /**
+     * @return the string with this quoting style applied.
+     */
+    public abstract String quote(String str);
+
+    /**
+     * @return the raw quote character.
+     */
+    public char getValue() {
+      return value;
+    }
+
+  }
+
+  /**
+   * Escapes the special characters identified the {@link CharMatcher}, using single quotes.
+   * @param matcher identifies characters to be escaped
+   * @param str string to quote
+   * @return possibly quoted string
+   */
+  public static String escape(Quoter quoter, CharMatcher matcher, String str) {
+    if (matcher.matchesAnyOf(str) || str.isEmpty()) {
+      return quoter.quote(str);
+    } else {
+      return str;
+    }
+  }
+
+  /**
+   * @return a escaper function using the given quote style and escaping characters determined
+   *     by the given matcher.
+   */
+  public static Function<String, String> escaper(
+      final Quoter quoter,
+      final CharMatcher matcher) {
+    return new Function<String, String>() {
+      @Override
+      public String apply(String input) {
+        return escape(quoter, matcher, input);
+      }
+    };
+  }
+
+  private static final CharMatcher BASH_SPECIAL_CHARS =
+      CharMatcher
+          .anyOf("<>|!?*[]$\\(){}\"'`&;=")
+          .or(CharMatcher.WHITESPACE);
 
   /**
    * Bash quoting {@link com.google.common.base.Function Function} which can be passed to
    * {@link com.google.common.collect.Iterables#transform Iterables.transform()}.
    */
-  public static final Function<String, String> BASH_ESCAPER = new Function<String, String>() {
-    @Override
-    public String apply(String s) {
-      return Escaper.escapeAsBashString(s);
-    }
-  };
+  public static final Function<String, String> BASH_ESCAPER =
+      escaper(Quoter.SINGLE, BASH_SPECIAL_CHARS);
 
   /**
    * Quotes a string to be passed to Bash, if necessary. Uses single quotes to prevent variable
@@ -49,13 +115,7 @@ public final class Escaper {
    * @return possibly quoted string
    */
   public static String escapeAsBashString(String str) {
-    if ("".equals(str)) {
-      return "''";
-    } else if (BASH_SPECIAL_CHARS.matchesNoneOf(str)) {
-      return str;
-    } else {
-      return new StringBuilder("'").append(str.replace("'", "'\\''")).append("'").toString();
-    }
+    return escape(Quoter.SINGLE, BASH_SPECIAL_CHARS, str);
   }
 
   public static String escapeAsBashString(Path path) {

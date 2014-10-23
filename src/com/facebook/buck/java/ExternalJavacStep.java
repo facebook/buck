@@ -33,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -116,7 +115,9 @@ public class ExternalJavacStep extends JavacStep {
     if (pathToSrcsList.isPresent()) {
       try {
         context.getProjectFilesystem().writeLinesToPath(
-            Iterables.transform(expandedSources, Functions.toStringFunction()),
+            FluentIterable.from(expandedSources)
+                .transform(Functions.toStringFunction())
+                .transform(ARGFILES_ESCAPER),
             pathToSrcsList.get());
         command.add("@" + pathToSrcsList.get());
       } catch (IOException e) {
