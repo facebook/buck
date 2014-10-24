@@ -43,6 +43,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -77,6 +78,8 @@ public class ExopackageInstaller {
    * Maximum length of commands that can be passed to "adb shell".
    */
   private static final int MAX_ADB_COMMAND_SIZE = 1019;
+
+  private static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
@@ -510,7 +513,7 @@ public class ExopackageInstaller {
             installFile(
                 device,
                 AGENT_PORT,
-                "metadata.txt",
+                SECONDARY_DEX_DIR.resolve("metadata.txt"),
                 temp.get());
           }
         }
@@ -526,13 +529,13 @@ public class ExopackageInstaller {
       String hash,
       final Path source)
       throws Exception {
-    installFile(device, port, "secondary-" + hash + ".dex.jar", source);
+    installFile(device, port, SECONDARY_DEX_DIR.resolve("secondary-" + hash + ".dex.jar"), source);
   }
 
   private void installFile(
       IDevice device,
       final int port,
-      String basename,
+      Path pathRelativeToDataRoot,
       final Path source) throws Exception {
     CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
 
@@ -562,7 +565,7 @@ public class ExopackageInstaller {
       }
     };
 
-    String targetFileName = dataRoot + "/secondary-dex/" + basename;
+    String targetFileName = dataRoot + "/" + pathRelativeToDataRoot.toString();
     String command =
         "umask 022 && " +
             getAgentCommand() +
