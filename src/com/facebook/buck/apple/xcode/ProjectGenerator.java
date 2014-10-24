@@ -1178,12 +1178,13 @@ public class ProjectGenerator {
 
       List<String> scriptArguments = Lists.newArrayList();
       for (Path dir : assetCatalog.getDirs()) {
+        Path pathRelativeToProjectRoot = pathRelativizer.outputDirToRootRelative(dir);
+
         resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(dir)));
+                pathRelativeToProjectRoot));
 
-        Path pathRelativeToProjectRoot = MorePaths.relativize(outputDirectory, dir);
         LOG.debug(
             "Resolved asset catalog path %s, output directory %s, result %s",
             dir, outputDirectory, pathRelativeToProjectRoot);
