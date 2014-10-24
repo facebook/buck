@@ -86,7 +86,7 @@ public class ExopackageInstaller {
   private final AdbHelper adbHelper;
   private final InstallableApk apkRule;
   private final String packageName;
-  private final String dataRoot;
+  private final Path dataRoot;
 
   private final InstallableApk.ExopackageInfo exopackageInfo;
 
@@ -125,7 +125,7 @@ public class ExopackageInstaller {
     this.eventBus = context.getBuckEventBus();
     this.apkRule = Preconditions.checkNotNull(apkRule);
     this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(apkRule, context);
-    this.dataRoot = "/data/local/tmp/exopackage/" + packageName;
+    this.dataRoot = Paths.get("/data/local/tmp/exopackage/").resolve(packageName);
 
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
@@ -412,10 +412,10 @@ public class ExopackageInstaller {
       String mkdirP = useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
 
       Preconditions.checkNotNull(device);
+      String secondaryDexDir = dataRoot.resolve(SECONDARY_DEX_DIR).toString();
       AdbHelper.executeCommandWithErrorChecking(
-          device, "umask 022 && " + mkdirP + " " + dataRoot + "/secondary-dex");
-      String output = AdbHelper.executeCommandWithErrorChecking(
-          device, "ls " + dataRoot + "/secondary-dex");
+          device, "umask 022 && " + mkdirP + " " + secondaryDexDir);
+      String output = AdbHelper.executeCommandWithErrorChecking(device, "ls " + secondaryDexDir);
 
       ImmutableSet.Builder<String> toDeleteBuilder = ImmutableSet.builder();
 
@@ -423,7 +423,7 @@ public class ExopackageInstaller {
 
       Iterable<String> filesToDelete = toDeleteBuilder.build();
 
-      String commandPrefix = "cd " + dataRoot + "/secondary-dex && rm ";
+      String commandPrefix = "cd " + secondaryDexDir + " && rm ";
       // Add a fudge factor for separators and error checking.
       final int overhead = commandPrefix.length() + 100;
       for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
@@ -565,7 +565,7 @@ public class ExopackageInstaller {
       }
     };
 
-    String targetFileName = dataRoot + "/" + pathRelativeToDataRoot.toString();
+    String targetFileName = dataRoot.resolve(pathRelativeToDataRoot).toString();
     String command =
         "umask 022 && " +
             getAgentCommand() +
