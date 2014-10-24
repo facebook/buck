@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -81,7 +80,7 @@ public class PartialGraph {
         enableProfiling);
 
     return new PartialGraph(
-        graph.buildActionGraph(new BuildRuleResolver(), eventBus),
+        graph.getActionGraph(eventBus),
         FluentIterable.from(graph.getNodes())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -112,8 +111,7 @@ public class PartialGraph {
         parser,
         eventBus,
         console,
-        environment,
-        new BuildRuleResolver());
+        environment);
   }
 
   public static PartialGraph createPartialGraph(
@@ -122,8 +120,7 @@ public class PartialGraph {
       Parser parser,
       BuckEventBus eventBus,
       Console console,
-      ImmutableMap<String, String> environment,
-      BuildRuleResolver ruleResolver)
+      ImmutableMap<String, String> environment)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Preconditions.checkNotNull(parser);
 
@@ -134,7 +131,7 @@ public class PartialGraph {
         includes,
         eventBus,
         console,
-        environment).buildActionGraph(ruleResolver, eventBus);
+        environment).getActionGraph(eventBus);
 
     return new PartialGraph(graph, targets);
   }

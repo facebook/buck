@@ -58,7 +58,7 @@ public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirecte
   }
 
   /** @return an unmodifiable view of the nodes in this graph */
-  public Iterable<T> getNodes() {
+  public ImmutableSet<T> getNodes() {
     return nodes;
   }
 

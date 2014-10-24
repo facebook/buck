@@ -28,7 +28,6 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -116,8 +115,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
             getParser(),
             getBuckEventBus(),
             console,
-            environment,
-            new BuildRuleResolver());
+            environment);
       }
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);

@@ -158,10 +158,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     // Create an ActionGraph that only contains targets that can be represented as IDE
     // configuration files.
     ActionGraph actionGraph;
-    BuildRuleResolver resolver = new BuildRuleResolver();
 
     try {
-      actionGraph = createPartialGraphs(options, resolver).getProjectGraph();
+      actionGraph = createPartialGraphs(options).getProjectGraph();
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -171,7 +170,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         actionGraph);
 
     Project project = new Project(
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new BuildRuleResolver(actionGraph.getNodes())),
         ImmutableSet.copyOf(
             FluentIterable
                 .from(actionGraph.getNodes())
@@ -217,7 +216,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       List<String> additionalInitialTargets = ImmutableList.of();
       if (options.shouldProcessAnnotations()) {
         try {
-          additionalInitialTargets = getAnnotationProcessingTargets(options, resolver);
+          additionalInitialTargets = getAnnotationProcessingTargets(options);
         } catch (BuildTargetException | BuildFileParseException e) {
           throw new HumanReadableException(e);
         }
@@ -260,9 +259,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return 0;
   }
 
-  ImmutableList<String> getAnnotationProcessingTargets(
-      ProjectCommandOptions options,
-      BuildRuleResolver resolver)
+  ImmutableList<String> getAnnotationProcessingTargets(ProjectCommandOptions options)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Optional<ImmutableSet<BuildTarget>> buildTargets = getRootsFromOptions(options);
     PartialGraph partialGraph = Iterables.getOnlyElement(
@@ -277,7 +274,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getBuckEventBus(),
           console,
           environment,
-          resolver,
           options.getEnableProfiling()));
 
     return ImmutableList.copyOf(
@@ -301,9 +297,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ActionGraphs actionGraphs;
     SourcePathResolver resolver;
     try {
-      BuildRuleResolver ruleResolver = new BuildRuleResolver();
-      actionGraphs = createPartialGraphs(options, ruleResolver);
-      resolver = new SourcePathResolver(ruleResolver);
+      actionGraphs = createPartialGraphs(options);
+      resolver = new SourcePathResolver(
+          new BuildRuleResolver(actionGraphs.getProjectGraph().getNodes()));
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -470,9 +466,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return buildTargets;
   }
 
-  private ActionGraphs createPartialGraphs(
-      final ProjectCommandOptions options,
-      BuildRuleResolver resolver)
+  private ActionGraphs createPartialGraphs(final ProjectCommandOptions options)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     Predicate<TargetNode<?>> projectRootsPredicate;
     Predicate<TargetNode<?>> projectPredicate;
@@ -588,7 +582,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getBuckEventBus(),
           console,
           environment,
-          resolver,
           options.getEnableProfiling());
       return new ActionGraphs(
           partialGraphs.get(0).getActionGraph(),
@@ -608,7 +601,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getBuckEventBus(),
           console,
           environment,
-          resolver,
           options.getEnableProfiling());
       return new ActionGraphs(
           partialGraphs.get(0).getActionGraph(),
@@ -645,7 +637,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       BuckEventBus eventBus,
       Console console,
       ImmutableMap<String, String> environment,
-      BuildRuleResolver resolver,
       boolean enableProfiling)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
 
@@ -682,8 +673,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         parser,
         eventBus,
         console,
-        environment,
-        predicates.size() > 0 ? new BuildRuleResolver() : resolver);
+        environment);
 
     graphs.add(partialGraph);
 
@@ -699,8 +689,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           parser,
           eventBus,
           console,
-          environment,
-          new BuildRuleResolver());
+          environment);
 
       ImmutableSet.Builder<BuildTarget> allTargetsBuilder = ImmutableSet.builder();
       allTargetsBuilder.addAll(partialGraph.getTargets());
@@ -721,8 +710,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           parser,
           eventBus,
           console,
-          environment,
-          i == predicates.size() - 1 ? resolver : new BuildRuleResolver());
+          environment);
 
       graphs.add(partialGraph);
     }

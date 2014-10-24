@@ -30,6 +30,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
@@ -39,80 +41,98 @@ import com.google.common.collect.ImmutableSet;
  */
 public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode<?>> {
 
+  private final Supplier<ActionGraph> actionGraphSupplier;
+
   public TargetGraph(MutableDirectedGraph<TargetNode<?>> graph) {
     super(graph);
+    actionGraphSupplier = createActionGraphSupplier();
   }
 
-  public ActionGraph buildActionGraph(final BuildRuleResolver ruleResolver, BuckEventBus eventBus) {
-    final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
-
-    final TargetNodeToBuildRuleTransformer transformer = new TargetNodeToBuildRuleTransformer();
-
-    AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
-        new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(this) {
-
+  private Supplier<ActionGraph> createActionGraphSupplier() {
+    final TargetGraph targetGraph = this;
+    return Suppliers.memoize(
+        new Supplier<ActionGraph>() {
           @Override
-          public void visit(TargetNode<?> node) {
-            BuildRule rule;
-            try {
-              rule = transformer.transform(ruleResolver, node);
-            } catch (NoSuchBuildTargetException e) {
-              throw new HumanReadableException(e);
-            }
-            ruleResolver.addToIndex(rule);
-            actionGraph.addNode(rule);
+          public ActionGraph get() {
+            final BuildRuleResolver ruleResolver = new BuildRuleResolver();
+            final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
 
-            for (BuildRule buildRule : rule.getDeps()) {
-              if (buildRule.getBuildTarget().isFlavored()) {
-                addGraphEnhancedDeps(rule);
-              }
-            }
+            final TargetNodeToBuildRuleTransformer transformer =
+                new TargetNodeToBuildRuleTransformer();
 
-            for (BuildRule dep : rule.getDeps()) {
-              actionGraph.addEdge(rule, dep);
-            }
+            AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
+                new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(targetGraph) {
 
-          }
-
-          @Override
-          public ActionGraph getResult() {
-            return new ActionGraph(actionGraph);
-          }
-
-          private void addGraphEnhancedDeps(BuildRule rule) {
-            new AbstractDependencyVisitor(rule) {
-              @Override
-              public ImmutableSet<BuildRule> visit(BuildRule rule) {
-                ImmutableSet.Builder<BuildRule> depsToVisit = null;
-                boolean isRuleFlavored = rule.getBuildTarget().isFlavored();
-
-                for (BuildRule dep : rule.getDeps()) {
-                  boolean isDepFlavored = dep.getBuildTarget().isFlavored();
-                  if (isRuleFlavored || isDepFlavored) {
-                    actionGraph.addEdge(rule, dep);
-                  }
-
-                  if (isDepFlavored) {
-                    if (depsToVisit == null) {
-                      depsToVisit = ImmutableSet.builder();
+                  @Override
+                  public void visit(TargetNode<?> node) {
+                    BuildRule rule;
+                    try {
+                      rule = transformer.transform(ruleResolver, node);
+                    } catch (NoSuchBuildTargetException e) {
+                      throw new HumanReadableException(e);
                     }
-                    depsToVisit.add(dep);
+                    ruleResolver.addToIndex(rule);
+                    actionGraph.addNode(rule);
+
+                    for (BuildRule buildRule : rule.getDeps()) {
+                      if (buildRule.getBuildTarget().isFlavored()) {
+                        addGraphEnhancedDeps(rule);
+                      }
+                    }
+
+                    for (BuildRule dep : rule.getDeps()) {
+                      actionGraph.addEdge(rule, dep);
+                    }
+
                   }
-                }
 
-                return depsToVisit == null ? ImmutableSet.<BuildRule>of() : depsToVisit.build();
-              }
-            }.start();
+                  @Override
+                  public ActionGraph getResult() {
+                    return new ActionGraph(actionGraph);
+                  }
+
+                  private void addGraphEnhancedDeps(BuildRule rule) {
+                    new AbstractDependencyVisitor(rule) {
+                      @Override
+                      public ImmutableSet<BuildRule> visit(BuildRule rule) {
+                        ImmutableSet.Builder<BuildRule> depsToVisit = null;
+                        boolean isRuleFlavored = rule.getBuildTarget().isFlavored();
+
+                        for (BuildRule dep : rule.getDeps()) {
+                          boolean isDepFlavored = dep.getBuildTarget().isFlavored();
+                          if (isRuleFlavored || isDepFlavored) {
+                            actionGraph.addEdge(rule, dep);
+                          }
+
+                          if (isDepFlavored) {
+                            if (depsToVisit == null) {
+                              depsToVisit = ImmutableSet.builder();
+                            }
+                            depsToVisit.add(dep);
+                          }
+                        }
+
+                        return depsToVisit == null ?
+                            ImmutableSet.<BuildRule>of() :
+                            depsToVisit.build();
+                      }
+                    }.start();
+                  }
+                };
+            bottomUpTraversal.traverse();
+            return bottomUpTraversal.getResult();
           }
-        };
+        });
+  }
 
+  public ActionGraph getActionGraph(BuckEventBus eventBus) {
     Iterable<BuildTarget> buildTargets = FluentIterable.from(getNodesWithNoIncomingEdges())
         .transform(HasBuildTarget.TO_TARGET);
 
     eventBus.post(ActionGraphEvent.started(buildTargets));
-    bottomUpTraversal.traverse();
+    ActionGraph actionGraph = actionGraphSupplier.get();
     eventBus.post(ActionGraphEvent.finished(buildTargets));
 
-    return bottomUpTraversal.getResult();
+    return actionGraph;
   }
 }
