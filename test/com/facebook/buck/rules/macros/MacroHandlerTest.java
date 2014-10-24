@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
@@ -45,6 +46,17 @@ public class MacroHandlerTest {
     } catch (MacroException e) {
       assertTrue(e.getMessage().contains("no such macro \"badmacro\""));
     }
+  }
+
+  @Test
+  public void escapeMacro() throws MacroException {
+    MacroHandler handler = new MacroHandler(ImmutableMap.<String, MacroExpander>of());
+    BuildTarget target = BuildTargetFactory.newInstance("//:test");
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    String raw = "hello \\$(notamacro hello)";
+    String expanded = handler.expand(target, resolver, filesystem, raw);
+    assertEquals("hello $(notamacro hello)", expanded);
   }
 
 }

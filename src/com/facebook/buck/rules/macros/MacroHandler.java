@@ -114,22 +114,25 @@ public class MacroHandler {
       if (matcher.start() > 0 && blob.charAt(matcher.start() - 1) == '\\') {
         expanded.append(blob.substring(lastEnd, matcher.start() - 1));
         expanded.append(blob.substring(matcher.start(), matcher.end()));
-        continue;
+
+      // Otherwise we need to add the expanded value.
+      } else {
+
+        // Add everything from the original string since the last match to this one.
+        expanded.append(blob.substring(lastEnd, matcher.start()));
+
+        // Call the relevant expander and add the expanded value to the string.
+        String name = matcher.group(1);
+        String input = Optional.fromNullable(matcher.group(2)).or("");
+        try {
+          expanded.append(getExpander(name).expand(target, resolver, filesystem, input));
+        } catch (MacroException e) {
+          throw new MacroException(
+              String.format("expanding %s: %s", matcher.group(), e.getMessage()),
+              e);
+        }
       }
 
-      // Add everything from the original string since the last match to this one.
-      expanded.append(blob.substring(lastEnd, matcher.start()));
-
-      // Call the relevant expander and add the expanded value to the string.
-      String name = matcher.group(1);
-      String input = Optional.fromNullable(matcher.group(2)).or("");
-      try {
-        expanded.append(getExpander(name).expand(target, resolver, filesystem, input));
-      } catch (MacroException e) {
-        throw new MacroException(
-            String.format("expanding %s: %s", matcher.group(), e.getMessage()),
-            e);
-      }
       lastEnd = matcher.end();
     }
 
