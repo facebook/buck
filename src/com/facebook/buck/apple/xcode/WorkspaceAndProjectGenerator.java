@@ -37,7 +37,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -73,11 +72,11 @@ public class WorkspaceAndProjectGenerator {
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       Multimap<BuildRule, AppleTest> sourceRuleToTestRules,
       Iterable<BuildRule> extraTestBundleRules) {
-    this.resolver = Preconditions.checkNotNull(resolver);
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.projectGraph = Preconditions.checkNotNull(projectGraph);
-    this.executionContext = Preconditions.checkNotNull(executionContext);
-    this.workspaceBuildable = Preconditions.checkNotNull(workspaceBuildable);
+    this.resolver = resolver;
+    this.projectFilesystem = projectFilesystem;
+    this.projectGraph = projectGraph;
+    this.executionContext = executionContext;
+    this.workspaceBuildable = workspaceBuildable;
     this.projectGeneratorOptions = ImmutableSet.<ProjectGenerator.Option>builder()
       .addAll(projectGeneratorOptions)
       .addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS)

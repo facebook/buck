@@ -114,13 +114,13 @@ class DexSplitMode {
       Optional<SourcePath> primaryDexScenarioFile,
       boolean isPrimaryDexScenarioOverflowAllowed) {
     this.shouldSplitDex = shouldSplitDex;
-    this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
-    this.dexStore = Preconditions.checkNotNull(dexStore);
+    this.dexSplitStrategy = dexSplitStrategy;
+    this.dexStore = dexStore;
     this.useLinearAllocSplitDex = useLinearAllocSplitDex;
     this.linearAllocHardLimit = linearAllocHardLimit;
     this.primaryDexPatterns = ImmutableSet.copyOf(primaryDexPatterns);
-    this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
-    this.primaryDexScenarioFile = Preconditions.checkNotNull(primaryDexScenarioFile);
+    this.primaryDexClassesFile = primaryDexClassesFile;
+    this.primaryDexScenarioFile = primaryDexScenarioFile;
     this.isPrimaryDexScenarioOverflowAllowed = isPrimaryDexScenarioOverflowAllowed;
   }
 

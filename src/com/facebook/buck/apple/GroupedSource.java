@@ -50,7 +50,7 @@ public class GroupedSource {
       @Nullable SourcePath sourcePath,
       @Nullable String sourceGroupName,
       @Nullable ImmutableList<GroupedSource> sourceGroup) {
-    this.type = Preconditions.checkNotNull(type);
+    this.type = type;
     switch (this.type) {
       case SOURCE_PATH:
         Preconditions.checkNotNull(sourcePath);

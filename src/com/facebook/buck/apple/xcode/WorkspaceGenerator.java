@@ -77,7 +77,7 @@ public class WorkspaceGenerator {
     private final Path path;
 
     WorkspaceFileRef(Path path) {
-      this.path = Preconditions.checkNotNull(path);
+      this.path = path;
     }
 
     public Path getPath() {
@@ -89,9 +89,9 @@ public class WorkspaceGenerator {
       ProjectFilesystem projectFilesystem,
       String workspaceName,
       Path outputDirectory) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.workspaceName = Preconditions.checkNotNull(workspaceName);
-    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
+    this.projectFilesystem = projectFilesystem;
+    this.workspaceName = workspaceName;
+    this.outputDirectory = outputDirectory;
     this.children = new TreeMap<>();
   }
 

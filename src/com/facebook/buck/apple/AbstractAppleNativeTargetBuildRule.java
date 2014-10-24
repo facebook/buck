@@ -30,7 +30,6 @@ import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -74,13 +73,13 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
       TargetSources targetSources) {
     super(params, resolver);
     configurations = arg.configs.get();
-    srcs = Preconditions.checkNotNull(targetSources.srcs);
-    perFileFlags = Preconditions.checkNotNull(targetSources.perFileFlags);
-    frameworks = Preconditions.checkNotNull(arg.frameworks.get());
-    gid = Preconditions.checkNotNull(arg.gid);
-    headerPathPrefix = Preconditions.checkNotNull(arg.headerPathPrefix);
-    useBuckHeaderMaps = Preconditions.checkNotNull(arg.useBuckHeaderMaps).or(false);
-    prefixHeader = Preconditions.checkNotNull(arg.prefixHeader);
+    srcs = targetSources.srcs;
+    perFileFlags = targetSources.perFileFlags;
+    frameworks = arg.frameworks.get();
+    gid = arg.gid;
+    headerPathPrefix = arg.headerPathPrefix;
+    useBuckHeaderMaps = arg.useBuckHeaderMaps.or(false);
+    prefixHeader = arg.prefixHeader;
   }
 
   @Override

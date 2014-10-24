@@ -23,7 +23,6 @@ import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import org.kohsuke.args4j.Option;
 
@@ -72,7 +71,7 @@ public abstract class AbstractCommandOptions {
   private CommandLineBuildTargetNormalizer commandLineBuildTargetNormalizer;
 
   AbstractCommandOptions(BuckConfig buckConfig) {
-    this.buckConfig = Preconditions.checkNotNull(buckConfig);
+    this.buckConfig = buckConfig;
   }
 
   /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */

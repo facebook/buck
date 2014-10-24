@@ -23,7 +23,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
@@ -89,9 +88,9 @@ public class GenRDotTxtUtil {
         Path genDirectoryPath,
         boolean isTempRDotJava,
         Path dummyAndroidManifest) {
-      this.resDirectories = Preconditions.checkNotNull(resDirectories);
-      this.androidManifest = Preconditions.checkNotNull(dummyAndroidManifest);
-      this.genDirectoryPath = Preconditions.checkNotNull(genDirectoryPath);
+      this.resDirectories = resDirectories;
+      this.androidManifest = dummyAndroidManifest;
+      this.genDirectoryPath = genDirectoryPath;
       this.isTempRDotJava = isTempRDotJava;
     }
 

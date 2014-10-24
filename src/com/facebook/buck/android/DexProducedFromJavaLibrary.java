@@ -39,7 +39,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
@@ -82,7 +81,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       SourcePathResolver resolver,
       JavaLibrary javaLibrary) {
     super(params, resolver);
-    this.javaLibrary = Preconditions.checkNotNull(javaLibrary);
+    this.javaLibrary = javaLibrary;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 

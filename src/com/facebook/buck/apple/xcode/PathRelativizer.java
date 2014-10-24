@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MorePaths;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
@@ -36,7 +35,7 @@ public final class PathRelativizer {
   private final Path outputPathToProjectRoot;
 
   public PathRelativizer(Path projectRoot, Path outputDirectory, SourcePathResolver resolver) {
-    this.resolver = Preconditions.checkNotNull(resolver);
+    this.resolver = resolver;
     this.outputPathToProjectRoot = MorePaths.relativize(
         outputDirectory.toAbsolutePath(),
         projectRoot.toAbsolutePath());

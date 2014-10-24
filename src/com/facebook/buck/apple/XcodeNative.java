@@ -24,7 +24,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -54,11 +53,11 @@ public class XcodeNative extends AbstractBuildRule {
       SourcePathResolver resolver,
       XcodeNativeDescription.Arg arg) {
     super(params, resolver);
-    this.projectContainerPath = Preconditions.checkNotNull(arg.projectContainerPath);
+    this.projectContainerPath = arg.projectContainerPath;
 
     String shortName = params.getBuildTarget().getShortNameOnly();
-    this.targetName = Preconditions.checkNotNull(arg.targetName).or(shortName);
-    this.buildableName = Preconditions.checkNotNull(arg.buildableName).or("lib" + shortName + ".a");
+    this.targetName = arg.targetName.or(shortName);
+    this.buildableName = arg.buildableName.or("lib" + shortName + ".a");
   }
 
   public SourcePath getProjectContainerPath() {

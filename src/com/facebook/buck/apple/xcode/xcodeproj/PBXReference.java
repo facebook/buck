@@ -19,7 +19,6 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import javax.annotation.Nullable;
 
@@ -102,9 +101,9 @@ public class PBXReference extends PBXContainerItem {
   private SourceTree sourceTree;
 
   public PBXReference(String name, @Nullable String path, SourceTree sourceTree) {
-    this.name = Preconditions.checkNotNull(name);
+    this.name = name;
     this.path = path;
-    this.sourceTree = Preconditions.checkNotNull(sourceTree);
+    this.sourceTree = sourceTree;
   }
 
   public String getName() {

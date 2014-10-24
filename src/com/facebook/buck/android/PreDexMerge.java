@@ -101,10 +101,10 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
       ImmutableSet<DexProducedFromJavaLibrary> preDexDeps,
       AaptPackageResources aaptPackageResources) {
     super(params, resolver);
-    this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
-    this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
-    this.preDexDeps = Preconditions.checkNotNull(preDexDeps);
-    this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
+    this.primaryDexPath = primaryDexPath;
+    this.dexSplitMode = dexSplitMode;
+    this.preDexDeps = preDexDeps;
+    this.aaptPackageResources = aaptPackageResources;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
@@ -325,7 +325,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     BuildOutput(@Nullable Sha1HashCode primaryDexHash, ImmutableSet<Path> secondaryDexDirectories) {
       this.primaryDexHash = primaryDexHash;
-      this.secondaryDexDirectories = Preconditions.checkNotNull(secondaryDexDirectories);
+      this.secondaryDexDirectories = secondaryDexDirectories;
     }
   }
 

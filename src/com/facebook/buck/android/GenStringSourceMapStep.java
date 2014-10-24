@@ -22,7 +22,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.XmlDomParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
@@ -95,9 +94,9 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
       ImmutableList<Path> resDirectories,
       Path destinationPath) {
     super("build_string_source_map");
-    this.rDotTxtDir = Preconditions.checkNotNull(rDotTxtDir);
+    this.rDotTxtDir = rDotTxtDir;
     this.resDirectories = ImmutableList.copyOf(resDirectories);
-    this.destinationPath = Preconditions.checkNotNull(destinationPath);
+    this.destinationPath = destinationPath;
   }
 
   @Override
@@ -205,9 +204,8 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     // resource originated from
 
     public NativeStringInfo(Integer androidResourceId, String stringsXmlPath) {
-      this.androidResourceId =
-          String.format("0x%08X", Preconditions.checkNotNull(androidResourceId));
-      this.stringsXmlPath = Preconditions.checkNotNull(stringsXmlPath);
+      this.androidResourceId = String.format("0x%08X", androidResourceId);
+      this.stringsXmlPath = stringsXmlPath;
     }
 
     @SuppressWarnings("unused") // Used via reflection for JSON serialization.

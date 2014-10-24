@@ -32,7 +32,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -105,10 +104,10 @@ public class ResourcesFilter extends AbstractBuildRule
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesStep.ResourceFilter resourceFilter) {
     super(params, resolver);
-    this.resDirectories = Preconditions.checkNotNull(resDirectories);
-    this.whitelistedStringDirs = Preconditions.checkNotNull(whitelistedStringDirs);
-    this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
-    this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
+    this.resDirectories = resDirectories;
+    this.whitelistedStringDirs = whitelistedStringDirs;
+    this.resourceCompressionMode = resourceCompressionMode;
+    this.resourceFilter = resourceFilter;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
@@ -254,8 +253,8 @@ public class ResourcesFilter extends AbstractBuildRule
     public BuildOutput(
         ImmutableList<Path> resDirectories,
         ImmutableSet<Path> nonEnglishStringFiles) {
-      this.resDirectories = Preconditions.checkNotNull(resDirectories);
-      this.nonEnglishStringFiles = Preconditions.checkNotNull(nonEnglishStringFiles);
+      this.resDirectories = resDirectories;
+      this.nonEnglishStringFiles = nonEnglishStringFiles;
     }
   }
 

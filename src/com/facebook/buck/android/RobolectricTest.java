@@ -99,7 +99,7 @@ public class RobolectricTest extends JavaTest {
         vmArgs,
         sourceTargetsUnderTest,
         resourcesRoot);
-    this.optionalDummyRDotJava = Preconditions.checkNotNull(optionalDummyRDotJava);
+    this.optionalDummyRDotJava = optionalDummyRDotJava;
   }
 
   @Override

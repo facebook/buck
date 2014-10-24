@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import java.util.EnumSet;
@@ -40,13 +39,13 @@ public class XCScheme {
       Optional<ProfileAction> profileAction,
       Optional<AnalyzeAction> analyzeAction,
       Optional<ArchiveAction> archiveAction) {
-    this.name = Preconditions.checkNotNull(name);
-    this.buildAction = Preconditions.checkNotNull(buildAction);
-    this.testAction = Preconditions.checkNotNull(testAction);
-    this.launchAction = Preconditions.checkNotNull(launchAction);
-    this.profileAction = Preconditions.checkNotNull(profileAction);
-    this.analyzeAction = Preconditions.checkNotNull(analyzeAction);
-    this.archiveAction = Preconditions.checkNotNull(archiveAction);
+    this.name = name;
+    this.buildAction = buildAction;
+    this.testAction = testAction;
+    this.launchAction = launchAction;
+    this.profileAction = profileAction;
+    this.analyzeAction = analyzeAction;
+    this.archiveAction = archiveAction;
   }
 
   public String getName() {
@@ -90,8 +89,8 @@ public class XCScheme {
         String blueprintName) {
       this.containerRelativePath = containerRelativePath;
       this.blueprintIdentifier = blueprintIdentifier;
-      this.buildableName = Preconditions.checkNotNull(buildableName);
-      this.blueprintName = Preconditions.checkNotNull(blueprintName);
+      this.buildableName = buildableName;
+      this.blueprintName = blueprintName;
     }
 
     public String getContainerRelativePath() {
@@ -146,8 +145,8 @@ public class XCScheme {
     public BuildActionEntry(
         BuildableReference buildableReference,
         EnumSet<BuildFor> buildFor) {
-      this.buildableReference = Preconditions.checkNotNull(buildableReference);
-      this.buildFor = Preconditions.checkNotNull(buildFor);
+      this.buildableReference = buildableReference;
+      this.buildFor = buildFor;
     }
 
     public BuildableReference getBuildableReference() {
@@ -164,8 +163,8 @@ public class XCScheme {
     private final String buildConfiguration;
 
     public LaunchAction(BuildableReference buildableReference, String buildConfiguration) {
-      this.buildableReference = Preconditions.checkNotNull(buildableReference);
-      this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
+      this.buildableReference = buildableReference;
+      this.buildConfiguration = buildConfiguration;
     }
 
     public BuildableReference getBuildableReference() {
@@ -182,8 +181,8 @@ public class XCScheme {
     private final String buildConfiguration;
 
     public ProfileAction(BuildableReference buildableReference, String buildConfiguration) {
-      this.buildableReference = Preconditions.checkNotNull(buildableReference);
-      this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
+      this.buildableReference = buildableReference;
+      this.buildConfiguration = buildConfiguration;
     }
 
     public BuildableReference getBuildableReference() {
@@ -201,7 +200,7 @@ public class XCScheme {
 
     public TestAction(String buildConfiguration) {
       this.testables = Lists.newArrayList();
-      this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
+      this.buildConfiguration = buildConfiguration;
     }
 
     public void addTestableReference(TestableReference testable) {
@@ -221,7 +220,7 @@ public class XCScheme {
     private BuildableReference buildableReference;
 
     public TestableReference(BuildableReference buildableReference) {
-      this.buildableReference = Preconditions.checkNotNull(buildableReference);
+      this.buildableReference = buildableReference;
     }
 
     public BuildableReference getBuildableReference() {
@@ -233,7 +232,7 @@ public class XCScheme {
     public final String buildConfiguration;
 
     public AnalyzeAction(String buildConfiguration) {
-      this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
+      this.buildConfiguration = buildConfiguration;
     }
 
     public String getBuildConfiguration() {
@@ -245,7 +244,7 @@ public class XCScheme {
     public final String buildConfiguration;
 
     public ArchiveAction(String buildConfiguration) {
-      this.buildConfiguration = Preconditions.checkNotNull(buildConfiguration);
+      this.buildConfiguration = buildConfiguration;
     }
 
     public String getBuildConfiguration() {

@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 /**
  * Utility class representing a tuple of (SourceTree, Path) used for uniquely describing a file
@@ -30,9 +31,9 @@ public class SourceTreePath {
   private final Path path;
 
   public SourceTreePath(PBXReference.SourceTree sourceTree, Path path) {
-    this.sourceTree = Preconditions.checkNotNull(sourceTree);
+    this.sourceTree = sourceTree;
     Preconditions.checkState(
-        path != null && path.toString().length() > 0,
+        path.toString().length() > 0,
         "A path to a file cannot be null or empty");
     path = path.normalize();
     Preconditions.checkState(path.toString().length() > 0, "A path to a file cannot be empty");
@@ -53,7 +54,7 @@ public class SourceTreePath {
   }
 
   @Override
-  public boolean equals(Object other) {
+  public boolean equals(@Nullable Object other) {
     if (other == null || !(other instanceof SourceTreePath)) {
       return false;
     }

@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -51,9 +50,9 @@ public class AppleBundle extends AbstractBuildRule {
       Optional<SourcePath> infoPlist,
       BuildRule binary) {
     super(params, resolver);
-    this.extension = Preconditions.checkNotNull(extension);
-    this.infoPlist = Preconditions.checkNotNull(infoPlist);
-    this.binary = Preconditions.checkNotNull(binary);
+    this.extension = extension;
+    this.infoPlist = infoPlist;
+    this.binary = binary;
   }
 
   /**

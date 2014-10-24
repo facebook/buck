@@ -72,19 +72,18 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   @Nullable private volatile ArtifactCache artifactCache;
 
   protected AbstractCommandRunner(CommandRunnerParams params) {
-    this.commandRunnerParams = Preconditions.checkNotNull(params);
-    this.console = Preconditions.checkNotNull(params.getConsole());
-    this.repository = Preconditions.checkNotNull(params.getRepository());
-    this.buildEngine = Preconditions.checkNotNull(params.getBuildEngine());
-    this.artifactCacheFactory = Preconditions.checkNotNull(params.getArtifactCacheFactory());
-    this.parser = Preconditions.checkNotNull(params.getParser());
-    this.eventBus = Preconditions.checkNotNull(params.getBuckEventBus());
-    this.platform = Preconditions.checkNotNull(params.getPlatform());
-    this.androidDirectoryResolver =
-        Preconditions.checkNotNull(params.getAndroidDirectoryResolver());
-    this.environment = Preconditions.checkNotNull(params.getEnvironment());
-    this.objectMapper = Preconditions.checkNotNull(params.getObjectMapper());
-    this.processManager = Preconditions.checkNotNull(params.getProcessManager());
+    this.commandRunnerParams = params;
+    this.console = params.getConsole();
+    this.repository = params.getRepository();
+    this.buildEngine = params.getBuildEngine();
+    this.artifactCacheFactory = params.getArtifactCacheFactory();
+    this.parser = params.getParser();
+    this.eventBus = params.getBuckEventBus();
+    this.platform = params.getPlatform();
+    this.androidDirectoryResolver = params.getAndroidDirectoryResolver();
+    this.environment = params.getEnvironment();
+    this.objectMapper = params.getObjectMapper();
+    this.processManager = params.getProcessManager();
   }
 
   abstract T createOptions(BuckConfig buckConfig);
@@ -152,6 +151,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   /**
    * @return may be null
    */
+  @Nullable
   abstract String getUsageIntro();
 
   /**
@@ -179,7 +179,6 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
    */
   protected ImmutableSet<BuildTarget> getBuildTargets(ImmutableSet<String> buildTargetNames)
       throws NoSuchBuildTargetException, IOException {
-    Preconditions.checkNotNull(buildTargetNames);
     ImmutableSet.Builder<BuildTarget> buildTargets = ImmutableSet.builder();
 
     // Parse all of the build targets specified by the user.

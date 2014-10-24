@@ -19,7 +19,6 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  * File referenced by a build phase, unique to each build phase.
@@ -37,7 +36,7 @@ public class PBXBuildFile extends PBXProjectItem {
   private Optional<NSDictionary> settings;
 
   public PBXBuildFile(PBXReference fileRef) {
-    this.fileRef = Preconditions.checkNotNull(fileRef);
+    this.fileRef = fileRef;
     this.settings = Optional.absent();
   }
 

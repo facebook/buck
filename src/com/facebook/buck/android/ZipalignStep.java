@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -30,8 +29,8 @@ public class ZipalignStep extends ShellStep {
   private final Path outputFile;
 
   public ZipalignStep(Path inputFile, Path outputFile) {
-    this.inputFile = Preconditions.checkNotNull(inputFile);
-    this.outputFile = Preconditions.checkNotNull(outputFile);
+    this.inputFile = inputFile;
+    this.outputFile = outputFile;
   }
 
   @Override

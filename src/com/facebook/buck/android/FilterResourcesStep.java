@@ -112,11 +112,11 @@ public class FilterResourcesStep implements Step {
     Preconditions.checkArgument(filterDrawables || filterStrings);
     Preconditions.checkArgument(!filterDrawables ||
         (targetDensities != null && drawableFinder != null));
-    this.inResDirToOutResDirMap = Preconditions.checkNotNull(inResDirToOutResDirMap);
+    this.inResDirToOutResDirMap = inResDirToOutResDirMap;
     this.filterDrawables = filterDrawables;
     this.filterStrings = filterStrings;
-    this.whitelistedStringDirs = Preconditions.checkNotNull(whitelistedStringDirs);
-    this.filteredDirectoryCopier = Preconditions.checkNotNull(filteredDirectoryCopier);
+    this.whitelistedStringDirs = whitelistedStringDirs;
+    this.filteredDirectoryCopier = filteredDirectoryCopier;
     this.targetDensities = targetDensities;
     this.drawableFinder = drawableFinder;
     this.imageScaler = imageScaler;

@@ -62,7 +62,7 @@ public class CoreDataModel extends AbstractBuildRule {
     Preconditions.checkArgument(
         CORE_DATA_MODEL_EXTENSION.equals(extension) ||
         VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
-    this.inputPathsSupplier = Preconditions.checkNotNull(inputPathsSupplier);
+    this.inputPathsSupplier = inputPathsSupplier;
     this.path = args.path;
   }
 

@@ -74,11 +74,11 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
       Optional<PreDexMerge> preDexMerge,
       Keystore keystore) {
     super(params, resolver);
-    this.packageableCollection = Preconditions.checkNotNull(packageableCollection);
-    this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
-    this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);
-    this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
-    this.keystore = Preconditions.checkNotNull(keystore);
+    this.packageableCollection = packageableCollection;
+    this.aaptPackageResources = aaptPackageResources;
+    this.packageStringAssets = packageStringAssets;
+    this.preDexMerge = preDexMerge;
+    this.keystore = keystore;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
@@ -198,7 +198,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
     private final Sha1HashCode abiHash;
 
     BuildOutput(Sha1HashCode abiHash) {
-      this.abiHash = Preconditions.checkNotNull(abiHash);
+      this.abiHash = abiHash;
     }
   }
 

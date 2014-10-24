@@ -154,16 +154,16 @@ public class SplitZipStep implements Step {
       Optional<Path> primaryDexClassesFile,
       Path pathToReportDir) {
     this.inputPathsToSplit = ImmutableSet.copyOf(inputPathsToSplit);
-    this.secondaryJarMetaPath = Preconditions.checkNotNull(secondaryJarMetaPath);
-    this.primaryJarPath = Preconditions.checkNotNull(primaryJarPath);
-    this.secondaryJarDir = Preconditions.checkNotNull(secondaryJarDir);
-    this.secondaryJarPattern = Preconditions.checkNotNull(secondaryJarPattern);
-    this.proguardFullConfigFile = Preconditions.checkNotNull(proguardFullConfigFile);
-    this.proguardMappingFile = Preconditions.checkNotNull(proguardMappingFile);
-    this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
-    this.primaryDexScenarioFile = Preconditions.checkNotNull(primaryDexScenarioFile);
-    this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
-    this.pathToReportDir = Preconditions.checkNotNull(pathToReportDir);
+    this.secondaryJarMetaPath = secondaryJarMetaPath;
+    this.primaryJarPath = primaryJarPath;
+    this.secondaryJarDir = secondaryJarDir;
+    this.secondaryJarPattern = secondaryJarPattern;
+    this.proguardFullConfigFile = proguardFullConfigFile;
+    this.proguardMappingFile = proguardMappingFile;
+    this.dexSplitMode = dexSplitMode;
+    this.primaryDexScenarioFile = primaryDexScenarioFile;
+    this.primaryDexClassesFile = primaryDexClassesFile;
+    this.pathToReportDir = pathToReportDir;
 
     Preconditions.checkArgument(
         proguardFullConfigFile.isPresent() == proguardMappingFile.isPresent(),

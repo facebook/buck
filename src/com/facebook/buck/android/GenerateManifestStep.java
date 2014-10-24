@@ -27,7 +27,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -50,9 +49,9 @@ public class GenerateManifestStep implements Step {
       Path skeletonManifestPath,
       ImmutableSet<Path> libraryManifestPaths,
       Path outManifestPath) {
-    this.skeletonManifestPath = Preconditions.checkNotNull(skeletonManifestPath);
+    this.skeletonManifestPath = skeletonManifestPath;
     this.libraryManifestPaths = ImmutableSet.copyOf(libraryManifestPaths);
-    this.outManifestPath = Preconditions.checkNotNull(outManifestPath);
+    this.outManifestPath = outManifestPath;
   }
 
   @Override
@@ -66,7 +65,7 @@ public class GenerateManifestStep implements Step {
       throw new HumanReadableException("Output Manifest filepath is missing");
     }
 
-    if (libraryManifestPaths == null || libraryManifestPaths.isEmpty()) {
+    if (libraryManifestPaths.isEmpty()) {
       warnUser(context, "No library manifests found. Aborting manifest merge step.");
       return 1;
     }

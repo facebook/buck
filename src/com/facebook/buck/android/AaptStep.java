@@ -21,7 +21,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -49,11 +48,11 @@ public class AaptStep extends ShellStep {
       Path pathToOutputApkFile,
       Path pathToRDotTxtDir,
       boolean isCrunchPngFiles) {
-    this.androidManifest = Preconditions.checkNotNull(androidManifest);
-    this.resDirectories = Preconditions.checkNotNull(resDirectories);
-    this.assetsDirectory = Preconditions.checkNotNull(assetsDirectory);
-    this.pathToOutputApkFile = Preconditions.checkNotNull(pathToOutputApkFile);
-    this.pathToRDotTxtDir = Preconditions.checkNotNull(pathToRDotTxtDir);
+    this.androidManifest = androidManifest;
+    this.resDirectories = resDirectories;
+    this.assetsDirectory = assetsDirectory;
+    this.pathToOutputApkFile = pathToOutputApkFile;
+    this.pathToRDotTxtDir = pathToRDotTxtDir;
     this.isCrunchPngFiles = isCrunchPngFiles;
   }
 

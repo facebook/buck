@@ -26,7 +26,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -50,7 +49,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
   private final Optional<String> ndkVersion;
 
   public NdkLibraryDescription(Optional<String> ndkVersion) {
-    this.ndkVersion = Preconditions.checkNotNull(ndkVersion);
+    this.ndkVersion = ndkVersion;
   }
 
   @Override

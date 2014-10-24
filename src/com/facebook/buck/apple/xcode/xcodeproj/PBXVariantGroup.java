@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -65,8 +64,8 @@ public class PBXVariantGroup extends PBXGroup {
     private final SourceTreePath sourceTreePath;
 
     public VirtualNameAndSourceTreePath(String virtualName, SourceTreePath sourceTreePath) {
-      this.virtualName = Preconditions.checkNotNull(virtualName);
-      this.sourceTreePath = Preconditions.checkNotNull(sourceTreePath);
+      this.virtualName = virtualName;
+      this.sourceTreePath = sourceTreePath;
     }
 
     public String getVirtualName() {

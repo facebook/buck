@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
@@ -46,7 +45,7 @@ public class UnsortedAndroidResourceDeps {
   private final ImmutableSet<HasAndroidResourceDeps> resourceDeps;
 
   public UnsortedAndroidResourceDeps(ImmutableSet<HasAndroidResourceDeps> resourceDeps) {
-    this.resourceDeps = Preconditions.checkNotNull(resourceDeps);
+    this.resourceDeps = resourceDeps;
   }
 
   public ImmutableSet<HasAndroidResourceDeps> getResourceDeps() {

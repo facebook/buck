@@ -29,8 +29,8 @@ public class PlistScalar extends PlistValue {
   private final Object value;
 
   private PlistScalar(Type type, Object value) {
-    this.type = Preconditions.checkNotNull(type);
-    this.value = Preconditions.checkNotNull(value);
+    this.type = type;
+    this.value = value;
   }
 
   public Type getType() {

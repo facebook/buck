@@ -30,7 +30,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -57,10 +56,10 @@ public class AppleTest extends AbstractBuildRule implements TestRule {
       ImmutableSet<Label> labels,
       ImmutableSet<BuildRule> sourceUnderTest) {
     super(params, resolver);
-    this.testBundle = Preconditions.checkNotNull(testBundle);
-    this.contacts = Preconditions.checkNotNull(contacts);
-    this.labels = Preconditions.checkNotNull(labels);
-    this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
+    this.testBundle = testBundle;
+    this.contacts = contacts;
+    this.labels = labels;
+    this.sourceUnderTest = sourceUnderTest;
   }
 
   /**

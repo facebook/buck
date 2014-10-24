@@ -60,11 +60,11 @@ public class SeparatedProjectsGenerator {
       ExecutionContext executionContext,
       ImmutableSet<BuildTarget> projectConfigTargets,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
-    this.resolver = Preconditions.checkNotNull(resolver);
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.actionGraph = Preconditions.checkNotNull(actionGraph);
-    this.executionContext = Preconditions.checkNotNull(executionContext);
-    this.projectConfigTargets = Preconditions.checkNotNull(projectConfigTargets);
+    this.resolver = resolver;
+    this.projectFilesystem = projectFilesystem;
+    this.actionGraph = actionGraph;
+    this.executionContext = executionContext;
+    this.projectConfigTargets = projectConfigTargets;
     this.projectGenerators = null;
     this.projectGeneratorOptions = ImmutableSet.<ProjectGenerator.Option>builder()
       .addAll(projectGeneratorOptions)

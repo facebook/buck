@@ -20,10 +20,11 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+
+import javax.annotation.Nullable;
 
 public class GenProGuardConfigStep extends ShellStep {
 
@@ -35,9 +36,9 @@ public class GenProGuardConfigStep extends ShellStep {
       Path androidManifestPath,
       ImmutableList<Path> resDirectories,
       Path proguardConfigurationPath) {
-    this.androidManifestPath = Preconditions.checkNotNull(androidManifestPath);
-    this.resDirectories = Preconditions.checkNotNull(resDirectories);
-    this.proguardConfigurationPath = Preconditions.checkNotNull(proguardConfigurationPath);
+    this.androidManifestPath = androidManifestPath;
+    this.resDirectories = resDirectories;
+    this.proguardConfigurationPath = proguardConfigurationPath;
   }
 
   @Override
@@ -70,7 +71,7 @@ public class GenProGuardConfigStep extends ShellStep {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (obj == null || !(obj instanceof GenProGuardConfigStep)) {
       return false;
     }

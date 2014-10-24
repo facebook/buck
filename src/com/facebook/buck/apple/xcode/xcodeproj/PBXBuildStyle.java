@@ -18,14 +18,13 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.base.Preconditions;
 
 public class PBXBuildStyle extends PBXProjectItem {
   private final String name;
   private NSDictionary buildSettings;
 
   public PBXBuildStyle(String name) {
-    this.name = Preconditions.checkNotNull(name);
+    this.name = name;
     this.buildSettings = new NSDictionary();
   }
 

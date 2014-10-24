@@ -26,7 +26,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -96,16 +95,15 @@ public class ApkBuilderStep implements Step {
       Path pathToKeystore,
       Path pathToKeystorePropertiesFile,
       boolean debugMode) {
-    this.resourceApk = Preconditions.checkNotNull(resourceApk);
-    this.pathToOutputApkFile = Preconditions.checkNotNull(pathToOutputApkFile);
-    this.dexFile = Preconditions.checkNotNull(dexFile);
-    this.assetDirectories = Preconditions.checkNotNull(assetDirectories);
-    this.nativeLibraryDirectories = Preconditions.checkNotNull(nativeLibraryDirectories);
-    this.jarFilesThatMayContainResources =
-        Preconditions.checkNotNull(jarFilesThatMayContainResources);
-    this.zipFiles = Preconditions.checkNotNull(zipFiles);
-    this.pathToKeystore = Preconditions.checkNotNull(pathToKeystore);
-    this.pathToKeystorePropertiesFile = Preconditions.checkNotNull(pathToKeystorePropertiesFile);
+    this.resourceApk = resourceApk;
+    this.pathToOutputApkFile = pathToOutputApkFile;
+    this.dexFile = dexFile;
+    this.assetDirectories = assetDirectories;
+    this.nativeLibraryDirectories = nativeLibraryDirectories;
+    this.jarFilesThatMayContainResources = jarFilesThatMayContainResources;
+    this.zipFiles = zipFiles;
+    this.pathToKeystore = pathToKeystore;
+    this.pathToKeystorePropertiesFile = pathToKeystorePropertiesFile;
     this.debugMode = debugMode;
   }
 
@@ -238,8 +236,8 @@ public class ApkBuilderStep implements Step {
     private final X509Certificate certificate;
 
     PrivateKeyAndCertificate(PrivateKey privateKey, X509Certificate certificate) {
-      this.privateKey = Preconditions.checkNotNull(privateKey);
-      this.certificate = Preconditions.checkNotNull(certificate);
+      this.privateKey = privateKey;
+      this.certificate = certificate;
     }
   }
 }

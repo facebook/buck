@@ -65,7 +65,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
                 return input.toString().endsWith(".xcassets");
               }
             }));
-    this.inputPathsSupplier = Preconditions.checkNotNull(inputPathsSupplier);
+    this.inputPathsSupplier = inputPathsSupplier;
     this.dirs = ImmutableSet.copyOf(args.dirs);
     this.copyToBundles = args.copyToBundles.or(Boolean.FALSE);
   }

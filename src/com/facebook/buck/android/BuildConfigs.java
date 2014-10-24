@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -102,8 +101,6 @@ public class BuildConfigs {
       String javaPackage,
       boolean useConstantExpressions,
       BuildConfigFields userFields) {
-    Preconditions.checkNotNull(javaPackage);
-    Preconditions.checkNotNull(userFields);
 
     BuildConfigFields totalFields = getDefaultBuildConfigFields().putAll(userFields);
     return totalFields.generateBuildConfigDotJava(source, javaPackage, useConstantExpressions);

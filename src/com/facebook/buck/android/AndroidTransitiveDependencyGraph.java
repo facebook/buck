@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Optionals;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -36,7 +35,7 @@ public class AndroidTransitiveDependencyGraph {
    *     process of being constructed via its builder.
    */
   AndroidTransitiveDependencyGraph(ImmutableSortedSet<BuildRule> deps) {
-    this.rulesToTraverseForTransitiveDeps = Preconditions.checkNotNull(deps);
+    this.rulesToTraverseForTransitiveDeps = deps;
   }
   public ImmutableSet<SourcePath> findManifestFiles() {
 

@@ -100,12 +100,12 @@ public class AdbHelper {
       Console console,
       BuckEventBus buckEventBus,
       BuckConfig buckConfig) {
-    this.options = Preconditions.checkNotNull(adbOptions);
-    this.deviceOptions = Preconditions.checkNotNull(deviceOptions);
-    this.context = Preconditions.checkNotNull(context);
-    this.console = Preconditions.checkNotNull(console);
-    this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
-    this.buckConfig = Preconditions.checkNotNull(buckConfig);
+    this.options = adbOptions;
+    this.deviceOptions = deviceOptions;
+    this.context = context;
+    this.console = console;
+    this.buckEventBus = buckEventBus;
+    this.buckConfig = buckConfig;
   }
 
   private BuckEventBus getBuckEventBus() {
@@ -211,12 +211,8 @@ public class AdbHelper {
       // ADB was already initialized, we're fine, so just ignore.
     }
 
-    AndroidDebugBridge adb = null;
-    if (context != null) {
-      adb = AndroidDebugBridge.createBridge(context.getPathToAdbExecutable(), false);
-    } else {
-      adb = AndroidDebugBridge.createBridge();
-    }
+    AndroidDebugBridge adb =
+        AndroidDebugBridge.createBridge(context.getPathToAdbExecutable(), false);
     if (adb == null) {
       console.printBuildFailure("Failed to connect to adb. Make sure adb server is running.");
       return null;

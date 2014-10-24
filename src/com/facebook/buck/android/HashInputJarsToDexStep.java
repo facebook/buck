@@ -58,9 +58,9 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
       Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs,
       Supplier<Map<String, HashCode>> classNamesToHashesSupplier) {
     super("collect_smart_dex_inputs_hash");
-    this.primaryInputsToDex = Preconditions.checkNotNull(primaryInputsToDex);
-    this.secondaryOutputToInputs = Preconditions.checkNotNull(secondaryOutputToInputs);
-    this.classNamesToHashesSupplier = Preconditions.checkNotNull(classNamesToHashesSupplier);
+    this.primaryInputsToDex = primaryInputsToDex;
+    this.secondaryOutputToInputs = secondaryOutputToInputs;
+    this.classNamesToHashesSupplier = classNamesToHashesSupplier;
 
     this.dexInputsToHashes = ImmutableMap.builder();
     this.stepFinished = false;

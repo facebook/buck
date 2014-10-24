@@ -64,8 +64,8 @@ public class MergeAndroidResourcesStep implements Step {
       Optional<Path> uberRDotTxt,
       Path outputDir) {
     this.androidResourceDeps = ImmutableList.copyOf(androidResourceDeps);
-    this.uberRDotTxt = Preconditions.checkNotNull(uberRDotTxt);
-    this.outputDir = Preconditions.checkNotNull(outputDir);
+    this.uberRDotTxt = uberRDotTxt;
+    this.outputDir = outputDir;
   }
 
   public ImmutableSet<SourcePath> getRDotJavaFiles() {

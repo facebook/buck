@@ -76,7 +76,7 @@ public class DummyRDotJava extends AbstractBuildRule
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.javacOptions = javacOptions;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
@@ -218,7 +218,7 @@ public class DummyRDotJava extends AbstractBuildRule
     final Sha1HashCode rDotTxtSha1;
 
     public BuildOutput(Sha1HashCode rDotTxtSha1) {
-      this.rDotTxtSha1 = Preconditions.checkNotNull(rDotTxtSha1);
+      this.rDotTxtSha1 = rDotTxtSha1;
     }
   }
 }

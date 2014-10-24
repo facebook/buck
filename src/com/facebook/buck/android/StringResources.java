@@ -75,9 +75,9 @@ public class StringResources {
       TreeMap<Integer, String> strings,
       TreeMap<Integer, ImmutableMap<String, String>> plurals,
       TreeMultimap<Integer, String> arrays) {
-    this.strings = Preconditions.checkNotNull(strings);
-    this.plurals = Preconditions.checkNotNull(plurals);
-    this.arrays = Preconditions.checkNotNull(arrays);
+    this.strings = strings;
+    this.plurals = plurals;
+    this.arrays = arrays;
   }
 
   public StringResources getMergedResources(StringResources otherResources) {

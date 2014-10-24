@@ -100,10 +100,10 @@ public class DxStep extends ShellStep {
   @VisibleForTesting
   DxStep(Path outputDexFile, Iterable<Path> filesToDex, EnumSet<Option> options,
       Supplier<String> getPathToCustomDx) {
-    this.outputDexFile = Preconditions.checkNotNull(outputDexFile);
+    this.outputDexFile = outputDexFile;
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
-    this.getPathToCustomDx = Preconditions.checkNotNull(getPathToCustomDx);
+    this.getPathToCustomDx = getPathToCustomDx;
 
     Preconditions.checkArgument(
         !options.contains(Option.RUN_IN_PROCESS) ||

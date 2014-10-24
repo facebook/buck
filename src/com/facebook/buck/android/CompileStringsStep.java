@@ -113,9 +113,9 @@ public class CompileStringsStep implements Step {
       ImmutableSet<Path> filteredStringFiles,
       Path rDotTxtDir,
       Path destinationDir) {
-    this.filteredStringFiles = Preconditions.checkNotNull(filteredStringFiles);
-    this.rDotTxtDir = Preconditions.checkNotNull(rDotTxtDir);
-    this.destinationDir = Preconditions.checkNotNull(destinationDir);
+    this.filteredStringFiles = filteredStringFiles;
+    this.rDotTxtDir = rDotTxtDir;
+    this.destinationDir = destinationDir;
     this.regionSpecificToBaseLocaleMap = Maps.newHashMap();
     this.resourceNameToIdMap = Maps.newHashMap();
   }

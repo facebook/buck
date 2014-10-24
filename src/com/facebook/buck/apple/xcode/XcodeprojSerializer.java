@@ -107,10 +107,8 @@ public class XcodeprojSerializer {
   }
 
   public void addField(String name, PBXObject obj) {
-    if (obj != null) {
-      String gid = serializeObject(obj);
-      Preconditions.checkNotNull(currentObject).put(name, gid);
-    }
+    String gid = serializeObject(obj);
+    Preconditions.checkNotNull(currentObject).put(name, gid);
   }
 
   public void addField(String name, int val) {
@@ -118,9 +116,7 @@ public class XcodeprojSerializer {
   }
 
   public void addField(String name, String val) {
-    if (val != null) {
-      Preconditions.checkNotNull(currentObject).put(name, val);
-    }
+    Preconditions.checkNotNull(currentObject).put(name, val);
   }
 
   public void addField(String name, boolean val) {
@@ -137,8 +133,6 @@ public class XcodeprojSerializer {
   }
 
   public void addField(String name, NSObject v) {
-    if (v != null) {
-      Preconditions.checkNotNull(currentObject).put(name, v);
-    }
+    Preconditions.checkNotNull(currentObject).put(name, v);
   }
 }

@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.util.DirectoryTraverser;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,7 +72,7 @@ public class AppleResource extends AbstractBuildRule {
       DirectoryTraverser directoryTraverser,
       AppleResourceDescription.Arg args) {
     super(params, resolver);
-    this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
+    this.directoryTraverser = directoryTraverser;
     this.dirs = ImmutableSortedSet.copyOf(args.dirs);
     this.files = ImmutableSortedSet.copyOf(args.files);
 

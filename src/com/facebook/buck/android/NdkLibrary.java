@@ -99,7 +99,7 @@ public class NdkLibrary extends AbstractBuildRule
     this.sources = ImmutableSortedSet.copyOf(sources);
     this.flags = ImmutableList.copyOf(flags);
 
-    this.ndkVersion = Preconditions.checkNotNull(ndkVersion);
+    this.ndkVersion = ndkVersion;
   }
 
   @Override

@@ -22,7 +22,6 @@ import com.facebook.buck.step.ExecutionContext;
 import java.nio.file.Path;
 import java.io.IOException;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 
 /**
  * This step writes the size of a .dex.jar file and the uncompressed size of its contained
@@ -35,8 +34,8 @@ class DexJarAnalysisStep implements Step {
   private final Path dexMetaPath;
 
   DexJarAnalysisStep(Path dexPath, Path dexMetaPath) {
-    this.dexPath = Preconditions.checkNotNull(dexPath);
-    this.dexMetaPath = Preconditions.checkNotNull(dexMetaPath);
+    this.dexPath = dexPath;
+    this.dexMetaPath = dexMetaPath;
   }
 
   @Override

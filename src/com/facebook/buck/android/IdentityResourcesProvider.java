@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -27,7 +26,7 @@ public class IdentityResourcesProvider implements FilteredResourcesProvider {
   private final ImmutableList<Path> resDirectories;
 
   public IdentityResourcesProvider(ImmutableList<Path> resDirectories) {
-    this.resDirectories = Preconditions.checkNotNull(resDirectories);
+    this.resDirectories = resDirectories;
   }
 
   @Override

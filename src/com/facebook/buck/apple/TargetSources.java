@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.AppleSource;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,10 +57,10 @@ public class TargetSources {
       ImmutableSortedMap<SourcePath, String> perFileFlags,
       ImmutableSortedSet<SourcePath> srcPaths,
       ImmutableSortedSet<SourcePath> headerPaths) {
-    this.srcs = Preconditions.checkNotNull(srcs);
-    this.perFileFlags = Preconditions.checkNotNull(perFileFlags);
-    this.srcPaths = Preconditions.checkNotNull(srcPaths);
-    this.headerPaths = Preconditions.checkNotNull(headerPaths);
+    this.srcs = srcs;
+    this.perFileFlags = perFileFlags;
+    this.srcPaths = srcPaths;
+    this.headerPaths = headerPaths;
   }
 
   /**

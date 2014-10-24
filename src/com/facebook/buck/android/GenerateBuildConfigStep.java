@@ -23,7 +23,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 
 import java.io.IOException;
@@ -43,11 +42,11 @@ public class GenerateBuildConfigStep implements Step {
       boolean useConstantExpressions,
       Supplier<BuildConfigFields> fields,
       Path outBuildConfigPath) {
-    this.source = Preconditions.checkNotNull(source);
-    this.javaPackage = Preconditions.checkNotNull(javaPackage);
+    this.source = source;
+    this.javaPackage = javaPackage;
     this.useConstantExpressions = useConstantExpressions;
-    this.fields = Preconditions.checkNotNull(fields);
-    this.outBuildConfigPath = Preconditions.checkNotNull(outBuildConfigPath);
+    this.fields = fields;
+    this.outBuildConfigPath = outBuildConfigPath;
     if (outBuildConfigPath.getNameCount() == 0) {
       throw new HumanReadableException("Output BuildConfig.java filepath is missing");
     }

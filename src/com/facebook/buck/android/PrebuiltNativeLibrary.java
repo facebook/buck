@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -59,8 +58,8 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
       ImmutableSortedSet<Path> librarySources) {
     super(params, resolver);
     this.isAsset = isAsset;
-    this.libraryPath = Preconditions.checkNotNull(nativeLibsDirectory);
-    this.librarySources = Preconditions.checkNotNull(librarySources);
+    this.libraryPath = nativeLibsDirectory;
+    this.librarySources = librarySources;
   }
 
   @Override

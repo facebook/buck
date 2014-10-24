@@ -251,13 +251,13 @@ public class ProjectGenerator {
       Path outputDirectory,
       String projectName,
       Set<Option> options) {
-    this.resolver = Preconditions.checkNotNull(resolver);
+    this.resolver = resolver;
     this.rulesToBuild = ImmutableSet.copyOf(rulesToBuild);
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.executionContext = Preconditions.checkNotNull(executionContext);
-    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
-    this.projectName = Preconditions.checkNotNull(projectName);
+    this.projectFilesystem = projectFilesystem;
+    this.executionContext = executionContext;
+    this.outputDirectory = outputDirectory;
+    this.projectName = projectName;
     this.options = ImmutableSet.copyOf(options);
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -2061,12 +2061,11 @@ public class ProjectGenerator {
         ImmutableMap<String, String> projectLevelInlineSettings,
         Optional<SourcePath> targetLevelConfigFile,
         ImmutableMap<String, String> targetLevelInlineSettings) {
-      this.buildTarget = Preconditions.checkNotNull(buildTarget);
-      this.projectLevelConfigFile =
-          Preconditions.checkNotNull(projectLevelConfigFile);
-      this.projectLevelInlineSettings = Preconditions.checkNotNull(projectLevelInlineSettings);
-      this.targetLevelConfigFile = Preconditions.checkNotNull(targetLevelConfigFile);
-      this.targetLevelInlineSettings = Preconditions.checkNotNull(targetLevelInlineSettings);
+      this.buildTarget = buildTarget;
+      this.projectLevelConfigFile = projectLevelConfigFile;
+      this.projectLevelInlineSettings = projectLevelInlineSettings;
+      this.targetLevelConfigFile = targetLevelConfigFile;
+      this.targetLevelInlineSettings = targetLevelInlineSettings;
     }
   }
 }

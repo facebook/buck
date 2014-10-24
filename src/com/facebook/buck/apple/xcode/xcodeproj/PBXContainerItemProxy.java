@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.base.Preconditions;
 
 /**
  * Reference to another object used by {@link PBXTargetDependency}. Can reference a remote file
@@ -46,9 +45,6 @@ public class PBXContainerItemProxy extends PBXContainerItem {
       PBXFileReference containerPortal,
       String remoteGlobalIDString,
       ProxyType proxyType) {
-    Preconditions.checkNotNull(containerPortal);
-    Preconditions.checkNotNull(remoteGlobalIDString);
-    Preconditions.checkNotNull(proxyType);
     this.containerPortal = containerPortal;
     this.remoteGlobalIDString = remoteGlobalIDString;
     this.proxyType = proxyType;

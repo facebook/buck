@@ -115,11 +115,11 @@ public class SmartDexingStep implements Step {
             return map.build();
           }
         });
-    this.secondaryOutputDir = Preconditions.checkNotNull(secondaryOutputDir);
-    this.dexInputHashesProvider = Preconditions.checkNotNull(dexInputHashesProvider);
-    this.successDir = Preconditions.checkNotNull(successDir);
-    this.numThreads = Preconditions.checkNotNull(numThreads);
-    this.dxOptions = Preconditions.checkNotNull(dxOptions);
+    this.secondaryOutputDir = secondaryOutputDir;
+    this.dexInputHashesProvider = dexInputHashesProvider;
+    this.successDir = successDir;
+    this.numThreads = numThreads;
+    this.dxOptions = dxOptions;
   }
 
   static int determineOptimalThreadCount() {
@@ -170,8 +170,7 @@ public class SmartDexingStep implements Step {
       Set<Path> producedArtifacts,
       ProjectFilesystem projectFilesystem) throws IOException {
     Path normalizedRoot = projectFilesystem.getRootPath().normalize();
-    for (Path secondaryOutput :
-        Preconditions.checkNotNull(projectFilesystem.getDirectoryContents(secondaryOutputDir))) {
+    for (Path secondaryOutput : projectFilesystem.getDirectoryContents(secondaryOutputDir)) {
       Path relativePath = normalizedRoot.relativize(secondaryOutput.normalize());
       if (!producedArtifacts.contains(relativePath) &&
           !secondaryOutput.getFileName().toString().endsWith(".meta")) {
@@ -262,11 +261,11 @@ public class SmartDexingStep implements Step {
         Path outputPath,
         Path outputHashPath,
         EnumSet<Option> dxOptions) {
-      this.filesystem = Preconditions.checkNotNull(filesystem);
+      this.filesystem = filesystem;
       this.dexInputHashes = ImmutableMap.copyOf(dexInputHashes);
       this.srcs = ImmutableSet.copyOf(srcs);
-      this.outputPath = Preconditions.checkNotNull(outputPath);
-      this.outputHashPath = Preconditions.checkNotNull(outputHashPath);
+      this.outputPath = outputPath;
+      this.outputHashPath = outputHashPath;
       this.dxOptions = dxOptions;
     }
 

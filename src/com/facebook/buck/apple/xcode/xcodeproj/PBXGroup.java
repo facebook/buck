@@ -21,7 +21,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
-import com.google.common.base.Preconditions;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -135,7 +134,7 @@ public class PBXGroup extends PBXReference {
   }
 
   public void setSortPolicy(SortPolicy sortPolicy) {
-    this.sortPolicy = Preconditions.checkNotNull(sortPolicy);
+    this.sortPolicy = sortPolicy;
   }
 
   public SortPolicy getSortPolicy() {

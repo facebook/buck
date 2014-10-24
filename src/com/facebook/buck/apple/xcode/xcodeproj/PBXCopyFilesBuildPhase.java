@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.base.Preconditions;
 
 public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
   /**
@@ -59,8 +58,8 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
   private String path;
 
   public PBXCopyFilesBuildPhase(Destination dstSubfolderSpec, String path) {
-    this.dstSubfolderSpec = Preconditions.checkNotNull(dstSubfolderSpec);
-    this.path = Preconditions.checkNotNull(path);
+    this.dstSubfolderSpec = dstSubfolderSpec;
+    this.path = path;
   }
 
   public Destination getDstSubfolderSpec() {

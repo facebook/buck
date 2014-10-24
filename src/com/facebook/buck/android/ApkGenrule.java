@@ -28,7 +28,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -77,9 +76,8 @@ public class ApkGenrule extends Genrule implements InstallableApk {
         /* out */ params.getBuildTarget().getShortName() + ".apk",
         relativeToAbsolutePathFunction);
 
-    this.apk = Preconditions.checkNotNull(apk);
-    this.relativeToAbsolutePathFunction =
-        Preconditions.checkNotNull(relativeToAbsolutePathFunction);
+    this.apk = apk;
+    this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
   }
 
   @Override

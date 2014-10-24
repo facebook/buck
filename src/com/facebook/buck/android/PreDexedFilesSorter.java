@@ -77,15 +77,14 @@ public class PreDexedFilesSorter {
       long linearAllocHardLimit,
       DexStore dexStore,
       Path secondaryDexJarFilesDir) {
-    this.rDotJavaDex = Preconditions.checkNotNull(rDotJavaDex);
-    this.dexFilesToMerge = Preconditions.checkNotNull(dexFilesToMerge);
-    this.primaryDexFilter = ClassNameFilter.fromConfiguration(
-        Preconditions.checkNotNull(primaryDexPatterns));
-    this.scratchDirectory = Preconditions.checkNotNull(scratchDirectory);
+    this.rDotJavaDex = rDotJavaDex;
+    this.dexFilesToMerge = dexFilesToMerge;
+    this.primaryDexFilter = ClassNameFilter.fromConfiguration(primaryDexPatterns);
+    this.scratchDirectory = scratchDirectory;
     Preconditions.checkState(linearAllocHardLimit > 0);
     this.linearAllocHardLimit = linearAllocHardLimit;
-    this.dexStore = Preconditions.checkNotNull(dexStore);
-    this.secondaryDexJarFilesDir = Preconditions.checkNotNull(secondaryDexJarFilesDir);
+    this.dexStore = dexStore;
+    this.secondaryDexJarFilesDir = secondaryDexJarFilesDir;
   }
 
   public Result sortIntoPrimaryAndSecondaryDexes(
@@ -272,10 +271,9 @@ public class PreDexedFilesSorter {
         Multimap<Path, Path> secondaryOutputToInputs,
         Map<Path, DexWithClasses> metadataTxtDexEntries,
         final ImmutableMap<Path, Sha1HashCode> dexInputHashes) {
-      this.primaryDexInputs = Preconditions.checkNotNull(primaryDexInputs);
-      this.secondaryOutputToInputs = Preconditions.checkNotNull(secondaryOutputToInputs);
-      this.metadataTxtDexEntries = Preconditions.checkNotNull(metadataTxtDexEntries);
-      Preconditions.checkNotNull(dexInputHashes);
+      this.primaryDexInputs = primaryDexInputs;
+      this.secondaryOutputToInputs = secondaryOutputToInputs;
+      this.metadataTxtDexEntries = metadataTxtDexEntries;
       this.dexInputHashesProvider = new DexInputHashesProvider() {
         @Override
         public ImmutableMap<Path, Sha1HashCode> getDexInputHashes() {

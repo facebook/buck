@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -60,8 +59,8 @@ public abstract class PBXTarget extends PBXProjectItem {
   @Nullable private PBXFileReference productReference;
 
   public PBXTarget(String name, ProductType productType) {
-    this.name = Preconditions.checkNotNull(name);
-    this.productType = Preconditions.checkNotNull(productType);
+    this.name = name;
+    this.productType = productType;
     this.dependencies = Lists.newArrayList();
     this.buildPhases = Lists.newArrayList();
     this.buildConfigurationList = new XCConfigurationList();
@@ -120,9 +119,7 @@ public abstract class PBXTarget extends PBXProjectItem {
     super.serializeInto(s);
 
     s.addField("name", name);
-    if (productType != null) {
-      s.addField("productType", productType.toString());
-    }
+    s.addField("productType", productType.toString());
     if (productName != null) {
       s.addField("productName", productName);
     }
@@ -131,8 +128,6 @@ public abstract class PBXTarget extends PBXProjectItem {
     }
     s.addField("dependencies", dependencies);
     s.addField("buildPhases", buildPhases);
-    if (buildConfigurationList != null) {
-      s.addField("buildConfigurationList", buildConfigurationList);
-    }
+    s.addField("buildConfigurationList", buildConfigurationList);
   }
 }

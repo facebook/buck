@@ -28,7 +28,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -110,10 +109,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize) {
     this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
-    this.pathToProGuardCommandLineArgsFile = Preconditions.checkNotNull(
-        pathToProGuardCommandLineArgsFile);
-    this.proguardJarOverride = Preconditions.checkNotNull(proguardJarOverride);
-    this.proguardMaxHeapSize = Preconditions.checkNotNull(proguardMaxHeapSize);
+    this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
+    this.proguardJarOverride = proguardJarOverride;
+    this.proguardMaxHeapSize = proguardMaxHeapSize;
   }
 
   @Override
@@ -241,13 +239,13 @@ public final class ProGuardObfuscateStep extends ShellStep {
         Path proguardDirectory,
         Path pathToProGuardCommandLineArgsFile) {
       super("write_proguard_command_line_parameters");
-      this.generatedProGuardConfig = Preconditions.checkNotNull(generatedProGuardConfig);
+      this.generatedProGuardConfig = generatedProGuardConfig;
       this.customProguardConfigs = ImmutableSet.copyOf(customProguardConfigs);
       this.sdkProguardConfig = sdkProguardConfig;
-      this.optimizationPasses = Preconditions.checkNotNull(optimizationPasses);
+      this.optimizationPasses = optimizationPasses;
       this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
       this.additionalLibraryJarsForProguard = ImmutableSet.copyOf(additionalLibraryJarsForProguard);
-      this.proguardDirectory = Preconditions.checkNotNull(proguardDirectory);
+      this.proguardDirectory = proguardDirectory;
       this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
     }
 

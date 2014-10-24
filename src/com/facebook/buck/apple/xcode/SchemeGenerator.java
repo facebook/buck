@@ -89,13 +89,13 @@ class SchemeGenerator {
       Map<SchemeActionType, String> actionConfigNames,
       Map<BuildTarget, PBXTarget> buildTargetToPbxTargetMap,
       Map<PBXTarget, Path> targetToProjectPathMap) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.primaryTarget = Preconditions.checkNotNull(primaryTarget);
+    this.projectFilesystem = projectFilesystem;
+    this.primaryTarget = primaryTarget;
     this.orderedBuildTargets = ImmutableSet.copyOf(orderedBuildTargets);
     this.orderedTestBuildTargets = ImmutableSet.copyOf(orderedTestBuildTargets);
     this.orderedTestBundleTargets = ImmutableSet.copyOf(orderedTestBundleTargets);
-    this.schemeName = Preconditions.checkNotNull(schemeName);
-    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
+    this.schemeName = schemeName;
+    this.outputDirectory = outputDirectory;
     this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
     this.buildTargetToPbxTargetMap = ImmutableMap.copyOf(buildTargetToPbxTargetMap);
     this.targetToProjectPathMap = ImmutableMap.copyOf(targetToProjectPathMap);

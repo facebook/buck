@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.base.Preconditions;
 
 /**
  * Element of the {@link PBXTarget#dependencies}. Represents a dependency of one target upon another
@@ -27,7 +26,7 @@ public class PBXTargetDependency extends PBXProjectItem {
   private final PBXContainerItemProxy targetProxy;
 
   public PBXTargetDependency(PBXContainerItemProxy targetProxy) {
-    this.targetProxy = Preconditions.checkNotNull(targetProxy);
+    this.targetProxy = targetProxy;
   }
 
   @Override
