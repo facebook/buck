@@ -1,0 +1,66 @@
+{namespace buck.string_parameter_macros}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'String Parameter Macros' /}
+    {param prettify: true /}
+    {param description}
+      Parameter macros provide more expressive power to a rule's string parameters.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+Some rules allow the use of specialized macros embedded within the strings
+of their parameters, providing additional funcitonality such as referecing
+the output paths of other rules.
+
+String parameter macros have the form <code>$(macro[ argument])</code>.
+For rules that support string parameter macros, you can use a backslash at
+any time to prevent expansion (e.g. <code>\$(dirname ...)</code>).
+{/param}
+
+{param args}
+
+{call buck.functionArg}
+  {param desc}
+  String parameter macros may take a single argument.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+
+The following example uses a string parameter macros in a <code>genrule()</code>
+to copy the output of another rule:
+{literal}<pre class="prettyprint lang-py">
+genrule(
+  name = 'gen',
+  out = 'out.txt',
+  cmd = 'cp $(location //some/other:rule) $OUT',
+)
+</pre>{/literal}
+
+The following example uses a backslash to prevent macro expansion, and hand
+the <code>dirname</code> subshell command directly to the shell:
+{literal}<pre class="prettyprint lang-py">
+genrule(
+  name = 'gen',
+  out = 'out.txt',
+  cmd = 'cp $SRCS \$(dirname $OUT)',
+  srcs = [
+    'test1.txt',
+    'test2.txt',
+  ],
+)
+</pre>{/literal}
+
+{/param}
+
+{/call} // buck.rule
+    {/param} // content
+  {/call}
+{/template}
