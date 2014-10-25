@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple.xcode;
 
-import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
@@ -52,13 +51,11 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
@@ -466,7 +463,6 @@ public class ProjectGenerator {
 
     addPostBuildScriptPhasesForDependencies(bundle, target);
 
-    project.getTargets().add(target);
     LOG.debug("Generated iOS bundle target %s", target);
     return target;
   }
@@ -483,7 +479,6 @@ public class ProjectGenerator {
         /* includeFrameworks */ true,
         ImmutableList.<AppleResource>of(),
         ImmutableList.<AppleAssetCatalog>of());
-    project.getTargets().add(target);
     LOG.debug("Generated Apple binary target %s", target);
     return target;
   }
@@ -504,7 +499,6 @@ public class ProjectGenerator {
         /* includeFrameworks */ appleLibrary.getLinkedDynamically(),
         ImmutableList.<AppleResource>of(),
         ImmutableList.<AppleAssetCatalog>of());
-    project.getTargets().add(target);
     LOG.debug("Generated iOS library target %s", target);
     return target;
   }
@@ -548,16 +542,23 @@ public class ProjectGenerator {
         : appleBuildRule.getBuildTarget();
 
     String productName = getProductName(buildTarget);
-    NewNativeTargetProjectMutator targetBuilder = new NewNativeTargetProjectMutator(buildTarget)
+    NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
+        pathRelativizer,
+        resolver,
+        buildTarget);
+
+    mutator
         .setTargetName(getXcodeTargetName(buildTarget))
         .setProduct(
             productType,
             productName,
             Paths.get(String.format(productOutputFormat, productName)))
-        .setGid(appleBuildRule.getGid());
+        .setGid(appleBuildRule.getGid())
+        .setShouldGenerateCopyHeadersPhase(!appleBuildRule.getUseBuckHeaderMaps())
+        .setSources(appleBuildRule.getSrcs(), appleBuildRule.getPerFileFlags());
 
     NewNativeTargetProjectMutator.Result targetBuilderResult =
-        targetBuilder.buildAndAddToProject(project);
+        mutator.buildTargetAndAddToProject(project);
     PBXNativeTarget target = targetBuilderResult.target;
     PBXGroup targetGroup = targetBuilderResult.targetGroup;
 
@@ -627,14 +628,13 @@ public class ProjectGenerator {
       addRunScriptBuildPhasesForDependencies(bundle.get(), target);
     }
     addRunScriptBuildPhasesForDependencies(appleBuildRule, target);
-    addBuildPhasesGroupsAndHeaderMapsForSourcesAndHeaders(
-        appleBuildRule,
-        target,
-        targetGroup,
-        appleBuildRule.getHeaderPathPrefix(),
-        appleBuildRule.getUseBuckHeaderMaps(),
-        appleBuildRule.getSrcs(),
-        appleBuildRule.getPerFileFlags());
+    if (appleBuildRule.getUseBuckHeaderMaps()) {
+      addHeaderMapsForHeaders(
+          appleBuildRule,
+          appleBuildRule.getHeaderPathPrefix(),
+          appleBuildRule.getSrcs(),
+          appleBuildRule.getPerFileFlags());
+    }
     if (includeFrameworks) {
       ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
       frameworksBuilder.addAll(appleBuildRule.getFrameworks());
@@ -848,63 +848,30 @@ public class ProjectGenerator {
   }
 
   /**
-   * Add sources and headers build phases to a target, and add references to the target's group.
    * Create header map files and write them to disk.
    *
-   * @param target      Target to add the build phases to.
-   * @param targetGroup Group to link the source files to.
-   * @param groupedSources Grouped sources and headers to include in the build
-   *        phase, path relative to project root.
+   * @param groupedSources Source files to include in the header map.
+   *                       Implementation files in the source groups are ignored.
    * @param sourceFlags    Source path to flag mapping.
    */
-  private void addBuildPhasesGroupsAndHeaderMapsForSourcesAndHeaders(
+  private void addHeaderMapsForHeaders(
       AbstractAppleNativeTargetBuildRule buildRule,
-      PBXNativeTarget target,
-      PBXGroup targetGroup,
       Optional<String> headerPathPrefix,
-      boolean useBuckHeaderMaps,
       Iterable<GroupedSource> groupedSources,
       ImmutableMap<SourcePath, String> sourceFlags) throws IOException {
-    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
-    // Sources groups stay in the order in which they're declared in the BUCK file.
-    sourcesGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
-    PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
-    PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
-
-    addGroupedSourcesToBuildPhases(
-        sourcesGroup,
-        sourcesBuildPhase,
-        // We still want to create groups for header files even if header build phases
-        // are replaced with header maps.
-        (useBuckHeaderMaps ? Optional.<PBXHeadersBuildPhase>absent()
-            : Optional.of(headersBuildPhase)),
+    HeaderMap.Builder publicMapBuilder = HeaderMap.builder();
+    HeaderMap.Builder targetMapBuilder = HeaderMap.builder();
+    HeaderMap.Builder targetUserMapBuilder = HeaderMap.builder();
+    addGroupedSourcesToHeaderMaps(
+        publicMapBuilder,
+        targetMapBuilder,
+        targetUserMapBuilder,
+        Paths.get(headerPathPrefix.or(getProductName(buildRule.getBuildTarget()))),
         groupedSources,
         sourceFlags);
-
-    if (!sourcesBuildPhase.getFiles().isEmpty()) {
-      target.getBuildPhases().add(sourcesBuildPhase);
-    }
-    if (!headersBuildPhase.getFiles().isEmpty()) {
-      target.getBuildPhases().add(headersBuildPhase);
-    }
-
-    // -- header maps
-    if (useBuckHeaderMaps) {
-      HeaderMap.Builder publicMapBuilder = HeaderMap.builder();
-      HeaderMap.Builder targetMapBuilder = HeaderMap.builder();
-      HeaderMap.Builder targetUserMapBuilder = HeaderMap.builder();
-      addGroupedSourcesToHeaderMaps(
-          publicMapBuilder,
-          targetMapBuilder,
-          targetUserMapBuilder,
-          Paths.get(headerPathPrefix.or(getProductName(buildRule.getBuildTarget()))),
-          groupedSources,
-          sourceFlags);
-      writeHeaderMap(publicMapBuilder.build(), buildRule, HeaderMapType.PUBLIC_HEADER_MAP);
-      writeHeaderMap(targetMapBuilder.build(), buildRule, HeaderMapType.TARGET_HEADER_MAP);
-      writeHeaderMap(targetUserMapBuilder.build(), buildRule, HeaderMapType.TARGET_USER_HEADER_MAP);
-    }
-
+    writeHeaderMap(publicMapBuilder.build(), buildRule, HeaderMapType.PUBLIC_HEADER_MAP);
+    writeHeaderMap(targetMapBuilder.build(), buildRule, HeaderMapType.TARGET_HEADER_MAP);
+    writeHeaderMap(targetUserMapBuilder.build(), buildRule, HeaderMapType.TARGET_USER_HEADER_MAP);
   }
 
   private void addGroupedSourcesToHeaderMaps(
@@ -942,75 +909,6 @@ public class ProjectGenerator {
           throw new RuntimeException("Unhandled grouped source type: " + groupedSource.getType());
       }
     }
-  }
-
-  private void addGroupedSourcesToBuildPhases(
-      PBXGroup sourcesGroup,
-      PBXSourcesBuildPhase sourcesBuildPhase,
-      Optional<PBXHeadersBuildPhase> headersBuildPhase,
-      Iterable<GroupedSource> groupedSources,
-      ImmutableMap<SourcePath, String> sourceFlags) {
-    for (GroupedSource groupedSource : groupedSources) {
-      switch (groupedSource.getType()) {
-        case SOURCE_PATH:
-          if (resolver.isSourcePathExtensionInSet(
-              groupedSource.getSourcePath(),
-              FileExtensions.CLANG_HEADERS)) {
-            addSourcePathToHeadersBuildPhase(
-                groupedSource.getSourcePath(),
-                sourcesGroup,
-                headersBuildPhase,
-                sourceFlags);
-          } else {
-            addSourcePathToSourcesBuildPhase(
-                groupedSource.getSourcePath(),
-                sourcesGroup,
-                sourcesBuildPhase,
-                sourceFlags);
-          }
-          break;
-        case SOURCE_GROUP:
-          PBXGroup newSourceGroup = sourcesGroup.getOrCreateChildGroupByName(
-              groupedSource.getSourceGroupName());
-          // Sources groups stay in the order in which they're declared in the BUCK file.
-          newSourceGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
-          addGroupedSourcesToBuildPhases(
-              newSourceGroup,
-              sourcesBuildPhase,
-              headersBuildPhase,
-              groupedSource.getSourceGroup(),
-              sourceFlags);
-          break;
-        default:
-          throw new RuntimeException("Unhandled grouped source type: " + groupedSource.getType());
-      }
-    }
-  }
-
-  private void addSourcePathToSourcesBuildPhase(
-      SourcePath sourcePath,
-      PBXGroup sourcesGroup,
-      PBXSourcesBuildPhase sourcesBuildPhase,
-      ImmutableMap<SourcePath, String> sourceFlags) {
-    Path path = resolver.getPath(sourcePath);
-    PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-        new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            pathRelativizer.outputDirToRootRelative(path)));
-    PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-    sourcesBuildPhase.getFiles().add(buildFile);
-    String customFlags = sourceFlags.get(sourcePath);
-    if (customFlags != null) {
-      NSDictionary settings = new NSDictionary();
-      settings.put("COMPILER_FLAGS", customFlags);
-      buildFile.setSettings(Optional.of(settings));
-    }
-    LOG.verbose(
-        "Added source path %s to group %s, flags %s, PBXFileReference %s",
-        sourcePath,
-        sourcesGroup.getName(),
-        customFlags,
-        fileReference);
   }
 
   private void addHeaderMapEntry(
@@ -1059,46 +957,6 @@ public class ProjectGenerator {
           "Xcode's so-called 'private' headers have been deprecated in the new header map mode. " +
           "Please declare '" + fileName + "' as public, " +
           "or use the default visibility (i.e. by target) instead.");
-    }
-  }
-
-  private void addSourcePathToHeadersBuildPhase(
-      SourcePath headerPath,
-      PBXGroup headersGroup,
-      Optional<PBXHeadersBuildPhase> headersBuildPhase,
-      ImmutableMap<SourcePath, String> sourceFlags) {
-    Path repoRootRelativePath = pathRelativizer.outputPathToSourcePath(headerPath);
-    PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
-        new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            repoRootRelativePath));
-    PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-    String headerFlags = sourceFlags.get(headerPath);
-    if (headerFlags != null) {
-      // If we specify nothing, Xcode will use "project" visibility.
-      NSDictionary settings = new NSDictionary();
-      settings.put(
-          "ATTRIBUTES",
-          new NSArray(new NSString(HeaderVisibility.fromString(headerFlags).toXcodeAttribute())));
-      buildFile.setSettings(Optional.of(settings));
-    } else {
-      buildFile.setSettings(Optional.<NSDictionary>absent());
-    }
-    if (headersBuildPhase.isPresent()) {
-      headersBuildPhase.get().getFiles().add(buildFile);
-      LOG.verbose(
-          "Added header path %s to headers group %s, flags %s, PBXFileReference %s",
-          headerPath,
-          headersGroup.getName(),
-          headerFlags,
-          fileReference);
-    } else {
-      LOG.verbose(
-          "Skipped header path %s to headers group %s, flags %s, PBXFileReference %s",
-          headerPath,
-          headersGroup.getName(),
-          headerFlags,
-          fileReference);
     }
   }
 

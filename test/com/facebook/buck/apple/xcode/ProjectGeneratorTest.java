@@ -26,14 +26,12 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.xml.HasXPath.hasXPath;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
@@ -188,67 +186,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testLibrarySourceGroups() throws IOException {
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
-    arg.srcs = Optional.of(
-        ImmutableList.of(
-            AppleSource.ofSourceGroup(
-                new Pair<>(
-                    "Group1",
-                    ImmutableList.of(
-                        AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
-                        AppleSource.ofSourcePathWithFlags(
-                            new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall"))))),
-            AppleSource.ofSourceGroup(
-                new Pair<>(
-                    "Group2",
-                    ImmutableList.of(
-                        AppleSource.ofSourcePath(new TestSourcePath("baz.m")),
-                        AppleSource.ofSourcePathWithFlags(
-                            new Pair<SourcePath, String>(
-                                new TestSourcePath("blech.m"), "-fobjc-arc")))))));
-    arg.useBuckHeaderMaps = Optional.of(false);
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
-    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
-
-    assertThat(sourcesGroup.getChildren(), hasSize(2));
-
-    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
-    assertEquals("Group1", group1.getName());
-    assertThat(group1.getChildren(), hasSize(2));
-    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
-    assertEquals("foo.m", fileRefFoo.getName());
-    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
-    assertEquals("bar.m", fileRefBar.getName());
-
-    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
-    assertEquals("Group2", group2.getName());
-    assertThat(group2.getChildren(), hasSize(2));
-    PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
-    assertEquals("baz.m", fileRefBaz.getName());
-    PBXFileReference fileRefBlech = (PBXFileReference) Iterables.get(group2.getChildren(), 1);
-    assertEquals("blech.m", fileRefBlech.getName());
-  }
-
-  @Test
-  public void testLibraryHeaderGroups() throws IOException {
+  public void shouldNotCreateHeaderMapsWhenHeaderMapsAreDisabled() throws IOException {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
             .setType(AppleLibraryDescription.TYPE)
@@ -266,15 +204,7 @@ public class ProjectGeneratorTest {
                         AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
                         AppleSource.ofSourcePathWithFlags(
                             new Pair<SourcePath, String>(
-                                new TestSourcePath("bar.h"), "public"))))),
-            AppleSource.ofSourceGroup(
-                new Pair<>(
-                    "HeaderGroup2",
-                    ImmutableList.of(
-                        AppleSource.ofSourcePath(new TestSourcePath("baz.h")),
-                        AppleSource.ofSourcePathWithFlags(
-                            new Pair<SourcePath, String>(
-                                new TestSourcePath("blech.h"), "private")))))));
+                                new TestSourcePath("bar.h"), "public")))))));
     arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -283,63 +213,6 @@ public class ProjectGeneratorTest {
         ImmutableSet.of(rule.getBuildTarget()));
 
     projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
-    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
-
-    assertThat(sourcesGroup.getChildren(), hasSize(2));
-
-    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
-    assertEquals("HeaderGroup1", group1.getName());
-    assertThat(group1.getChildren(), hasSize(2));
-    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
-    assertEquals("foo.h", fileRefFoo.getName());
-    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
-    assertEquals("bar.h", fileRefBar.getName());
-
-    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
-    assertEquals("HeaderGroup2", group2.getName());
-    assertThat(group2.getChildren(), hasSize(2));
-    PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
-    assertEquals("baz.h", fileRefBaz.getName());
-    PBXFileReference fileRefBlech = (PBXFileReference) Iterables.get(group2.getChildren(), 1);
-    assertEquals("blech.h", fileRefBlech.getName());
-
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        project,
-        "//foo:lib");
-    PBXBuildPhase headersBuildPhase =
-      Iterables.find(target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
-          @Override
-          public boolean apply(PBXBuildPhase input) {
-              return input instanceof PBXHeadersBuildPhase;
-          }
-        });
-    PBXBuildFile fooHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 0);
-    assertFalse(
-        "foo.h should not have settings dictionary",
-        fooHeaderBuildFile.getSettings().isPresent());
-    PBXBuildFile barHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 1);
-    assertTrue(
-        "bar.h should have settings dictionary",
-        barHeaderBuildFile.getSettings().isPresent());
-    NSDictionary barBuildFileSettings = barHeaderBuildFile.getSettings().get();
-    NSArray barAttributes = (NSArray) barBuildFileSettings.get("ATTRIBUTES");
-    assertArrayEquals(new NSString[]{new NSString("Public")}, barAttributes.getArray());
-    PBXBuildFile bazHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 2);
-    assertFalse(
-        "baz.h should not have settings dictionary",
-        bazHeaderBuildFile.getSettings().isPresent());
-    PBXBuildFile blechHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 3);
-    assertTrue(
-        "blech.h should have settings dictionary",
-        blechHeaderBuildFile.getSettings().isPresent());
-    NSDictionary blechBuildFileSettings = blechHeaderBuildFile.getSettings().get();
-    NSArray blechAttributes = (NSArray) blechBuildFileSettings.get("ATTRIBUTES");
-    assertArrayEquals(new NSString[]{new NSString("Private")}, blechAttributes.getArray());
 
     // No header map should be generated
     List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
