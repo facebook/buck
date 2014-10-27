@@ -6,6 +6,8 @@
   // The value must always end with a forward slash.
   "GUAVA_BASE_URL" : "http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/",
 
+  "JDK_BASE_URL" : "http://docs.oracle.com/javase/7/docs/api/",
+
   // The value must always end with a forward slash.
   "GEN_DIR" : "buck-out/gen/",
 

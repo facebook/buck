@@ -1,0 +1,99 @@
+{namespace buck.immutables}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Immutable Value Types' /}
+    {param prettify: true /}
+    {param description}
+      Auto-generating values and Builders in Buck.
+    {/param}
+    {param content}
+
+<p>Buck makes heavy use of immutable value types (Java objects which
+only hold <code>final</code> members and contain no business logic). These ease
+development and testing, as stateful APIs can be rewritten as stateless APIs which
+accept and return all the value types upon which they need to act.</p>
+
+<p>Traditional Java value types cause two problems:</p>
+
+<ol>
+<li>Each value type requires a lot of manually-written
+boilerplate code, including <code><a href="{JDK_BASE_URL}
+java/lang/Object.html#equals(java.lang.Object)">equals()</a></code>, <code>
+<a href="{JDK_BASE_URL}
+java/lang/Object.html#toString()">toString()</a></code>,
+and <code> <a href="{JDK_BASE_URL}java/lang/Object.html#hashCode()">hashCode()</a></code></li>
+<li>Value type constructors take large numbers
+of arguments, causing any change to the value type to necessitate changes
+in a large number of clients and tests</li>
+</ol>
+
+<p>To fix both of these issues, we use the <a href="http://immutables.github.io/immutable.html">Immutables.org</a> library
+automatically generate source code for immutable value types (including implementations for <code>equals()</code>, <code>toString()</code>, and <code>hashCode()</code>)
+as well as <a href="http://cantina.co/immutable-objects-and-the-builder-pattern/"><code>Builder</code>s</a> to
+put together instances of a value type piece by piece.
+
+<p>To use immutable value types in a Buck <code>java_library</code>, use the
+<code>java_immutables_library</code> function in your <code>BUCK</code> file.  For example:</code>
+
+{literal}<pre class="prettyprint lang-py">
+java_immutables_library(
+  name = 'value',
+  srcs = glob(['*.java'])
+  deps = [
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)
+</pre>
+{/literal}
+
+<p>Then, declare an <code>interface</code> or <code>abstract</code> class
+containing the type and data accessors. Make sure to annotate it
+with <code>@org.immutables.value.Value.Immutable</code>:</p>
+
+{literal}<pre class="prettyprint lang-java">
+import com.google.common.base.Optional;
+import org.immutables.value.Value;
+import java.util.List;
+
+@Value.Immutable
+public interface Type {
+  String name();
+  List&lt;Long&gt; phoneNumbers();
+  Optional&lt;String&gt; description();
+}
+</pre>
+{/literal}
+
+<p>Note that you must use <code>List&lt;T&gt;</code> instead of <code>ImmutableList&lt;T&gt;</code> in your
+interface. (Under the hood, it will be <code>ImmutableList</code>, but the source generation currently prefers
+the general type in the interface.)</p>
+
+<p>This will generate two classes:</p>
+
+<ul>
+<li><code>ImmutableType</code>: A concrete implementation of <code>Type</code> with <code>private final</code> members</li>
+<li><code>ImmutableType.Builder</code>: A <code>Builder</code> which generates instances of <code>ImmutableType</code></li>
+</ul>
+
+<p>For example, to generate an instance of and check its members in a unit test:</p>
+
+{literal}<pre class="prettyprint lang-java">
+    Type t = ImmutableType.builder()
+        .name("Jenny")
+        .addPhoneNumbers(8675309L)
+        .build();
+
+    assertEquals("Jenny", t.name());
+    assertEquals(ImmutableList.of(8675309L), t.phoneNumbers());
+    assertFalse(t.description().isPresent());
+</pre>
+{/literal}
+
+<p>For more documentation, see the reference at <a href="http://immutables.github.io/immutable.html">immutables.github.io</a>.</p>
+
+    {/param}
+  {/call}
+{/template}
