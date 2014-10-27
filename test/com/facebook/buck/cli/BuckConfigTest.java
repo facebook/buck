@@ -391,6 +391,28 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void testResolveNullPathThatMayBeOutsideTheProjectFilesystem() throws IOException {
+    BuckConfig config = createFromText("");
+    assertNull(config.resolvePathThatMayBeOutsideTheProjectFilesystem(null));
+  }
+
+  @Test
+  public void testResolveAbsolutePathThatMayBeOutsideTheProjectFilesystem() throws IOException {
+    BuckConfig config = createFromText("");
+    assertEquals(
+        Paths.get("/foo/bar"),
+        config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get("/foo/bar")));
+  }
+
+  @Test
+  public void testResolveRelativePathThatMayBeOutsideTheProjectFilesystem() throws IOException {
+    BuckConfig config = createFromText("");
+    assertEquals(
+        Paths.get("/project/foo/bar"),
+        config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get("../foo/bar")));
+  }
+
+  @Test
   public void testBuckPyIgnorePaths() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "buck_py_ignore_paths", temporaryFolder);
@@ -605,7 +627,12 @@ public class BuckConfigTest {
   }
 
   private BuckConfig createFromText(String... lines) throws IOException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem() {
+      @Override
+      public Path getRootPath() {
+        return Paths.get("/project/root");
+      }
+    };
     BuildTargetParser parser = new BuildTargetParser();
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
     return BuckConfig.createFromReader(

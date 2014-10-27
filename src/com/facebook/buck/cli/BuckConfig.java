@@ -707,7 +707,21 @@ public class BuckConfig {
   @VisibleForTesting
   Path getCacheDir() {
     String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
-    Path expandedPath = MorePaths.expandHomeDir(Paths.get(cacheDir));
+    Path pathToCacheDir = resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(cacheDir));
+    return Preconditions.checkNotNull(pathToCacheDir);
+  }
+
+  @Nullable
+  Path resolvePathThatMayBeOutsideTheProjectFilesystem(@Nullable Path path) {
+    if (path == null) {
+      return path;
+    }
+
+    if (path.isAbsolute()) {
+      return path;
+    }
+
+    Path expandedPath = MorePaths.expandHomeDir(path);
     return projectFilesystem.getAbsolutifier().apply(expandedPath);
   }
 

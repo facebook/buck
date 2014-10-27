@@ -152,7 +152,7 @@ public class ProjectFilesystem {
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
    */
   public Path resolve(Path path) {
-    return projectRoot.resolve(path).toAbsolutePath().normalize();
+    return getRootPath().resolve(path).toAbsolutePath().normalize();
   }
 
   /**
