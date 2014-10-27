@@ -2057,73 +2057,6 @@ public class ProjectGeneratorTest {
     assertTrue(hasShellScriptPhaseToCompileAssetCatalogs(bundleTarget));
   }
 
-  @Test
-  public void assetCatalogsBuildPhaseBuildsBothCommonAndBundledAssetCatalogs() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRule assetCatalog1 = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "asset_catalog1").build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        new AppleAssetCatalogDescription(),
-        new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
-          @Override
-          public AppleAssetCatalogDescription.Arg apply(AppleAssetCatalogDescription.Arg input) {
-            input.dirs = ImmutableSet.of(Paths.get("AssetCatalog1.xcassets"));
-            return input;
-          }
-        });
-    resolver.addToIndex(assetCatalog1);
-
-    BuildRule assetCatalog2 = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "asset_catalog2").build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        new AppleAssetCatalogDescription(),
-        new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
-          @Override
-          public AppleAssetCatalogDescription.Arg apply(AppleAssetCatalogDescription.Arg input) {
-            input.dirs = ImmutableSet.of(Paths.get("AssetCatalog2.xcassets"));
-            input.copyToBundles = Optional.of(Boolean.TRUE);
-            return input;
-          }
-        });
-    resolver.addToIndex(assetCatalog2);
-
-    BuildRule libraryRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "lib").build(),
-        ImmutableSortedSet.of(assetCatalog1, assetCatalog2),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(libraryRule);
-
-    BuildRule bundleLibraryRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "bundlelib").build(),
-        ImmutableSortedSet.of(libraryRule),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(bundleLibraryRule);
-
-    BuildRule bundleRule = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "bundle").build(),
-        resolver,
-        appleBundleDescription,
-        bundleLibraryRule,
-        AppleBundleExtension.BUNDLE);
-    resolver.addToIndex(bundleRule);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(assetCatalog1, assetCatalog2, libraryRule, bundleRule),
-        ImmutableSet.of(bundleRule.getBuildTarget()));
-    projectGenerator.createXcodeProjects();
-
-    PBXProject generatedProject = projectGenerator.getGeneratedProject();
-    PBXTarget bundleTarget = assertTargetExistsAndReturnTarget(
-        generatedProject,
-        "//foo:bundle");
-    assertTrue(hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(bundleTarget));
-  }
-
   /**
    * The project configurations should have named entries corresponding to every existing target
    * configuration for targets in the project.
@@ -2551,36 +2484,5 @@ public class ProjectGeneratorTest {
     }
 
     return found;
-  }
-
-  private boolean hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(PBXTarget target) {
-    PBXShellScriptBuildPhase assetCatalogBuildPhase = null;
-    for (PBXBuildPhase phase : target.getBuildPhases()) {
-      if (phase.getClass().equals(PBXShellScriptBuildPhase.class)) {
-        PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) phase;
-        if (shellScriptBuildPhase.getShellScript().contains("compile_asset_catalogs")) {
-          assetCatalogBuildPhase = shellScriptBuildPhase;
-        }
-      }
-    }
-
-    assertNotNull(assetCatalogBuildPhase);
-
-    boolean foundCommonAssetCatalogCompileCommand = false;
-    boolean foundSplitAssetCatalogCompileCommand = false;
-    String[] lines = assetCatalogBuildPhase.getShellScript().split("\\n");
-    for (String line : lines) {
-      if (line.contains("compile_asset_catalogs")) {
-        if (line.contains(" -b ")) {
-          foundSplitAssetCatalogCompileCommand = true;
-        } else {
-          // There can be only one
-          assertFalse(foundCommonAssetCatalogCompileCommand);
-          foundCommonAssetCatalogCompileCommand = true;
-        }
-      }
-    }
-
-    return foundCommonAssetCatalogCompileCommand && foundSplitAssetCatalogCompileCommand;
   }
 }

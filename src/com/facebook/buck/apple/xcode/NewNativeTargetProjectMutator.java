@@ -19,6 +19,7 @@ package com.facebook.buck.apple.xcode;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
@@ -33,6 +34,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
@@ -86,6 +88,8 @@ public class NewNativeTargetProjectMutator {
   private ImmutableSet<String> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
   private ImmutableSet<AppleResource> resources = ImmutableSet.of();
+  private ImmutableSet<AppleAssetCatalog> assetCatalogs = ImmutableSet.of();
+  private Path assetCatalogBuildScript = Paths.get("");
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer,
@@ -152,6 +156,18 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
+  /**
+   * @param assetCatalogBuildScript Path of the asset catalog build script relative to repo root.
+   * @param assetCatalogs List of asset catalog targets.
+   */
+  public NewNativeTargetProjectMutator setAssetCatalogs(
+      Path assetCatalogBuildScript,
+      ImmutableSet<AppleAssetCatalog> assetCatalogs) {
+    this.assetCatalogBuildScript = assetCatalogBuildScript;
+    this.assetCatalogs = assetCatalogs;
+    return this;
+  }
+
   public Result buildTargetAndAddToProject(PBXProject project) {
     PBXNativeTarget target = new PBXNativeTarget(targetName, productType);
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(targetName);
@@ -164,6 +180,7 @@ public class NewNativeTargetProjectMutator {
     addPhasesAndGroupsForSources(target, targetGroup);
     addFrameworksBuildPhase(project, target);
     addResourcesBuildPhase(target, targetGroup);
+    addAssetCatalogBuildPhase(target, targetGroup);
 
     // Product
 
@@ -408,5 +425,70 @@ public class NewNativeTargetProjectMutator {
       }
     }
     LOG.debug("Added resources build phase %s", phase);
+  }
+
+  private void addAssetCatalogBuildPhase(PBXNativeTarget target, PBXGroup targetGroup) {
+    if (assetCatalogs.isEmpty()) {
+      return;
+    }
+
+    // Asset catalogs go in the resources group also.
+    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+
+    // Some asset catalogs should be copied to their sibling bundles, while others use the default
+    // output format (which may be to copy individual files to the root resource output path or to
+    // be archived in Assets.car if it is supported by the target platform version).
+
+    ImmutableList.Builder<String> commonAssetCatalogsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<String> assetCatalogsToSplitIntoBundlesBuilder =
+        ImmutableList.builder();
+    for (AppleAssetCatalog assetCatalog : assetCatalogs) {
+      for (Path dir : assetCatalog.getDirs()) {
+        Path pathRelativeToProjectRoot = pathRelativizer.outputDirToRootRelative(dir);
+
+        resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SOURCE_ROOT,
+                pathRelativeToProjectRoot));
+
+        LOG.debug("Resolved asset catalog path %s, result %s", dir, pathRelativeToProjectRoot);
+
+        String bundlePath = "$PROJECT_DIR/" + pathRelativeToProjectRoot.toString();
+        if (assetCatalog.getCopyToBundles()) {
+          assetCatalogsToSplitIntoBundlesBuilder.add(bundlePath);
+        } else {
+          commonAssetCatalogsBuilder.add(bundlePath);
+        }
+      }
+    }
+
+    ImmutableList<String> commonAssetCatalogs = commonAssetCatalogsBuilder.build();
+    ImmutableList<String> assetCatalogsToSplitIntoBundles =
+        assetCatalogsToSplitIntoBundlesBuilder.build();
+
+    // Map asset catalog paths to their shell script arguments relative to the project's root
+    Path buildScript = pathRelativizer.outputDirToRootRelative(assetCatalogBuildScript);
+    StringBuilder scriptBuilder = new StringBuilder("set -e\n");
+    if (commonAssetCatalogs.size() != 0) {
+      scriptBuilder
+          .append("\"${PROJECT_DIR}/\"")
+          .append(buildScript.toString())
+          .append(" ")
+          .append(Joiner.on(' ').join(commonAssetCatalogs))
+          .append("\n");
+    }
+    if (assetCatalogsToSplitIntoBundles.size() != 0) {
+      scriptBuilder
+          .append("\"${PROJECT_DIR}/\"")
+          .append(buildScript.toString())
+          .append(" -b ")
+          .append(Joiner.on(' ').join(assetCatalogsToSplitIntoBundles))
+          .append("\n");
+    }
+
+    PBXShellScriptBuildPhase phase = new PBXShellScriptBuildPhase();
+    target.getBuildPhases().add(phase);
+    phase.setShellScript(scriptBuilder.toString());
+    LOG.debug("Added asset catalog build phase %s", phase);
   }
 }

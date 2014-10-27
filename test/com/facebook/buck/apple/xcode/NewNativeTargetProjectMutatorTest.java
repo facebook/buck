@@ -19,6 +19,7 @@ package com.facebook.buck.apple.xcode;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonPhaseWithEntries;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
@@ -26,12 +27,15 @@ import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleAssetCatalog;
+import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.GroupedSource;
@@ -43,17 +47,22 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import org.junit.Before;
@@ -286,6 +295,49 @@ public class NewNativeTargetProjectMutatorTest {
         ImmutableList.of("$SOURCE_ROOT/../foo.png"));
   }
 
+  @Test
+  public void assetCatalogsBuildPhaseBuildsBothCommonAndBundledAssetCatalogs() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
+    AppleAssetCatalog assetCatalog1 = (AppleAssetCatalog) createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "asset_catalog1").build(),
+        resolver,
+        ImmutableSortedSet.<BuildRule>of(),
+        new AppleAssetCatalogDescription(),
+        new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
+          @Override
+          public AppleAssetCatalogDescription.Arg apply(AppleAssetCatalogDescription.Arg input) {
+            input.dirs = ImmutableSet.of(Paths.get("AssetCatalog1.xcassets"));
+            return input;
+          }
+        });
+    resolver.addToIndex(assetCatalog1);
+
+    AppleAssetCatalog assetCatalog2 = (AppleAssetCatalog) createBuildRuleWithDefaults(
+        BuildTarget.builder("//foo", "asset_catalog2").build(),
+        resolver,
+        ImmutableSortedSet.<BuildRule>of(),
+        new AppleAssetCatalogDescription(),
+        new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
+          @Override
+          public AppleAssetCatalogDescription.Arg apply(AppleAssetCatalogDescription.Arg input) {
+            input.dirs = ImmutableSet.of(Paths.get("AssetCatalog2.xcassets"));
+            input.copyToBundles = Optional.of(Boolean.TRUE);
+            return input;
+          }
+        });
+    resolver.addToIndex(assetCatalog2);
+
+    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+    mutator.setAssetCatalogs(
+        Paths.get("compile_asset_catalogs"),
+        ImmutableSet.of(assetCatalog1, assetCatalog2));
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject);
+    assertTrue(hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(result.target));
+  }
+
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults(BuildTarget target) {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
@@ -311,5 +363,34 @@ public class NewNativeTargetProjectMutatorTest {
               }
             }),
         not(emptyIterable()));
+  }
+
+  private boolean hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(PBXTarget target) {
+    PBXShellScriptBuildPhase assetCatalogBuildPhase = null;
+    for (PBXBuildPhase phase : target.getBuildPhases()) {
+      if (phase.getClass().equals(PBXShellScriptBuildPhase.class)) {
+        PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) phase;
+        if (shellScriptBuildPhase.getShellScript().contains("compile_asset_catalogs")) {
+          assetCatalogBuildPhase = shellScriptBuildPhase;
+        }
+      }
+    }
+    assertNotNull(assetCatalogBuildPhase);
+
+    boolean foundCommonAssetCatalogCompileCommand = false;
+    boolean foundSplitAssetCatalogCompileCommand = false;
+    String[] lines = assetCatalogBuildPhase.getShellScript().split("\\n");
+    for (String line : lines) {
+      if (line.contains("compile_asset_catalogs")) {
+        if (line.contains(" -b ")) {
+          foundSplitAssetCatalogCompileCommand = true;
+        } else {
+          assertFalse("should have only one invocation", foundCommonAssetCatalogCompileCommand);
+          foundCommonAssetCatalogCompileCommand = true;
+        }
+      }
+    }
+
+    return foundCommonAssetCatalogCompileCommand && foundSplitAssetCatalogCompileCommand;
   }
 }

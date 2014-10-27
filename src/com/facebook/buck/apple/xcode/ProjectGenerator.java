@@ -93,7 +93,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -474,7 +473,7 @@ public class ProjectGenerator {
         Optional.<Path>absent(),
         /* includeFrameworks */ true,
         ImmutableSet.<AppleResource>of(),
-        ImmutableList.<AppleAssetCatalog>of());
+        ImmutableSet.<AppleAssetCatalog>of());
     LOG.debug("Generated Apple binary target %s", target);
     return target;
   }
@@ -494,7 +493,7 @@ public class ProjectGenerator {
         Optional.<Path>absent(),
         /* includeFrameworks */ appleLibrary.getLinkedDynamically(),
         ImmutableSet.<AppleResource>of(),
-        ImmutableList.<AppleAssetCatalog>of());
+        ImmutableSet.<AppleAssetCatalog>of());
     LOG.debug("Generated iOS library target %s", target);
     return target;
   }
@@ -531,7 +530,7 @@ public class ProjectGenerator {
       Optional<Path> infoPlistOptional,
       boolean includeFrameworks,
       ImmutableSet<AppleResource> resources,
-      Iterable<AppleAssetCatalog> assetCatalogs)
+      ImmutableSet<AppleAssetCatalog> assetCatalogs)
       throws IOException {
     BuildTarget buildTarget = bundle.isPresent()
         ? bundle.get().getBuildTarget()
@@ -542,7 +541,6 @@ public class ProjectGenerator {
         pathRelativizer,
         resolver,
         buildTarget);
-
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
         .setProduct(
@@ -553,6 +551,20 @@ public class ProjectGenerator {
         .setShouldGenerateCopyHeadersPhase(!appleBuildRule.getUseBuckHeaderMaps())
         .setSources(appleBuildRule.getSrcs(), appleBuildRule.getPerFileFlags())
         .setResources(resources);
+
+    Path assetCatalogBuildPhaseScript;
+    if (!assetCatalogs.isEmpty()) {
+      if (PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT != null) {
+        assetCatalogBuildPhaseScript =
+            Paths.get(PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT);
+      } else {
+        // In order for the script to run, it must be accessible by Xcode and
+        // deserves to be part of the generated output.
+        shouldPlaceAssetCatalogCompiler = true;
+        assetCatalogBuildPhaseScript = placedAssetCatalogBuildPhaseScript;
+      }
+      mutator.setAssetCatalogs(assetCatalogBuildPhaseScript, assetCatalogs);
+    }
 
     if (includeFrameworks) {
       ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
@@ -639,10 +651,6 @@ public class ProjectGenerator {
           appleBuildRule.getHeaderPathPrefix(),
           appleBuildRule.getSrcs(),
           appleBuildRule.getPerFileFlags());
-    }
-
-    if (!Iterables.isEmpty(assetCatalogs)) {
-      addAssetCatalogBuildPhase(target, targetGroup, assetCatalogs);
     }
 
     // Use Core Data models from immediate dependencies only.
@@ -949,93 +957,6 @@ public class ProjectGenerator {
           "Please declare '" + fileName + "' as public, " +
           "or use the default visibility (i.e. by target) instead.");
     }
-  }
-
-  private void addAssetCatalogBuildPhase(
-      PBXNativeTarget target, PBXGroup targetGroup,
-      final Iterable<AppleAssetCatalog> assetCatalogs) {
-
-    // Asset catalogs go in the resources group also.
-    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
-
-    // Some asset catalogs should be copied to their sibling bundles, while others use the default
-    // output format (which may be to copy individual files to the root resource output path or to
-    // be archived in Assets.car if it is supported by the target platform version).
-
-    ImmutableList.Builder<String> commonAssetCatalogsBuilder = ImmutableList.builder();
-    ImmutableList.Builder<String> assetCatalogsToSplitIntoBundlesBuilder =
-        ImmutableList.builder();
-    for (AppleAssetCatalog assetCatalog : assetCatalogs) {
-
-      List<String> scriptArguments = Lists.newArrayList();
-      for (Path dir : assetCatalog.getDirs()) {
-        Path pathRelativeToProjectRoot = pathRelativizer.outputDirToRootRelative(dir);
-
-        resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativeToProjectRoot));
-
-        LOG.debug(
-            "Resolved asset catalog path %s, output directory %s, result %s",
-            dir, outputDirectory, pathRelativeToProjectRoot);
-        scriptArguments.add("$PROJECT_DIR/" + pathRelativeToProjectRoot.toString());
-      }
-
-      if (assetCatalog.getCopyToBundles()) {
-        assetCatalogsToSplitIntoBundlesBuilder.addAll(scriptArguments);
-      } else {
-        commonAssetCatalogsBuilder.addAll(scriptArguments);
-      }
-    }
-
-    ImmutableList<String> commonAssetCatalogs = commonAssetCatalogsBuilder.build();
-    ImmutableList<String> assetCatalogsToSplitIntoBundles =
-        assetCatalogsToSplitIntoBundlesBuilder.build();
-
-    // If there are no asset catalogs, don't add the build phase
-    if (commonAssetCatalogs.size() == 0 &&
-        assetCatalogsToSplitIntoBundles.size() == 0) {
-      return;
-    }
-
-    Path assetCatalogBuildPhaseScriptRelativeToProjectRoot;
-
-    if (PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT != null) {
-      assetCatalogBuildPhaseScriptRelativeToProjectRoot =
-          pathRelativizer.outputDirToRootRelative(
-              Paths.get(PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT));
-    } else {
-      // In order for the script to run, it must be accessible by Xcode and
-      // deserves to be part of the generated output.
-      shouldPlaceAssetCatalogCompiler = true;
-
-      assetCatalogBuildPhaseScriptRelativeToProjectRoot =
-        MorePaths.relativize(outputDirectory, placedAssetCatalogBuildPhaseScript);
-    }
-
-    // Map asset catalog paths to their shell script arguments relative to the project's root
-    String combinedAssetCatalogsToBeSplitIntoBundlesScriptArguments =
-        Joiner.on(' ').join(assetCatalogsToSplitIntoBundles);
-    String combinedCommonAssetCatalogsScriptArguments = Joiner.on(' ').join(commonAssetCatalogs);
-
-    PBXShellScriptBuildPhase phase = new PBXShellScriptBuildPhase();
-
-    StringBuilder scriptBuilder = new StringBuilder("set -e\n");
-    if (commonAssetCatalogs.size() != 0) {
-      scriptBuilder.append("\"${PROJECT_DIR}/\"" +
-              assetCatalogBuildPhaseScriptRelativeToProjectRoot.toString() + " " +
-              combinedCommonAssetCatalogsScriptArguments + "\n");
-    }
-
-    if (assetCatalogsToSplitIntoBundles.size() != 0) {
-      scriptBuilder.append("\"${PROJECT_DIR}/\"" +
-              assetCatalogBuildPhaseScriptRelativeToProjectRoot.toString() + " -b " +
-              combinedAssetCatalogsToBeSplitIntoBundlesScriptArguments);
-    }
-    phase.setShellScript(scriptBuilder.toString());
-    LOG.debug("Added asset catalog build phase %s", phase);
-    target.getBuildPhases().add(phase);
   }
 
   private void addCoreDataModelBuildPhase(
@@ -1603,18 +1524,12 @@ public class ProjectGenerator {
   /**
    * Collect asset catalogs from recursive dependencies.
    */
-  private static Iterable<AppleAssetCatalog> collectRecursiveAssetCatalogs(BuildRule rule) {
+  private static ImmutableSet<AppleAssetCatalog> collectRecursiveAssetCatalogs(BuildRule rule) {
     Iterable<BuildRule> assetCatalogRules = AppleBuildRules.getRecursiveRuleDependenciesOfType(
         AppleBuildRules.RecursiveRuleDependenciesMode.COPYING,
         rule,
         AppleAssetCatalogDescription.TYPE);
-    ImmutableSet.Builder<AppleAssetCatalog> assetCatalogs = ImmutableSet.builder();
-    for (BuildRule assetCatalogRule : assetCatalogRules) {
-      AppleAssetCatalog assetCatalog = (AppleAssetCatalog) Preconditions.checkNotNull(
-          assetCatalogRule);
-      assetCatalogs.add(assetCatalog);
-    }
-    return assetCatalogs.build();
+    return ImmutableSet.copyOf(Iterables.filter(assetCatalogRules, AppleAssetCatalog.class));
   }
 
   @SuppressWarnings("incomplete-switch")
