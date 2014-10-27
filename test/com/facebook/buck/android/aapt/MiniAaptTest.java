@@ -241,6 +241,7 @@ public class MiniAaptTest {
   @Test
   public void testProcessFileNamesInDirectory() throws IOException, ResourceParseException {
     filesystem.touch(Paths.get("res/drawable/icon.png"));
+    filesystem.touch(Paths.get("res/drawable/another_icon.png.orig"));
     filesystem.touch(Paths.get("res/drawable-ldpi/nine_patch.9.png"));
     filesystem.touch(Paths.get("res/drawable-ldpi/.DS_Store"));
 

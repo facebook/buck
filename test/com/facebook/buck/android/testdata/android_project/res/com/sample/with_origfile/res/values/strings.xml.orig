@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!-- This file is used to test that aapt ignores *.orig files. -->
+<!-- Otherwise aapt would throw an error because @string/nothing is not defined. -->
+<resources>
+  <string name='you_know'>@string/nothing</string>
+</resources>

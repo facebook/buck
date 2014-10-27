@@ -43,14 +43,13 @@ public class AaptPackageResourcesIntegrationTest {
     tmpFolder.create();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmpFolder);
-
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
-    result.assertSuccess();
   }
 
   @Test
   public void testEditingLayoutChangesPackageHash() throws IOException {
+    workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
+
     // This is too low-level of a test.  Ideally, we'd be able to save the rule graph generated
     // by the build and query it directly, but runBuckCommand doesn't support that, so just
     // test the files directly for now.
@@ -59,8 +58,7 @@ public class AaptPackageResourcesIntegrationTest {
 
     workspace.replaceFileContents(PATH_TO_LAYOUT_XML, "white", "black");
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
-    result.assertSuccess();
+    workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
 
     String secondHash = workspace.getFileContents(
         "buck-out/bin/apps/sample/.app#aapt_package/metadata/resource_package_hash");
@@ -70,4 +68,8 @@ public class AaptPackageResourcesIntegrationTest {
     assertNotEquals(firstHashCode, secondHashCode);
   }
 
+  @Test
+  public void testOrigFileIsIgnoredByAapt() throws IOException {
+    workspace.runBuckBuild("//apps/sample:app_deps_resource_with_orig_file").assertSuccess();
+  }
 }

@@ -67,6 +67,8 @@ public class GenProGuardConfigStep extends ShellStep {
     args.add("--auto-add-overlay");
     args.add("-I").add(androidPlatformTarget.getAndroidJar().toString());
 
+    args.add("--ignore-assets", AaptStep.IGNORE_ASSETS_PATTERN);
+
     return args.build();
   }
 

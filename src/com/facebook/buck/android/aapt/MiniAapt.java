@@ -31,6 +31,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
@@ -58,6 +59,8 @@ import javax.xml.xpath.XPathFactory;
  * <p>
  */
 public class MiniAapt implements Step {
+
+  private static final ImmutableList<String> IGNORED_FILE_EXTENSIONS = ImmutableList.of("orig");
 
   private static final String ID_DEFINITION_PREFIX = "@+id/";
   private static final String ITEM_TAG = "item";
@@ -227,7 +230,7 @@ public class MiniAapt implements Step {
     }
 
     for (Path resourceFile : filesystem.getDirectoryContents(dir)) {
-      if (filesystem.isHidden(resourceFile)) {
+      if (shouldIgnoreFile(resourceFile, filesystem)) {
         continue;
       }
 
@@ -242,7 +245,7 @@ public class MiniAapt implements Step {
   void processValues(ProjectFilesystem filesystem, BuckEventBus eventBus, Path valuesDir)
       throws IOException, ResourceParseException {
     for (Path path : filesystem.getFilesUnderPath(valuesDir)) {
-      if (filesystem.isHidden(path)) {
+      if (shouldIgnoreFile(path, filesystem)) {
         continue;
       }
       if (!filesystem.isFile(path) && !filesystem.isIgnored(path)) {
@@ -416,6 +419,13 @@ public class MiniAapt implements Step {
 
   private static boolean isAValuesDir(String dirname) {
     return dirname.equals("values") || dirname.startsWith("values-");
+  }
+
+  private static boolean shouldIgnoreFile(Path path, ProjectFilesystem filesystem)
+      throws IOException{
+    return filesystem.isHidden(path) ||
+        IGNORED_FILE_EXTENSIONS.contains(
+            com.google.common.io.Files.getFileExtension(path.getFileName().toString()));
   }
 
   @VisibleForTesting
