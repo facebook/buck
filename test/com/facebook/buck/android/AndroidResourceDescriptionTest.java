@@ -63,6 +63,7 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFolder("res/dirs");
     tmpFolder.newFolder("res/dirs/values");
     tmpFolder.newFile("res/dirs/values/strings.xml");
+    tmpFolder.newFile("res/dirs/values/strings.xml.orig");
 
     tmpFolder.newFolder("res/dirs/.svn");
     tmpFolder.newFile("res/dirs/.svn/ignore");

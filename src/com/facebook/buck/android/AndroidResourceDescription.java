@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -36,6 +37,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -148,8 +150,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     }
     final ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
 
-    // aapt, unless specified a pattern, ignores certain files and directories. We follow the same
-    // logic as the default pattern found at http://goo.gl/OTTK88 and line 61.
+    // We ignore the same files that mini-aapt and aapt ignore.
     FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
       @Override
       public FileVisitResult preVisitDirectory(
@@ -177,6 +178,9 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
           return false;
         }
         if (fileOrDirName.charAt(fileOrDirName.length() - 1) == '~') {
+          return false;
+        }
+        if (MiniAapt.IGNORED_FILE_EXTENSIONS.contains(Files.getFileExtension(fileOrDirName))) {
           return false;
         }
         return true;

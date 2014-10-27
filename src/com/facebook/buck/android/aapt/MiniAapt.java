@@ -60,7 +60,10 @@ import javax.xml.xpath.XPathFactory;
  */
 public class MiniAapt implements Step {
 
-  private static final ImmutableList<String> IGNORED_FILE_EXTENSIONS = ImmutableList.of("orig");
+  /**
+   * See {@link com.facebook.buck.android.AaptStep} for a list of files that we ignore.
+   */
+  public static final ImmutableList<String> IGNORED_FILE_EXTENSIONS = ImmutableList.of("orig");
 
   private static final String ID_DEFINITION_PREFIX = "@+id/";
   private static final String ITEM_TAG = "item";

@@ -32,7 +32,8 @@ import java.nio.file.Path;
  */
 public class AaptStep extends ShellStep {
 
-  // Copied from the aapt command description.
+  // aapt, unless specified a pattern, ignores certain files and directories. We follow the same
+  // logic as the default pattern found at http://goo.gl/OTTK88 and line 61.
   private static final String DEFAULT_IGNORE_ASSETS_PATTERN =
       "\\!.svn:\\!.git:\\!.ds_store:\\!*.scc:.*:<dir>_*:\\!CVS:\\!thumbs.db:\\!picasa.ini:\\!*~";
 
