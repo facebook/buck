@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import com.google.common.base.Optional;
 
@@ -53,5 +54,20 @@ public class ProcessExecutorTest {
         Optional.<String>absent());
     assertEquals("Hello\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());
+  }
+
+  @Test
+  public void testProcessFailureDoesNotWriteEmptyString() throws IOException, InterruptedException {
+    DirtyPrintStreamDecorator stdOut =
+        new DirtyPrintStreamDecorator(new CapturingPrintStream());
+    DirtyPrintStreamDecorator stdErr =
+        new DirtyPrintStreamDecorator(new CapturingPrintStream());
+    Ansi ansi = Ansi.forceTty();
+    Console console = new Console(
+        Verbosity.ALL, stdOut, stdErr, ansi);
+    ProcessExecutor executor = new ProcessExecutor(console);
+    executor.execute(Runtime.getRuntime().exec("false"));
+    assertFalse(stdOut.isDirty());
+    assertFalse(stdErr.isDirty());
   }
 }

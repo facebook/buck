@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.log.Logger;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -30,6 +32,8 @@ import java.util.Set;
  * Executes a {@link Process} and blocks until it is finished.
  */
 public class ProcessExecutor {
+
+  private static final Logger LOG = Logger.get(ProcessExecutor.class);
 
   /**
    * Options for {@link ProcessExecutor#execute(Process, Set, Optional)}.
@@ -217,10 +221,12 @@ public class ProcessExecutor {
     // If the command has failed and we're not being explicitly quiet, ensure everything gets
     // printed.
     if (exitCode != 0 && !options.contains(Option.IS_SILENT)) {
-      if (!shouldPrintStdOut) {
+      if (!shouldPrintStdOut && !stdoutText.get().isEmpty()) {
+        LOG.verbose("Writing captured stdout text to stream: [%s]", stdoutText.get());
         stdOutStream.print(stdoutText.get());
       }
-      if (!shouldPrintStdErr) {
+      if (!shouldPrintStdErr && !stderrText.get().isEmpty()) {
+        LOG.verbose("Writing captured stderr text to stream: [%s]", stderrText.get());
         stdErrStream.print(stderrText.get());
       }
     }
