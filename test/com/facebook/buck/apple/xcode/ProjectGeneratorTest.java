@@ -1289,11 +1289,11 @@ public class ProjectGeneratorTest {
 
     // Assert that the post-build script phase comes after resources are copied.
     assertThat(
-        target.getBuildPhases().get(1),
+        target.getBuildPhases().get(0),
         instanceOf(PBXResourcesBuildPhase.class));
 
     assertThat(
-        target.getBuildPhases().get(2),
+        target.getBuildPhases().get(1),
         instanceOf(PBXShellScriptBuildPhase.class));
   }
 
@@ -1949,9 +1949,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:final");
     assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 1, target.getBuildPhases().size());
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
-        target, ImmutableList.<String>of());
+    assertEquals("Should have exact number of build phases ", 0, target.getBuildPhases().size());
   }
 
   @Test

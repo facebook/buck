@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode;
 
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
@@ -46,6 +47,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import org.junit.Before;
@@ -233,6 +235,25 @@ public class NewNativeTargetProjectMutatorTest {
     }
   }
 
+  @Test
+  public void testFrameworkBuildPhase() {
+    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+    mutator.setFrameworks(ImmutableSet.of("$SDKROOT/Foo.framework"));
+    mutator.setArchives(ImmutableSet.of(
+        new PBXFileReference(
+            "libdep.a",
+            "libdep.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR)));
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject);
+    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        result.target,
+        ImmutableList.of(
+            "$SDKROOT/Foo.framework",
+            "$BUILT_PRODUCTS_DIR/libdep.a"));
+  }
+
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults(BuildTarget target) {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
@@ -259,5 +280,4 @@ public class NewNativeTargetProjectMutatorTest {
             }),
         not(emptyIterable()));
   }
-
 }

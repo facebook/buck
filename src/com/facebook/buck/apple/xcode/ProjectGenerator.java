@@ -49,7 +49,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
@@ -557,6 +556,14 @@ public class ProjectGenerator {
         .setShouldGenerateCopyHeadersPhase(!appleBuildRule.getUseBuckHeaderMaps())
         .setSources(appleBuildRule.getSrcs(), appleBuildRule.getPerFileFlags());
 
+    if (includeFrameworks) {
+      ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
+      frameworksBuilder.addAll(appleBuildRule.getFrameworks());
+      collectRecursiveFrameworkDependencies(appleBuildRule, frameworksBuilder);
+      mutator.setFrameworks(frameworksBuilder.build());
+      mutator.setArchives(collectRecursiveLibraryDependencies(appleBuildRule));
+    }
+
     NewNativeTargetProjectMutator.Result targetBuilderResult =
         mutator.buildTargetAndAddToProject(project);
     PBXNativeTarget target = targetBuilderResult.target;
@@ -634,17 +641,6 @@ public class ProjectGenerator {
           appleBuildRule.getHeaderPathPrefix(),
           appleBuildRule.getSrcs(),
           appleBuildRule.getPerFileFlags());
-    }
-    if (includeFrameworks) {
-      ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
-      frameworksBuilder.addAll(appleBuildRule.getFrameworks());
-      collectRecursiveFrameworkDependencies(appleBuildRule, frameworksBuilder);
-      addFrameworksBuildPhase(
-          buildTarget,
-          target,
-          project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
-          frameworksBuilder.build(),
-          collectRecursiveLibraryDependencies(appleBuildRule));
     }
 
     if (!Iterables.isEmpty(resources)) {
@@ -1229,59 +1225,6 @@ public class ProjectGenerator {
             .getOrCreateFileReferenceBySourceTreePath(getProductsSourceTreePathForRule(file));
         copyFilesBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
       }
-    }
-  }
-
-  private void addFrameworksBuildPhase(
-      BuildTarget buildTarget,
-      PBXNativeTarget target,
-      PBXGroup sharedFrameworksGroup,
-      Iterable<String> frameworks,
-      Iterable<PBXFileReference> archives) {
-    PBXFrameworksBuildPhase frameworksBuildPhase = new PBXFrameworksBuildPhase();
-    target.getBuildPhases().add(frameworksBuildPhase);
-    for (String framework : frameworks) {
-      Path path = Paths.get(framework);
-
-      String firstElement =
-        Preconditions.checkNotNull(Iterables.getFirst(path, Paths.get(""))).toString();
-
-      if (firstElement.startsWith("$")) { // NOPMD - length() > 0 && charAt(0) == '$' is ridiculous
-        Optional<PBXReference.SourceTree> sourceTree =
-            PBXReference.SourceTree.fromBuildSetting(firstElement);
-        if (sourceTree.isPresent()) {
-          Path sdkRootRelativePath = path.subpath(1, path.getNameCount());
-          PBXFileReference fileReference =
-              sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
-                  new SourceTreePath(sourceTree.get(), sdkRootRelativePath));
-          frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
-        } else {
-          throw new HumanReadableException(String.format(
-              "Unknown SourceTree: %s in build target: %s. Should be one of: %s",
-              firstElement,
-              buildTarget,
-              Joiner.on(',').join(Iterables.transform(
-                  ImmutableList.copyOf(PBXReference.SourceTree.values()),
-                  new Function<PBXReference.SourceTree, String>() {
-                    @Override
-                    public String apply(PBXReference.SourceTree input) {
-                      return "$" + input.toString();
-                    }
-                  }))));
-        }
-      } else {
-        // regular path
-        PBXFileReference fileReference =
-            sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.GROUP,
-                    pathRelativizer.outputPathToBuildTargetPath(buildTarget, path)));
-        frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
-      }
-    }
-
-    for (PBXFileReference archive : archives) {
-      frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
     }
   }
 
