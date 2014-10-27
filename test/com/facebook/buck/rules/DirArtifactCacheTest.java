@@ -26,6 +26,7 @@ import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
@@ -364,7 +365,7 @@ public class DirArtifactCacheTest {
     }
 
     @Override
-    public Iterable<Path> getInputs() {
+    public ImmutableCollection<Path> getInputs() {
       return ImmutableList.of(file.toPath());
     }
   }

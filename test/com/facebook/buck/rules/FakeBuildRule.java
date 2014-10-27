@@ -69,7 +69,7 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public Iterable<Path> getInputs() {
+  public ImmutableCollection<Path> getInputs() {
     return ImmutableList.of();
   }
 

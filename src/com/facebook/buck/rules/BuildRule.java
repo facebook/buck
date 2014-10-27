@@ -21,6 +21,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -64,7 +65,7 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
   /**
    * @return the inputs needed to build this build rule
    */
-  public Iterable<Path> getInputs();
+  public ImmutableCollection<Path> getInputs();
 
   /**
    * @return key based on the BuildRule's state, including the transitive closure of its

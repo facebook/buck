@@ -42,7 +42,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final BuildRuleType buildRuleType;
   private final SourcePathResolver resolver;
   /** @see #getInputsToCompareToOutput()  */
-  @Nullable private Iterable<Path> inputsToCompareToOutputs;
+  @Nullable private ImmutableCollection<Path> inputsToCompareToOutputs;
   @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
@@ -89,7 +89,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public Iterable<Path> getInputs() {
+  public ImmutableCollection<Path> getInputs() {
     if (inputsToCompareToOutputs == null) {
       inputsToCompareToOutputs = getInputsToCompareToOutput();
     }
@@ -143,7 +143,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
     // hashed. It turns out that we need both of these in order to construct a RuleKey correctly.
     // Note: appendToRuleKey() should not set("srcs", srcs) if the inputs are order-independent.
-    Iterable<Path> inputs = getInputs();
+    ImmutableCollection<Path> inputs = getInputs();
     builder = builder
         .setInputs("buck.inputs", inputs.iterator())
         .setSourcePaths("buck.sourcepaths", SourcePaths.toSourcePathsSortedByNaturalOrder(inputs));

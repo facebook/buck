@@ -793,7 +793,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public Iterable<Path> getInputs() {
+    public ImmutableCollection<Path> getInputs() {
       return ImmutableSet.of();
     }
 
