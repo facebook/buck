@@ -548,7 +548,7 @@ public class ExopackageInstaller {
       public void addOutput(byte[] data, int offset, int length) {
         super.addOutput(data, offset, length);
         if (!sentPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
-          LOG.verbose("Got key: %s", getOutput());
+          LOG.verbose("Got key: %s", getOutput().trim());
 
           sentPayload = true;
           try (Socket clientSocket = new Socket("localhost", port)) {
