@@ -34,6 +34,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
@@ -214,6 +216,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         .toSet();
 
     int exitCode;
+    String buildReport = null;
     boolean isKeepGoing = options.isKeepGoing();
     try {
       // Get the Future representing the build and then block until everything is built.
@@ -233,11 +236,11 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         throw e;
       }
 
+      buildReport = generateBuildReport(
+          ImmutableList.copyOf(rulesToBuild),
+          results,
+          console.getAnsi());
       if (isKeepGoing) {
-        String buildReport = generateBuildReport(
-            ImmutableList.copyOf(rulesToBuild),
-            results,
-            console.getAnsi());
         console.getStdErr().print(buildReport);
         exitCode = Iterables.any(results, Predicates.isNull()) ? 1 : 0;
         if (exitCode != 0) {
@@ -265,6 +268,18 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         } else {
           console.printBuildFailureWithoutStacktrace(e);
         }
+        exitCode = 1;
+      }
+    }
+
+    Optional<Path> pathToBuildReport = options.getPathToBuildReport();
+    if (buildReport != null && pathToBuildReport.isPresent()) {
+      // Note that pathToBuildReport is an absolute path that may exist outside of the project
+      // root, so it is not appropriate to use ProjectFilesystem to write the output.
+      try {
+        Files.write(buildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
+      } catch (IOException e) {
+        e.printStackTrace(console.getStdErr());
         exitCode = 1;
       }
     }

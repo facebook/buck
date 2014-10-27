@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -24,6 +25,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.base.Charsets;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,6 +40,9 @@ public class BuildKeepGoingIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  @Rule
+  public DebuggableTemporaryFolder tmpFolderForBuildReport = new DebuggableTemporaryFolder();
 
   @Test
   public void testKeepGoingWithMultipleSuccessfulTargets() throws IOException {
@@ -94,6 +99,28 @@ public class BuildKeepGoingIntegrationTest {
         "OK   //:rule_with_output FETCHED_FROM_CACHE buck-out/gen/rule_with_output.txt\n" +
         "OK   //:rule_without_output FETCHED_FROM_CACHE\n";
     assertThat(result3.getStderr(), containsString(expectedReport3));
+  }
+
+  @Test
+  public void testKeepGoingWithBuildReport() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "keep_going", tmp).setUp();
+
+    File buildReport = new File(tmpFolderForBuildReport.getRoot(), "build-report.txt");
+    workspace.runBuckBuild(
+        "--build-report",
+        buildReport.getAbsolutePath(),
+        "--keep-going",
+        "//:rule_with_output",
+        "//:failing_rule")
+        .assertFailure();
+
+    assertTrue(buildReport.exists());
+    String buildReportContents = com.google.common.io.Files.toString(buildReport, Charsets.UTF_8);
+    String expectedReport =
+        "OK   //:rule_with_output BUILT_LOCALLY buck-out/gen/rule_with_output.txt\n" +
+        "FAIL //:failing_rule\n";
+    assertEquals(expectedReport, buildReportContents);
   }
 
   private static ProcessResult buildTwoGoodRulesAndAssertSuccess(ProjectWorkspace workspace)

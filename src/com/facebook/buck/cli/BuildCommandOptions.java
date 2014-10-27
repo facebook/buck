@@ -41,6 +41,7 @@ import com.google.common.collect.Lists;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -54,6 +55,12 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       name = "--keep-going",
       usage = "Keep going when some targets can't be made.")
   private boolean keepGoing = false;
+
+  @Option(
+      name = "--build-report",
+      usage = "File where build report will be written.")
+  @Nullable
+  private Path buildReport = null;
 
   @Option(name = "--build-dependencies",
       aliases = "-b",
@@ -125,6 +132,14 @@ public class BuildCommandOptions extends AbstractCommandOptions {
 
   public boolean isKeepGoing() {
     return keepGoing;
+  }
+
+  /**
+   * @return an absolute path or {@link Optional#absent()}.
+   */
+  public Optional<Path> getPathToBuildReport() {
+    return Optional.fromNullable(getBuckConfig().resolvePathThatMayBeOutsideTheProjectFilesystem(
+        buildReport));
   }
 
   public BuildDependencies getBuildDependencies() {
